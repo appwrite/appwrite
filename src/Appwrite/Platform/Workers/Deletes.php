@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -301,7 +302,7 @@ class Deletes extends Action
                         $this->deleteTeam($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
+                        $this->deleteBucket($dbForPlatform, $getProjectDB, $deviceForFiles, $document, $project);
                         break;
                     case DELETE_TYPE_INSTALLATIONS:
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
@@ -1641,6 +1642,9 @@ class Deletes extends Action
         $siteId = $document->getId();
         $siteInternalId = $document->getSequence();
 
+        // Monitors scoped to the site go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'site', $document);
+
         /**
          * Delete rules for site
          */
@@ -1721,6 +1725,9 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $functionId = $document->getId();
         $functionInternalId = $document->getSequence();
+
+        // Monitors scoped to the function go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'function', $document);
 
         /**
          * Delete rules
@@ -2103,8 +2110,11 @@ class Deletes extends Action
      * @param Document $project
      * @return void
      */
-    private function deleteBucket(callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
+    private function deleteBucket(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
     {
+        // Monitors scoped to the bucket go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'bucket', $document);
+
         $dbForProject = $getProjectDB($project);
 
         $dbForProject->deleteCollection('bucket_' . $document->getSequence());

@@ -2,8 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Http\Monitors;
 
-use Appwrite\Alert\Schedules;
-use Appwrite\Alert\State;
+use Appwrite\Alert\Monitors;
 use Appwrite\Platform\Modules\Alerts\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,9 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -70,23 +67,7 @@ class Delete extends Base
     ): void {
         $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
 
-        // Stopped first: if the delete then fails the monitor is still there to retry,
-        // while a schedule left active after the monitor is gone would fire forever.
-        (new Schedules($dbForPlatform))->stop($monitor);
-
-        // By monitor rather than by `alertId`, which an evaluation that failed to announce its alert never stored.
-        $alert = $authorization->skip(fn () => $dbForPlatform->findOne('monitorAlerts', [
-            Query::equal('monitorInternalId', [(string) $monitor->getSequence()]),
-            Query::equal('status', [State::Firing->value]),
-        ]));
-        if (!$alert->isEmpty()) {
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), new Document([
-                'status' => State::Resolved->value,
-                'resolvedAt' => DateTime::now(),
-            ])));
-        }
-
-        $authorization->skip(fn () => $dbForPlatform->deleteDocument('monitors', $monitor->getId()));
+        (new Monitors($dbForPlatform))->delete($monitor);
 
         $response->noContent();
     }
