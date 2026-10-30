@@ -16,13 +16,36 @@ export function isFunctionEmailEnabled(
   return func?.emailEnabled === true
 }
 
+/** Local part of the default address. Edge accepts any local part. */
+export const FUNCTION_EMAIL_LOCAL_PART = 'contact'
+
+/** A DNS label is at most 63 characters. */
+const MAX_DNS_LABEL_LENGTH = 63
+
+/** Only `a-z`, `0-9` and `-`: the characters a DNS label carries. */
+function isLabel(value: string): boolean {
+  for (const char of value) {
+    const isDigit = char >= '0' && char <= '9'
+    const isLower = char >= 'a' && char <= 'z'
+    if (!isDigit && !isLower && char !== '-') return false
+  }
+  return value !== ''
+}
+
 /**
- * Appwrite-owned testing address, `{functionId}@{projectId}.{zone}`.
+ * Appwrite-owned testing address, `contact@{functionId}-{projectId}.{zone}`.
  *
- * `zone` is `_APP_DOMAIN_EMAIL` from console variables. Project IDs are
- * lowercase-only; the function ID keeps its case because Edge matches the
- * local-part against the real ID. Returns null when any part is missing, so
- * the console never shows an address the region does not serve.
+ * The function and project IDs share one DNS label, so the local part is
+ * free: senders can use any mailbox name or plus-tag
+ * (`orders+eu@{functionId}-{projectId}.{zone}`). DNS is case-insensitive, so
+ * the label is lowercased; Edge matches IDs case-insensitively, and tries the
+ * label split at every `-` since either ID may contain one.
+ *
+ * `zone` is `_APP_DOMAIN_EMAIL` from console variables. Returns null when any
+ * part is missing, or when the IDs do not fit one DNS label (a function ID
+ * with `.` or `_`, a project ID ending in `-`, or a label over 63
+ * characters), so the console never shows
+ * an address the region does not serve.
  */
 export function buildFunctionEmailAddress(
   projectId: string | null | undefined,
@@ -30,10 +53,18 @@ export function buildFunctionEmailAddress(
   zone: string | null | undefined,
 ): string | null {
   const project = projectId?.trim().toLowerCase() ?? ''
-  const fn = functionId?.trim() ?? ''
+  const fn = functionId?.trim().toLowerCase() ?? ''
   const domain = zone?.trim().toLowerCase() ?? ''
   if (project === '' || fn === '' || domain === '') return null
-  return `${fn}@${project}.${domain}`
+
+  const label = `${fn}-${project}`
+  if (
+    !isLabel(label) ||
+    label.endsWith('-') ||
+    label.length > MAX_DNS_LABEL_LENGTH
+  )
+    return null
+  return `${FUNCTION_EMAIL_LOCAL_PART}@${label}.${domain}`
 }
 
 /**

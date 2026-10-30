@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, BackupServices } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -46,6 +46,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ENVIRONMENT_BACKUPS_TOOLTIP } from './_components/DatabaseBackupsNavLink'
 import {
   Tooltip,
   TooltipContent,
@@ -150,8 +151,11 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   >([])
 
   // Get project to get teamId for organization plan
-  const { project } = useProject(projectId)
+  const { project, projectData } = useProject(projectId)
   const region = project?.region
+  // An environment is backed up with the project it belongs to: its backup
+  // routes refuse, so nothing is asked of them
+  const isEnvironment = !!projectData?.parentId
 
   // Get organization plan to check backups availability
   const { plan: organizationPlan, isLoading: planLoading } =
@@ -167,19 +171,19 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
     projectId,
     databaseId,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
   const { data: archivesData, isLoading: archivesLoading } = useBackupArchives(
     projectId,
     databaseId,
     backupsPage - 1,
     backupsPageSize,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
   const { data: restoreMigrations } = useDatabaseRestoreMigrations(
     projectId,
     databaseId,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
 
   const visibleRestorations = (() => {
@@ -542,6 +546,46 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
     setBackupsPageSize(size)
     setBackupsPage(1)
     setSelectedBackups(new Set()) // Clear selection on page size change
+  }
+
+  if (isEnvironment) {
+    return (
+      <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Backups')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(ENVIRONMENT_BACKUPS_TOOLTIP)}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 min-h-[400px]">
+            <EmptyState
+              icon={Archive}
+              title={t('Backed up with the project')}
+              description={t(
+                'Backup policies and archives are managed on the project this environment belongs to.',
+              )}
+              isEmpty={true}
+              variant="centered"
+              iconSize="md"
+              action={
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    to="/projects/$projectId/databases"
+                    params={{ projectId: projectData.parentId as string }}
+                  >
+                    {t('Open the project')}
+                  </Link>
+                </Button>
+              }
+            />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (isBackupsDisabled) {
