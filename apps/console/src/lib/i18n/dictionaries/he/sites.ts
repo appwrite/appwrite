@@ -585,4 +585,12 @@ export const heSitesDictionary: Record<string, string> = {
     'קבלו כתובת appwrite.network מיד, ואז הוסיפו דומיין משלכם.',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
+
+  // Preview domain settings card (sites and functions)
+  'Preview domain': 'דומיין לתצוגות מקדימות',
+  'Deployment and branch previews get a generated URL on a shared Appwrite domain.':
+    'תצוגות מקדימות של פריסות ושל Branches מקבלות כתובת שנוצרת אוטומטית על דומיין משותף של Appwrite.',
+  'Current preview domain:': 'הדומיין הנוכחי לתצוגות מקדימות:',
+  'Serve previews from a domain you own so every preview link matches your brand. Custom preview domains are available on Enterprise plans.':
+    'השתמשו בדומיין משלכם לתצוגות מקדימות, כך שכל קישור לתצוגה מקדימה יתאים למותג שלכם. דומיין מותאם אישית לתצוגות מקדימות זמין בתוכניות Enterprise.',
 }

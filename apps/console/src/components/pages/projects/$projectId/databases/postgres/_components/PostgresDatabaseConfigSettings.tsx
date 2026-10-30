@@ -122,6 +122,7 @@ export function PostgresDatabaseReplicasCard({
 }: PostgresDatabaseSettingsCardProps) {
   const t = useT()
   const { features } = useConsoleProfile()
+  const { project } = useProject(projectId)
   const source = useReplicationSource({
     projectId,
     databaseId,
@@ -375,7 +376,9 @@ export function PostgresDatabaseReplicasCard({
               className="h-8 shrink-0 text-[13px]"
               asChild
             >
-              <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
+              <ContactSalesLink source="replicas" orgId={project?.teamId}>
+                {t('Contact sales')}
+              </ContactSalesLink>
             </Button>
           </div>
         ) : null}

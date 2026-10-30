@@ -20,6 +20,8 @@ export const FUNCTION_SETTINGS_NAV: ResourceSettingsNavItem[] = [
       'created',
       'updated',
       'identifiers',
+      'preview',
+      'domain',
       'delete',
       'remove',
       'trash',

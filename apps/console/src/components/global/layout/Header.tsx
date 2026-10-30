@@ -1821,7 +1821,7 @@ export function ConsoleHeader({
                       <p className="text-[11px] text-muted-foreground mb-1.5">
                         {headerCopy.accountMenu.accountStatus}
                       </p>
-                      <ul className="space-y-1.5">
+                      <ul className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
                         <li className="flex items-center gap-2">
                           <span className="flex h-3.5 w-3.5 items-center justify-center">
                             <span

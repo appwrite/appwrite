@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { useProjectSite } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -8,12 +9,14 @@ import { NameCard } from './NameCard'
 import { SiteDetailsCard } from './SiteDetailsCard'
 import { SiteStatusCard } from './SiteStatusCard'
 import { DangerZoneCard } from './DangerZoneCard'
+import { PreviewDomainCard } from '../../shared/PreviewDomainCard'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
   const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const { isCloud } = useConsoleProfile()
   const { data: site, isLoading: siteLoading } = useProjectSite(
     projectId,
     siteId,
@@ -66,6 +69,20 @@ export function View() {
         <SiteStatusCard projectId={projectId} siteId={siteId} site={site} />
       ),
     },
+    ...(isCloud
+      ? [
+          {
+            id: 'preview-domain',
+            search: {
+              title: 'Preview domain',
+              description:
+                'Deployment and branch previews get a generated URL on a shared Appwrite domain.',
+              keywords: ['preview', 'domain', 'branch', 'custom', 'enterprise'],
+            },
+            node: <PreviewDomainCard projectId={projectId} />,
+          },
+        ]
+      : []),
     {
       id: 'delete',
       search: {

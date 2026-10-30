@@ -1719,4 +1719,186 @@ export const heMarketingDictionary: Record<string, string> = {
   'Manage records in the Console, next to your projects.': 'ניהול רשומות ב-Console, לצד הפרויקטים שלכם.',
   'Connect Sites, Functions, or API domains with certificates issued for you.':
     'חיבור אתרים, פונקציות או דומיינים של API עם תעודות שמונפקות עבורכם.',
+  'Copy agent prompt':
+    'העתקת פרומפט לסוכן',
+  'Your agent':
+    'הסוכן שלכם',
+  'Claim link':
+    'קישור תביעת הבעלות',
+  '60 min':
+    '60 דקות',
+  '24 h':
+    '24 שעות',
+  'For agents':
+    'בשביל סוכנים',
+  'Hand it to your agent':
+    'העבירו את זה לסוכן שלכם',
+  'Open in':
+    'פתיחה ב:',
+  'Agent session':
+    'סשן של הסוכן',
+  'Created a Zero project':
+    'נוצר פרויקט Zero',
+  'Created the messages table':
+    'נוצרה הטבלה messages',
+  'Deployed the site':
+    'האתר נפרס',
+  'Owner link':
+    'קישור הבעלים',
+  'An hour to build. A day to claim it':
+    'שעה לבנות. יום לתבוע בעלות',
+  'Every service, from minute zero':
+    'כל השירותים, מהדקה הראשונה',
+  'A Zero project is a normal Appwrite project on a capped plan. What your agent builds is what you keep, with nothing to migrate.':
+    'פרויקט Zero הוא פרויקט Appwrite רגיל על תוכנית מוגבלת. מה שהסוכן שלכם בונה הוא מה שנשאר לכם, בלי שום מיגרציה.',
+  'After you claim it':
+    'אחרי תביעת הבעלות',
+  'Three ways in':
+    'שלוש דרכים להתחיל',
+  'Nothing to install beyond Node.js. Writes appwrite.config.json and signs the CLI in with the project key, so npx appwrite push deploys straight into it.':
+    'אין צורך להתקין דבר מלבד Node.js. כותב את appwrite.config.json ומחבר את ה-CLI עם מפתח הפרויקט, כך ש-npx appwrite push פורס ישירות אליו.',
+  'One public request, no key. The response carries an API key with every project scope until the build window ends.':
+    'בקשה ציבורית אחת, בלי מפתח. התגובה כוללת מפתח API עם כל הרשאות הפרויקט עד שחלון הבנייה נסגר.',
+  'Start the local MCP server without a project or key. It asks for a Zero project and points every other tool at it.':
+    'הפעילו את שרת ה-MCP המקומי בלי פרויקט ובלי מפתח. הוא מבקש פרויקט Zero ומכוון אליו את כל שאר הכלים.',
+  'Every project scope':
+    'כל הרשאות הפרויקט',
+  'Give this to a human':
+    'להעביר לבן אדם',
+  'Opens your domains until claimed':
+    'פותח את הדומיינים שלכם עד תביעת הבעלות',
+  'End of the build hour':
+    'סוף שעת הבנייה',
+  'Claim deadline':
+    'המועד האחרון לתביעת בעלות',
+  'Do I need an Appwrite account?':
+    'צריך חשבון Appwrite?',
+  'No. The command gives you the project and its API key straight away. You only sign in when you want to keep it.':
+    'לא. הפקודה נותנת לכם את הפרויקט ואת מפתח ה-API שלו מיד. מתחברים רק כשרוצים לשמור אותו.',
+  'Is it really free?':
+    'זה באמת בחינם?',
+  'Yes. You never enter a card. An unclaimed project runs on its own Zero plan with hourly caps, so nobody pays for it and it stays free for everyone.':
+    'כן. אף פעם לא מזינים כרטיס אשראי. פרויקט שלא נתבעה עליו בעלות רץ על תוכנית Zero משלו עם מגבלות שעתיות, כך שאף אחד לא משלם עליו והוא נשאר חינמי לכולם.',
+  'What happens after 60 minutes?':
+    'מה קורה אחרי 60 דקות?',
+  'The project pauses and API calls return zero_expired, but nothing is deleted. You then have 24 hours to claim it from the link you were given. Unclaimed projects are deleted with their data.':
+    'הפרויקט מושהה וקריאות API מחזירות zero_expired, אבל שום דבר לא נמחק. מאותו רגע יש לכם 24 שעות לתבוע עליו בעלות דרך הקישור שקיבלתם. פרויקטים שלא נתבעה עליהם בעלות נמחקים יחד עם הנתונים שלהם.',
+  'What do I keep when I claim it?':
+    'מה נשמר אחרי תביעת הבעלות?',
+  'All of it. The project keeps its ID, API key, data, files and deployments, and moves into an organization you own. Its site and function domains open to everyone.':
+    'הכול. הפרויקט שומר על המזהה, מפתח ה-API, הנתונים, הקבצים והפריסות שלו, ועובר לארגון שבבעלותכם. הדומיינים של האתרים והפונקציות שלו נפתחים לכולם.',
+  'Who can open my site or function domain?':
+    'מי יכול לפתוח את הדומיין של האתר או הפונקציה שלי?',
+  'Only you, until you claim the project. Open a domain\'s owner link once in your browser, or send the accessToken in the X-Appwrite-Zero-Token header from an agent. npx appwrite zero status lists the owner link for each domain. After you claim it, the domains are public.':
+    'רק אתם, עד שתתבעו בעלות על הפרויקט. פתחו פעם אחת בדפדפן את קישור הבעלים של הדומיין, או שלחו מסוכן את ה-accessToken בכותרת X-Appwrite-Zero-Token. הפקודה npx appwrite zero status מציגה את קישור הבעלים של כל דומיין. אחרי תביעת הבעלות, הדומיינים ציבוריים.',
+  'What is limited before I claim it?':
+    'מה מוגבל לפני תביעת הבעלות?',
+  'One project, 500 function executions and 20 deployments an hour, and no messaging. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
+    'פרויקט אחד, 500 הרצות של פונקציות ו-20 פריסות בשעה, ובלי הודעות. אי אפשר ליצור ממנו פרויקטים או ארגונים נוספים. כל השאר לפי תוכנית Free.',
+  'Can my coding agent use it?':
+    'סוכן הקוד שלי יכול להשתמש בזה?',
+  'Yes, that is what it is for. An agent can run npx appwrite zero, call POST /v1/zero, or start the Appwrite MCP server without credentials. It gets the endpoint, the key and the claim link, and hands the claim link back to you.':
+    'כן, בשביל זה הוא נבנה. סוכן יכול להריץ npx appwrite zero, לקרוא ל-POST /v1/zero, או להפעיל את שרת ה-MCP של Appwrite בלי פרטי גישה. הוא מקבל את ה-Endpoint, את המפתח ואת קישור תביעת הבעלות, ומעביר לכם את קישור תביעת הבעלות.',
+  'What if it says to try again later?':
+    'מה אם מופיעה הודעה לנסות שוב מאוחר יותר?',
+  'Each region holds a fixed number of unclaimed projects, and each network can create five a day. If you hit either limit, try again shortly or sign up to keep building.':
+    'בכל אזור יש מספר קבוע של פרויקטים שלא נתבעה עליהם בעלות, וכל רשת יכולה ליצור חמישה ביום. אם הגעתם לאחת המגבלות, נסו שוב בעוד רגע או הירשמו כדי להמשיך לבנות.',
+  'Start from zero':
+    'התחילו מאפס',
+  'One command, a real backend and an hour on the clock. Keep it if you like what you built.':
+    'פקודה אחת, backend אמיתי ושעה על השעון. אהבתם את מה שבניתם? שמרו אותו.',
+  'Sign up for free':
+    'הירשמו בחינם',
+  'Zero signup. Full backend':
+    'אפס הרשמה. backend מלא',
+  'Signup forms':
+    'טפסי הרשמה',
+  'Keys to paste':
+    'מפתחות להדבקה',
+  'To build with every service':
+    'לבנייה עם כל השירותים',
+  'To claim it after that':
+    'לתביעת בעלות אחרי זה',
+  'The project is real from the first request. When the hour is up it pauses with every row, file and deployment intact, and waits a day for you to claim it.':
+    'הפרויקט אמיתי מהבקשה הראשונה. כשהשעה נגמרת הוא מושהה, וכל שורה, קובץ ופריסה נשארים במקומם. אחר כך הוא מחכה יום שלם שתתבעו עליו בעלות.',
+  'Project lifecycle':
+    'מחזור החיים של הפרויקט',
+  'Each one returns the same project: an endpoint, a project ID, an API key and a claim link.':
+    'כל אחת מהן מחזירה את אותו פרויקט: Endpoint, מזהה פרויקט, מפתח API וקישור תביעת בעלות.',
+  'CLI docs':
+    'מסמכי CLI',
+  'REST API docs':
+    'מסמכי REST API',
+  'Free plan docs':
+    'מסמכי תוכנית Free',
+  'A real Appwrite project for you or your coding agent, with no account and no card. Build for an hour, then claim it to keep everything.':
+    'פרויקט Appwrite אמיתי בשבילכם או בשביל סוכן הקוד שלכם, בלי חשבון ובלי כרטיס אשראי. בנו במשך שעה, ואז תבעו בעלות כדי לשמור על הכול.',
+  'Sign in once, to keep it':
+    'מתחברים פעם אחת, כדי לשמור',
+  'When there is something worth keeping, open the claim link and move the project into an organization you own. Same ID, same key, same data.':
+    'כשיש משהו ששווה לשמור, פתחו את קישור תביעת הבעלות והעבירו את הפרויקט לארגון שבבעלותכם. אותו מזהה, אותו מפתח, אותם נתונים.',
+  'Type what you want built and send it to your agent. It creates the backend itself, builds on it, and hands you two links. One opens what it built, the other keeps it.':
+    'כתבו מה אתם רוצים לבנות ושלחו את זה לסוכן שלכם. הוא יוצר את ה-backend בעצמו, בונה עליו ומעביר לכם שני קישורים. אחד פותח את מה שהוא בנה, והשני שומר אותו.',
+  'What should your agent build?':
+    'מה הסוכן שלכם צריך לבנות?',
+  'Build a guestbook':
+    'תבנה ספר אורחים',
+  'Start a launch waitlist':
+    'תפתח רשימת המתנה להשקה',
+  'Created the signups table':
+    'נוצרה הטבלה signups',
+  'Make a photo board':
+    'תבנה לוח תמונות',
+  'Created the photos bucket':
+    'נוצר הבאקט photos',
+  'Add sign-in to my app':
+    'תוסיף התחברות לאפליקציה שלי',
+  'Turned on email sign-in':
+    'הופעלה התחברות עם אימייל',
+  'Created the tables it needs':
+    'נוצרו הטבלאות הנדרשות',
+  'It is live. Open the owner link once to see it, then claim the project to keep it.':
+    'זה באוויר. פתחו פעם אחת את קישור הבעלים כדי לראות, ואז תבעו בעלות על הפרויקט כדי לשמור עליו.',
+  'Send it to':
+    'שליחה אל',
+  '60 minutes':
+    '60 דקות',
+  'First, build. Every service answers and the API key has every project scope.':
+    'קודם בונים. כל השירותים זמינים ולמפתח ה-API יש את כל הרשאות הפרויקט.',
+  'Then it pauses. API calls return zero_expired and nothing is deleted.':
+    'אחר כך הוא מושהה. קריאות API מחזירות zero_expired ושום דבר לא נמחק.',
+  'After 25 hours, a project nobody claimed is deleted with its data.':
+    'אחרי 25 שעות, פרויקט שאף אחד לא תבע עליו בעלות נמחק יחד עם הנתונים שלו.',
+  'Claim it any time in those 25 hours, even during the build hour. Same project, same ID, same API key, now without an expiry, and its domains open to everyone.':
+    'אפשר לתבוע בעלות בכל רגע במהלך 25 השעות האלה, גם בשעת הבנייה. אותו פרויקט, אותו מזהה, אותו מפתח API, עכשיו בלי תאריך תפוגה, והדומיינים שלו נפתחים לכולם.',
+  'The times are for a project you start now, in your time zone.':
+    'השעות מחושבות לפרויקט שתתחילו עכשיו, באזור הזמן שלכם.',
+  'Before you claim it':
+    'לפני תביעת הבעלות',
+  'Email, OAuth, magic links and anonymous sessions':
+    'אימייל, OAuth, Magic URL וסשנים אנונימיים',
+  'Tables, rows, queries, indexes and permissions':
+    'טבלאות, שורות, שאילתות, אינדקסים והרשאות',
+  'Uploads with image previews and file tokens':
+    'העלאות עם תצוגות מקדימות של תמונות וטוקנים לקבצים',
+  '1 bucket':
+    'באקט אחד',
+  'Code in any runtime':
+    'קוד בכל runtime',
+  '500 runs an hour':
+    '500 הרצות בשעה',
+  'A frontend on a real domain, private until claimed':
+    'frontend על דומיין אמיתי, פרטי עד לתביעת הבעלות',
+  '20 deploys an hour':
+    '20 פריסות בשעה',
+  'Subscriptions over WebSockets':
+    'האזנה לשינויים דרך WebSockets',
+  'Email, SMS and push':
+    'אימייל, SMS והתראות push',
+  'Questions':
+    'שאלות',
+  'Personal projects':
+    'פרויקטים אישיים',
+  'Replay':
+    'הפעלה מחדש',
 }

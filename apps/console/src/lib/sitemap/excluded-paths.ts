@@ -24,6 +24,7 @@ export const SITEMAP_EXCLUDED_EXACT_PATHS = [
   '/llms-full.txt',
   '/docs/llms.txt',
   '/for-agents.md',
+  '/zero.md',
   '/docs.md',
   '/blog.md',
   '/changelog.md',

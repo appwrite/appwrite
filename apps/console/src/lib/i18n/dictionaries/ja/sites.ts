@@ -547,4 +547,12 @@ export const jaSitesDictionary: Record<string, string> = {
     'すぐに appwrite.network の URL が発行されます。その後、独自ドメインを追加できます。',
   "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
     'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
+
+  // Preview domain settings card (sites and functions)
+  'Preview domain': 'プレビュードメイン',
+  'Deployment and branch previews get a generated URL on a shared Appwrite domain.':
+    'デプロイとブランチのプレビューには、共有の Appwrite ドメイン上で自動生成された URL が割り当てられます。',
+  'Current preview domain:': '現在のプレビュードメイン:',
+  'Serve previews from a domain you own so every preview link matches your brand. Custom preview domains are available on Enterprise plans.':
+    '所有するドメインからプレビューを配信すると、すべてのプレビューリンクをブランドに合わせられます。カスタムプレビュードメインは Enterprise プランで利用できます。',
 }

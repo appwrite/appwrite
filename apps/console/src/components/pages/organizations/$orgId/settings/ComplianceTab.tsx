@@ -133,7 +133,9 @@ export function ComplianceTab() {
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30">
             <Button variant="outline" size="sm" className="h-9 text-[13px]" asChild>
-              <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
+              <ContactSalesLink source="compliance" orgId={organizationId}>
+                {t('Contact sales')}
+              </ContactSalesLink>
             </Button>
           </div>
         </div>

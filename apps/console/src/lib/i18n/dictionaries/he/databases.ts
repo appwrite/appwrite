@@ -1337,6 +1337,7 @@ export const heDatabasesDictionary: Record<string, string> = {
   'You don\'t have permission to perform this action.': 'אין לכם הרשאה לבצע פעולה זו.',
   'You have reached the maximum self-serve replica count. Contact sales if you need a custom high availability configuration.': 'הגעתם למספר הרפליקות המרבי בשירות עצמי. פנו למכירות אם אתם זקוקים לתצורת זמינות גבוהה מותאמת אישית.',
   'Your plan only supports the daily preset policy. Upgrade to create custom policies.': 'התוכנית שלכם תומכת רק במדיניות היומית המוגדרת מראש. שדרגו כדי ליצור כללי מדיניות מותאמים אישית.',
+  'Your plan includes the daily backup policy. Custom schedules and retention are available on Enterprise.': 'התוכנית שלכם כוללת את מדיניות הגיבוי היומית. תזמונים ותקופות שמירה מותאמים אישית זמינים בתוכנית Enterprise.',
   // Column drawer (tablesdb)
   'Key is required': 'יש להזין מפתח',
   'Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _':

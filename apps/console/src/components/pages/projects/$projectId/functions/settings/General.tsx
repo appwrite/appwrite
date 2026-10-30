@@ -24,6 +24,8 @@ import {
   type SettingsCardItem,
 } from '@/components/global/shared/settings-search/SettingsCardsList'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { PreviewDomainCard } from '../../shared/PreviewDomainCard'
 import { useT } from '@/lib/i18n/translate'
 
 export function View() {
@@ -31,6 +33,7 @@ export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { isCloud } = useConsoleProfile()
 
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
@@ -288,6 +291,20 @@ export function View() {
       </div>
       ),
     },
+    ...(isCloud
+      ? [
+          {
+            id: 'preview-domain',
+            search: {
+              title: 'Preview domain',
+              description:
+                'Deployment and branch previews get a generated URL on a shared Appwrite domain.',
+              keywords: ['preview', 'domain', 'branch', 'custom', 'enterprise'],
+            },
+            node: <PreviewDomainCard projectId={projectId} />,
+          },
+        ]
+      : []),
     {
       id: 'delete',
       search: {
