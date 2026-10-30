@@ -3372,10 +3372,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create environment': '環境を作成',
   'Rename environment': '環境の名前を変更',
   'Delete environment': '環境を削除',
-  'Environment ID': '環境 ID',
   'Enter environment name': '環境名を入力',
-  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
-    '環境はこのプロジェクトと同じリージョンに、独自のリソースとユーザーを持ちます。使用量はこのプロジェクトに請求されます。',
   'Only the name changes. The environment ID stays the same.':
     '変更されるのは名前だけです。環境 ID はそのままです。',
   'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
@@ -3388,6 +3385,35 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to delete environment': '環境の削除に失敗しました',
   'Too many environments created for this project in the last hour. Try again later.':
     'このプロジェクトで過去 1 時間に作成された環境が多すぎます。しばらくしてからもう一度お試しください。',
+  // Migration resource types copied into an environment
+  'Function variable': 'Function の変数',
+  'Function variables': 'Function の変数',
+  'Messaging providers': 'メッセージングプロバイダー',
+  'OAuth2 provider': 'OAuth2 プロバイダー',
+  'Project variable': 'プロジェクト変数',
+  'SMTP settings': 'SMTP 設定',
+  'Security policies': 'セキュリティポリシー',
+  'Site deployment': 'サイトのデプロイ',
+  'Site deployments': 'サイトのデプロイ',
+  'Site variable': 'サイト変数',
+  'Site variables': 'サイト変数',
+  // Environment switcher order, banner and creation wizard
+  'The copy from the project is under way. Its progress shows in the corner of the environment.':
+    'プロジェクトからのコピーを実行中です。進行状況は環境の隅に表示されます。',
+  'Failed to update environment order': '環境の順序を更新できませんでした',
+  'Project environment': 'プロジェクト環境',
+  'Switch to production': '本番に切り替え',
+  'Changes here do not affect production.':
+    'ここでの変更は本番に影響しません。',
+  'Name the environment and choose where it starts.':
+    '環境に名前を付け、開始方法を選択します。',
+  'Pick what to copy from the project.':
+    'プロジェクトからコピーする内容を選択します。',
+  'Point your app at the new environment.': 'アプリを新しい環境に接続します。',
+  'Open environment': '環境を開く',
+  'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.':
+    '環境はそれ自体が1つのプロジェクトです。このプロジェクト ID を使ってアプリを接続してください。API エンドポイントはプロジェクトで使用しているものと同じです。',
+  'API endpoint': 'API エンドポイント',
   'Send your first message': '最初のメッセージを送信',
   'Reach your users by email, SMS, and push notifications from one place.':
     'メール、SMS、プッシュ通知でユーザーに届けられます。すべて 1 か所で管理できます。',
@@ -3566,7 +3592,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'You need an organization to claim this project. Create one, then open the link again.':
     'このプロジェクトを受け取るには組織が必要です。組織を作成してから、もう一度リンクを開いてください。',
   'Link expires': 'リンクの有効期限',
-  'This transfer link is no longer valid.': 'この転送リンクは無効になりました。',
+  'This transfer link is no longer valid.':
+    'この転送リンクは無効になりました。',
   'The project already belongs to this organization. Select a different one.':
     'プロジェクトはすでにこの組織に属しています。別の組織を選択してください。',
   'will move from': 'は次の組織から移動します:',
@@ -3602,8 +3629,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'What to copy': 'コピーする内容',
   'Pick what to copy, or start from an empty environment.':
     'コピーする内容を選択するか、空の環境から開始してください。',
-  'Environment created. The copy from the project is under way.':
-    '環境を作成しました。プロジェクトからのコピーを実行中です。',
   'Databases, tables, columns and indexes':
     'データベース、テーブル、カラム、インデックス',
   'Rows and documents': '行とドキュメント',

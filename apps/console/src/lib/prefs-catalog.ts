@@ -1,5 +1,5 @@
 /**
- * Central catalog of console preference keys (account + team).
+ * Central catalog of console preference keys (account, team and project).
  *
  * All managed prefs should be registered here so the debug menu can show a
  * structured known/unknown view. Key constants stay in their domain modules;
@@ -15,6 +15,7 @@ import { USER_PREFS_KEY_DIAGRAM_GENERATIONS } from '@/lib/diagram-generator/gene
 import { USER_PREFS_KEY_API_REFERENCE_UI } from '@/lib/docs/references/api-reference-ui-prefs'
 import { INIT_PRESENCE_PREFS_KEY_PREFIX } from '@/lib/init/init-presence-prefs'
 import { INIT_TICKET_PREFS_KEY_PREFIX } from '@/lib/init/ticket-prefs'
+import { PROJECT_PREFS_KEY_ENVIRONMENTS_ORDER } from '@/lib/project-prefs-keys'
 import { USER_PREFS_KEY_REALTIME_DEBUGGER_PREFIX } from '@/lib/realtime/debugger-prefs'
 import { TEAM_PREFS_KEY_PINNED_PROJECT_IDS } from '@/lib/team-prefs-keys'
 import {
@@ -87,7 +88,7 @@ import {
   USER_PREFS_KEY_USAGE_CHART_INTERVAL,
 } from '@/lib/user-prefs-keys'
 
-export type PrefsCatalogScope = 'account' | 'team' | 'both'
+export type PrefsCatalogScope = 'account' | 'team' | 'both' | 'project'
 
 export type PrefsCatalogEntry = {
   /** Stable id for React keys / docs. */
@@ -140,8 +141,7 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     id: 'experimentsSeenAt',
     scope: 'account',
     key: USER_PREFS_KEY_EXPERIMENTS_SEEN_AT,
-    description:
-      'Last time the previews popover was opened (ISO timestamp).',
+    description: 'Last time the previews popover was opened (ISO timestamp).',
     category: 'Account',
   },
   {
@@ -672,6 +672,14 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: TEAM_PREFS_KEY_PINNED_PROJECT_IDS,
     description: 'Pinned project IDs for the organization (JSON string[]).',
     category: 'Organization',
+  },
+  {
+    id: 'environmentsOrder',
+    scope: 'project',
+    key: PROJECT_PREFS_KEY_ENVIRONMENTS_ORDER,
+    description:
+      'Order of the environments in the project switcher, saved on the production project (JSON string[]).',
+    category: 'Project',
   },
 ] as const
 
