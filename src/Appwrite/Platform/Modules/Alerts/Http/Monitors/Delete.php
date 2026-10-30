@@ -13,6 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -73,8 +74,12 @@ class Delete extends Base
         // while a schedule left active after the monitor is gone would fire forever.
         (new Schedules($dbForPlatform))->stop($monitor);
 
-        $alert = $authorization->skip(fn () => $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', '')));
-        if (!$alert->isEmpty() && $alert->getAttribute('status') === State::Firing->value) {
+        // By monitor rather than by `alertId`, which an evaluation that failed to announce its alert never stored.
+        $alert = $authorization->skip(fn () => $dbForPlatform->findOne('monitorAlerts', [
+            Query::equal('monitorInternalId', [(string) $monitor->getSequence()]),
+            Query::equal('status', [State::Firing->value]),
+        ]));
+        if (!$alert->isEmpty()) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), new Document([
                 'status' => State::Resolved->value,
                 'resolvedAt' => DateTime::now(),

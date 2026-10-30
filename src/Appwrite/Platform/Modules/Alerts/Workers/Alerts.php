@@ -19,7 +19,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Id;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
@@ -159,14 +159,20 @@ class Alerts extends Action
         }
 
         // The alert is opened before anything is announced, so the announcement
-        // can link to it. A retry that finds it already open keeps using it.
-        $alert = new Document();
+        // can link to it. A retry, or an overlapping evaluation, opens the same one.
         if ($status === Status::Firing) {
             $alert = $this->open($monitor, $project, $value, $comparator, $dbForPlatform);
             $changes->setAttribute('alertId', $alert->getId());
-        } elseif ($previous === Status::Firing) {
-            $alert = $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', ''));
-            $changes->setAttribute('alertId', '');
+        } else {
+            // Looked up by monitor rather than by `alertId`: an evaluation that opened an
+            // alert but failed to announce it never stored it on the monitor.
+            $alert = $dbForPlatform->findOne('monitorAlerts', [
+                Query::equal('monitorInternalId', [(string) $monitor->getSequence()]),
+                Query::equal('status', [State::Firing->value]),
+            ]);
+            if ($previous === Status::Firing) {
+                $changes->setAttribute('alertId', '');
+            }
         }
 
         // Publish before the new state is stored: if publishing fails, the retry
@@ -184,52 +190,50 @@ class Alerts extends Action
     }
 
     /**
-     * The monitor's open alert, created when it starts firing. The monitor
-     * points at it once its state is stored; until then, a retry finds the
-     * alert it opened by its monitor and status. It belongs to the organization
-     * that owns the project when it opens.
+     * The monitor's open alert, created when it starts firing. Its ID is derived
+     * from the monitor's state it opens from, so evaluations that overlap or retry
+     * from that state open the same alert: the first creates it, the rest reuse it.
+     * It belongs to the organization that owns the project when it opens.
      */
     protected function open(Document $monitor, Document $project, float $value, Comparator $comparator, Database $dbForPlatform): Document
     {
         $alert = $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', ''));
-        if ($alert->isEmpty()) {
-            $alert = $dbForPlatform->findOne('monitorAlerts', [
-                Query::equal('monitorInternalId', [(string) $monitor->getSequence()]),
-                Query::equal('status', [State::Firing->value]),
-            ]);
-        }
         if (!$alert->isEmpty() && $alert->getAttribute('status') === State::Firing->value) {
             return $alert;
         }
 
-        $alertId = Id::unique();
+        $alertId = \md5($monitor->getSequence() . ':' . ($monitor->getAttribute('evaluatedAt') ?? $monitor->getCreatedAt()));
 
-        return $dbForPlatform->createDocument('monitorAlerts', new Document([
-            '$id' => $alertId,
-            '$permissions' => [],
-            'name' => (string) $monitor->getAttribute('name'),
-            'monitorId' => $monitor->getId(),
-            'monitorInternalId' => (string) $monitor->getSequence(),
-            'teamId' => (string) $project->getAttribute('teamId', ''),
-            'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
-            'projectId' => (string) $monitor->getAttribute('projectId', ''),
-            // An ID column, which takes no empty string for a monitor without a project.
-            'projectInternalId' => $monitor->getAttribute('projectInternalId') ?: null,
-            'region' => (string) $monitor->getAttribute('region', ''),
-            'status' => State::Firing->value,
-            'rules' => $monitor->getAttribute('rules', []),
-            'type' => (string) $monitor->getAttribute('type'),
-            'resourceType' => (string) $monitor->getAttribute('resourceType'),
-            'resourceId' => (string) $monitor->getAttribute('resourceId'),
-            'metric' => (string) $monitor->getAttribute('metric'),
-            'comparator' => $comparator->value,
-            'threshold' => (float) $monitor->getAttribute('threshold'),
-            'value' => $value,
-            'peak' => $value,
-            'channels' => $monitor->getAttribute('channels', []),
-            'notifications' => 0,
-            'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
-        ]));
+        try {
+            return $dbForPlatform->createDocument('monitorAlerts', new Document([
+                '$id' => $alertId,
+                '$permissions' => [],
+                'name' => (string) $monitor->getAttribute('name'),
+                'monitorId' => $monitor->getId(),
+                'monitorInternalId' => (string) $monitor->getSequence(),
+                'teamId' => (string) $project->getAttribute('teamId', ''),
+                'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
+                'projectId' => (string) $monitor->getAttribute('projectId', ''),
+                // An ID column, which takes no empty string for a monitor without a project.
+                'projectInternalId' => $monitor->getAttribute('projectInternalId') ?: null,
+                'region' => (string) $monitor->getAttribute('region', ''),
+                'status' => State::Firing->value,
+                'rules' => $monitor->getAttribute('rules', []),
+                'type' => (string) $monitor->getAttribute('type'),
+                'resourceType' => (string) $monitor->getAttribute('resourceType'),
+                'resourceId' => (string) $monitor->getAttribute('resourceId'),
+                'metric' => (string) $monitor->getAttribute('metric'),
+                'comparator' => $comparator->value,
+                'threshold' => (float) $monitor->getAttribute('threshold'),
+                'value' => $value,
+                'peak' => $value,
+                'channels' => $monitor->getAttribute('channels', []),
+                'notifications' => 0,
+                'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
+            ]));
+        } catch (Duplicate) {
+            return $dbForPlatform->getDocument('monitorAlerts', $alertId);
+        }
     }
 
     /**
