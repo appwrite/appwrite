@@ -39,6 +39,7 @@ import {
   ruleFormError,
   ruleFormFromMonitor,
   monitorInputFromForm,
+  roleLabel,
   type RuleForm,
 } from './RuleFields'
 
@@ -402,7 +403,11 @@ export function MonitorDrawer({
                   {t('Notifies')}
                 </dt>
                 <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
-                  {t('Organization owners')}
+                  {monitor.notify.length === 0
+                    ? t('Nobody, only its events')
+                    : monitor.notify
+                        .map((role) => t(roleLabel(role)))
+                        .join(', ')}
                   {monitor.cooldown > 0 && cooldown && (
                     <span className="text-muted-foreground">
                       {' · '}

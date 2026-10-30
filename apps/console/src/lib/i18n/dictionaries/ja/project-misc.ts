@@ -3648,7 +3648,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Less than': 'より小さい',
   'Less than or equal': '以下',
   Metric: 'メトリクス',
-  'No cooldown': 'クールダウンなし',
   OK: '正常',
   'Outbound bandwidth': '送信帯域幅',
   'Read IOPS': '読み取り IOPS',
@@ -3729,7 +3728,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Would have fired {count}× in the {range}':
     '{range}に {count} 回発火したはずです',
   'History range': '履歴の範囲',
-  'Organization owners': '組織のオーナー',
   'Name, cooldown': '名前、クールダウン',
   'Firing since': '発火開始',
   Checked: 'チェック',
@@ -3794,9 +3792,37 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '{count} notifications sent, one per cooldown':
     '{count} 件の通知を送信 (クールダウンごとに 1 件)',
   'Its alerts stay in the history.': 'アラートは履歴に残ります。',
-  'Organization owners get an email and a console notification when the monitor fires and again when it resolves. Project webhooks and functions can also listen to its alert events.':
-    'モニターが発火したときと解決したときに、組織のオーナーにメールとコンソール通知が届きます。プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
-  "Alerts reach the organization's owners by email and in the console. Every alert is also a project event your own systems can receive.":
-    'アラートは組織のオーナーにメールとコンソールで届きます。各アラートはプロジェクトのイベントでもあり、独自のシステムで受け取れます。',
   'Send alerts to a webhook': 'アラートを Webhook に送信',
+  Owners: 'オーナー',
+  Editors: '編集者',
+  Analysts: 'アナリスト',
+  'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.':
+    'これらのロールのメンバーには、モニターが発火したときと解決したときにメールとコンソール通知が届きます。',
+  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.':
+    '誰にもメールや通知は届きません。アラートはプロジェクトの Webhook や Functions 向けのイベントを引き続き発生させます。',
+  'Project webhooks and functions can also listen to its alert events.':
+    'プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
+  'Nobody, only its events': 'なし（イベントのみ）',
+  'Notifies nobody': '通知先なし',
+  'Notifies nobody. Its alerts only fire their events.':
+    '通知先はありません。アラートはイベントのみを発生させます。',
+  'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
+    '各モニターは指定した組織ロールにメールと通知を送ります。各アラートはプロジェクトのイベントでもあり、独自のシステムで受け取れます。',
+  'This link is not valid': 'このリンクは無効です',
+  'Alert emails stopped': 'アラートメールを停止しました',
+  'Stop alert emails?': 'アラートメールを停止しますか？',
+  'Open the latest link from an alert email.':
+    'アラートメールの最新のリンクを開いてください。',
+  'This link is not valid or has expired.':
+    'このリンクは無効か、期限切れです。',
+  'Resume emails': 'メールを再開',
+  'Stop emails': 'メールを停止',
+  'You will no longer get emails for this monitor. Console notifications continue.':
+    'このモニターのメールは届かなくなります。コンソール通知は引き続き届きます。',
+  'Stop getting emails for this monitor? Console notifications continue.':
+    'このモニターのメールを停止しますか？コンソール通知は引き続き届きます。',
+  'You will no longer get alert emails of this kind. Console notifications continue.':
+    'この種類のアラートメールは届かなくなります。コンソール通知は引き続き届きます。',
+  'Stop getting every alert email of this kind? Console notifications continue.':
+    'この種類のアラートメールをすべて停止しますか？コンソール通知は引き続き届きます。',
 }

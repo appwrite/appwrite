@@ -11,6 +11,7 @@ import type {
   AlertStatus as Status,
   Models,
   MonitorResourceType,
+  MonitorNotifyRole,
   MonitorStatus as State,
   MonitorType as Kind,
 } from '@appwrite.io/console'
@@ -75,5 +76,7 @@ export type MonitorInput = {
   /** Ignored for gauge metrics. */
   window?: number
   cooldown?: number
+  /** Organization roles emailed and notified in the console; none relies on the alert events alone. */
+  notify?: MonitorNotifyRole[]
   enabled?: boolean
 }

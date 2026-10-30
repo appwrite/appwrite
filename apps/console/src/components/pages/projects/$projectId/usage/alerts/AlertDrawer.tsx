@@ -129,11 +129,7 @@ export function AlertDrawer({
                   )
                 }
               />
-              <Stat
-                label={t('Notifications')}
-                value={alert.notifications}
-                note={t('Organization owners')}
-              />
+              <Stat label={t('Notifications')} value={alert.notifications} />
             </div>
 
             <dl className="grid grid-cols-[120px_minmax(0,1fr)] gap-y-2 text-[13px]">

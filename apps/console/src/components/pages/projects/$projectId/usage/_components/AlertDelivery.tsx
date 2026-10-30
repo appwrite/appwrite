@@ -13,7 +13,7 @@ export const ALERT_EVENTS = [
 ]
 
 /**
- * Where alerts go besides the organization's owners, with a quick action that
+ * Where alerts go besides the members a monitor notifies, with a quick action that
  * opens a new project webhook already subscribed to the alert events.
  */
 export function AlertDelivery({ projectId }: { projectId: string }) {
@@ -28,7 +28,7 @@ export function AlertDelivery({ projectId }: { projectId: string }) {
     <div className="mt-6 flex flex-col gap-3 rounded-lg border border-border bg-card/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-[13px] text-muted-foreground">
         {t(
-          "Alerts reach the organization's owners by email and in the console. Every alert is also a project event your own systems can receive.",
+          'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.',
         )}
       </p>
       <Button

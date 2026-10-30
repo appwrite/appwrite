@@ -378,10 +378,8 @@ export const WINDOWS: { value: number; label: string }[] = [
   { value: 2592000, label: '30 days' },
 ]
 
-export const COOLDOWNS: { value: number; label: string }[] = [
-  { value: 0, label: 'No cooldown' },
-  ...WINDOWS,
-]
+/** The API takes at least five minutes between two notifications of a firing monitor. */
+export const COOLDOWNS: { value: number; label: string }[] = WINDOWS
 
 /**
  * How many times over an upper threshold a value is ("12×"), when that says

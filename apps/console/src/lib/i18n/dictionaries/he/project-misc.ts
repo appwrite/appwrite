@@ -3578,7 +3578,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Less than': 'קטן מ-',
   'Less than or equal': 'קטן או שווה ל-',
   Metric: 'מדד',
-  'No cooldown': 'ללא המתנה',
   OK: 'תקין',
   'Outbound bandwidth': 'תעבורה יוצאת',
   'Read IOPS': 'IOPS קריאה',
@@ -3654,7 +3653,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Would have fired {count}× in the {range}':
     'היה מופעל {count} פעמים ב{range}',
   'History range': 'טווח היסטוריה',
-  'Organization owners': 'בעלי הארגון',
   'Name, cooldown': 'שם, השהיה',
   'Firing since': 'מופעל מאז',
   Checked: 'נבדק',
@@ -3719,9 +3717,36 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '{count} notifications sent, one per cooldown':
     'נשלחו {count} התראות, אחת לכל תקופת המתנה',
   'Its alerts stay in the history.': 'ההתראות שלו נשארות בהיסטוריה.',
-  'Organization owners get an email and a console notification when the monitor fires and again when it resolves. Project webhooks and functions can also listen to its alert events.':
-    'בעלי הארגון מקבלים אימייל והתראה ב-Console כשהמוניטור מופעל, ושוב כשהוא נפתר. גם Webhooks ופונקציות של הפרויקט יכולים להאזין לאירועי ההתראות שלו.',
-  "Alerts reach the organization's owners by email and in the console. Every alert is also a project event your own systems can receive.":
-    'ההתראות מגיעות לבעלי הארגון באימייל וב-Console. כל התראה היא גם אירוע של הפרויקט שהמערכות שלכם יכולות לקבל.',
   'Send alerts to a webhook': 'שליחת התראות ל-Webhook',
+  Owners: 'בעלים',
+  Editors: 'עורכים',
+  Analysts: 'אנליסטים',
+  'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.':
+    'חברים בתפקידים האלה מקבלים אימייל והתראה ב-Console כשהמוניטור מופעל, ושוב כשהוא נפתר.',
+  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.':
+    'אף אחד לא מקבל אימייל או התראה. ההתראות עדיין מפעילות את האירועים שלהן עבור Webhooks ופונקציות של הפרויקט.',
+  'Project webhooks and functions can also listen to its alert events.':
+    'גם Webhooks ופונקציות של הפרויקט יכולים להאזין לאירועי ההתראות שלו.',
+  'Nobody, only its events': 'אף אחד, רק האירועים שלו',
+  'Notifies nobody': 'לא מתריע לאף אחד',
+  'Notifies nobody. Its alerts only fire their events.':
+    'לא מתריע לאף אחד. ההתראות שלו רק מפעילות את האירועים שלהן.',
+  'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
+    'כל מוניטור שולח אימייל והתראה לתפקידים בארגון שהוא מגדיר. כל התראה היא גם אירוע של הפרויקט שהמערכות שלכם יכולות לקבל.',
+  'This link is not valid': 'הקישור הזה אינו תקף',
+  'Alert emails stopped': 'אימיילי ההתראות הופסקו',
+  'Stop alert emails?': 'להפסיק את אימיילי ההתראות?',
+  'Open the latest link from an alert email.':
+    'פתחו את הקישור העדכני מאימייל של התראה.',
+  'This link is not valid or has expired.': 'הקישור הזה אינו תקף או שפג תוקפו.',
+  'Resume emails': 'חידוש האימיילים',
+  'Stop emails': 'הפסקת האימיילים',
+  'You will no longer get emails for this monitor. Console notifications continue.':
+    'לא תקבלו עוד אימיילים עבור המוניטור הזה. ההתראות ב-Console ממשיכות.',
+  'Stop getting emails for this monitor? Console notifications continue.':
+    'להפסיק לקבל אימיילים עבור המוניטור הזה? ההתראות ב-Console ממשיכות.',
+  'You will no longer get alert emails of this kind. Console notifications continue.':
+    'לא תקבלו עוד אימיילי התראה מהסוג הזה. ההתראות ב-Console ממשיכות.',
+  'Stop getting every alert email of this kind? Console notifications continue.':
+    'להפסיק לקבל את כל אימיילי ההתראה מהסוג הזה? ההתראות ב-Console ממשיכות.',
 }

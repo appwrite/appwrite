@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
+import { MonitorNotifyRole } from '@appwrite.io/console'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -59,6 +60,7 @@ export type RuleForm = {
   byteUnit: ByteUnit
   window: number
   cooldown: number
+  notify: MonitorNotifyRole[]
 }
 
 const RESOURCE_PICKER_LIMIT = 100
@@ -74,6 +76,7 @@ export function emptyRuleForm(): RuleForm {
     byteUnit: 'GB',
     window: 3600,
     cooldown: 3600,
+    notify: [MonitorNotifyRole.Owner],
   }
 }
 
@@ -94,7 +97,20 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     byteUnit: split ? split.unit : 'GB',
     window: rule.window,
     cooldown: rule.cooldown,
+    notify: rule.notify as MonitorNotifyRole[],
   }
+}
+
+/** How the form and the list name a role a monitor notifies. */
+export function roleLabel(role: string): string {
+  const labels: Record<string, string> = {
+    owner: 'Owners',
+    developer: 'Developers',
+    editor: 'Editors',
+    analyst: 'Analysts',
+    billing: 'Billing',
+  }
+  return labels[role] ?? role
 }
 
 /** Name a monitor gets when none is typed, e.g. `Outbound bandwidth > 10 GB`. */
@@ -150,6 +166,7 @@ export function monitorInputFromForm(
     // Gauges compare their latest reading, so the API ignores a window for them.
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
+    notify: form.notify,
   }
 }
 
@@ -573,9 +590,60 @@ export function RuleFields({
         <SectionHeading
           title={t('Notify')}
           description={t(
-            'Organization owners get an email and a console notification when the monitor fires and again when it resolves. Project webhooks and functions can also listen to its alert events.',
+            'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.',
           )}
         />
+        <div className="flex flex-wrap gap-2">
+          {Object.values(MonitorNotifyRole).map((role) => {
+            const selected = form.notify.includes(role)
+            return (
+              <button
+                key={role}
+                type="button"
+                role="checkbox"
+                aria-checked={selected}
+                disabled={disabled}
+                onClick={() =>
+                  onChange({
+                    notify: selected
+                      ? form.notify.filter((entry) => entry !== role)
+                      : [...form.notify, role],
+                  })
+                }
+                className={cn(
+                  'inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                  selected
+                    ? 'border-foreground text-foreground ring-1 ring-inset ring-foreground'
+                    : 'border-border text-muted-foreground hover:bg-accent/40',
+                )}
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    'flex h-3.5 w-3.5 items-center justify-center rounded-[4px] border-[1.5px]',
+                    selected
+                      ? 'border-foreground bg-foreground text-background'
+                      : 'border-muted-foreground/60',
+                  )}
+                >
+                  {selected && (
+                    <Check className="h-2.5 w-2.5" strokeWidth={3} />
+                  )}
+                </span>
+                {t(roleLabel(role))}
+              </button>
+            )
+          })}
+        </div>
+        <p className="mt-2 text-[12px] text-muted-foreground">
+          {form.notify.length === 0
+            ? t(
+                'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.',
+              )
+            : t(
+                'Project webhooks and functions can also listen to its alert events.',
+              )}
+        </p>
       </section>
 
       <section className="border-t border-border pt-4">

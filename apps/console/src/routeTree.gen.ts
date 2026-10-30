@@ -94,6 +94,7 @@ import { Route as ApiReferencesApiServiceRouteImport } from './routes/_api/refer
 import { Route as ApiResendApiKeysRouteImport } from './routes/_api/resend/api-keys'
 import { Route as ApiResendDomainsRouteImport } from './routes/_api/resend/domains'
 import { Route as ApiSitemapNewsDotxmlRouteImport } from './routes/_api/sitemap/news[.]xml'
+import { Route as AuthAlertsUnsubscribeRouteImport } from './routes/_auth/alerts.unsubscribe'
 import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-url'
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
@@ -902,6 +903,11 @@ const ApiSitemapNewsDotxmlRoute = ApiSitemapNewsDotxmlRouteImport.update({
   id: '/_api/sitemap/news.xml',
   path: '/sitemap/news.xml',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthAlertsUnsubscribeRoute = AuthAlertsUnsubscribeRouteImport.update({
+  id: '/alerts/unsubscribe',
+  path: '/alerts/unsubscribe',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthAuthMagicUrlRoute = AuthAuthMagicUrlRouteImport.update({
   id: '/auth/magic-url',
@@ -3476,6 +3482,7 @@ export interface FileRoutesByFullPath {
   '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
+  '/alerts/unsubscribe': typeof AuthAlertsUnsubscribeRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -3938,6 +3945,7 @@ export interface FileRoutesByTo {
   '/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/resend/domains': typeof ApiResendDomainsRoute
   '/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
+  '/alerts/unsubscribe': typeof AuthAlertsUnsubscribeRoute
   '/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -4360,6 +4368,7 @@ export interface FileRoutesById {
   '/_api/resend/api-keys': typeof ApiResendApiKeysRouteWithChildren
   '/_api/resend/domains': typeof ApiResendDomainsRoute
   '/_api/sitemap/news.xml': typeof ApiSitemapNewsDotxmlRoute
+  '/_auth/alerts/unsubscribe': typeof AuthAlertsUnsubscribeRoute
   '/_auth/auth/magic-url': typeof AuthAuthMagicUrlRoute
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
@@ -4828,6 +4837,7 @@ export interface FileRouteTypes {
     | '/resend/api-keys'
     | '/resend/domains'
     | '/sitemap/news.xml'
+    | '/alerts/unsubscribe'
     | '/auth/magic-url'
     | '/education/join'
     | '/oauth2/consent'
@@ -5290,6 +5300,7 @@ export interface FileRouteTypes {
     | '/resend/api-keys'
     | '/resend/domains'
     | '/sitemap/news.xml'
+    | '/alerts/unsubscribe'
     | '/auth/magic-url'
     | '/education/join'
     | '/oauth2/consent'
@@ -5711,6 +5722,7 @@ export interface FileRouteTypes {
     | '/_api/resend/api-keys'
     | '/_api/resend/domains'
     | '/_api/sitemap/news.xml'
+    | '/_auth/alerts/unsubscribe'
     | '/_auth/auth/magic-url'
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
@@ -6739,6 +6751,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sitemap/news.xml'
       preLoaderRoute: typeof ApiSitemapNewsDotxmlRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/alerts/unsubscribe': {
+      id: '/_auth/alerts/unsubscribe'
+      path: '/alerts/unsubscribe'
+      fullPath: '/alerts/unsubscribe'
+      preLoaderRoute: typeof AuthAlertsUnsubscribeRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/auth/magic-url': {
       id: '/_auth/auth/magic-url'
@@ -9432,6 +9451,7 @@ interface AuthRouteChildren {
   AuthSignOutRoute: typeof AuthSignOutRoute
   AuthSignUpRoute: typeof AuthSignUpRoute
   AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
+  AuthAlertsUnsubscribeRoute: typeof AuthAlertsUnsubscribeRoute
   AuthAuthMagicUrlRoute: typeof AuthAuthMagicUrlRoute
   AuthEducationJoinRoute: typeof AuthEducationJoinRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
@@ -9450,6 +9470,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthSignOutRoute: AuthSignOutRoute,
   AuthSignUpRoute: AuthSignUpRoute,
   AuthVerifyEmailRoute: AuthVerifyEmailRoute,
+  AuthAlertsUnsubscribeRoute: AuthAlertsUnsubscribeRoute,
   AuthAuthMagicUrlRoute: AuthAuthMagicUrlRoute,
   AuthEducationJoinRoute: AuthEducationJoinRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
