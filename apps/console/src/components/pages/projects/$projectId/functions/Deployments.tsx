@@ -2165,10 +2165,7 @@ export function View() {
               </RadioGroup>
               {hasUnavailableSpecifications(specifications) && (
                 <div className="mt-3">
-                  <SpecificationsUpgradeNote
-                    orgId={project?.teamId}
-                    showContactSales
-                  />
+                  <SpecificationsUpgradeNote orgId={project?.teamId} />
                 </div>
               )}
             </div>

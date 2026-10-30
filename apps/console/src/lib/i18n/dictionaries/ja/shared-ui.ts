@@ -26,7 +26,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'already exists': 'は既に存在します',
   'is longer than 8192 allowed characters':
     'は許可される8192文字を超えています',
-  'contact sales': '営業にお問い合わせ',
   'to include more repos.': 'して、さらに多くのリポジトリを含めてください。',
   'to unlock additional specifications.':
     'して、追加の仕様を有効にしてください。',
@@ -256,6 +255,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'My filters': '自分のフィルター',
   'Name, email, phone, or user ID…': '名前、メール、電話、またはユーザー ID…',
   'Need more resources?': 'リソースが足りませんか?',
+  'Higher CPU and memory are available on Enterprise.':
+    'Enterprise プランでは、より多くの CPU とメモリをご利用いただけます。',
   'Next image': '次の画像',
   'No API key scopes are available from the server.':
     'サーバーから利用可能な API キースコープがありません。',

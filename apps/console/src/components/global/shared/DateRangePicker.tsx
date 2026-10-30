@@ -82,6 +82,8 @@ interface DateRangePickerProps {
    * instants (usage, activity, analytics). Off for a date-only range.
    */
   showTime?: boolean
+  /** Shown above the actions while `retentionHours` limits the range. */
+  retentionNote?: React.ReactNode
 }
 
 export function DateRangePicker({
@@ -94,6 +96,7 @@ export function DateRangePicker({
   presetGroups = USAGE_DATE_RANGE_PRESET_GROUPS,
   presetContext,
   showTime = true,
+  retentionNote,
 }: DateRangePickerProps) {
   const t = useT()
   const since = presetContext?.since
@@ -338,6 +341,14 @@ export function DateRangePicker({
     />
   ) : null
 
+  // `w-0 min-w-full` keeps the note from widening the auto-sized popover.
+  const retentionRow =
+    retentionLimited && retentionNote ? (
+      <div className="w-0 min-w-full shrink-0 border-t border-border px-3.5 py-2.5 text-[12px] leading-relaxed text-muted-foreground">
+        {retentionNote}
+      </div>
+    ) : null
+
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -434,6 +445,7 @@ export function DateRangePicker({
                 />
               </div>
               {timeRow}
+              {retentionRow}
               <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border p-3">
                 <Button
                   variant="ghost"
@@ -534,6 +546,7 @@ export function DateRangePicker({
             </div>
 
             {timeRow}
+            {retentionRow}
 
             <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border bg-muted/20 px-3.5 py-2.5">
               <Button

@@ -88,7 +88,12 @@ import {
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { BackupsEmptyState } from './_components/BackupsEmptyState'
-import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import {
+  isSelfServiceProPlan,
+  resolveOrganizationPlanDisplayLabel,
+} from '@/lib/utils/plan-filter'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
@@ -166,6 +171,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
     planName: organizationPlan?.name ?? null,
     planId: organizationPlan?.$id,
   })
+  // Custom backup policies are Enterprise only, so Upgrade can't help Pro.
+  const showContactSales = isSelfServiceProPlan(organizationPlan)
 
   // Fetch policies and archives - only if backups are enabled
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
@@ -657,6 +664,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           resourceName="backup policies"
           orgId={project?.teamId}
           fullWidth
+          salesSource={showContactSales ? 'backups' : undefined}
         />
       ) : null}
       <div
@@ -1147,6 +1155,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
         databaseId={databaseId}
         existingPoliciesCount={policies.length}
         backupPoliciesLimit={backupPoliciesLimit}
+        orgId={project?.teamId}
+        showContactSales={showContactSales}
       />
 
       {/* Create Manual Backup Dialog */}
@@ -1221,6 +1231,9 @@ interface CreatePolicyDialogProps {
   databaseId: string
   existingPoliciesCount: number
   backupPoliciesLimit: number
+  orgId: string | undefined
+  /** Point plans without custom policies at sales instead of Upgrade. */
+  showContactSales: boolean
 }
 
 function CreatePolicyDialog({
@@ -1230,7 +1243,9 @@ function CreatePolicyDialog({
   isLoading,
   databaseId,
   existingPoliciesCount,
-  backupPoliciesLimit}: CreatePolicyDialogProps) {
+  backupPoliciesLimit,
+  orgId,
+  showContactSales}: CreatePolicyDialogProps) {
   const t = useT()
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
   const [customPolicies, setCustomPolicies] = useState<
@@ -1359,9 +1374,25 @@ function CreatePolicyDialog({
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Create backup policy')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {supportsCustomPolicies
-              ? t('Choose preset policies or create custom backup schedules.')
-              : t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')}
+            {supportsCustomPolicies ? (
+              t('Choose preset policies or create custom backup schedules.')
+            ) : showContactSales ? (
+              <>
+                <EnterpriseBadge />
+                {t(
+                  'Your plan includes the daily backup policy. Custom schedules and retention are available on Enterprise.',
+                )}{' '}
+                <ContactSalesLink
+                  source="backups"
+                  orgId={orgId}
+                  className="font-medium text-foreground underline hover:no-underline"
+                >
+                  {t('Contact sales')}
+                </ContactSalesLink>
+              </>
+            ) : (
+              t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
