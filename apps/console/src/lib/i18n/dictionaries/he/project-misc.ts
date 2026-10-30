@@ -3506,8 +3506,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Transfer link': 'קישור ההעברה',
   'Expires in': 'תוקף הקישור',
   'Recipient organization ID (optional)': 'מזהה הארגון הנמען (אופציונלי)',
-  'Leave empty to let any organization claim the project.':
-    'השאירו ריק כדי לאפשר לכל ארגון לקבל את הפרויקט.',
+  'Recommended. Only this organization can claim the project, so the link is useless to anyone else who gets it. Leave empty to let any organization with the link claim it.':
+    'מומלץ. רק הארגון הזה יוכל לקבל את הפרויקט, כך שהקישור לא יועיל לאף אחד אחר שיגיע אליו. השאירו ריק כדי לאפשר לכל ארגון שבידיו הקישור לקבל את הפרויקט.',
   'Failed to create transfer link': 'יצירת קישור ההעברה נכשלה',
   'Delete transfer link': 'מחיקת קישור העברה',
   'The link will stop working and the project can no longer be claimed with it.':
@@ -3534,6 +3534,47 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'רק ארגון זה יכול לקבל את הקישור הזה.',
   'This transfer is reserved for an organization you are not part of:':
     'ההעברה הזו שמורה לארגון שאינכם חברים בו:',
+  "Resolve this organization's billing issues before transferring.":
+    'פתרו את בעיות החיוב של הארגון הזה לפני ההעברה.',
+  'This organization has a failed or unauthorized payment. Resolve its billing issues before transferring this project.':
+    'לארגון הזה יש תשלום שנכשל או שלא אושר. פתרו את בעיות החיוב שלו לפני העברת הפרויקט.',
+  'Go to billing': 'מעבר לחיוב',
+  'Checking...': 'בודקים...',
+  'Billing issue': 'בעיית חיוב',
+  'Project limit reached': 'הגעתם למגבלת הפרויקטים',
+  "You don't have permission to add projects to this organization.":
+    'אין לכם הרשאה להוסיף פרויקטים לארגון הזה.',
+  'This organization has billing issues. Resolve them before it can receive projects.':
+    'לארגון הזה יש בעיות חיוב. פתרו אותן כדי שהוא יוכל לקבל פרויקטים.',
+  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.":
+    'הארגון הזה הגיע למגבלת הפרויקטים של התוכנית שלו. שדרגו את התוכנית כדי לקבל את הפרויקט.',
+  "Change which organization owns this project. Its resources and data move with it, and the new organization's plan and members apply from then on.":
+    'שנו את הארגון שהפרויקט שייך אליו. המשאבים והנתונים עוברים יחד עם הפרויקט, ומאותו רגע חלים עליו התוכנית והחברים של הארגון החדש.',
+  'Move to another organization': 'העברה לארגון אחר',
+  'Move this project to another organization you are a member of. The move happens right away.':
+    'העבירו את הפרויקט לארגון אחר שאתם חברים בו. ההעברה מתבצעת מיד.',
+  'Destination organization': 'ארגון יעד',
+  'Move project': 'העברת הפרויקט',
+  'Failed to move project': 'העברת הפרויקט נכשלה',
+  'You are not a member of any other organization.': 'אינכם חברים בארגון אחר.',
+  'Select an organization to move this project to.':
+    'בחרו ארגון שאליו יועבר הפרויקט.',
+  'Hand off with a transfer link': 'מסירה באמצעות קישור העברה',
+  "Share a single-use link with someone in another organization. The project moves when they claim it, and you don't need to be a member of their organization.":
+    'שתפו קישור חד-פעמי עם מישהו בארגון אחר. הפרויקט יועבר כשיקבלו אותו, ואין צורך שתהיו חברים בארגון שלהם.',
+  'Pending transfer links': 'קישורי העברה ממתינים',
+  'Links that have not been claimed yet. Expired links can no longer be claimed. Delete a link to stop it from working sooner.':
+    'קישורים שעדיין לא מומשו. לא ניתן לממש קישורים שפג תוקפם. מחקו קישור כדי שיפסיק לפעול מוקדם יותר.',
+  'The project already belongs to this organization.':
+    'הפרויקט כבר שייך לארגון זה.',
+  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'רק חברי ארגון שהתפקיד שלהם מאפשר לנהל פרויקטים יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'No permission': 'אין הרשאה',
+  "You don't have permission to transfer projects in this organization.":
+    'אין לכם הרשאה להעביר פרויקטים בארגון זה.',
+  'Transfer links': 'קישורי העברה',
+  'Active transfer links for this project stop working after the move.':
+    'קישורי ההעברה הפעילים של הפרויקט יפסיקו לפעול אחרי ההעברה.',
   'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
     'בחרו כמה זמן לשמור פריסות לא פעילות. פריסות פעילות ופריסות שמקושרות לדומיין מותאם אישית נשמרות תמיד.',
   'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':

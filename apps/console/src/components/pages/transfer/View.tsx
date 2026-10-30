@@ -9,7 +9,11 @@ import {
 import { FolderInput, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useOrganizations } from '@/lib/react-query/hooks'
+import {
+  TRANSFER_DESTINATION_BLOCK_LABELS,
+  useOrganizations,
+  useTransferDestinations,
+} from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
@@ -48,12 +52,18 @@ export function ClaimProjectTransfer({
   const [teamId, setTeamId] = useState('')
   const hasLink = transferId !== '' && secret !== ''
   const hasOrganizations = organizationsLoading || organizations.length > 0
+  const destinations = useTransferDestinations(organizations)
+  const selected = destinations.find(
+    (check) => check.organization.$id === teamId,
+  )
 
+  // Start on the first organization that can receive the project, once that is known
   useEffect(() => {
-    if (teamId === '' && organizations.length > 0) {
-      setTeamId(organizations[0].$id)
-    }
-  }, [organizations, teamId])
+    if (teamId !== '' || destinations.length === 0) return
+    if (destinations.some((check) => check.isChecking)) return
+    const eligible = destinations.find((check) => check.block === null)
+    setTeamId((eligible ?? destinations[0]).organization.$id)
+  }, [destinations, teamId])
 
   // The preview runs as the selected organization, so it reports whether that organization may claim it
   const preview = useQuery({
@@ -105,6 +115,8 @@ export function ClaimProjectTransfer({
     preview.isSuccess &&
     !isAlreadyOwner &&
     (recipientId === '' || teamId === recipientId) &&
+    selected?.block === null &&
+    !selected.isChecking &&
     !claimMutation.isPending
 
   const problem = preview.isError
@@ -116,7 +128,17 @@ export function ClaimProjectTransfer({
       ? t(
           'The project already belongs to this organization. Select a different one.',
         )
-      : null
+      : selected?.block === 'permission'
+        ? t("You don't have permission to add projects to this organization.")
+        : selected?.block === 'billing'
+          ? t(
+              'This organization has billing issues. Resolve them before it can receive projects.',
+            )
+          : selected?.block === 'projectLimit'
+            ? t(
+                "This organization has reached its plan's project limit. Upgrade its plan to claim this project.",
+              )
+            : null
 
   const switchAccount = useAuthAccountSwitch()
   const goToDashboard = () => navigate({ to: '/' })
@@ -251,12 +273,20 @@ export function ClaimProjectTransfer({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {organizations.map((organization) => (
+                    {destinations.map(({ organization, block, isChecking }) => (
                       <SelectItem
                         key={organization.$id}
                         value={organization.$id}
+                        disabled={isChecking || block !== null}
                       >
-                        {organization.name}
+                        <span className="truncate">{organization.name}</span>
+                        {(isChecking || block !== null) && (
+                          <span className="ms-2 text-[12px] text-muted-foreground">
+                            {isChecking
+                              ? t('Checking...')
+                              : t(TRANSFER_DESTINATION_BLOCK_LABELS[block!])}
+                          </span>
+                        )}
                       </SelectItem>
                     ))}
                   </SelectContent>

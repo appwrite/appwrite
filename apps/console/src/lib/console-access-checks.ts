@@ -95,6 +95,17 @@ export function canCreateProject(
   return whenOrgRoles(access, features, access.canWriteProjects)
 }
 
+/**
+ * Send a project out of, or receive one into, an organization. Transfer routes
+ * only honor organization-wide roles, so pass the access resolved without a project.
+ */
+export function canTransferProject(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteProjects)
+}
+
 export function canCreateDatabase(
   access: ConsoleAccess,
   features: AccessCheckFeatures,

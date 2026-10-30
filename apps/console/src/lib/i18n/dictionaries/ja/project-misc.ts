@@ -3574,8 +3574,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Transfer link': '転送リンク',
   'Expires in': '有効期間',
   'Recipient organization ID (optional)': '受取先の組織 ID (任意)',
-  'Leave empty to let any organization claim the project.':
-    '空欄にすると、どの組織でもプロジェクトを受け取れます。',
+  'Recommended. Only this organization can claim the project, so the link is useless to anyone else who gets it. Leave empty to let any organization with the link claim it.':
+    '推奨。この組織だけがプロジェクトを受け取れるため、リンクが他の人に渡っても使われることはありません。空欄にすると、リンクを持つどの組織でもプロジェクトを受け取れます。',
   'Failed to create transfer link': '転送リンクの作成に失敗しました',
   'Delete transfer link': '転送リンクを削除',
   'The link will stop working and the project can no longer be claimed with it.':
@@ -3603,6 +3603,48 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このリンクを受け取れるのはこの組織だけです。',
   'This transfer is reserved for an organization you are not part of:':
     'この転送は、あなたが所属していない組織専用です:',
+  "Resolve this organization's billing issues before transferring.":
+    '転送する前に、この組織の請求に関する問題を解決してください。',
+  'This organization has a failed or unauthorized payment. Resolve its billing issues before transferring this project.':
+    'この組織には失敗した支払い、または承認されていない支払いがあります。このプロジェクトを転送する前に、請求に関する問題を解決してください。',
+  'Go to billing': '請求へ移動',
+  'Checking...': '確認中...',
+  'Billing issue': '請求の問題',
+  'Project limit reached': 'プロジェクト数の上限に達しています',
+  "You don't have permission to add projects to this organization.":
+    'この組織にプロジェクトを追加する権限がありません。',
+  'This organization has billing issues. Resolve them before it can receive projects.':
+    'この組織には請求に関する問題があります。プロジェクトを受け取るには、先に問題を解決してください。',
+  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.":
+    'この組織はプランのプロジェクト数の上限に達しています。このプロジェクトを受け取るには、プランをアップグレードしてください。',
+  "Change which organization owns this project. Its resources and data move with it, and the new organization's plan and members apply from then on.":
+    'このプロジェクトを所有する組織を変更します。リソースとデータはプロジェクトと一緒に移動し、以降は新しい組織のプランとメンバーが適用されます。',
+  'Move to another organization': '別の組織に移動',
+  'Move this project to another organization you are a member of. The move happens right away.':
+    'このプロジェクトを、あなたが所属する別の組織に移動します。移動はすぐに反映されます。',
+  'Destination organization': '移動先の組織',
+  'Move project': 'プロジェクトを移動',
+  'Failed to move project': 'プロジェクトの移動に失敗しました',
+  'You are not a member of any other organization.':
+    'ほかに所属している組織がありません。',
+  'Select an organization to move this project to.':
+    'プロジェクトの移動先の組織を選択してください。',
+  'Hand off with a transfer link': '転送リンクで引き渡す',
+  "Share a single-use link with someone in another organization. The project moves when they claim it, and you don't need to be a member of their organization.":
+    '別の組織のユーザーに 1 回限りのリンクを共有します。相手が受け取るとプロジェクトが移動します。相手の組織に所属している必要はありません。',
+  'Pending transfer links': '保留中の転送リンク',
+  'Links that have not been claimed yet. Expired links can no longer be claimed. Delete a link to stop it from working sooner.':
+    'まだ受け取られていないリンクです。期限切れのリンクでは受け取れません。期限より前に無効にするには、リンクを削除してください。',
+  'The project already belongs to this organization.':
+    'プロジェクトはすでにこの組織に属しています。',
+  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'このプロジェクトを転送できるのは、プロジェクトを管理できるロールを持つ組織メンバーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
+  'No permission': '権限なし',
+  "You don't have permission to transfer projects in this organization.":
+    'この組織でプロジェクトを転送する権限がありません。',
+  'Transfer links': '転送リンク',
+  'Active transfer links for this project stop working after the move.':
+    '移動後、このプロジェクトの有効な転送リンクは使用できなくなります。',
   'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
     '非アクティブなデプロイの保持期間を選択します。アクティブなデプロイとカスタムドメインに紐づくデプロイは常に保持されます。',
   'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
