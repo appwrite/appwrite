@@ -6,6 +6,7 @@
 
 mod base;
 mod device;
+mod filename;
 mod folder;
 mod http;
 mod model;

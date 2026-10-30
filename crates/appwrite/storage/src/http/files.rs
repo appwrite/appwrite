@@ -24,6 +24,7 @@ use crate::base::{
     file_permissions, id_or_unique, list_value, long, permission_list, reset_events, unauthorized, user_id,
 };
 use crate::device::{self, Stored};
+use crate::filename::Filename;
 use crate::model::{FileList, FileModel};
 
 use super::meta;
@@ -69,6 +70,11 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     } else {
         (1, 1, upload.size)
     };
+
+    let filename = Filename(Text::with_min(0, 0));
+    if !filename.is_valid(&Json::String(upload.name.clone())) {
+        return Err(Error::with_message(ErrorType::GeneralArgumentInvalid, filename.description()));
+    }
 
     let allowed = bucket.strings("allowedFileExtensions");
     if !allowed.is_empty() && !FileExt::new(allowed).is_valid(&Json::String(upload.name.clone())) {
@@ -186,7 +192,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let name = match ctx.param("name") {
         None => None,
         Some(value) if value.is_null() => None,
-        Some(_) => Some(ctx.required_str("name", &Text::new(128))?),
+        Some(_) => Some(ctx.required_str("name", &Filename(Text::new(128)))?),
     };
     let raw = ctx.param("permissions").cloned().unwrap_or(Json::Null);
     let db = ctx.db()?;
@@ -547,6 +553,7 @@ async fn finish(
             let mut updates = Document::default();
             updates.put("signature", Value::from(hash.as_str()));
             updates.put("mimeType", Value::from(mime.as_str()));
+            updates.put("sizeOriginal", Value::Int(file_size));
             updates.put("sizeActual", Value::Int(size_actual));
             updates.put("algorithm", Value::from(algorithm.as_str()));
             put_cipher(&mut updates, sealed.as_ref());
