@@ -40,7 +40,9 @@ function isAuthPage(pathname: string): boolean {
     pathname === '/join' ||
     pathname === '/mfa' ||
     pathname === '/verify-email' ||
-    pathname === '/auth/magic-url'
+    pathname === '/auth/magic-url' ||
+    pathname === '/partner/sign-in' ||
+    pathname === '/partner/sign-up'
   )
 }
 

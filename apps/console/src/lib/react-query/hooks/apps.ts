@@ -25,6 +25,7 @@ import {
   type MarketplaceApp,
   type MarketplaceAppCategory,
 } from '@/lib/marketplace/types'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { DEFAULT_STALE_TIME } from './constants'
 import { nextCursorAfter } from './cursor'
 
@@ -45,7 +46,13 @@ export type MarketplaceCurationLabel = 'official' | 'suggested'
 // QUERY FUNCTIONS
 // ============================================================================
 
-export async function fetchOrganizationAppsRaw(organizationId: string) {
+export async function fetchOrganizationAppsRaw(
+  organizationId: string,
+  search?: string,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = MARKETPLACE_APPS_LIMIT,
+) {
   if (!organizationId) {
     return { apps: [], total: 0 }
   }
@@ -53,8 +60,11 @@ export async function fetchOrganizationAppsRaw(organizationId: string) {
   const response = await sdk.forConsole.apps.list({
     queries: [
       Query.equal('teamId', organizationId),
+      ...(filterQueries ?? []),
+      ...buildAttributePrefixSearchQueries(['name', '$id'], search),
       Query.orderDesc('$createdAt'),
-      Query.limit(MARKETPLACE_APPS_LIMIT),
+      Query.limit(limit),
+      Query.offset(page * limit),
     ],
     total: true,
   })
@@ -335,16 +345,36 @@ export function organizationAppSecretsQueryOptions(
 
 export function organizationAppsQueryOptions(
   organizationId: string | null | undefined,
+  search?: string,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = MARKETPLACE_APPS_LIMIT,
 ) {
   return queryOptions({
-    queryKey: ['apps', 'organization', organizationId],
-    queryFn: () => fetchOrganizationAppsRaw(organizationId!),
+    queryKey: [
+      'apps',
+      'organization',
+      organizationId,
+      page,
+      limit,
+      search,
+      filterQueries,
+    ],
+    queryFn: () =>
+      fetchOrganizationAppsRaw(
+        organizationId!,
+        search,
+        filterQueries,
+        page,
+        limit,
+      ),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
     gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
 }
@@ -454,9 +484,19 @@ function mapListedApps(
 export function useOrganizationApps(
   organizationId: string | null | undefined,
   teamNamesById?: Record<string, string>,
+  search?: string,
+  filterQueries?: string[],
+  page: number = 0,
+  limit: number = MARKETPLACE_APPS_LIMIT,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
-    organizationAppsQueryOptions(organizationId),
+    organizationAppsQueryOptions(
+      organizationId,
+      search,
+      filterQueries,
+      page,
+      limit,
+    ),
   )
 
   const apps = useMemo(

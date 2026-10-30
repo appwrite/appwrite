@@ -33,6 +33,7 @@ export const enCatalog = {
         signUp: 'Sign up',
         signOut: 'Sign out',
         backToOrganization: 'Back to organization',
+        backToCloud: 'Back to Cloud',
       },
       createMenu: {
         newProject: 'New Project',

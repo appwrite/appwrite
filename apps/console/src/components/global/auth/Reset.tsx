@@ -21,6 +21,7 @@ import {
 } from '@/components/global/auth/AuthFlowCard'
 import { AuthFlowIllustrationColumn } from '@/components/global/auth/AuthFlowShell'
 import { useT, type Translator } from '@/lib/i18n/translate'
+import { getAuthEmailSearch, resolveAuthAudience } from '@/lib/auth-audience'
 
 const createResetPasswordSchema = (t: Translator) =>
   z
@@ -42,15 +43,16 @@ interface ResetProps {
   preview?: boolean
 }
 
-const illustration = <AuthFlowIllustrationColumn />
-
 export function Reset({
   onSubmit,
   isLoading,
   isSuccess,
   preview = false,
 }: ResetProps) {
+  const audience = resolveAuthAudience()
   const signInTo = preview ? '/debug/sign-in-preview' : '/sign-in'
+  const signInSearch = preview ? undefined : getAuthEmailSearch(audience)
+  const illustration = <AuthFlowIllustrationColumn audience={audience} />
   const t = useT()
   const form = useForm<ResetPasswordValues>({
     resolver: zodResolver(createResetPasswordSchema(t)),
@@ -76,7 +78,7 @@ export function Reset({
               )}
             </AuthFlowDescription>
           </div>
-          <Link to={signInTo}>
+          <Link to={signInTo} search={signInSearch}>
             <Button variant="brandCta" className="w-full">
               {t('Sign in')}
             </Button>
@@ -141,7 +143,11 @@ export function Reset({
 
           <AuthFlowDescription className="text-center">
             {t('Remember your password?')}{' '}
-            <Link to={signInTo} className="link-neutral">
+            <Link
+              to={signInTo}
+              search={signInSearch}
+              className="link-neutral"
+            >
               {t('Sign in')}
             </Link>
           </AuthFlowDescription>

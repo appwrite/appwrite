@@ -59,6 +59,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Alert added': 'アラートを追加しました',
   'Alert removed': 'アラートを削除しました',
   'Alert when spending reaches': '支出が次に達したときにアラート',
+  'All clients': 'すべてのクライアント',
   'All projects': 'すべてのプロジェクト',
   'Per project': 'プロジェクトごと',
   'Project access': 'プロジェクトアクセス',
@@ -113,6 +114,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Billing address updated': '請求先住所を更新しました',
   'Billing alerts': '請求アラート',
   'Billing and payment management only.': '請求と支払いの管理のみ。',
+  'Billing is not available on this console profile.':
+    'このコンソールプロファイルでは請求は利用できません。',
   'Brief summary of your issue': '問題の簡単な概要',
   'Browse by category': 'カテゴリ別に閲覧',
   'Browse files': 'ファイルを閲覧',
@@ -142,6 +145,117 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Click to upload or drag and drop':
     'クリックしてアップロード、またはドラッグ&ドロップ',
   'Client type': 'クライアントタイプ',
+  'Clients': 'クライアント',
+  'Client pinned': 'クライアントをピン留めしました',
+  'Client unpinned': 'クライアントのピン留めを解除しました',
+  'Client resources': 'クライアントのリソース',
+  'Collapse clients list': 'クライアントリストを折りたたむ',
+  'Expand clients list': 'クライアントリストを展開',
+  'Onboard': '追加',
+  'New client': '新しいクライアント',
+  'No clients': 'クライアントはありません',
+  'No clients match your search': '検索に一致するクライアントはありません',
+  'Onboard a client organization to manage their projects and billing from this grid.':
+    'クライアント組織を追加すると、ここからプロジェクトと請求を管理できます。',
+  'Partners docs': 'パートナー向けドキュメント',
+  'Learn to onboard clients and provision their projects.':
+    'クライアントの追加とプロジェクトのプロビジョニングを学べます。',
+  'This becomes the client organization billed through your partner account.':
+    'パートナーアカウント経由で請求されるクライアント組織になります。',
+  'Client organizations use Pro or Scale. Billing stays on this partner.':
+    'クライアント組織は Pro または Scale を使用します。請求はこのパートナーに残ります。',
+  'Handoff projects': 'プロジェクトの引き渡し',
+  'Handoff resources': 'リソースの引き渡し',
+  'Handoff': '引き渡し',
+  'Handoff project': 'プロジェクトを引き渡し',
+  'Handoff domain': 'ドメインを引き渡し',
+  'Handoff app': 'アプリを引き渡し',
+  'Move development projects from this partner organization into the new client. Skip this if you will add projects later.':
+    'このパートナー組織の開発プロジェクトを新しいクライアントへ引き渡します。後から追加する場合はスキップできます。',
+  'Move development projects, apps, or domains from this partner organization into the new client. Skip this if you will add them later.':
+    'このパートナー組織の開発プロジェクト、アプリ、またはドメインを新しいクライアントへ引き渡します。後から追加する場合はスキップできます。',
+  'Clear selection': '選択を解除',
+  'No development projects to hand off yet.': '引き渡せる開発プロジェクトはまだありません。',
+  'No development domains to hand off yet.': '引き渡せる開発ドメインはまだありません。',
+  'No development apps to hand off yet.': '引き渡せる開発アプリはまだありません。',
+  'No projects match your search': '検索に一致するプロジェクトはありません',
+  'No domains match your search': '検索に一致するドメインはありません',
+  'Move a development project into this client organization.':
+    '開発プロジェクトをこのクライアント組織に引き渡します。',
+  'Move a development project to a client organization.':
+    '開発プロジェクトをクライアント組織に引き渡します。',
+  'Move a development domain into this client organization.':
+    '開発ドメインをこのクライアント組織に引き渡します。',
+  'Move a development domain to a client organization.':
+    '開発ドメインをクライアント組織に引き渡します。',
+  'Move a development app into this client organization.':
+    '開発アプリをこのクライアント組織に引き渡します。',
+  'Move a development app to a client organization.':
+    '開発アプリをクライアント組織に引き渡します。',
+  'No client organizations yet.': 'クライアント組織はまだありません。',
+  'Project handed off': 'プロジェクトを引き渡しました',
+  'Domain handed off': 'ドメインを引き渡しました',
+  'App handed off': 'アプリを引き渡しました',
+  'Could not hand off project': 'プロジェクトを引き渡せませんでした',
+  'Could not hand off domain': 'ドメインを引き渡せませんでした',
+  'Could not hand off app': 'アプリを引き渡せませんでした',
+  'Select domain': 'ドメインを選択',
+  'Select app': 'アプリを選択',
+  'Select client': 'クライアントを選択',
+  'Create client': 'クライアントを作成',
+  'Client organization created': 'クライアント組織を作成しました',
+  'Client organization created and projects handed off':
+    'クライアント組織を作成し、プロジェクトを引き渡しました',
+  'Client organization created and resources handed off':
+    'クライアント組織を作成し、リソースを引き渡しました',
+  'Client created. Some projects could not be handed off.':
+    'クライアントを作成しました。一部のプロジェクトを引き渡せませんでした。',
+  'Client created. Some resources could not be handed off.':
+    'クライアントを作成しました。一部のリソースを引き渡せませんでした。',
+  'Could not hand off the selected projects.': '選択したプロジェクトを引き渡せませんでした。',
+  'Could not hand off the selected resources.': '選択したリソースを引き渡せませんでした。',
+  'Could not create client': 'クライアントを作成できませんでした',
+  'Complete card authentication to finish creating this client.':
+    'カード認証を完了すると、クライアントの作成が完了します。',
+  'Add a payment method to this partner organization before onboarding a client.':
+    'クライアントを追加する前に、このパートナー組織に支払い方法を追加してください。',
+  'Add a billing address to this partner organization before onboarding a client.':
+    'クライアントを追加する前に、このパートナー組織に請求先住所を追加してください。',
+  'You need to be an owner of this partner organization to onboard a client.':
+    'クライアントを追加するには、このパートナー組織のオーナーである必要があります。',
+  'Client organizations cannot manage other organizations.':
+    'クライアント組織は他の組織を管理できません。',
+  'Client organizations must use a paid plan.':
+    'クライアント組織には有料プランが必要です。',
+  'Playground projects can only be handed off to a client of this partner.':
+    '開発プロジェクトは、このパートナーのクライアントにのみ引き渡せます。',
+  'Disconnect partner': 'パートナーを切断',
+  'Stop managing this client organization. The client keeps their projects and billing. You will lose partner access.':
+    'このクライアント組織の管理を終了します。クライアントのプロジェクトと請求は残ります。パートナーとしてのアクセスは失われます。',
+  'This organization will no longer be managed by this partner.':
+    'この組織は、このパートナーの管理下ではなくなります。',
+  'Partner disconnected': 'パートナーを切断しました',
+  'This organization is not managed by a partner.':
+    'この組織はパートナーに管理されていません。',
+  "You don't have permission to disconnect this partner.":
+    'このパートナーを切断する権限がありません。',
+  'Could not disconnect partner': 'パートナーを切断できませんでした',
+  'Enter an organization name.': '組織名を入力してください。',
+  'Enter a monthly budget of at least $1.': '月額予算は $1 以上で入力してください。',
+  'Review the client organization before you create it.':
+    '作成前にクライアント組織を確認してください。',
+  'Projects to hand off': '引き渡すプロジェクト',
+  'Resources to hand off': '引き渡すリソース',
+  Plan: 'プラン',
+  Workspace: 'ワークスペース',
+  'Billed to': '請求先',
+  'This partner': 'このパートナー',
+  'Invoices for this client use the partner payment method.':
+    'このクライアントの請求書にはパートナーの支払い方法が使われます。',
+  'Invoices for this client use the selected payment method.':
+    'このクライアントの請求書には選択した支払い方法が使われます。',
+  'Recommended': 'おすすめ',
+  'Resize clients list': 'クライアントリストのサイズを変更',
   'Coming soon': '近日公開',
   'Comment (optional)': 'コメント (任意)',
   'Company (optional)': '会社名 (任意)',
@@ -169,7 +283,20 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Create a new project in your organization.':
     '組織に新しいプロジェクトを作成します。',
   'Create a project first': '先にプロジェクトを作成してください',
+  'Create a project here to build and test before handing it off to a client.':
+    'クライアントに引き渡す前に、ここでプロジェクトを作成して開発とテストができます。',
+  'Create a project in the development env and hand it off here, or open the client console.':
+    '開発環境でプロジェクトを作成してここに引き渡すか、クライアントのコンソールを開いてください。',
+  'Create a project under this partner organization, then hand it off to a client.':
+    'このパートナー組織でプロジェクトを作成し、クライアントに引き渡してください。',
   'Create organization': '組織を作成',
+  'Create domain': 'ドメインを作成',
+  'Create a domain, or buy or transfer one into this organization.':
+    'ドメインを作成するか、この組織に購入または移管してください。',
+  'Create a domain, hand one off from development, or buy or transfer one into this organization.':
+    'ドメインを作成するか、開発環境から引き渡すか、この組織に購入または移管してください。',
+  'Create an app here, or hand one off from development.':
+    'ここでアプリを作成するか、開発環境から引き渡してください。',
   'Create project': 'プロジェクトを作成',
   'Advanced security': '高度なセキュリティ',
   'Security add-on': 'セキュリティアドオン',
@@ -235,6 +362,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Deleting projects': 'プロジェクトを削除中',
   'Deleting resources': 'リソースを削除中',
   'Developer tools': '開発ツール',
+  Development: '開発',
   'Device flow': 'デバイスフロー',
   'Docs, status, and community': 'ドキュメント、ステータス、コミュニティ',
   'Domain limit reached': 'ドメイン上限に達しました',
@@ -262,6 +390,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Email is required': 'メールは必須です',
   'Enable auto renewal': '自動更新を有効化',
   'Enable budget cap': '予算上限を有効化',
+  'Enter app name': 'アプリ名を入力',
   'Enter coupon code': 'クーポンコードを入力',
   'Enter domain name': 'ドメイン名を入力',
   'Enter organization name': '組織名を入力',
@@ -323,6 +452,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to update payment method': '支払い方法の更新に失敗しました',
   'Failed to update pinned projects':
     'ピン留めプロジェクトの更新に失敗しました',
+  'Failed to update pinned clients': 'ピン留めクライアントの更新に失敗しました',
   'Failed to update plan': 'プランの更新に失敗しました',
   'Failed to update role': 'ロールの更新に失敗しました',
   'Failed to update tax ID': '税務 ID の更新に失敗しました',
@@ -515,6 +645,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Pending owner approval': 'オーナーの承認待ち',
   'Pending registry': 'レジストリ処理待ち',
   'Phone (E.164)': '電話番号 (E.164)',
+  'Pin client': 'クライアントをピン留め',
   'Pin project': 'プロジェクトをピン留め',
   'Plan Changes Restricted': 'プラン変更が制限されています',
   'Plan comparison': 'プラン比較',
@@ -580,6 +711,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'SOC 2 type II report': 'SOC 2 Type II レポート',
   'Search app settings...': 'アプリ設定を検索',
   'Search apps...': 'アプリを検索...',
+  'Search clients...': 'クライアントを検索...',
   'Search domains...': 'ドメインを検索...',
   'Search files': 'ファイルを検索',
   'Search members...': 'メンバーを検索...',
@@ -657,6 +789,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Transfer cancelled': '移管をキャンセルしました',
   'Transfer completed': '移管が完了しました',
   'Transfer could not be completed': '移管を完了できませんでした',
+  'Transfer domain': 'ドメインを移管',
   'Transfer domain in': 'ドメインを移管',
   'Transfer in': '移管',
   'Transfer in progress': '移管を実施中',
@@ -706,6 +839,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Who should reach out': '問い合わせるべき人',
   'Why it matters:': '重要な理由:',
   'Will delete': '削除予定',
+  'Workspace view': 'ワークスペース表示',
   'You have': '次を保有しています',
   'You have reached your member limit.': 'メンバー上限に達しました。',
   'You will be charged': '次が請求されます',
@@ -1228,6 +1362,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'ベンダー審査、セキュリティ評価、またはエンタープライズ調達の際',
   'When pay-as-you-go plans do not meet your support or billing needs':
     '従量課金制プランがサポートまたは請求のニーズを満たさない場合',
+  "You don't have permission to view billing.":
+    '請求情報を表示する権限がありません。',
+  "You don't have permission to view compliance.":
+    'コンプライアンスを表示する権限がありません。',
+  'You can pin up to 6 projects': 'ピン留めできるプロジェクトは6件までです',
+  "You don't have permission to manage domains.": 'ドメインを管理する権限がありません。',
+  "You don't have permission to manage apps.": 'アプリを管理する権限がありません。',
   Active: 'アクティブ',
   Add: '追加',
   Address: '住所',
@@ -1256,6 +1397,8 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Collapse: '折りたたむ',
   Comment: 'コメント',
   Compliance: 'コンプライアンス',
+  'Compliance is not available on this console profile.':
+    'このコンソールプロファイルではコンプライアンスは利用できません。',
   Compute: 'コンピュート',
   Confidential: '機密',
   'Client ID': 'クライアント ID',
@@ -1327,6 +1470,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Offline: 'オフライン',
   Online: 'オンライン',
   Open: '開く',
+  Organization: '組織',
   Or: 'または',
   Overview: '概要',
   Owner: 'オーナー',
@@ -1353,7 +1497,6 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Catch up on Init': 'Init のまとめを見る',
   'Rewatch sessions and explore every launch from Init week.':
     'セッションのリプレイと Init week の発表をチェック。',
-  Recommended: '推奨',
   Region: 'リージョン',
   Registrar: 'レジストラ',
   Registration: '登録',
@@ -1391,10 +1534,12 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   Unavailable: '利用不可',
   Unlimited: '無制限',
   Unpin: 'ピン留め解除',
+  'Unpin client': 'クライアントのピン留めを解除',
   Unverified: '未検証',
   Update: '更新',
   Upgrade: 'アップグレード',
   Usage: '使用量',
+  Users: 'ユーザー',
   Value: '値',
   Verified: '検証済み',
   Verify: '検証',
@@ -1619,4 +1764,13 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'Appwrite の上に構築する',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'API キーを貼り付ける代わりに、同意に基づくスコープ付きのアクセスで Appwrite ユーザーがプロジェクトを接続できる OAuth2 アプリを作成できます。マーケットプレイスに公開して、あらゆる組織に見つけてもらいましょう。',
+  'Partner settings': 'パートナー設定',
+  'Manage this partner organization and its team.':
+    'このパートナー組織とそのチームを管理します。',
+  "You don't have permission to update organization settings.":
+    '組織設定を更新する権限がありません。',
+  "You don't have permission to delete this organization.":
+    'この組織を削除する権限がありません。',
+  'Slack is assigned by Appwrite.': 'Slack チャネルは Appwrite が割り当てます。',
+  'No channel assigned yet.': 'まだチャネルは割り当てられていません。',
 }

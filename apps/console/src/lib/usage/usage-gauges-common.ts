@@ -458,7 +458,7 @@ export async function fetchProjectUsageGaugeChartSeriesByResourceType(
         to,
         resolvedInterval,
         `${metric}:${entry.key}`,
-        { gauge: true },
+        { gauge: true, seed: projectId },
       )
       chartPointsBySeries.set(entry.key, chartPoints)
       previousChartPointsBySeries.set(
@@ -470,7 +470,7 @@ export async function fetchProjectUsageGaugeChartSeriesByResourceType(
               previousTo,
               resolvedInterval,
               `${metric}:${entry.key}`,
-              { quieter: true, gauge: true },
+              { quieter: true, gauge: true, seed: projectId },
             ),
       )
     }
@@ -578,7 +578,7 @@ export async function fetchProjectUsageGaugeChartSeries(
       to,
       resolvedInterval,
       metricKey,
-      { gauge: true },
+      { gauge: true, seed: projectId },
     )
     const previousChartPoints =
       comparisonMode === 'first_half'
@@ -588,7 +588,7 @@ export async function fetchProjectUsageGaugeChartSeries(
             previousTo,
             resolvedInterval,
             metricKey,
-            { quieter: true, gauge: true },
+            { quieter: true, gauge: true, seed: projectId },
           )
     return { chartPoints, previousChartPoints }
   }

@@ -2,6 +2,11 @@ import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { MarketingSiteLink } from '@/components/global/shared/MarketingSiteLink'
+import {
+  CONSOLE_AUTH_COVER,
+  PARTNER_AUTH_COVER,
+  type AuthAudience,
+} from '@/lib/auth-audience'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -105,15 +110,21 @@ export function AuthFlowShell({
 }
 
 /** Shared cover image column for illustration auth cards (sign-in, recovery, etc.). */
-export function AuthFlowIllustrationColumn() {
+export function AuthFlowIllustrationColumn({
+  audience = 'console',
+}: {
+  audience?: AuthAudience
+}) {
+  const partner = audience === 'partner'
+
   return (
     <div className="hidden min-h-[600px] bg-background md:block">
       <img
         alt=""
         className="h-full w-full object-cover"
-        height={600}
-        src="/cover.avif"
-        width={600}
+        height={partner ? 1024 : 600}
+        src={partner ? PARTNER_AUTH_COVER : CONSOLE_AUTH_COVER}
+        width={partner ? 908 : 600}
       />
     </div>
   )

@@ -30,6 +30,7 @@ import { CreateProjectSecurityAddonSection } from './_components/CreateProjectSe
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { buildConsoleUrl, openInNewTab } from '@/lib/utils/context-menu'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   Select,
@@ -49,6 +50,7 @@ interface CreateProjectDialogProps {
   teamId: string | null | undefined
   organizationPlan?: Models.BillingPlan | null
   currentProjectsCount?: number
+  openCreatedInNewTab?: boolean
 }
 
 export function CreateProjectDialog({
@@ -57,6 +59,7 @@ export function CreateProjectDialog({
   teamId,
   organizationPlan: organizationPlanProp,
   currentProjectsCount = 0,
+  openCreatedInNewTab = false,
 }: CreateProjectDialogProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -212,10 +215,14 @@ export function CreateProjectDialog({
       handleOpenChange(false)
 
       if (newProjectId) {
-        navigate({
-          to: '/projects/$projectId',
-          params: { projectId: newProjectId },
-        })
+        if (openCreatedInNewTab) {
+          openInNewTab(buildConsoleUrl(`/projects/${newProjectId}`))
+        } else {
+          navigate({
+            to: '/projects/$projectId',
+            params: { projectId: newProjectId },
+          })
+        }
       }
 
       if (shouldEnableSecurityAddon) {

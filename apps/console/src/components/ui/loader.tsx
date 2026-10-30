@@ -1,13 +1,8 @@
 import { ExternalLink, Loader2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
-import { getReleaseLine } from '@/lib/appwrite-version'
 import { getStatusIcon, getStatusPresentation } from '@/lib/cloud-status-copy'
-import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
-import { LegacyAppwriteLogo } from '@/components/global/shared/LegacyAppwriteBrand'
-import { isLegacyThemeFromStorage } from '@/lib/legacy-theme-assets'
-import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
-import { getRuntimeConfig } from '@/lib/runtime-config'
+import { LoaderBrandMark } from '@/components/global/shared/LoaderBrandMark'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -15,29 +10,6 @@ import { cn } from '@/lib/utils'
 const SPINNER_DELAY_MS = 1500
 /** Fade the full overlay, background included, into the page underneath. */
 export const FULLSCREEN_LOADER_HIDE_MS = 420
-
-function LoaderBrandMark() {
-  const isLegacy = isLegacyThemeFromStorage()
-  const release = getReleaseLine(getRuntimeConfig().appwriteVersion)
-
-  return (
-    <div
-      className={cn('inline-flex items-end gap-1.5', FORCE_LTR_CLASS)}
-      dir="ltr"
-    >
-      {isLegacy ? (
-        <LegacyAppwriteLogo className="h-8" aria-label="Appwrite" />
-      ) : (
-        <AppwriteWordmark className="h-8" />
-      )}
-      {release ? (
-        <span className="pb-0.5 text-xs font-extralight tracking-tight text-muted-foreground">
-          / {release}
-        </span>
-      ) : null}
-    </div>
-  )
-}
 
 export type FullscreenLoaderStatusBanner = {
   /** Main title (inherits container text color). */
@@ -58,12 +30,14 @@ interface FullscreenLoaderProps {
   onComplete?: () => void
   /** When set, shows a compact notice under the logo that we're experiencing issues (e.g. from status API). */
   statusBanner?: FullscreenLoaderStatusBanner
+  brand?: 'console' | 'partners'
 }
 
 export function FullscreenLoader({
   isVisible,
   onComplete,
   statusBanner,
+  brand = 'console',
 }: FullscreenLoaderProps) {
   const t = useT()
   const hasStatusBanner = Boolean(statusBanner)
@@ -196,7 +170,7 @@ export function FullscreenLoader({
             )
           })()}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <LoaderBrandMark />
+          <LoaderBrandMark brand={brand} />
         </div>
         {showSpinner && !hasStatusBanner ? (
           <div

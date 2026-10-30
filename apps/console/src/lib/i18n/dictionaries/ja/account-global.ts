@@ -272,6 +272,18 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Your name': 'お名前',
   'Your password': 'パスワード',
   'Already have an account?': '既にアカウントをお持ちですか?',
+  'Are you a partner?': 'パートナーの方ですか?',
+  'Partner login': 'パートナーログイン',
+  'Developer login': '開発者ログイン',
+  'Looking for the developer console?': '開発者コンソールをお探しですか?',
+  'Partner sign in': 'パートナーサインイン',
+  'Partner sign up': 'パートナー登録',
+  'No partner organization found': 'パートナー組織が見つかりません',
+  'This account is not a member of a partner organization.':
+    'このアカウントはパートナー組織のメンバーではありません。',
+  'This organization is not available here': 'この組織はここでは利用できません',
+  'Partner organizations cannot be opened in the console. Use partner login to access them.':
+    'パートナー組織はコンソールでは開けません。パートナーログインからアクセスしてください。',
   'Already verified?': '既に確認済みですか?',
   'Authorizing…': '承認中…',
   'Back to sign in': 'サインインに戻る',

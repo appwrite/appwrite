@@ -61,6 +61,8 @@ type ExpandedFooterGroup = {
 
 type ConsoleFooterProps = {
   expanded?: boolean
+  /** When false, omits the top border separator. Defaults to true. */
+  separator?: boolean
 }
 
 function docsFooterLink(
@@ -402,8 +404,12 @@ function FooterGroupLinks({
  *
  * Usage:
  * <ConsoleFooter />
+ * <ConsoleFooter separator={false} />
  */
-export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
+export function ConsoleFooter({
+  expanded = false,
+  separator = true,
+}: ConsoleFooterProps) {
   const t = useT()
   const currentYear = new Date().getFullYear()
   const { isCloud, features } = useConsoleProfile()
@@ -488,7 +494,12 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
   })
 
   const compactFooter = (
-    <div className="flex min-h-[54px] items-center">
+    <div
+      className={cn(
+        'flex items-center',
+        separator ? 'min-h-[54px]' : 'min-h-0 pb-3 pt-2',
+      )}
+    >
       <div
         className={cn(
           'mx-auto flex w-full max-w-7xl items-center justify-between gap-2',
@@ -620,7 +631,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
       <footer
         className={cn(
           FOOTER_CONTAINER,
-          'w-full shrink-0 border-t border-border',
+          'w-full shrink-0',
+          separator ? 'border-t border-border' : 'border-t-0',
         )}
       >
         {compactFooter}
@@ -632,7 +644,8 @@ export function ConsoleFooter({ expanded = false }: ConsoleFooterProps) {
     <footer
       className={cn(
         FOOTER_CONTAINER,
-        'w-full shrink-0 border-t border-border bg-background',
+        'w-full shrink-0 bg-background',
+        separator ? 'border-t border-border' : 'border-t-0',
       )}
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12">

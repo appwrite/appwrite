@@ -1810,6 +1810,7 @@ export function useOrganizations() {
         billingPlanId?: string
         billingPlanDowngrade?: unknown
         status?: string
+        managerType?: string
       }
       const mocked = applyScreenshotModeOrganizationName(o)
       const plan = resolveOrganizationCanonicalPlan({
@@ -1829,6 +1830,7 @@ export function useOrganizations() {
         billingPlan: o.billingPlan,
         billingPlanId: o.billingPlanId,
         billingPlanDowngrade: o.billingPlanDowngrade,
+        managerType: o.managerType,
       }
     }) as Organization[]
   }, [organizationsData, screenshotModeEpoch, billingPlans])

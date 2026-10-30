@@ -13,6 +13,7 @@ import { StandaloneCommandCenterScope } from '@/components/global/providers/Stan
 import { Button } from '@/components/ui/button'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { isMarketingPagePath } from '@/lib/marketing/is-marketing-page'
+import { isPartnerConsolePath } from '@/lib/partners'
 import { getLegacyRedirectTarget } from '@/lib/seo/legacy-redirects'
 import { MarketingPageShell } from '@/lib/marketing/MarketingPageShell'
 import { getMarketingPageUrl } from '@/lib/marketing/urls'
@@ -32,12 +33,16 @@ const CONSOLE_AREA_PREFIXES = new Set([
   'generator',
   'assistant',
   'agent',
+  'partner',
   'upgrade',
 ])
 
 function isConsoleAreaPath(pathname: string): boolean {
-  const firstSegment = pathname.split('/').filter(Boolean)[0]
-  return firstSegment ? CONSOLE_AREA_PREFIXES.has(firstSegment) : false
+  const segments = pathname.split('/').filter(Boolean)
+  const firstSegment = segments[0]
+  if (!firstSegment) return false
+  if (isPartnerConsolePath(pathname)) return true
+  return CONSOLE_AREA_PREFIXES.has(firstSegment)
 }
 
 function isDocsPath(pathname: string): boolean {

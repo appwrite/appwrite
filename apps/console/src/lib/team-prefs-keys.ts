@@ -16,6 +16,8 @@ export const TEAM_PREFS_KEY_PINNED_PROJECT_IDS = 'console.pinnedProjectIds'
 
 export type TeamPrefs = Record<string, unknown>
 
+const EMPTY_PINNED_PROJECT_IDS: string[] = []
+
 /**
  * Parse pinned project IDs from team prefs.
  * Returns up to MAX_PINNED_PROJECTS IDs in order.
@@ -24,16 +26,17 @@ export function parsePinnedProjectIds(
   prefs: TeamPrefs | null | undefined,
 ): string[] {
   if (!prefs || typeof prefs[TEAM_PREFS_KEY_PINNED_PROJECT_IDS] !== 'string') {
-    return []
+    return EMPTY_PINNED_PROJECT_IDS
   }
   try {
     const raw = JSON.parse(prefs[TEAM_PREFS_KEY_PINNED_PROJECT_IDS] as string)
-    if (!Array.isArray(raw)) return []
-    return raw
+    if (!Array.isArray(raw)) return EMPTY_PINNED_PROJECT_IDS
+    const ids = raw
       .filter((id): id is string => typeof id === 'string' && id.length > 0)
       .slice(0, MAX_PINNED_PROJECTS)
+    return ids.length > 0 ? ids : EMPTY_PINNED_PROJECT_IDS
   } catch {
-    return []
+    return EMPTY_PINNED_PROJECT_IDS
   }
 }
 

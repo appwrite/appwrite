@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
@@ -6,12 +6,14 @@ import { Recovery } from '@/components/global/auth/Recovery'
 import { AuthFlowShell } from '@/components/global/auth/AuthFlowShell'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
+import { setAuthAudience, resolveAuthAudience } from '@/lib/auth-audience'
 import { AppwriteException } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   email: z.string().optional(),
+  audience: z.enum(['partner']).optional(),
 })
 
 export const Route = createFileRoute('/_auth/recovery')({
@@ -25,6 +27,12 @@ function RecoveryPage() {
   const search = useSearch({ from: '/_auth/recovery' })
   const [isSuccess, setIsSuccess] = useState(false)
 
+  useEffect(() => {
+    if (search.audience === 'partner') {
+      setAuthAudience('partner')
+    }
+  }, [search.audience])
+
   const recoveryMutation = useMutation({
     mutationFn: async (data: { email: string }) => {
       try {
@@ -33,7 +41,10 @@ function RecoveryPage() {
           typeof window !== 'undefined' ? window.location.origin : ''
         // The recovery URL should point to a reset password page
         // Appwrite will append userId and secret as query parameters
-        const redirectUrl = `${origin}/reset`
+        const redirectUrl =
+          resolveAuthAudience() === 'partner'
+            ? `${origin}/reset?audience=partner`
+            : `${origin}/reset`
 
         await sdk.forConsole.account.createRecovery({
           email: data.email,

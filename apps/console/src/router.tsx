@@ -1,3 +1,4 @@
+import '@/lib/html-theme'
 // Keep global CSS in the static entry graph so Start includes it in SSR HTML.
 import './styles.css'
 import { createRouter } from '@tanstack/react-router'

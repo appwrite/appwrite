@@ -36,6 +36,11 @@ import {
 import { DEFAULT_CONSOLE_OAUTH_LOGIN } from '@/lib/utils/console-oauth'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
+import {
+  getAuthEmailSearch,
+  resolveAuthAudience,
+  type AuthAudience,
+} from '@/lib/auth-audience'
 import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
 
 // Google's standard four-color "G"; its branding rules forbid a monochrome one.
@@ -283,6 +288,7 @@ interface SignInProps {
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
   /** Debug preview routes: cross-links stay on /debug/*-preview; demo user is fill-only. */
   preview?: boolean
+  audience?: AuthAudience
 }
 
 export function SignIn({
@@ -295,8 +301,10 @@ export function SignIn({
   onPasskeySignIn,
   redirect,
   preview = false,
+  audience: audienceProp,
 }: SignInProps) {
   const t = useT()
+  const audience = audienceProp ?? resolveAuthAudience()
   const { isDebugModeOpen } = useDebugMode()
   const schema =
     mode === 'sign-in' ? createLoginSchema(t) : createSignUpSchema(t)
@@ -442,7 +450,9 @@ export function SignIn({
   }
 
   return (
-    <AuthFlowIllustrationCard illustration={<AuthFlowIllustrationColumn />}>
+    <AuthFlowIllustrationCard
+      illustration={<AuthFlowIllustrationColumn audience={audience} />}
+    >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="space-y-2">
@@ -643,7 +653,16 @@ export function SignIn({
                   {mode === 'sign-in' && (
                     <Link
                       to={preview ? '/debug/recovery-preview' : '/recovery'}
-                      search={emailValue ? { email: emailValue } : undefined}
+                      search={
+                        emailValue || audience === 'partner'
+                          ? {
+                              ...(emailValue ? { email: emailValue } : {}),
+                              ...(audience === 'partner'
+                                ? { audience: 'partner' as const }
+                                : {}),
+                            }
+                          : undefined
+                      }
                       className="link-neutral text-sm"
                     >
                       {t('Forgot your password?')}
@@ -684,7 +703,9 @@ export function SignIn({
                     ? '/sign-up'
                     : '/sign-in'
               }
-              search={!preview && redirect ? { redirect } : undefined}
+              search={
+                preview ? undefined : getAuthEmailSearch(audience, redirect)
+              }
               className="link-neutral"
             >
               {mode === 'sign-in' ? t('Sign up') : t('Sign in')}

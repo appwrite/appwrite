@@ -8,6 +8,7 @@ export const BillingPlanTier = {
   Start: 'tier-1-1',
   Tier1: 'tier-1',
   Tier2: 'tier-2',
+  Partner: 'partner-1',
 } as const
 
 export type BillingPlanTier =

@@ -112,3 +112,28 @@ export function wouldIncurPlanAddonCharge(
     currency: addon?.currency || 'USD',
   }
 }
+
+/**
+ * Extra units beyond the plan included allocation, and the monthly addon charge.
+ * New orgs start at count 0; pass the projects that will exist after create/transfer.
+ */
+export function getPlanAddonOverage(
+  plan: BillingPlan | null | undefined,
+  key: BillablePlanAddonKey,
+  count: number,
+): { additionalCount: number; amount: number; currency: string } {
+  const addon = getAddon(plan, key)
+  const currency = addon?.currency || 'USD'
+  const price = getPlanAddonPrice(plan, key)
+  const included = getPlanAddonIncludedCount(plan, key)
+  if (price <= 0 || included === null) {
+    return { additionalCount: 0, amount: 0, currency }
+  }
+
+  const additionalCount = Math.max(0, count - included)
+  return {
+    additionalCount,
+    amount: additionalCount * price,
+    currency,
+  }
+}
