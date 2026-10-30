@@ -669,8 +669,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'アダプティブ動画ストリーミング、レンディション、字幕',
   'Audit log of project events': 'プロジェクトイベントの監査ログ',
-  'Realtime channels and live messages':
-    'Realtime チャンネルとライブメッセージ',
   'Usage statistics and quotas': '使用統計とクォータ',
   'Website analytics and traffic insights':
     'ウェブサイト分析とトラフィックのインサイト',
@@ -1009,8 +1007,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '内蔵の Appwrite CLI ターミナルを切り替え',
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'プラットフォームを接続 (Web、iOS、Android、Flutter、サーバー)',
-  'Browse and test Appwrite REST API endpoints':
-    'Appwrite REST API エンドポイントを閲覧してテスト',
+  'Test REST API endpoints and Realtime subscriptions':
+    'REST API エンドポイントと Realtime サブスクリプションをテスト',
   'Users, teams, sessions and authentication providers':
     'ユーザー、チーム、セッション、認証プロバイダー',
   'Project settings, custom domains, variables, webhooks':
@@ -1369,4 +1367,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
+  // Halloween caution tape
+  Caution: '注意',
+  'Spooky zone': '恐怖ゾーン',
 }

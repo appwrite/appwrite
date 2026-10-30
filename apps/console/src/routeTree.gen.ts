@@ -199,6 +199,7 @@ import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_pu
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
 import { Route as PublicProjectsProjectIdOnboardingRouteImport } from './routes/_public/projects.$projectId.onboarding'
 import { Route as PublicProjectsProjectIdOverviewRouteImport } from './routes/_public/projects.$projectId.overview'
+import { Route as PublicProjectsProjectIdPlaygroundRouteImport } from './routes/_public/projects.$projectId.playground'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_public/projects.$projectId.settings'
 import { Route as PublicProjectsProjectIdStorageRouteImport } from './routes/_public/projects.$projectId.storage'
@@ -236,6 +237,7 @@ import { Route as PublicProjectsProjectIdAuthTemplatesRouteImport } from './rout
 import { Route as PublicProjectsProjectIdDatabasesIndexRouteImport } from './routes/_public/projects.$projectId.databases.index'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId'
 import { Route as PublicProjectsProjectIdDatabasesCreateRouteImport } from './routes/_public/projects.$projectId.databases.create'
+import { Route as PublicProjectsProjectIdEnvironmentsCreateRouteImport } from './routes/_public/projects.$projectId.environments.create'
 import { Route as PublicProjectsProjectIdFirewallIndexRouteImport } from './routes/_public/projects.$projectId.firewall.index'
 import { Route as PublicProjectsProjectIdFirewallCreateRouteImport } from './routes/_public/projects.$projectId.firewall.create'
 import { Route as PublicProjectsProjectIdFunctionsIndexRouteImport } from './routes/_public/projects.$projectId.functions.index'
@@ -1494,6 +1496,12 @@ const PublicProjectsProjectIdOverviewRoute =
     path: '/overview',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
+const PublicProjectsProjectIdPlaygroundRoute =
+  PublicProjectsProjectIdPlaygroundRouteImport.update({
+    id: '/playground',
+    path: '/playground',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
 const PublicProjectsProjectIdRealtimeRoute =
   PublicProjectsProjectIdRealtimeRouteImport.update({
     id: '/realtime',
@@ -1715,6 +1723,12 @@ const PublicProjectsProjectIdDatabasesCreateRoute =
     id: '/create',
     path: '/create',
     getParentRoute: () => PublicProjectsProjectIdDatabasesRoute,
+  } as any)
+const PublicProjectsProjectIdEnvironmentsCreateRoute =
+  PublicProjectsProjectIdEnvironmentsCreateRouteImport.update({
+    id: '/environments/create',
+    path: '/environments/create',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdFirewallIndexRoute =
   PublicProjectsProjectIdFirewallIndexRouteImport.update({
@@ -3569,6 +3583,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
+  '/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -3604,6 +3619,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
+  '/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
   '/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
@@ -4017,6 +4033,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
   '/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
+  '/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
   '/agent/automations': typeof PublicAgentAutomationsIndexRoute
   '/agent/settings': typeof PublicAgentSettingsIndexRoute
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdIndexRoute
@@ -4041,6 +4058,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
   '/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
+  '/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/projects/$projectId/functions/editor': typeof PublicProjectsProjectIdFunctionsEditorRoute
   '/projects/$projectId/functions/templates': typeof PublicProjectsProjectIdFunctionsTemplatesRoute
@@ -4451,6 +4469,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/onboarding': typeof PublicProjectsProjectIdOnboardingRoute
   '/_public/projects/$projectId/overview': typeof PublicProjectsProjectIdOverviewRoute
+  '/_public/projects/$projectId/playground': typeof PublicProjectsProjectIdPlaygroundRoute
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/settings': typeof PublicProjectsProjectIdSettingsRouteWithChildren
   '/_public/projects/$projectId/storage': typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -4486,6 +4505,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/auth/templates': typeof PublicProjectsProjectIdAuthTemplatesRoute
   '/_public/projects/$projectId/databases/$databaseId': typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
   '/_public/projects/$projectId/databases/create': typeof PublicProjectsProjectIdDatabasesCreateRoute
+  '/_public/projects/$projectId/environments/create': typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   '/_public/projects/$projectId/firewall/create': typeof PublicProjectsProjectIdFirewallCreateRoute
   '/_public/projects/$projectId/functions/$functionId': typeof PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren
   '/_public/projects/$projectId/functions/create': typeof PublicProjectsProjectIdFunctionsCreateRouteWithChildren
@@ -4918,6 +4938,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/onboarding'
     | '/projects/$projectId/overview'
+    | '/projects/$projectId/playground'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/settings'
     | '/projects/$projectId/storage'
@@ -4953,6 +4974,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/templates'
     | '/projects/$projectId/databases/$databaseId'
     | '/projects/$projectId/databases/create'
+    | '/projects/$projectId/environments/create'
     | '/projects/$projectId/firewall/create'
     | '/projects/$projectId/functions/$functionId'
     | '/projects/$projectId/functions/create'
@@ -5366,6 +5388,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/imagine'
     | '/projects/$projectId/onboarding'
     | '/projects/$projectId/overview'
+    | '/projects/$projectId/playground'
     | '/agent/automations'
     | '/agent/settings'
     | '/organizations/$orgId'
@@ -5390,6 +5413,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/auth/templates'
     | '/projects/$projectId/databases/$databaseId'
     | '/projects/$projectId/databases/create'
+    | '/projects/$projectId/environments/create'
     | '/projects/$projectId/firewall/create'
     | '/projects/$projectId/functions/editor'
     | '/projects/$projectId/functions/templates'
@@ -5799,6 +5823,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/onboarding'
     | '/_public/projects/$projectId/overview'
+    | '/_public/projects/$projectId/playground'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/settings'
     | '/_public/projects/$projectId/storage'
@@ -5834,6 +5859,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/auth/templates'
     | '/_public/projects/$projectId/databases/$databaseId'
     | '/_public/projects/$projectId/databases/create'
+    | '/_public/projects/$projectId/environments/create'
     | '/_public/projects/$projectId/firewall/create'
     | '/_public/projects/$projectId/functions/$functionId'
     | '/_public/projects/$projectId/functions/create'
@@ -7461,6 +7487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdOverviewRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
+    '/_public/projects/$projectId/playground': {
+      id: '/_public/projects/$projectId/playground'
+      path: '/playground'
+      fullPath: '/projects/$projectId/playground'
+      preLoaderRoute: typeof PublicProjectsProjectIdPlaygroundRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
     '/_public/projects/$projectId/realtime': {
       id: '/_public/projects/$projectId/realtime'
       path: '/realtime'
@@ -7719,6 +7752,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/databases/create'
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesCreateRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesRoute
+    }
+    '/_public/projects/$projectId/environments/create': {
+      id: '/_public/projects/$projectId/environments/create'
+      path: '/environments/create'
+      fullPath: '/projects/$projectId/environments/create'
+      preLoaderRoute: typeof PublicProjectsProjectIdEnvironmentsCreateRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/firewall/': {
       id: '/_public/projects/$projectId/firewall/'
@@ -11163,6 +11203,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdOnboardingRoute: typeof PublicProjectsProjectIdOnboardingRoute
   PublicProjectsProjectIdOverviewRoute: typeof PublicProjectsProjectIdOverviewRoute
+  PublicProjectsProjectIdPlaygroundRoute: typeof PublicProjectsProjectIdPlaygroundRoute
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdSettingsRoute: typeof PublicProjectsProjectIdSettingsRouteWithChildren
   PublicProjectsProjectIdStorageRoute: typeof PublicProjectsProjectIdStorageRouteWithChildren
@@ -11170,6 +11211,7 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdUsageRoute: typeof PublicProjectsProjectIdUsageRouteWithChildren
   PublicProjectsProjectIdVideosRoute: typeof PublicProjectsProjectIdVideosRouteWithChildren
   PublicProjectsProjectIdIndexRoute: typeof PublicProjectsProjectIdIndexRoute
+  PublicProjectsProjectIdEnvironmentsCreateRoute: typeof PublicProjectsProjectIdEnvironmentsCreateRoute
   PublicProjectsProjectIdSitesSiteIdRoute: typeof PublicProjectsProjectIdSitesSiteIdRouteWithChildren
   PublicProjectsProjectIdSitesCreateRoute: typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   PublicProjectsProjectIdSitesIndexRoute: typeof PublicProjectsProjectIdSitesIndexRoute
@@ -11200,6 +11242,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdOnboardingRoute:
       PublicProjectsProjectIdOnboardingRoute,
     PublicProjectsProjectIdOverviewRoute: PublicProjectsProjectIdOverviewRoute,
+    PublicProjectsProjectIdPlaygroundRoute:
+      PublicProjectsProjectIdPlaygroundRoute,
     PublicProjectsProjectIdRealtimeRoute:
       PublicProjectsProjectIdRealtimeRouteWithChildren,
     PublicProjectsProjectIdSettingsRoute:
@@ -11213,6 +11257,8 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdVideosRoute:
       PublicProjectsProjectIdVideosRouteWithChildren,
     PublicProjectsProjectIdIndexRoute: PublicProjectsProjectIdIndexRoute,
+    PublicProjectsProjectIdEnvironmentsCreateRoute:
+      PublicProjectsProjectIdEnvironmentsCreateRoute,
     PublicProjectsProjectIdSitesSiteIdRoute:
       PublicProjectsProjectIdSitesSiteIdRouteWithChildren,
     PublicProjectsProjectIdSitesCreateRoute:

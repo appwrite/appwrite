@@ -2853,6 +2853,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Never: 'なし',
   Scopes: 'スコープ',
   Explorer: 'Explorer',
+  'Playground mode': 'プレイグラウンドのモード',
   APIs: 'API',
   Other: 'その他',
   Breakdown: '内訳',
@@ -3372,10 +3373,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Create environment': '環境を作成',
   'Rename environment': '環境の名前を変更',
   'Delete environment': '環境を削除',
-  'Environment ID': '環境 ID',
   'Enter environment name': '環境名を入力',
-  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
-    '環境はこのプロジェクトと同じリージョンに、独自のリソースとユーザーを持ちます。使用量はこのプロジェクトに請求されます。',
   'Only the name changes. The environment ID stays the same.':
     '変更されるのは名前だけです。環境 ID はそのままです。',
   'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
@@ -3388,6 +3386,35 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to delete environment': '環境の削除に失敗しました',
   'Too many environments created for this project in the last hour. Try again later.':
     'このプロジェクトで過去 1 時間に作成された環境が多すぎます。しばらくしてからもう一度お試しください。',
+  // Migration resource types copied into an environment
+  'Function variable': 'Function の変数',
+  'Function variables': 'Function の変数',
+  'Messaging providers': 'メッセージングプロバイダー',
+  'OAuth2 provider': 'OAuth2 プロバイダー',
+  'Project variable': 'プロジェクト変数',
+  'SMTP settings': 'SMTP 設定',
+  'Security policies': 'セキュリティポリシー',
+  'Site deployment': 'サイトのデプロイ',
+  'Site deployments': 'サイトのデプロイ',
+  'Site variable': 'サイト変数',
+  'Site variables': 'サイト変数',
+  // Environment switcher order, banner and creation wizard
+  'The copy from the project is under way. Its progress shows in the corner of the environment.':
+    'プロジェクトからのコピーを実行中です。進行状況は環境の隅に表示されます。',
+  'Failed to update environment order': '環境の順序を更新できませんでした',
+  'Project environment': 'プロジェクト環境',
+  'Switch to production': '本番に切り替え',
+  'Changes here do not affect production.':
+    'ここでの変更は本番に影響しません。',
+  'Name the environment and choose where it starts.':
+    '環境に名前を付け、開始方法を選択します。',
+  'Pick what to copy from the project.':
+    'プロジェクトからコピーする内容を選択します。',
+  'Point your app at the new environment.': 'アプリを新しい環境に接続します。',
+  'Open environment': '環境を開く',
+  'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.':
+    '環境はそれ自体が1つのプロジェクトです。このプロジェクト ID を使ってアプリを接続してください。API エンドポイントはプロジェクトで使用しているものと同じです。',
+  'API endpoint': 'API エンドポイント',
   'Send your first message': '最初のメッセージを送信',
   'Reach your users by email, SMS, and push notifications from one place.':
     'メール、SMS、プッシュ通知でユーザーに届けられます。すべて 1 か所で管理できます。',
@@ -3547,8 +3574,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Transfer link': '転送リンク',
   'Expires in': '有効期間',
   'Recipient organization ID (optional)': '受取先の組織 ID (任意)',
-  'Leave empty to let any organization claim the project.':
-    '空欄にすると、どの組織でもプロジェクトを受け取れます。',
+  'Recommended. Only this organization can claim the project, so the link is useless to anyone else who gets it. Leave empty to let any organization with the link claim it.':
+    '推奨。この組織だけがプロジェクトを受け取れるため、リンクが他の人に渡っても使われることはありません。空欄にすると、リンクを持つどの組織でもプロジェクトを受け取れます。',
   'Failed to create transfer link': '転送リンクの作成に失敗しました',
   'Delete transfer link': '転送リンクを削除',
   'The link will stop working and the project can no longer be claimed with it.':
@@ -3566,7 +3593,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'You need an organization to claim this project. Create one, then open the link again.':
     'このプロジェクトを受け取るには組織が必要です。組織を作成してから、もう一度リンクを開いてください。',
   'Link expires': 'リンクの有効期限',
-  'This transfer link is no longer valid.': 'この転送リンクは無効になりました。',
+  'This transfer link is no longer valid.':
+    'この転送リンクは無効になりました。',
   'The project already belongs to this organization. Select a different one.':
     'プロジェクトはすでにこの組織に属しています。別の組織を選択してください。',
   'will move from': 'は次の組織から移動します:',
@@ -3575,6 +3603,48 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このリンクを受け取れるのはこの組織だけです。',
   'This transfer is reserved for an organization you are not part of:':
     'この転送は、あなたが所属していない組織専用です:',
+  "Resolve this organization's billing issues before transferring.":
+    '転送する前に、この組織の請求に関する問題を解決してください。',
+  'This organization has a failed or unauthorized payment. Resolve its billing issues before transferring this project.':
+    'この組織には失敗した支払い、または承認されていない支払いがあります。このプロジェクトを転送する前に、請求に関する問題を解決してください。',
+  'Go to billing': '請求へ移動',
+  'Checking...': '確認中...',
+  'Billing issue': '請求の問題',
+  'Project limit reached': 'プロジェクト数の上限に達しています',
+  "You don't have permission to add projects to this organization.":
+    'この組織にプロジェクトを追加する権限がありません。',
+  'This organization has billing issues. Resolve them before it can receive projects.':
+    'この組織には請求に関する問題があります。プロジェクトを受け取るには、先に問題を解決してください。',
+  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.":
+    'この組織はプランのプロジェクト数の上限に達しています。このプロジェクトを受け取るには、プランをアップグレードしてください。',
+  "Change which organization owns this project. Its resources and data move with it, and the new organization's plan and members apply from then on.":
+    'このプロジェクトを所有する組織を変更します。リソースとデータはプロジェクトと一緒に移動し、以降は新しい組織のプランとメンバーが適用されます。',
+  'Move to another organization': '別の組織に移動',
+  'Move this project to another organization you are a member of. The move happens right away.':
+    'このプロジェクトを、あなたが所属する別の組織に移動します。移動はすぐに反映されます。',
+  'Destination organization': '移動先の組織',
+  'Move project': 'プロジェクトを移動',
+  'Failed to move project': 'プロジェクトの移動に失敗しました',
+  'You are not a member of any other organization.':
+    'ほかに所属している組織がありません。',
+  'Select an organization to move this project to.':
+    'プロジェクトの移動先の組織を選択してください。',
+  'Hand off with a transfer link': '転送リンクで引き渡す',
+  "Share a single-use link with someone in another organization. The project moves when they claim it, and you don't need to be a member of their organization.":
+    '別の組織のユーザーに 1 回限りのリンクを共有します。相手が受け取るとプロジェクトが移動します。相手の組織に所属している必要はありません。',
+  'Pending transfer links': '保留中の転送リンク',
+  'Links that have not been claimed yet. Expired links can no longer be claimed. Delete a link to stop it from working sooner.':
+    'まだ受け取られていないリンクです。期限切れのリンクでは受け取れません。期限より前に無効にするには、リンクを削除してください。',
+  'The project already belongs to this organization.':
+    'プロジェクトはすでにこの組織に属しています。',
+  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'このプロジェクトを転送できるのは、プロジェクトを管理できるロールを持つ組織メンバーだけです。組織のオーナーに転送を依頼するか、ロールの変更を依頼してください。',
+  'No permission': '権限なし',
+  "You don't have permission to transfer projects in this organization.":
+    'この組織でプロジェクトを転送する権限がありません。',
+  'Transfer links': '転送リンク',
+  'Active transfer links for this project stop working after the move.':
+    '移動後、このプロジェクトの有効な転送リンクは使用できなくなります。',
   'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
     '非アクティブなデプロイの保持期間を選択します。アクティブなデプロイとカスタムドメインに紐づくデプロイは常に保持されます。',
   'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
@@ -3602,8 +3672,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'What to copy': 'コピーする内容',
   'Pick what to copy, or start from an empty environment.':
     'コピーする内容を選択するか、空の環境から開始してください。',
-  'Environment created. The copy from the project is under way.':
-    '環境を作成しました。プロジェクトからのコピーを実行中です。',
   'Databases, tables, columns and indexes':
     'データベース、テーブル、カラム、インデックス',
   'Rows and documents': '行とドキュメント',

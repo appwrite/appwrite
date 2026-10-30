@@ -5051,7 +5051,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
-    "title": "Setup Stripe",
+    "title": "Set up Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
     "layout": "tutorial",
     "readingTimeMinutes": 2,

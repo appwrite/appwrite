@@ -22,7 +22,6 @@ import {
   Play,
   Trash2,
   Unplug,
-  X,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
@@ -36,7 +35,6 @@ import {
 } from '@/components/ui/tooltip'
 import { EventEditorModal } from '@/components/global/shared/EventEditor'
 import { SearchableSelect } from '@/components/global/shared/SearchableSelect'
-import { ServiceHeader } from '../shared/ServiceHeader'
 import { ConnectionCodeDialog } from './_components/ConnectionCodeDialog'
 import { CollapsibleJsonView } from './_components/CollapsibleJsonView'
 import { MessagesFilterBar } from './_components/MessagesFilterBar'
@@ -55,7 +53,6 @@ import {
   type RealtimeMessageLog,
   type RealtimeReconnectState,
   type RealtimeSession,
-  type RealtimeSessionError,
 } from '@/lib/realtime/session-client'
 import {
   formatSummaryList,
@@ -359,7 +356,7 @@ function messageTypeVariant(
   return 'info'
 }
 
-export function View() {
+export function Realtime() {
   const t = useT()
   const { projectId } = useParams({ strict: false })
 
@@ -491,7 +488,7 @@ export function View() {
     })
   }, [])
 
-  const handleSessionError = useCallback((_error: RealtimeSessionError) => {
+  const handleSessionError = useCallback(() => {
     setConnectionStatus('error')
     setSocketOpen(false)
   }, [])
@@ -936,9 +933,7 @@ export function View() {
   return (
     // Below lg the panels stack and the whole page scrolls; at lg they split
     // into a viewport-height grid where each panel owns its scroll area.
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto lg:overflow-hidden">
-      <ServiceHeader title={t('Realtime')} fullWidthBorder fullWidth />
-
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:overflow-hidden">
       <div className="flex flex-col lg:min-h-0 lg:flex-1 lg:overflow-hidden">
         <TooltipProvider delayDuration={300}>
           <div
