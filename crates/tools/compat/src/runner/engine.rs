@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::Path;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use serde_json::{Value, json};
 
@@ -305,6 +305,8 @@ impl Engine {
                 continue;
             }
             let file = &cases::load_file(path)?;
+            let started = Instant::now();
+            let mut ran = 0;
             for case in &file.cases {
                 let name = label(lib, file, case);
                 if filter.is_some_and(|f| !cases::selected(f, &name)) {
@@ -330,6 +332,7 @@ impl Engine {
                     r = self.diff_case(lib, &spec, case)?;
                     self.flaked = None;
                 }
+                ran += 1;
                 let failed = !r.differences.is_empty() || !r.faults.is_empty();
                 if let Some(t) = &mut self.trace {
                     t.cases.push(json!({
@@ -358,6 +361,11 @@ impl Engine {
                         eprintln!("  ok  {name}");
                     }
                 }
+            }
+            // A CI shard reports each file's time as it goes, so a slow
+            // shard's log shows where its time went before the job's limit.
+            if let Some(shard) = shard {
+                eprintln!("{lib}@{shard} {file_name}: {ran} cases in {:.0}s", started.elapsed().as_secs_f64());
             }
         }
         Ok(report)
