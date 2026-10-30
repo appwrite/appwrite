@@ -30,6 +30,7 @@ impl Serialize for BucketModel<'_> {
         map.serialize_entry("encryption", &doc.boolean("encryption").unwrap_or(true))?;
         map.serialize_entry("antivirus", &doc.boolean("antivirus").unwrap_or(true))?;
         map.serialize_entry("transformations", &doc.boolean("transformations").unwrap_or(true))?;
+        map.serialize_entry("stripMetadata", &doc.boolean("stripMetadata").unwrap_or(false))?;
         map.serialize_entry("totalSize", &0_i64)?;
         map.end()
     }

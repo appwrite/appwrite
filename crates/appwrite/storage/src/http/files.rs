@@ -60,6 +60,10 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         if !uid().is_valid(&Value::from(file_id.as_str())) {
             return Err(Error::new(ErrorType::StorageInvalidAppwriteId));
         }
+        // A range starting at the declared size has no bytes left to address.
+        if range.start >= total {
+            return Err(Error::new(ErrorType::StorageInvalidContentRange));
+        }
         let (chunk, chunks) = device::chunk_index(range.start, total);
         (chunk, chunks, total)
     } else {
@@ -212,6 +216,13 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let mut updates = Document::default();
     updates.put("$permissions", list_value(&permissions));
     if let Some(name) = &name {
+        let allowed = bucket.strings("allowedFileExtensions");
+        if !allowed.is_empty()
+            && *name != file.string_or_empty("name")
+            && !FileExt::new(allowed).is_valid(&Json::String(name.clone()))
+        {
+            return Err(Error::with_message(ErrorType::StorageFileTypeUnsupported, "File extension not allowed"));
+        }
         updates.put("name", Value::from(name.as_str()));
     }
     let file = if secured && !permitted {

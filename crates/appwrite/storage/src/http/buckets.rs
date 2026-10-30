@@ -40,6 +40,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let encryption = ctx.optional_bool("encryption", true)?;
     let antivirus = ctx.optional_bool("antivirus", true)?;
     let transformations = ctx.optional_bool("transformations", true)?;
+    let strip_metadata = ctx.optional_bool("stripMetadata", false)?;
     let description = ctx.optional_str("description", "", &Text::with_min(1024, 0))?.unwrap_or_default();
 
     let db = ctx.db()?;
@@ -57,6 +58,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     document.put("encryption", Value::Bool(encryption));
     document.put("antivirus", Value::Bool(antivirus));
     document.put("transformations", Value::Bool(transformations));
+    document.put("stripMetadata", Value::Bool(strip_metadata));
     document.put("search", Value::from(format!("{bucket_id} {name} {description}").as_str()));
 
     let created = db
@@ -128,6 +130,8 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let encryption = nullable_bool(ctx, "encryption", true, bucket.boolean("encryption").unwrap_or(true))?;
     let antivirus = ctx.optional_bool("antivirus", true)?;
     let transformations = ctx.optional_bool("transformations", true)?;
+    let previous = bucket.boolean("stripMetadata").unwrap_or(false);
+    let strip_metadata = nullable_bool(ctx, "stripMetadata", previous, previous)?;
     let description = match ctx.param("description") {
         None => bucket.string_or_empty("description"),
         Some(value) if value.is_null() => bucket.string_or_empty("description"),
@@ -146,6 +150,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     updates.put("compression", Value::from(compression.as_str()));
     updates.put("antivirus", Value::Bool(antivirus));
     updates.put("transformations", Value::Bool(transformations));
+    updates.put("stripMetadata", Value::Bool(strip_metadata));
     updates.put("search", Value::from(format!("{bucket_id} {name} {description}").as_str()));
     let bucket = db.update_document("buckets", bucket.id(), updates).await.map_err(base::map_db)?;
     db.update_collection(

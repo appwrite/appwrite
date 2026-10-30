@@ -86,7 +86,8 @@ pub async fn download(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     let bucket = super::visible_bucket(ctx, &db, &bucket_id).await?;
     let file = load_file(ctx, &db, &bucket, &file_id).await?;
-    send(ctx, &file, &file.string_or_empty("mimeType"), "attachment", "", false, OUTPUT_CHUNK).await
+    send(ctx, &file, &file.string_or_empty("mimeType"), "attachment", "sandbox; script-src 'none';", true, OUTPUT_CHUNK)
+        .await
 }
 
 /// `GET /v1/storage/buckets/:bucketId/files/:fileId/view`.
@@ -114,10 +115,7 @@ pub async fn push(ctx: &mut Context) -> Result<Response> {
     {
         return Err(Error::new(ErrorType::UserUnauthorized));
     }
-    let disposition = {
-        let value = claim(&claims, "disposition");
-        if value.is_empty() { "inline".to_owned() } else { value }
-    };
+    let mut disposition = if claim(&claims, "disposition") == "attachment" { "attachment" } else { "inline" };
     let internal = claim_truthy(claims.get("internal"));
     let db = if internal { ctx.platform_db()? } else { ctx.db()? };
     let bucket = super::visible_bucket(ctx, &db, &bucket_id).await?;
@@ -127,7 +125,7 @@ pub async fn push(ctx: &mut Context) -> Result<Response> {
         .skip(db.get_document(&collection, &file_id, Vec::new(), false))
         .await
         .map_err(base::map_db)?;
-    if file.is_empty() {
+    if incomplete(&file) {
         return Err(Error::new(ErrorType::StorageFileNotFound));
     }
     let device = Stored::for_project(&ctx.project.id)?;
@@ -137,8 +135,11 @@ pub async fn push(ctx: &mut Context) -> Result<Response> {
     }
     let mime = file.string_or_empty("mimeType");
     let content_type = if MIMES.contains(&mime.as_str()) { mime } else { "text/plain".to_owned() };
+    if content_type == "image/svg+xml" {
+        disposition = "attachment";
+    }
     let response =
-        serve(ctx, &device, &file, &content_type, &disposition, "script-src none;", true, READ_BUFFER).await?;
+        serve(ctx, &device, &file, &content_type, disposition, "script-src 'none';", true, READ_BUFFER).await?;
     Ok(response)
 }
 
@@ -247,10 +248,40 @@ async fn load_file(ctx: &Context, db: &Database, bucket: &Document, file_id: &st
         db.authorization().skip(db.get_document(&collection, file_id, Vec::new(), false)).await.map_err(base::map_db)?
     };
     token_matches_file(ctx, &file)?;
-    if file.is_empty() {
+    if incomplete(&file) {
         return Err(Error::new(ErrorType::StorageFileNotFound));
     }
     Ok(file)
+}
+
+/// Missing, or still uploading: a file stays incomplete until its final
+/// chunk is joined and scanned.
+fn incomplete(file: &Document) -> bool {
+    let total = file.get("chunksTotal").map(utopia_database::value::to_long).unwrap_or(1);
+    file.is_empty() || base::long(file, "chunksUploaded") < total
+}
+
+/// `Response::setContentDisposition()`: an ASCII fallback name (a UTF-8
+/// lead byte becomes `_`; control characters, `"`, `\` and `;` are dropped)
+/// and the RFC 5987 UTF-8 name.
+///
+/// ```text
+/// café "report"\;.html → attachment; filename="caf_ report.html"; filename*=UTF-8''caf%C3%A9%20%22report%22%5C%3B.html
+/// ```
+fn content_disposition(kind: &str, name: &str) -> String {
+    let mut fallback = String::new();
+    for &byte in name.as_bytes() {
+        if byte >= 0xC0 {
+            fallback.push('_');
+        } else if (32..127).contains(&byte) && !matches!(byte, b'"' | b'\\' | b';') {
+            fallback.push(byte as char);
+        }
+    }
+    if fallback.is_empty() {
+        fallback.push_str("download");
+    }
+    let encoded = php_std::encoding::rawurlencode(if name.is_empty() { b"download" } else { name.as_bytes() });
+    format!("{kind}; filename=\"{fallback}\"; filename*=UTF-8''{encoded}")
 }
 
 async fn send(
@@ -322,7 +353,7 @@ async fn serve(
         response.add("content-length", &(end - start + 1).to_string());
     }
     response.add("cache-control", &format!("private, max-age={DOWNLOAD_MAX_AGE}"));
-    response.add("content-disposition", &format!("{disposition}; filename=\"{}\"", file.string_or_empty("name")));
+    response.set("content-disposition", &content_disposition(disposition, &file.string_or_empty("name")));
     if !csp.is_empty() {
         response.add("content-security-policy", csp);
     }
@@ -743,5 +774,19 @@ fn claim_truthy(value: Option<&Json>) -> bool {
         Some(Json::Number(value)) => value.as_i64() != Some(0) && value.as_f64() != Some(0.0),
         Some(Json::String(value)) => !value.is_empty() && value != "0",
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::content_disposition;
+
+    #[test]
+    fn content_disposition_as_php() {
+        assert_eq!(
+            content_disposition("attachment", "caf\u{e9} \"report\"\\;.html"),
+            "attachment; filename=\"caf_ report.html\"; filename*=UTF-8''caf%C3%A9%20%22report%22%5C%3B.html"
+        );
+        assert_eq!(content_disposition("inline", ""), "inline; filename=\"download\"; filename*=UTF-8''download");
     }
 }
