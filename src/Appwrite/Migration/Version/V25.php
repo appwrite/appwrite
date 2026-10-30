@@ -373,6 +373,12 @@ class V25 extends Migration
                 case 'deployments':
                     if ($collectionType === 'projects') {
                         try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'callbacks');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"callbacks\" from {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_commitHash_branch');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_commitHash_branch\" from {$id}: {$th->getMessage()}");

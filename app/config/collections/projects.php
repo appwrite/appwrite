@@ -252,6 +252,7 @@ return [
             Attribute::datetime(key: 'buildStartedAt'),
             Attribute::datetime(key: 'buildEndedAt'),
             Attribute::integer(key: 'buildDuration', signed: false),
+            Attribute::string(key: 'callbacks', size: 16, default: [], array: true),
             Attribute::integer(key: 'buildSize', width: IntegerWidth::Bits64, signed: false),
             Attribute::integer(key: 'totalSize', width: IntegerWidth::Bits64, signed: false),
             Attribute::string(key: 'status', size: 16, default: 'waiting'),
