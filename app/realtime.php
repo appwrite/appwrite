@@ -585,6 +585,48 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         }
     });
 
+    $pubsubState = [
+        'stage' => 'idle',
+        'since' => \microtime(true),
+        'received' => 0,
+        'arrivals' => 0,
+        'matched' => 0,
+        'sent' => 0,
+        'error' => '',
+    ];
+
+    Timer::tick(60000, function () use (&$pubsubState, $workerId) {
+        $stageSeconds = \round(\microtime(true) - $pubsubState['since'], 3);
+
+        $span = Span::init('realtime.pubsub.heartbeat');
+        $span
+            ->set('realtime.worker.id', $workerId)
+            ->set('realtime.pubsub.stage', $pubsubState['stage'])
+            ->set('realtime.pubsub.stage_seconds', $stageSeconds)
+            ->set('realtime.pubsub.events_received', $pubsubState['received'])
+            ->set('realtime.pubsub.arrivals_recorded', $pubsubState['arrivals'])
+            ->set('realtime.pubsub.events_matched', $pubsubState['matched'])
+            ->set('realtime.pubsub.messages_sent', $pubsubState['sent']);
+
+        if ($pubsubState['error'] !== '') {
+            $span->set('realtime.pubsub.last_error', $pubsubState['error']);
+        }
+
+        if ($pubsubState['stage'] !== 'idle' && $stageSeconds > 60) {
+            $span->set('warning.message', "Pub/sub callback stuck in {$pubsubState['stage']} for {$stageSeconds}s");
+        } elseif ($pubsubState['received'] > 0 && $pubsubState['arrivals'] === 0) {
+            $span->set('warning.message', 'Pub/sub events received but no arrival recorded');
+        }
+
+        $span->finish();
+
+        $pubsubState['received'] = 0;
+        $pubsubState['arrivals'] = 0;
+        $pubsubState['matched'] = 0;
+        $pubsubState['sent'] = 0;
+        $pubsubState['error'] = '';
+    });
+
     while ($attempts < 300) {
         $span = Span::init('realtime.pubsub');
         try {
@@ -604,10 +646,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 Console::error('Pub/sub failed (worker: ' . $workerId . ')');
             }
 
-            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+            $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($server, $workerId, $stats, $register, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, &$pubsubState) {
+                $pubsubState['received']++;
+                $pubsubState['stage'] = 'decode';
+                $pubsubState['since'] = \microtime(true);
+
                 $event = json_decode($payload, true);
                 $closing = [];
 
+                $pubsubState['stage'] = 'arrival';
                 $eventTimestamp = $event['data']['timestamp'] ?? null;
                 if (\is_string($eventTimestamp)) {
                     try {
@@ -618,11 +665,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $arrivalDelayMs = (int) \max(0, $nowTimestampMs - $eventTimestampMs);
 
                         $register->get('telemetry.arrivalDelayHistogram')->record($arrivalDelayMs);
-                    } catch (\Throwable) {
-                        // Ignore invalid timestamp payloads.
+                        $pubsubState['arrivals']++;
+                    } catch (\Throwable $th) {
+                        $pubsubState['error'] = 'arrival: ' . $th->getMessage();
                     }
                 }
 
+                $pubsubState['stage'] = 'permissions';
                 if ($event['permissionsChanged'] && isset($event['userId'])) {
                     $projectId = $event['project'];
                     $userId = $event['userId'];
@@ -864,7 +913,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
+                $pubsubState['stage'] = 'match';
                 $receivers = $realtime->getSubscribers($event);
+                if ($receivers !== []) {
+                    $pubsubState['matched']++;
+                }
+                $pubsubState['stage'] = 'deliver';
 
                 if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
@@ -914,6 +968,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $outboundBytes += strlen($payloadJson);
                 }
 
+                $pubsubState['sent'] += $total;
+
                 if ($total > 0) {
                     $register->get('telemetry.messageSentCounter')->add($total);
                     $register->get('telemetry.outboundBytesCounter')->add($outboundBytes);
@@ -928,8 +984,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                             $delayMs = (int) \max(0, $nowTimestampMs - $updatedAtTimestampMs);
 
                             $register->get('telemetry.deliveryDelayHistogram')->record($delayMs);
-                        } catch (\Throwable) {
-                            // Ignore invalid timestamp payloads.
+                        } catch (\Throwable $th) {
+                            $pubsubState['error'] = 'delivery: ' . $th->getMessage();
                         }
                     }
 
@@ -949,10 +1005,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 // Connections whose access ended with this event got it above with the
                 // roles they held until now, so the client sees what ended it before the
                 // socket goes. Expired ones got nothing.
+                $pubsubState['stage'] = 'close';
                 foreach (\array_keys($closing) as $connection) {
                     $server->send([$connection], $unauthorizedPayloadJson);
                     $server->close($connection, $unauthorized->getCode());
                 }
+
+                $pubsubState['stage'] = 'tail';
 
                 // Console live event tail: runs for EVERY firehose event, regardless of
                 // whether it had regular subscribers ($total). The firehose is published
@@ -977,9 +1036,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 if ($tailProjectId !== '' && $eventTailRegistry->isTailed($tailProjectId)) {
                     $eventTailRegistry->ingest($tailProjectId, Realtime::toTailMetadata($event), \microtime(true));
                 }
+
+                $pubsubState['stage'] = 'idle';
+                $pubsubState['since'] = \microtime(true);
             });
         } catch (Throwable $th) {
             $span->setError($th);
+            $pubsubState['stage'] = 'idle';
+            $pubsubState['since'] = \microtime(true);
+            $pubsubState['error'] = 'subscribe: ' . $th->getMessage();
 
             Console::error('Pub/sub error: ' . $th->getMessage());
             $attempts++;
