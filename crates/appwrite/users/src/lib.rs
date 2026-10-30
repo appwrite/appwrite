@@ -399,7 +399,7 @@ impl Module for Users {
                 "/v1/users/:userId/mfa/recovery-codes",
                 "getUserMFARecoveryCodes",
                 "getMFARecoveryCodes",
-                READ,
+                WRITE,
                 None,
                 None,
                 mfa::get_recovery_codes
