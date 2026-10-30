@@ -929,20 +929,31 @@ final class EvaluationCustomServerTest extends Scope
                     // The project as the workers see it, but writing to a tenant of its own.
                     $isolated = new Document(['$sequence' => $tenant] + $project->getArrayCopy());
 
+                    $written = new \DateTimeImmutable();
                     $this->writeEvents($project, $isolated, $resources, $dbForProject, $connection);
                     $gauges = $this->writeGauges($project, $isolated, $resources, $factory, $dbForProject, $platform, $connection);
                     $cases = $this->metricCases($resources, $gauges);
 
                     $worker = new class () extends Alerts {
-                        public function read(Document $monitor, Document $project, Database $dbForProject, Connection $connection): float
+                        public function read(Document $monitor, Document $project, Database $dbForProject, Connection $connection, \DateTimeImmutable $now): ?float
                         {
-                            return $this->measure($monitor, $project, $dbForProject, $connection, new \DateTimeImmutable());
+                            return $this->measure($monitor, $project, $dbForProject, $connection, $now);
                         }
                     };
+                    // Evaluated once the lag has passed over everything written, as the scheduler would.
+                    $lag = $this->usageLag();
+                    $later = (new \DateTimeImmutable())->add(new \DateInterval('PT' . ($lag + 1) . 'S'));
+
+                    // Usage still inside the lag is not read yet: evaluated as it is written, there is nothing to compare.
+                    $requests = $platform->getDocument('monitors', $this->createScopedMonitor(METRIC_NETWORK_REQUESTS, 'project', ''));
+                    $cases['lag'] = ['early' => $worker->read($requests, $isolated, $dbForProject, $connection, $written), 'late' => $worker->read($requests, $isolated, $dbForProject, $connection, $later)];
 
                     foreach ($cases as $case => &$expectation) {
+                        if ($case === 'lag') {
+                            continue;
+                        }
                         $monitor = $platform->getDocument('monitors', $this->createScopedMonitor($expectation['metric'], $expectation['resourceType'], $expectation['resourceId']));
-                        $expectation['measured'] = $worker->read($monitor, $isolated, $dbForProject, $connection);
+                        $expectation['measured'] = $worker->read($monitor, $isolated, $dbForProject, $connection, $later);
 
                         if (isset($expectation['wrong'])) {
                             $registry = Config::getParam('alerts', []);
@@ -950,7 +961,7 @@ final class EvaluationCustomServerTest extends Scope
                             $scope = $expectation['wrong']($scope);
                             unset($scope);
                             $engine = $expectation['resourceType'] === 'database' ? (string) $dbForProject->getDocument('databases', $expectation['resourceId'])->getAttribute('type', '') : '';
-                            $expectation['misread'] = (new Meter(new Tenant($connection->getUsage(), $tenant), $registry))->measure($monitor, new \DateTimeImmutable(), $engine);
+                            $expectation['misread'] = (new Meter(new Tenant($connection->getUsage(), $tenant), $registry, $lag))->measure($monitor, $later, $engine);
                         }
                     }
                     unset($expectation);
@@ -971,6 +982,12 @@ final class EvaluationCustomServerTest extends Scope
             }
         }
 
+        if ($this->usageLag() > 0) {
+            $this->assertNull($cases['lag']['early'], 'Requests written inside the lag are not read yet');
+        }
+        $this->assertEqualsWithDelta(2.0, $cases['lag']['late'], 0.001, 'Requests are read once the lag has passed');
+        unset($cases['lag']);
+
         /**
          * Test for SUCCESS
          */
@@ -978,9 +995,112 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertGreaterThan(0, $expectation['expected'], "{$case}: the writer recorded something to read");
             $this->assertEqualsWithDelta($expectation['expected'], $expectation['measured'], 0.001, $case);
             if (isset($expectation['wrong'])) {
-                $this->assertNotEqualsWithDelta($expectation['expected'], $expectation['misread'], 0.001, "{$case}: reading it in another dimension must miss");
+                $this->assertNotEqualsWithDelta($expectation['expected'], $expectation['misread'] ?? 0.0, 0.001, "{$case}: reading it in another dimension must miss");
             }
         }
+    }
+
+    /**
+     * Without usage recorded for its window a monitor is not compared: an idle
+     * project reads no data, not 0, so a `lessThan` monitor does not fire on it.
+     * Once usage below the threshold is recorded, it does.
+     */
+    public function testMonitorWithoutUsageIsNotCompared(): void
+    {
+        if (System::getEnv('_APP_USAGE_STATS', 'enabled') === 'disabled') {
+            $this->markTestSkipped('Usage stats are disabled on this stack');
+        }
+
+        // Nothing in this project sends messages, so the metric has no rows.
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => 'Too few failures ' . \uniqid(),
+            'rules' => [Query::lessThan(METRIC_MESSAGES_FAILED, 5)->toString()],
+            'window' => 3600,
+            'cooldown' => 0,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $first = $this->waitForEvaluation($monitorId, null);
+        $this->waitForEvaluation($monitorId, $first);
+        $monitor = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body'];
+        $this->assertSame('ok', $monitor['status']);
+        $this->assertNull($monitor['value'], 'Evaluated without data, the monitor has no reading');
+        $this->assertSame(0, $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()])['total']);
+
+        // One failure, recorded where the messaging worker records it, before the lag.
+        $at = (new \DateTimeImmutable())->sub(new \DateInterval('PT' . ($this->usageLag() + 30) . 'S'));
+        $this->inCoroutine(function () use ($at): void {
+            global $container;
+            $project = $this->platform()->getDocument('projects', $this->getProject()['$id']);
+            $usage = (new UsageContext())
+                ->setResource(METRIC_MESSAGES_RESOURCE_TYPE)
+                ->setResourceId(Id::unique())
+                ->setResourceInternalId('1')
+                ->addMetric(METRIC_MESSAGES_FAILED, 1);
+            $stats = new StatsUsage();
+            $stats->action(
+                new Message(['pid' => \uniqid(), 'queue' => 'stats-usage', 'timestamp' => \time(), 'payload' => ['timestamp' => \gmdate('Y-m-d H:i:s', $at->getTimestamp())] + (new UsageMessage($project, $usage->getMetrics()))->toArray()]),
+                ProjectContext::fromDocument($project),
+                $container->get('usageConnection'),
+            );
+            // StatsUsage writes its batch on a timer.
+            Coroutine::sleep(7);
+        });
+
+        $firing = $this->waitForStatus($monitorId, 'firing');
+        $this->assertEqualsWithDelta(1.0, $firing['value'], 0.001);
+    }
+
+    /**
+     * Deleting a bucket deletes the monitors scoped to it, resolving the alert
+     * one has open and keeping it in the history.
+     */
+    public function testDeletingAResourceDeletesItsMonitors(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->headers(), [
+            'bucketId' => Id::unique(),
+            'name' => 'Short-lived',
+            'fileSecurity' => false,
+            'permissions' => [],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => 'Bucket storage ' . \uniqid(),
+            'rules' => [
+                Query::greaterThan(METRIC_STORAGE, 10)->toString(),
+                Query::equal('resourceType', ['bucket'])->toString(),
+                Query::equal('resourceId', [$bucketId])->toString(),
+            ],
+            'cooldown' => 0,
+            'enabled' => false,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+        $this->inCoroutine(fn () => $this->evaluateMonitor($this->platform(), $monitorId, 20));
+        $alertId = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body']['alertId'];
+        $this->assertNotEmpty($alertId);
+        $this->assertSame('firing', $this->getAlert($alertId)['status']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, $this->headers());
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->assertEventually(function () use ($monitorId) {
+            $this->assertSame(404, $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['headers']['status-code']);
+        }, self::TIMEOUT_MS, 1_000);
+        $alert = $this->getAlert($alertId);
+        $this->assertSame('resolved', $alert['status']);
+        $this->assertNotNull($alert['resolvedAt']);
     }
 
     /**
@@ -1319,6 +1439,16 @@ final class EvaluationCustomServerTest extends Scope
         }
 
         return $expectations;
+    }
+
+    /**
+     * The lag the alerts worker reads usage behind, as it reads it.
+     */
+    private function usageLag(): int
+    {
+        $lag = System::getEnv('_APP_ALERTS_USAGE_LAG', '');
+
+        return \is_numeric($lag) ? (int) $lag : ALERTS_USAGE_LAG_SECONDS;
     }
 
     /**
