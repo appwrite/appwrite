@@ -34,6 +34,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   projectEnvironmentDotClass,
   type ProjectEnvironmentOption,
 } from '@/lib/project-environments'
@@ -52,6 +57,7 @@ interface ReorderEnvironmentsDialogProps {
   /** The production project, whose prefs hold the order */
   projectId: string
   region?: string
+  /** The project's prefs as loaded; null while loading or after a failed fetch */
   prefs: ProjectPrefs | null
   production: ProjectEnvironmentOption
   /** The environments in the order the switcher shows them now */
@@ -136,6 +142,9 @@ export function ReorderEnvironmentsDialog({
   const ids = useMemo(() => items.map((item) => item.id), [items])
   const isDirty = ids.some((id, index) => id !== environments[index]?.id)
   const isPending = updatePrefsMutation.isPending
+  // The update replaces the whole prefs object, so saving over prefs that
+  // never loaded would drop every other key the project holds
+  const prefsLoaded = prefs !== null
 
   const handleOpenChange = (next: boolean) => {
     if (!isPending) onOpenChange(next)
@@ -225,14 +234,29 @@ export function ReorderEnvironmentsDialog({
           >
             {t('Cancel')}
           </Button>
-          <Button
-            type="button"
-            variant="brandCta"
-            onClick={handleSave}
-            disabled={!isDirty || isPending}
-          >
-            {t('Save')}
-          </Button>
+          {prefsLoaded ? (
+            <Button
+              type="button"
+              variant="brandCta"
+              onClick={handleSave}
+              disabled={!isDirty || isPending}
+            >
+              {t('Save')}
+            </Button>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0} className="inline-flex">
+                  <Button type="button" variant="brandCta" disabled>
+                    {t('Save')}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {t('The project preferences have not loaded yet.')}
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </DialogContent>
     </Dialog>

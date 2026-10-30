@@ -3331,6 +3331,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Site variable': 'משתנה אתר',
   'Site variables': 'משתני אתר',
   // Environment switcher order, banner and creation wizard
+  'The project preferences have not loaded yet.':
+    'העדפות הפרויקט עדיין לא נטענו.',
   'Reorder environments': 'סידור מחדש של הסביבות',
   'Drag the environments into the order the switcher should list them. Production always comes first.':
     'גררו את הסביבות לסדר שבו בורר הסביבות יציג אותן. פרודקשן תמיד ראשון.',

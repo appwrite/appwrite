@@ -241,11 +241,13 @@ const IN_PROGRESS_COPY_STATUSES = ['pending', 'processing']
  * on the parent project and the migration announces itself on the environment.
  *
  * @param environmentId - The environment, once created
+ * @param region - The environment's region, which the SDK cannot look up yet for a project it has not loaded
  * @param enabled - False until there is a copy to follow
  * @returns The migration, or null until the environment lists it
  */
 export function useEnvironmentCopyProgress(
   environmentId: string | null | undefined,
+  region: string | undefined,
   enabled = true,
 ) {
   const { data } = useQuery({
@@ -255,9 +257,13 @@ export function useEnvironmentCopyProgress(
       environmentId,
       'environment-copy',
       'progress',
+      region,
     ],
     queryFn: async () => {
-      const result = await fetchEnvironmentCopyMigrations(environmentId!)
+      const result = await fetchEnvironmentCopyMigrations(
+        environmentId!,
+        region,
+      )
       return { migration: result.migrations[0] ?? null }
     },
     enabled: !!environmentId && enabled,

@@ -103,6 +103,7 @@ export function CreateEnvironmentWizardView({
   // The copy is followed only once the environment exists and was asked to copy
   const migration = useEnvironmentCopyProgress(
     environment?.$id,
+    environment?.region || region,
     isCopy && !!environment,
   )
   const copyRunning =

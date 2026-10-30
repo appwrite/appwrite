@@ -3399,6 +3399,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Site variable': 'サイト変数',
   'Site variables': 'サイト変数',
   // Environment switcher order, banner and creation wizard
+  'The project preferences have not loaded yet.':
+    'プロジェクトの設定をまだ読み込めていません。',
   'Reorder environments': '環境の並べ替え',
   'Drag the environments into the order the switcher should list them. Production always comes first.':
     '環境をドラッグして、切り替えメニューに表示する順序に並べてください。本番は常に先頭に表示されます。',
