@@ -49,8 +49,8 @@ use Utopia\System\System;
  * processing for a deployment is serialized under a per-deployment lock — that
  * keeps its buildLogs a clean, monotonic append while letting different
  * deployments build in parallel. Callbacks are at-least-once, so events are
- * de-duplicated inside the lock. Log chunks retain deduplication before append;
- * state callbacks are recorded after application so failed writes can retry.
+ * de-duplicated inside the lock. Logs and their dedupe marker are written before
+ * the log transaction commits; state callbacks are marked after application.
  *
  * Handlers are protected extension points: downstream workers (e.g. cloud)
  * override finalize() and wrap parent:: for post-activation work.
@@ -180,9 +180,6 @@ class Jobs extends Action
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
-                if ($callback === CallbackEvent::Log && $cache->save($key, true) === false) {
-                    throw new \RuntimeException('Failed to record build log callback.');
-                }
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -200,7 +197,15 @@ class Jobs extends Action
             }
 
             $deployment = match ($callback) {
-                CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform),
+                CallbackEvent::Log => $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $deployment, $event, $vcsFactory, $platform, $cache): Document {
+                    $deployment = $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform);
+                    // A failed append or marker save rolls back the log write;
+                    // realtime delivery happens after commit and keeps the marker.
+                    if ($event->id !== '' && $cache->save('jobs-event-' . $project->getSequence() . '-' . $event->id, true) === false) {
+                        throw new \RuntimeException('Failed to record build log callback.');
+                    }
+                    return $deployment;
+                }),
                 CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
@@ -695,10 +700,9 @@ class Jobs extends Action
         if (!$site->isEmpty()) {
             $detection = Detection::rendering($site->getAttribute('framework', ''), $files);
             $adapter = $site->getAttribute('adapter', '');
-            if (empty($adapter)) {
-                $update['adapter'] = $detection->getName();
-                $update['fallbackFile'] = $detection->getFallbackFile() ?? '';
-            } elseif ($adapter === 'ssr' && $detection->getName() === 'static') {
+            $update['adapter'] = $detection->getName();
+            $update['fallbackFile'] = $detection->getFallbackFile() ?? '';
+            if ($adapter === 'ssr' && $detection->getName() === 'static') {
                 return [$deployment, 'Adapter mismatch. Detected: ' . $detection->getName() . ' does not match with the set adapter: ' . $adapter];
             }
         }

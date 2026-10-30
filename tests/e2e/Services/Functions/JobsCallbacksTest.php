@@ -139,6 +139,41 @@ final class JobsCallbacksTest extends TestCase
         $this->assertSame("build log\n", $this->database->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
     }
 
+    public function testRefusedLogMarkerRollsBackAppendBeforeRedelivery(): void
+    {
+        $adapter = new RefusedEventCache();
+        $this->cache = new Cache($adapter);
+        try {
+            $this->send('log');
+            $this->fail('The refused deduplication write must fail the callback.');
+        } catch (\RuntimeException) {
+        }
+        $this->assertSame('', $this->database->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
+        $adapter->refuse = false;
+
+        $this->send('log');
+
+        $this->assertSame("build log\n", $this->database->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
+    }
+
+    public function testLogWriteFailureDoesNotSuppressRedelivery(): void
+    {
+        $table = $this->pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%deployments'")->fetchColumn();
+        $this->pdo->exec('CREATE TRIGGER fail_log BEFORE UPDATE ON "' . $table . '" BEGIN SELECT RAISE(ABORT, \'transient log write failure\'); END');
+        try {
+            $this->send('log');
+            $this->fail('The log write must fail before retrying.');
+        } catch (DatabaseException) {
+        } finally {
+            $this->pdo->exec('DROP TRIGGER fail_log');
+        }
+        $this->assertSame('', $this->database->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
+
+        $this->send('log');
+
+        $this->assertSame("build log\n", $this->database->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
+    }
+
     public function testManifestWriteFailureDoesNotSuppressRedelivery(): void
     {
         $table = $this->pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%deployments'")->fetchColumn();
@@ -224,6 +259,21 @@ final class JobsCallbacksTest extends TestCase
         $this->send('complete');
 
         $this->assertSame('failed', $this->database->getDocument('deployments', 'deployment')->getAttribute('status'));
+        $this->assertSame('ssr', $this->database->getDocument('sites', 'site')->getAttribute('adapter'));
+    }
+
+    public function testSiteConfiguredBeforeManifestStillRejectsLaterAdapterMismatch(): void
+    {
+        // The site can be configured after deployment creation, before its manifest.
+        $this->database->updateDocument('sites', 'site', new Document(['adapter' => 'static']));
+        $this->send('manifest');
+        $this->database->updateDocument('sites', 'site', new Document(['adapter' => 'ssr']));
+        \file_put_contents($this->root . '/output.tar.gz', 'build output');
+        $this->send('exit');
+        $this->send('complete');
+
+        $deployment = $this->database->getDocument('deployments', 'deployment');
+        $this->assertSame('failed', $deployment->getAttribute('status'));
         $this->assertSame('ssr', $this->database->getDocument('sites', 'site')->getAttribute('adapter'));
     }
 
@@ -328,5 +378,17 @@ final class PinningJobs extends Jobs
     protected function onVerified(Database $dbForProject, Document $project, Document $deployment, Cache $cache): void
     {
         $dbForProject->updateDocument('sites', $deployment->getAttribute('resourceId'), new Document(['adapter' => 'ssr']));
+    }
+}
+
+final class RefusedEventCache extends Memory
+{
+    public bool $refuse = true;
+
+    public function save(string $key, array|string $data, string $hash = '', int $ttl = 0): bool|string|array
+    {
+        return $this->refuse && \str_starts_with($key, 'jobs-event-')
+            ? false
+            : parent::save($key, $data, $hash, $ttl);
     }
 }
