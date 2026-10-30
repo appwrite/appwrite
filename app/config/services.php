@@ -132,7 +132,7 @@ return [
         'name' => 'Project',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
         'description' => '',
-        'controller' => 'api/project.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',
