@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -13,8 +14,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { useCreateMonitor } from '@/lib/react-query/hooks'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { useCreateMonitor, useProject } from '@/lib/react-query/hooks'
+import { getErrorMessage, isPlanLimitError } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import {
   RuleFields,
@@ -39,6 +40,8 @@ export function CreateMonitor({
   initial,
 }: CreateAlertProps) {
   const t = useT()
+  const navigate = useNavigate()
+  const { project } = useProject(projectId)
   const createMutation = useCreateMonitor(projectId)
   const [form, setForm] = useState<RuleForm>(emptyRuleForm)
 
@@ -62,7 +65,19 @@ export function CreateMonitor({
         onOpenChange(false)
       },
       onError: (err: Error) => {
-        toast.error(getErrorMessage(err, t('Failed to create monitor')))
+        const message = getErrorMessage(err, t('Failed to create monitor'))
+        const orgId = project?.teamId
+        if (isPlanLimitError(err) && orgId) {
+          toast.error(message, {
+            action: {
+              label: t('Upgrade'),
+              onClick: () =>
+                void navigate({ to: '/upgrade', search: { orgId } }),
+            },
+          })
+          return
+        }
+        toast.error(message)
       },
     })
   }

@@ -7,9 +7,12 @@ import {
   dedicatedDatabasesQueryOptions,
   monitorsQueryOptions,
   projectQueryOptions,
+  useMonitors,
+  useOrganizationPlan,
   useOrganizationScopes,
   useProject,
 } from '@/lib/react-query/hooks'
+import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-resources'
 import { Monitors } from '@/components/pages/projects/$projectId/usage/monitors/Monitors'
 import type { RuleForm } from '@/components/pages/projects/$projectId/usage/monitors/RuleFields'
 import { canWriteMonitors } from '@/lib/console-access-checks'
@@ -77,6 +80,11 @@ function UsageMonitorsPage() {
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canWriteMonitors(access, features)
+  // A plan that caps monitors per project refuses the next one; 0 is no cap.
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const { total } = useMonitors(projectId)
+  const monitorsLimit = getBillingPlanResourceLimit(plan, 'monitors') ?? 0
+  const isAtPlanLimit = monitorsLimit > 0 && total >= monitorsLimit
 
   const prefill = useMemo((): Partial<RuleForm> | undefined => {
     if (!search.metric || !(search.metric in METRICS)) return undefined
@@ -123,11 +131,13 @@ function UsageMonitorsPage() {
       onPrefillConsumed={clearSearch}
       openMonitorId={search.monitor}
       onOpenMonitorConsumed={clearSearch}
-      createDisabled={!canWrite}
+      createDisabled={!canWrite || isAtPlanLimit}
       createDisabledTooltip={
-        canWrite
-          ? undefined
-          : t("You don't have permission to manage monitors.")
+        !canWrite
+          ? t("You don't have permission to manage monitors.")
+          : isAtPlanLimit
+            ? t("You've reached the limit for this resource on your plan")
+            : undefined
       }
     />
   )
