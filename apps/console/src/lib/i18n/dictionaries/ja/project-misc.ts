@@ -2853,6 +2853,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Never: 'なし',
   Scopes: 'スコープ',
   Explorer: 'Explorer',
+  'Playground mode': 'プレイグラウンドのモード',
   APIs: 'API',
   Other: 'その他',
   Breakdown: '内訳',

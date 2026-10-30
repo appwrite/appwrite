@@ -1011,9 +1011,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'חיבור פלטפורמות (ווב, iOS, Android, Flutter, שרת)',
   'Server API keys and tokens': 'מפתחות API וטוקנים לשרת',
-  // pragma: allowlist secret
-  'Browse and test Appwrite REST API endpoints':
-    'עיון ובדיקה של נקודות הקצה של Appwrite REST API', // pragma: allowlist secret
+  'Test REST API endpoints and Realtime subscriptions':
+    'בדיקת נקודות קצה של REST API ומינויי Realtime',
   'Users, teams, sessions and authentication providers':
     'משתמשים, צוותים, סשנים וספקי אימות',
   'Manage databases, tables and collections':
@@ -1026,7 +1025,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
-  'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
   'Website analytics and traffic insights': 'אנליטיקת אתרים ותובנות תעבורה',
   'Project settings, custom domains, variables, webhooks':

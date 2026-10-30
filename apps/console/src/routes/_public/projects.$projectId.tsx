@@ -750,9 +750,8 @@ function ProjectLayout() {
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
     activeSection === 'activity' ||
-    activeSection === 'realtime' ||
     activeSection === 'storage' ||
-    activeSection === 'explorer' ||
+    activeSection === 'playground' ||
     activeSection === 'agents' ||
     isFunctionsEditorView ||
     isFunctionExecutionsTab ||

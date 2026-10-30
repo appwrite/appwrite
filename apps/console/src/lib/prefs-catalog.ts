@@ -54,6 +54,7 @@ import {
   USER_PREFS_KEY_IMAGE_TRANSFORM_PRESETS,
   USER_PREFS_KEY_ORG_PROJECTS_LIST_VIEW_MODE,
   USER_PREFS_KEY_ORGANIZATION,
+  USER_PREFS_KEY_PLAYGROUND_MODE,
   USER_PREFS_KEY_POSTGRES_QUERY_HISTORY_PREFIX,
   USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_PREFIX,
   USER_PREFS_KEY_POSTGRES_SAVED_QUERIES_SCOPE_PREFIX,
@@ -585,6 +586,13 @@ export const PREFS_CATALOG: readonly PrefsCatalogEntry[] = [
     key: USER_PREFS_KEY_GENERATOR_PANEL_VISIBILITY,
     description: 'Generator left/right panel visibility (JSON).',
     category: 'Generators',
+  },
+  {
+    id: 'playgroundMode',
+    scope: 'account',
+    key: USER_PREFS_KEY_PLAYGROUND_MODE,
+    description: 'Project Playground mode (rest or realtime).',
+    category: 'API Explorer',
   },
   {
     id: 'apiExplorerColumnsLayout',

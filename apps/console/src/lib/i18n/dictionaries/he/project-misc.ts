@@ -70,6 +70,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Explorer
   Explorer: 'אקספלורר',
+  'Playground mode': 'מצב סביבת הניסוי',
   APIs: 'ממשקי API',
   Other: 'אחר',
 

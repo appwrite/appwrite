@@ -296,7 +296,6 @@ export function canSeeProjectNavItem(
   switch (itemId) {
     case 'apps':
     case 'api-keys':
-    case 'explorer':
     case 'agents':
       return (access.isOwner || access.isDeveloper) && access.canSeeProjects
     case 'databases':
@@ -312,7 +311,7 @@ export function canSeeProjectNavItem(
     case 'videos':
       return access.canSeeVideos
     case 'usage':
-    case 'realtime':
+    case 'playground':
     case 'analytics':
       return access.canSeeProjects
     case 'activity':

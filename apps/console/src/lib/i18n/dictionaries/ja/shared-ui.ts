@@ -669,8 +669,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'アダプティブ動画ストリーミング、レンディション、字幕',
   'Audit log of project events': 'プロジェクトイベントの監査ログ',
-  'Realtime channels and live messages':
-    'Realtime チャンネルとライブメッセージ',
   'Usage statistics and quotas': '使用統計とクォータ',
   'Website analytics and traffic insights':
     'ウェブサイト分析とトラフィックのインサイト',
@@ -1009,8 +1007,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '内蔵の Appwrite CLI ターミナルを切り替え',
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'プラットフォームを接続 (Web、iOS、Android、Flutter、サーバー)',
-  'Browse and test Appwrite REST API endpoints':
-    'Appwrite REST API エンドポイントを閲覧してテスト',
+  'Test REST API endpoints and Realtime subscriptions':
+    'REST API エンドポイントと Realtime サブスクリプションをテスト',
   'Users, teams, sessions and authentication providers':
     'ユーザー、チーム、セッション、認証プロバイダー',
   'Project settings, custom domains, variables, webhooks':
