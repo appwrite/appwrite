@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Cache\Feature;
 
 /** Temporary wire compatibility for a rolling migration from cache 5.x. */

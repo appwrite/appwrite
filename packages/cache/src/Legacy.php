@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Cache;
 
 use Utopia\Cache\Exception\Unavailable;
@@ -14,6 +16,25 @@ final class Legacy extends Cache
         }
 
         return $this->saveWithLease($key, $data, $hash, '*');
+    }
+
+    /** @return string[] */
+    public function list(string $key): array
+    {
+        return \array_values(\array_filter(parent::list($key), fn (string $field): bool => $field !== '__utopia_gen__'));
+    }
+
+    public function touch(string $key, string $hash = ''): bool
+    {
+        throw new Unavailable('Legacy migration does not support touch');
+    }
+
+    /** @param array<string, mixed> $data
+     * @return array<string, mixed>|false
+     */
+    public function saveMany(string $key, array $data, int $ttl = 0): array|false
+    {
+        throw new Unavailable('Legacy migration does not support batch fills');
     }
 
     public function getLease(string $key): string

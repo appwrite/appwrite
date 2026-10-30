@@ -81,7 +81,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned, \Utopia\Cac
     /** @param array<int|string, mixed>|string $data */
     public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
     {
-        if ($this->isReserved($hash)) {
+        if ($this->isReserved($hash) || $hash === '__utopia_gen__') {
             return false;
         }
 
@@ -103,7 +103,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned, \Utopia\Cac
 
     public function purgeLegacy(string $key, string $hash = ''): bool
     {
-        if ($this->isReserved($hash)) {
+        if ($this->isReserved($hash) || $hash === '__utopia_gen__') {
             return false;
         }
 
@@ -227,7 +227,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned, \Utopia\Cac
     /** Reserved internal fields must never be reachable through the public field API. */
     protected function isReserved(string $hash): bool
     {
-        return in_array($hash, [self::TOMBSTONE_FIELD, self::VERSION_FIELD, '__utopia_gen__'], true);
+        return in_array($hash, [self::TOMBSTONE_FIELD, self::VERSION_FIELD], true);
     }
 
     /**

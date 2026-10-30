@@ -157,48 +157,28 @@ class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \
 
     public function getGeneration(string $key): string
     {
-        /** @var string $result */
-        $result = (function () use ($key): string {
-            $adapter = $this->getAdapter($key);
-            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
-                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
-            }
-
-            return $adapter->getGeneration($key);
-        })();
-
-        return $result;
+        return $this->legacyAdapter($key)->getGeneration($key);
     }
 
     /** @param array<int|string, mixed>|string $data */
     public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
     {
-        /** @var bool $result */
-        $result = (function () use ($key, $data, $hash, $generation): bool {
-            $adapter = $this->getAdapter($key);
-            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
-                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
-            }
-
-            return $adapter->saveWithGeneration($key, $data, $hash, $generation);
-        })();
-
-        return $result;
+        return $this->legacyAdapter($key)->saveWithGeneration($key, $data, $hash, $generation);
     }
 
     public function purgeLegacy(string $key, string $hash = ''): bool
     {
-        /** @var bool $result */
-        $result = (function () use ($key, $hash): bool {
-            $adapter = $this->getAdapter($key);
-            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
-                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
-            }
+        return $this->legacyAdapter($key)->purgeLegacy($key, $hash);
+    }
 
-            return $adapter->purgeLegacy($key, $hash);
-        })();
+    private function legacyAdapter(string $key): \Utopia\Cache\Feature\Legacy
+    {
+        $adapter = $this->getAdapter($key);
+        if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+            throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+        }
 
-        return $result;
+        return $adapter;
     }
 
     public function supportsVersioning(): bool
