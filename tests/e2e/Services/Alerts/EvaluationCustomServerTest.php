@@ -918,12 +918,18 @@ final class EvaluationCustomServerTest extends Scope
         $cases = [];
         $errors = [];
 
-        $this->inCoroutine(function () use ($projectId, $resources, $tenant, &$cases, &$errors): void {
+        // A monitor per case, created through the API before the coroutine the workers run in.
+        $monitors = ['lag' => $this->createScopedMonitor(METRIC_NETWORK_REQUESTS, 'project', '')];
+        foreach ($this->metricCases($resources, []) as $case => $expectation) {
+            $monitors[$case] = $this->createScopedMonitor($expectation['metric'], $expectation['resourceType'], $expectation['resourceId']);
+        }
+
+        $this->inCoroutine(function () use ($projectId, $resources, $tenant, $monitors, &$cases, &$errors): void {
             try {
                 global $register, $container;
                 $authorization = new Authorization();
                 $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
-                $authorization->skip(function () use ($factory, $container, $projectId, $resources, $tenant, &$cases): void {
+                $authorization->skip(function () use ($factory, $container, $projectId, $resources, $tenant, $monitors, &$cases): void {
                     $platform = $factory->platform();
                     $project = $platform->getDocument('projects', $projectId);
                     $dbForProject = $factory->project($project);
@@ -948,14 +954,14 @@ final class EvaluationCustomServerTest extends Scope
                     $later = (new \DateTimeImmutable())->add(new \DateInterval('PT' . ($lag + 1) . 'S'));
 
                     // Usage still inside the lag is not read yet: evaluated as it is written, there is nothing to compare.
-                    $requests = $platform->getDocument('monitors', $this->createScopedMonitor(METRIC_NETWORK_REQUESTS, 'project', ''));
+                    $requests = $platform->getDocument('monitors', $monitors['lag']);
                     $cases['lag'] = ['early' => $worker->read($requests, $isolated, $dbForProject, $connection, $written), 'late' => $worker->read($requests, $isolated, $dbForProject, $connection, $later)];
 
                     foreach ($cases as $case => &$expectation) {
                         if ($case === 'lag') {
                             continue;
                         }
-                        $monitor = $platform->getDocument('monitors', $this->createScopedMonitor($expectation['metric'], $expectation['resourceType'], $expectation['resourceId']));
+                        $monitor = $platform->getDocument('monitors', $monitors[$case]);
                         $expectation['measured'] = $worker->read($monitor, $isolated, $dbForProject, $connection, $later);
 
                         if (isset($expectation['wrong'])) {
@@ -1023,7 +1029,7 @@ final class EvaluationCustomServerTest extends Scope
             'name' => 'Too few failures ' . \uniqid(),
             'rules' => [Query::lessThan(METRIC_MESSAGES_FAILED, 5)->toString()],
             'window' => 3600,
-            'cooldown' => 0,
+            'cooldown' => 300,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -1085,7 +1091,7 @@ final class EvaluationCustomServerTest extends Scope
                 Query::equal('resourceType', ['bucket'])->toString(),
                 Query::equal('resourceId', [$bucketId])->toString(),
             ],
-            'cooldown' => 0,
+            'cooldown' => 300,
             'enabled' => false,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
