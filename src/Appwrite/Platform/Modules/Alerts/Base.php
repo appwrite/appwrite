@@ -46,6 +46,7 @@ class Base extends Action
 
     /**
      * @param array<string> $rules
+     * @param array<string> $notify
      */
     protected function createMonitor(
         string $type,
@@ -55,6 +56,7 @@ class Base extends Action
         int $window,
         int $cooldown,
         bool $enabled,
+        array $notify,
         Response $response,
         Document $project,
         Database $dbForPlatform,
@@ -80,6 +82,7 @@ class Base extends Action
             ...$this->ruleAttributes($parsed, $resourceId, $resourceInternalId),
             'window' => $window,
             'cooldown' => $cooldown,
+            'notify' => \array_values(\array_unique($notify)),
             'enabled' => $enabled,
             'status' => Status::Ok->value,
             'search' => $this->search($monitorId, $name, $parsed->metric, $parsed->resourceType, $resourceId),
@@ -102,6 +105,7 @@ class Base extends Action
      * Changes only what is passed; the monitor's state and its open alert are kept.
      *
      * @param array<string>|null $rules
+     * @param array<string>|null $notify
      */
     protected function updateMonitor(
         string $type,
@@ -111,6 +115,7 @@ class Base extends Action
         ?int $window,
         ?int $cooldown,
         ?bool $enabled,
+        ?array $notify,
         Response $response,
         Document $project,
         Database $dbForPlatform,
@@ -138,6 +143,7 @@ class Base extends Action
             'window' => $window,
             'cooldown' => $cooldown,
             'enabled' => $enabled,
+            'notify' => $notify === null ? null : \array_values(\array_unique($notify)),
         ] as $key => $value) {
             if ($value !== null) {
                 $changes->setAttribute($key, $value);

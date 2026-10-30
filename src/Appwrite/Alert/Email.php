@@ -26,6 +26,9 @@ readonly class Email
      * @param ?\DateTimeImmutable $since when the rule started firing, for how long a resolved rule fired
      * @param int $cooldown seconds before the rule can email again while it keeps firing
      * @param string $pauseUrl where the "Pause this monitor" link goes; none when empty
+     * @param string $unsubscribeUrl where "Stop emails for this monitor" goes; none when empty
+     * @param string $unsubscribeAllUrl where the link stopping every alert email of the monitor's type goes; none when empty
+     * @param string $unsubscribeAllLabel that link's text
      */
     public function __construct(
         public Status $status,
@@ -45,6 +48,9 @@ readonly class Email
         public ?\DateTimeImmutable $since = null,
         public int $cooldown = 0,
         public string $pauseUrl = '',
+        public string $unsubscribeUrl = '',
+        public string $unsubscribeAllUrl = '',
+        public string $unsubscribeAllLabel = 'Stop all usage alert emails',
     ) {
     }
 
@@ -126,6 +132,7 @@ readonly class Email
             ->setParam('{{action}}', $this->wording->action ?? 'View alert')
             ->setParam('{{link}}', $this->link(), escapeHtml: false)
             ->setParam('{{reason}}', $this->reason)
+            ->setParam('{{unsubscribe}}', $this->unsubscribe(), escapeHtml: false)
             ->render(minify: false);
     }
 
@@ -233,6 +240,28 @@ readonly class Email
         }
 
         return '<td style="padding-left: 16px; vertical-align: middle;"><a rel="noopener" target="_blank" href="' . \htmlspecialchars($url) . '" style="color: #19191c; font-size: 14px; text-decoration: underline;">' . \htmlspecialchars($label) . '</a></td>';
+    }
+
+    /**
+     * The links that stop this monitor's emails, or every alert email of its type, for the recipient.
+     */
+    private function unsubscribe(): string
+    {
+        $links = \array_filter([
+            'Stop emails for this monitor' => $this->unsubscribeUrl,
+            $this->unsubscribeAllLabel => $this->unsubscribeAllUrl,
+        ], fn (string $url) => $url !== '');
+
+        if ($links === []) {
+            return '';
+        }
+
+        $anchors = [];
+        foreach ($links as $label => $url) {
+            $anchors[] = '<a rel="noopener" target="_blank" href="' . \htmlspecialchars($url) . '" style="color: #6c6c75; text-decoration: underline;">' . \htmlspecialchars($label) . '</a>';
+        }
+
+        return '<p style="margin: 8px 0 0; color: #6c6c75; font-size: 13px; line-height: 20px;">' . \implode(' · ', $anchors) . '</p>';
     }
 
     /**

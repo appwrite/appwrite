@@ -98,6 +98,37 @@ final class ComparatorTest extends TestCase
         $this->assertSame('Outbound bandwidth reached 548.73 KB, 110× the 5 KB threshold.', $email(Status::Firing, null)->summary());
     }
 
+    public function testEmailLinksItsUnsubscribeLinksOnlyWhenGiven(): void
+    {
+        $template = __DIR__ . '/../../../app/config/locale/templates/email-alert.tpl';
+        $email = fn (string $unsubscribeUrl, string $unsubscribeAllUrl) => new Email(
+            status: Status::Firing,
+            rule: 'Egress spike',
+            metric: 'Outbound bandwidth',
+            place: 'Storefront',
+            value: new Quantity(6_000, 'bytes'),
+            comparator: Comparator::GreaterThan,
+            threshold: new Quantity(5_000, 'bytes'),
+            window: 3600,
+            changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
+            details: [],
+            url: 'https://console.example/alerts',
+            reason: 'You\'re receiving this as an owner of Acme.',
+            unsubscribeUrl: $unsubscribeUrl,
+            unsubscribeAllUrl: $unsubscribeAllUrl,
+        );
+
+        $html = $email('https://console.example/alerts/unsubscribe?token=one&x=1', 'https://console.example/alerts/unsubscribe?token=all')->render($template);
+        $this->assertStringContainsString('href="https://console.example/alerts/unsubscribe?token=one&amp;x=1"', $html);
+        $this->assertStringContainsString('>Stop emails for this monitor</a>', $html);
+        $this->assertStringContainsString('href="https://console.example/alerts/unsubscribe?token=all"', $html);
+        $this->assertStringContainsString('>Stop all usage alert emails</a>', $html);
+
+        $html = $email('', '')->render($template);
+        $this->assertStringNotContainsString('Stop emails', $html);
+        $this->assertStringNotContainsString('{{unsubscribe}}', $html);
+    }
+
     public function testEmailWordingReplacesTheGeneratedCopy(): void
     {
         $email = new Email(

@@ -375,6 +375,7 @@ const NOTIFICATION_TYPE_PUSH = MESSAGE_TYPE_PUSH;
 const NOTIFICATION_TYPE_CONSOLE = 'console';
 const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
 const NOTIFICATION_TRACKING_JWT_TTL = 60 * 60 * 24 * 7;
+const ALERT_UNSUBSCRIBE_TTL = 60 * 60 * 24 * 90; // An alert email's unsubscribe links work as long as its alert is kept
 const MAIL_TEMPLATE_ALERT = 'alert';
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';

@@ -365,6 +365,7 @@ class Notifications extends Action
                 replyToEmail: $replyTo,
                 attachments: $attachments,
                 html: true,
+                headers: \is_array($payload['headers'] ?? null) ? $payload['headers'] : [],
             );
 
             // A pooled adapter belongs to this send alone; a project's own SMTP is

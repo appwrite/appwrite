@@ -9,6 +9,7 @@ use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -19,6 +20,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response\Model\Alert as AlertModel;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -35,9 +37,9 @@ use Utopia\Usage\Tenant;
  * Measures one monitor, compares it with its threshold and records the result
  * on the monitor and on the alert it opens while firing. Every change of state
  * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
- * `.resolved`) for webhooks, functions and realtime. The organization's owners
- * are notified by email and in the console: on entering `firing` (at most once
- * per cooldown) and on returning to `ok`.
+ * `.resolved`) for webhooks, functions and realtime. The organization's members
+ * holding a role its `notify` names are notified by email and in the console:
+ * on entering `firing` (at most once per cooldown) and on returning to `ok`.
  */
 class Alerts extends Action
 {
@@ -172,7 +174,9 @@ class Alerts extends Action
         }
 
         $notify = false;
-        if ($status === Status::Firing && !$announced) {
+        // A monitor that notifies no role announces nothing, so it starts no cooldown; its events still fire.
+        $silent = $monitor->getAttribute('notify', [User::ROLE_OWNER]) === [];
+        if ($status === Status::Firing && !$announced && !$silent) {
             // Cooldown counts from the last announced firing, so a monitor flapping
             // around its threshold is reported once per cooldown, and a firing
             // that started inside the cooldown is reported once it has passed.
@@ -396,7 +400,10 @@ class Alerts extends Action
 
     /**
      * Notifies the team of the monitor's alert firing or resolving: one message
-     * per organization owner, for the console bell and email. Each links to the alert.
+     * per confirmed member of the project's organization holding a role the
+     * monitor's `notify` names, for the console bell and, unless they stopped
+     * this monitor's or all alert emails, by email. Each links to the alert and
+     * carries one-click unsubscribe links signed for its recipient.
      *
      * The deduplication key names the monitor, its new status and the moment it
      * changed, so an at-least-once redelivery of the same evaluation sends
@@ -415,6 +422,13 @@ class Alerts extends Action
         NotificationPublisher $publisherForNotifications,
         array $platform,
     ): void {
+        // The project's organization, not the one stored on the monitor: a transferred
+        // project's alerts go to the members of the organization it moved to.
+        $members = $this->members($dbForPlatform, (string) $project->getAttribute('teamInternalId', ''), $monitor->getAttribute('notify', [User::ROLE_OWNER]));
+        if ($members === []) {
+            return;
+        }
+
         // Named after the evaluation the decision was made against, so a retried
         // evaluation of the same state reuses the key instead of sending twice.
         $deduplicationKey = 'monitor:' . $monitor->getId() . ':' . $status->value . ':' . ($monitor->getAttribute('evaluatedAt') ?? $monitor->getCreatedAt());
@@ -429,38 +443,38 @@ class Alerts extends Action
         $unit = (string) ($definition['unit'] ?? '');
         $resourceType = (string) $monitor->getAttribute('resourceType');
         $projectName = (string) $project->getAttribute('name');
-        // The project's organization, not the one stored on the monitor: a transferred
-        // project's alerts go to the owners of the organization it moved to.
         $team = $dbForPlatform->getDocument('teams', (string) $project->getAttribute('teamId', ''));
+        $teamName = (string) $team->getAttribute('name', '');
         $region = (string) $project->getAttribute('region', '');
         $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
-        $url = ($platform['consoleUrl'] ?? '') . $this->path($project) . '/alerts?alert=' . $alert->getId();
-        // The monitor's drawer, which pauses it from its header.
-        $pauseUrl = ($platform['consoleUrl'] ?? '') . $this->path($project) . '/monitors?monitor=' . $monitor->getId();
-        $notice = new Email(
-            status: $status,
-            rule: (string) $monitor->getAttribute('name'),
-            metric: (string) ($definition['label'] ?? $metric),
-            place: $projectName,
-            value: new Quantity($value, $unit),
-            comparator: Comparator::from((string) $monitor->getAttribute('comparator')),
-            threshold: new Quantity((float) $monitor->getAttribute('threshold'), $unit),
-            window: ($definition['kind'] ?? 'gauge') !== 'gauge' ? (int) $monitor->getAttribute('window') : null,
-            changedAt: new \DateTimeImmutable($changedAt),
-            details: $resourceType === 'project' ? [] : ['Resource' => \ucfirst($resourceType) . ' ' . $monitor->getAttribute('resourceId')],
-            url: $url,
-            reason: 'You\'re receiving this as an owner of ' . $team->getAttribute('name', '') . '.',
-            location: \implode(' · ', \array_filter([$projectName, (string) $team->getAttribute('name', ''), $regionName === 'default' ? '' : $regionName])),
+        $consoleUrl = (string) ($platform['consoleUrl'] ?? '');
+        $endpoint = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https') . '://' . ($platform['apiHostname'] ?? System::getEnv('_APP_DOMAIN', 'localhost')) . '/v1';
+        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $type = (string) $monitor->getAttribute('type');
+        $typeConfig = Config::getParam('alerts', [])['types'][$type] ?? [];
+        // Every email of a type can be stopped at once only where the type allows it.
+        $typeScope = ($typeConfig['optOut'] ?? false) === true ? Unsubscribe::type($type) : '';
+        $notice = [
+            'status' => $status,
+            'rule' => (string) $monitor->getAttribute('name'),
+            'metric' => (string) ($definition['label'] ?? $metric),
+            'place' => $projectName,
+            'value' => new Quantity($value, $unit),
+            'comparator' => Comparator::from((string) $monitor->getAttribute('comparator')),
+            'threshold' => new Quantity((float) $monitor->getAttribute('threshold'), $unit),
+            'window' => ($definition['kind'] ?? 'gauge') !== 'gauge' ? (int) $monitor->getAttribute('window') : null,
+            'changedAt' => new \DateTimeImmutable($changedAt),
+            'details' => $resourceType === 'project' ? [] : ['Resource' => \ucfirst($resourceType) . ' ' . $monitor->getAttribute('resourceId')],
+            'url' => $consoleUrl . $this->path($project) . '/alerts?alert=' . $alert->getId(),
+            'location' => \implode(' · ', \array_filter([$projectName, $teamName, $regionName === 'default' ? '' : $regionName])),
             // When the alert opened, for how long it fired once it resolves.
-            since: $alert->isEmpty() ? null : new \DateTimeImmutable($alert->getCreatedAt()),
-            cooldown: (int) $monitor->getAttribute('cooldown', 0),
-            pauseUrl: $pauseUrl,
-        );
-        $subject = $notice->subject();
-        $summary = $notice->summary();
+            'since' => $alert->isEmpty() ? null : new \DateTimeImmutable($alert->getCreatedAt()),
+            'cooldown' => (int) $monitor->getAttribute('cooldown', 0),
+            // The monitor's drawer, which pauses it from its header.
+            'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . $monitor->getId(),
+        ];
 
-        $body = $notice->render(APP_CE_CONFIG_DIR . '/locale/templates/email-alert.tpl');
-        foreach ($this->owners($dbForPlatform, (string) $project->getAttribute('teamInternalId', '')) as $user) {
+        foreach ($members as [$user, $role]) {
             $resource = [
                 'resourceType' => RESOURCE_TYPE_USERS,
                 'resourceId' => $user->getId(),
@@ -469,21 +483,35 @@ class Alerts extends Action
             ];
 
             $recipients = [['address' => $user->getId(), 'channel' => NOTIFICATION_TYPE_CONSOLE, ...$resource]];
-            if ((string) $user->getAttribute('email', '') !== '') {
+            $unsubscribed = $user->getAttribute('alertsUnsubscribed', []);
+            if (
+                (string) $user->getAttribute('email', '') !== ''
+                && !\in_array($monitor->getId(), $unsubscribed, true)
+                && ($typeScope === '' || !\in_array($typeScope, $unsubscribed, true))
+            ) {
                 $recipients[] = ['address' => (string) $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL, ...$resource];
             }
+
+            $token = $unsubscribe->token($user->getId(), $monitor->getId());
+            $email = new Email(
+                ...$notice,
+                reason: 'You\'re receiving this as ' . (\in_array(\strtolower($role[0] ?? ''), ['a', 'e', 'i', 'o', 'u'], true) ? 'an ' : 'a ') . $role . ' of ' . $teamName . '.',
+                unsubscribeUrl: $consoleUrl . '/alerts/unsubscribe?token=' . \urlencode($token),
+                unsubscribeAllUrl: $typeScope === '' ? '' : $consoleUrl . '/alerts/unsubscribe?token=' . \urlencode($unsubscribe->token($user->getId(), $typeScope)),
+                unsubscribeAllLabel: 'Stop all ' . \strtolower((string) ($typeConfig['label'] ?? $type)) . ' alert emails',
+            );
 
             $this->publish($publisherForNotifications, new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
                 template: MAIL_TEMPLATE_ALERT,
                 deduplicationKey: $deduplicationKey,
-                subject: $subject,
+                subject: $email->subject(),
                 bodyTemplate: APP_CE_CONFIG_DIR . '/locale/templates/email-base-styled.tpl',
-                body: $body,
-                preview: $summary,
+                body: $email->render(APP_CE_CONFIG_DIR . '/locale/templates/email-alert.tpl'),
+                preview: $email->summary(),
                 variables: [
-                    'heading' => $notice->heading(),
+                    'heading' => $email->heading(),
                     'logoUrl' => $platform['logoUrl'] ?? APP_EMAIL_LOGO_URL,
                     'accentColor' => $platform['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
                     'twitter' => $platform['twitterUrl'] ?? APP_SOCIAL_TWITTER,
@@ -493,18 +521,29 @@ class Alerts extends Action
                     'privacy' => $platform['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
                     'platform' => $platform['platformName'] ?? APP_NAME,
                 ],
+                // One-click unsubscribe (RFC 8058) from this monitor's emails.
+                headers: [
+                    'List-Unsubscribe' => '<' . $endpoint . '/console/alerts/unsubscribe?project=console&token=' . \urlencode($token) . '>',
+                    'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+                ],
             ));
         }
     }
 
     /**
-     * The organization's confirmed owners.
+     * The organization's confirmed members holding any of `$roles`, each with
+     * the first of those roles they hold.
      *
-     * @return list<Document>
+     * @param array<string> $roles
+     * @return list<array{0: Document, 1: string}>
      */
-    protected function owners(Database $dbForPlatform, string $teamInternalId): array
+    protected function members(Database $dbForPlatform, string $teamInternalId, array $roles): array
     {
-        $userIds = [];
+        if ($roles === []) {
+            return [];
+        }
+
+        $memberRoles = [];
         $cursor = null;
         do {
             $queries = [
@@ -519,23 +558,25 @@ class Alerts extends Action
 
             $memberships = $dbForPlatform->find('memberships', $queries);
             foreach ($memberships as $membership) {
-                if (\in_array('owner', $membership->getAttribute('roles', []), true)) {
-                    $userIds[] = (string) $membership->getAttribute('userId');
+                $held = \array_values(\array_intersect($roles, $membership->getAttribute('roles', [])));
+                if ($held !== []) {
+                    $memberRoles[(string) $membership->getAttribute('userId')] ??= $held[0];
                 }
             }
 
             $cursor = \end($memberships) ?: null;
         } while (\count($memberships) === APP_LIMIT_SUBQUERY);
 
-        $userIds = \array_values(\array_unique($userIds));
-        if ($userIds === []) {
+        if ($memberRoles === []) {
             return [];
         }
 
-        return $dbForPlatform->find('users', [
-            Query::equal('$id', $userIds),
-            Query::limit(\count($userIds)),
+        $users = $dbForPlatform->find('users', [
+            Query::equal('$id', \array_map('strval', \array_keys($memberRoles))),
+            Query::limit(\count($memberRoles)),
         ]);
+
+        return \array_map(fn (Document $user) => [$user, $memberRoles[$user->getId()]], $users);
     }
 
     /**

@@ -211,6 +211,7 @@ $platformCollections = [
             Attribute::double(key: 'threshold', required: true, default: 0),
             Attribute::integer(key: 'window', required: true, default: 3600, signed: false),
             Attribute::integer(key: 'cooldown', required: true, default: 3600, signed: false),
+            Attribute::string(key: 'notify', size: 32, default: ['owner'], array: true),
             Attribute::boolean(key: 'enabled', required: true, default: true),
             Attribute::string(key: 'status', size: 16, required: true, default: 'ok'),
             Attribute::double(key: 'value'),

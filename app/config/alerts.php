@@ -1,11 +1,14 @@
 <?php
 
+use Appwrite\Utopia\Database\Documents\User;
+
 /**
  * What a monitor can check.
  *
  * `types` are the kinds of check a monitor runs, each with its own create and
  * update routes under `/v1/monitors/<type>`; `usage` reads the project's usage
- * stats. The rest describes usage monitors.
+ * stats. `optOut` lets a recipient stop every alert email of the type at once;
+ * without it, an email offers to stop only its own monitor's. The rest describes usage monitors.
  *
  * `resources` are what a usage monitor's `resourceType` rule can scope it to,
  * each with the project collection its ID is looked up in (`project` needs
@@ -26,16 +29,21 @@
  *   a project reads them all, one resource reads its own engine's
  * - `sum`: a list of such series added together, in place of the keys above
  *
- * An edition adds types, resources and metrics here, and a meter of its own
+ * `roles` are the organization roles a monitor's `notify` can name: the
+ * confirmed members holding any of them get its email and console notification.
+ *
+ * An edition adds types, resources, metrics and roles here, and a meter of its own
  * for metrics that are not read from the project's usage.
  *
  * `Appwrite\Alert\Meter` reads each metric listed here.
  */
 
 return [
+    'roles' => [User::ROLE_OWNER, User::ROLE_DEVELOPER],
     'types' => [
         'usage' => [
             'label' => 'Usage',
+            'optOut' => true,
         ],
     ],
     'resources' => [
