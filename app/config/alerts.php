@@ -13,10 +13,10 @@
  * under an engine's name, the attribute holding that engine.
  *
  * `metrics` are keyed by the usage metric name the project's usage charts
- * read. Each has the name notifications show, its `group` on the usage page,
- * the unit its threshold is written in and its `kind`: a `counter` is summed
- * over the monitor's window, a `gauge` is its latest sample, and `growth` is
- * how much a gauge rose over the window. `resources` maps each resource type
+ * read. Each has the name notifications show, the unit its threshold is
+ * written in and its `kind`: a `counter` is summed over the monitor's window,
+ * a `gauge` is its latest sample, and `growth` is how much a gauge rose over
+ * the window. `resources` maps each resource type
  * the metric can be scoped to onto where its writer records it:
  *
  * - `metric`: the series the value is stored under, when not the metric's own name
@@ -60,7 +60,6 @@ return [
     'metrics' => [
         METRIC_NETWORK_REQUESTS => [
             'label' => 'Requests',
-            'group' => 'network',
             'kind' => 'counter',
             'unit' => 'requests',
             'resources' => [
@@ -69,7 +68,6 @@ return [
         ],
         METRIC_NETWORK_INBOUND => [
             'label' => 'Inbound bandwidth',
-            'group' => 'network',
             'kind' => 'counter',
             'unit' => 'bytes',
             'resources' => [
@@ -78,7 +76,6 @@ return [
         ],
         METRIC_NETWORK_OUTBOUND => [
             'label' => 'Outbound bandwidth',
-            'group' => 'network',
             'kind' => 'counter',
             'unit' => 'bytes',
             'resources' => [
@@ -87,7 +84,6 @@ return [
         ],
         METRIC_EXECUTIONS => [
             'label' => 'Executions',
-            'group' => 'compute',
             'kind' => 'counter',
             'unit' => 'executions',
             'resources' => [
@@ -98,7 +94,6 @@ return [
         ],
         METRIC_EXECUTIONS_MB_SECONDS => [
             'label' => 'Execution GB-hours',
-            'group' => 'compute',
             'kind' => 'counter',
             'unit' => 'mbSeconds',
             'resources' => [
@@ -109,7 +104,6 @@ return [
         ],
         METRIC_REALTIME_CONNECTIONS => [
             'label' => 'Concurrent connections',
-            'group' => 'realtime',
             // Sampled by the stats-resources task from the open/close deltas;
             // the samples carry no resource tags.
             'kind' => 'gauge',
@@ -120,7 +114,6 @@ return [
         ],
         METRIC_WEBHOOKS_SENT => [
             'label' => 'Webhook events sent',
-            'group' => 'webhooks',
             'kind' => 'counter',
             'unit' => 'events',
             'resources' => [
@@ -129,7 +122,6 @@ return [
         ],
         METRIC_WEBHOOKS_FAILED => [
             'label' => 'Webhook events failed',
-            'group' => 'webhooks',
             'kind' => 'counter',
             'unit' => 'events',
             'resources' => [
@@ -138,7 +130,6 @@ return [
         ],
         METRIC_MAU => [
             'label' => 'Monthly active users',
-            'group' => 'auth',
             // The resource sweep writes it with no resource tags.
             'kind' => 'gauge',
             'unit' => 'users',
@@ -148,7 +139,6 @@ return [
         ],
         METRIC_AUTH_METHOD_PHONE => [
             'label' => 'OTP attempts',
-            'group' => 'auth',
             'kind' => 'counter',
             'unit' => 'attempts',
             'resources' => [
@@ -157,7 +147,6 @@ return [
         ],
         METRIC_USERS => [
             'label' => 'Sign-ups',
-            'group' => 'auth',
             // Net growth of the users count, as the sign-ups chart shows it.
             'kind' => 'growth',
             'unit' => 'users',
@@ -167,7 +156,6 @@ return [
         ],
         METRIC_DATABASES_OPERATIONS_READS => [
             'label' => 'Database reads',
-            'group' => 'databases',
             'kind' => 'counter',
             'unit' => 'operations',
             'resources' => [
@@ -177,7 +165,6 @@ return [
         ],
         METRIC_DATABASES_OPERATIONS_WRITES => [
             'label' => 'Database writes',
-            'group' => 'databases',
             'kind' => 'counter',
             'unit' => 'operations',
             'resources' => [
@@ -187,7 +174,6 @@ return [
         ],
         METRIC_DATABASES_STORAGE => [
             'label' => 'Database storage',
-            'group' => 'databases',
             'kind' => 'gauge',
             'unit' => 'bytes',
             'resources' => [
@@ -197,7 +183,6 @@ return [
         ],
         METRIC_STORAGE => [
             'label' => 'Storage used',
-            'group' => 'storage',
             'kind' => 'gauge',
             'unit' => 'bytes',
             'resources' => [
@@ -217,7 +202,6 @@ return [
         ],
         METRIC_FILES_STORAGE => [
             'label' => 'File storage',
-            'group' => 'storage',
             'kind' => 'gauge',
             'unit' => 'bytes',
             'resources' => [
@@ -226,7 +210,6 @@ return [
         ],
         METRIC_MESSAGES_SENT => [
             'label' => 'Messages sent',
-            'group' => 'messaging',
             'kind' => 'counter',
             'unit' => 'messages',
             'resources' => [
@@ -235,7 +218,6 @@ return [
         ],
         \str_replace('{type}', MESSAGE_TYPE_SMS, METRIC_MESSAGES_TYPE_SENT) => [
             'label' => 'SMS messages sent',
-            'group' => 'messaging',
             'kind' => 'counter',
             'unit' => 'messages',
             'resources' => [
@@ -244,7 +226,6 @@ return [
         ],
         METRIC_MESSAGES_FAILED => [
             'label' => 'Messages failed',
-            'group' => 'messaging',
             'kind' => 'counter',
             'unit' => 'messages',
             'resources' => [
@@ -253,7 +234,6 @@ return [
         ],
         METRIC_AVATARS_SCREENSHOTS_GENERATED => [
             'label' => 'Screenshots generated',
-            'group' => 'avatars',
             'kind' => 'counter',
             'unit' => 'screenshots',
             'resources' => [

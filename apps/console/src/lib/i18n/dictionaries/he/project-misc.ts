@@ -3588,6 +3588,18 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'This project has no buckets yet.': 'בפרויקט הזה עדיין אין באקטים.',
   'This project has no databases of this type yet.':
     'בפרויקט הזה עדיין אין מסדי נתונים מהסוג הזה.',
+  'Execution GB-hours': 'שעות GB של הרצות',
+  'Files, databases and deployments grow past 50 GB.':
+    'קבצים, מסדי נתונים ופריסות גדלים מעבר ל-50 GB.',
+  'Messages failed': 'הודעות שנכשלו', // pragma: allowlist secret
+  'More than 10 webhook deliveries fail in an hour.':
+    'יותר מ-10 שליחות Webhook נכשלות בתוך שעה.',
+  'SMS messages sent': 'הודעות SMS שנשלחו', // pragma: allowlist secret
+  'This project has no functions yet.': 'בפרויקט הזה עדיין אין פונקציות.',
+  'This project has no sites yet.': 'בפרויקט הזה עדיין אין אתרים.',
+  'Webhook events failed': 'אירועי Webhook שנכשלו',
+  'Webhook events sent': 'אירועי Webhook שנשלחו',
+  'Webhook failures': 'כשלים ב-Webhook',
   'Webhook URL': 'כתובת URL של Webhook',
   Window: 'חלון זמן',
   'Write IOPS': 'IOPS כתיבה',
@@ -3601,7 +3613,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Could not load usage history.': 'לא ניתן לטעון את היסטוריית השימוש.',
   'Counted over the window and compared at every check.':
     'נספר לאורך החלון ומושווה בכל בדיקה.',
-  'Databases grow past 5 GB.': 'מסדי הנתונים גדלים מעבר ל-5 GB.',
   'Get notified when usage crosses a threshold, and again when it recovers.':
     'קבלו התראה כשהשימוש חוצה סף, ושוב כשהוא חוזר לשגרה.',
   'Last checked': 'בדיקה אחרונה',
@@ -3622,7 +3633,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Select a resource to see its history.':
     'בחרו משאב כדי לראות את ההיסטוריה שלו.',
   'Signed POST request': 'בקשת POST חתומה',
-  'Stored files grow past 50 GB.': 'הקבצים המאוחסנים גדלים מעבר ל-50 GB.',
   'The latest reading is compared at every check.':
     'הקריאה האחרונה מושווית בכל בדיקה.',
   'The whole project': 'הפרויקט כולו',

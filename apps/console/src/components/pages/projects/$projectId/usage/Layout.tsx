@@ -201,9 +201,18 @@ interface CategoryNavigationProps {
 
 /** Metric each usage category opens a new monitor on. */
 const ALERT_METRIC_BY_CATEGORY: Record<string, string> = {
-  bandwidth: 'bandwidth.outbound',
-  databases: 'databases.reads',
-  storage: 'files.storage',
+  requests: 'network.requests',
+  bandwidth: 'network.outbound',
+  compute: 'executions',
+  functions: 'executions',
+  sites: 'executions',
+  realtime: 'realtime.connections',
+  auth: 'users.mau',
+  databases: 'databases.operations.reads',
+  storage: 'storage',
+  messaging: 'messages.sent',
+  webhooks: 'webhooks.events.failed',
+  avatars: 'avatars.screenshotsGenerated',
 }
 
 /** The two pages under Monitoring: what is watched, and what it raised. */

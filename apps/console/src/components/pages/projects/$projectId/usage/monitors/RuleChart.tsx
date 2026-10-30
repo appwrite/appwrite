@@ -19,7 +19,7 @@ import type {
   AlertMetric,
   AlertResourceType,
 } from '@/lib/appwrite/monitors'
-import { METRICS, formatMetricValue } from '@/lib/alerts/metrics'
+import { formatMetricValue, metricDefinition } from '@/lib/alerts/metrics'
 import {
   breaches,
   firings,
@@ -178,7 +178,7 @@ export function RuleChart({
   height?: number
 }) {
   const t = useT()
-  const counter = METRICS[rule.metric].counter
+  const counter = metricDefinition(rule.metric).counter
   const ranges = seriesRanges(rule.window, counter)
   const [picked, setPicked] = useState<number | undefined>()
   const span =

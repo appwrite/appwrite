@@ -22,6 +22,8 @@ import {
   databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
   fetchMonitor,
+  functionsQueryOptions,
+  sitesQueryOptions,
   useMonitors,
   useDeleteMonitor,
   useUpdateMonitor,
@@ -62,7 +64,7 @@ import type { MonitorChannel } from '@appwrite.io/console'
 import type { ParsedMonitor } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
-  METRICS,
+  metricDefinition,
   RESOURCE_TYPES,
   WINDOWS,
   formatMetricValue,
@@ -124,7 +126,7 @@ const STATE_STYLES: Record<
 
 type Filter = 'all' | RuleState
 
-/** Resolves database, bucket and dedicated database names for the monitors that watch one. */
+/** Resolves the names of the databases, buckets, functions, sites and dedicated databases monitors watch. */
 function useResourceNames(projectId: string, monitors: ParsedMonitor[]) {
   const types = new Set(monitors.map((monitor) => monitor.resourceType))
   const databases = useQuery({
@@ -135,6 +137,14 @@ function useResourceNames(projectId: string, monitors: ParsedMonitor[]) {
     ...bucketsQueryOptions(projectId, 0, 100),
     enabled: types.has('bucket'),
   })
+  const functions = useQuery({
+    ...functionsQueryOptions(projectId, 0, 100),
+    enabled: types.has('function'),
+  })
+  const sites = useQuery({
+    ...sitesQueryOptions(projectId, 0, 100),
+    enabled: types.has('site'),
+  })
   const dedicated = useQuery({
     ...dedicatedDatabasesQueryOptions(projectId),
     enabled: types.has('dedicatedDatabase'),
@@ -144,12 +154,14 @@ function useResourceNames(projectId: string, monitors: ParsedMonitor[]) {
     for (const item of [
       ...(databases.data?.databases ?? []),
       ...(buckets.data?.buckets ?? []),
+      ...(functions.data?.functions ?? []),
+      ...(sites.data?.sites ?? []),
       ...(dedicated.data?.databases ?? []),
     ]) {
       names.set(item.$id, item.name)
     }
     return names
-  }, [databases.data, buckets.data, dedicated.data])
+  }, [databases.data, buckets.data, functions.data, sites.data, dedicated.data])
 }
 
 interface MonitorsProps {
@@ -239,7 +251,7 @@ export function Monitors({
           !query ||
           monitor.name.toLowerCase().includes(query) ||
           monitor.metric.toLowerCase().includes(query) ||
-          t(METRICS[monitor.metric]?.label ?? '')
+          t(metricDefinition(monitor.metric).label)
             .toLowerCase()
             .includes(query) ||
           monitor.$id.toLowerCase().includes(query),
@@ -299,13 +311,13 @@ export function Monitors({
 
   /** `Outbound bandwidth > 10 GB within 1 hour` */
   const sentence = (monitor: ParsedMonitor) => {
-    const definition = METRICS[monitor.metric]
+    const definition = metricDefinition(monitor.metric)
     const symbol =
       COMPARATORS.find((entry) => entry.value === monitor.comparator)?.symbol ??
       monitor.comparator
     const window = WINDOWS.find((entry) => entry.value === monitor.window)
-    const base = `${t(definition?.label ?? monitor.metric)} ${symbol} ${formatMetricValue(monitor.metric, monitor.threshold)}`
-    if (!definition?.counter) return base
+    const base = `${t(definition.label)} ${symbol} ${formatMetricValue(monitor.metric, monitor.threshold)}`
+    if (!definition.counter) return base
     return `${base} ${t('within')} ${window ? t(window.label) : `${monitor.window}s`}`
   }
 

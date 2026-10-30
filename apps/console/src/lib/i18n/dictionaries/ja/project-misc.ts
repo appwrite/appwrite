@@ -3659,6 +3659,20 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このプロジェクトにはまだバケットがありません。',
   'This project has no databases of this type yet.':
     'このプロジェクトにはまだこの種類のデータベースがありません。',
+  'Execution GB-hours': '実行の GB 時間',
+  'Files, databases and deployments grow past 50 GB.':
+    'ファイル、データベース、デプロイの合計が 50 GB を超えたとき。',
+  'Messages failed': '失敗メッセージ',
+  'More than 10 webhook deliveries fail in an hour.':
+    '1 時間に Webhook の配信が 10 件を超えて失敗したとき。',
+  'SMS messages sent': '送信 SMS メッセージ',
+  'This project has no functions yet.':
+    'このプロジェクトにはまだ関数がありません。',
+  'This project has no sites yet.':
+    'このプロジェクトにはまだサイトがありません。',
+  'Webhook events failed': '失敗した Webhook イベント',
+  'Webhook events sent': '送信した Webhook イベント',
+  'Webhook failures': 'Webhook の失敗',
   'Webhook URL': 'Webhook URL',
   Window: '期間',
   'Write IOPS': '書き込み IOPS',
@@ -3672,7 +3686,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Could not load usage history.': '使用状況の履歴を読み込めませんでした。',
   'Counted over the window and compared at every check.':
     '期間内の合計をチェックごとに比較します。',
-  'Databases grow past 5 GB.': 'データベースが 5 GB を超えたとき。',
   'Get notified when usage crosses a threshold, and again when it recovers.':
     '使用量がしきい値を超えたときと、回復したときに通知を受け取ります。',
   'Last checked': '最終チェック',
@@ -3694,7 +3707,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Select a resource to see its history.':
     '履歴を表示するリソースを選択してください。',
   'Signed POST request': '署名付き POST リクエスト',
-  'Stored files grow past 50 GB.': '保存ファイルが 50 GB を超えたとき。',
   'The latest reading is compared at every check.':
     'チェックごとに最新の値を比較します。',
   'The whole project': 'プロジェクト全体',

@@ -1,7 +1,8 @@
 /**
  * History of the value a monitor compares, rebuilt from project usage the
  * same way the server measures it: a counter summed over the monitor's window at
- * every bucket, a gauge at its latest sample.
+ * every bucket, a gauge at its latest sample, and growth as how far a gauge
+ * rose over the window.
  */
 
 import { Query, type Models } from '@appwrite.io/console'
@@ -13,7 +14,6 @@ import type {
 } from '@/lib/appwrite/monitors'
 import { USAGE_API_MAX_LIMIT } from '@/lib/usage/breakdown-limits'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
-import { METRICS } from './metrics'
 
 export type AlertPoint = { time: number; value: number }
 
@@ -163,65 +163,114 @@ function engines(metric: string): string[] {
   return [metric, `documentsdb.${metric}`, `vectorsdb.${metric}`]
 }
 
-type Source = {
+/** One usage request: the names it reads and the rows it keeps. */
+type Series = {
   metrics: string[]
   queries: string[]
-  counter: boolean
 }
 
+/**
+ * How the value is read: summed `counter` events, the latest `gauge` sample,
+ * or a gauge's `growth` across the window.
+ */
+type Kind = 'counter' | 'gauge' | 'growth'
+
+type Source = {
+  series: Series[]
+  kind: Kind
+}
+
+/** Where each metric's writer records it for a scope, as `app/config/alerts.php` declares. */
 function source(
   metric: AlertMetric,
   resourceType: AlertResourceType,
   resourceId: string,
 ): Source | null {
-  const scoped =
-    resourceType === 'project' ? [] : [Query.equal('resourceId', resourceId)]
+  const tagged = (type: string): string[] => [
+    Query.equal('resourceType', type),
+    ...(resourceType === 'project'
+      ? []
+      : [Query.equal('resourceId', resourceId)]),
+  ]
+  const whole = (kind: Kind): Source => ({
+    series: [{ metrics: [metric], queries: [] }],
+    kind,
+  })
   switch (metric) {
-    case 'bandwidth.inbound':
-    case 'bandwidth.outbound':
+    case 'network.requests':
+    case 'network.inbound':
+    case 'network.outbound':
+    case 'auth.method.phone':
+    case 'messages.sent':
+    case 'messages.sms.sent':
+    case 'messages.failed':
+    case 'webhooks.events.sent':
+    case 'webhooks.events.failed':
+    case 'avatars.screenshotsGenerated':
+      return whole('counter')
+    case 'executions':
+    case 'executions.mbSeconds':
+      return resourceType === 'project'
+        ? whole('counter')
+        : {
+            series: [{ metrics: [metric], queries: tagged(resourceType) }],
+            kind: 'counter',
+          }
+    case 'realtime.connections':
+    case 'users.mau':
+      return whole('gauge')
+    case 'users':
+      return whole('growth')
+    case 'databases.operations.reads':
+    case 'databases.operations.writes':
       return {
-        metrics: [
-          metric === 'bandwidth.inbound'
-            ? 'network.inbound'
-            : 'network.outbound',
+        series: [
+          {
+            metrics: engines(metric),
+            queries: resourceType === 'project' ? [] : tagged('database'),
+          },
         ],
-        queries: [Query.notEqual('resourceType', 'site')],
-        counter: true,
-      }
-    case 'databases.reads':
-    case 'databases.writes':
-      return {
-        metrics: engines(
-          metric === 'databases.reads'
-            ? 'databases.operations.reads'
-            : 'databases.operations.writes',
-        ),
-        queries: scoped,
-        counter: true,
+        kind: 'counter',
       }
     case 'databases.storage':
       return {
-        metrics: engines('databases.storage'),
-        queries: [
-          Query.equal(
-            'resourceType',
-            resourceType === 'project' ? 'project' : 'database',
-          ),
-          ...scoped,
+        series: [
+          {
+            metrics: engines(metric),
+            queries: tagged(
+              resourceType === 'project' ? 'project' : 'database',
+            ),
+          },
         ],
-        counter: false,
+        kind: 'gauge',
       }
     case 'files.storage':
-      return resourceType === 'bucket'
+      return {
+        series: [{ metrics: [metric], queries: tagged('project') }],
+        kind: 'gauge',
+      }
+    case 'storage':
+      return resourceType === 'project'
         ? {
-            metrics: ['storage'],
-            queries: [Query.equal('resourceType', 'bucket'), ...scoped],
-            counter: false,
+            series: [
+              {
+                metrics: ['files.storage', ...engines('databases.storage')],
+                queries: [Query.equal('resourceType', 'project')],
+              },
+              {
+                metrics: ['deployments.storage'],
+                queries: [Query.equal('resourceType', 'deployment')],
+              },
+              {
+                metrics: ['builds.storage'],
+                queries: [Query.equal('resourceType', 'build')],
+              },
+            ],
+            kind: 'gauge',
           }
         : {
-            metrics: ['files.storage'],
-            queries: [Query.equal('resourceType', 'project')],
-            counter: false,
+            series: [{ metrics: [metric], queries: tagged(resourceType) }],
+            kind: 'gauge',
           }
     default:
       return null
@@ -256,33 +305,59 @@ export async function fetchAlertSeries(
 ): Promise<AlertPoint[] | null> {
   const from = source(rule.metric, rule.resourceType, rule.resourceId)
   if (!from) return null
-  const counter = METRICS[rule.metric].counter
-  const plan = seriesPlan(rule.window, counter, range)
+  // Growth compares a gauge across the window, so it reads like a counter's plan.
+  const windowed = from.kind !== 'gauge'
+  const plan = seriesPlan(rule.window, windowed, range)
   const end = now
   const start = end - plan.range * 1000
-  // A counter's first window needs the buckets before the range too.
-  const fetchStart = start - (plan.span - 1) * plan.bucket * 1000
+  // A counter's first window needs the buckets before the range too, and growth one more to rise from.
+  const lead =
+    from.kind === 'counter'
+      ? plan.span - 1
+      : from.kind === 'growth'
+        ? plan.span
+        : 0
+  const fetchStart = start - lead * plan.bucket * 1000
 
-  const request = {
-    metrics: from.metrics,
-    queries: from.queries,
-    interval: plan.interval,
-    startAt: new Date(fetchStart).toISOString(),
-    endAt: new Date(end).toISOString(),
-    orderBy: 'time' as const,
-    orderDir: 'asc' as const,
-    limit: USAGE_API_MAX_LIMIT,
-  }
   const usage = sdk.forProject(projectId).usage
-  const response: Models.UsageEventList | Models.UsageGaugeList = counter
-    ? await usage.listEvents(request)
-    : await usage.listGauges(request)
+  const responses: (Models.UsageEventList | Models.UsageGaugeList)[] =
+    await Promise.all(
+      from.series.map((series) => {
+        const request = {
+          metrics: series.metrics,
+          queries: series.queries,
+          interval: plan.interval,
+          startAt: new Date(fetchStart).toISOString(),
+          endAt: new Date(end).toISOString(),
+          orderBy: 'time' as const,
+          orderDir: 'asc' as const,
+          limit: USAGE_API_MAX_LIMIT,
+        }
+        return from.kind === 'counter'
+          ? usage.listEvents(request)
+          : usage.listGauges(request)
+      }),
+    )
 
-  const samples = (response.metrics ?? []).flatMap((entry) =>
-    (entry.points ?? [])
-      .filter((point): point is typeof point & { time: string } => !!point.time)
-      .map((point) => ({ time: parseTime(point.time), value: point.value })),
+  const samples = responses.flatMap((response) =>
+    (response.metrics ?? []).flatMap((entry) =>
+      (entry.points ?? [])
+        .filter(
+          (point): point is typeof point & { time: string } => !!point.time,
+        )
+        .map((point) => ({ time: parseTime(point.time), value: point.value })),
+    ),
   )
+  const counter = from.kind === 'counter'
   const buckets = fillBuckets(samples, fetchStart, end, plan.bucket, counter)
-  return counter ? rolling(buckets, plan.span) : buckets
+  if (from.kind === 'gauge') return buckets
+  return counter ? rolling(buckets, plan.span) : growth(buckets, plan.span)
+}
+
+/** Each point replaced by how far it rose over the `span` buckets before it; the first `span` are dropped. */
+export function growth(points: AlertPoint[], span: number): AlertPoint[] {
+  return points.slice(span).map((point, index) => ({
+    time: point.time,
+    value: point.value - points[index].value,
+  }))
 }

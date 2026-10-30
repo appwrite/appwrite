@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import type { Alert } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
-  METRICS,
+  metricDefinition,
   formatLength,
   formatMetricValue,
   thresholdRatio,
@@ -43,7 +43,7 @@ export function alertCondition(
   const symbol =
     COMPARATORS.find((entry) => entry.value === alert.comparator)?.symbol ??
     alert.comparator
-  return `${t(METRICS[alert.metric]?.label ?? alert.metric)} ${symbol} ${formatMetricValue(alert.metric, alert.threshold)}`
+  return `${t(metricDefinition(alert.metric).label)} ${symbol} ${formatMetricValue(alert.metric, alert.threshold)}`
 }
 
 interface AlertHistoryProps {

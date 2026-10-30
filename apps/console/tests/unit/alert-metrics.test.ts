@@ -3,13 +3,23 @@ import { MutationObserver, QueryClient } from '@tanstack/react-query'
 import { MonitorChannel } from '@appwrite.io/console'
 import * as actualSdk from '@/lib/appwrite/sdk'
 import {
+  METRIC_CATEGORIES,
+  METRIC_NAMES,
   formatLength,
+  formatMetricValue,
   fromBytes,
+  metricDefinition,
   suggestThreshold,
   thresholdRatio,
   toBytes,
 } from '@/lib/alerts/metrics'
-import { fillBuckets, firings, rolling, seriesPlan } from '@/lib/alerts/series'
+import {
+  fillBuckets,
+  firings,
+  growth,
+  rolling,
+  seriesPlan,
+} from '@/lib/alerts/series'
 import {
   MIN_BAR_PERCENT,
   alertLength,
@@ -44,6 +54,14 @@ describe('alert byte thresholds', () => {
 })
 
 describe('alert rule history', () => {
+  test('growth is the rise over the span before each point', () => {
+    const points = [3, 5, 9, 9, 12].map((value, index) => ({
+      time: index,
+      value,
+    }))
+    expect(growth(points, 2).map((point) => point.value)).toEqual([6, 4, 3])
+  })
+
   const at = (minutes: number[]) =>
     minutes.map((value, index) => ({ time: index * 60_000, value }))
 
@@ -130,7 +148,7 @@ describe('monitor rules', () => {
   test('a project-wide monitor holds only its comparison', () => {
     expect(
       buildRules({
-        metric: 'bandwidth.outbound',
+        metric: 'network.outbound',
         comparator: 'greaterThan',
         threshold: 5_000,
         resourceType: 'project',
@@ -139,7 +157,7 @@ describe('monitor rules', () => {
     ).toEqual([
       {
         method: 'greaterThan',
-        attribute: 'bandwidth.outbound',
+        attribute: 'network.outbound',
         values: [5_000],
       },
     ])
@@ -147,7 +165,7 @@ describe('monitor rules', () => {
 
   test('a scoped monitor names its resource in the rules', () => {
     const condition = {
-      metric: 'files.storage',
+      metric: 'storage',
       comparator: 'greaterThanEqual',
       threshold: 1e9,
       resourceType: 'bucket',
@@ -155,7 +173,7 @@ describe('monitor rules', () => {
     } as const
     const rules = buildRules(condition)
     expect(rules.map((rule) => JSON.parse(rule))).toEqual([
-      { method: 'greaterThanEqual', attribute: 'files.storage', values: [1e9] },
+      { method: 'greaterThanEqual', attribute: 'storage', values: [1e9] },
       { method: 'equal', attribute: 'resourceType', values: ['bucket'] },
       { method: 'equal', attribute: 'resourceId', values: ['images'] },
     ])
@@ -167,10 +185,10 @@ describe('monitor rules', () => {
       parseRules([
         '{"method":"equal","attribute":"resourceType","values":["database"]}',
         'not a query',
-        '{"method":"lessThan","attribute":"databases.reads","values":[10]}',
+        '{"method":"lessThan","attribute":"databases.operations.reads","values":[10]}',
       ]),
     ).toEqual({
-      metric: 'databases.reads',
+      metric: 'databases.operations.reads',
       comparator: 'lessThan',
       threshold: 10,
       resourceType: 'database',
@@ -224,9 +242,44 @@ describe('monitor rules', () => {
     )
   })
 
+  test('a GB-hours threshold is typed in GB-hours and sent in MB-seconds', () => {
+    const t = (text: string) => text
+    const form = {
+      ...emptyRuleForm(),
+      metric: 'executions.mbSeconds' as const,
+      resourceType: 'function' as const,
+      resourceId: 'resize',
+      threshold: 2.5,
+    }
+    const input = monitorInputFromForm(form, t)
+    expect(JSON.parse(input.rules[0])).toEqual({
+      method: 'greaterThan',
+      attribute: 'executions.mbSeconds',
+      values: [9_000_000],
+    })
+    expect(input.name).toBe('Execution GB-hours > 2.5 GB-hours')
+    expect(formatMetricValue('executions.mbSeconds', 9_000_000)).toBe(
+      '2.5 GB-hours',
+    )
+  })
+
+  test('sign-ups are measured over the window', () => {
+    const t = (text: string) => text
+    const form = { ...emptyRuleForm(), metric: 'users' as const, window: 86400 }
+    expect(monitorInputFromForm(form, t).window).toBe(86400)
+  })
+
+  test('every metric is offered under a usage page section', () => {
+    for (const metric of METRIC_NAMES) {
+      expect(METRIC_CATEGORIES.map((category) => category.value)).toContain(
+        metricDefinition(metric).category,
+      )
+    }
+  })
+
   test('a gauge sends no window', () => {
     const t = (text: string) => text
-    const form = { ...emptyRuleForm(), metric: 'files.storage' as const }
+    const form = { ...emptyRuleForm(), metric: 'storage' as const }
     expect(monitorInputFromForm(form, t).window).toBeUndefined()
     expect(monitorInputFromForm(emptyRuleForm(), t).window).toBe(3600)
   })

@@ -23,7 +23,7 @@ import type { ParsedMonitor, MonitorInput } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
   COOLDOWNS,
-  METRICS,
+  metricDefinition,
   WINDOWS,
   formatMetricValue,
   thresholdRatio,
@@ -237,10 +237,10 @@ export function MonitorDrawer({
 
   const condition = monitor
     ? [
-        t(METRICS[monitor.metric]?.label ?? monitor.metric),
+        t(metricDefinition(monitor.metric).label),
         COMPARATORS.find((entry) => entry.value === monitor.comparator)?.symbol,
         formatMetricValue(monitor.metric, monitor.threshold),
-        METRICS[monitor.metric]?.counter
+        metricDefinition(monitor.metric).counter
           ? `${t('within')} ${t(WINDOWS.find((entry) => entry.value === monitor.window)?.label ?? `${monitor.window}s`)}`
           : null,
       ]

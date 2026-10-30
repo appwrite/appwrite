@@ -8,7 +8,9 @@ import { NumberInput } from '@/components/ui/number-input'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -16,6 +18,8 @@ import {
   bucketsQueryOptions,
   databasesQueryOptions,
   dedicatedDatabasesQueryOptions,
+  functionsQueryOptions,
+  sitesQueryOptions,
 } from '@/lib/react-query/hooks'
 import {
   buildRules,
@@ -29,10 +33,14 @@ import {
   BYTE_UNITS,
   COMPARATORS,
   COOLDOWNS,
+  MB_SECONDS_PER_GB_HOUR,
+  METRIC_CATEGORIES,
+  METRIC_NAMES,
   METRICS,
   RESOURCE_TYPES,
   WINDOWS,
   fromBytes,
+  metricDefinition,
   toBytes,
   type ByteUnit,
 } from '@/lib/alerts/metrics'
@@ -41,7 +49,7 @@ import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import { RuleChart } from './RuleChart'
 
-/** Monitor form state; `threshold` is in `byteUnit` for byte metrics. */
+/** Monitor form state; `threshold` is in `byteUnit` for byte metrics and in GB-hours for MB-seconds. */
 export type RuleForm = {
   name: string
   resourceType: AlertResourceType
@@ -89,7 +97,7 @@ export function emptyRuleForm(): RuleForm {
     name: '',
     resourceType: 'project',
     resourceId: '',
-    metric: 'bandwidth.outbound',
+    metric: 'network.outbound',
     comparator: 'greaterThan',
     threshold: 10,
     byteUnit: 'GB',
@@ -101,15 +109,19 @@ export function emptyRuleForm(): RuleForm {
 }
 
 export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
-  const bytes = METRICS[rule.metric]?.unit === 'bytes'
-  const split = bytes ? fromBytes(rule.threshold) : null
+  const unit = metricDefinition(rule.metric).unit
+  const split = unit === 'bytes' ? fromBytes(rule.threshold) : null
   return {
     name: rule.name,
     resourceType: rule.resourceType,
     resourceId: rule.resourceType === 'project' ? '' : rule.resourceId,
     metric: rule.metric,
     comparator: rule.comparator,
-    threshold: split ? split.amount : rule.threshold,
+    threshold: split
+      ? split.amount
+      : unit === 'gbHours'
+        ? rule.threshold / MB_SECONDS_PER_GB_HOUR
+        : rule.threshold,
     byteUnit: split ? split.unit : 'GB',
     window: rule.window,
     cooldown: rule.cooldown,
@@ -123,7 +135,7 @@ export function suggestedName(
   form: RuleForm,
   t: (text: string) => string,
 ): string {
-  const definition = METRICS[form.metric]
+  const definition = metricDefinition(form.metric)
   const symbol =
     COMPARATORS.find((entry) => entry.value === form.comparator)?.symbol ?? ''
   const unit =
@@ -131,20 +143,25 @@ export function suggestedName(
       ? ` ${form.byteUnit}`
       : definition.unit === 'percent'
         ? '%'
-        : definition.suffix
-          ? ` ${definition.suffix}`
-          : ''
+        : definition.unit === 'gbHours'
+          ? ' GB-hours'
+          : definition.suffix
+            ? ` ${definition.suffix}`
+            : ''
   return `${t(definition.label)} ${symbol} ${form.threshold.toLocaleString('en-US')}${unit}`
 }
 
 /** The form's threshold in the metric's unit. */
 export function formThreshold(form: RuleForm): number {
-  return METRICS[form.metric]?.unit === 'bytes'
-    ? toBytes(form.threshold, form.byteUnit)
-    : form.threshold
+  const unit = metricDefinition(form.metric).unit
+  if (unit === 'bytes') return toBytes(form.threshold, form.byteUnit)
+  if (unit === 'gbHours') {
+    return Math.round(form.threshold * MB_SECONDS_PER_GB_HOUR)
+  }
+  return form.threshold
 }
 
-/** The database or bucket the form watches; empty for the whole project. */
+/** The resource the form watches; empty for the whole project. */
 export function formResourceId(form: RuleForm): string {
   return form.resourceType === 'project' ? '' : form.resourceId.trim()
 }
@@ -165,7 +182,7 @@ export function monitorInputFromForm(
       resourceId: formResourceId(form),
     }),
     // Gauges compare their latest reading, so the API ignores a window for them.
-    window: METRICS[form.metric]?.counter ? form.window : undefined,
+    window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
     channels: form.channels,
     // The API validates any URL it is sent, so an empty one is left out.
@@ -232,23 +249,32 @@ function ResourcePicker({
     ...bucketsQueryOptions(projectId, 0, RESOURCE_PICKER_LIMIT),
     enabled: resourceType === 'bucket',
   })
+  const functions = useQuery({
+    ...functionsQueryOptions(projectId, 0, RESOURCE_PICKER_LIMIT),
+    enabled: resourceType === 'function',
+  })
+  const sites = useQuery({
+    ...sitesQueryOptions(projectId, 0, RESOURCE_PICKER_LIMIT),
+    enabled: resourceType === 'site',
+  })
   const dedicated = useQuery({
     ...dedicatedDatabasesQueryOptions(projectId),
     enabled: resourceType === 'dedicatedDatabase',
   })
 
-  const query =
-    resourceType === 'database'
-      ? databases
-      : resourceType === 'bucket'
-        ? buckets
-        : dedicated
-  const items: { $id: string; name: string }[] =
-    resourceType === 'database'
-      ? (databases.data?.databases ?? [])
-      : resourceType === 'bucket'
-        ? (buckets.data?.buckets ?? [])
-        : (dedicated.data?.databases ?? [])
+  const sources = {
+    database: { query: databases, items: databases.data?.databases },
+    bucket: { query: buckets, items: buckets.data?.buckets },
+    function: { query: functions, items: functions.data?.functions },
+    site: { query: sites, items: sites.data?.sites },
+    dedicatedDatabase: { query: dedicated, items: dedicated.data?.databases },
+  }
+  const source =
+    resourceType in sources
+      ? sources[resourceType as keyof typeof sources]
+      : sources.dedicatedDatabase
+  const query = source.query
+  const items: { $id: string; name: string }[] = source.items ?? []
 
   if (query.isError) {
     return (
@@ -270,7 +296,11 @@ function ResourcePicker({
       <p className="text-[13px] text-muted-foreground">
         {resourceType === 'bucket'
           ? t('This project has no buckets yet.')
-          : t('This project has no databases of this type yet.')}
+          : resourceType === 'function'
+            ? t('This project has no functions yet.')
+            : resourceType === 'site'
+              ? t('This project has no sites yet.')
+              : t('This project has no databases of this type yet.')}
       </p>
     )
   }
@@ -346,18 +376,25 @@ export function RuleFields({
 }: RuleFieldsProps) {
   const t = useT()
   const { isCloud } = useConsoleProfile()
-  const definition = METRICS[form.metric]
+  const definition = metricDefinition(form.metric)
   // Dedicated databases exist only on the cloud profile.
-  const metrics = (Object.keys(METRICS) as AlertMetric[]).filter(
+  const metrics = METRIC_NAMES.filter(
     (metric) =>
-      isCloud || !METRICS[metric].resourceTypes.includes('dedicatedDatabase'),
+      isCloud ||
+      !metricDefinition(metric).resourceTypes.includes('dedicatedDatabase'),
   )
+  const groups = METRIC_CATEGORIES.map((category) => ({
+    ...category,
+    metrics: metrics.filter(
+      (metric) => metricDefinition(metric).category === category.value,
+    ),
+  })).filter((group) => group.metrics.length > 0)
   const resourceTypes = RESOURCE_TYPES.filter((type) =>
     definition.resourceTypes.includes(type.value),
   )
 
   const setMetric = (metric: AlertMetric) => {
-    const types = METRICS[metric].resourceTypes
+    const types = metricDefinition(metric).resourceTypes
     const resourceType = types.includes(form.resourceType)
       ? form.resourceType
       : types[0]
@@ -409,10 +446,15 @@ export function RuleFields({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {metrics.map((metric) => (
-                  <SelectItem key={metric} value={metric}>
-                    {t(METRICS[metric].label)}
-                  </SelectItem>
+                {groups.map((group) => (
+                  <SelectGroup key={group.value}>
+                    <SelectLabel>{t(group.label)}</SelectLabel>
+                    {group.metrics.map((metric) => (
+                      <SelectItem key={metric} value={metric}>
+                        {t(metricDefinition(metric).label)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
@@ -528,7 +570,9 @@ export function RuleFields({
                 <Word>
                   {definition.unit === 'percent'
                     ? '%'
-                    : t(definition.suffix ?? 'operations')}
+                    : definition.unit === 'gbHours'
+                      ? t('GB-hours')
+                      : t(definition.suffix ?? 'operations')}
                 </Word>
               )}
             </div>

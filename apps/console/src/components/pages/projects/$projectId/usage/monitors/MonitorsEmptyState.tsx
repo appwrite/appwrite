@@ -1,4 +1,4 @@
-import { Bell, Database, HardDrive, Network } from 'lucide-react'
+import { Bell, Database, HardDrive, Network, Webhook } from 'lucide-react'
 import type { ComponentType } from 'react'
 import {
   ProductEmptyStateCreateButton,
@@ -6,7 +6,7 @@ import {
   ProductEmptyStateVisual,
 } from '@/components/global/shared/ProductEmptyState'
 import {
-  METRICS,
+  metricDefinition,
   formatMetricValue,
   fromBytes,
   suggestThreshold,
@@ -24,7 +24,7 @@ function suggested(
   observed: number | null,
 ): { form: AlertPreset['form']; threshold: number } {
   const metric = preset.form.metric!
-  const bytes = METRICS[metric].unit === 'bytes'
+  const bytes = metricDefinition(metric).unit === 'bytes'
   const fallback = bytes
     ? toBytes(preset.form.threshold ?? 0, preset.form.byteUnit ?? 'GB')
     : (preset.form.threshold ?? 0)
@@ -41,8 +41,8 @@ function suggested(
 const PRESET_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   'egress-spike': Network,
   'read-surge': Database,
-  'database-storage': Database,
-  'file-storage': HardDrive,
+  'storage-used': HardDrive,
+  'webhook-failures': Webhook,
 }
 
 /** Decorative firing monitor card. */
@@ -105,7 +105,7 @@ function PresetCard({
 }) {
   const t = useT()
   const metric = preset.form.metric!
-  const counter = METRICS[metric].counter
+  const counter = metricDefinition(metric).counter
   const window = preset.form.window ?? 3600
   const { data } = useRuleSeries(
     projectId,

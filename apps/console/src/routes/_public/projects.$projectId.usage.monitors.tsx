@@ -14,7 +14,12 @@ import { Monitors } from '@/components/pages/projects/$projectId/usage/monitors/
 import type { RuleForm } from '@/components/pages/projects/$projectId/usage/monitors/RuleFields'
 import { canWriteMonitors } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { METRICS, fromBytes } from '@/lib/alerts/metrics'
+import {
+  MB_SECONDS_PER_GB_HOUR,
+  METRICS,
+  fromBytes,
+  metricDefinition,
+} from '@/lib/alerts/metrics'
 import type { AlertMetric, AlertResourceType } from '@/lib/appwrite/monitors'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
@@ -76,7 +81,7 @@ function UsageMonitorsPage() {
   const prefill = useMemo((): Partial<RuleForm> | undefined => {
     if (!search.metric || !(search.metric in METRICS)) return undefined
     const metric = search.metric as AlertMetric
-    const definition = METRICS[metric]
+    const definition = metricDefinition(metric)
     const resourceType = definition.resourceTypes.includes(
       search.resourceType as AlertResourceType,
     )
@@ -92,6 +97,8 @@ function UsageMonitorsPage() {
         const { amount, unit } = fromBytes(search.threshold)
         fields.threshold = amount
         fields.byteUnit = unit
+      } else if (definition.unit === 'gbHours') {
+        fields.threshold = search.threshold / MB_SECONDS_PER_GB_HOUR
       } else {
         fields.threshold = search.threshold
       }
