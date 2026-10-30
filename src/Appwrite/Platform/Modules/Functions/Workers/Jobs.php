@@ -197,15 +197,7 @@ class Jobs extends Action
             }
 
             $deployment = match ($callback) {
-                CallbackEvent::Log => $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $deployment, $event, $vcsFactory, $platform, $cache): Document {
-                    $deployment = $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform);
-                    // A failed append or marker save rolls back the log write;
-                    // realtime delivery happens after commit and keeps the marker.
-                    if ($event->id !== '' && $cache->save('jobs-event-' . $project->getSequence() . '-' . $event->id, true) === false) {
-                        throw new \RuntimeException('Failed to record build log callback.');
-                    }
-                    return $deployment;
-                }),
+                CallbackEvent::Log => $this->onLog($dbForProject, $dbForPlatform, $project, $deployment, JobLog::fromArray($event->data), $vcsFactory, $platform, $cache, $event->id),
                 CallbackEvent::Artifact => $this->onArtifact($dbForProject, $dbForPlatform, $project, $deployment, $artifact, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Exit => $this->onExit($dbForProject, $dbForPlatform, $project, $deployment, JobExit::fromArray($event->data), $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $vcsFactory, $cache, $platform, $plan, $bus),
                 CallbackEvent::Complete => $this->onComplete($dbForProject, $dbForPlatform, $project, $deployment, $usage, $publisherForUsage, $publisherForScreenshots, $deviceForBuilds, $deviceForFunctions, $deviceForSites, $vcsFactory, $cache, $platform, $plan, $bus),
@@ -279,32 +271,33 @@ class Jobs extends Action
         }
     }
 
-    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform): Document
+    protected function onLog(Database $dbForProject, Database $dbForPlatform, Document $project, Document $deployment, JobLog $log, VcsFactory $vcsFactory, array $platform, Cache $cache, string $eventId): Document
     {
         $chunk = \implode("\n", $log->lines);
-        if ($chunk === '') {
+        $update = [];
+        if ($chunk !== '') {
+            $update['buildLogs'] = $this->truncate($deployment->getAttribute('buildLogs', '') . $chunk . "\n");
+            // The first output starts the build; template deployments can be processing.
+            if (\in_array($deployment->getAttribute('status'), ['waiting', 'processing'], true)) {
+                $update['status'] = 'building';
+                $update['buildStartedAt'] = DateTime::now();
+            }
+        }
+
+        $deployment = $dbForProject->withTransaction(function () use ($dbForProject, $project, $deployment, $update, $cache, $eventId): Document {
+            if ($update !== []) {
+                $dbForProject->updateDocuments('deployments', new Document($update), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+                $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+            }
+            // A refused marker rolls back the append. Realtime runs after commit.
+            if ($eventId !== '' && $cache->save('jobs-event-' . $project->getSequence() . '-' . $eventId, true) === false) {
+                throw new \RuntimeException('Failed to record build log callback.');
+            }
             return $deployment;
-        }
-
-        $logs = $this->truncate($deployment->getAttribute('buildLogs', '') . $chunk . "\n");
-        $update = ['buildLogs' => $logs];
-
-        // First build output means the build is running: promote the queued
-        // deployment to 'building' and stamp its start (mirrors the executor).
-        // 'processing' occurs when the Builds worker prepared the source (the
-        // template-into-repo push) before handing the build to the jobs-service.
-        if (\in_array($deployment->getAttribute('status'), ['waiting', 'processing'], true)) {
-            $update['status'] = 'building';
-            $update['buildStartedAt'] = DateTime::now();
-        }
-
-        // Guarded like finalize: a concurrent cancel appends its own closing
-        // log line, which a blind write here would clobber.
-        $dbForProject->updateDocuments('deployments', new Document($update), [
-            Query::equal('$id', [$deployment->getId()]),
-            Query::notEqual('status', 'canceled'),
-        ]);
-        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+        });
 
         if (($update['status'] ?? '') === 'building' && $deployment->getAttribute('status') === 'building') {
             GitAction::report('processing', $deployment, $project, $dbForProject, $dbForPlatform, $vcsFactory, $platform);
@@ -746,80 +739,58 @@ class Jobs extends Action
 
         $collection = $deployment->getAttribute('resourceType', 'functions');
         $resource = $dbForProject->getDocument($collection, $deployment->getAttribute('resourceId'));
-        $terminal = $success ? 'ready' : 'failed';
+        $applied = 0;
+        $deployment = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $message, $collection, $buildSize, &$applied): Document {
+            $applied = 0;
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId(), forUpdate: true);
+            if ($deployment->isEmpty() || \in_array($deployment->getAttribute('status'), ['ready', 'failed', 'canceled'], true)) {
+                return $deployment;
+            }
 
-        $logs = $deployment->getAttribute('buildLogs', '');
-        $trailer = $success
-            ? "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n"
-            : "\n" . ($message !== '' ? $message : 'Build failed.') . "\n";
-        $update = [
-            'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
-            'buildLogs' => $this->truncate($logs . $trailer),
-        ];
-        if ($success) {
-            $update['buildSize'] = $buildSize;
-            $update['totalSize'] = $buildSize + (int) $deployment->getAttribute('sourceSize', 0);
-        }
-
-        // Guard against a concurrent cancel (updateDeploymentStatus): only
-        // transition if the build wasn't canceled between the read and this
-        // write, so a late outcome can't resurrect a canceled build.
-        $applied = $dbForProject->updateDocuments('deployments', new Document($update), [
-            Query::equal('$id', [$deployment->getId()]),
-            Query::notEqual('status', 'canceled'),
-        ]);
-        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-
-        // latestDeployment* must be written before activate(). activate() sets
-        // deploymentId then walks platform rules; under parallel Sites e2e that
-        // scan is slow enough that clients waiting on deploymentId observe a
-        // stale latestDeploymentId (still the previous deployment).
-        if (! $resource->isEmpty()) {
-            $this->updateLatestDeployment($dbForProject, $resource);
-        }
-
-        // The status and the resource's deploymentId commit together, so
-        // executions never reach a deployment that is still building and a
-        // deployment reported ready is already the one they reach. The rules
-        // live in the platform database and are repointed before the commit;
-        // the router keeps serving the active deployment until then.
-        if ($applied > 0) {
-            [$applied, $success] = $dbForProject->withTransaction(function () use ($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus, $success, $terminal, $collection, $logs): array {
-                $applied = $dbForProject->updateDocuments('deployments', new Document(['status' => $terminal]), [
-                    Query::equal('$id', [$deployment->getId()]),
-                    Query::notEqual('status', 'canceled'),
-                ]);
-
-                if ($applied > 0 && $success && $collection === 'sites' && !empty($deployment->getAttribute('adapter')) && !$resource->isEmpty()) {
-                    // Other deployments have their own callback locks. Serialize
-                    // the first successful adapter pin on the site row itself.
-                    $site = $dbForProject->getDocument('sites', $resource->getId(), forUpdate: true);
-                    if ($deployment->getAttribute('adapter') === 'static' && $site->getAttribute('adapter') === 'ssr') {
-                        $success = false;
-                        $dbForProject->updateDocument('deployments', $deployment->getId(), new Document([
-                            'status' => 'failed',
-                            'buildLogs' => $this->truncate($logs . "\nAdapter mismatch. Detected: static does not match with the set adapter: ssr\n"),
-                        ]));
-                    } elseif (empty($site->getAttribute('adapter'))) {
-                        $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                            'adapter' => $deployment->getAttribute('adapter'),
-                            'fallbackFile' => $deployment->getAttribute('fallbackFile', ''),
-                        ]));
-                    }
+            if ($success && $collection === 'sites' && !empty($deployment->getAttribute('adapter')) && !$resource->isEmpty()) {
+                // Deployments have separate callback locks; serialize adapter pinning on the site.
+                $resource = $dbForProject->getDocument('sites', $resource->getId(), forUpdate: true);
+                if ($deployment->getAttribute('adapter') === 'static' && $resource->getAttribute('adapter') === 'ssr') {
+                    $success = false;
+                    $message = 'Adapter mismatch. Detected: static does not match with the set adapter: ssr';
                 }
+            }
 
-                if ($applied > 0 && $success && $deployment->getAttribute('activate') === true && ! $resource->isEmpty()) {
+            $trailer = $success
+                ? "\033[90m[" . \date('H:i:s') . "] \033[90m[\033[0mappwrite\033[90m]\033[32m Deployment finished. \033[0m\n"
+                : "\n" . ($message !== '' ? $message : 'Build failed.') . "\n";
+            $update = [
+                'status' => $success ? 'ready' : 'failed',
+                'buildEndedAt' => $deployment->getAttribute('buildEndedAt') ?: DateTime::now(),
+                'buildLogs' => $this->truncate($deployment->getAttribute('buildLogs', '') . $trailer),
+            ];
+            if ($success) {
+                $update['buildSize'] = $buildSize;
+                $update['totalSize'] = $buildSize + (int) $deployment->getAttribute('sourceSize', 0);
+            }
+            $applied = $dbForProject->updateDocuments('deployments', new Document($update), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
+
+            if ($applied > 0 && !$resource->isEmpty()) {
+                if ($success && $collection === 'sites' && !empty($deployment->getAttribute('adapter')) && empty($resource->getAttribute('adapter'))) {
+                    $dbForProject->updateDocument('sites', $resource->getId(), new Document([
+                        'adapter' => $deployment->getAttribute('adapter'),
+                        'fallbackFile' => $deployment->getAttribute('fallbackFile', ''),
+                    ]));
+                }
+                // Publish the final latest-deployment state before activation exposes this build.
+                $this->updateLatestDeployment($dbForProject, $resource);
+                if ($success && $deployment->getAttribute('activate') === true) {
                     $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
                 }
+            }
 
-                return [$applied, $success];
-            });
-            $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
-        }
-
-        if ($applied > 0 && ! $resource->isEmpty()) {
-            $this->updateLatestDeployment($dbForProject, $resource);
-        }
+            return $deployment;
+        });
+        $success = $deployment->getAttribute('status') === 'ready';
 
         if ($applied > 0 && $success && $collection === 'sites' && ! $resource->isEmpty()) {
             // Every successful site build, activated or not, repoints the

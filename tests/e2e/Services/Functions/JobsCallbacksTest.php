@@ -262,6 +262,32 @@ final class JobsCallbacksTest extends TestCase
         $this->assertSame('ssr', $this->database->getDocument('sites', 'site')->getAttribute('adapter'));
     }
 
+    public function testFinalizationRollsBackWhenLatestDeploymentCannotBeUpdated(): void
+    {
+        \file_put_contents($this->root . '/output.tar.gz', 'build output');
+        $this->send('manifest');
+        $this->send('exit');
+        $table = $this->pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%sites'")->fetchColumn();
+        $this->pdo->exec('CREATE TRIGGER fail_latest BEFORE UPDATE ON "' . $table . '" WHEN NEW.latestDeploymentStatus = \'ready\' BEGIN SELECT RAISE(ABORT, \'latest deployment unavailable\'); END');
+        try {
+            $this->send('complete');
+            $this->fail('Updating the latest deployment must fail before retrying.');
+        } catch (DatabaseException) {
+        } finally {
+            $this->pdo->exec('DROP TRIGGER fail_latest');
+        }
+
+        $deployment = $this->database->getDocument('deployments', 'deployment');
+        $this->assertSame('building', $deployment->getAttribute('status'));
+        $this->assertNull($deployment->getAttribute('buildSize'));
+        $this->assertSame('', $this->database->getDocument('sites', 'site')->getAttribute('adapter'));
+
+        $this->send('complete');
+
+        $this->assertSame('ready', $this->database->getDocument('deployments', 'deployment')->getAttribute('status'));
+        $this->assertSame('ready', $this->database->getDocument('sites', 'site')->getAttribute('latestDeploymentStatus'));
+    }
+
     public function testDetectionPreservesConfiguredFallbackFile(): void
     {
         $this->database->updateDocument('sites', 'site', new Document(['adapter' => 'static', 'fallbackFile' => '404.html']));
