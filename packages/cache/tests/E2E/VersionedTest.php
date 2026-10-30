@@ -25,6 +25,39 @@ final class VersionedTest extends TestCase
     }
 
     #[DataProvider('transports')]
+    public function testLegacyRegistrationIgnoresFillGraceButConditionalFillsRespectIt(bool $multiplexed): void
+    {
+        $error = null;
+        run(function () use ($multiplexed, &$error): void {
+            $redis = new Redis();
+            $port = (int) (\getenv('CACHE_VERSIONED_TEST_PORT') ?: Services::REDIS_PORT);
+            $redis->connect(Services::HOST, $port);
+            $adapter = $multiplexed ? new Multiplexing(Services::HOST, $port) : new RedisAdapter($redis);
+            $adapter->setLeaseGraceWindow(1000);
+            $legacy = (new Cache($adapter))->legacy();
+            $key = 'legacy-grace:'.\bin2hex(\random_bytes(8));
+            try {
+                $this->assertSame('first', $legacy->save($key, 'first', 'first'));
+                $this->assertTrue($legacy->purge($key, 'first'));
+                $this->assertSame('second', $legacy->save($key, 'second', 'second'), 'A normal registration must not be refused by fill grace');
+                $this->assertFalse($legacy->saveWithLease($key, 'fill', '', $legacy->getLease($key)), 'Conditional fills still respect grace');
+                $this->assertSame('second', $legacy->load($key, 60, 'second'));
+            } catch (Throwable $caught) {
+                $error = $caught;
+            } finally {
+                if ($adapter instanceof Multiplexing) {
+                    $adapter->disconnect();
+                }
+                $redis->del($key);
+                $redis->close();
+            }
+        });
+        if ($error instanceof Throwable) {
+            throw $error;
+        }
+    }
+
+    #[DataProvider('transports')]
     public function testLegacyFacadePreservesTheReleasedWireFormat(bool $multiplexed): void
     {
         $error = null;

@@ -90,7 +90,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned, \Utopia\Cac
             if ARGV[1] ~= '*' and current ~= ARGV[1] then return 0 end
             local deadline = tonumber(redis.call('HGET', KEYS[1], '__utopia_tomb__'))
             local window = tonumber(ARGV[4])
-            if deadline ~= nil and window > 0 then
+            if ARGV[1] ~= '*' and deadline ~= nil and window > 0 then
                 local t = redis.call('TIME')
                 local now = tonumber(t[1]) * 1000000 + tonumber(t[2])
                 if now < deadline and deadline - now <= window * 1000 then return 0 end
