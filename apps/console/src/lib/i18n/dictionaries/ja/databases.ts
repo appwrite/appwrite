@@ -1294,6 +1294,7 @@ export const jaDatabasesDictionary: Record<string, string> = {
   "You don't have permission to perform this action.": 'この操作を実行する権限がありません。',
   'You have reached the maximum self-serve replica count. Contact sales if you need a custom high availability configuration.': 'セルフサービスのレプリカ数の上限に達しました。カスタムの高可用性構成が必要な場合は営業にお問い合わせください。',
   'Your plan only supports the daily preset policy. Upgrade to create custom policies.': 'お使いのプランは毎日のプリセットポリシーのみサポートしています。カスタムポリシーを作成するにはアップグレードしてください。',
+  'Your plan includes the daily backup policy. Custom schedules and retention are available on Enterprise.': 'お使いのプランには毎日のバックアップポリシーが含まれています。カスタムのスケジュールと保持期間は Enterprise プランでご利用いただけます。',
   // Column drawer (tablesdb)
   'Key is required': 'キーは必須です',
   'Column with this key already exists': 'このキーの列は既に存在します',

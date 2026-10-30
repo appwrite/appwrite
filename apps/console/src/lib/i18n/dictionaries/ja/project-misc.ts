@@ -2757,8 +2757,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ストア向けのアーティファクトを作成するためにビルドをトリガーします。',
   'Submit a ready build to a store to track its review status here.':
     '準備できたビルドをストアに提出すると、ここでレビュー状況を追跡できます。',
-  'Upgrade or contact sales for longer retention.':
-    'より長い保持期間が必要な場合は、アップグレードするか営業にお問い合わせください。',
+  'Upgrade for longer retention.':
+    'より長い保持期間が必要な場合は、アップグレードしてください。',
+  'Longer retention is available on Enterprise.':
+    'Enterprise プランでは、より長い保持期間をご利用いただけます。',
   'Activity will appear here as you use your project':
     'プロジェクトを使用すると、ここにアクティビティが表示されます',
   'Human vs AI traffic (last 30 days)': '人間と AI のトラフィック (過去 30 日)',

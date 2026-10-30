@@ -54,7 +54,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   then: 'ואז',
   'already exists': 'כבר קיים',
   'is longer than 8192 allowed characters': 'ארוך מ-8192 התווים המותרים',
-  'contact sales': 'צרו קשר עם מכירות',
   'to include more repos.': 'כדי לכלול repos נוספים.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
 
@@ -396,6 +395,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'My filters': 'הסינונים שלי',
   'Name, email, phone, or user ID…': 'שם, אימייל, טלפון או מזהה משתמש…',
   'Need more resources?': 'צריכים משאבים נוספים?',
+  'Higher CPU and memory are available on Enterprise.':
+    'משאבי CPU וזיכרון גבוהים יותר זמינים בתוכנית Enterprise.',
   'Next image': 'התמונה הבאה',
 
   // Empty states

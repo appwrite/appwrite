@@ -718,6 +718,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
+  'Need SSO or custom organization roles?':
+    'זקוקים ל-SSO או לתפקידי ארגון מותאמים?',
+  'Need a custom SLA or a private Slack channel?':
+    'זקוקים ל-SLA מותאם או לערוץ Slack פרטי?',
+  'Running Appwrite at scale?': 'מריצים את Appwrite בקנה מידה גדול?',
+  'Get a custom SLA, a private Slack channel, and SOC 2 and HIPAA without add-ons.':
+    'קבלו SLA מותאם, ערוץ Slack פרטי, ו-SOC 2 ו-HIPAA ללא תוספות.',
+  'Talk to sales': 'שיחה עם מכירות',
   'Need compliance, custom SLAs, or volume pricing?':
     'זקוקים לציות, הסכמי SLA מותאמים או תמחור לפי היקף?',
   Network: 'רשת',
