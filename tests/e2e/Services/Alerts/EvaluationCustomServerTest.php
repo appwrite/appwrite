@@ -428,6 +428,55 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('firing', $this->getMonitorBody($monitorId)['status']);
     }
 
+    public function testConcurrentUnsubscribesAllHold(): void
+    {
+        $root = $this->getRoot()['$id'];
+        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $scopes = \array_map(fn (int $i) => 'concurrent' . $i . \uniqid(), \range(1, 12));
+
+        /**
+         * Test for SUCCESS
+         */
+        // Every opt-out sent at once is kept, none overwriting another.
+        $multi = \curl_multi_init();
+        $handles = [];
+        foreach ($scopes as $scope) {
+            $handle = \curl_init('http://appwrite.test/v1/console/alerts/unsubscribe?project=console');
+            \curl_setopt_array($handle, [
+                CURLOPT_POST => true,
+                CURLOPT_HTTPHEADER => ['content-type: application/json', 'x-appwrite-project: console'],
+                CURLOPT_POSTFIELDS => \json_encode(['token' => $unsubscribe->token($root, $scope)]),
+                CURLOPT_RETURNTRANSFER => true,
+            ]);
+            \curl_multi_add_handle($multi, $handle);
+            $handles[] = $handle;
+        }
+        do {
+            \curl_multi_exec($multi, $running);
+            \curl_multi_select($multi);
+        } while ($running > 0);
+        foreach ($handles as $handle) {
+            $this->assertSame(204, \curl_getinfo($handle, CURLINFO_RESPONSE_CODE));
+            \curl_multi_remove_handle($multi, $handle);
+        }
+        \curl_multi_close($multi);
+
+        $stored = [];
+        $this->withFactory(function (object $factory) use ($root, &$stored): void {
+            $stored = $factory->platform()->getDocument('users', $root)->getAttribute('alertsUnsubscribed', []);
+        });
+        $this->assertSame([], \array_values(\array_diff($scopes, $stored)), 'An unsubscribe sent alongside others was lost.');
+
+        // And resumed at once, every one of them goes.
+        foreach ($scopes as $scope) {
+            $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $unsubscribe->token($root, $scope))['headers']['status-code']);
+        }
+        $this->withFactory(function (object $factory) use ($root, &$stored): void {
+            $stored = $factory->platform()->getDocument('users', $root)->getAttribute('alertsUnsubscribed', []);
+        });
+        $this->assertSame([], \array_values(\array_intersect($scopes, $stored)));
+    }
+
     public function testTransferredProjectAlertsItsNewOrganizationsOwners(): void
     {
         $console = [
