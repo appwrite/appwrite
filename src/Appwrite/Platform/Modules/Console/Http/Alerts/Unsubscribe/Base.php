@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Operator;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -29,12 +30,12 @@ abstract class Base extends Action
     abstract protected function getMethod(): string;
 
     /**
-     * The user's opted-out monitors once this request's scope is applied.
+     * The change to the user's opted-out scopes, applied in the database so
+     * concurrent requests each keep theirs.
      *
-     * @param list<string> $unsubscribed
-     * @return list<string>
+     * @param list<string> $unsubscribed the scopes the user had when read
      */
-    abstract protected function apply(array $unsubscribed, string $scope): array;
+    abstract protected function change(array $unsubscribed, string $scope): ?Operator;
 
     public function __construct()
     {
@@ -82,10 +83,10 @@ abstract class Base extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $unsubscribed = \array_values(\array_unique($this->apply($user->getAttribute('alertsUnsubscribed', []), $scope)));
-        if ($unsubscribed !== $user->getAttribute('alertsUnsubscribed', [])) {
+        $change = $this->change($user->getAttribute('alertsUnsubscribed', []), $scope);
+        if ($change !== null) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), new Document([
-                'alertsUnsubscribed' => $unsubscribed,
+                'alertsUnsubscribed' => $change,
             ])));
         }
 
