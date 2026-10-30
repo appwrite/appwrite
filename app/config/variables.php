@@ -890,6 +890,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_MQTT_PERMISSION_TIMEOUT',
+                'description' => 'Maximum seconds the broker waits for a revoke or unsubscribe permission check against the database. Past it the broker fails closed: the user\'s connections or subscription are dropped unverified, and clients re-authenticate on reconnect. Minimum 0.1. Default value is: \'5\'.',
+                'introduction' => '2.6.3',
+                'default' => '5',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [

@@ -476,6 +476,7 @@
       "processes": 1,
       "paths": [
         "app/mqtt.php",
+        "app/init/mqtt/",
         "src/Appwrite/Mqtt/",
         "src/Appwrite/Messaging/Adapter/Mqtt.php",
         "src/Appwrite/Messaging/Adapter/Push/",
