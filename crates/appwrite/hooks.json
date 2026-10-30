@@ -143,7 +143,7 @@
       "rust": {
         "file": "crates/appwrite/core/src/platform/hooks/shutdown/onboarding.rs",
         "status": "done",
-        "note": "Every stage of `app/config/onboarding.php` (a unit test pins the list) and the CLI and MCP install stages from `X-SDK-Name` / `X-SDK-Language`. Proved by `appwrite diff` (CLI and MCP variants).",
+        "note": "Every stage of `app/config/onboarding.php` (a unit test pins the list) and the CLI and MCP install stages from `X-SDK-Name` / `X-SDK-Language`. Runs before the response is returned rather than in the background shutdown task: PHP runs it inline right after `send()`, so its write and purge land as the request completes, under the same skip-on-contention lock. Proved by `appwrite diff` (CLI and MCP variants).",
         "where": [{ "file": "crates/appwrite/core/src/platform/hooks/shutdown/onboarding.rs", "anchor": "async fn onboarding" }]
       }
     },

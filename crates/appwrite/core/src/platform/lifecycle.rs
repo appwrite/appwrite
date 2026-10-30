@@ -55,7 +55,7 @@ pub(super) async fn run(platform: &Platform, request: Request) -> Response {
     if result.is_err() && !ctx.route.has_group("api") {
         resources::project::resolve_alone(&mut ctx).await;
     }
-    finalize(ctx, result)
+    finalize(ctx, result).await
 }
 
 /// Init hooks of the `api` group (`general.php` I1–I4 and `shared/api.php`
@@ -92,7 +92,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
 }
 
 /// Builds the final response (success or error) and schedules shutdown work.
-pub(super) fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
+pub(super) async fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
     let allowed = ctx.allowed_hostnames();
     let cors = network::cors_headers(ctx.request.header_or_empty("origin"), &allowed);
     let https = ctx
@@ -118,7 +118,7 @@ pub(super) fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
         } else {
             sent.set("server", "swoole-http-server");
         }
-        return send(ctx, sent, true);
+        return send(ctx, sent, true).await;
     }
 
     let mut response = match result {
@@ -151,12 +151,12 @@ pub(super) fn finalize(mut ctx: Context, result: Result<Response>) -> Response {
         response.set("expires", "0");
         response.set("pragma", "no-cache");
     }
-    send(ctx, response, api)
+    send(ctx, response, api).await
 }
 
 /// `Response::send()`: compression, `X-Debug-Speed` (from the request
 /// start), then the body; and the shutdown hooks of a success.
-fn send(ctx: Context, mut response: Response, api: bool) -> Response {
+async fn send(ctx: Context, mut response: Response, api: bool) -> Response {
     let state = ctx.state.clone();
     let is_error = response.status().as_u16() >= 400;
     let body: Bytes = response.staged().cloned().unwrap_or_default();
@@ -173,7 +173,7 @@ fn send(ctx: Context, mut response: Response, api: bool) -> Response {
     response.flush();
 
     if !is_error && api && !ctx.failed {
-        shutdown::schedule(ctx, response.status(), response.content_type().to_owned(), body, response.size());
+        shutdown::schedule(ctx, response.status(), response.content_type().to_owned(), body, response.size()).await;
     }
     response
 }

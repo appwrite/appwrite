@@ -10,6 +10,13 @@
 //! deletes, the database listeners' `users.[userId].create` events, the
 //! queued messages, `events`, `audits`, `usage` (with `usage-status`) and
 //! `onboarding`.
+//!
+//! `onboarding` alone runs before the response is returned. PHP runs it
+//! inline in the request's coroutine, right after `send()`, so its project
+//! write and cache purge land as the request completes; at the end of the
+//! background task they waited behind every other step and could land after
+//! the next request began. It writes only the first time a stage completes,
+//! and nothing else here orders against it.
 
 mod abuse_reset;
 mod audits;
@@ -70,7 +77,7 @@ struct Job {
     response_size: usize,
 }
 
-pub(in crate::platform) fn schedule(
+pub(in crate::platform) async fn schedule(
     ctx: Context,
     status: StatusCode,
     content_type: String,
@@ -151,6 +158,7 @@ pub(in crate::platform) fn schedule(
         status,
         response_size,
     };
+    job.onboarding().await;
     utopia_async::spawn(job.run());
 }
 
@@ -226,7 +234,6 @@ impl Job {
 
         self.audit().await;
         self.usage().await;
-        self.onboarding().await;
     }
 
     async fn publish<T: serde::Serialize>(&self, queue: &str, payload: &T) {
