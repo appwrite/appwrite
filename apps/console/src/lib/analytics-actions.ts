@@ -116,6 +116,11 @@ export const ANALYTICS_ACTIONS = {
   'for-agents-install-skills': 'For Agents Install Skills Clicked',
   'for-agents-connect-mcp': 'For Agents Connect MCP Clicked',
   'for-agents-view-docs': 'For Agents View Docs Clicked',
+  'zero-copy-command': 'Zero Copy Command Clicked',
+  'zero-copy-install': 'Zero Copy Install Clicked',
+  'zero-copy-entry': 'Zero Copy Entry Clicked',
+  'zero-copy-prompt': 'Zero Copy Prompt Clicked',
+  'zero-sign-up': 'Zero Sign Up Clicked',
 
   // Pricing page CTAs
   'pricing-start-free': 'Pricing Start Free Clicked',

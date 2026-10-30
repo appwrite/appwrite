@@ -1047,6 +1047,42 @@ html:not([lang='en']):not([lang='he']) {
   }
 }
 
+/* Zero page terminal: types the command, then prints the output */
+@keyframes zero-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes zero-line {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.zero-terminal-command {
+  display: inline-block;
+  vertical-align: bottom;
+  animation: zero-type var(--zero-type-ms) steps(var(--zero-chars)) var(--zero-start-ms) both;
+}
+
+.zero-terminal-line {
+  animation: zero-line 200ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zero-terminal-command,
+  .zero-terminal-line {
+    animation: none;
+  }
+}
+
 /* Smoother loader spin: longer duration + will-change for compositor */
 @keyframes spin-smooth {
   from {

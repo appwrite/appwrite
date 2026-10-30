@@ -1563,4 +1563,144 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Manage records in the Console, next to your projects.': 'プロジェクトと同じ Console でレコードを管理できます。',
   'Connect Sites, Functions, or API domains with certificates issued for you.':
     'サイト、Functions、API ドメインを接続すると、証明書が自動で発行されます。',
+  'A backend in one command':
+    'コマンドひとつでバックエンド',
+  'Appwrite Zero gives you or your coding agent a real Appwrite project with no account and no card. Build for an hour, then claim it to keep everything.':
+    'Appwrite Zero は、アカウントもカードもなしで、あなたやコーディングエージェントに本物の Appwrite プロジェクトを用意します。1 時間ビルドしたら、プロジェクトを引き継いですべてを残せます。',
+  'Writes appwrite.config.json and signs the CLI in with the project key, so appwrite push deploys straight into it.':
+    'appwrite.config.json を書き出し、プロジェクトのキーで CLI にサインインします。appwrite push でそのままデプロイできます。',
+  'One public request, no key. The response carries an API key with every project scope until the build window ends.':
+    'キー不要の公開リクエストを 1 回送るだけです。レスポンスには、ビルド期間が終わるまでプロジェクトのすべてのスコープを持つ API キーが含まれます。',
+  'Start the local MCP server without a project or key. It asks for a Zero project and points every other tool at it.':
+    'プロジェクトやキーを指定せずにローカルの MCP サーバーを起動します。Zero プロジェクトを取得し、ほかのツールをすべてそのプロジェクトに向けます。',
+  'Every service answers and the API key has every project scope. Sites and functions open only through your owner link.':
+    'すべてのサービスが使え、API キーはプロジェクトのすべてのスコープを持ちます。サイトと Functions はオーナーリンクからのみ開けます。',
+  'Paused, data kept':
+    '一時停止中 (データは保持)',
+  'API calls stop with zero_expired. Nothing is deleted. Claim it and the project comes back as you left it.':
+    'API 呼び出しは zero_expired で停止します。何も削除されません。引き継げば、プロジェクトは元の状態のまま戻ります。',
+  'Nobody claimed it, so the project and its data are gone. Run the command again for a new one.':
+    '引き継がれなかったため、プロジェクトとそのデータは削除されました。もう一度コマンドを実行すると新しいプロジェクトを取得できます。',
+  'Sign up users with email, OAuth, magic links and anonymous sessions.':
+    'メール、OAuth、Magic URL、匿名セッションでユーザーを登録できます。',
+  'Tables, rows, queries, indexes and permissions, through the SDKs or the API key.':
+    'テーブル、行、クエリ、インデックス、権限を SDK や API キーから扱えます。',
+  'A bucket for uploads, with image previews and file tokens.':
+    '画像プレビューとファイルトークンに対応したアップロード用バケットです。',
+  'Deploy code in any runtime. Up to 500 executions an hour while unclaimed.':
+    '任意のランタイムでコードをデプロイできます。引き継ぐまでは 1 時間あたり最大 500 回実行できます。',
+  'Deploy a frontend to a real domain. Up to 20 deployments an hour, private until claimed.':
+    'フロントエンドを実際のドメインにデプロイできます。1 時間あたり最大 20 回デプロイでき、引き継ぐまでは非公開です。',
+  'Subscribe to changes over WebSockets from the same project.':
+    '同じプロジェクトの変更を WebSocket で購読できます。',
+  'Open the claim link':
+    '引き継ぎリンクを開く',
+  'Sign in, or create an account. The link works any time before the deadline.':
+    'サインインするか、アカウントを作成します。リンクは期限までいつでも使えます。',
+  'Pick an organization':
+    '組織を選ぶ',
+  'Choose one you own, or create a free one on the spot.':
+    'オーナーになっている組織を選ぶか、その場で無料の組織を作成します。',
+  'Same project, same ID, same API key, now without an expiry. Its domains open to everyone.':
+    'プロジェクトも ID も API キーもそのままで、有効期限はなくなります。ドメインは誰でも開けるようになります。',
+  'Is it really free?':
+    '本当に無料ですか？',
+  'Yes. You never enter a card. An unclaimed project runs on its own Zero plan with hourly caps, so nobody pays for it and it stays free for everyone.':
+    'はい。カードを入力することはありません。引き継がれていないプロジェクトは、1 時間ごとの上限がある専用の Zero プランで動くため、誰にも費用はかからず、誰でも無料で使えます。',
+  'Do I need an Appwrite account?':
+    'Appwrite のアカウントは必要ですか？',
+  'No. The command gives you the project and its API key straight away. You only sign in when you want to keep it.':
+    'いいえ。コマンドを実行するとすぐにプロジェクトと API キーが手に入ります。サインインが必要なのは、プロジェクトを残したいときだけです。',
+  'What happens after 60 minutes?':
+    '60 分たつとどうなりますか？',
+  'The project pauses and API calls return zero_expired, but nothing is deleted. You then have 24 hours to claim it from the link you were given. Unclaimed projects are deleted with their data.':
+    'プロジェクトは一時停止し、API 呼び出しは zero_expired を返しますが、何も削除されません。そこから 24 時間以内に、受け取ったリンクから引き継げます。引き継がれなかったプロジェクトはデータごと削除されます。',
+  'Who can open my site or function domain?':
+    'サイトや Functions のドメインは誰が開けますか？',
+  'Only you, until you claim the project. Open the owner link the CLI prints once in your browser, or send the X-Appwrite-Zero-Token header from an agent. After you claim it, the domains are public.':
+    'プロジェクトを引き継ぐまでは、あなただけです。CLI が表示するオーナーリンクをブラウザで一度開くか、エージェントから X-Appwrite-Zero-Token ヘッダーを送信してください。引き継いだ後はドメインが公開されます。',
+  'What is limited before I claim it?':
+    '引き継ぐ前は何が制限されますか？',
+  'One project, 500 function executions and 20 deployments an hour, and no messaging. You cannot create other projects or organizations from it. Everything else follows the Free plan.':
+    'プロジェクトは 1 つ、Functions の実行は 1 時間あたり 500 回、デプロイは 20 回までで、メッセージングは使えません。ここから別のプロジェクトや組織は作成できません。それ以外は Free プランと同じです。',
+  'What if it says to try again later?':
+    '「後でもう一度お試しください」と表示されたら？',
+  'Each region holds a fixed number of unclaimed projects, and each network can create five a day. If you hit either limit, try again shortly or sign up to keep building.':
+    '各リージョンで保持できる未引き継ぎのプロジェクト数には上限があり、1 つのネットワークから作成できるのは 1 日 5 件までです。どちらかの上限に達した場合は、少し待ってから再試行するか、サインアップして開発を続けてください。',
+  'Can my coding agent use it?':
+    'コーディングエージェントでも使えますか？',
+  'Yes, that is what it is for. An agent can run appwrite zero, call POST /v1/zero, or start the Appwrite MCP server without credentials. It gets the endpoint, the key and the claim link, and hands the claim link back to you.':
+    'はい、そのためのものです。エージェントは appwrite zero を実行するか、POST /v1/zero を呼び出すか、認証情報なしで Appwrite の MCP サーバーを起動できます。エンドポイント、キー、引き継ぎリンクを受け取り、引き継ぎリンクをあなたに渡します。',
+  'Questions':
+    'よくある質問',
+  'What happens to the project, the clock and the limits.':
+    'プロジェクト、時間、制限について。',
+  'No CLI yet?':
+    'CLI をまだ入れていませんか？',
+  'Use HTTP or MCP instead':
+    'HTTP か MCP を使う',
+  'Nothing to sign and nothing to configure. The project is real from the first second, and it waits for you to decide whether to keep it. The times below assume you start now; drag the clock to see each stage.':
+    '登録も設定も不要です。プロジェクトは最初の 1 秒から本物で、残すかどうかはあなたが決めるまで待ってくれます。下の時刻は今すぐ始めた場合のものです。時計をドラッグして各段階を確認してください。',
+  'Each one returns the same project: an endpoint, a project ID, an API key and a claim link.':
+    'どの方法でも同じプロジェクトが返ります。エンドポイント、プロジェクト ID、API キー、引き継ぎリンクです。',
+  'Install the CLI first if you do not have it:':
+    'CLI が入っていない場合は、先にインストールしてください:',
+  'Made for agents':
+    'エージェントのために',
+  'If your agent can run a command, it can get its own backend. No key to paste, no dashboard to click through. It builds, then hands you the owner link and the claim link.':
+    'コマンドを実行できるエージェントなら、自分専用のバックエンドを用意できます。キーを貼り付ける必要も、ダッシュボードを操作する必要もありません。ビルドが終わると、オーナーリンクと引き継ぎリンクをあなたに渡します。',
+  'Paste this into Claude Code, Codex or Cursor':
+    'Claude Code、Codex、Cursor に貼り付けてください',
+  'The whole backend':
+    'バックエンドのすべて',
+  'Not a sandbox with half the features switched off. A Zero project is a normal Appwrite project on a capped plan, so what you build is what you keep.':
+    '機能の半分が無効になったサンドボックスではありません。Zero プロジェクトは上限付きプランで動く通常の Appwrite プロジェクトなので、作ったものがそのまま残ります。',
+  'Email, SMS and push work once you claim the project.':
+    'メール、SMS、プッシュ通知は、プロジェクトを引き継ぐと使えるようになります。',
+  'Keep what you built':
+    '作ったものを残す',
+  'Claim your project':
+    'プロジェクトを引き継ぐ',
+  'Create an account to keep this project, with everything already built in it.':
+    'アカウントを作成すると、これまでに作ったものを含めてこのプロジェクトを残せます。',
+  'Zero project':
+    'Zero プロジェクト',
+  'Personal projects':
+    '個人プロジェクト',
+  'Create a free organization':
+    '無料の組織を作成',
+  'Start from zero':
+    'ゼロから始めよう',
+  'One command, a real project, and an hour on the clock. Claim it if you like it.':
+    'コマンドひとつで、本物のプロジェクトと 1 時間の持ち時間。気に入ったら引き継いでください。',
+  'Would rather have an account from the start?':
+    '最初からアカウントを作りたい場合は',
+  'Sign up for free':
+    '無料でサインアップ',
+  'An hour to build, a day to keep it':
+    '1 時間で作り、1 日で残す',
+  'Three ways in':
+    '3 つの始め方',
+  'Build until':
+    'ビルド期限',
+  'An hour from now':
+    '今から 1 時間後',
+  'Claim by':
+    '引き継ぎ期限',
+  'A day after that':
+    'その 1 日後',
+  'Time since the project was created':
+    'プロジェクト作成からの経過時間',
+  'First hour':
+    '最初の 1 時間',
+  'Next 24 hours':
+    '次の 24 時間',
+  'Since creation':
+    '作成から',
+  'Build time left':
+    '残りのビルド時間',
+  'Replay':
+    'もう一度再生',
+  'After 25 hours':
+    '25 時間後',
 }

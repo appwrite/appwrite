@@ -55,6 +55,7 @@ import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricin
 import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
 import { Route as MarketingStartupsRouteImport } from './routes/_marketing/startups'
 import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
+import { Route as MarketingZeroRouteImport } from './routes/_marketing/zero'
 import { Route as ProtectedExampleProtectedRouteRouteImport } from './routes/_protected/example-protected-route'
 import { Route as PublicAccountRouteImport } from './routes/_public/account'
 import { Route as PublicAgentRouteImport } from './routes/_public/agent'
@@ -701,6 +702,11 @@ const MarketingStartupsRoute = MarketingStartupsRouteImport.update({
 const MarketingTermsRoute = MarketingTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingZeroRoute = MarketingZeroRouteImport.update({
+  id: '/zero',
+  path: '/zero',
   getParentRoute: () => MarketingRoute,
 } as any)
 const ProtectedExampleProtectedRouteRoute =
@@ -3423,6 +3429,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof MarketingPrivacyRoute
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
+  '/zero': typeof MarketingZeroRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/account': typeof PublicAccountRouteWithChildren
   '/agent': typeof PublicAgentRouteWithChildren
@@ -3885,6 +3892,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof MarketingPrivacyRoute
   '/startups': typeof MarketingStartupsRoute
   '/terms': typeof MarketingTermsRoute
+  '/zero': typeof MarketingZeroRoute
   '/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/app': typeof PublicAppRoute
   '/assistant': typeof PublicAssistantRoute
@@ -4302,6 +4310,7 @@ export interface FileRoutesById {
   '/_marketing/privacy': typeof MarketingPrivacyRoute
   '/_marketing/startups': typeof MarketingStartupsRoute
   '/_marketing/terms': typeof MarketingTermsRoute
+  '/_marketing/zero': typeof MarketingZeroRoute
   '/_protected/example-protected-route': typeof ProtectedExampleProtectedRouteRoute
   '/_public/account': typeof PublicAccountRouteWithChildren
   '/_public/agent': typeof PublicAgentRouteWithChildren
@@ -4769,6 +4778,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/startups'
     | '/terms'
+    | '/zero'
     | '/example-protected-route'
     | '/account'
     | '/agent'
@@ -5231,6 +5241,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/startups'
     | '/terms'
+    | '/zero'
     | '/example-protected-route'
     | '/app'
     | '/assistant'
@@ -5647,6 +5658,7 @@ export interface FileRouteTypes {
     | '/_marketing/privacy'
     | '/_marketing/startups'
     | '/_marketing/terms'
+    | '/_marketing/zero'
     | '/_protected/example-protected-route'
     | '/_public/account'
     | '/_public/agent'
@@ -6439,6 +6451,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof MarketingTermsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/zero': {
+      id: '/_marketing/zero'
+      path: '/zero'
+      fullPath: '/zero'
+      preLoaderRoute: typeof MarketingZeroRouteImport
       parentRoute: typeof MarketingRoute
     }
     '/_protected/example-protected-route': {
@@ -9441,6 +9460,7 @@ interface MarketingRouteChildren {
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingStartupsRoute: typeof MarketingStartupsRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingZeroRoute: typeof MarketingZeroRoute
   MarketingIndexRoute: typeof MarketingIndexRoute
   MarketingAlternativeToCompetitorRoute: typeof MarketingAlternativeToCompetitorRoute
   MarketingBlogPageRoute: typeof MarketingBlogPageRoute
@@ -9479,6 +9499,7 @@ const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingStartupsRoute: MarketingStartupsRoute,
   MarketingTermsRoute: MarketingTermsRoute,
+  MarketingZeroRoute: MarketingZeroRoute,
   MarketingIndexRoute: MarketingIndexRoute,
   MarketingAlternativeToCompetitorRoute: MarketingAlternativeToCompetitorRoute,
   MarketingBlogPageRoute: MarketingBlogPageRoute,
