@@ -331,25 +331,12 @@ final class EvaluationCustomServerTest extends Scope
                 $group->add();
                 Coroutine::create(function () use ($monitorId, $barrier, &$arrivals, &$errors, $group): void {
                     try {
-                        $platform = $this->platform();
-                        $held = $this->getMockBuilder(Database::class)
-                            ->disableOriginalConstructor()
-                            ->onlyMethods(['getDocument', 'findOne', 'find', 'createDocument', 'updateDocument'])
-                            ->getMock();
-                        $held->method('getDocument')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->getDocument(...$arguments));
-                        $held->method('findOne')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->findOne(...$arguments));
-                        $held->method('find')->willReturnCallback(fn (mixed ...$arguments): array => $platform->find(...$arguments));
-                        $held->method('updateDocument')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->updateDocument(...$arguments));
-                        $held->method('createDocument')->willReturnCallback(function (string $collection, Document $document) use ($platform, $barrier, &$arrivals): Document {
-                            if ($collection === 'monitorAlerts') {
-                                if (++$arrivals === 1) {
-                                    $barrier->pop(10);
-                                } else {
-                                    $barrier->push(true);
-                                }
+                        $held = $this->heldPlatform(function () use ($barrier, &$arrivals): void {
+                            if (++$arrivals === 1) {
+                                $barrier->pop(10);
+                            } else {
+                                $barrier->push(true);
                             }
-
-                            return $platform->createDocument($collection, $document);
                         });
 
                         $this->evaluateMonitor($held, $monitorId, 20);
@@ -374,6 +361,51 @@ final class EvaluationCustomServerTest extends Scope
         // Recovering resolves the one alert, leaving nothing firing.
         $this->inCoroutine(fn () => $this->evaluateMonitor($this->platform(), $monitorId, 0));
 
+        $alerts = $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()]);
+        $this->assertSame(['resolved'], \array_column($alerts['alerts'], 'status'));
+    }
+
+    public function testStaleEvaluationLeavesAResolvedFiringAlone(): void
+    {
+        $monitorId = $this->createPausedMonitor('Stale ' . \uniqid());
+
+        /**
+         * Test for SUCCESS
+         */
+        $errors = [];
+        $this->inCoroutine(function () use ($monitorId, &$errors): void {
+            // One evaluation reads the monitor and, before it opens its alert, another
+            // opens that alert and a third resolves it.
+            $arrived = new Channel(1);
+            $release = new Channel(1);
+            $group = new WaitGroup();
+            $group->add();
+            Coroutine::create(function () use ($monitorId, $arrived, $release, &$errors, $group): void {
+                try {
+                    $held = $this->heldPlatform(function () use ($arrived, $release): void {
+                        $arrived->push(true);
+                        $release->pop(30);
+                    });
+                    $this->evaluateMonitor($held, $monitorId, 20);
+                } catch (\Throwable $error) {
+                    $errors[] = $error;
+                } finally {
+                    $group->done();
+                }
+            });
+
+            $arrived->pop(30);
+            $this->evaluateMonitor($this->platform(), $monitorId, 20);
+            $this->evaluateMonitor($this->platform(), $monitorId, 0);
+            $release->push(true);
+            $group->wait(30);
+        });
+        $this->assertSame([], \array_map(fn (\Throwable $error) => $error->getMessage(), $errors));
+
+        // The late evaluation neither reopens the firing nor points the monitor at its resolved alert.
+        $monitor = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body'];
+        $this->assertSame('ok', $monitor['status']);
+        $this->assertSame('', $monitor['alertId']);
         $alerts = $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()]);
         $this->assertSame(['resolved'], \array_column($alerts['alerts'], 'status'));
     }
@@ -619,6 +651,31 @@ final class EvaluationCustomServerTest extends Scope
         global $register;
 
         return $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), new Authorization(false))->platform();
+    }
+
+    /**
+     * The platform database, calling `$beforeAlertCreate` each time an alert is about to be created.
+     */
+    private function heldPlatform(callable $beforeAlertCreate): Database
+    {
+        $platform = $this->platform();
+        $held = $this->getMockBuilder(Database::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getDocument', 'findOne', 'find', 'createDocument', 'updateDocument'])
+            ->getMock();
+        $held->method('getDocument')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->getDocument(...$arguments));
+        $held->method('findOne')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->findOne(...$arguments));
+        $held->method('find')->willReturnCallback(fn (mixed ...$arguments): array => $platform->find(...$arguments));
+        $held->method('updateDocument')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->updateDocument(...$arguments));
+        $held->method('createDocument')->willReturnCallback(function (string $collection, Document $document) use ($platform, $beforeAlertCreate): Document {
+            if ($collection === 'monitorAlerts') {
+                $beforeAlertCreate();
+            }
+
+            return $platform->createDocument($collection, $document);
+        });
+
+        return $held;
     }
 
     /**
