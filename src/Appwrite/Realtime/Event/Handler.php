@@ -66,6 +66,7 @@ class Handler
     public function handle(mixed $redis, string $channel, string $payload): void
     {
         $this->eventsReceived->add(1);
+        $arrivedAt = \microtime(true);
         $this->enter('decode');
         $event = \json_decode($payload, true);
         if (!\is_array($event)) {
@@ -74,6 +75,13 @@ class Handler
             return;
         }
 
+        $span = Span::init('realtime.event');
+        $span
+            ->set('project.id', $event['project'] ?? '')
+            ->set('realtime.event.name', $event['data']['events'][0] ?? '')
+            ->set('realtime.arrived_at', $arrivedAt);
+
+        $error = null;
         try {
             $this->enter('arrival');
             $this->recordArrival($event);
@@ -88,7 +96,7 @@ class Handler
             $closing += $this->endDeletedTeams($event);
 
             $this->enter('deliver');
-            $closing += $this->deliver($event, $payload);
+            $closing += $this->deliver($event, $payload, $span);
 
             // After delivery, so revoked connections see the event that ended their access.
             $this->enter('close');
@@ -101,14 +109,14 @@ class Handler
             $this->tail($event);
         } catch (\Throwable $th) {
             $this->eventsFailed->add(1, ['stage' => $this->stage]);
-
-            // Only a failed event gets a span, so the firehose stays out of the logs.
-            $span = Span::init('realtime.event');
-            $span->set('project.id', $event['project'] ?? '');
-            $span->finish(error: $th);
+            $span->set('realtime.result', 'failed');
+            $error = $th;
         } finally {
             $this->enter('idle');
         }
+
+        $span->set('realtime.resolved_at', \microtime(true));
+        $span->finish(error: $error);
     }
 
     private function enter(string $stage): void
@@ -583,7 +591,7 @@ class Handler
      *
      * @return array<int, true> expired receivers, to close
      */
-    private function deliver(array $event, string $payload): array
+    private function deliver(array $event, string $payload, Span $span): array
     {
         $closing = [];
         $receivers = $this->realtime->getSubscribers($event);
@@ -626,6 +634,10 @@ class Handler
             $total++;
             $outboundBytes += \strlen($payloadJson);
         }
+
+        $span
+            ->set('realtime.result', $total > 0 ? 'delivered' : 'no_subscriber')
+            ->set('realtime.receivers', $total);
 
         if ($total === 0) {
             return $closing;

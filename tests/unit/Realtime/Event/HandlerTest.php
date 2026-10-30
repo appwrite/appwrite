@@ -11,6 +11,7 @@ use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Usage;
 use PHPUnit\Framework\TestCase;
 use Swoole\Table;
+use Utopia\Span\Span;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 use Utopia\WebSocket\Server;
 
@@ -18,11 +19,15 @@ final class HandlerTest extends TestCase
 {
     private TestTelemetry $telemetry;
 
+    private RecordingExporter $spans;
+
     private Handler $handler;
 
     protected function setUp(): void
     {
         $this->telemetry = new TestTelemetry();
+        $this->spans = new RecordingExporter();
+        Span::setExporters($this->spans);
 
         $stats = new Table(16);
         $stats->column('messages', Table::TYPE_INT);
@@ -51,6 +56,33 @@ final class HandlerTest extends TestCase
             workerId: 0,
             checkLimit: 1,
         );
+    }
+
+    protected function tearDown(): void
+    {
+        Span::setExporters();
+    }
+
+    public function testLogsOneSpanPerEventWithItsProjectAndResult(): void
+    {
+        $this->handler->handle(null, 'realtime', $this->payload(\date(DATE_ATOM)));
+
+        $this->assertCount(1, $this->spans->spans);
+        $span = $this->spans->spans[0];
+        $this->assertSame('realtime.event', $span->getAction());
+        $this->assertSame('project1', $span->get('project.id'));
+        $this->assertSame('databases.db.collections.col.documents.doc.create', $span->get('realtime.event.name'));
+        $this->assertSame('no_subscriber', $span->get('realtime.result'));
+        $this->assertSame(0, $span->get('realtime.receivers'));
+        $this->assertNull($span->getError());
+        $this->assertGreaterThanOrEqual($span->get('realtime.arrived_at'), $span->get('realtime.resolved_at'));
+    }
+
+    public function testLogsNoSpanForPayloadThatIsNotAnEvent(): void
+    {
+        $this->handler->handle(null, 'realtime', 'not json');
+
+        $this->assertSame([], $this->spans->spans);
     }
 
     public function testCountsEveryEventAndDropsOnesWithoutSubscribers(): void
