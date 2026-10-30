@@ -855,7 +855,7 @@
       ]
     },
     "fake.connect": {
-      "doc": "Connection::connect(new ConnectionOptions(...options, transportFactory: the fake transport (Fake.php) serving INFO merged with `info`, with `rules`))",
+      "doc": "Connection::connect(new ConnectionOptions(...options, transportFactory: the fake transport (Fake.php) serving INFO merged with `info`, with `rules`)); with `late`, wrapped in Late.php",
       "covers": [
         "Utopia\\NATS\\Connection::connect"
       ]
@@ -921,7 +921,7 @@
       ]
     },
     "conn.connect": {
-      "doc": "Connection::connect(options) to the service (or url) given",
+      "doc": "Connection::connect(options) to the service (or url) given; with `late`, over a TcpTransport wrapped in Late.php",
       "covers": [
         "Utopia\\NATS\\Connection::connect"
       ]
@@ -1682,6 +1682,9 @@
       "covers": [
         "Utopia\\NATS\\Services\\Service::getId"
       ]
+    },
+    "transport.late": {
+      "doc": "On a connection made with `late` (its transport wrapped in Late.php, the PHP tests' LateReadTransport): delayNextRead(`delay`) and/or arriveAfter(`arrive_after`)"
     }
   },
   "generators": {

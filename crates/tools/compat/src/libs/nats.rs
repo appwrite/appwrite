@@ -86,6 +86,7 @@ pub const OPS: &[&str] = &[
     "fake.connect_passes",
     "fake.discovered",
     "transport.tls_failure",
+    "transport.late",
     "conn.connect_counted",
     "conn.connect_failure",
     "conn.connect",
@@ -581,6 +582,70 @@ impl Transport for Fake {
     }
 }
 
+/// When a [`Late`] transport lets reads through, shared by its copies.
+#[derive(Default)]
+struct LateState {
+    delay: Duration,
+    arrival: Option<Instant>,
+}
+
+/// The twin of `tests/compat/nats/Late.php` (the PHP tests'
+/// LateReadTransport): a decorator for a reply the reader gets late.
+/// `delay` holds the next read back, the reply waiting on the socket;
+/// `arrival` makes nothing readable until then, as a reply in transit.
+struct Late {
+    state: Arc<Mutex<LateState>>,
+    inner: Box<dyn Transport>,
+}
+
+impl Late {
+    async fn hold(state: Arc<Mutex<LateState>>) -> utopia_nats::Result<()> {
+        let delay = std::mem::take(&mut state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).delay);
+        if !delay.is_zero() {
+            utopia_async::sleep(delay).await;
+        }
+        let arrival = state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).arrival;
+        if arrival.is_some_and(|at| Instant::now() < at) {
+            utopia_async::sleep(Duration::from_millis(1)).await;
+            return Err(Error::Timeout("Nothing has arrived yet".into()));
+        }
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl Transport for Late {
+    async fn connect(&mut self, host: &str, port: u16, timeout: Duration) -> utopia_nats::Result<()> {
+        self.inner.connect(host, port, timeout).await
+    }
+
+    async fn write(&mut self, data: &[u8]) -> utopia_nats::Result<usize> {
+        self.inner.write(data).await
+    }
+
+    async fn read(&mut self, buf: &mut Vec<u8>, max: usize, timeout: Option<Duration>) -> utopia_nats::Result<usize> {
+        Self::hold(self.state.clone()).await?;
+        self.inner.read(buf, max, timeout).await
+    }
+
+    async fn read_line(&mut self, timeout: Option<Duration>) -> utopia_nats::Result<Vec<u8>> {
+        Self::hold(self.state.clone()).await?;
+        self.inner.read_line(timeout).await
+    }
+
+    async fn upgrade_tls(&mut self, options: &TlsOptions) -> utopia_nats::Result<()> {
+        self.inner.upgrade_tls(options).await
+    }
+
+    fn is_connected(&self) -> bool {
+        self.inner.is_connected()
+    }
+
+    async fn close(&mut self) {
+        self.inner.close().await;
+    }
+}
+
 /// An error a scripted fixture raises: {"class": short name, "message"}.
 fn scripted_error(spec: &Value) -> Error {
     let message = spec.get("message").and_then(Value::as_str).unwrap_or_default().to_owned();
@@ -617,11 +682,14 @@ async fn fake_connection(fake: &Fake, options: ConnectionOptions) -> utopia_nats
 type Shared<T> = Arc<utopia_async::sync::Mutex<T>>;
 type Log = Arc<Mutex<Vec<Value>>>;
 
-/// A connection with what its callbacks recorded, and its fake transport.
+/// A connection with what its callbacks recorded, its fake transport, and
+/// the state of the [`Late`] decorator around its transport when it was
+/// connected with `late`.
 struct Conn {
     conn: Connection,
     log: Log,
     fake: Option<Fake>,
+    late: Option<Arc<Mutex<LateState>>>,
 }
 
 /// A subscription built on its own, with what its callbacks recorded.
@@ -2139,15 +2207,21 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let options = connection_options(a.opt("options").unwrap_or(&json!({})), &log)?;
             let transport = fake.clone();
             let factory_log = log.clone();
+            let late = a.opt("late").and_then(Value::as_bool).unwrap_or(false).then(Arc::<Mutex<LateState>>::default);
+            let factory_late = late.clone();
             let options = ConnectionOptions {
                 transport_factory: Some(Arc::new(move |scheme: &str| {
                     record(&factory_log, json!(["transport", scheme]));
-                    Ok(Box::new(transport.clone()) as Box<dyn Transport>)
+                    Ok(match &factory_late {
+                        Some(state) => Box::new(Late { state: state.clone(), inner: Box::new(transport.clone()) })
+                            as Box<dyn Transport>,
+                        None => Box::new(transport.clone()) as Box<dyn Transport>,
+                    })
                 })),
                 ..options
             };
             let conn = try_lib!(Connection::connect(options).await);
-            Ok(Outcome::ok(shared(session, Conn { conn, log, fake: Some(fake) })))
+            Ok(Outcome::ok(shared(session, Conn { conn, log, fake: Some(fake), late })))
         }
         "fake.push" => {
             fake_of(session, &a).await?.push(&a.bytes("data")?);
@@ -2159,6 +2233,20 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         }
         "fake.answer_pings" => {
             fake_of(session, &a).await?.lock().answer_pings = a.bool("answer")?;
+            Ok(Outcome::ok(Value::Null))
+        }
+        "transport.late" => {
+            let conn = get::<Conn>(session, &a, "conn")?;
+            let Some(state) = conn.lock().await.late.clone() else {
+                return Err(Fault::new("nats: connection not made with late"));
+            };
+            let mut state = state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(delay) = a.opt("delay").and_then(Value::as_f64) {
+                state.delay = Duration::from_secs_f64(delay.max(0.0));
+            }
+            if let Some(after) = a.opt("arrive_after").and_then(Value::as_f64) {
+                state.arrival = Some(Instant::now() + Duration::from_secs_f64(after.max(0.0)));
+            }
             Ok(Outcome::ok(Value::Null))
         }
         "fake.fail_reads" => {
@@ -2216,9 +2304,16 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 options["servers"] = json!(url);
             }
             let log = Log::default();
-            let options = connection_options(&options, &log)?;
+            let mut options = connection_options(&options, &log)?;
+            let late = a.opt("late").and_then(Value::as_bool).unwrap_or(false).then(Arc::<Mutex<LateState>>::default);
+            if let Some(state) = late.clone() {
+                options.transport_factory = Some(Arc::new(move |_scheme: &str| {
+                    Ok(Box::new(Late { state: state.clone(), inner: Box::new(TcpTransport::new()) })
+                        as Box<dyn Transport>)
+                }));
+            }
             let conn = try_lib!(Connection::connect(options).await);
-            Ok(Outcome::ok(shared(session, Conn { conn, log, fake: None })))
+            Ok(Outcome::ok(shared(session, Conn { conn, log, fake: None, late })))
         }
         "conn.publish" => {
             let conn = get::<Conn>(session, &a, "conn")?;
