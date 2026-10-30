@@ -44,6 +44,9 @@ const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element 
 const APP_LIMIT_ROLE_LENGTH = 81; // Maximum length of a team role: `project-<projectId>-<role>` is 9 template characters around two 36-character IDs
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+const APP_LIMIT_REVIEWS_PULL = 100; // Reviews of one pull request the review service reads back, newest first
+const APP_LIMIT_REVIEW_FINDINGS = 1000; // Findings of one pull request the review service reads back at once
+const APP_LIMIT_REVIEW_LEARNINGS = 100; // Learnings of a repository a review is given, oldest first
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // MQTT keep-alive in seconds for a client that disables it, and the longest an MQTT 5.0 client is granted
@@ -542,6 +545,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_REVIEWS = 'reviews';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
 const ADVISOR_INSIGHT_TYPES = [

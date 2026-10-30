@@ -180,6 +180,19 @@
       "paths": ["src/Appwrite/Platform/Modules/Advisor/"]
     },
     {
+      "name": "Reviews",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Reviews/",
+        "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Event/Message/Review.php",
+        "src/Appwrite/Event/Publisher/Review.php",
+        "packages/vcs/"
+      ]
+    },
+    {
       "name": "Locale",
       "runner": "e2e",
       "functional": true,

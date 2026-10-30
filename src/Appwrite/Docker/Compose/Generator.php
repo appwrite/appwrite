@@ -39,6 +39,13 @@ class Generator
         ],
     ];
 
+    /**
+     * Services behind a profile that are kept, without the profile, only when their param is true.
+     */
+    private const array OPTIONAL_SERVICE_GROUPS = [
+        'reviews' => ['appwrite-hansi'],
+    ];
+
     private const array LOCAL_VOLUME_PREPENDS = [
         'appwrite' => [
             'param' => 'hostPath',
@@ -58,6 +65,7 @@ class Generator
         'database' => 'postgresql',
         'hostPath' => '',
         'topology' => 'combined',
+        'reviews' => false,
     ];
 
     private const array DEPENDENCY_SELECTORS = [
@@ -150,6 +158,10 @@ class Generator
             }
         }
 
+        foreach (\array_keys(self::OPTIONAL_SERVICE_GROUPS) as $param) {
+            $params[$param] = $params[$param] === true;
+        }
+
         $params['hostPath'] = \rtrim((string)$params['hostPath'], '/');
 
         return $params;
@@ -175,6 +187,20 @@ class Generator
      */
     private function filterServices(array $services): array
     {
+        foreach (self::OPTIONAL_SERVICE_GROUPS as $param => $names) {
+            foreach ($names as $name) {
+                if (!isset($services[$name]) || !\is_array($services[$name])) {
+                    continue;
+                }
+
+                if ($this->params[$param]) {
+                    unset($services[$name]['profiles']);
+                } else {
+                    unset($services[$name]);
+                }
+            }
+        }
+
         foreach (self::SELECTABLE_SERVICE_GROUPS as $param => $config) {
             foreach ($config['services'] as $service) {
                 if ($service !== $this->params[$param]) {
