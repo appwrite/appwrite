@@ -1,0 +1,16 @@
+---
+layout: changelog
+title: "Quicker responses after a cold start"
+date: 2026-10-30
+tags: functions, sites, performance
+---
+
+When a function or site on Appwrite Cloud starts from cold, Appwrite now routes the first request to it as soon as your code begins accepting connections. Previously, that request also waited for an extra readiness step on our side to complete.
+
+Your first execution after a cold start returns sooner, and requests that arrive while a runtime is still starting are less likely to fail with "Failed to connect".
+
+The improvement applies to all [Appwrite Functions](/docs/products/functions) and [Appwrite Sites](/docs/products/sites) automatically, with no changes to your code or settings.
+
+{% arrow_link href="/docs/products/functions" %}
+Read the Functions docs
+{% /arrow_link %}
