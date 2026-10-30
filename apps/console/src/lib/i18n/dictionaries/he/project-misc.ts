@@ -3582,7 +3582,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   OK: 'תקין',
   'Outbound bandwidth': 'תעבורה יוצאת',
   'Read IOPS': 'IOPS קריאה',
-  'Select at least one channel.': 'בחרו לפחות ערוץ אחד.',
   'Select resource': 'בחירת משאב',
   'Select the resource to watch.': 'בחרו את המשאב למעקב.',
   'This project has no buckets yet.': 'בפרויקט הזה עדיין אין באקטים.',
@@ -3600,14 +3599,11 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Webhook events failed': 'אירועי Webhook שנכשלו',
   'Webhook events sent': 'אירועי Webhook שנשלחו',
   'Webhook failures': 'כשלים ב-Webhook',
-  'Webhook URL': 'כתובת URL של Webhook',
   Window: 'חלון זמן',
   'Write IOPS': 'IOPS כתיבה',
   'Get notified when a usage metric crosses a threshold, and again when it recovers.':
     'קבלו התראה כשמדד שימוש חוצה סף, ושוב כשהוא חוזר לתקין.',
   'Could not load resources.': 'לא ניתן לטעון את המשאבים.',
-  'Use this secret to verify the signature of alert webhook requests. Copy it now.':
-    'השתמשו בסוד הזה כדי לאמת את החתימה של בקשות ה-webhook של ההתראות. העתיקו אותו עכשיו.',
   Comparator: 'השוואה',
   Console: 'קונסולה',
   'Could not load usage history.': 'לא ניתן לטעון את היסטוריית השימוש.',
@@ -3623,7 +3619,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No history is available for this metric yet.':
     'עדיין אין היסטוריה למדד הזה.',
   'Not checked yet': 'עדיין לא נבדק',
-  'Notification bell': 'פעמון ההתראות',
   Notify: 'הודעה',
   'Outbound bandwidth above 10 GB in an hour.': 'רוחב פס יוצא מעל 10 GB בשעה.',
   'Paused rules are not checked and never notify.':
@@ -3632,7 +3627,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Read surge': 'זינוק בקריאות',
   'Select a resource to see its history.':
     'בחרו משאב כדי לראות את ההיסטוריה שלו.',
-  'Signed POST request': 'בקשת POST חתומה',
   'The latest reading is compared at every check.':
     'הקריאה האחרונה מושווית בכל בדיקה.',
   'The whole project': 'הפרויקט כולו',
@@ -3671,20 +3665,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'הצעות לפי השימוש ב-7 הימים האחרונים',
   'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
     'נשלח כשהשימוש הנוסף מגיע לכל סף. הם עוקבים אחר מגבלת התקציב וההתראות למעלה.',
-  'Edit webhook': 'עריכת Webhook',
-  'Add webhook': 'הוספת Webhook',
   'Cap reached': 'הגיע למגבלה',
   '{percent}% of {budget}': '{percent}% מתוך {budget}',
   'Managed by budget': 'מנוהל לפי התקציב',
   'Last sent': 'נשלח לאחרונה',
-  'Also posted to': 'נשלח גם אל',
-  'Budget alert webhook': 'Webhook להתראות תקציב',
-  'Every budget alert also posts a signed request to this URL. Leave it empty to stop.':
-    'כל התראת תקציב שולחת גם בקשה חתומה לכתובת זו. השאר ריק כדי להפסיק.',
-  'Webhook removed from budget alerts': 'ה-Webhook הוסר מהתראות התקציב',
-  'Budget alerts will also post to the webhook':
-    'התראות התקציב יישלחו גם ל-Webhook',
-  'Failed to update budget alerts': 'עדכון התראות התקציב נכשל',
   'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
     'מוניטור מעלה התראה כשהכללים שלו מתקיימים, וסוגר אותה כשהשימוש חוזר לשגרה.',
   Alert: 'התראה',
@@ -3720,8 +3704,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Resolves when the monitor's rules stop holding.":
     'נסגרת כשהכללים של המוניטור מפסיקים להתקיים.',
   'Search monitors...': 'חיפוש מוניטורים...',
-  'Sent when the monitor fires and again when it resolves.':
-    'נשלח כשהמוניטור מופעל ושוב כשהוא נסגר.',
   'Started firing': 'התחיל לפעול',
   'Still firing': 'עדיין פעיל',
   'View monitor': 'הצגת המוניטור',
@@ -3735,4 +3717,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '{count} notifications sent, one per cooldown':
     'נשלחו {count} התראות, אחת לכל תקופת המתנה',
   'Its alerts stay in the history.': 'ההתראות שלו נשארות בהיסטוריה.',
+  'Organization owners get an email and a console notification when the monitor fires and again when it resolves. Project webhooks and functions can also listen to its alert events.':
+    'בעלי הארגון מקבלים אימייל והתראה ב-Console כשהמוניטור מופעל, ושוב כשהוא נפתר. גם Webhooks ופונקציות של הפרויקט יכולים להאזין לאירועי ההתראות שלו.',
+  "Alerts reach the organization's owners by email and in the console. Every alert is also a project event your own systems can receive.":
+    'ההתראות מגיעות לבעלי הארגון באימייל וב-Console. כל התראה היא גם אירוע של הפרויקט שהמערכות שלכם יכולות לקבל.',
+  'Send alerts to a webhook': 'שליחת התראות ל-Webhook',
 }

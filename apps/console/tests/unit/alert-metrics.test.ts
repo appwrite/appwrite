@@ -1,6 +1,5 @@
 import { afterAll, describe, expect, mock, test } from 'bun:test'
-import { MutationObserver, QueryClient } from '@tanstack/react-query'
-import { MonitorChannel } from '@appwrite.io/console'
+import { QueryClient } from '@tanstack/react-query'
 import * as actualSdk from '@/lib/appwrite/sdk'
 import {
   METRIC_CATEGORIES,
@@ -105,13 +104,10 @@ describe('alert rule history', () => {
 describe('alert rule form', () => {
   const t = (text: string) => text
 
-  test('leaves the webhook URL out unless the webhook channel is on', () => {
-    const form = { ...emptyRuleForm(), webhookUrl: 'https://example.com' }
-    expect(monitorInputFromForm(form, t).webhookUrl).toBeUndefined()
+  test('sends no delivery settings, which monitors no longer take', () => {
     expect(
-      monitorInputFromForm({ ...form, channels: [MonitorChannel.Webhook] }, t)
-        .webhookUrl,
-    ).toBe('https://example.com')
+      Object.keys(monitorInputFromForm(emptyRuleForm(), t)).sort(),
+    ).toEqual(['cooldown', 'name', 'rules', 'window'])
   })
 
   test('names an unnamed rule after its condition', () => {
@@ -226,9 +222,6 @@ describe('monitor rules', () => {
       resourceId: 'main',
       window: 3600,
       cooldown: 3600,
-      channels: ['email'],
-      webhookUrl: '',
-      webhookSecret: '',
       enabled: true,
       status: 'ok',
       value: null,
@@ -339,80 +332,6 @@ describe('alerts feed', () => {
   test('draws only marks when every alert is instant', () => {
     const instant = alert(at(29, 5), at(29, 5))
     expect(barWidths([instant], now).get(instant)).toBe(MIN_BAR_PERCENT)
-  })
-})
-
-describe('budget monitor webhook', () => {
-  afterAll(() => {
-    mock.module('@/lib/appwrite/sdk', () => actualSdk)
-  })
-
-  test('refetches the monitors when an update fails partway', async () => {
-    const monitor = (id: string) =>
-      parseMonitor({
-        $id: id,
-        type: 'budget',
-        name: id,
-        rules: [],
-        channels: ['email'],
-      } as unknown as Monitor)
-    const requests: { method: string; path: string; body: unknown }[] = []
-    mock.module('@/lib/appwrite/sdk', () => ({
-      ...actualSdk,
-      sdk: {
-        forConsole: {
-          client: {
-            config: { endpoint: 'https://cloud.test/v1', project: 'console' },
-            call: async (
-              method: string,
-              uri: URL,
-              _: unknown,
-              body: unknown,
-            ) => {
-              requests.push({ method, path: uri.pathname, body })
-              if (requests.length > 1) throw new Error('rejected')
-              return { $id: 'first', type: 'budget', rules: [] }
-            },
-          },
-        },
-      },
-    }))
-    const { budgetMonitorsWebhookMutationOptions } = await import(
-      '@/lib/react-query/hooks/monitors'
-    )
-
-    const queryClient = new QueryClient()
-    const queryKey = ['monitors', 'organization', 'org', 'budget']
-    queryClient.setQueryData(queryKey, [])
-    const observer = new MutationObserver(
-      queryClient,
-      budgetMonitorsWebhookMutationOptions(queryClient, 'org'),
-    )
-
-    await expect(
-      observer.mutate({
-        monitors: [monitor('first'), monitor('second')],
-        webhookUrl: 'https://example.com/hook',
-      }),
-    ).rejects.toThrow('rejected')
-
-    expect(requests.map(({ path }) => path)).toEqual([
-      '/v1/organizations/org/monitors/budget/first',
-      '/v1/organizations/org/monitors/budget/second',
-    ])
-    // The budget route takes delivery settings only.
-    expect(requests[0]).toMatchObject({
-      method: 'put',
-      body: {
-        channels: ['email', 'webhook'],
-        webhookUrl: 'https://example.com/hook',
-      },
-    })
-    expect(Object.keys(requests[0].body as object).sort()).toEqual([
-      'channels',
-      'webhookUrl',
-    ])
-    expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true)
   })
 })
 

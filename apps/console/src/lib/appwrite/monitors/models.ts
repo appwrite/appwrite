@@ -10,7 +10,6 @@ import type {
   AlertMetric as Metric,
   AlertStatus as Status,
   Models,
-  MonitorChannel,
   MonitorResourceType,
   MonitorStatus as State,
   MonitorType as Kind,
@@ -76,7 +75,5 @@ export type MonitorInput = {
   /** Ignored for gauge metrics. */
   window?: number
   cooldown?: number
-  channels?: MonitorChannel[]
-  webhookUrl?: string
   enabled?: boolean
 }

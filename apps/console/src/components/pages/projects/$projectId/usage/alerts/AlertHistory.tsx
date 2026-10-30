@@ -25,6 +25,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { AlertDelivery } from '../_components/AlertDelivery'
 import { AlertDrawer } from './AlertDrawer'
 
 type Filter = 'all' | Alert['status']
@@ -221,6 +222,8 @@ export function AlertHistory({
           ) : null}
         </div>
       )}
+
+      <AlertDelivery projectId={projectId} />
 
       <AlertDrawer
         projectId={projectId}

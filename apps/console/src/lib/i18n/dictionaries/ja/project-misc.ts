@@ -3652,7 +3652,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   OK: '正常',
   'Outbound bandwidth': '送信帯域幅',
   'Read IOPS': '読み取り IOPS',
-  'Select at least one channel.': '通知方法を 1 つ以上選択してください。',
   'Select resource': 'リソースを選択',
   'Select the resource to watch.': '監視するリソースを選択してください。',
   'This project has no buckets yet.':
@@ -3673,14 +3672,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Webhook events failed': '失敗した Webhook イベント',
   'Webhook events sent': '送信した Webhook イベント',
   'Webhook failures': 'Webhook の失敗',
-  'Webhook URL': 'Webhook URL',
   Window: '期間',
   'Write IOPS': '書き込み IOPS',
   'Get notified when a usage metric crosses a threshold, and again when it recovers.':
     '使用量のメトリクスがしきい値を超えたとき、そして回復したときに通知を受け取ります。',
   'Could not load resources.': 'リソースを読み込めませんでした。',
-  'Use this secret to verify the signature of alert webhook requests. Copy it now.':
-    'このシークレットでアラート Webhook リクエストの署名を検証します。今すぐコピーしてください。',
   Comparator: '比較条件',
   Console: 'コンソール',
   'Could not load usage history.': '使用状況の履歴を読み込めませんでした。',
@@ -3696,7 +3692,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'No history is available for this metric yet.':
     'このメトリクスの履歴はまだありません。',
   'Not checked yet': '未チェック',
-  'Notification bell': '通知ベル',
   Notify: '通知',
   'Outbound bandwidth above 10 GB in an hour.':
     '1 時間の送信帯域幅が 10 GB を超えたとき。',
@@ -3706,7 +3701,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Read surge': '読み取りの急増',
   'Select a resource to see its history.':
     '履歴を表示するリソースを選択してください。',
-  'Signed POST request': '署名付き POST リクエスト',
   'The latest reading is compared at every check.':
     'チェックごとに最新の値を比較します。',
   'The whole project': 'プロジェクト全体',
@@ -3744,21 +3738,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Suggested from your last 7 days of usage': '過去 7 日間の使用量からの提案',
   'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
     '追加使用量が各しきい値に達すると送信されます。上の予算上限とアラートに従います。',
-  'Edit webhook': 'Webhook を編集',
-  'Add webhook': 'Webhook を追加',
   'Cap reached': '上限に到達',
   '{percent}% of {budget}': '{budget} の {percent}%',
   'Managed by budget': '予算で管理',
   'Last sent': '最終送信',
-  'Also posted to': '送信先',
-  'Budget alert webhook': '予算アラートの Webhook',
-  'Every budget alert also posts a signed request to this URL. Leave it empty to stop.':
-    'すべての予算アラートは、この URL に署名付きリクエストも送信します。停止するには空にしてください。',
-  'Webhook removed from budget alerts':
-    '予算アラートから Webhook を削除しました',
-  'Budget alerts will also post to the webhook':
-    '予算アラートは Webhook にも送信されます',
-  'Failed to update budget alerts': '予算アラートを更新できませんでした',
   'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
     'モニターはルールが成立するとアラートを発生させ、使用量が回復すると解決します。',
   Alert: 'アラート',
@@ -3794,8 +3777,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "Resolves when the monitor's rules stop holding.":
     'モニターのルールが成立しなくなると解決します。',
   'Search monitors...': 'モニターを検索...',
-  'Sent when the monitor fires and again when it resolves.':
-    'モニターが発生したときと解決したときに送信されます。',
   'Started firing': '発生開始',
   'Still firing': '発生中',
   'View monitor': 'モニターを表示',
@@ -3810,4 +3791,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '{count} notifications sent, one per cooldown':
     '{count} 件の通知を送信 (クールダウンごとに 1 件)',
   'Its alerts stay in the history.': 'アラートは履歴に残ります。',
+  'Organization owners get an email and a console notification when the monitor fires and again when it resolves. Project webhooks and functions can also listen to its alert events.':
+    'モニターが発火したときと解決したときに、組織のオーナーにメールとコンソール通知が届きます。プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
+  "Alerts reach the organization's owners by email and in the console. Every alert is also a project event your own systems can receive.":
+    'アラートは組織のオーナーにメールとコンソールで届きます。各アラートはプロジェクトのイベントでもあり、独自のシステムで受け取れます。',
+  'Send alerts to a webhook': 'アラートを Webhook に送信',
 }

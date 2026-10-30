@@ -132,7 +132,7 @@ export function AlertDrawer({
               <Stat
                 label={t('Notifications')}
                 value={alert.notifications}
-                note={alert.channels.join(', ')}
+                note={t('Organization owners')}
               />
             </div>
 

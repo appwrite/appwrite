@@ -1,19 +1,4 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Webhook } from 'lucide-react'
-import { MonitorChannel } from '@appwrite.io/console'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import {
   StatusPill,
@@ -22,9 +7,7 @@ import {
 import {
   organizationBudgetMonitorsQueryOptions,
   useOrganizationById,
-  useSetBudgetMonitorsWebhook,
 } from '@/lib/react-query/hooks'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 
@@ -34,15 +17,12 @@ const usd = (amount: number) =>
 /**
  * The organization's budget alerts as the monitors that send them: their
  * status and the spend they last read. The budget settings above own their
- * thresholds, so the only change offered here is a webhook on all of them.
+ * thresholds, and they reach the organization's owners like every alert.
  */
 export function BudgetMonitors({ orgId }: { orgId?: string }) {
   const t = useT()
   const { organization } = useOrganizationById(orgId)
   const monitors = useQuery(organizationBudgetMonitorsQueryOptions(orgId))
-  const setWebhook = useSetBudgetMonitorsWebhook(orgId ?? '')
-  const [open, setOpen] = useState(false)
-  const [url, setUrl] = useState('')
 
   // Editions without organization monitors answer with an error: nothing to show.
   if (
@@ -55,31 +35,6 @@ export function BudgetMonitors({ orgId }: { orgId?: string }) {
   }
 
   const budget = Number(organization?.billingBudget ?? 0)
-  const webhookUrl =
-    monitors.data.find((monitor) =>
-      monitor.channels.includes(MonitorChannel.Webhook),
-    )?.webhookUrl ?? ''
-
-  const save = (next: string) => {
-    setWebhook.mutate(
-      { monitors: monitors.data, webhookUrl: next.trim() },
-      {
-        onSuccess: () => {
-          toast.success(
-            next.trim() === ''
-              ? t('Webhook removed from budget alerts')
-              : t('Budget alerts will also post to the webhook'),
-          )
-          setOpen(false)
-        },
-        onError: (err: Error) =>
-          toast.error(
-            getErrorMessage(err, t('Failed to update budget alerts')),
-          ),
-      },
-    )
-  }
-
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card/50">
       <div className="flex flex-wrap items-start justify-between gap-3 px-6 py-4">
@@ -93,19 +48,6 @@ export function BudgetMonitors({ orgId }: { orgId?: string }) {
             )}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8"
-          onClick={() => {
-            setUrl(webhookUrl)
-            setOpen(true)
-          }}
-        >
-          <Webhook className="me-1.5 h-3.5 w-3.5" />
-          {webhookUrl ? t('Edit webhook') : t('Add webhook')}
-        </Button>
       </div>
       <ul className="divide-y divide-border border-t border-border">
         {monitors.data.map((monitor) => {
@@ -156,53 +98,6 @@ export function BudgetMonitors({ orgId }: { orgId?: string }) {
           )
         })}
       </ul>
-      {webhookUrl && (
-        <p className="border-t border-border px-6 py-3 text-[12px] text-muted-foreground">
-          {t('Also posted to')}{' '}
-          <span className="font-mono text-foreground">{webhookUrl}</span>
-        </p>
-      )}
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('Budget alert webhook')}</DialogTitle>
-            <DialogDescription>
-              {t(
-                'Every budget alert also posts a signed request to this URL. Leave it empty to stop.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="budget-webhook-url">{t('Webhook URL')}</Label>
-            <Input
-              id="budget-webhook-url"
-              type="url"
-              placeholder="https://example.com/budget"
-              value={url}
-              onChange={(event) => setUrl(event.target.value)}
-              disabled={setWebhook.isPending}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={setWebhook.isPending}
-            >
-              {t('Cancel')}
-            </Button>
-            <Button
-              type="button"
-              onClick={() => save(url)}
-              disabled={setWebhook.isPending}
-            >
-              {t('Save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

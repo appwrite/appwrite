@@ -2,19 +2,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
-  Bell,
   ChevronRight,
   Copy,
   FileJson,
   Gauge,
   Loader2,
-  Mail,
   Pencil,
   Plus,
   Search,
   Trash2,
-  Webhook,
-  type LucideIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -60,7 +56,6 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import type { MonitorChannel } from '@appwrite.io/console'
 import type { ParsedMonitor } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
@@ -78,6 +73,7 @@ import {
 } from '@/lib/utils/overlay-lock'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
+import { AlertDelivery } from '../_components/AlertDelivery'
 import { MonitorsEmptyState } from './MonitorsEmptyState'
 import { MonitorDrawer } from './MonitorDrawer'
 import { CreateMonitor } from './CreateMonitor'
@@ -90,12 +86,6 @@ const STATE_ORDER: Record<RuleState, number> = {
   pending: 1,
   ok: 2,
   paused: 3,
-}
-
-const CHANNELS: Record<MonitorChannel, { label: string; icon: LucideIcon }> = {
-  email: { label: 'Email', icon: Mail },
-  console: { label: 'Console', icon: Bell },
-  webhook: { label: 'Webhook', icon: Webhook },
 }
 
 const STATE_STYLES: Record<
@@ -480,7 +470,6 @@ export function Monitors({
                         state === 'paused' && 'opacity-50',
                       )}
                     />
-                    <ChannelIcons channels={monitor.channels} />
                     <MonitorState
                       projectId={projectId}
                       monitor={monitor}
@@ -563,6 +552,8 @@ export function Monitors({
         </>
       )}
 
+      {monitors.length > 0 && <AlertDelivery projectId={projectId} />}
+
       <CreateMonitor
         open={createOpen}
         onOpenChange={setCreateOpen}
@@ -618,35 +609,6 @@ export function Monitors({
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  )
-}
-
-/** The channels a monitor notifies, as icons named in their tooltips. */
-function ChannelIcons({ channels }: { channels: MonitorChannel[] }) {
-  const t = useT()
-  return (
-    <div
-      className="hidden w-[68px] shrink-0 items-center gap-1.5 text-muted-foreground lg:flex"
-      onClick={(event) => event.stopPropagation()}
-    >
-      {channels.map((channel) => {
-        const { label, icon: Icon } = CHANNELS[channel]
-        return (
-          <Tooltip key={channel}>
-            <TooltipTrigger asChild>
-              <span
-                tabIndex={0}
-                aria-label={t(label)}
-                className="flex h-6 w-6 items-center justify-center rounded-md border border-border bg-background"
-              >
-                <Icon className="h-3.5 w-3.5" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{t(label)}</TooltipContent>
-          </Tooltip>
-        )
-      })}
     </div>
   )
 }

@@ -1,7 +1,6 @@
-import { useState, type ComponentType, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Bell, Check, ChevronDown, Mail, Webhook } from 'lucide-react'
-import { MonitorChannel } from '@appwrite.io/console'
+import { ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -60,37 +59,9 @@ export type RuleForm = {
   byteUnit: ByteUnit
   window: number
   cooldown: number
-  channels: MonitorChannel[]
-  webhookUrl: string
 }
 
 const RESOURCE_PICKER_LIMIT = 100
-
-const CHANNELS: {
-  value: MonitorChannel
-  label: string
-  description: string
-  icon: ComponentType<{ className?: string }>
-}[] = [
-  {
-    value: MonitorChannel.Email,
-    label: 'Email',
-    description: 'Organization owners',
-    icon: Mail,
-  },
-  {
-    value: MonitorChannel.Console,
-    label: 'Console',
-    description: 'Notification bell',
-    icon: Bell,
-  },
-  {
-    value: MonitorChannel.Webhook,
-    label: 'Webhook',
-    description: 'Signed POST request',
-    icon: Webhook,
-  },
-]
 
 export function emptyRuleForm(): RuleForm {
   return {
@@ -103,8 +74,6 @@ export function emptyRuleForm(): RuleForm {
     byteUnit: 'GB',
     window: 3600,
     cooldown: 3600,
-    channels: [MonitorChannel.Email, MonitorChannel.Console],
-    webhookUrl: '',
   }
 }
 
@@ -125,8 +94,6 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     byteUnit: split ? split.unit : 'GB',
     window: rule.window,
     cooldown: rule.cooldown,
-    channels: rule.channels,
-    webhookUrl: rule.webhookUrl,
   }
 }
 
@@ -171,7 +138,6 @@ export function monitorInputFromForm(
   form: RuleForm,
   t: (text: string) => string,
 ): MonitorInput {
-  const webhook = form.channels.includes(MonitorChannel.Webhook)
   return {
     name: form.name.trim() || suggestedName(form, t),
     rules: buildRules({
@@ -184,9 +150,6 @@ export function monitorInputFromForm(
     // Gauges compare their latest reading, so the API ignores a window for them.
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
-    channels: form.channels,
-    // The API validates any URL it is sent, so an empty one is left out.
-    webhookUrl: webhook ? form.webhookUrl.trim() : undefined,
   }
 }
 
@@ -200,13 +163,6 @@ export function ruleFormError(
   }
   if (!Number.isFinite(form.threshold) || form.threshold < 0) {
     return t('Enter a threshold of 0 or more.')
-  }
-  if (form.channels.length === 0) return t('Select at least one channel.')
-  if (
-    form.channels.includes(MonitorChannel.Webhook) &&
-    !form.webhookUrl.trim()
-  ) {
-    return t('Enter a webhook URL.')
   }
   return undefined
 }
@@ -402,14 +358,6 @@ export function RuleFields({
       metric,
       resourceType,
       resourceId: resourceType === form.resourceType ? form.resourceId : '',
-    })
-  }
-
-  const toggleChannel = (channel: MonitorChannel) => {
-    onChange({
-      channels: form.channels.includes(channel)
-        ? form.channels.filter((entry) => entry !== channel)
-        : [...form.channels, channel],
     })
   }
 
@@ -625,73 +573,9 @@ export function RuleFields({
         <SectionHeading
           title={t('Notify')}
           description={t(
-            'Sent when the monitor fires and again when it resolves.',
+            'Organization owners get an email and a console notification when the monitor fires and again when it resolves. Project webhooks and functions can also listen to its alert events.',
           )}
         />
-        <div className="grid gap-2 sm:grid-cols-3">
-          {CHANNELS.map((channel) => {
-            const selected = form.channels.includes(channel.value)
-            const Icon = channel.icon
-            return (
-              <button
-                key={channel.value}
-                type="button"
-                role="checkbox"
-                aria-checked={selected}
-                disabled={disabled}
-                onClick={() => toggleChannel(channel.value)}
-                className={cn(
-                  'flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-                  selected
-                    ? 'border-foreground ring-1 ring-inset ring-foreground'
-                    : 'border-border hover:bg-accent/40',
-                )}
-              >
-                <span
-                  aria-hidden
-                  className={cn(
-                    'mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[4px] border-[1.5px]',
-                    selected
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-muted-foreground/60',
-                  )}
-                >
-                  {selected && (
-                    <Check className="h-2.5 w-2.5" strokeWidth={3} />
-                  )}
-                </span>
-                <span>
-                  <span className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
-                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                    {t(channel.label)}
-                  </span>
-                  <span className="block text-[12px] text-muted-foreground">
-                    {t(channel.description)}
-                  </span>
-                </span>
-              </button>
-            )
-          })}
-        </div>
-
-        {form.channels.includes(MonitorChannel.Webhook) && (
-          <div className="mt-4 space-y-2">
-            <Label
-              htmlFor="alert-webhook-url"
-              className="text-[12px] font-medium"
-            >
-              {t('Webhook URL')} <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="alert-webhook-url"
-              type="url"
-              placeholder="https://example.com/alerts"
-              value={form.webhookUrl}
-              onChange={(event) => onChange({ webhookUrl: event.target.value })}
-              disabled={disabled}
-            />
-          </div>
-        )}
       </section>
 
       <section className="border-t border-border pt-4">

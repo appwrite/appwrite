@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Pause, Pencil, Play, Trash2 } from 'lucide-react'
-import { MonitorChannel } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -399,17 +398,7 @@ export function MonitorDrawer({
                   {t('Notifies')}
                 </dt>
                 <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
-                  {monitor.channels
-                    .map((channel) =>
-                      t(
-                        channel === MonitorChannel.Email
-                          ? 'Email'
-                          : channel === MonitorChannel.Console
-                            ? 'Console'
-                            : 'Webhook',
-                      ),
-                    )
-                    .join(', ')}
+                  {t('Organization owners')}
                   {monitor.cooldown > 0 && cooldown && (
                     <span className="text-muted-foreground">
                       {' · '}

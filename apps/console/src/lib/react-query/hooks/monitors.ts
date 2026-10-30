@@ -4,19 +4,16 @@
 
 import {
   infiniteQueryOptions,
-  mutationOptions,
   queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
-  type QueryClient,
 } from '@tanstack/react-query'
-import { ID, MonitorChannel, Query } from '@appwrite.io/console'
+import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   listOrganizationMonitors,
   parseMonitor,
-  updateBudgetMonitor,
   type Alert,
   type AlertMetric,
   type AlertResourceType,
@@ -274,55 +271,5 @@ export function organizationBudgetMonitorsQueryOptions(
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
-  })
-}
-
-/** Adds or removes a webhook on every budget monitor of an organization. */
-export function useSetBudgetMonitorsWebhook(organizationId: string) {
-  const queryClient = useQueryClient()
-  return useMutation(
-    budgetMonitorsWebhookMutationOptions(queryClient, organizationId),
-  )
-}
-
-export function budgetMonitorsWebhookMutationOptions(
-  queryClient: QueryClient,
-  organizationId: string,
-) {
-  return mutationOptions({
-    mutationFn: async ({
-      monitors,
-      webhookUrl,
-    }: {
-      monitors: ParsedMonitor[]
-      webhookUrl: string
-    }) => {
-      // One at a time: concurrent monitor writes contend on the same schedules rows.
-      const updated: ParsedMonitor[] = []
-      for (const monitor of monitors) {
-        const others = monitor.channels.filter(
-          (channel) => channel !== MonitorChannel.Webhook,
-        )
-        updated.push(
-          parseMonitor(
-            await updateBudgetMonitor(sdk.forConsole.client, {
-              organizationId,
-              monitorId: monitor.$id,
-              channels:
-                webhookUrl === ''
-                  ? others
-                  : [...others, MonitorChannel.Webhook],
-              webhookUrl: webhookUrl === '' ? undefined : webhookUrl,
-            }),
-          ),
-        )
-      }
-      return updated
-    },
-    // A failure partway leaves the earlier monitors changed, so refetch either way.
-    onSettled: () =>
-      queryClient.invalidateQueries({
-        queryKey: ['monitors', 'organization', organizationId],
-      }),
   })
 }
