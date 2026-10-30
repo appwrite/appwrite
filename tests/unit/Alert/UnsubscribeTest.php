@@ -17,7 +17,7 @@ final class UnsubscribeTest extends TestCase
         $unsubscribe = new Unsubscribe(self::SECRET);
 
         $this->assertSame(['userId' => 'ana', 'scope' => 'egress'], $unsubscribe->verify($unsubscribe->token('ana', 'egress')));
-        $this->assertSame(['userId' => 'ana', 'scope' => Unsubscribe::ALL], $unsubscribe->verify($unsubscribe->token('ana', Unsubscribe::ALL)));
+        $this->assertSame(['userId' => 'ana', 'scope' => Unsubscribe::type('usage')], $unsubscribe->verify($unsubscribe->token('ana', Unsubscribe::type('usage'))));
     }
 
     public function testTokenExpires(): void
@@ -40,7 +40,7 @@ final class UnsubscribeTest extends TestCase
         $encode = fn (array $claims): string => \rtrim(\strtr(\base64_encode((string) \json_encode($claims)), '+/', '-_'), '=');
 
         yield 'another user' => [$header . '.' . $encode(['userId' => 'ben'] + $claims) . '.' . $signature];
-        yield 'every monitor' => [$header . '.' . $encode(['scope' => Unsubscribe::ALL] + $claims) . '.' . $signature];
+        yield 'every monitor' => [$header . '.' . $encode(['scope' => Unsubscribe::type('usage')] + $claims) . '.' . $signature];
         yield 'another secret' => [(new Unsubscribe('another-secret'))->token('ana', 'egress')];
         yield 'not a token' => ['not-a-token'];
         yield 'empty' => [''];

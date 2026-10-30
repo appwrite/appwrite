@@ -117,6 +117,10 @@ trait MonitorsBase
         $window = $this->createMonitor(['window' => 59]);
         $this->assertSame(400, $window['headers']['status-code']);
 
+        // Events report every change; the cooldown only spaces out the team's emails, at least five minutes apart.
+        $cooldown = $this->createMonitor(['cooldown' => 0]);
+        $this->assertSame(400, $cooldown['headers']['status-code']);
+
         $role = $this->createMonitor(['notify' => ['guests']]);
         $this->assertSame(400, $role['headers']['status-code']);
 
@@ -179,6 +183,9 @@ trait MonitorsBase
         $monitor = $this->getMonitor($monitorId);
         $this->assertSame('project', $monitor['body']['resourceType']);
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
+
+        $cooldown = $this->updateMonitor($monitorId, ['cooldown' => 299]);
+        $this->assertSame(400, $cooldown['headers']['status-code']);
 
         $role = $this->updateMonitor($monitorId, ['notify' => ['users']]);
         $this->assertSame(400, $role['headers']['status-code']);

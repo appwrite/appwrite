@@ -34,6 +34,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Services\Realtime\RealtimeBase;
 use Tests\Unit\Event\MockPublisher;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
@@ -51,6 +52,7 @@ use Utopia\Usage\Adapter;
 use Utopia\Usage\Metric;
 use Utopia\Usage\Tenant;
 use Utopia\Usage\Usage;
+use WebSocket\TimeoutException;
 
 use function Swoole\Coroutine\run;
 
@@ -62,9 +64,13 @@ use function Swoole\Coroutine\run;
 final class EvaluationCustomServerTest extends Scope
 {
     use ProjectCustom;
+    use RealtimeBase;
     use SideServer;
 
     private const int TIMEOUT_MS = 180_000;
+
+    /** How many in-process notification checks ran, to space them past the cooldown. */
+    private int $checks = 0;
 
     public function testMonitorFiresAndResolvesItsAlertThroughEveryChannel(): void
     {
@@ -81,7 +87,7 @@ final class EvaluationCustomServerTest extends Scope
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
-            'cooldown' => 0,
+            'cooldown' => 300,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -190,7 +196,7 @@ final class EvaluationCustomServerTest extends Scope
             'monitorId' => 'unique()',
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
-            'cooldown' => 0,
+            'cooldown' => 300,
             'notify' => [],
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
@@ -247,7 +253,7 @@ final class EvaluationCustomServerTest extends Scope
             'monitorId' => 'unique()',
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
-            'cooldown' => 0,
+            'cooldown' => 300,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -290,7 +296,7 @@ final class EvaluationCustomServerTest extends Scope
             'monitorId' => 'unique()',
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
-            'cooldown' => 0,
+            'cooldown' => 300,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -327,7 +333,7 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
 
         // Every monitor's emails stop with the "all" link; console notifications stay.
-        $all = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root['$id'], Unsubscribe::ALL);
+        $all = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root['$id'], Unsubscribe::type('usage'));
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $all)['headers']['status-code']);
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($other, $root['$id']));
 
@@ -343,7 +349,7 @@ final class EvaluationCustomServerTest extends Scope
          */
         $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
         [$head, $claims, $signature] = \explode('.', $token);
-        $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['scope' => Unsubscribe::ALL] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
+        $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['scope' => Unsubscribe::type('usage')] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
         foreach ([
             'tampered' => $forged,
             'expired' => $unsubscribe->token($root['$id'], $monitorId, \time() - ALERT_UNSUBSCRIBE_TTL - 60),
@@ -356,6 +362,67 @@ final class EvaluationCustomServerTest extends Scope
         }
         // None of them changed anything.
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
+    }
+
+    public function testProjectUsersCannotSeeMonitorsOrAlerts(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $client = ['origin' => 'http://localhost', 'content-type' => 'application/json', 'x-appwrite-project' => $projectId];
+        $email = 'end-user-' . \uniqid() . '@localhost.test';
+        $password = 'password-' . \uniqid(); // pragma: allowlist secret
+        $this->assertSame(201, $this->client->call(Client::METHOD_POST, '/account', $client, ['userId' => 'unique()', 'email' => $email, 'password' => $password])['headers']['status-code']);
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $client, ['email' => $email, 'password' => $password]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $client['cookie'] = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        // A monitor that fires, so the realtime check below has an event to miss.
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
+        }
+        $user = $this->getWebsocket(['account', 'documents', 'files'], ['origin' => 'http://localhost', 'cookie' => $client['cookie']], $projectId, timeout: 5);
+        $this->assertSame('connected', \json_decode($user->receive(), true)['type']);
+        $console = $this->getWebsocket(['console'], ['origin' => 'http://localhost', 'cookie' => 'a_session_console=' . $this->getRoot()['session']], 'console', timeout: 5);
+        $this->assertSame('connected', \json_decode($console->receive(), true)['type']);
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => 'Realtime ' . \uniqid(),
+            'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+        $firing = $this->waitForStatus($monitorId, 'firing');
+        $event = 'monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.firing';
+
+        /**
+         * Test for SUCCESS
+         */
+        // The console's members get the alert live...
+        $message = $this->receiveUntilEvent($console, fn (array $message): bool => \in_array($event, $message['data']['events'] ?? [], true));
+        $this->assertSame($firing['alertId'], $message['data']['payload']['$id']);
+        $console->close();
+
+        /**
+         * Test for FAILURE
+         */
+        // ...the project's own users never do.
+        while (true) {
+            try {
+                $frame = \json_decode($user->receive(), true);
+            } catch (TimeoutException) {
+                break;
+            }
+            $this->assertNotContains($event, $frame['data']['events'] ?? [], 'A project user received an alert over realtime.');
+        }
+        $user->close();
+
+        // Nor can they read monitors or alerts over the API.
+        foreach (['/monitors', '/monitors/' . $monitorId, '/alerts', '/alerts/' . $firing['alertId']] as $path) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $client);
+            $this->assertSame(401, $response['headers']['status-code'], $path);
+        }
+        $this->assertSame(401, $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $client)['headers']['status-code']);
+        $this->assertSame('firing', $this->getMonitorBody($monitorId)['status']);
     }
 
     public function testTransferredProjectAlertsItsNewOrganizationsOwners(): void
@@ -379,7 +446,7 @@ final class EvaluationCustomServerTest extends Scope
             'monitorId' => 'unique()',
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
-            'cooldown' => 0,
+            'cooldown' => 300,
             'enabled' => false,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
@@ -447,7 +514,7 @@ final class EvaluationCustomServerTest extends Scope
             'monitorId' => 'unique()',
             'name' => 'History ' . \uniqid(),
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
-            'cooldown' => 0,
+            'cooldown' => 300,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -708,54 +775,40 @@ final class EvaluationCustomServerTest extends Scope
 
     public function testFiringThatOutlastsItsCooldownIsAnnounced(): void
     {
-        $webhook = $this->createAlertWebhook();
-        $name = 'Sustained ' . \uniqid();
-
-        for ($i = 0; $i < 5; $i++) {
-            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
-        }
-
-        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
-            'monitorId' => 'unique()',
-            'name' => $name,
-            'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
-            'window' => 3600,
-            'cooldown' => 60,
-        ]);
-        $this->assertSame(201, $created['headers']['status-code']);
-        $monitorId = $created['body']['$id'];
+        // The test evaluates a paused monitor itself, at the times it chooses, so
+        // the five-minute minimum cooldown passes without waiting for it.
+        $monitorId = $this->createPausedMonitor('Sustained ' . \uniqid());
+        $root = $this->getRoot()['$id'];
+        $at = new \DateTimeImmutable();
+        $sent = fn (array $messages): int => \count(\array_filter($messages, fn (NotificationMessage $message) => \in_array($root, \array_column($message->recipients, 'resourceId'), true)));
 
         /**
          * Test for SUCCESS
          */
-        $first = $this->waitForStatus($monitorId, 'firing');
-        $this->waitForEvent($webhook['path'], $monitorId, 'firing');
-        $this->setThreshold($monitorId, 1e15);
-        $this->waitForStatus($monitorId, 'ok');
-        $this->waitForEvent($webhook['path'], $monitorId, 'resolved');
-        $this->assertEventually(function () use ($name) {
-            $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
-        }, 60_000, 1_000);
+        $this->inCoroutine(function () use ($monitorId, $at, $sent): void {
+            $messages = [];
+            $this->evaluateMonitor($this->platform(), $monitorId, 20, messages: $messages, now: $at);
+            $this->assertSame(1, $sent($messages), 'The first firing is announced.');
 
-        // Firing again inside the cooldown is an event, but held back from the team...
-        $this->setThreshold($monitorId, 0);
-        $held = $this->waitForStatus($monitorId, 'firing');
-        $this->assertSame($first['triggeredAt'], $held['triggeredAt']);
-        $this->waitForEvent($webhook['path'], $monitorId, 'firing', 2);
-        $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
+            $messages = [];
+            $this->evaluateMonitor($this->platform(), $monitorId, 0, messages: $messages, now: $at->modify('+60 seconds'));
+            $this->assertSame(1, $sent($messages), 'Its resolution is announced.');
 
-        // ...and announced by the first evaluation after the cooldown, while it still fires.
-        $this->assertEventually(function () use ($monitorId, $first) {
-            $monitor = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body'];
-            $this->assertSame('firing', $monitor['status']);
-            $this->assertNotSame($first['triggeredAt'], $monitor['triggeredAt']);
-            $this->assertGreaterThanOrEqual(60, \strtotime($monitor['triggeredAt']) - \strtotime($first['triggeredAt']));
-        }, self::TIMEOUT_MS, 2_000);
-        $this->assertEventually(function () use ($name) {
-            $this->assertSame(['firing' => 2, 'resolved' => 1], $this->teamNotifications($name));
-        }, 60_000, 1_000);
-        // The announcement after the cooldown is no change of state, so it fires no event.
-        $this->assertSame(['firing', 'resolved', 'firing'], $this->eventStatuses($webhook['path'], $monitorId));
+            // Firing again inside the cooldown is held back from the team...
+            $messages = [];
+            $this->evaluateMonitor($this->platform(), $monitorId, 20, messages: $messages, now: $at->modify('+120 seconds'));
+            $this->assertSame(0, $sent($messages), 'A firing inside the cooldown was announced.');
+            $this->evaluateMonitor($this->platform(), $monitorId, 20, messages: $messages, now: $at->modify('+240 seconds'));
+            $this->assertSame(0, $sent($messages));
+
+            // ...and announced by the first evaluation after the cooldown, while it still fires.
+            $this->evaluateMonitor($this->platform(), $monitorId, 20, messages: $messages, now: $at->modify('+301 seconds'));
+            $this->assertSame(1, $sent($messages), 'The firing that outlasted the cooldown was not announced.');
+        });
+
+        $monitor = $this->getMonitorBody($monitorId);
+        $this->assertSame('firing', $monitor['status']);
+        $this->assertSame(1, $this->getAlert($monitor['alertId'])['notifications']);
     }
 
     public function testPausedMonitorIsNotEvaluatedUntilResumed(): void
@@ -1358,7 +1411,7 @@ final class EvaluationCustomServerTest extends Scope
             'monitorId' => 'unique()',
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
-            'cooldown' => 0,
+            'cooldown' => 300,
             'enabled' => false,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
@@ -1373,7 +1426,7 @@ final class EvaluationCustomServerTest extends Scope
     /**
      * @param list<NotificationMessage> $messages receives what the evaluation published
      */
-    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = []): void
+    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = [], ?\DateTimeImmutable $now = null): void
     {
         $publisher = $this->createStub(NotificationPublisher::class);
         $publisher->method('enqueue')->willReturnCallback(function (NotificationMessage $message) use ($accepted, &$messages): bool {
@@ -1383,7 +1436,7 @@ final class EvaluationCustomServerTest extends Scope
         });
 
         $evaluator = new class () extends Alerts {
-            public function evaluateNow(Document $monitor, Document $project, float $value, Database $dbForPlatform, NotificationPublisher $publisher): void
+            public function evaluateNow(Document $monitor, Document $project, float $value, Database $dbForPlatform, NotificationPublisher $publisher, \DateTimeImmutable $now): void
             {
                 $events = new MockPublisher();
                 $realtime = new class () extends Realtime {
@@ -1393,7 +1446,7 @@ final class EvaluationCustomServerTest extends Scope
                     }
                 };
 
-                $this->evaluate($monitor, $project, $value, new \DateTimeImmutable(), $dbForPlatform, $publisher, new Event($events), new Webhook($events), new FunctionPublisher($events, new Queue(Event::FUNCTIONS_QUEUE_NAME)), $realtime, []);
+                $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisher, new Event($events), new Webhook($events), new FunctionPublisher($events, new Queue(Event::FUNCTIONS_QUEUE_NAME)), $realtime, []);
             }
         };
 
@@ -1403,6 +1456,7 @@ final class EvaluationCustomServerTest extends Scope
             $value,
             $dbForPlatform,
             $publisher,
+            $now ?? new \DateTimeImmutable(),
         );
     }
 
@@ -1585,9 +1639,11 @@ final class EvaluationCustomServerTest extends Scope
     {
         $channels = [];
         $this->inCoroutine(function () use ($monitorId, $userId, &$channels): void {
+            // Each check runs a day after the last, so the cooldown never holds the firing back.
+            $at = new \DateTimeImmutable('+' . (++$this->checks) . ' days');
             $messages = [];
-            $this->evaluateMonitor($this->platform(), $monitorId, 20, messages: $messages);
-            $this->evaluateMonitor($this->platform(), $monitorId, 0, messages: $messages);
+            $this->evaluateMonitor($this->platform(), $monitorId, 20, messages: $messages, now: $at);
+            $this->evaluateMonitor($this->platform(), $monitorId, 0, messages: $messages, now: $at->modify('+1 minute'));
             foreach ($messages as $message) {
                 foreach ($message->recipients as $recipient) {
                     if (($recipient['resourceId'] ?? '') === $userId) {
