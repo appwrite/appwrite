@@ -456,7 +456,7 @@ class Alerts extends Action
         $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
         $type = (string) $monitor->getAttribute('type');
         $typeConfig = Config::getParam('alerts', [])['types'][$type] ?? [];
-        // Every email of a type can be stopped at once only where the type allows it.
+        // Every email of a type is stopped at once only where the type allows it.
         $typeScope = ($typeConfig['optOut'] ?? false) === true ? Unsubscribe::type($type) : '';
         $notice = [
             'status' => $status,
@@ -501,8 +501,6 @@ class Alerts extends Action
                 ...$notice,
                 reason: 'You\'re receiving this as ' . (\in_array(\strtolower($role[0] ?? ''), ['a', 'e', 'i', 'o', 'u'], true) ? 'an ' : 'a ') . $role . ' of ' . $teamName . '.',
                 unsubscribeUrl: $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($token),
-                unsubscribeAllUrl: $typeScope === '' ? '' : $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($unsubscribe->token($user->getId(), $typeScope)),
-                unsubscribeAllLabel: 'Stop all ' . \strtolower((string) ($typeConfig['label'] ?? $type)) . ' alert emails',
             );
 
             $this->publish($publisherForNotifications, new NotificationMessage(

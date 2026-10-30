@@ -16,9 +16,9 @@ class Create extends Base
         return self::HTTP_REQUEST_METHOD_POST;
     }
 
-    protected function change(array $unsubscribed, string $scope): ?Operator
+    protected function change(array $unsubscribed, string $entry): ?Operator
     {
-        // A concurrent request for the same scope can still add it twice, which reads the same.
-        return \in_array($scope, $unsubscribed, true) ? null : Operator::arrayAppend([$scope]);
+        // A concurrent request for the same entry can still add it twice, which reads the same.
+        return \in_array($entry, $unsubscribed, true) ? null : Operator::arrayAppend([$entry]);
     }
 }

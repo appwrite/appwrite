@@ -16,9 +16,9 @@ class Delete extends Base
         return self::HTTP_REQUEST_METHOD_DELETE;
     }
 
-    protected function change(array $unsubscribed, string $scope): ?Operator
+    protected function change(array $unsubscribed, string $entry): ?Operator
     {
-        // Removes every copy of the scope, including one a concurrent request added twice.
-        return \in_array($scope, $unsubscribed, true) ? Operator::arrayRemove($scope) : null;
+        // Removes every copy of the entry, including one a concurrent request added twice.
+        return \in_array($entry, $unsubscribed, true) ? Operator::arrayRemove($entry) : null;
     }
 }

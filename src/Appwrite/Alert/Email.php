@@ -26,9 +26,7 @@ readonly class Email
      * @param ?\DateTimeImmutable $since when the rule started firing, for how long a resolved rule fired
      * @param int $cooldown seconds before the rule can email again while it keeps firing
      * @param string $pauseUrl where the "Pause this monitor" link goes; none when empty
-     * @param string $unsubscribeUrl where "Stop emails for this monitor" goes; none when empty
-     * @param string $unsubscribeAllUrl where the link stopping every alert email of the monitor's type goes; none when empty
-     * @param string $unsubscribeAllLabel that link's text
+     * @param string $unsubscribeUrl where the "Unsubscribe" link after the reason goes; none when empty
      */
     public function __construct(
         public Status $status,
@@ -49,8 +47,6 @@ readonly class Email
         public int $cooldown = 0,
         public string $pauseUrl = '',
         public string $unsubscribeUrl = '',
-        public string $unsubscribeAllUrl = '',
-        public string $unsubscribeAllLabel = 'Stop all usage alert emails',
     ) {
     }
 
@@ -243,25 +239,15 @@ readonly class Email
     }
 
     /**
-     * The links that stop this monitor's emails, or every alert email of its type, for the recipient.
+     * A quiet link after the reason, to the page where the recipient stops these emails.
      */
     private function unsubscribe(): string
     {
-        $links = \array_filter([
-            'Stop emails for this monitor' => $this->unsubscribeUrl,
-            $this->unsubscribeAllLabel => $this->unsubscribeAllUrl,
-        ], fn (string $url) => $url !== '');
-
-        if ($links === []) {
+        if ($this->unsubscribeUrl === '') {
             return '';
         }
 
-        $anchors = [];
-        foreach ($links as $label => $url) {
-            $anchors[] = '<a rel="noopener" target="_blank" href="' . \htmlspecialchars($url) . '" style="color: #6c6c75; text-decoration: underline;">' . \htmlspecialchars($label) . '</a>';
-        }
-
-        return '<p style="margin: 8px 0 0; color: #6c6c75; font-size: 13px; line-height: 20px;">' . \implode(' · ', $anchors) . '</p>';
+        return ' <a rel="noopener" target="_blank" href="' . \htmlspecialchars($this->unsubscribeUrl) . '" style="color: #6c6c75; text-decoration: underline;">Unsubscribe</a>';
     }
 
     /**

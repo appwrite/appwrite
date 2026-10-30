@@ -104,6 +104,7 @@
         "GET /v1/avatars/photo",
         "GET /v1/avatars/qr",
         "GET /v1/avatars/screenshots",
+        "GET /v1/console/alerts/unsubscribe",
         "GET /v1/console/oauth2-providers",
         "GET /v1/console/resources",
         "GET /v1/console/scopes/organization",

@@ -38,5 +38,4 @@
     </tr>
 </table>
 
-<p style="margin: 28px 0 0; padding-top: 16px; border-top: 1px solid #e8e9f0; color: #6c6c75; font-size: 13px; line-height: 20px;">{{reason}}</p>
-{{unsubscribe}}
+<p style="margin: 28px 0 0; padding-top: 16px; border-top: 1px solid #e8e9f0; color: #6c6c75; font-size: 13px; line-height: 20px;">{{reason}}{{unsubscribe}}</p>
