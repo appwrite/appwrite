@@ -646,7 +646,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($eventHandler): void {
                 $arrivedAt = \microtime(true);
-                $span = Span::init('realtime.event');
+                // Not made current: most events are never logged, so their span is just dropped.
+                $span = new Span('realtime.event');
 
                 $outcome = $eventHandler->handle($redis, $channel, $payload);
                 $resolvedAt = \microtime(true);
