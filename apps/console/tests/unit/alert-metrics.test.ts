@@ -109,10 +109,16 @@ describe('alert rule history', () => {
 describe('alert rule form', () => {
   const t = (text: string) => text
 
-  test('sends no delivery settings, which monitors no longer take', () => {
-    expect(
-      Object.keys(monitorInputFromForm(emptyRuleForm(), t)).sort(),
-    ).toEqual(['cooldown', 'name', 'rules', 'window'])
+  test('sends the roles to notify and no delivery channels', () => {
+    const input = monitorInputFromForm(emptyRuleForm(), t)
+    expect(Object.keys(input).sort()).toEqual([
+      'cooldown',
+      'name',
+      'notify',
+      'rules',
+      'window',
+    ])
+    expect(input.notify).toEqual(['owner'])
   })
 
   test('names an unnamed rule after its condition', () => {
