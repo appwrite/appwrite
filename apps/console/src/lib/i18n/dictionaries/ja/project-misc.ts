@@ -3808,21 +3808,21 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '通知先はありません。アラートはイベントのみを発生させます。',
   'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
     '各モニターは指定した組織ロールにメールと通知を送ります。各アラートはプロジェクトのイベントでもあり、独自のシステムで受け取れます。',
-  'This link is not valid': 'このリンクは無効です',
-  'Alert emails stopped': 'アラートメールを停止しました',
-  'Stop alert emails?': 'アラートメールを停止しますか？',
-  'Open the latest link from an alert email.':
-    'アラートメールの最新のリンクを開いてください。',
-  'This link is not valid or has expired.':
-    'このリンクは無効か、期限切れです。',
-  'Resume emails': 'メールを再開',
-  'Stop emails': 'メールを停止',
-  'You will no longer get emails for this monitor. Console notifications continue.':
-    'このモニターのメールは届かなくなります。コンソール通知は引き続き届きます。',
-  'Stop getting emails for this monitor? Console notifications continue.':
-    'このモニターのメールを停止しますか？コンソール通知は引き続き届きます。',
-  'You will no longer get alert emails of this kind. Console notifications continue.':
-    'この種類のアラートメールは届かなくなります。コンソール通知は引き続き届きます。',
-  'Stop getting every alert email of this kind? Console notifications continue.':
-    'この種類のアラートメールをすべて停止しますか？コンソール通知は引き続き届きます。',
+  'Unsubscribe from alert emails': 'アラートメールの配信停止',
+  'This monitor was deleted.': 'このモニターは削除されました。',
+  'Stop emails for this monitor': 'このモニターのメールを停止',
+  'Emails for this monitor are stopped.':
+    'このモニターのメールは停止されています。',
+  'Stop all usage alert emails': '使用量アラートのメールをすべて停止',
+  'Stop all alert emails of this kind': 'この種類のアラートメールをすべて停止',
+  'All usage alert emails are stopped.':
+    '使用量アラートのメールはすべて停止されています。',
+  'All alert emails of this kind are stopped.':
+    'この種類のアラートメールはすべて停止されています。',
+  'This link is invalid or has expired': 'このリンクは無効か、期限切れです',
+  'Open the Unsubscribe link in a more recent alert email.':
+    'より新しいアラートメールの配信停止リンクを開いてください。',
+  "You'll still see these alerts in console notifications.":
+    'これらのアラートは引き続きコンソール通知に表示されます。',
+  'Saving...': '保存中...',
 }

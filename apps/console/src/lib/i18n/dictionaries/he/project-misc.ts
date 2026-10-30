@@ -3733,20 +3733,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'לא מתריע לאף אחד. ההתראות שלו רק מפעילות את האירועים שלהן.',
   'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
     'כל מוניטור שולח אימייל והתראה לתפקידים בארגון שהוא מגדיר. כל התראה היא גם אירוע של הפרויקט שהמערכות שלכם יכולות לקבל.',
-  'This link is not valid': 'הקישור הזה אינו תקף',
-  'Alert emails stopped': 'אימיילי ההתראות הופסקו',
-  'Stop alert emails?': 'להפסיק את אימיילי ההתראות?',
-  'Open the latest link from an alert email.':
-    'פתחו את הקישור העדכני מאימייל של התראה.',
-  'This link is not valid or has expired.': 'הקישור הזה אינו תקף או שפג תוקפו.',
-  'Resume emails': 'חידוש האימיילים',
-  'Stop emails': 'הפסקת האימיילים',
-  'You will no longer get emails for this monitor. Console notifications continue.':
-    'לא תקבלו עוד אימיילים עבור המוניטור הזה. ההתראות ב-Console ממשיכות.',
-  'Stop getting emails for this monitor? Console notifications continue.':
-    'להפסיק לקבל אימיילים עבור המוניטור הזה? ההתראות ב-Console ממשיכות.',
-  'You will no longer get alert emails of this kind. Console notifications continue.':
-    'לא תקבלו עוד אימיילי התראה מהסוג הזה. ההתראות ב-Console ממשיכות.',
-  'Stop getting every alert email of this kind? Console notifications continue.':
-    'להפסיק לקבל את כל אימיילי ההתראה מהסוג הזה? ההתראות ב-Console ממשיכות.',
+  'Unsubscribe from alert emails': 'ביטול הרשמה לאימיילי התראות',
+  'This monitor was deleted.': 'המוניטור הזה נמחק.',
+  'Stop emails for this monitor': 'הפסקת אימיילים עבור המוניטור הזה',
+  'Emails for this monitor are stopped.': 'האימיילים עבור המוניטור הזה הופסקו.',
+  'Stop all usage alert emails': 'הפסקת כל אימיילי ההתראות על שימוש',
+  'Stop all alert emails of this kind': 'הפסקת כל אימיילי ההתראה מהסוג הזה',
+  'All usage alert emails are stopped.': 'כל אימיילי ההתראות על שימוש הופסקו.',
+  'All alert emails of this kind are stopped.':
+    'כל אימיילי ההתראה מהסוג הזה הופסקו.',
+  'This link is invalid or has expired': 'הקישור הזה אינו תקף או שפג תוקפו',
+  'Open the Unsubscribe link in a more recent alert email.':
+    'פתחו את קישור ביטול ההרשמה באימייל התראה עדכני יותר.',
+  "You'll still see these alerts in console notifications.":
+    'ההתראות האלה עדיין יופיעו בהתראות ב-Console.',
+  'Saving...': 'שומר...',
 }

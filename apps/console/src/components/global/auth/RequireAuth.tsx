@@ -50,6 +50,8 @@ export function isOptionalAuthPage(pathname: string): boolean {
   if (pathname === '/oauth2/consent') return true
   // Native SDK OAuth relays open in a browser with no console session.
   if (pathname.startsWith('/auth/oauth2/')) return true
+  // Alert email unsubscribe links carry a token instead of a session.
+  if (pathname === '/auth/alerts/unsubscribe') return true
   const features = getActiveProfileFeatures()
   if (pathname === '/init' || pathname.startsWith('/init/')) {
     return isInitSurfaceEnabled()

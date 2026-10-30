@@ -6,43 +6,49 @@
 
 import type { Client } from '@appwrite.io/console'
 
-/** Prefix of a token's scope that covers every monitor of a type. */
-const TYPE_SCOPE = 'type:'
-
-/** What a token stops: one monitor's emails, or every alert email of a type. */
-export type UnsubscribeScope =
-  | { kind: 'monitor'; monitorId: string }
-  | { kind: 'type'; type: string }
-
-/**
- * Reads the scope from the token's claims for the page's wording. The server
- * verifies the signature; nothing here is trusted beyond display.
- */
-export function unsubscribeScope(token: string): UnsubscribeScope | null {
-  const claims = token.split('.')[1]
-  if (!claims) return null
-  try {
-    const json = atob(claims.replace(/-/g, '+').replace(/_/g, '/'))
-    const scope = (JSON.parse(json) as { scope?: unknown }).scope
-    if (typeof scope !== 'string' || scope === '') return null
-    return scope.startsWith(TYPE_SCOPE)
-      ? { kind: 'type', type: scope.slice(TYPE_SCOPE.length) }
-      : { kind: 'monitor', monitorId: scope }
-  } catch {
-    return null
-  }
+/** What the page shows: what the email named, and what is stopped already. */
+export type AlertsUnsubscribe = {
+  monitorName: string
+  projectName: string
+  type: string
+  /** Whether every alert email of the monitor's type can be stopped at once. */
+  optOut: boolean
+  /** This monitor's emails are stopped. */
+  monitor: boolean
+  /** Every alert email of the type is stopped. */
+  all: boolean
 }
 
-/** Stops the emails the token names (`post`), or resumes them (`delete`). */
+export type UnsubscribeScope = 'monitor' | 'all'
+
+function call<T>(
+  client: Client,
+  method: 'get' | 'post' | 'delete',
+  payload: Record<string, string>,
+): Promise<T> {
+  const headers: Record<string, string> = { 'X-Appwrite-Project': 'console' }
+  if (method !== 'get') headers['content-type'] = 'application/json'
+  return client.call(
+    method,
+    new URL(client.config.endpoint + '/console/alerts/unsubscribe'),
+    headers,
+    payload,
+  ) as Promise<T>
+}
+
+export function getAlertsUnsubscribe(
+  client: Client,
+  token: string,
+): Promise<AlertsUnsubscribe> {
+  return call(client, 'get', { token })
+}
+
+/** Stops the emails `scope` names (`post`), or resumes them (`delete`). */
 export function setAlertEmails(
   client: Client,
   method: 'post' | 'delete',
   token: string,
+  scope: UnsubscribeScope,
 ): Promise<unknown> {
-  return client.call(
-    method,
-    new URL(client.config.endpoint + '/console/alerts/unsubscribe'),
-    { 'X-Appwrite-Project': 'console', 'content-type': 'application/json' },
-    { token },
-  )
+  return call(client, method, { token, scope })
 }
