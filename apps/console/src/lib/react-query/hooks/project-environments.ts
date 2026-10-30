@@ -19,6 +19,7 @@ import { useMemo } from 'react'
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { createProjectEnvironment } from '@/lib/appwrite/project-environments'
+import { fetchEnvironmentCopyMigrations } from './migrations'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** One page covers the per-plan environment cap many times over. */
@@ -228,4 +229,47 @@ export function useDeleteProjectEnvironment(
       })
     },
   })
+}
+
+/** The copy is still being worked on by the migrations worker */
+const IN_PROGRESS_COPY_STATUSES = ['pending', 'processing']
+
+/**
+ * Hook following the copy of a freshly created environment from its project,
+ * for the creation wizard: the newest Appwrite to Appwrite migration of the
+ * environment, polled while it runs. Realtime cannot carry it, as the wizard is
+ * on the parent project and the migration announces itself on the environment.
+ *
+ * @param environmentId - The environment, once created
+ * @param enabled - False until there is a copy to follow
+ * @returns The migration, or null until the environment lists it
+ */
+export function useEnvironmentCopyProgress(
+  environmentId: string | null | undefined,
+  enabled = true,
+) {
+  const { data } = useQuery({
+    queryKey: [
+      'migrations',
+      'project',
+      environmentId,
+      'environment-copy',
+      'progress',
+    ],
+    queryFn: async () => {
+      const result = await fetchEnvironmentCopyMigrations(environmentId!)
+      return { migration: result.migrations[0] ?? null }
+    },
+    enabled: !!environmentId && enabled,
+    refetchInterval: (query) => {
+      const status = query.state.data?.migration?.status
+      return !status || IN_PROGRESS_COPY_STATUSES.includes(status)
+        ? 2000
+        : false
+    },
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
+  return data?.migration ?? null
 }

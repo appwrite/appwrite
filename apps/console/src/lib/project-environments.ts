@@ -11,34 +11,40 @@ export interface ProjectEnvironmentOption {
 }
 
 /**
- * Dot colors for the switcher. The project itself always takes the first one;
- * every other environment keeps the same color between renders because the
- * color is derived from its id (an environment has no type to key on).
+ * Dot colors for the switcher. The project itself is production and shows green;
+ * every environment shows purple, whatever its name or id, so the two kinds are
+ * told apart at a glance and nothing else is read into the color.
  */
-const PROJECT_ENVIRONMENT_DOT_CLASSES = [
-  'bg-emerald-500',
-  'bg-amber-500',
-  'bg-sky-500',
-  'bg-violet-500',
-  'bg-rose-500',
-  'bg-cyan-500',
-] as const
-
-function hashEnvironmentId(environmentId: string): number {
-  let hash = 0
-  for (let index = 0; index < environmentId.length; index += 1) {
-    hash = (hash << 5) - hash + environmentId.charCodeAt(index)
-    hash |= 0
-  }
-  return Math.abs(hash)
-}
+export const PROJECT_ENVIRONMENT_DOT_CLASS_PRODUCTION = 'bg-emerald-500'
+export const PROJECT_ENVIRONMENT_DOT_CLASS = 'bg-purple-500'
 
 export function projectEnvironmentDotClass(
-  environment: ProjectEnvironmentOption,
+  environment: Pick<ProjectEnvironmentOption, 'isDefault'>,
 ): string {
-  if (environment.isDefault) return PROJECT_ENVIRONMENT_DOT_CLASSES[0]
-  const palette = PROJECT_ENVIRONMENT_DOT_CLASSES.slice(1)
-  return palette[hashEnvironmentId(environment.id) % palette.length]!
+  return environment.isDefault
+    ? PROJECT_ENVIRONMENT_DOT_CLASS_PRODUCTION
+    : PROJECT_ENVIRONMENT_DOT_CLASS
+}
+
+/**
+ * Environments in the order the project saved in its prefs. An environment the
+ * saved order does not know, created since it was saved, keeps its place after
+ * the known ones; with no saved order the list is returned as given.
+ */
+export function sortProjectEnvironments<T extends { $id: string }>(
+  environments: readonly T[],
+  order: readonly string[],
+): T[] {
+  if (order.length === 0) return [...environments]
+  const rank = new Map(order.map((id, index) => [id, index]))
+  return [...environments].sort((a, b) => {
+    const rankA = rank.get(a.$id)
+    const rankB = rank.get(b.$id)
+    if (rankA === undefined && rankB === undefined) return 0
+    if (rankA === undefined) return 1
+    if (rankB === undefined) return -1
+    return rankA - rankB
+  })
 }
 
 /**

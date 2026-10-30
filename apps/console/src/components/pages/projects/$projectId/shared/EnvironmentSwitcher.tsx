@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, ChevronsUpDown, Pencil, Plus, Trash2 } from 'lucide-react'
+import {
+  ArrowUpDown,
+  Check,
+  ChevronsUpDown,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -19,16 +26,19 @@ import {
 } from '@/components/ui/tooltip'
 import { ConfirmNameDialog } from '@/components/global/shared/ConfirmNameDialog'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
-import { CreateEnvironmentDialog } from '@/components/pages/projects/$projectId/shared/CreateEnvironmentDialog'
 import { RenameEnvironmentDialog } from '@/components/pages/projects/$projectId/shared/RenameEnvironmentDialog'
+import { ReorderEnvironmentsDialog } from '@/components/pages/projects/$projectId/shared/ReorderEnvironmentsDialog'
 import {
   projectEnvironmentDotClass,
+  sortProjectEnvironments,
   type ProjectEnvironmentOption,
 } from '@/lib/project-environments'
+import { parseEnvironmentsOrder } from '@/lib/project-prefs-keys'
 import {
   useDeleteProjectEnvironment,
   useProject,
   useProjectEnvironments,
+  useProjectPrefs,
 } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -87,8 +97,14 @@ export function EnvironmentSwitcher({
     region,
     environmentsEnabled,
   )
+  // The order members gave the list, kept in the parent's prefs
+  const { prefs } = useProjectPrefs(
+    parentProjectId,
+    region,
+    environmentsEnabled,
+  )
 
-  const [createOpen, setCreateOpen] = useState(false)
+  const [reorderOpen, setReorderOpen] = useState(false)
   const [renameOpen, setRenameOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
@@ -99,26 +115,34 @@ export function EnvironmentSwitcher({
 
   // The parent is the default environment and is never one of the rows the
   // list endpoint returns.
-  const options = useMemo<ProjectEnvironmentOption[]>(
+  const production = useMemo<ProjectEnvironmentOption | null>(
     () =>
       parentProjectId
-        ? [
-            {
-              id: parentProjectId,
-              name: parentProject?.name || parentProjectId,
-              isDefault: true,
-            },
-            ...environments.map((environment) => ({
-              id: environment.$id,
-              name: environment.name || environment.$id,
-              isDefault: false,
-            })),
-          ]
-        : [],
-    [parentProjectId, parentProject?.name, environments],
+        ? {
+            id: parentProjectId,
+            name: parentProject?.name || parentProjectId,
+            isDefault: true,
+          }
+        : null,
+    [parentProjectId, parentProject?.name],
+  )
+  const environmentOptions = useMemo<ProjectEnvironmentOption[]>(
+    () =>
+      sortProjectEnvironments(environments, parseEnvironmentsOrder(prefs)).map(
+        (environment) => ({
+          id: environment.$id,
+          name: environment.name || environment.$id,
+          isDefault: false,
+        }),
+      ),
+    [environments, prefs],
   )
 
-  if (!environmentsEnabled || !project || !parentProjectId) return null
+  if (!environmentsEnabled || !project || !parentProjectId || !production) {
+    return null
+  }
+
+  const options = [production, ...environmentOptions]
 
   const selected: ProjectEnvironmentOption = {
     id: project.$id,
@@ -130,6 +154,13 @@ export function EnvironmentSwitcher({
     navigate({
       to: '/projects/$projectId',
       params: { projectId: nextProjectId },
+    })
+
+  // Environments are created from the parent, on its own wizard route
+  const openCreate = () =>
+    navigate({
+      to: '/projects/$projectId/environments/create',
+      params: { projectId: parentProjectId },
     })
 
   const handleConfirmDelete = () => {
@@ -247,15 +278,26 @@ export function EnvironmentSwitcher({
           })}
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onSelect={() =>
-              openDialogAfterOverlayCloses(() => setCreateOpen(true))
-            }
+            onSelect={() => void openCreate()}
             className="text-[13px]"
           >
             <MenuItemContent icon={Plus}>
               {t('Create environment')}
             </MenuItemContent>
           </DropdownMenuItem>
+          {/* One environment has nothing to be ordered against */}
+          {environmentOptions.length > 1 && (
+            <DropdownMenuItem
+              onSelect={() =>
+                openDialogAfterOverlayCloses(() => setReorderOpen(true))
+              }
+              className="text-[13px]"
+            >
+              <MenuItemContent icon={ArrowUpDown}>
+                {t('Reorder environments')}
+              </MenuItemContent>
+            </DropdownMenuItem>
+          )}
           {/* The parent is managed from its own settings, so rename and delete
               only apply to the environment being shown. */}
           {!selected.isDefault && (
@@ -285,12 +327,14 @@ export function EnvironmentSwitcher({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <CreateEnvironmentDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
+      <ReorderEnvironmentsDialog
+        open={reorderOpen}
+        onOpenChange={setReorderOpen}
         projectId={parentProjectId}
         region={region}
-        onCreated={openProject}
+        prefs={prefs}
+        production={production}
+        environments={environmentOptions}
       />
 
       <RenameEnvironmentDialog

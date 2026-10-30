@@ -3306,8 +3306,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Delete environment': 'מחיקת סביבה',
   'Environment ID': 'מזהה סביבה',
   'Enter environment name': 'הזינו שם סביבה',
-  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
-    'לכל סביבה יש משאבים ומשתמשים משלה, באותו אזור של הפרויקט הזה. השימוש בה מחויב תחת הפרויקט הזה.',
   'Only the name changes. The environment ID stays the same.':
     'רק השם משתנה. מזהה הסביבה נשאר זהה.',
   'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
@@ -3320,6 +3318,41 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to delete environment': 'מחיקת הסביבה נכשלה',
   'Too many environments created for this project in the last hour. Try again later.':
     'נוצרו יותר מדי סביבות לפרויקט הזה בשעה האחרונה. נסו שוב מאוחר יותר.',
+  // Migration resource types copied into an environment
+  'Function variable': 'משתנה פונקציה',
+  'Function variables': 'משתני פונקציה',
+  'Messaging providers': 'ספקי הודעות',
+  'OAuth2 provider': 'ספק OAuth2',
+  'Project variable': 'משתנה פרויקט',
+  'SMTP settings': 'הגדרות SMTP',
+  'Security policies': 'מדיניות אבטחה',
+  'Site deployment': 'פריסת אתר',
+  'Site deployments': 'פריסות אתר',
+  'Site variable': 'משתנה אתר',
+  'Site variables': 'משתני אתר',
+  // Environment switcher order, banner and creation wizard
+  'Reorder environments': 'סידור מחדש של הסביבות',
+  'Drag the environments into the order the switcher should list them. Production always comes first.':
+    'גררו את הסביבות לסדר שבו בורר הסביבות יציג אותן. פרודקשן תמיד ראשון.',
+  'Environment order updated': 'סדר הסביבות עודכן',
+  'Failed to update environment order': 'עדכון סדר הסביבות נכשל',
+  'Project environment': 'סביבת פרויקט',
+  'Switch to production': 'מעבר לפרודקשן',
+  'Changes here do not affect production.':
+    'שינויים כאן לא משפיעים על פרודקשן.',
+  'Name the environment and choose where it starts.':
+    'תנו שם לסביבה ובחרו מאיפה היא מתחילה.',
+  'Pick what to copy from the project.': 'בחרו מה להעתיק מהפרויקט.',
+  'Point your app at the new environment.':
+    'כוונו את האפליקציה שלכם לסביבה החדשה.',
+  'Follow the copy from the project.': 'עקבו אחרי ההעתקה מהפרויקט.',
+  'Open environment': 'פתיחת הסביבה',
+  'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.':
+    'סביבה היא פרויקט בפני עצמו. כוונו אליה אפליקציה באמצעות מזהה הפרויקט הזה; ה-Endpoint של ה-API הוא זה שהפרויקט שלכם כבר משתמש בו.',
+  'API endpoint': 'Endpoint של ה-API',
+  'Starting the copy': 'ההעתקה מתחילה',
+  'You can skip this step. The copy keeps running in the background and shows its progress in the corner of the environment.':
+    'אפשר לדלג על השלב הזה. ההעתקה ממשיכה לרוץ ברקע ומציגה את ההתקדמות שלה בפינת הסביבה.',
   'Send your first message': 'שליחת ההודעה הראשונה שלכם',
   'Reach your users by email, SMS, and push notifications from one place.':
     'הגיעו למשתמשים שלכם באימייל, ב-SMS ובהתראות Push, הכול ממקום אחד.',
@@ -3533,8 +3566,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'What to copy': 'מה להעתיק',
   'Pick what to copy, or start from an empty environment.':
     'בחרו מה להעתיק, או התחילו מסביבה ריקה.',
-  'Environment created. The copy from the project is under way.':
-    'הסביבה נוצרה. ההעתקה מהפרויקט מתבצעת כעת.',
   'Databases, tables, columns and indexes':
     'מסדי נתונים, טבלאות, עמודות ואינדקסים',
   'Rows and documents': 'שורות ומסמכים',
