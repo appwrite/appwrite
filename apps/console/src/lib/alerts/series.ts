@@ -354,10 +354,11 @@ export async function fetchAlertSeries(
   return counter ? rolling(buckets, plan.span) : growth(buckets, plan.span)
 }
 
-/** Each point replaced by how far it rose over the `span` buckets before it; the first `span` are dropped. */
+/** Each point replaced by how far it rose over the `span` buckets before it, never below zero; the first `span` are dropped. */
 export function growth(points: AlertPoint[], span: number): AlertPoint[] {
   return points.slice(span).map((point, index) => ({
     time: point.time,
-    value: point.value - points[index].value,
+    // Clamped like the server's reading: a fall, from deleted users, is no growth.
+    value: Math.max(0, point.value - points[index].value),
   }))
 }

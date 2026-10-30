@@ -61,6 +61,11 @@ describe('alert rule history', () => {
     expect(growth(points, 2).map((point) => point.value)).toEqual([6, 4, 3])
   })
 
+  test('growth never reads below zero, as the server measures it', () => {
+    const points = [9, 7, 4].map((value, index) => ({ time: index, value }))
+    expect(growth(points, 1).map((point) => point.value)).toEqual([0, 0])
+  })
+
   const at = (minutes: number[]) =>
     minutes.map((value, index) => ({ time: index * 60_000, value }))
 
