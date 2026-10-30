@@ -8,8 +8,10 @@ use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -33,27 +35,32 @@ class ScheduleAlerts extends Action
             ->inject('publisherForAlerts')
             ->inject('dbForPlatform')
             ->inject('telemetry')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
-    public function action(AlertPublisher $publisherForAlerts, Database $dbForPlatform, Telemetry $telemetry): void
+    public function action(AlertPublisher $publisherForAlerts, Database $dbForPlatform, Telemetry $telemetry, Group $pools): void
     {
         $source = new Source\Alerts(
             $dbForPlatform,
             fn (array $schedules): array => $this->intervals($schedules, $dbForPlatform),
         );
 
-        $scheduler = new Scheduler(
-            source: $source,
-            syncSeconds: \min(30, $this->interval()),
-            telemetry: $telemetry,
-            onError: function (\Throwable $error): void {
-                Span::init('schedule.alerts.reconcile');
-                Span::current()?->finish(error: $error);
-            },
-        );
+        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForAlerts): void {
+            $scheduler = new Scheduler(
+                source: $source,
+                store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
+                syncSeconds: \min(30, $this->interval()),
+                telemetry: $telemetry,
+                onError: function (\Throwable $error): void {
+                    Span::init('schedule.alerts.reconcile');
+                    Span::current()?->finish(error: $error);
+                },
+            );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForAlerts));
+            $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForAlerts));
+        });
 
         Span::init('schedule.alerts.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
