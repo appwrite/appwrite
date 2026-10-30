@@ -1112,6 +1112,7 @@ jobs:
               done
 
       - name: Load and Start Appwrite
+        id: start
         timeout-minutes: 5
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
@@ -1176,6 +1177,8 @@ jobs:
         run: bin/compat appwrite diff
 
       - name: Run tests
+        # Each suite reports even when the lifecycle diff or another suite failed.
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
         timeout-minutes: 15
         env:
           RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
@@ -1187,6 +1190,7 @@ jobs:
             --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
 
       - name: Run Storage tests
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
         timeout-minutes: 25
         env:
           RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
