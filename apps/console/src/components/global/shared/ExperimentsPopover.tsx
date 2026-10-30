@@ -1,4 +1,9 @@
-import { FlaskConical } from 'lucide-react'
+import {
+  ArrowLeftRight,
+  FlaskConical,
+  Layers,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,22 +18,27 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import {
   countUnseenExperiments,
   EXPERIMENTS,
-  getExperimentIntroducedDate,
   setExperimentEnabled,
+  type Experiment,
 } from '@/lib/experiments'
-import { useLocalizedDateFormat } from '@/lib/i18n/use-localized-date-format'
 import { useT } from '@/lib/i18n/translate'
 import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
 import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
+
+const EXPERIMENT_ICONS = {
+  analytics: ANALYTICS_PRODUCT_ICON,
+  projectEnvironments: Layers,
+  projectTransfers: ArrowLeftRight,
+} as const satisfies Record<Experiment['flag'], LucideIcon>
 
 export function ExperimentsPopover() {
   const t = useT()
   const { features } = useConsoleProfile()
   const { account } = useAuth()
-  const { formatDate } = useLocalizedDateFormat()
   const markSeen = useMarkExperimentsSeen()
   const seenAt = parseExperimentsSeenAt(
     (account as { prefs?: UserPrefs } | null | undefined)?.prefs,
@@ -70,51 +80,47 @@ export function ExperimentsPopover() {
       </Tooltip>
       <PopoverContent
         align="end"
-        className="w-80 p-0"
+        className="w-80 overflow-hidden p-0"
         data-analytics-track="false"
       >
-        <div className="px-4 py-3 text-start">
+        <div className="border-b border-border px-4 py-3 text-start">
           <p className="text-[13px] font-semibold text-foreground">
             {t('Previews')}
           </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-            {t(
-              'Features the quality team can try before they launch. Choices stay in this browser.',
-            )}
+          <p className="mt-0.5 text-[12px] text-muted-foreground">
+            {t('Early access. Saved in this browser.')}
           </p>
         </div>
-        <div className="border-t border-border" />
-        <ul>
-          {EXPERIMENTS.map((experiment) => (
-            <li
-              key={experiment.flag}
-              className="flex items-start gap-3 px-4 py-3"
-            >
-              <div className="min-w-0 flex-1 text-start">
-                <p className="text-[13px] font-medium text-foreground">
-                  {t(experiment.name)}
-                </p>
-                <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  {t(experiment.description)}
-                </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  {t('Introduced')}{' '}
-                  {formatDate(
-                    getExperimentIntroducedDate(experiment),
-                    'MMM d, yyyy',
-                  )}
-                </p>
-              </div>
-              <Switch
-                className="mt-0.5"
-                checked={features[experiment.flag]}
-                onCheckedChange={(checked) =>
-                  setExperimentEnabled(experiment.flag, checked)
-                }
-                aria-label={t(experiment.name)}
-              />
-            </li>
-          ))}
+        <ul className="divide-y divide-border">
+          {EXPERIMENTS.map((experiment) => {
+            const Icon = EXPERIMENT_ICONS[experiment.flag]
+            return (
+              <li
+                key={experiment.flag}
+                className="flex items-start gap-3 px-4 py-3"
+              >
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  <Icon className="h-4 w-4" aria-hidden />
+                </div>
+                <div className="min-w-0 flex-1 text-start">
+                  <p className="text-[13px] font-medium text-foreground">
+                    {t(experiment.name)}
+                  </p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+                    {t(experiment.description)}
+                  </p>
+                </div>
+                <Switch
+                  className="mt-0.5"
+                  checked={features[experiment.flag]}
+                  onCheckedChange={(checked) =>
+                    setExperimentEnabled(experiment.flag, checked)
+                  }
+                  aria-label={t(experiment.name)}
+                />
+              </li>
+            )
+          })}
         </ul>
       </PopoverContent>
     </Popover>

@@ -1353,18 +1353,17 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
   Previews: 'プレビュー',
-  'Features the quality team can try before they launch. Choices stay in this browser.':
-    '公開前に品質チームが試せる機能です。選択内容はこのブラウザに保存されます。',
+  'Early access. Saved in this browser.':
+    '早期アクセスです。このブラウザに保存されます。',
   'Appwrite Analytics': 'Appwrite Analytics',
-  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
-    'コンソールにアナリティクスを表示し、プロジェクト内の訪問者、ページ、参照元、キャンペーン、カスタムイベントを計測します。',
+  'Visitor, page, and campaign tracking.':
+    '訪問者、ページ、キャンペーンを計測します。',
   'Project environments': 'プロジェクト環境',
-  'Switch between environments of a project, such as staging and production, and create one as a copy of the project.':
-    'ステージングや本番など、プロジェクトの環境を切り替え、プロジェクトのコピーとして環境を作成します。',
+  'Switch or clone staging and production.':
+    'ステージングと本番を切り替え、複製します。',
   'Project transfers': 'プロジェクトの転送',
-  'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.':
-    '自分の組織へ移動する代わりに、別の組織が受け取るリンクでプロジェクトを転送します。',
-  Introduced: '追加日',
+  'Move a project to another organization.':
+    'プロジェクトを別の組織へ移します。',
   'Repository not available': 'リポジトリを利用できません',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',

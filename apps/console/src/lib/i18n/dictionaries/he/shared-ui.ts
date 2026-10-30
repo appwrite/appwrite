@@ -1391,18 +1391,17 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
   Previews: 'תצוגות מקדימות',
-  'Features the quality team can try before they launch. Choices stay in this browser.':
-    "פיצ'רים שצוות האיכות יכול לנסות לפני ההשקה. הבחירות נשמרות בדפדפן הזה.",
+  'Early access. Saved in this browser.':
+    'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',
-  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
-    'הציגו את אנליטיקה בקונסולה ועקבו אחרי מבקרים, עמודים, מקורות, קמפיינים ואירועים מותאמים בפרויקט.',
+  'Visitor, page, and campaign tracking.':
+    'מעקב אחרי מבקרים, עמודים וקמפיינים.',
   'Project environments': 'סביבות פרויקט',
-  'Switch between environments of a project, such as staging and production, and create one as a copy of the project.':
-    'עברו בין הסביבות של פרויקט, כמו staging ו-production, וצרו סביבה כעותק של הפרויקט.',
+  'Switch or clone staging and production.':
+    'מעבר או שכפול בין staging לפרודקשן.',
   'Project transfers': 'העברות פרויקטים',
-  'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.':
-    'העבירו פרויקט באמצעות קישור שארגון אחר מממש, במקום להעביר אותו לאחד מהארגונים שלכם.',
-  Introduced: 'נוסף',
+  'Move a project to another organization.':
+    'העברת פרויקט לארגון אחר.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
