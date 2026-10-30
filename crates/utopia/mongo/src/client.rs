@@ -1,17 +1,20 @@
 //! [`Client`]: one MongoDB deployment, reached through the official driver.
 
+use std::borrow::Cow;
 use std::future::Future;
 use std::sync::{Arc, Mutex as SyncMutex, MutexGuard};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use bson::spec::BinarySubtype;
-use bson::{Binary, Bson, Document, doc};
+use bson::spec::{BinarySubtype, ElementType};
+use bson::{Binary, Bson, Document, RawDocument, RawDocumentBuf, doc};
+use futures_util::StreamExt;
 use mongodb::ClientSession;
 use mongodb::error::ErrorKind;
 use mongodb::options::{
     AuthMechanism, ClientOptions, Credential, ReadConcern as DriverReadConcern, ServerAddress, SessionOptions, Tls,
     TlsOptions, TransactionOptions,
 };
+use mongodb::raw_batch_cursor::{RawBatch, RawBatchCursor, SessionRawBatchCursor};
 use utopia_async::sync::Mutex;
 
 use crate::error::{Error, Result};
@@ -356,6 +359,19 @@ struct Link {
     cluster_time: Option<Bson>,
     operation_time: Option<Bson>,
     replica_set: Option<bool>,
+    /// The open cursors whose replies hold a string that is not UTF-8, by
+    /// id, for the caller's `getMore` (see [`Client::cursor`]).
+    cursors: Vec<(i64, Held)>,
+}
+
+/// The most cursors a client holds (see [`Link::cursors`]): past it, the
+/// oldest is closed.
+const HELD_CURSORS: usize = 64;
+
+/// A cursor the driver reads raw, with the session it was opened in.
+enum Held {
+    Implicit(RawBatchCursor),
+    Session(SessionRawBatchCursor, Arc<Mutex<ClientSession>>),
 }
 
 impl Link {
@@ -370,6 +386,7 @@ impl Link {
         self.cluster_time = None;
         self.operation_time = None;
         self.replica_set = None;
+        self.cursors.clear();
     }
 }
 
@@ -383,9 +400,9 @@ pub struct Client {
 }
 
 /// Whether PHP's extension encodes `command`: a key holding a null byte is
-/// an `UnexpectedValueException` naming the key up to it, a string that is
-/// not UTF-8 (see [`string`]) one naming its field path from the command's
-/// root and quoting its bytes. Since 2.5.4 the extension stops at the first
+/// an `UnexpectedValueException` naming the key up to it, a string libbson
+/// does not take (see [`string`] and [`encodes`]) one naming its field path
+/// from the command's root and quoting its bytes. Since 2.5.4 the extension stops at the first
 /// of these, in document order (2.5.2 went on and reported the last).
 fn encodable(command: &Document) -> Result<()> {
     fn walk(document: &Document, path: &mut Vec<String>) -> Option<Vec<u8>> {
@@ -414,7 +431,7 @@ fn encodable(command: &Document) -> Result<()> {
                 path.pop();
                 refused
             }),
-            Bson::Binary(binary) => unencoded(binary).map(|bytes| {
+            Bson::Binary(binary) => unencoded(binary).filter(|bytes| !encodes(bytes)).map(|bytes| {
                 let mut message =
                     format!("Detected invalid UTF-8 for field path \"{}\": ", path.join(".")).into_bytes();
                 // The message is formatted with `%s`: the string up to its first null byte.
@@ -428,6 +445,124 @@ fn encodable(command: &Document) -> Result<()> {
         None => Ok(()),
         Some(message) => Err(Error::unexpected_value(message)),
     }
+}
+
+/// Whether libbson takes `bytes` as a BSON string, as PHP's extension
+/// encodes one (`bson_utf8_validate()` with null bytes allowed): UTF-8, in
+/// which `C0 80`, the overlong two-byte form of NUL, also passes. No other
+/// overlong form, no surrogate, nothing past U+10FFFF and no truncated
+/// sequence does.
+pub fn encodes(bytes: &[u8]) -> bool {
+    let mut rest = bytes;
+    loop {
+        match std::str::from_utf8(rest) {
+            Ok(_) => return true,
+            Err(e) => {
+                let at = e.valid_up_to();
+                if rest.get(at..at + 2) != Some(&[0xc0, 0x80][..]) {
+                    return false;
+                }
+                rest = &rest[at + 2..];
+            }
+        }
+    }
+}
+
+/// `command` as the BSON PHP's extension sends: the strings [`string`]
+/// kept as binaries (those libbson takes, see [`encodes`]) written as the
+/// string elements they are, which a Rust string cannot hold.
+fn raw(command: &Document) -> bson::error::Result<RawDocumentBuf> {
+    fn marked(value: &Bson) -> bool {
+        match value {
+            Bson::Document(d) => d.values().any(marked),
+            Bson::Array(items) => items.iter().any(marked),
+            Bson::Binary(binary) => unencoded(binary).is_some(),
+            _ => false,
+        }
+    }
+    fn header(out: &mut Vec<u8>, kind: ElementType, key: &str) {
+        out.push(kind as u8);
+        out.extend_from_slice(key.as_bytes());
+        out.push(0);
+    }
+    fn write<'a>(
+        entries: &mut dyn Iterator<Item = (Cow<'a, str>, &'a Bson)>,
+        out: &mut Vec<u8>,
+    ) -> bson::error::Result<()> {
+        let start = out.len();
+        out.extend_from_slice(&[0; 4]);
+        for (key, value) in entries {
+            let key = key.as_ref();
+            match value {
+                Bson::Document(d) => {
+                    header(out, ElementType::EmbeddedDocument, key);
+                    write(&mut d.iter().map(|(k, v)| (Cow::Borrowed(k.as_str()), v)), out)?;
+                }
+                Bson::Array(items) => {
+                    header(out, ElementType::Array, key);
+                    write(&mut items.iter().enumerate().map(|(i, v)| (Cow::Owned(i.to_string()), v)), out)?;
+                }
+                Bson::Binary(binary) if let Some(bytes) = unencoded(binary) => {
+                    header(out, ElementType::String, key);
+                    out.extend_from_slice(&(bytes.len() as i32 + 1).to_le_bytes());
+                    out.extend_from_slice(bytes);
+                    out.push(0);
+                }
+                other => {
+                    let mut single = Document::new();
+                    single.insert(key, other.clone());
+                    let bytes = single.to_vec()?;
+                    out.extend_from_slice(&bytes[4..bytes.len() - 1]);
+                }
+            }
+        }
+        out.push(0);
+        let length = (out.len() - start) as i32;
+        out[start..start + 4].copy_from_slice(&length.to_le_bytes());
+        Ok(())
+    }
+    if !command.values().any(marked) {
+        return RawDocumentBuf::try_from(command);
+    }
+    let mut out = Vec::new();
+    write(&mut command.iter().map(|(k, v)| (Cow::Borrowed(k.as_str()), v)), &mut out)?;
+    RawDocumentBuf::from_bytes(out)
+}
+
+/// A reply as a document, a string that is not UTF-8 (one libbson took, see
+/// [`encodes`]) read as [`string`] gives it, as PHP reads it back.
+fn decode(reply: &RawDocument) -> bson::error::Result<Document> {
+    elements(reply).map(|fields| fields.into_iter().collect())
+}
+
+/// A raw document's fields, as [`decode`] reads them.
+fn elements(document: &RawDocument) -> bson::error::Result<Vec<(String, Bson)>> {
+    let bytes = document.as_bytes();
+    let mut offset = 4;
+    let mut out = Vec::new();
+    for element in document.iter_elements() {
+        let element = element?;
+        let key = element.key().as_str();
+        let start = offset + 1 + key.len() + 1;
+        offset = start + element.size();
+        let slice = &bytes[start..offset];
+        let value = match element.element_type() {
+            ElementType::String => string(&slice[4..slice.len() - 1]),
+            ElementType::EmbeddedDocument => Bson::Document(decode(RawDocument::from_bytes(slice)?)?),
+            ElementType::Array => {
+                Bson::Array(elements(RawDocument::from_bytes(slice)?)?.into_iter().map(|(_, v)| v).collect())
+            }
+            _ => Bson::try_from(element)?,
+        };
+        out.push((key.to_owned(), value));
+    }
+    Ok(out)
+}
+
+/// Whether the driver failed to read a reply as a document for a string in
+/// it that is not UTF-8.
+fn unreadable(e: &mongodb::error::Error) -> bool {
+    matches!(*e.kind, ErrorKind::Bson(ref b) if matches!(b.kind, bson::error::ErrorKind::Utf8Encoding { .. }))
 }
 
 fn now() -> i64 {
@@ -757,17 +892,39 @@ impl Client {
         encodable(&command)?;
         let database = driver.database(db.unwrap_or(&self.config.database));
         let timeout = Duration::from_secs_f64(self.config.timeout);
-        let outcome = match &handle {
-            Some(handle) => {
-                let mut guard = handle.lock().await;
-                let run = database.run_command(command).session(&mut *guard);
-                utopia_async::timeout(timeout, run).await
+        let name = command.keys().next().cloned().unwrap_or_default();
+        let held = match command.get(command::GET_MORE) {
+            Some(id) if name == command::GET_MORE => {
+                let id = integer(id);
+                let mut link = self.link();
+                link.cursors.iter().position(|(held, _)| *held == id).map(|at| link.cursors.remove(at).1)
             }
-            None => utopia_async::timeout(timeout, database.run_command(command)).await,
+            _ => None,
+        };
+        let outcome = match held {
+            Some(held) => utopia_async::timeout(timeout, self.more(held)).await,
+            None => {
+                let command = raw(&command).map_err(|e| Error::exception(e.to_string(), 0))?;
+                let retry = matches!(name.as_str(), command::FIND | command::AGGREGATE).then(|| command.clone());
+                let outcome = match &handle {
+                    Some(handle) => {
+                        let mut guard = handle.lock().await;
+                        let run = database.run_raw_command(command).session(&mut *guard);
+                        utopia_async::timeout(timeout, run).await
+                    }
+                    None => utopia_async::timeout(timeout, database.run_raw_command(command)).await,
+                };
+                match (outcome, retry) {
+                    (Ok(Err(e)), Some(command)) if unreadable(&e) => {
+                        utopia_async::timeout(timeout, self.cursor(&database, command, handle.as_ref())).await
+                    }
+                    (outcome, _) => outcome.map(|reply| reply.map_err(|e| self.driver_error(e))),
+                }
+            }
         };
         let reply = match outcome {
             Ok(Ok(reply)) => reply,
-            Ok(Err(e)) => return Err(self.driver_error(e)),
+            Ok(Err(e)) => return Err(e),
             Err(_) => {
                 self.invalidate(false);
                 return Err(Error::exception("Receive timeout: no data received within reasonable time", 11601));
@@ -780,6 +937,74 @@ impl Client {
             tracked.last_use = now();
         }
         self.parse_response(reply)
+    }
+
+    /// Runs the cursor command `command` again for a reply holding a string
+    /// that is not UTF-8 (one libbson took, see [`encodes`]), which the
+    /// driver reads only through a raw cursor: its first reply, as
+    /// [`decode`] reads it. The cursor stays open for the caller's
+    /// `getMore` (see [`Self::more`]).
+    async fn cursor(
+        &self,
+        database: &mongodb::Database,
+        command: RawDocumentBuf,
+        handle: Option<&Arc<Mutex<ClientSession>>>,
+    ) -> Result<Document> {
+        let run = database.run_raw_cursor_command(command);
+        match handle {
+            Some(handle) => {
+                let mut guard = handle.lock().await;
+                let mut cursor = run.session(&mut *guard).batch().await.map_err(|e| self.driver_error(e))?;
+                let batch = cursor.stream(&mut guard).next().await;
+                drop(guard);
+                self.batch(batch, Held::Session(cursor, handle.clone()))
+            }
+            None => {
+                let mut cursor = run.batch().await.map_err(|e| self.driver_error(e))?;
+                let batch = cursor.next().await;
+                self.batch(batch, Held::Implicit(cursor))
+            }
+        }
+    }
+
+    /// The next reply of a cursor [`Self::cursor`] opened: the server's
+    /// `getMore` reply, in the batch size the cursor was opened with.
+    async fn more(&self, held: Held) -> Result<Document> {
+        match held {
+            Held::Implicit(mut cursor) => {
+                let batch = cursor.next().await;
+                self.batch(batch, Held::Implicit(cursor))
+            }
+            Held::Session(mut cursor, handle) => {
+                let batch = {
+                    let mut guard = handle.lock().await;
+                    cursor.stream(&mut guard).next().await
+                };
+                self.batch(batch, Held::Session(cursor, handle))
+            }
+        }
+    }
+
+    /// A cursor's reply as a document; the cursor is kept while the server
+    /// holds it open.
+    fn batch(&self, batch: Option<mongodb::error::Result<RawBatch>>, held: Held) -> Result<Document> {
+        let batch = match batch {
+            Some(batch) => batch.map_err(|e| self.driver_error(e))?,
+            None => return Err(Error::exception("Invalid response: cursor is exhausted", 0)),
+        };
+        let reply = decode(batch.as_raw_document()).map_err(|e| Error::exception(e.to_string(), 0))?;
+        let id = match reply.get("cursor") {
+            Some(Bson::Document(cursor)) => cursor.get("id").map_or(0, integer),
+            _ => 0,
+        };
+        if id != 0 {
+            let mut link = self.link();
+            if link.cursors.len() >= HELD_CURSORS {
+                link.cursors.remove(0);
+            }
+            link.cursors.push((id, held));
+        }
+        Ok(reply)
     }
 
     /// A driver error as PHP reports the same failure.
@@ -1848,6 +2073,60 @@ mod tests {
         let nul = doc! { "a": { "k": string(b"ab\xffcd\0ef") } };
         assert_eq!(refused(nul).1, b"Detected invalid UTF-8 for field path \"a.k\": ab\xffcd");
         assert!(encodable(&doc! { "a": string("é".as_bytes()) }).is_ok());
+        // `C0 80` passes libbson; the first string it refuses is reported.
+        let overlong = doc! { "documents": [{ "a": string(b"\x14\xc0\x80"), "b": string(b"\xc0\x81") }] };
+        assert_eq!(refused(overlong).1, b"Detected invalid UTF-8 for field path \"documents.0.b\": \xc0\x81");
+    }
+
+    /// The strings libbson takes, as PHP 2.5.5 encodes them: UTF-8 and the
+    /// overlong NUL `C0 80`, no other overlong form or surrogate.
+    #[test]
+    fn libbson_strings() {
+        let taken: [&[u8]; 6] = [b"", b"a\0b", b"\xc0\x80", b"a\xc0\x80b\xc0\x80", b"\xc0\x80\0", b"\xe0\xa0\x80"];
+        for bytes in taken {
+            assert!(encodes(bytes), "{bytes:x?}");
+        }
+        let refused: [&[u8]; 12] = [
+            b"\xc0",
+            b"\xc0\x81",
+            b"\xc1\x80",
+            b"\xe0\x80\x80",
+            b"\xe0\x9f\xbf",
+            b"\xf0\x80\x80\x80",
+            b"\xf0\x8f\xbf\xbf",
+            b"\xed\xa0\x80",
+            b"\xf4\x90\x80\x80",
+            b"\xf8\x88\x80\x80\x80",
+            b"\xff",
+            b"\xc0\x80\xe2\x82",
+        ];
+        for bytes in refused {
+            assert!(!encodes(bytes), "{bytes:x?}");
+        }
+    }
+
+    /// A string libbson takes goes out as a string element and reads back
+    /// as the bytes it was.
+    #[test]
+    fn overlong_nul_round_trips() {
+        let command = doc! { "insert": "c", "documents": [{ "_id": 1, "t": string(b"\x14\xc0\x80"), "u": ["x", string(b"\xc0\x80")] }] };
+        let encoded = raw(&command).expect("raw");
+        let bytes = encoded.as_bytes();
+        let element = b"\x02t\0\x04\0\0\0\x14\xc0\x80\0";
+        assert!(bytes.windows(element.len()).any(|w| w == element));
+        assert!(bson::Document::try_from(encoded.as_ref()).is_err());
+        let decoded = decode(encoded.as_ref()).expect("decode");
+        let Some(Bson::Array(documents)) = decoded.get("documents") else { panic!("documents") };
+        let Some(Bson::Document(document)) = documents.first() else { panic!("document") };
+        let Some(Bson::Binary(t)) = document.get("t") else { panic!("t") };
+        assert_eq!(unencoded(t), Some(&b"\x14\xc0\x80"[..]));
+        let Some(Bson::Array(u)) = document.get("u") else { panic!("u") };
+        assert_eq!(u[0], Bson::String("x".into()));
+        assert!(matches!(&u[1], Bson::Binary(b) if unencoded(b) == Some(&b"\xc0\x80"[..])));
+        assert_eq!(document.get("_id"), Some(&Bson::Int32(1)));
+        // Without such a string, the command is BSON's own encoding.
+        let plain = doc! { "find": "c", "filter": { "a": 1 } };
+        assert_eq!(raw(&plain).expect("raw").as_bytes(), plain.to_vec().expect("bytes"));
     }
 
     #[test]

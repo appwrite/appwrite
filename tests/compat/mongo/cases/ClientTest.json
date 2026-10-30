@@ -1499,6 +1499,370 @@
       ]
     },
     {
+      "name": "strings libbson takes that are not UTF-8",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "document": {
+              "_id": 1,
+              "t": {
+                "$bytes": "FMCA"
+              },
+              "list": [
+                {
+                  "$bytes": "YcCAYsCA"
+                },
+                {
+                  "$bytes": "wIAA"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "_id": 1,
+            "t": {
+              "$bytes": "FMCA"
+            },
+            "list": [
+              {
+                "$bytes": "YcCAYsCA"
+              },
+              {
+                "$bytes": "wIAA"
+              }
+            ]
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "documents": [
+              {
+                "_id": 2,
+                "t": {
+                  "$bytes": "wIA="
+                }
+              },
+              {
+                "_id": 3,
+                "t": "plain"
+              },
+              {
+                "_id": 4,
+                "t": {
+                  "$bytes": "eMCA"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "_id": 2,
+              "t": {
+                "$bytes": "wIA="
+              }
+            },
+            {
+              "_id": 3,
+              "t": "plain"
+            },
+            {
+              "_id": 4,
+              "t": {
+                "$bytes": "eMCA"
+              }
+            }
+          ]
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "document": {
+              "_id": 5,
+              "t": {
+                "$bytes": "wIE="
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "MongoDB\\Driver\\Exception\\UnexpectedValueException",
+              "message": {
+                "$bytes": "RGV0ZWN0ZWQgaW52YWxpZCBVVEYtOCBmb3IgZmllbGQgcGF0aCAiZG9jdW1lbnRzLjAudCI6IMCB"
+              }
+            }
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "document": {
+              "_id": 6,
+              "a": {
+                "$bytes": "wIA="
+              },
+              "b": {
+                "$bytes": "7aCA"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "MongoDB\\Driver\\Exception\\UnexpectedValueException",
+              "message": {
+                "$bytes": "RGV0ZWN0ZWQgaW52YWxpZCBVVEYtOCBmb3IgZmllbGQgcGF0aCAiZG9jdW1lbnRzLjAuYiI6IO2ggA=="
+              }
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "filters": {
+              "t": {
+                "$bytes": "FMCA"
+              }
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 1,
+                        "t": {
+                          "$bytes": "FMCA"
+                        },
+                        "list": [
+                          {
+                            "$bytes": "YcCAYsCA"
+                          },
+                          {
+                            "$bytes": "wIAA"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.s"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "options": {
+              "batchSize": 1,
+              "sort": {
+                "_id": 1
+              }
+            }
+          },
+          "bind": "first",
+          "mask": {
+            "paths": [
+              "/$object/cursor/$object/id"
+            ],
+            "reason": "cursor ids are the server's"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 1,
+                        "t": {
+                          "$bytes": "FMCA"
+                        },
+                        "list": [
+                          {
+                            "$bytes": "YcCAYsCA"
+                          },
+                          {
+                            "$bytes": "wIAA"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "id": "<masked>",
+                  "ns": "${ns}.s"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_more",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "cursor_id": {
+              "$ref": "first",
+              "path": "/$object/cursor/$object/id"
+            },
+            "collection": "s",
+            "batch_size": 10
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "nextBatch": [
+                    {
+                      "$object": {
+                        "_id": 2,
+                        "t": {
+                          "$bytes": "wIA="
+                        }
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 3,
+                        "t": "plain"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 4,
+                        "t": {
+                          "$bytes": "eMCA"
+                        }
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.s"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.aggregate",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "pipeline": [
+              {
+                "$match": {
+                  "_id": {
+                    "$in": [
+                      2,
+                      4
+                    ]
+                  }
+                }
+              },
+              {
+                "$sort": {
+                  "_id": -1
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 4,
+                        "t": {
+                          "$bytes": "eMCA"
+                        }
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 2,
+                        "t": {
+                          "$bytes": "wIA="
+                        }
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.s"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "s",
+            "filters": {
+              "t": {
+                "$bytes": "wIA="
+              }
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
       "name": "upserts with multi and options",
       "steps": [
         {

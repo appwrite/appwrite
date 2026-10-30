@@ -1006,7 +1006,7 @@
     {
       "symbol": "Utopia\\Mongo\\Client::query",
       "php": "ClientTest drives Swoole socket doubles and private state by reflection: partial and failed writes replayed on a fresh socket, impossible or overlong frame lengths, OP_REPLY frames, invalid BSON, receive deadlines and the connect budget split between the dial and SCRAM, primary-change errors closing the socket and keeping sessions.",
-      "reason": "The native driver owns the wire protocol, its connection pool and their failures; what a caller sees is ported (ClientTest.json): a command error or a write error keeps the connection, the timeouts are checked, a client that is not connected refuses commands with UnsentException, an unreachable server is an UnsentException. A string that is not UTF-8 cannot be a BSON string in Rust (PHP's extension rejects it when encoding, with MongoDB\\Driver\\Exception\\UnexpectedValueException)."
+      "reason": "The native driver owns the wire protocol, its connection pool and their failures; what a caller sees is ported (ClientTest.json): a command error or a write error keeps the connection, the timeouts are checked, a client that is not connected refuses commands with UnsentException, an unreachable server is an UnsentException. A string that is not UTF-8 cannot be a Rust string: client::string() carries it as a marked binary, sent as the raw string element when libbson takes it (UTF-8 and the overlong NUL C0 80) and refused as PHP's extension refuses the rest (MongoDB\\Driver\\Exception\\UnexpectedValueException); replies holding one are read through a raw cursor (find, aggregate and their getMore, in the cursor's own batch size)."
     },
     {
       "symbol": "Utopia\\Mongo\\Client::startSession",

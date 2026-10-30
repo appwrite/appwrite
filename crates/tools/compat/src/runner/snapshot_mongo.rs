@@ -26,8 +26,11 @@
 //! The runner is synchronous and may itself run inside a runtime, so
 //! each call runs on its own thread with its own runtime.
 
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as BASE64;
 use futures_util::TryStreamExt;
-use mongodb::bson::{Bson, Document, doc};
+use mongodb::bson::spec::ElementType;
+use mongodb::bson::{Bson, Document, RawDocument, RawDocumentBuf, doc};
 use mongodb::options::{ClientOptions, Credential, ServerAddress};
 use serde_json::{Map, Value};
 
@@ -111,6 +114,41 @@ fn fields(document: Document) -> Value {
     Value::Object(fields.into_iter().map(|(k, v)| (k, json(v))).collect())
 }
 
+/// A stored document, a string that is not UTF-8 (`C0 80`, the overlong
+/// NUL libbson lets PHP store) as `{"$bytes": "<base64>"}`, which a BSON
+/// string in Rust cannot hold.
+fn stored(document: &RawDocument) -> Result<Document, String> {
+    elements(document).map(|fields| fields.into_iter().collect())
+}
+
+fn elements(document: &RawDocument) -> Result<Vec<(String, Bson)>, String> {
+    let bytes = document.as_bytes();
+    let mut offset = 4;
+    let mut out = Vec::new();
+    for element in document.iter_elements() {
+        let element = element.map_err(|e| e.to_string())?;
+        let key = element.key().as_str();
+        let start = offset + 1 + key.len() + 1;
+        offset = start + element.size();
+        let slice = &bytes[start..offset];
+        let inner = || RawDocument::from_bytes(slice).map_err(|e| e.to_string());
+        let value = match element.element_type() {
+            ElementType::String => {
+                let text = &slice[4..slice.len() - 1];
+                match std::str::from_utf8(text) {
+                    Ok(text) => Bson::String(text.to_owned()),
+                    Err(_) => Bson::Document(doc! { "$bytes": BASE64.encode(text) }),
+                }
+            }
+            ElementType::EmbeddedDocument => Bson::Document(stored(inner()?)?),
+            ElementType::Array => Bson::Array(elements(inner()?)?.into_iter().map(|(_, v)| v).collect()),
+            _ => Bson::try_from(element).map_err(|e| e.to_string())?,
+        };
+        out.push((key.to_owned(), value));
+    }
+    Ok(out)
+}
+
 pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {
     let ns = ns.to_owned();
     with_client(url, move |client| {
@@ -128,7 +166,7 @@ pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {
                 collections.sort();
                 let mut tables = Vec::new();
                 for collection in collections {
-                    let coll = db.collection::<Document>(&collection);
+                    let coll = db.collection::<RawDocumentBuf>(&collection);
                     let mut indexes: Vec<(String, Value)> = Vec::new();
                     let mut cursor = db.run_cursor_command(doc! { "listIndexes": &collection }).await.map_err(err)?;
                     while let Some(mut spec) = cursor.try_next().await.map_err(err)? {
@@ -137,7 +175,7 @@ pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {
                         indexes.push((name, json(Bson::Document(spec))));
                     }
                     indexes.sort_by(|a, b| a.0.cmp(&b.0));
-                    let documents: Vec<Document> = coll
+                    let documents: Vec<RawDocumentBuf> = coll
                         .find(doc! {})
                         .sort(doc! { "_id": 1 })
                         .await
@@ -147,7 +185,8 @@ pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {
                         .map_err(err)?;
                     let mut table = Map::new();
                     table.insert("indexes".into(), Value::Object(indexes.into_iter().collect()));
-                    table.insert("documents".into(), Value::Array(documents.into_iter().map(fields).collect()));
+                    let documents = documents.iter().map(|d| stored(d).map(fields)).collect::<Result<_, _>>()?;
+                    table.insert("documents".into(), Value::Array(documents));
                     let mut entry = Map::new();
                     entry.insert("name".into(), Value::String(collection));
                     entry.extend(table);

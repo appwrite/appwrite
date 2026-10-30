@@ -197,7 +197,8 @@ pub fn decode(value: &Json) -> Result<Bson, Fault> {
                     }));
                 }
                 if map.contains_key("$bytes") {
-                    return Err(Fault::new("a binary string cannot become a BSON string"));
+                    let bytes = crate::adapter::bytes(value).ok_or_else(|| Fault::new("invalid $bytes"))?;
+                    return Ok(utopia_mongo::client::string(&bytes));
                 }
             }
             Bson::Document(fields_of(map)?)
@@ -231,6 +232,7 @@ pub fn encode(value: &Bson) -> Json {
         Bson::String(s) => Json::String(s.clone()),
         Bson::Array(items) => Json::Array(items.iter().map(encode).collect()),
         Bson::Document(d) => encode_document(d),
+        Bson::Binary(b) if let Some(bytes) = utopia_mongo::client::unencoded(b) => bytes_json(bytes),
         other => json!({ "$bson": other.clone().into_canonical_extjson() }),
     }
 }
