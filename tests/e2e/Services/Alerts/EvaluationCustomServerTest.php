@@ -1359,6 +1359,20 @@ final class EvaluationCustomServerTest extends Scope
             }
         };
         $gauges = $sweep->sweep($project, $dbForProject, $platform, $getDatabasesDB);
+        // TODO: remove probe
+        $probe = [];
+        foreach ($dbForProject->find('databases', [Query::limit(100)]) as $database) {
+            try {
+                $dbForDatabases = $getDatabasesDB($database);
+                foreach ($dbForProject->find('database_' . $database->getSequence(), [Query::limit(100)]) as $collection) {
+                    $data = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                    $probe[] = $database->getAttribute('type') . ' ' . $dbForDatabases->count($data) . ' ' . $dbForDatabases->getSizeOfCollection($data);
+                }
+            } catch (\Throwable $th) {
+                $probe[] = $database->getAttribute('type') . ' ' . $database->getId() . ' ' . \get_class($th) . ': ' . $th->getMessage();
+            }
+        }
+        \fwrite(STDERR, 'SWEEP PROBE ' . \json_encode($probe) . PHP_EOL);
 
         $sweep->action(
             new Message(['pid' => \uniqid(), 'queue' => 'stats-resources', 'timestamp' => \time(), 'payload' => (new StatsResourcesMessage($isolated, $gauges))->toArray()]),
