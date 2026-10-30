@@ -441,7 +441,6 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Project/",
-        "app/controllers/api/project.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "packages/smtp/"
