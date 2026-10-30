@@ -3330,12 +3330,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Site variable': 'משתנה אתר',
   'Site variables': 'משתני אתר',
   // Environment switcher order, banner and creation wizard
-  'The project preferences have not loaded yet.':
-    'העדפות הפרויקט עדיין לא נטענו.',
-  'Reorder environments': 'סידור מחדש של הסביבות',
-  'Drag the environments into the order the switcher should list them. Production always comes first.':
-    'גררו את הסביבות לסדר שבו בורר הסביבות יציג אותן. פרודקשן תמיד ראשון.',
-  'Environment order updated': 'סדר הסביבות עודכן',
+  'The copy from the project is under way. Its progress shows in the corner of the environment.':
+    'ההעתקה מהפרויקט בעיצומה. ההתקדמות שלה מוצגת בפינת הסביבה.',
   'Failed to update environment order': 'עדכון סדר הסביבות נכשל',
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
@@ -3346,14 +3342,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Pick what to copy from the project.': 'בחרו מה להעתיק מהפרויקט.',
   'Point your app at the new environment.':
     'כוונו את האפליקציה שלכם לסביבה החדשה.',
-  'Follow the copy from the project.': 'עקבו אחרי ההעתקה מהפרויקט.',
   'Open environment': 'פתיחת הסביבה',
   'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.':
     'סביבה היא פרויקט בפני עצמו. כוונו אליה אפליקציה באמצעות מזהה הפרויקט הזה; ה-Endpoint של ה-API הוא זה שהפרויקט שלכם כבר משתמש בו.',
   'API endpoint': 'Endpoint של ה-API',
-  'Starting the copy': 'ההעתקה מתחילה',
-  'You can skip this step. The copy keeps running in the background and shows its progress in the corner of the environment.':
-    'אפשר לדלג על השלב הזה. ההעתקה ממשיכה לרוץ ברקע ומציגה את ההתקדמות שלה בפינת הסביבה.',
   'Send your first message': 'שליחת ההודעה הראשונה שלכם',
   'Reach your users by email, SMS, and push notifications from one place.':
     'הגיעו למשתמשים שלכם באימייל, ב-SMS ובהתראות Push, הכול ממקום אחד.',

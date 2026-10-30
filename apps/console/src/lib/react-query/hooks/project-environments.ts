@@ -231,21 +231,19 @@ export function useDeleteProjectEnvironment(
   })
 }
 
-/** The copy is still being worked on by the migrations worker */
-const IN_PROGRESS_COPY_STATUSES = ['pending', 'processing']
-
 /**
- * Hook following the copy of a freshly created environment from its project,
- * for the creation wizard: the newest Appwrite to Appwrite migration of the
- * environment, polled while it runs. Realtime cannot carry it, as the wizard is
- * on the parent project and the migration announces itself on the environment.
+ * Hook finding the copy of a freshly created environment from its project, so
+ * the creation wizard can hand it to the environment's progress card: the
+ * newest Appwrite to Appwrite migration of the environment, polled until the
+ * environment lists it. Realtime cannot carry it, as the wizard is on the
+ * parent project and the migration announces itself on the environment.
  *
  * @param environmentId - The environment, once created
  * @param region - The environment's region, which the SDK cannot look up yet for a project it has not loaded
- * @param enabled - False until there is a copy to follow
+ * @param enabled - False until there is a copy to find
  * @returns The migration, or null until the environment lists it
  */
-export function useEnvironmentCopyProgress(
+export function useEnvironmentCopyMigration(
   environmentId: string | null | undefined,
   region: string | undefined,
   enabled = true,
@@ -256,7 +254,7 @@ export function useEnvironmentCopyProgress(
       'project',
       environmentId,
       'environment-copy',
-      'progress',
+      'created',
       region,
     ],
     queryFn: async () => {
@@ -267,12 +265,7 @@ export function useEnvironmentCopyProgress(
       return { migration: result.migrations[0] ?? null }
     },
     enabled: !!environmentId && enabled,
-    refetchInterval: (query) => {
-      const status = query.state.data?.migration?.status
-      return !status || IN_PROGRESS_COPY_STATUSES.includes(status)
-        ? 2000
-        : false
-    },
+    refetchInterval: (query) => (query.state.data?.migration ? false : 2000),
     refetchOnWindowFocus: false,
     retry: false,
   })

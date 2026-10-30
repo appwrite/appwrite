@@ -1,8 +1,7 @@
 /**
  * Creates an environment of a project in steps: its details, what to copy when
- * it starts as a copy, how an app reaches it once created, and the copy as it
- * runs. The copy can be left at any point; it continues on the environment,
- * where the progress card picks it up. Cloud only, behind the
+ * it starts as a copy, and how an app reaches it once created. A copy runs on
+ * the environment, where the progress card follows it. Cloud only, behind the
  * projectEnvironments feature like the switcher that opens this.
  */
 
@@ -17,7 +16,7 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   PROJECT_NAME_MAX_LENGTH,
   useCreateProjectEnvironment,
-  useEnvironmentCopyProgress,
+  useEnvironmentCopyMigration,
   useProject,
 } from '@/lib/react-query/hooks'
 import { isValidProjectId } from '@/lib/project-id'
@@ -30,7 +29,6 @@ import {
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
 import { ConnectStep } from './_components/ConnectStep'
-import { CopyProgressStep } from './_components/CopyProgressStep'
 import {
   DetailsStep,
   type EnvironmentStartFrom,
@@ -38,16 +36,13 @@ import {
 import { ResourcesStep } from './_components/ResourcesStep'
 import { WizardSteps, type WizardStep } from './_components/WizardSteps'
 
-type StepId = 'details' | 'resources' | 'connect' | 'progress'
+type StepId = 'details' | 'resources' | 'connect'
 
 const STEP_DESCRIPTIONS: Record<StepId, string> = {
   details: 'Name the environment and choose where it starts.',
   resources: 'Pick what to copy from the project.',
   connect: 'Point your app at the new environment.',
-  progress: 'Follow the copy from the project.',
 }
-
-const IN_PROGRESS_COPY_STATUSES = ['pending', 'processing']
 
 /**
  * Create fails with its own copy for the per-hour creation limit and for the
@@ -100,18 +95,15 @@ export function CreateEnvironmentWizardView({
   const isCreating = createEnvironmentMutation.isPending
   const isCopy = startFrom === 'project'
 
-  // The copy is followed only once the environment exists and was asked to copy
-  const migration = useEnvironmentCopyProgress(
+  // The copy is looked up once the environment exists and was asked to copy,
+  // and handed to the environment's progress card before the wizard is left:
+  // the session outlives the switch of project, so the card shows the copy at
+  // once, finished or not, instead of looking it up on arrival
+  const migration = useEnvironmentCopyMigration(
     environment?.$id,
     environment?.region || region,
     isCopy && !!environment,
   )
-  const copyRunning =
-    !migration || IN_PROGRESS_COPY_STATUSES.includes(migration.status)
-
-  // Hand the copy to the environment's progress card before the wizard is
-  // left: the session outlives the switch of project, so the card shows the
-  // copy at once, finished or not, instead of looking it up on arrival
   const { addCopyId } = useSessionMigrations(environment?.$id)
   useEffect(() => {
     if (environment && migration) addCopyId(environment.$id, migration.$id)
@@ -138,7 +130,6 @@ export function CreateEnvironmentWizardView({
       { id: 'details', title: 'Details' },
       ...(isCopy ? [{ id: 'resources', title: 'Resources' }] : []),
       { id: 'connect', title: 'Connect' },
-      ...(isCopy ? [{ id: 'progress', title: 'Copy' }] : []),
     ],
     [isCopy],
   )
@@ -268,26 +259,11 @@ export function CreateEnvironmentWizardView({
           </Button>
         </>
       )}
-      {step === 'connect' &&
-        (isCopy ? (
-          <Button type="button" onClick={() => setStep('progress')}>
-            {t('Continue')}
-          </Button>
-        ) : (
-          <Button type="button" variant="brandCta" onClick={openEnvironment}>
-            {t('Open environment')}
-          </Button>
-        ))}
-      {step === 'progress' &&
-        (copyRunning ? (
-          <Button type="button" variant="outline" onClick={openEnvironment}>
-            {t('Skip')}
-          </Button>
-        ) : (
-          <Button type="button" variant="brandCta" onClick={openEnvironment}>
-            {t('Open environment')}
-          </Button>
-        ))}
+      {step === 'connect' && (
+        <Button type="button" variant="brandCta" onClick={openEnvironment}>
+          {t('Open environment')}
+        </Button>
+      )}
     </div>
   )
 
@@ -332,15 +308,7 @@ export function CreateEnvironmentWizardView({
         )}
 
         {step === 'connect' && environment && (
-          <ConnectStep environment={environment} />
-        )}
-
-        {step === 'progress' && environment && (
-          <CopyProgressStep
-            environmentId={environment.$id}
-            sourceName={project?.name || projectId}
-            migration={migration}
-          />
+          <ConnectStep environment={environment} copying={isCopy} />
         )}
       </div>
     </WizardLayout>

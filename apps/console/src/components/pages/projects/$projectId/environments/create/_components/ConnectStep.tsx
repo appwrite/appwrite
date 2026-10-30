@@ -22,7 +22,14 @@ function Field({
 }
 
 /** The new environment is a project of its own: the ID an app uses to talk to it. */
-export function ConnectStep({ environment }: { environment: Models.Project }) {
+export function ConnectStep({
+  environment,
+  copying,
+}: {
+  environment: Models.Project
+  /** The environment was created as a copy of the project */
+  copying: boolean
+}) {
   const t = useT()
 
   return (
@@ -39,6 +46,13 @@ export function ConnectStep({ environment }: { environment: Models.Project }) {
             'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.',
           )}
         </p>
+        {copying && (
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            {t(
+              'The copy from the project is under way. Its progress shows in the corner of the environment.',
+            )}
+          </p>
+        )}
         <dl className="mt-5 space-y-3">
           <Field label={t('Name')}>{environment.name}</Field>
           <Field label={t('Project ID')}>

@@ -3398,12 +3398,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Site variable': 'サイト変数',
   'Site variables': 'サイト変数',
   // Environment switcher order, banner and creation wizard
-  'The project preferences have not loaded yet.':
-    'プロジェクトの設定をまだ読み込めていません。',
-  'Reorder environments': '環境の並べ替え',
-  'Drag the environments into the order the switcher should list them. Production always comes first.':
-    '環境をドラッグして、切り替えメニューに表示する順序に並べてください。本番は常に先頭に表示されます。',
-  'Environment order updated': '環境の順序を更新しました',
+  'The copy from the project is under way. Its progress shows in the corner of the environment.':
+    'プロジェクトからのコピーを実行中です。進行状況は環境の隅に表示されます。',
   'Failed to update environment order': '環境の順序を更新できませんでした',
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
@@ -3414,15 +3410,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Pick what to copy from the project.':
     'プロジェクトからコピーする内容を選択します。',
   'Point your app at the new environment.': 'アプリを新しい環境に接続します。',
-  'Follow the copy from the project.':
-    'プロジェクトからのコピーの進行状況を確認します。',
   'Open environment': '環境を開く',
   'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.':
     '環境はそれ自体が1つのプロジェクトです。このプロジェクト ID を使ってアプリを接続してください。API エンドポイントはプロジェクトで使用しているものと同じです。',
   'API endpoint': 'API エンドポイント',
-  'Starting the copy': 'コピーを開始しています',
-  'You can skip this step. The copy keeps running in the background and shows its progress in the corner of the environment.':
-    'このステップはスキップできます。コピーはバックグラウンドで続行され、環境の隅に進行状況が表示されます。',
   'Send your first message': '最初のメッセージを送信',
   'Reach your users by email, SMS, and push notifications from one place.':
     'メール、SMS、プッシュ通知でユーザーに届けられます。すべて 1 か所で管理できます。',
