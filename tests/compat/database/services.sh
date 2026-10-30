@@ -37,13 +37,22 @@ mariadb_image="${COMPAT_MARIADB_IMAGE:-mariadb:10.11}"
 mysql_image="${COMPAT_MYSQL_IMAGE:-mysql:8.0.43}"
 
 # Starts a MariaDB/MySQL server (container, image, host port, server and
-# client binaries) and waits until it answers queries.
+# client binaries, then any server options of its own) and waits until it
+# answers queries. The cases are DDL-heavy (every case creates and drops its
+# collections, every attribute an ALTER TABLE) and InnoDB makes each DDL
+# durable with fsyncs, so the data directory is a tmpfs and the servers skip
+# what only durability needs (redo log flush at commit, doublewrite, file
+# syncs): a third less time per case. Nothing a case observes depends on it.
 mysql_up() {
     local name="$1" img="$2" port="$3" server="$4" client="$5"
+    shift 5
     if ! docker ps --format '{{.Names}}' | grep -qx "$name"; then
         docker run -d --rm --network "$network" --name "$name" \
+            --tmpfs /var/lib/mysql:rw \
             -e MYSQL_ROOT_PASSWORD=password -p "$port:3306" "$img" \
-            "$server" --max_allowed_packet=1G --max_connections=500 >/dev/null
+            "$server" --max_allowed_packet=1G --max_connections=500 \
+            --innodb-flush-log-at-trx-commit=0 --innodb-doublewrite=0 --innodb-flush-method=nosync \
+            "$@" >/dev/null
     fi
     for _ in $(seq 1 120); do
         if docker exec "$name" "$client" --protocol=tcp -h127.0.0.1 -uroot -ppassword -e 'SELECT 1' >/dev/null 2>&1; then
@@ -91,7 +100,7 @@ up)
                 -c "CREATE COLLATION IF NOT EXISTS utf8_ci_ai (provider = icu, locale = 'und-u-ks-level1', deterministic = false)" \
                 >/dev/null
             mysql_up compat-database-mariadb "$mariadb_image" 16306 mariadbd mariadb
-            mysql_up compat-database-mysql "$mysql_image" 16307 mysqld mysql
+            mysql_up compat-database-mysql "$mysql_image" 16307 mysqld mysql --skip-log-bin
             exit 0
         fi
         sleep 1
