@@ -11,23 +11,29 @@ use Appwrite\Realtime\EventTailRegistry;
 use Appwrite\Realtime\Usage;
 use PHPUnit\Framework\TestCase;
 use Swoole\Table;
-use Utopia\Span\Span;
-use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 use Utopia\WebSocket\Server;
 
 final class HandlerTest extends TestCase
 {
-    private TestTelemetry $telemetry;
+    private RecordingHistogram $arrivalDelay;
 
-    private RecordingExporter $spans;
+    private RecordingCounter $received;
+
+    private RecordingCounter $dropped;
+
+    private RecordingCounter $failed;
+
+    private RecordingGauge $stage;
 
     private Handler $handler;
 
     protected function setUp(): void
     {
-        $this->telemetry = new TestTelemetry();
-        $this->spans = new RecordingExporter();
-        Span::setExporters($this->spans);
+        $this->arrivalDelay = new RecordingHistogram();
+        $this->received = new RecordingCounter();
+        $this->dropped = new RecordingCounter();
+        $this->failed = new RecordingCounter();
+        $this->stage = new RecordingGauge();
 
         $stats = new Table(16);
         $stats->column('messages', Table::TYPE_INT);
@@ -40,15 +46,15 @@ final class HandlerTest extends TestCase
             eventTailRegistry: new EventTailRegistry(),
             usage: new Usage(function (): void {
             }),
-            arrivalDelay: $this->telemetry->createHistogram('realtime.server.arrival_delay'),
-            deliveryDelay: $this->telemetry->createHistogram('realtime.server.delivery_delay'),
-            messagesSent: $this->telemetry->createCounter('realtime.server.message.sent'),
-            outboundBytes: $this->telemetry->createCounter('realtime.server.outbound_bytes'),
-            eventsReceived: $this->telemetry->createCounter('realtime.server.events.received'),
-            eventsDropped: $this->telemetry->createCounter('realtime.server.events.dropped'),
-            eventsFailed: $this->telemetry->createCounter('realtime.server.events.failed'),
-            eventStage: $this->telemetry->createObservableGauge('realtime.server.event.stage'),
-            subscriptions: $this->telemetry->createUpDownCounter('realtime.server.worker_subscriptions'),
+            arrivalDelay: $this->arrivalDelay,
+            deliveryDelay: new RecordingHistogram(),
+            messagesSent: new RecordingCounter(),
+            outboundBytes: new RecordingCounter(),
+            eventsReceived: $this->received,
+            eventsDropped: $this->dropped,
+            eventsFailed: $this->failed,
+            eventStage: $this->stage,
+            subscriptions: new SilentUpDownCounter(),
             workerAttributes: ['workerId' => '0'],
             unauthorized: new AppwriteException(AppwriteException::USER_UNAUTHORIZED),
             unauthorizedPayload: '{}',
@@ -57,59 +63,44 @@ final class HandlerTest extends TestCase
         );
     }
 
-    protected function tearDown(): void
+    public function testReturnsTheOutcomeForTheEntrypointSpan(): void
     {
-        Span::setExporters();
-    }
+        $outcome = $this->handler->handle(null, 'realtime', $this->payload(\date(DATE_ATOM)));
 
-    public function testLogsOneSpanPerEventWithItsProjectAndResult(): void
-    {
-        $this->handler->handle(null, 'realtime', $this->payload(\date(DATE_ATOM)));
-
-        $this->assertCount(1, $this->spans->spans);
-        $span = $this->spans->spans[0];
-        $this->assertSame('realtime.event', $span->getAction());
-        $this->assertSame('project1', $span->get('project.id'));
-        $this->assertSame('databases.db.collections.col.documents.doc.create', $span->get('realtime.event.name'));
-        $this->assertSame('no_subscriber', $span->get('realtime.result'));
-        $this->assertSame(0, $span->get('realtime.receivers'));
-        $this->assertNull($span->getError());
-        $this->assertGreaterThanOrEqual($span->get('realtime.arrived_at'), $span->get('realtime.resolved_at'));
-    }
-
-    public function testLogsNoSpanForPayloadThatIsNotAnEvent(): void
-    {
-        $this->handler->handle(null, 'realtime', 'not json');
-
-        $this->assertSame([], $this->spans->spans);
+        $this->assertSame([
+            'project' => 'project1',
+            'event' => 'databases.db.collections.col.documents.doc.create',
+            'result' => 'no_subscriber',
+            'receivers' => 0,
+            'error' => null,
+        ], $outcome);
     }
 
     public function testCountsEveryEventAndDropsOnesWithoutSubscribers(): void
     {
         $this->handler->handle(null, 'realtime', $this->payload(\date(DATE_ATOM)));
 
-        $this->assertSame([1], $this->values('realtime.server.events.received'));
-        $this->assertSame([1], $this->values('realtime.server.events.dropped'));
-        $this->assertSame([], $this->values('realtime.server.events.failed'));
-        $this->assertCount(1, $this->telemetry->histograms['realtime.server.arrival_delay']->values);
+        $this->assertSame([[1, []]], $this->received->added);
+        $this->assertSame([[1, ['reason' => 'no_subscriber']]], $this->dropped->added);
+        $this->assertSame([], $this->failed->added);
+        $this->assertCount(1, $this->arrivalDelay->recorded);
     }
 
     public function testCountsArrivalFailureInsteadOfSwallowingIt(): void
     {
         $this->handler->handle(null, 'realtime', $this->payload('not a date'));
 
-        $this->assertSame([1], $this->values('realtime.server.events.received'));
-        $this->assertSame([1], $this->values('realtime.server.events.failed'));
-        $this->assertArrayNotHasKey('realtime.server.arrival_delay', $this->telemetry->histograms);
+        $this->assertSame([[1, ['stage' => 'arrival']]], $this->failed->added);
+        $this->assertSame([], $this->arrivalDelay->recorded);
     }
 
     public function testDropsPayloadThatIsNotAnEvent(): void
     {
-        $this->handler->handle(null, 'realtime', 'not json');
+        $outcome = $this->handler->handle(null, 'realtime', 'not json');
 
-        $this->assertSame([1], $this->values('realtime.server.events.received'));
-        $this->assertSame([1], $this->values('realtime.server.events.dropped'));
-        $this->assertSame([], $this->values('realtime.server.events.failed'));
+        $this->assertSame('invalid_payload', $outcome['result']);
+        $this->assertSame([[1, ['reason' => 'invalid_payload']]], $this->dropped->added);
+        $this->assertSame([], $this->failed->added);
     }
 
     public function testStageGaugeReadsZeroWhenIdle(): void
@@ -117,7 +108,7 @@ final class HandlerTest extends TestCase
         $this->handler->handle(null, 'realtime', $this->payload(\date(DATE_ATOM)));
 
         $observed = [];
-        foreach ($this->telemetry->observableGauges['realtime.server.event.stage']->callbacks as $callback) {
+        foreach ($this->stage->callbacks as $callback) {
             $callback(function (float $value, array $attributes) use (&$observed): void {
                 $observed[] = [$value, $attributes];
             });
@@ -140,11 +131,5 @@ final class HandlerTest extends TestCase
                 'payload' => ['$id' => 'doc'],
             ],
         ]);
-    }
-
-    /** @return list<int|float> */
-    private function values(string $counter): array
-    {
-        return isset($this->telemetry->counters[$counter]) ? $this->telemetry->counters[$counter]->values : [];
     }
 }

@@ -28,6 +28,9 @@ class Handler
     private string $stage = 'idle';
     private float $stageSince;
 
+    // Connections the event being handled was sent to.
+    private int $delivered = 0;
+
     /**
      * @param array<string, string> $workerAttributes
      */
@@ -59,23 +62,21 @@ class Handler
         ));
     }
 
-    public function handle(mixed $redis, string $channel, string $payload): void
+    /**
+     * @return array{project: string, event: string, result: string, receivers: int, error: ?\Throwable}
+     */
+    public function handle(mixed $redis, string $channel, string $payload): array
     {
         $this->eventsReceived->add(1);
-        $arrivedAt = \microtime(true);
+        $this->delivered = 0;
         $this->enter('decode');
         $event = \json_decode($payload, true);
         if (!\is_array($event)) {
             $this->eventsDropped->add(1, ['reason' => 'invalid_payload']);
             $this->enter('idle');
-            return;
-        }
 
-        $span = Span::init('realtime.event');
-        $span
-            ->set('project.id', $event['project'] ?? '')
-            ->set('realtime.event.name', $event['data']['events'][0] ?? '')
-            ->set('realtime.arrived_at', $arrivedAt);
+            return ['project' => '', 'event' => '', 'result' => 'invalid_payload', 'receivers' => 0, 'error' => null];
+        }
 
         $error = null;
         try {
@@ -92,7 +93,7 @@ class Handler
             $closing += $this->endDeletedTeams($event);
 
             $this->enter('deliver');
-            $closing += $this->deliver($event, $payload, $span);
+            $closing += $this->deliver($event, $payload);
 
             // After delivery, so revoked connections see the event that ended their access.
             $this->enter('close');
@@ -105,14 +106,22 @@ class Handler
             $this->tail($event);
         } catch (\Throwable $th) {
             $this->eventsFailed->add(1, ['stage' => $this->stage]);
-            $span->set('realtime.result', 'failed');
             $error = $th;
         } finally {
             $this->enter('idle');
         }
 
-        $span->set('realtime.resolved_at', \microtime(true));
-        $span->finish(error: $error);
+        return [
+            'project' => (string) ($event['project'] ?? ''),
+            'event' => (string) ($event['data']['events'][0] ?? ''),
+            'result' => match (true) {
+                $error !== null => 'failed',
+                $this->delivered > 0 => 'delivered',
+                default => 'no_subscriber',
+            },
+            'receivers' => $this->delivered,
+            'error' => $error,
+        ];
     }
 
     private function enter(string $stage): void
@@ -575,7 +584,7 @@ class Handler
      *
      * @return array<int, true> expired receivers, to close
      */
-    private function deliver(array $event, string $payload, Span $span): array
+    private function deliver(array $event, string $payload): array
     {
         $closing = [];
         $receivers = $this->realtime->getSubscribers($event);
@@ -619,9 +628,7 @@ class Handler
             $outboundBytes += \strlen($payloadJson);
         }
 
-        $span
-            ->set('realtime.result', $total > 0 ? 'delivered' : 'no_subscriber')
-            ->set('realtime.receivers', $total);
+        $this->delivered = $total;
 
         if ($total === 0) {
             return $closing;
