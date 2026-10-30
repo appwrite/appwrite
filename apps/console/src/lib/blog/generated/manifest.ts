@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "customer-story-dentalrx",
+    "href": "/blog/post/customer-story-dentalrx",
+    "title": "How DentalRx replaced Firebase and Algolia with Appwrite",
+    "description": "Learn how pharmacist Nickolas Steel moved DentalRx from Firebase and Algolia to Postgres on Appwrite to run a free drug reference for 6,000+ dental users.",
+    "date": "2026-10-30",
+    "lastUpdated": "2026-10-30",
+    "timeToRead": 7,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-dentalrx/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-entire-partnership",
     "href": "/blog/post/announcing-appwrite-entire-partnership",
     "title": "Appwrite partners with Entire to deploy Sites and Functions",
