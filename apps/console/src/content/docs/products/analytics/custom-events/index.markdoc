@@ -142,7 +142,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 ```
 {% /multicode %}
 
-These examples continue from the setup in [Track a website](/docs/products/analytics/web), [Track a Flutter app](/docs/products/analytics/flutter), and [Track events from your server](/docs/products/analytics/server-side). On the web, an event belongs to the current page unless you pass a `url` option.
+These examples continue from the setup in [Track a website](/docs/products/analytics/web), [Track a Flutter app](/docs/products/analytics/flutter), and [Track events from your server](/docs/products/analytics/server-side). On the web, an event belongs to the current page unless you pass a `url` option. With the [script tag](/docs/products/analytics/web#script-tag), call `track()` on `window.__appwriteTracker`.
 
 # Name your events {% #names %}
 

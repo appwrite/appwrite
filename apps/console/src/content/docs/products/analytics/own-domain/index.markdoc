@@ -33,6 +33,8 @@ const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
 tracking.start();
 ```
 
+With the [script tag](/docs/products/analytics/web#script-tag), set `data-endpoint` to the same URL, such as `https://appwrite.example.com/v1`.
+
 Nothing else changes. Your site still needs a Web app under **Apps**, as described in [Track a website](/docs/products/analytics/web#before-you-start).
 
 # Use a proxy {% #proxy %}
@@ -56,6 +58,8 @@ tracking.start();
 ```
 
 `Tracking` now sends each event to `/relay/analytics/properties/<PROPERTY_ID>/events` on your site.
+
+With the [script tag](/docs/products/analytics/web#script-tag), set `data-endpoint` to the full URL of the route, such as `https://example.com/relay`. The attribute takes a full URL, not a path.
 
 ## Create an API key {% #api-key %}
 

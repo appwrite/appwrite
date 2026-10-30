@@ -1,10 +1,12 @@
 ---
 layout: article
 title: Track a website
-description: Add Appwrite Analytics to a website or web app with the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.
+description: Add Appwrite Analytics to a website or web app with one script tag or the Web SDK. Track pageviews, outbound links, scroll depth, engagement time, and file downloads from the browser.
 ---
 
 The Appwrite Web SDK includes a `Tracking` helper that records visits from the browser. A call to `start()` tracks pageviews, outbound link clicks, scroll depth, and engagement time. File downloads and your own events each take one more line.
+
+On a site without a build step, such as a static site or a CMS theme, the tracker script sets up `Tracking` from one script tag. In an app with a build step, install the SDK from npm instead.
 
 # Before you start {% #before-you-start %}
 
@@ -18,18 +20,78 @@ Your site also needs a Web app in the same project. Browsers send an `Origin` he
 
 Add one app for each hostname your site runs on, including `localhost` while you develop.
 
+# Add the script tag {% #script-tag %}
+
+Add the tracker script to the `<head>` of every page. It loads the Web SDK, creates a `Tracking` instance, and calls `start()`, so it needs no other code.
+
+```html
+<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
+```
+
+The script reads its settings from the `data-` attributes of its own tag.
+
+| Attribute | Value |
+| --- | --- |
+| `data-endpoint` | Your project's API endpoint, as a full URL. A path such as `/relay` doesn't work. |
+| `data-project` | Your project ID. |
+| `data-property` | Your property ID. |
+| `data-track-downloads` | Optional. `true` turns on [download tracking](#downloads). |
+| `data-respect-dnt` | Optional. `false` also tracks visitors who have [Do Not Track](#do-not-track) turned on. |
+
+The script sends the same [automatic events](#automatic-events) as `start()`. Open your site, then open the property in the Console. The visit appears on the dashboard within a few seconds.
+
+## Use the tracker from your code {% #script-tag-code %}
+
+The script stores its `Tracking` instance on `window.__appwriteTracker`, so you can send [custom events](/docs/products/analytics/custom-events) and turn helpers on and off. A deferred script runs after the inline scripts of the page, so wait for `DOMContentLoaded` before you use the tracker while the page loads.
+
+```html
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        window.__appwriteTracker.track('signup_completed', {
+            props: { plan: 'pro' },
+        });
+    });
+</script>
+```
+
+Code that runs later, such as a click handler, can use `window.__appwriteTracker` directly.
+
+The script tag tracks one property. To also send events to a second property, call `Appwrite.startTracking()`. It takes `endpoint`, `project`, and `property`, and the optional `respectDoNotTrack` and `trackDownloads`, and returns the started `Tracking` instance.
+
+```html
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        Appwrite.startTracking({
+            endpoint: 'https://<REGION>.cloud.appwrite.io/v1',
+            project: '<PROJECT_ID>',
+            property: '<SECOND_PROPERTY_ID>',
+        });
+    });
+</script>
+```
+
+## Check the file's integrity {% #script-tag-integrity %}
+
+To have the browser check that the file is unchanged, add its hash as the `integrity` attribute, together with `crossorigin="anonymous"`. Each release lists the hash of every file in `integrity.json`, such as `https://sdk.appwrite.io/web/29.2.0/integrity.json`.
+
+```html
+<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
+        integrity="sha384-M1DbhtkbnViz6JLD9On/0rc2MkZAXRrfr9I25PJKwZY5uUxON3dukLPp73l0fodH"
+        crossorigin="anonymous"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
+```
+
 # Install the SDK {% #install %}
 
-Install the Web SDK from npm.
+To create `Tracking` in your own code, install the Web SDK from npm.
 
 ```sh
 npm install appwrite
-```
-
-You can also load the SDK from a CDN with a script tag. The SDK is then available on the global `Appwrite` object.
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite"></script>
 ```
 
 # Start tracking {% #start-tracking %}
@@ -46,23 +108,6 @@ const client = new Client()
 const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
 
 tracking.start();
-```
-
-With the CDN build, read the same classes from the `Appwrite` global in a script that runs after the SDK loads.
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite"></script>
-<script>
-    const { Client, Analytics, Tracking } = Appwrite;
-
-    const client = new Client()
-        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<PROJECT_ID>');
-
-    const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
-
-    tracking.start();
-</script>
 ```
 
 Create one `Tracking` instance per page load and start it once. In a framework that renders on the server, run this code in the browser only, for example in a component that mounts once at the root of your app.
@@ -86,7 +131,7 @@ A link counts as outbound when its hostname is on a different domain from the cu
 
 # Track file downloads {% #downloads %}
 
-Download tracking is off by default, because the file types worth counting depend on your site. Turn it on after `start()`.
+Download tracking is off by default, because the file types worth counting depend on your site. Turn it on after `start()`. With the script tag, add `data-track-downloads="true"` instead.
 
 ```client-web
 tracking.enableAutoDownloadTracking();
@@ -94,7 +139,7 @@ tracking.enableAutoDownloadTracking();
 
 When a visitor clicks a link to a file with a tracked extension, `Tracking` sends a `file_download` event with `filename`, `extension`, and `href` props. The default extensions are `pdf`, `zip`, `rar`, `7z`, `tar`, `gz`, `csv`, `tsv`, `xls`, `xlsx`, `doc`, `docx`, `ppt`, `pptx`, `dmg`, `exe`, `msi`, `pkg`, `deb`, `rpm`, `apk`, `mp3`, `wav`, `flac`, `mp4`, `mov`, `avi`, `mkv`, and `webm`.
 
-Pass `extensions` to track your own list instead.
+Pass `extensions` to track your own list instead. With the script tag, leave `data-track-downloads` out and call `enableAutoDownloadTracking()` on `window.__appwriteTracker`.
 
 ```client-web
 tracking.enableAutoDownloadTracking({
@@ -128,7 +173,7 @@ To send your own events, such as a signup or a purchase, see [Track custom event
 
 # Do Not Track {% #do-not-track %}
 
-By default, `Tracking` sends nothing for visitors whose browser has Do Not Track turned on. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors as well, set `respectDoNotTrack` to `false`.
+By default, `Tracking` sends nothing for visitors whose browser has Do Not Track turned on. It checks the Do Not Track setting only, not Global Privacy Control. To count these visitors as well, set `respectDoNotTrack` to `false`. With the script tag, add `data-respect-dnt="false"` instead.
 
 ```client-web
 const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>', {
@@ -147,3 +192,9 @@ For what Appwrite stores about each visitor, see [Privacy](/docs/products/analyt
 - **`404` with `analytics_property_not_found`**: The property ID is wrong, or the property is turned off.
 - **Nothing in the network panel**: Do Not Track is on in your browser.
 - **Requests marked as blocked in the network panel**: an extension, such as an ad blocker, blocks them. See [Serve tracking from your domain](/docs/products/analytics/own-domain).
+
+The tracker script logs its own warnings when it can't start:
+
+- **`Tracker: script tag is missing data-property`**: the tag is missing a required attribute. The warning names each missing one.
+- **`Tracker: failed to start`** with `Invalid endpoint URL`: `data-endpoint` isn't a full URL, such as `https://<REGION>.cloud.appwrite.io/v1`.
+- **`Tracker: already started, ignoring this script tag`**: the page has more than one tracker tag, and only the first one runs. To track a second property, use [`Appwrite.startTracking()`](#script-tag-code).

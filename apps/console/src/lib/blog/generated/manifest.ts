@@ -3,6 +3,51 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "add-appwrite-analytics-to-your-mobile-app",
+    "href": "/blog/post/add-appwrite-analytics-to-your-mobile-app",
+    "title": "How to add Appwrite Analytics to your mobile app",
+    "description": "Add Appwrite Analytics to an Android, iOS, React Native, or Flutter app. Track screen views, time in the app, and custom events, and compare iOS and Android on one dashboard.",
+    "date": "2026-10-28",
+    "lastUpdated": "2026-10-28",
+    "timeToRead": 10,
+    "author": "atharva",
+    "category": "tutorials",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/add-appwrite-analytics-to-your-mobile-app/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "add-appwrite-analytics-to-your-website",
+    "href": "/blog/post/add-appwrite-analytics-to-your-website",
+    "title": "How to add Appwrite Analytics to your website",
+    "description": "Add Appwrite Analytics to your website with the Web SDK. Track pageviews, traffic sources, file downloads, and custom events without cookies.",
+    "date": "2026-10-28",
+    "lastUpdated": "2026-10-28",
+    "timeToRead": 7,
+    "author": "atharva",
+    "category": "tutorials",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/add-appwrite-analytics-to-your-website/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "introducing-appwrite-analytics",
+    "href": "/blog/post/introducing-appwrite-analytics",
+    "title": "Introducing Appwrite Analytics",
+    "description": "See the people and the AI agents that visit your websites and apps, track the events that matter to your product, and block unwanted traffic with Firewall, all without cookies.",
+    "date": "2026-10-28",
+    "lastUpdated": "2026-10-28",
+    "timeToRead": 7,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "draft": true,
+    "cover": "/images/blog/introducing-appwrite-analytics/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-entire-partnership",
     "href": "/blog/post/announcing-appwrite-entire-partnership",
     "title": "Appwrite partners with Entire to deploy Sites and Functions",

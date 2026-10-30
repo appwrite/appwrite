@@ -61,6 +61,15 @@ tracking.start();
 
 `start()` records pageviews, outbound link clicks, scroll depth, and engagement time.
 
+If your site has no build step, skip the install and add this tag to the `<head>` of every page instead. It sets up the same tracking.
+
+```html
+<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
+```
+
 # See your first visit {% #first-visit %}
 
 {% only_dark %}
@@ -78,7 +87,7 @@ Click **Open dashboard** to see the visit, with its page, source, location, brow
 
 {% cards %}
 {% cards_item href="/docs/products/analytics/web" title="Track a website" %}
-Load the SDK from a CDN, track file downloads, choose which events to send, and respect Do Not Track.
+Set up the script tag, track file downloads, choose which events to send, and respect Do Not Track.
 {% /cards_item %}
 {% cards_item href="/docs/products/analytics/custom-events" title="Track custom events" %}
 Record signups, purchases, and other actions that matter to your product.

@@ -1,0 +1,230 @@
+---
+layout: post
+title: "How to add Appwrite Analytics to your website"
+description: Add Appwrite Analytics to your website with the Web SDK. Track pageviews, traffic sources, file downloads, and custom events without cookies.
+date: 2026-10-28
+cover: /images/blog/add-appwrite-analytics-to-your-website/cover.avif
+timeToRead: 7
+author: atharva
+category: tutorials
+featured: false
+draft: true
+faqs:
+  - question: "How do I add Appwrite Analytics to a website?"
+    answer: "Register the site's hostname as a web app in your Appwrite project, create an analytics property, and install the appwrite package. Then create a Tracking instance with your property ID and call start() once when the site loads. On a site without a build step, one script tag that loads tracker.js does the same."
+  - question: "Does Appwrite Analytics use cookies?"
+    answer: "No. Appwrite Analytics stores nothing on the visitor's device. Each visitor ID is a one-way hash of the IP address, the user agent, and the hostname of the page, so a returning visitor on the same network and browser keeps the same ID."
+  - question: "Does Appwrite Analytics track single-page apps?"
+    answer: "Yes. The Tracking helper sends a pageview when the page loads and on every route change made through the History API or the URL hash. React Router, Next.js, Vue Router, SvelteKit, and similar routers need no extra code."
+  - question: "Which events does the Web SDK send automatically?"
+    answer: "start() sends pageview, outbound_link, scroll_depth, and engagement_time events. File downloads are opt-in with enableAutoDownloadTracking(), because the file types worth counting depend on the site."
+  - question: "How do I track a signup or a purchase?"
+    answer: "Call tracking.track() with an event name, such as signup_completed, and optional props, such as the plan. The event appears in the Custom events card. Selecting it filters the dashboard to that event, so Unique visitors and Visits add up, for each point on the chart, the people and visits that triggered it."
+  - question: "Why does my site not send analytics events?"
+    answer: "Check the browser console for the Tracking: failed to send event warning. A 403 with general_unknown_origin means the hostname is not a web app in the project. A 404 means the property ID is wrong or the property is off. No request at all means Do Not Track is on in the browser."
+---
+
+Appwrite Analytics shows how people find and use your website: where visitors come from, which pages they read, and what they do there. It counts visitors without cookies or any storage on their device, and it also shows the bots and AI agents that read your pages.
+
+This tutorial adds Appwrite Analytics to a website with the Appwrite Web SDK. At the end, the site sends pageviews and custom events, and the property's dashboard shows each visit with its source, pages, location, and device.
+
+# Register your website in your project
+
+Appwrite accepts events from a browser only when the page's hostname belongs to a web app in your project.
+
+1. In the Appwrite Console, open your project and go to **Apps**.
+2. Select **Add app**.
+3. Select **Web** and your framework. Then select **Continue**.
+4. Enter a name and your site's hostname, such as `example.com`.
+5. Select **Register and continue**.
+
+To track your site while you develop it, add `localhost` as a second web app.
+
+# Create an analytics property
+
+![The Create property page with a name, a domain, and the Web platform selected](/images/blog/add-appwrite-analytics-to-your-website/create-property.avif)
+
+A property collects the events of one website or app, and each property has its own dashboard.
+
+1. Go to **Analytics** and select **Create property**.
+2. Enter a **Name**, such as `Acme Store`.
+3. Enter your site's **Domain**, such as `example.com`.
+4. Under **Platform**, keep **Web** selected.
+5. Select **Create property**.
+
+The Console then shows the install steps for the property, with your endpoint, project ID, and property ID filled in. Keep the page open. It confirms the first event that your site sends.
+
+# Install the Web SDK
+
+Install the `appwrite` package in your site's project:
+
+```sh
+npm install appwrite
+```
+
+This command adds the Appwrite Web SDK, which includes the `Tracking` helper that sends analytics events from the browser.
+
+# Start tracking pageviews
+
+Create a file named `src/analytics.ts` that creates one `Tracking` instance for the site:
+
+```client-web
+import { Client, Analytics, Tracking } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+export const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>');
+```
+
+Then call `start()` once, in the entry file of your app. In a Vite app, this file is `src/main.tsx`:
+
+```client-web
+import { tracking } from './analytics';
+
+tracking.start();
+```
+
+`start()` turns on four automatic events:
+
+| Event | When `Tracking` sends it |
+| --- | --- |
+| `pageview` | When the page loads, and on every route change through the History API or the URL hash |
+| `outbound_link` | When a visitor selects a link to another domain |
+| `scroll_depth` | When the visitor changes route or leaves the page, with the deepest point they scrolled |
+| `engagement_time` | When the tab is hidden, the route changes, or the page unloads, with the seconds the page was visible |
+
+Client-side routers, such as React Router, Vue Router, and the SvelteKit router, change routes through the History API. Single-page apps therefore need no extra code for pageviews.
+
+## Next.js and other server-rendered frameworks
+
+`Tracking` runs in the browser only. In the Next.js App Router, put the same `analytics.ts` file in `lib/`, and call `start()` from a client component:
+
+```client-web
+'use client';
+
+import { useEffect } from 'react';
+import { tracking } from '@/lib/analytics';
+
+export function AnalyticsTracker() {
+    useEffect(() => {
+        tracking.start();
+    }, []);
+
+    return null;
+}
+```
+
+Save the component as `app/analytics-tracker.tsx`. Then render `<AnalyticsTracker />` inside `<body>` in `app/layout.tsx`. Navigation with `next/link` and the Next.js router goes through the History API, so every page change sends a pageview.
+
+## Sites without a build step
+
+A site without a bundler, such as a static site or a CMS theme, can use the tracker script instead of the npm package. It loads the SDK, creates the `Tracking` instance, and calls `start()`, with your settings in `data-` attributes. Add it to the `<head>` of every page:
+
+```html
+<script defer src="https://sdk.appwrite.io/web/29.2.0/tracker.js"
+        data-endpoint="https://<REGION>.cloud.appwrite.io/v1"
+        data-project="<PROJECT_ID>"
+        data-property="<PROPERTY_ID>"></script>
+```
+
+The script sends the same four automatic events. It stores its `Tracking` instance on `window.__appwriteTracker`, so the code in the rest of this tutorial also works with the script tag: use `window.__appwriteTracker` where the examples use `tracking`. A deferred script runs after the inline scripts of the page, so wait for `DOMContentLoaded` before you call the tracker while the page loads.
+
+# Confirm the first visit
+
+![The install page in the Console confirms that the first pageview arrived](/images/blog/add-appwrite-analytics-to-your-website/event-received.avif)
+
+Open your site in a browser. Within a few seconds, the install page in the Console shows **Event received** with the first `pageview`. Select **Open dashboard** to see the visit.
+
+If no event arrives, open the browser's developer tools. `Tracking` never throws an error into your page. When a request fails, it logs the warning `Tracking: failed to send event` to the console:
+
+- **`403` with `general_unknown_origin`**: the page's hostname is not a web app in your project.
+- **`404` with `analytics_property_not_found`**: the property ID is wrong, or the property is turned off.
+- **No request in the network panel**: Do Not Track is on in your browser. By default, `Tracking` sends nothing for these visitors.
+
+# Track custom events
+
+![The Custom events card on the dashboard lists each event name with how many times it was sent](/images/blog/add-appwrite-analytics-to-your-website/custom-events.avif)
+
+Pageviews show where people go. Custom events record what they do, such as a signup, a purchase, or an invite. Call `track()` with an event name and optional props:
+
+```client-web
+tracking.track('signup_completed', {
+    props: { plan: 'pro', source: 'pricing_page' },
+});
+```
+
+Call `track()` where the action completes, for example after your signup request succeeds. Give each event a name in lowercase `snake_case` that describes a finished action, such as `invite_sent` or `plan_upgraded`. An event takes up to 16 props, and each key and value can be up to 255 characters. Do not put personal data, such as email addresses, in props.
+
+The **Custom events** card on the dashboard lists every event name that your site sends. Select an event to filter the dashboard to it. **Unique visitors** and **Visits** then add up, for each point on the chart, the people and the visits that triggered the event, so a visitor who triggers it on several days counts once for each day. The **Pages**, **Locations**, and **Technology** cards show where those events happened and on which devices.
+
+# Track file downloads
+
+Download tracking is off by default, because the file types that matter are different for each site. Turn it on after `start()`:
+
+```client-web
+tracking.enableAutoDownloadTracking();
+```
+
+When a visitor selects a link to a file such as a PDF, a ZIP archive, or an installer, `Tracking` sends a `file_download` event with the file name and extension. To count only some file types, pass your own list:
+
+```client-web
+tracking.enableAutoDownloadTracking({
+    extensions: ['pdf', 'epub', 'zip'],
+});
+```
+
+With the script tag, add `data-track-downloads="true"` to track the default file types.
+
+# Send events through your own domain
+
+By default, `Tracking` sends events to your project's Appwrite endpoint. Some ad blockers block requests to hosts that their filter lists name as trackers. When your events go to a domain that you own, those rules do not apply to them.
+
+The simplest way is a custom domain for your project, such as `appwrite.example.com`. [Add the domain](/docs/products/network/custom-domains#domain) to your project, then use it as the endpoint:
+
+```client-web
+const client = new Client()
+    .setEndpoint('https://appwrite.example.com/v1')
+    .setProject('<PROJECT_ID>');
+```
+
+With the script tag, put the same URL in `data-endpoint`.
+
+You can also forward events through a route on your own site. The [proxy guide](/docs/products/analytics/own-domain#proxy) has ready-made routes for Next.js, Express, and Cloudflare Workers.
+
+# Read the dashboard
+
+![The Analytics dashboard for a store with unique visitors, visits, pageviews, and a chart for the last 30 days](/images/blog/add-appwrite-analytics-to-your-website/dashboard.avif)
+
+Each property has a dashboard on its **Analytics** tab. The top row shows unique visitors, visits, pageviews, views per visit, bounce rate, visit duration, and engagement time for the date range you pick. Select a metric to show it on the chart, and compare the range with the previous period.
+
+The cards below the chart break the traffic down:
+
+- **Traffic sources**: the channel of each visit, such as search, social, or AI assistants, the referring sites, and the UTM campaigns from your links.
+- **Pages**: the top pages, the pages where visits start, and the pages where they end.
+- **Locations** and **Technology**: countries, regions, and cities, and the browsers, operating systems, and devices of your visitors.
+- **Humans vs bots** and **AI agents and crawlers**: the share of traffic from automated clients, by name and category, such as GPTBot or ChatGPT User.
+- **Custom events**: the events from the previous section.
+
+Select any row to filter the dashboard to it, and save filters that you use often. The **online** count in the property header shows the visitors who were active in the last five minutes. To share the numbers, **Export** downloads the current view as a PDF report or as CSV files.
+
+# How Appwrite Analytics counts visitors without cookies
+
+`Tracking` stores nothing in the browser, neither cookies nor local storage. Appwrite gives each event a visitor ID, which is a one-way hash of the IP address, the user agent, and the hostname of the page. Appwrite groups the events of one visitor into visits, and a visit ends after 30 minutes without events.
+
+`Tracking` respects the Do Not Track setting of the browser by default. To count these visitors too, pass `respectDoNotTrack: false`, or add `data-respect-dnt="false"` to the script tag:
+
+```client-web
+const tracking = new Tracking(new Analytics(client), '<PROPERTY_ID>', {
+    respectDoNotTrack: false,
+});
+```
+
+# Resources
+
+- [Appwrite Analytics documentation](/docs/products/analytics)
+- [Track a website](/docs/products/analytics/web)
+- [Track custom events](/docs/products/analytics/custom-events)
+- [Serve tracking from your domain](/docs/products/analytics/own-domain)
+- [Visitors and sessions](/docs/products/analytics/visitors)
