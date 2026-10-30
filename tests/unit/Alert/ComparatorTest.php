@@ -98,10 +98,10 @@ final class ComparatorTest extends TestCase
         $this->assertSame('Outbound bandwidth reached 548.73 KB, 110× the 5 KB threshold.', $email(Status::Firing, null)->summary());
     }
 
-    public function testEmailLinksItsUnsubscribeLinksOnlyWhenGiven(): void
+    public function testEmailOffersUnsubscribeOnItsReasonLine(): void
     {
         $template = __DIR__ . '/../../../app/config/locale/templates/email-alert.tpl';
-        $email = fn (string $unsubscribeUrl, string $unsubscribeAllUrl) => new Email(
+        $email = fn (string $unsubscribeUrl) => new Email(
             status: Status::Firing,
             rule: 'Egress spike',
             metric: 'Outbound bandwidth',
@@ -114,18 +114,18 @@ final class ComparatorTest extends TestCase
             details: [],
             url: 'https://console.example/alerts',
             reason: 'You\'re receiving this as an owner of Acme.',
+            pauseUrl: 'https://console.example/monitors?monitor=egress',
             unsubscribeUrl: $unsubscribeUrl,
-            unsubscribeAllUrl: $unsubscribeAllUrl,
         );
 
-        $html = $email('https://console.example/alerts/unsubscribe?token=one&x=1', 'https://console.example/alerts/unsubscribe?token=all')->render($template);
-        $this->assertStringContainsString('href="https://console.example/alerts/unsubscribe?token=one&amp;x=1"', $html);
-        $this->assertStringContainsString('>Stop emails for this monitor</a>', $html);
-        $this->assertStringContainsString('href="https://console.example/alerts/unsubscribe?token=all"', $html);
-        $this->assertStringContainsString('>Stop all usage alert emails</a>', $html);
+        $html = $email('https://console.example/auth/alerts/unsubscribe?token=one&x=1')->render($template);
+        $this->assertMatchesRegularExpression('#You&\#039;re receiving this as an owner of Acme\. <a [^>]*href="https://console\.example/auth/alerts/unsubscribe\?token=one&amp;x=1"[^>]*>Unsubscribe</a></p>#', $html);
+        $this->assertSame(1, \substr_count($html, 'Unsubscribe'));
+        // Pausing stays with the alert's own actions.
+        $this->assertStringContainsString('>Pause this monitor</a>', $html);
 
-        $html = $email('', '')->render($template);
-        $this->assertStringNotContainsString('Stop emails', $html);
+        $html = $email('')->render($template);
+        $this->assertStringNotContainsString('Unsubscribe', $html);
         $this->assertStringNotContainsString('{{unsubscribe}}', $html);
     }
 

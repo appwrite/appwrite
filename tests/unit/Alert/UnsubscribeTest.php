@@ -12,12 +12,11 @@ final class UnsubscribeTest extends TestCase
 {
     private const string SECRET = 'unsubscribe-test-secret'; // pragma: allowlist secret
 
-    public function testTokenNamesTheUserAndWhatTheyStop(): void
+    public function testTokenNamesTheUserAndTheMonitor(): void
     {
         $unsubscribe = new Unsubscribe(self::SECRET);
 
-        $this->assertSame(['userId' => 'ana', 'scope' => 'egress'], $unsubscribe->verify($unsubscribe->token('ana', 'egress')));
-        $this->assertSame(['userId' => 'ana', 'scope' => Unsubscribe::type('usage')], $unsubscribe->verify($unsubscribe->token('ana', Unsubscribe::type('usage'))));
+        $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress'], $unsubscribe->verify($unsubscribe->token('ana', 'egress')));
     }
 
     public function testTokenExpires(): void
@@ -40,7 +39,7 @@ final class UnsubscribeTest extends TestCase
         $encode = fn (array $claims): string => \rtrim(\strtr(\base64_encode((string) \json_encode($claims)), '+/', '-_'), '=');
 
         yield 'another user' => [$header . '.' . $encode(['userId' => 'ben'] + $claims) . '.' . $signature];
-        yield 'every monitor' => [$header . '.' . $encode(['scope' => Unsubscribe::type('usage')] + $claims) . '.' . $signature];
+        yield 'another monitor' => [$header . '.' . $encode(['monitorId' => 'storage'] + $claims) . '.' . $signature];
         yield 'another secret' => [(new Unsubscribe('another-secret'))->token('ana', 'egress')];
         yield 'not a token' => ['not-a-token'];
         yield 'empty' => [''];
@@ -56,7 +55,7 @@ final class UnsubscribeTest extends TestCase
 
     public function testRefusesATokenSignedForSomethingElse(): void
     {
-        $other = (new \Ahc\Jwt\JWT(self::SECRET, 'HS256', 3600))->encode(['userId' => 'ana', 'scope' => 'egress', 'purpose' => 'notification_track']);
+        $other = (new \Ahc\Jwt\JWT(self::SECRET, 'HS256', 3600))->encode(['userId' => 'ana', 'monitorId' => 'egress', 'purpose' => 'notification_track']);
 
         $this->expectException(\InvalidArgumentException::class);
 

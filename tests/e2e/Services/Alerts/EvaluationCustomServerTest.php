@@ -307,16 +307,16 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        // Every alert email carries one-click unsubscribe headers and both links.
+        // Every alert email carries one-click unsubscribe headers and one quiet link on its reason line.
         $this->waitForStatus($monitorId, 'firing');
         $email = $this->getLastEmailByAddress($root['email'], function (array $email) use ($name) {
             $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
         $this->assertSame('List-Unsubscribe=One-Click', $email['headers']['list-unsubscribe-post'] ?? null);
         $this->assertSame(1, \preg_match('#<(https?://[^>]+/v1/console/alerts/unsubscribe\?[^>]+)>#', (string) ($email['headers']['list-unsubscribe'] ?? ''), $header));
-        $this->assertStringContainsString('Stop emails for this monitor', (string) $email['html']);
-        $this->assertStringContainsString('Stop all usage alert emails', (string) $email['html']);
-        $this->assertStringContainsString('/alerts/unsubscribe?token=', (string) $email['html']);
+        $this->assertMatchesRegularExpression('#as an owner of [^<]+\. <a [^>]*href="[^"]*/auth/alerts/unsubscribe\?token=[^"]+"[^>]*>Unsubscribe</a>#', (string) $email['html']);
+        $this->assertStringNotContainsString('Stop all usage alert emails', (string) $email['html']);
+        $this->assertStringContainsString('Pause this monitor', (string) $email['html']);
         \parse_str((string) \parse_url(\html_entity_decode($header[1]), PHP_URL_QUERY), $query);
         $token = (string) $query['token'];
 
@@ -330,39 +330,56 @@ final class EvaluationCustomServerTest extends Scope
         ], ['List-Unsubscribe' => 'One-Click']);
         $this->assertSame(204, $unsubscribed['headers']['status-code']);
 
+        // The page the email links to reads what it may stop, and what is stopped already, with the token alone.
+        $page = $this->unsubscribe(Client::METHOD_GET, $token);
+        $this->assertSame(200, $page['headers']['status-code']);
+        $this->assertSame([
+            'monitorName' => $name,
+            'projectName' => $this->getProject()['name'],
+            'type' => 'usage',
+            'optOut' => true,
+            'monitor' => true,
+            'all' => false,
+        ], $page['body']);
+
         // Another monitor, not unsubscribed from.
         $other = $this->createPausedMonitor('Other ' . \uniqid());
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($monitorId, $root['$id']));
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
 
-        // Every monitor's emails stop with the "all" link; console notifications stay.
-        $all = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root['$id'], Unsubscribe::type('usage'));
-        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $all)['headers']['status-code']);
+        // The same token stops every usage alert email from the page; console notifications stay.
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token, 'all')['headers']['status-code']);
+        $this->assertTrue($this->unsubscribe(Client::METHOD_GET, $token)['body']['all']);
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($other, $root['$id']));
 
-        // Resuming undoes each, with the same token.
-        $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $all)['headers']['status-code']);
+        // Undo restores each, with the same token.
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $token, 'all')['headers']['status-code']);
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($monitorId, $root['$id']));
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $token)['headers']['status-code']);
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($monitorId, $root['$id']));
+        $this->assertSame(['monitor' => false, 'all' => false], \array_intersect_key($this->unsubscribe(Client::METHOD_GET, $token)['body'], ['monitor' => 0, 'all' => 0]));
 
         /**
          * Test for FAILURE
          */
         $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
         [$head, $claims, $signature] = \explode('.', $token);
-        $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['scope' => Unsubscribe::type('usage')] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
+        $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['monitorId' => $other] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
         foreach ([
             'tampered' => $forged,
             'expired' => $unsubscribe->token($root['$id'], $monitorId, \time() - ALERT_UNSUBSCRIBE_TTL - 60),
             'another secret' => (new Unsubscribe('another-secret'))->token($root['$id'], $monitorId),
             'missing' => '',
         ] as $case => $invalid) {
-            $refused = $this->unsubscribe(Client::METHOD_POST, $invalid);
-            $this->assertSame(401, $refused['headers']['status-code'], $case);
-            $this->assertSame('user_invalid_token', $refused['body']['type'], $case);
+            foreach ([Client::METHOD_GET, Client::METHOD_POST] as $method) {
+                $refused = $this->unsubscribe($method, $invalid);
+                $this->assertSame(401, $refused['headers']['status-code'], $case);
+                $this->assertSame('user_invalid_token', $refused['body']['type'], $case);
+            }
         }
+        $scope = $this->unsubscribe(Client::METHOD_POST, $token, 'everything');
+        $this->assertSame(400, $scope['headers']['status-code']);
         // None of them changed anything.
         $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
     }
@@ -1816,12 +1833,12 @@ final class EvaluationCustomServerTest extends Scope
      *
      * @return array<string, mixed>
      */
-    private function unsubscribe(string $method, string $token): array
+    private function unsubscribe(string $method, string $token, ?string $scope = null): array
     {
         return $this->client->call($method, '/console/alerts/unsubscribe', [
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-        ], ['token' => $token]);
+        ], ['token' => $token] + ($scope === null ? [] : ['scope' => $scope]));
     }
 
     /**
