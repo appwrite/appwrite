@@ -17,15 +17,16 @@ trait MonitorsBase
             'rules' => [Query::greaterThan('network.outbound', 2.5e9)->toString()],
             'window' => 600,
             'cooldown' => 1800,
-            'channels' => ['webhook', 'console'],
-            'webhookUrl' => 'http://request-catcher-webhook:5000/alerts',
         ]);
 
         /**
          * Test for SUCCESS
          */
         $this->assertSame(201, $created['headers']['status-code']);
-        $this->assertSame(64, \strlen($created['body']['webhookSecret']));
+        // A monitor only decides when to fire; delivery is up to project events and the team's notifications.
+        $this->assertArrayNotHasKey('channels', $created['body']);
+        $this->assertArrayNotHasKey('webhookUrl', $created['body']);
+        $this->assertArrayNotHasKey('webhookSecret', $created['body']);
 
         $monitor = $this->getMonitor($created['body']['$id']);
         $this->assertSame(200, $monitor['headers']['status-code']);
@@ -37,16 +38,11 @@ trait MonitorsBase
         $this->assertSame([Query::greaterThan('network.outbound', 2.5e9)->toString()], $monitor['body']['rules']);
         $this->assertSame(600, $monitor['body']['window']);
         $this->assertSame(1800, $monitor['body']['cooldown']);
-        $this->assertSame(['webhook', 'console'], $monitor['body']['channels']);
-        $this->assertSame('http://request-catcher-webhook:5000/alerts', $monitor['body']['webhookUrl']);
         $this->assertTrue($monitor['body']['enabled']);
         $this->assertSame('ok', $monitor['body']['status']);
         $this->assertSame('', $monitor['body']['alertId']);
         $this->assertNull($monitor['body']['evaluatedAt']);
         $this->assertNull($monitor['body']['triggeredAt']);
-
-        // The secret is only returned on creation.
-        $this->assertSame('', $monitor['body']['webhookSecret']);
     }
 
     public function testCreateDatabaseScopedMonitor(): void
@@ -117,10 +113,6 @@ trait MonitorsBase
         $this->assertSame(400, $missing['headers']['status-code']);
         $this->assertSame('monitor_resource_not_found', $missing['body']['type']);
 
-        $webhook = $this->createMonitor(['channels' => ['webhook']]);
-        $this->assertSame(400, $webhook['headers']['status-code']);
-        $this->assertSame('monitor_webhook_url_missing', $webhook['body']['type']);
-
         $window = $this->createMonitor(['window' => 59]);
         $this->assertSame(400, $window['headers']['status-code']);
 
@@ -151,7 +143,6 @@ trait MonitorsBase
          * Test for SUCCESS
          */
         $this->assertSame(200, $updated['headers']['status-code']);
-        $this->assertSame('', $updated['body']['webhookSecret']);
 
         $monitor = $this->getMonitor($monitorId);
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
@@ -178,13 +169,8 @@ trait MonitorsBase
         $this->assertSame(400, $outside['headers']['status-code']);
         $this->assertSame('monitor_rules_invalid', $outside['body']['type']);
 
-        $webhook = $this->updateMonitor($monitorId, ['channels' => ['webhook']]);
-        $this->assertSame(400, $webhook['headers']['status-code']);
-        $this->assertSame('monitor_webhook_url_missing', $webhook['body']['type']);
-
         $monitor = $this->getMonitor($monitorId);
         $this->assertSame('project', $monitor['body']['resourceType']);
-        $this->assertSame(['email', 'console'], $monitor['body']['channels']);
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
 
         $missing = $this->updateMonitor('missing', ['name' => 'Missing']);
@@ -230,9 +216,6 @@ trait MonitorsBase
         $searched = $this->listMonitors([Query::search('search', $name)->toString()]);
         $this->assertSame(200, $searched['headers']['status-code']);
         $this->assertSame(2, $searched['body']['total']);
-        foreach ($searched['body']['monitors'] as $monitor) {
-            $this->assertSame('', $monitor['webhookSecret']);
-        }
 
         $filtered = $this->listMonitors([
             Query::search('search', $name)->toString(),
@@ -257,7 +240,7 @@ trait MonitorsBase
         /**
          * Test for FAILURE
          */
-        $unknown = $this->listMonitors([Query::equal('webhookSecret', ['x'])->toString()]);
+        $unknown = $this->listMonitors([Query::equal('channels', ['email'])->toString()]);
         $this->assertSame(400, $unknown['headers']['status-code']);
 
         $cursor = $this->listMonitors([Query::cursorAfter(new Document(['$id' => 'missing']))->toString()]);

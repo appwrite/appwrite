@@ -8,11 +8,15 @@ use Appwrite\Alert\Meter;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Bus\Listeners\Usage as UsageListener;
+use Appwrite\Event\Event;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Modules\Alerts\Workers\Alerts;
 use Appwrite\Platform\Workers\StatsResources;
 use Appwrite\Platform\Workers\StatsUsage;
@@ -28,6 +32,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\Unit\Event\MockPublisher;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
@@ -38,6 +43,7 @@ use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Message;
+use Utopia\Queue\Queue;
 use Utopia\System\System;
 use Utopia\Usage\Adapter;
 use Utopia\Usage\Metric;
@@ -61,7 +67,7 @@ final class EvaluationCustomServerTest extends Scope
     public function testMonitorFiresAndResolvesItsAlertThroughEveryChannel(): void
     {
         $name = 'Egress ' . \uniqid();
-        $path = '/alerts/' . \uniqid();
+        $webhook = $this->createAlertWebhook();
 
         // Traffic for the project, so network.outbound has something to sum.
         for ($i = 0; $i < 5; $i++) {
@@ -74,12 +80,9 @@ final class EvaluationCustomServerTest extends Scope
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
             'cooldown' => 0,
-            'channels' => ['webhook', 'console', 'email'],
-            'webhookUrl' => 'http://request-catcher-webhook:5000' . $path,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
-        $secret = $created['body']['webhookSecret'];
 
         /**
          * Test for SUCCESS
@@ -106,21 +109,21 @@ final class EvaluationCustomServerTest extends Scope
             Query::equal('status', ['firing'])->toString(),
         ])['alerts'], '$id'));
 
-        $webhook = $this->waitForWebhook($path, 'firing');
-        $timestamp = $webhook['headers']['X-Appwrite-Webhook-Timestamp'];
+        // The project's webhook receives the event, signed like every project webhook, with the alert as its payload.
+        $delivery = $this->waitForEvent($webhook['path'], $monitorId, 'firing');
         $this->assertSame(
-            'sha256=' . \hash_hmac('sha256', $timestamp . '.' . $webhook['body'], $secret),
-            $webhook['headers']['X-Appwrite-Webhook-Signature'],
+            \base64_encode(\hash_hmac('sha1', $webhook['url'] . $delivery['body'], $webhook['secret'], true)),
+            $delivery['headers']['X-Appwrite-Webhook-Signature'],
         );
-        $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $webhook['data']['subject']);
-        $this->assertSame(['alerts.firing'], $webhook['data']['events']);
-        $this->assertSame($monitorId, $webhook['data']['params']['monitorId']);
-        $this->assertSame($firing['alertId'], $webhook['data']['params']['alertId']);
-        $this->assertSame('usage', $webhook['data']['params']['type']);
-        $this->assertSame('firing', $webhook['data']['params']['status']);
-        $this->assertSame('network.outbound', $webhook['data']['params']['metric']);
-        $this->assertSame($this->getProject()['$id'], $webhook['data']['params']['projectId']);
-        $this->assertGreaterThan(0, $webhook['data']['params']['value']);
+        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.firing', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertContains('monitors.*.alerts.*.firing', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertSame($firing['alertId'], $delivery['data']['$id']);
+        $this->assertSame($name, $delivery['data']['name']);
+        $this->assertSame('usage', $delivery['data']['type']);
+        $this->assertSame('network.outbound', $delivery['data']['metric']);
+        $this->assertGreaterThan(0, $delivery['data']['value']);
+        $this->assertNull($delivery['data']['resolvedAt']);
+        $this->assertArrayNotHasKey('projectInternalId', $delivery['data']);
 
         // The project sends its own mail through custom SMTP; an alert is the
         // platform writing to the organization's owners, so it uses the platform mailer.
@@ -162,10 +165,14 @@ final class EvaluationCustomServerTest extends Scope
             Query::equal('status', ['firing'])->toString(),
         ])['alerts']);
 
-        $webhook = $this->waitForWebhook($path, 'resolved');
-        $this->assertStringStartsWith('[Resolved] ' . $name . ' · ', $webhook['data']['subject']);
-        $this->assertSame(['alerts.resolved'], $webhook['data']['events']);
-        $this->assertSame($firing['alertId'], $webhook['data']['params']['alertId']);
+        $delivery = $this->waitForEvent($webhook['path'], $monitorId, 'resolved');
+        $this->assertContains('monitors.' . $monitorId . '.alerts.' . $firing['alertId'] . '.resolved', \explode(',', $delivery['headers']['X-Appwrite-Webhook-Events']));
+        $this->assertSame($firing['alertId'], $delivery['data']['$id']);
+        $this->assertNotNull($delivery['data']['resolvedAt']);
+
+        $this->assertEventually(function () use ($name) {
+            $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
+        }, 60_000, 1_000);
     }
 
     public function testTransferredProjectAlertsItsNewOrganizationsOwners(): void
@@ -190,7 +197,6 @@ final class EvaluationCustomServerTest extends Scope
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'cooldown' => 0,
-            'channels' => ['email'],
             'enabled' => false,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
@@ -259,7 +265,6 @@ final class EvaluationCustomServerTest extends Scope
             'name' => 'History ' . \uniqid(),
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'cooldown' => 0,
-            'channels' => [],
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -472,9 +477,10 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(['resolved', 'resolved'], \array_column($alerts['alerts'], 'status'));
     }
 
-    public function testCooldownSuppressesRefiringAndItsResolution(): void
+    public function testCooldownHoldsBackTeamNotificationsButNotEvents(): void
     {
-        $path = '/alerts/' . \uniqid();
+        $webhook = $this->createAlertWebhook();
+        $name = 'Flapping ' . \uniqid();
 
         for ($i = 0; $i < 5; $i++) {
             $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
@@ -482,12 +488,10 @@ final class EvaluationCustomServerTest extends Scope
 
         $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
             'monitorId' => 'unique()',
-            'name' => 'Flapping ' . \uniqid(),
+            'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
             'cooldown' => 3600,
-            'channels' => ['webhook'],
-            'webhookUrl' => 'http://request-catcher-webhook:5000' . $path,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -495,28 +499,34 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        // First firing and its resolution are announced.
+        // The first firing and its resolution reach the team.
         $this->waitForStatus($monitorId, 'firing');
-        $this->waitForWebhook($path, 'firing');
+        $this->waitForEvent($webhook['path'], $monitorId, 'firing');
         $this->setThreshold($monitorId, 1e15);
         $this->waitForStatus($monitorId, 'ok');
-        $this->waitForWebhook($path, 'resolved');
+        $this->waitForEvent($webhook['path'], $monitorId, 'resolved');
 
-        // Firing again inside the cooldown is recorded but not announced, and so is its resolution.
+        // Firing again inside the cooldown is not sent to the team, and neither is its resolution...
         $this->setThreshold($monitorId, 0);
         $refiring = $this->waitForStatus($monitorId, 'firing');
         $this->setThreshold($monitorId, 1e15);
         $resolved = $this->waitForStatus($monitorId, 'ok');
         $this->assertSame($refiring['triggeredAt'], $resolved['triggeredAt']);
 
+        // ...while every change is still an event.
+        $this->assertEventually(function () use ($webhook, $monitorId) {
+            $this->assertSame(['firing', 'resolved', 'firing', 'resolved'], $this->eventStatuses($webhook['path'], $monitorId));
+        }, 60_000, 1_000);
+
         // Give the notifications worker time to deliver anything that was queued.
         \sleep(10);
-        $this->assertSame(['firing', 'resolved'], $this->webhookStatuses($path));
+        $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
     }
 
     public function testFiringThatOutlastsItsCooldownIsAnnounced(): void
     {
-        $path = '/alerts/' . \uniqid();
+        $webhook = $this->createAlertWebhook();
+        $name = 'Sustained ' . \uniqid();
 
         for ($i = 0; $i < 5; $i++) {
             $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
@@ -524,12 +534,10 @@ final class EvaluationCustomServerTest extends Scope
 
         $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
             'monitorId' => 'unique()',
-            'name' => 'Sustained ' . \uniqid(),
+            'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'window' => 3600,
             'cooldown' => 60,
-            'channels' => ['webhook'],
-            'webhookUrl' => 'http://request-catcher-webhook:5000' . $path,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -538,16 +546,20 @@ final class EvaluationCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $first = $this->waitForStatus($monitorId, 'firing');
-        $this->waitForWebhook($path, 'firing');
+        $this->waitForEvent($webhook['path'], $monitorId, 'firing');
         $this->setThreshold($monitorId, 1e15);
         $this->waitForStatus($monitorId, 'ok');
-        $this->waitForWebhook($path, 'resolved');
+        $this->waitForEvent($webhook['path'], $monitorId, 'resolved');
+        $this->assertEventually(function () use ($name) {
+            $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
+        }, 60_000, 1_000);
 
-        // Firing again inside the cooldown is held back...
+        // Firing again inside the cooldown is an event, but held back from the team...
         $this->setThreshold($monitorId, 0);
         $held = $this->waitForStatus($monitorId, 'firing');
         $this->assertSame($first['triggeredAt'], $held['triggeredAt']);
-        $this->assertSame(['firing', 'resolved'], $this->webhookStatuses($path));
+        $this->waitForEvent($webhook['path'], $monitorId, 'firing', 2);
+        $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
 
         // ...and announced by the first evaluation after the cooldown, while it still fires.
         $this->assertEventually(function () use ($monitorId, $first) {
@@ -556,9 +568,11 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertNotSame($first['triggeredAt'], $monitor['triggeredAt']);
             $this->assertGreaterThanOrEqual(60, \strtotime($monitor['triggeredAt']) - \strtotime($first['triggeredAt']));
         }, self::TIMEOUT_MS, 2_000);
-        $this->assertEventually(function () use ($path) {
-            $this->assertSame(['firing', 'resolved', 'firing'], $this->webhookStatuses($path));
+        $this->assertEventually(function () use ($name) {
+            $this->assertSame(['firing' => 2, 'resolved' => 1], $this->teamNotifications($name));
         }, 60_000, 1_000);
+        // The announcement after the cooldown is no change of state, so it fires no event.
+        $this->assertSame(['firing', 'resolved', 'firing'], $this->eventStatuses($webhook['path'], $monitorId));
     }
 
     public function testPausedMonitorIsNotEvaluatedUntilResumed(): void
@@ -567,7 +581,6 @@ final class EvaluationCustomServerTest extends Scope
             'monitorId' => 'unique()',
             'name' => 'Paused ' . \uniqid(),
             'rules' => [Query::greaterThan('network.outbound', 1e15)->toString()],
-            'channels' => ['console'],
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
@@ -631,7 +644,6 @@ final class EvaluationCustomServerTest extends Scope
                 Query::equal('resourceType', ['database'])->toString(),
                 Query::equal('resourceId', [$databaseId])->toString(),
             ],
-            'channels' => [],
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
 
@@ -1089,7 +1101,6 @@ final class EvaluationCustomServerTest extends Scope
             'name' => "{$metric} on {$resourceType}",
             'rules' => $rules,
             'window' => 3600,
-            'channels' => [],
             'enabled' => false,
         ]);
         $this->assertSame(201, $created['headers']['status-code'], "{$metric} on {$resourceType}: " . \json_encode($created['body']));
@@ -1165,8 +1176,6 @@ final class EvaluationCustomServerTest extends Scope
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 10)->toString()],
             'cooldown' => 0,
-            'channels' => ['webhook'],
-            'webhookUrl' => 'http://request-catcher-webhook:5000/alerts/' . \uniqid(),
             'enabled' => false,
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
@@ -1186,7 +1195,15 @@ final class EvaluationCustomServerTest extends Scope
         $evaluator = new class () extends Alerts {
             public function evaluateNow(Document $monitor, Document $project, float $value, Database $dbForPlatform, NotificationPublisher $publisher): void
             {
-                $this->evaluate($monitor, $project, $value, new \DateTimeImmutable(), $dbForPlatform, $publisher, []);
+                $events = new MockPublisher();
+                $realtime = new class () extends Realtime {
+                    public function trigger(): string|bool
+                    {
+                        return true;
+                    }
+                };
+
+                $this->evaluate($monitor, $project, $value, new \DateTimeImmutable(), $dbForPlatform, $publisher, new Event($events), new Webhook($events), new FunctionPublisher($events, new Queue(Event::FUNCTIONS_QUEUE_NAME)), $realtime, []);
             }
         };
 
@@ -1294,38 +1311,96 @@ final class EvaluationCustomServerTest extends Scope
     }
 
     /**
-     * Statuses of every webhook delivered to `$path`, oldest first.
+     * A project webhook on both alert events, posting to a path of its own.
+     *
+     * @return array{path: string, url: string, secret: string}
+     */
+    private function createAlertWebhook(): array
+    {
+        $path = '/alerts/' . \uniqid();
+        $url = 'http://request-catcher-webhook:5000' . $path;
+        $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $this->headers(), [
+            'webhookId' => 'unique()',
+            'name' => 'Alerts ' . $path,
+            'events' => ['monitors.*.alerts.*.firing', 'monitors.*.alerts.*.resolved'],
+            'url' => $url,
+            'tls' => false,
+        ]);
+        $this->assertSame(201, $webhook['headers']['status-code'], \json_encode($webhook['body']));
+
+        return ['path' => $path, 'url' => $url, 'secret' => $webhook['body']['secret']];
+    }
+
+    /**
+     * Alert statuses the monitor's events delivered to `$path`, oldest first. Every
+     * webhook of the project gets every monitor's events, so they are told apart by the alert.
      *
      * @return list<string|null>
      */
-    private function webhookStatuses(string $path): array
+    private function eventStatuses(string $path, string $monitorId): array
     {
-        return \array_map(
-            fn (array $request) => \json_decode($request['data'] ?? '{}', true)['params']['status'] ?? null,
-            \json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [],
+        $statuses = [];
+        foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [] as $request) {
+            $alert = \json_decode($request['data'] ?? '{}', true);
+            if (($alert['monitorId'] ?? null) === $monitorId) {
+                $statuses[] = $alert['status'] ?? null;
+            }
+        }
+
+        return $statuses;
+    }
+
+    /**
+     * Waits for the `$count`th event of the monitor's alerts with `$status` to reach `$path`.
+     *
+     * @return array<string, mixed> the request the catcher recorded, with its raw `body` and decoded `data`
+     */
+    private function waitForEvent(string $path, string $monitorId, string $status, int $count = 1): array
+    {
+        $this->assertEventually(function () use ($path, $monitorId, $status, $count) {
+            $this->assertGreaterThanOrEqual($count, \count(\array_keys($this->eventStatuses($path, $monitorId), $status, true)), "No '{$status}' event of monitor {$monitorId} reached {$path}");
+        }, 60_000, 1_000);
+
+        return $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            self::REQUEST_TYPE_WEBHOOK,
+            ['url' => $path],
+            0,
+            0,
+            function (array $request) use ($monitorId, $status) {
+                $this->assertSame($monitorId, $request['data']['monitorId'] ?? null);
+                $this->assertSame($status, $request['data']['status'] ?? null);
+            },
         );
     }
 
     /**
-     * @return array<string, mixed> the request the catcher recorded, with its raw `body` and decoded `data`
+     * How many firing and resolved notifications of the monitor named `$name`
+     * the organization's owner has in the console.
+     *
+     * @return array{firing: int, resolved: int}
      */
-    private function waitForWebhook(string $path, string $status): array
+    private function teamNotifications(string $name): array
     {
-        $request = [];
-        $this->assertEventually(function () use ($path, $status, &$request) {
-            $request = $this->getLastRequestForProject(
-                $this->getProject()['$id'],
-                self::REQUEST_TYPE_WEBHOOK,
-                ['url' => $path],
-                0,
-                0,
-                function (array $request) use ($status) {
-                    $this->assertSame($status, $request['data']['params']['status'] ?? null);
-                },
-            );
-            $this->assertNotEmpty($request, "No '{$status}' webhook reached {$path}");
-        }, 60_000, 1_000);
+        $bell = $this->client->call(Client::METHOD_GET, '/notifications', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'queries' => [
+                Query::equal('projectId', [$this->getProject()['$id']])->toString(),
+                Query::orderDesc('$createdAt')->toString(),
+                Query::limit(100)->toString(),
+            ],
+        ]);
+        $this->assertSame(200, $bell['headers']['status-code']);
 
-        return $request;
+        $titles = \array_column($bell['body']['notifications'], 'title');
+
+        return [
+            'firing' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Firing] ' . $name . ' · '))),
+            'resolved' => \count(\array_filter($titles, fn (string $title) => \str_starts_with($title, '[Resolved] ' . $name . ' · '))),
+        ];
     }
 }
