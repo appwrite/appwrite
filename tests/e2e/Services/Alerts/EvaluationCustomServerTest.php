@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Alerts;
 
+use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Platform\Modules\Alerts\Workers\Alerts;
 use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
+use Swoole\Coroutine\WaitGroup;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -308,6 +313,111 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(404, $foreign['headers']['status-code']);
     }
 
+    public function testOverlappingEvaluationsOpenOneAlert(): void
+    {
+        $monitorId = $this->createPausedMonitor('Overlapping ' . \uniqid());
+
+        /**
+         * Test for SUCCESS
+         */
+        $errors = [];
+        $this->inCoroutine(function () use ($monitorId, &$errors): void {
+            // Neither evaluation opens its alert until both have read the monitor
+            // and found none open, as when two workers evaluate it at once.
+            $barrier = new Channel(1);
+            $arrivals = 0;
+            $group = new WaitGroup();
+            for ($i = 0; $i < 2; $i++) {
+                $group->add();
+                Coroutine::create(function () use ($monitorId, $barrier, &$arrivals, &$errors, $group): void {
+                    try {
+                        $platform = $this->platform();
+                        $held = $this->getMockBuilder(Database::class)
+                            ->disableOriginalConstructor()
+                            ->onlyMethods(['getDocument', 'findOne', 'find', 'createDocument', 'updateDocument'])
+                            ->getMock();
+                        $held->method('getDocument')->willReturnCallback(fn (mixed ...$arguments) => $platform->getDocument(...$arguments));
+                        $held->method('findOne')->willReturnCallback(fn (mixed ...$arguments) => $platform->findOne(...$arguments));
+                        $held->method('find')->willReturnCallback(fn (mixed ...$arguments) => $platform->find(...$arguments));
+                        $held->method('updateDocument')->willReturnCallback(fn (mixed ...$arguments) => $platform->updateDocument(...$arguments));
+                        $held->method('createDocument')->willReturnCallback(function (string $collection, Document $document) use ($platform, $barrier, &$arrivals): Document {
+                            if ($collection === 'monitorAlerts') {
+                                if (++$arrivals === 1) {
+                                    $barrier->pop(10);
+                                } else {
+                                    $barrier->push(true);
+                                }
+                            }
+
+                            return $platform->createDocument($collection, $document);
+                        });
+
+                        $this->evaluateMonitor($held, $monitorId, 20);
+                    } catch (\Throwable $error) {
+                        $errors[] = $error;
+                    } finally {
+                        $group->done();
+                    }
+                });
+            }
+            $group->wait(30);
+        });
+        $this->assertSame([], \array_map(fn (\Throwable $error) => $error->getMessage(), $errors));
+
+        $monitor = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body'];
+        $this->assertSame('firing', $monitor['status']);
+        $alerts = $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()]);
+        $this->assertSame(1, $alerts['total']);
+        $this->assertSame([$monitor['alertId']], \array_column($alerts['alerts'], '$id'));
+        $this->assertSame(['firing'], \array_column($alerts['alerts'], 'status'));
+
+        // Recovering resolves the one alert, leaving nothing firing.
+        $this->inCoroutine(fn () => $this->evaluateMonitor($this->platform(), $monitorId, 0));
+
+        $alerts = $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()]);
+        $this->assertSame(['resolved'], \array_column($alerts['alerts'], 'status'));
+    }
+
+    public function testUnannouncedAlertResolvesWithItsMonitor(): void
+    {
+        $monitorId = $this->createPausedMonitor('Unannounced ' . \uniqid());
+
+        /**
+         * Test for SUCCESS
+         */
+        // The queue refuses the announcement: the alert is open, and the monitor keeps its old state.
+        $this->assertSame('The notification for the alert was not accepted by the queue.', $this->evaluateRefused($monitorId));
+
+        $monitor = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body'];
+        $this->assertSame('ok', $monitor['status']);
+        $this->assertSame('', $monitor['alertId']);
+        $opened = $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()])['alerts'];
+        $this->assertSame(['firing'], \array_column($opened, 'status'));
+        $this->assertSame([0], \array_column($opened, 'notifications'));
+
+        // Usage recovers before the evaluation is retried.
+        $this->inCoroutine(fn () => $this->evaluateMonitor($this->platform(), $monitorId, 0));
+
+        $alert = $this->getAlert($opened[0]['$id']);
+        $this->assertSame('resolved', $alert['status']);
+        $this->assertNotNull($alert['resolvedAt']);
+        $this->assertSame('ok', $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body']['status']);
+
+        // Deleting the monitor resolves an alert it opened but never announced as well.
+        $this->evaluateRefused($monitorId);
+        $this->assertCount(1, $this->listAlerts([
+            Query::equal('monitorId', [$monitorId])->toString(),
+            Query::equal('status', ['firing'])->toString(),
+        ])['alerts']);
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $this->headers());
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $alerts = $this->listAlerts([Query::equal('monitorId', [$monitorId])->toString()]);
+        $this->assertSame(2, $alerts['total']);
+        $this->assertSame(['resolved', 'resolved'], \array_column($alerts['alerts'], 'status'));
+    }
+
     public function testCooldownSuppressesRefiringAndItsResolution(): void
     {
         $path = '/alerts/' . \uniqid();
@@ -479,28 +589,104 @@ final class EvaluationCustomServerTest extends Scope
     }
 
     /**
-     * @return array<string, string>
-     */
-    /**
      * @param callable(object): void $callback receives the registered `databaseFactory`, whose class an edition may replace
      */
     private function withFactory(callable $callback): void
     {
-        $run = function () use ($callback): void {
+        $this->inCoroutine(function () use ($callback): void {
             global $register;
             $authorization = new Authorization();
             $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
 
             $authorization->skip(fn () => $callback($factory));
-        };
+        });
+    }
 
+    private function inCoroutine(callable $callback): void
+    {
         if (Coroutine::getCid() >= 0) {
-            $run();
+            $callback();
         } else {
-            run($run);
+            run($callback);
         }
     }
 
+    /**
+     * The platform database as the alerts worker sees it, with authorization off.
+     */
+    private function platform(): Database
+    {
+        global $register;
+
+        return $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), new Authorization(false))->platform();
+    }
+
+    /**
+     * A paused monitor the scheduler leaves alone, so only the test evaluates it.
+     */
+    private function createPausedMonitor(string $name): string
+    {
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => $name,
+            'rules' => [Query::greaterThan('bandwidth.outbound', 10)->toString()],
+            'cooldown' => 0,
+            'channels' => ['webhook'],
+            'webhookUrl' => 'http://request-catcher-webhook:5000/alerts/' . \uniqid(),
+            'enabled' => false,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        return $created['body']['$id'];
+    }
+
+    /**
+     * Runs the alerts worker's evaluation of the monitor against a measured value,
+     * with a queue that accepts or refuses its announcements.
+     */
+    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true): void
+    {
+        $publisher = $this->createStub(NotificationPublisher::class);
+        $publisher->method('enqueue')->willReturn($accepted);
+
+        $evaluator = new class () extends Alerts {
+            public function evaluateNow(Document $monitor, Document $project, float $value, Database $dbForPlatform, NotificationPublisher $publisher): void
+            {
+                $this->evaluate($monitor, $project, $value, new \DateTimeImmutable(), $dbForPlatform, $publisher, []);
+            }
+        };
+
+        $evaluator->evaluateNow(
+            $dbForPlatform->getDocument('monitors', $monitorId),
+            $dbForPlatform->getDocument('projects', $this->getProject()['$id']),
+            $value,
+            $dbForPlatform,
+            $publisher,
+        );
+    }
+
+    /**
+     * Evaluates the monitor as firing while the queue refuses the announcement.
+     *
+     * @return string the error the evaluation failed with
+     */
+    private function evaluateRefused(string $monitorId): string
+    {
+        $message = '';
+        $this->inCoroutine(function () use ($monitorId, &$message): void {
+            try {
+                $this->evaluateMonitor($this->platform(), $monitorId, 20, false);
+            } catch (\RuntimeException $error) {
+                $message = $error->getMessage();
+            }
+        });
+
+        return $message;
+    }
+
+    /**
+     * @return array<string, string>
+     */
     private function headers(): array
     {
         return \array_merge([
