@@ -19,7 +19,7 @@ You can visit your function's domain in the browser to see the demo application.
 
 In the demo app, click the **Register as anonymous** button to create a guest session. This will create a new user in your Appwrite Project. After registering, the demo app will show that you are **Not subscribed**. This means that your user does not have a `subscriber` label. You can click **Subscribe with Stripe** to start the payment process.
 
-Once redirected to Stripe, fill out the payment form. If your Stripe account is in test mode, you can use test card number `4242 4242 4242 4242` with any future expiration date and any CVC code. When done, click the **Subscribe** button.
+Once redirected to Stripe, fill out the payment form. In a sandbox, you can use test card number `4242 4242 4242 4242` with any future expiration date and any CVC code. When done, click the **Subscribe** button.
 
 Once processed, you will be redirected back to the demo application, where **Subscription status** will say **Subscribed**. If it doesn't, please allow Stripe a few moments to process the payment. You can keep refreshing the website until the status is updated.
 
