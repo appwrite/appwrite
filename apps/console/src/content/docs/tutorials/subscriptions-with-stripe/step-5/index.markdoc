@@ -8,7 +8,7 @@ You are now ready to use the Appwrite Function in your front end. You can initia
 
 ## Visit demo {% #visit-demo %} 
 
-You can visit our Function's domain in the browser to see the demo application.
+You can visit your function's domain in the browser to see the demo application.
 
 {% only_dark %}
 ![Stripe subscription demo](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe.avif)
@@ -27,11 +27,11 @@ Once processed, you will be redirected back to the demo application, where **Sub
 
 Once someone subscribes, they should receive a special label that will grant them permissions.
 To verify that a label was added successfully to the user, 
-you can switch to Appwrite Console and visit the **Auth** page of our Appwrite Project. 
+you can switch to Appwrite Console and visit the **Auth** page of your Appwrite Project.
 Here, you should see one anonymous user. 
 
 Let's click on this user to see the details. 
-After scrolling down to the **Labels** card, you can see the `subscriber` label has been added to this user.
+After scrolling down to the **Update labels** card, you can see the `subscriber` label has been added to this user.
 
 {% only_dark %}
 ![Appwrite User screen](/images/docs/tutorials/subscriptions-with-stripe/dark/user-subscriber-label.avif)
@@ -40,6 +40,13 @@ After scrolling down to the **Labels** card, you can see the `subscriber` label 
 ![Appwrite User screen](/images/docs/tutorials/subscriptions-with-stripe/user-subscriber-label.avif)
 {% /only_light %}
 
+## Troubleshooting {% #troubleshooting %}
+
+If the status never changes to **Subscribed**, check whether Stripe delivered the webhook. Open the [Webhooks](https://dashboard.stripe.com/webhooks) tab in Stripe's Workbench, select your destination, and open the **Event deliveries** tab.
+
+- A `401` response means the signature check failed. Make sure `STRIPE_WEBHOOK_SECRET` matches the destination's signing secret, and redeploy the function after changing a variable.
+- A `404` response means the **Endpoint URL** is missing the `/webhook` path.
+- If deliveries succeed but the label isn't added, make sure the destination uses the **Snapshot** payload format, and check the function's **Executions** tab for errors.
 
 ## Permissions {% #permissions %}
 
@@ -47,10 +54,10 @@ The label created will grant the user access to any resource with the following 
 
 | Description                                 | Code Snippet                                |
 | ------------------------------------------- | ------------------------------------------- |
-| Read   | `Permissions.read(Role.label('subscriber'))`|
-| Update | `Permissions.update(Role.label('subscriber'))` |
-| Delete | `Permissions.delete(Role.label('subscriber'))` |
-| Create | `Permissions.create(Role.label('subscriber'))` |
+| Read   | `Permission.read(Role.label('subscriber'))`|
+| Update | `Permission.update(Role.label('subscriber'))` |
+| Delete | `Permission.delete(Role.label('subscriber'))` |
+| Create | `Permission.create(Role.label('subscriber'))` |
 
 {% arrow_link href="/docs/advanced/security/permissions" %}
 Learn more about permissions
