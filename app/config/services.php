@@ -90,7 +90,7 @@ return [
         'name' => 'Locale',
         'subtitle' => 'The Locale service allows you to customize your app based on your users\' location.',
         'description' => '/docs/services/locale.md',
-        'controller' => 'api/locale.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/locale',
