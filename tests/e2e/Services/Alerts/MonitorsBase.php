@@ -39,6 +39,7 @@ trait MonitorsBase
         $this->assertSame(600, $monitor['body']['window']);
         $this->assertSame(1800, $monitor['body']['cooldown']);
         $this->assertTrue($monitor['body']['enabled']);
+        $this->assertTrue($monitor['body']['notify']);
         $this->assertSame('ok', $monitor['body']['status']);
         $this->assertSame('', $monitor['body']['alertId']);
         $this->assertNull($monitor['body']['evaluatedAt']);
@@ -137,6 +138,7 @@ trait MonitorsBase
         $updated = $this->updateMonitor($monitorId, [
             'rules' => [Query::lessThanEqual('files.storage', 42)->toString()],
             'enabled' => false,
+            'notify' => false,
         ]);
 
         /**
@@ -147,6 +149,7 @@ trait MonitorsBase
         $monitor = $this->getMonitor($monitorId);
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $monitor['body']['rules']);
         $this->assertFalse($monitor['body']['enabled']);
+        $this->assertFalse($monitor['body']['notify']);
         $this->assertSame('Before', $monitor['body']['name']);
         $this->assertSame(900, $monitor['body']['cooldown']);
 
@@ -154,6 +157,7 @@ trait MonitorsBase
         $this->assertSame(200, $renamed['headers']['status-code']);
         // Rules left out are kept.
         $this->assertSame([Query::lessThanEqual('files.storage', 42)->toString()], $renamed['body']['rules']);
+        $this->assertFalse($renamed['body']['notify']);
 
         $found = $this->listMonitors([Query::search('search', 'After ' . $monitorId)->toString()]);
         $this->assertSame([$monitorId], \array_column($found['body']['monitors'], '$id'));

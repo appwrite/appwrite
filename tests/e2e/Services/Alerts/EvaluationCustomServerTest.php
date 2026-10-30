@@ -175,6 +175,61 @@ final class EvaluationCustomServerTest extends Scope
         }, 60_000, 1_000);
     }
 
+    public function testMonitorWithoutNotifyOnlyFiresEvents(): void
+    {
+        $name = 'Silent ' . \uniqid();
+        $webhook = $this->createAlertWebhook();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => $name,
+            'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
+            'cooldown' => 0,
+            'notify' => false,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $this->assertFalse($created['body']['notify']);
+        $monitorId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        // The alert is recorded and its event delivered...
+        $firing = $this->waitForStatus($monitorId, 'firing');
+        $alert = $this->getAlert($firing['alertId']);
+        $this->assertSame('firing', $alert['status']);
+        $this->assertSame(0, $alert['notifications']);
+        $this->waitForEvent($webhook['path'], $monitorId, 'firing');
+
+        $this->setThreshold($monitorId, 1e15);
+        $this->waitForStatus($monitorId, 'ok');
+        $this->waitForEvent($webhook['path'], $monitorId, 'resolved');
+
+        // ...while the owners hear nothing, by email or in the console.
+        \sleep(10);
+        $this->assertSame(['firing' => 0, 'resolved' => 0], $this->teamNotifications($name));
+        $emails = \json_decode((string) \file_get_contents('http://maildev:1080/email'), true) ?: [];
+        $this->assertSame([], \array_values(\array_filter(
+            \array_column($emails, 'subject'),
+            fn (string $subject) => \str_contains($subject, ' ' . $name . ' · '),
+        )));
+
+        // Turning it back on notifies them of the next firing.
+        $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+            'notify' => true,
+            'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
+        ]);
+        $this->assertTrue($this->getMonitorBody($monitorId)['notify']);
+        $this->waitForStatus($monitorId, 'firing');
+        $this->assertEventually(function () use ($name) {
+            $this->assertSame(1, $this->teamNotifications($name)['firing']);
+        }, 60_000, 1_000);
+    }
+
     public function testTransferredProjectAlertsItsNewOrganizationsOwners(): void
     {
         $console = [
@@ -1308,6 +1363,17 @@ final class EvaluationCustomServerTest extends Scope
         }, self::TIMEOUT_MS, 1_000);
 
         return $evaluatedAt;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getMonitorBody(string $monitorId): array
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers());
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        return $response['body'];
     }
 
     /**
