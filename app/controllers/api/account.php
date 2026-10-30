@@ -1889,6 +1889,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
         $providerEmail = $oauth2->getUserEmail($accessToken);
         $email = $providerEmail;
+        $isVerified = $oauth2->isEmailVerified($accessToken);
 
         // Check if this identity is connected to a different user
         if (!$user->isEmpty()) {
@@ -1961,8 +1962,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $newTarget = null;
 
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
-            $isVerified = $oauth2->isEmailVerified($accessToken);
-
             $identity = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
@@ -2057,6 +2056,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
                     if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                    // An address held by identities of more than one user matches nobody
+                    $identityOfAnotherUser = $dbForProject->findOne('identities', [
+                        Query::equal('providerEmail', [$providerEmail]),
+                        Query::notEqual('userInternalId', $identityWithMatchingEmail->getAttribute('userInternalId')),
+                    ]);
+                    if (!$identityOfAnotherUser->isEmpty()) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
@@ -2163,8 +2170,6 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'emailIsDisposable' => null,
                 'emailIsFree' => null,
             ];
-
-            $isVerified = $oauth2->isEmailVerified($accessToken);
 
             try {
                 $parsedEmail = new Email($providerEmail);
@@ -2289,7 +2294,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     'userId' => $userId,
                     'provider' => $provider,
                     'providerUid' => $oauth2ID,
-                    'providerEmail' => $providerEmail,
+                    // Identity email lookups adopt users, so only store an attested address
+                    'providerEmail' => $isVerified ? $providerEmail : '',
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
@@ -2309,13 +2315,30 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
-            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+            $changes = [
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 // Refresh the photo URL on every login so expired CDN links self-heal.
                 'photo' => $oauth2->getUserPhoto($accessToken),
-            ]));
+            ];
+
+            // Store an email only once the provider attests it, and never one another user's identity holds.
+            // A different address drops the stored one; a missing email or an unverified repeat keeps it.
+            if ($isVerified && !empty($providerEmail)) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $user->getSequence()),
+                ]);
+                if ($identityWithMatchingEmail->isEmpty()) {
+                    $changes['providerEmail'] = $providerEmail;
+                }
+            }
+            if (!isset($changes['providerEmail']) && !empty($providerEmail) && $providerEmail !== $identity->getAttribute('providerEmail', '')) {
+                $changes['providerEmail'] = '';
+            }
+
+            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
         }
 
         if (empty($user->getAttribute('name'))) {

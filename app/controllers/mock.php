@@ -244,12 +244,22 @@ Http::get('/v1/mock/tests/general/oauth2/user')
             ];
         } elseif (\str_starts_with($token, 'canonical-')) {
             $id = \substr($token, \strlen('canonical-'));
+            // A "#unverified" suffix reports the same user's email as unverified
+            $verified = !\str_ends_with($id, '#unverified');
+            if (!$verified) {
+                $id = \substr($id, 0, -\strlen('#unverified'));
+            }
+            // A "<id>|<email>" value keeps the user ID while the email changes
+            $address = $id;
+            if (\str_contains($id, '|')) {
+                [$id, $address] = \explode('|', $id, 2);
+            }
             $user = [
                 'id' => $id,
                 'name' => 'Canonical Email User',
                 // Any address only in development, where the e2e suite runs
-                'email' => \str_contains($id, '@') && System::getEnv('_APP_ENV', 'development') === 'development' ? $id : 'oauth.' . $id . '@gmail.com',
-                'verified' => true,
+                'email' => \str_contains($address, '@') && System::getEnv('_APP_ENV', 'development') === 'development' ? $address : 'oauth.' . $address . '@gmail.com',
+                'verified' => $verified,
                 'photo' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
             ];
         } else {

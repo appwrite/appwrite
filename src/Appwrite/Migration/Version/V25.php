@@ -13,6 +13,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
+use Utopia\Emails\Email;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
 
@@ -439,6 +440,23 @@ class V25 extends Migration
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
+
+                    // Identity email lookups match users, so keep only addresses the owner has verified.
+                    // Other identities regain their email on the next verified sign-in.
+                    // Failures propagate so the migration can be re-run; the step is idempotent.
+                    if ($this->dbForProject->findCollection($id) !== null) {
+                        // Each page and its cursor are read before clearing, so the shrinking filter cannot skip rows
+                        $cursor = null;
+                        do {
+                            $queries = [Query::notEqual('providerEmail', ''), Query::limit(100)];
+                            if ($cursor !== null) {
+                                $queries[] = Query::cursorAfter($cursor);
+                            }
+                            $identities = $this->dbForProject->find($id, $queries);
+                            $cursor = \end($identities) ?: null;
+                            $this->clearUnverifiedIdentityEmails($identities);
+                        } while (\count($identities) === 100);
+                    }
                     break;
 
                 case 'sessions':
@@ -620,6 +638,61 @@ class V25 extends Migration
             $this->dbForProject->purgeCachedCollection($id);
             $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
         }
+    }
+
+    /**
+     * @param array<Document> $identities
+     */
+    private function clearUnverifiedIdentityEmails(array $identities): void
+    {
+        if ($identities === []) {
+            return;
+        }
+
+        $userIds = \array_values(\array_unique(\array_map(
+            fn (Document $identity) => (string) $identity->getAttribute('userId', ''),
+            $identities
+        )));
+
+        $users = [];
+        foreach ($this->dbForProject->find('users', [Query::equal('$id', $userIds), Query::limit(\count($userIds))]) as $user) {
+            $users[$user->getId()] = $user;
+        }
+
+        foreach ($identities as $identity) {
+            $user = $users[$identity->getAttribute('userId', '')] ?? null;
+            if (
+                $user !== null
+                && $user->getAttribute('emailVerification', false) === true
+                && $this->isOwnerEmail((string) $identity->getAttribute('providerEmail', ''), (string) $user->getAttribute('email', ''))
+            ) {
+                continue;
+            }
+
+            $this->dbForProject->updateDocument('identities', $identity->getId(), new Document([
+                'providerEmail' => '',
+            ]));
+        }
+    }
+
+    /**
+     * Whether the provider email is the owner's email, ignoring case or as the
+     * same-domain canonical form the OAuth2 flow stores on users.
+     */
+    private function isOwnerEmail(string $providerEmail, string $email): bool
+    {
+        if (\mb_strtolower($providerEmail) === \mb_strtolower($email)) {
+            return true;
+        }
+
+        try {
+            $canonicalLocal = \explode('@', (new Email($providerEmail))->getCanonical(), 2)[0];
+        } catch (Throwable) {
+            return false;
+        }
+        $providerDomain = \explode('@', \mb_strtolower($providerEmail), 2)[1] ?? '';
+
+        return $canonicalLocal . '@' . $providerDomain === \mb_strtolower($email);
     }
 
     protected function migrateDocument(Document $document): Document
