@@ -37,13 +37,13 @@ Open the [Webhooks](https://dashboard.stripe.com/webhooks) tab in Workbench and 
 Stripe recommends **Thin** events for new integrations, but the template reads the subscription details from each event's payload, which only **Snapshot** events include. With a **Thin** destination, the function can't tell which user subscribed, and the `subscriber` label is never added.
 {% /info %}
 
+Once created, Stripe opens the destination's details page. Reveal the **Signing secret**, which starts with `whsec_`, and copy it. Note it down, as you will need it later when setting the `STRIPE_WEBHOOK_SECRET` environment variable.
+
 {% only_dark %}
-![Stripe webhook destination setup](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe-webhook-subscription.avif)
+![Stripe webhook destination details](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe-webhook-subscription.avif)
 {% /only_dark %}
 {% only_light %}
-![Stripe webhook destination setup](/images/docs/tutorials/subscriptions-with-stripe/stripe-webhook-subscription.avif)
+![Stripe webhook destination details](/images/docs/tutorials/subscriptions-with-stripe/stripe-webhook-subscription.avif)
 {% /only_light %}
-
-Once created, Stripe opens the destination's details page. Reveal the **Signing secret**, which starts with `whsec_`, and copy it. Note it down, as you will need it later when setting the `STRIPE_WEBHOOK_SECRET` environment variable.
 
 Keep this page open, as you will need it soon to replace the placeholder URL with your function's domain.

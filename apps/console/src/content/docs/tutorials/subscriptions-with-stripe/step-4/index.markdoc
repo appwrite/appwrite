@@ -30,6 +30,6 @@ You don't need to follow the remaining setup instructions, so you can click **Do
 
 ## Update webhook endpoint {% #update-webhook-endpoint %}
 
-Go back to the [Webhooks](https://dashboard.stripe.com/webhooks) tab in Stripe's Workbench and select the destination you created earlier. Edit the destination and update its **Endpoint URL** to `https://<YOUR_FUNCTION_DOMAIN>/webhook`. For example, `https://subscriptions-with-stripe.fra.appwrite.run/webhook`.
+Go back to the [Webhooks](https://dashboard.stripe.com/webhooks) tab in Stripe's Workbench and select the destination you created earlier. Click **Edit destination** and update its **Endpoint URL** to `https://<YOUR_FUNCTION_DOMAIN>/webhook`. For example, `https://subscriptions-with-stripe.fra.appwrite.run/webhook`.
 
 The signing secret stays the same, so you don't need to change the function's variables.
