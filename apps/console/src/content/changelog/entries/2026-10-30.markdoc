@@ -7,7 +7,7 @@ tags: functions, sites, performance
 
 When a function or site on Appwrite Cloud starts from cold, Appwrite now routes the first request to it as soon as your code begins accepting connections. Previously, that request also waited for an extra readiness step on our side to complete.
 
-Your first execution after a cold start now returns sooner.
+The change rolled out to every Appwrite Cloud region on 29 October. In our first measurements since, the median function cold start dropped from about 3.7 seconds to 2.1 seconds, roughly 40% faster. Every region improved, by between 1.1 and 2.2 seconds.
 
 The improvement applies to all [Appwrite Functions](/docs/products/functions) and [Appwrite Sites](/docs/products/sites) automatically, with no changes to your code or settings.
 
