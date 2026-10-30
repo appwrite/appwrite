@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Alerts;
 
 use Appwrite\Alert\Meter;
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Bus\Listeners\Usage as UsageListener;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
@@ -175,7 +177,7 @@ final class EvaluationCustomServerTest extends Scope
         }, 60_000, 1_000);
     }
 
-    public function testMonitorWithoutNotifyOnlyFiresEvents(): void
+    public function testMonitorNotifyingNobodyOnlyFiresEvents(): void
     {
         $name = 'Silent ' . \uniqid();
         $webhook = $this->createAlertWebhook();
@@ -189,10 +191,10 @@ final class EvaluationCustomServerTest extends Scope
             'name' => $name,
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
             'cooldown' => 0,
-            'notify' => false,
+            'notify' => [],
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
-        $this->assertFalse($created['body']['notify']);
+        $this->assertSame([], $created['body']['notify']);
         $monitorId = $created['body']['$id'];
 
         /**
@@ -218,16 +220,142 @@ final class EvaluationCustomServerTest extends Scope
             fn (string $subject) => \str_contains($subject, ' ' . $name . ' · '),
         )));
 
-        // Turning it back on notifies them of the next firing.
+        // Listing the owners again notifies them of the next firing.
         $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
-            'notify' => true,
+            'notify' => ['owner'],
             'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
         ]);
-        $this->assertTrue($this->getMonitorBody($monitorId)['notify']);
+        $this->assertSame(['owner'], $this->getMonitorBody($monitorId)['notify']);
         $this->waitForStatus($monitorId, 'firing');
         $this->assertEventually(function () use ($name) {
             $this->assertSame(1, $this->teamNotifications($name)['firing']);
         }, 60_000, 1_000);
+    }
+
+    public function testNotifyReachesTheListedRoles(): void
+    {
+        $console = $this->consoleHeaders();
+        $teamId = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'], $console)['body']['teamId'];
+        $developer = $this->addMember($teamId, ['developer']);
+        $name = 'Roles ' . \uniqid();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => $name,
+            'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
+            'cooldown' => 0,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        // Owners by default: the owner hears about the firing, the developer does not.
+        $this->waitForStatus($monitorId, 'firing');
+        $this->getLastEmailByAddress($this->getRoot()['email'], function (array $email) use ($name) {
+            $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
+        });
+        \sleep(5);
+        $this->assertSame([], $this->emailSubjects($developer, $name));
+
+        // Listing developers too sends them the resolution.
+        $updated = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), [
+            'notify' => ['owner', 'developer'],
+        ]);
+        $this->assertSame(['owner', 'developer'], $updated['body']['notify']);
+        $this->setThreshold($monitorId, 1e15);
+        $this->waitForStatus($monitorId, 'ok');
+
+        $email = $this->getLastEmailByAddress($developer, function (array $email) use ($name) {
+            $this->assertStringStartsWith('[Resolved] ' . $name . ' · ', $email['subject']);
+        });
+        $this->assertStringContainsString('as a developer of', (string) $email['html']);
+    }
+
+    public function testAlertEmailsCanBeUnsubscribed(): void
+    {
+        $name = 'Unsubscribe ' . \uniqid();
+        $root = $this->getRoot();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $this->headers())['headers']['status-code']);
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $this->headers(), [
+            'monitorId' => 'unique()',
+            'name' => $name,
+            'rules' => [Query::greaterThan('network.outbound', 0)->toString()],
+            'cooldown' => 0,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        // Every alert email carries one-click unsubscribe headers and both links.
+        $this->waitForStatus($monitorId, 'firing');
+        $email = $this->getLastEmailByAddress($root['email'], function (array $email) use ($name) {
+            $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
+        });
+        $this->assertSame('List-Unsubscribe=One-Click', $email['headers']['list-unsubscribe-post'] ?? null);
+        $this->assertSame(1, \preg_match('#<(https?://[^>]+/v1/console/alerts/unsubscribe\?[^>]+)>#', (string) ($email['headers']['list-unsubscribe'] ?? ''), $header));
+        $this->assertStringContainsString('Stop emails for this monitor', (string) $email['html']);
+        $this->assertStringContainsString('Stop all usage alert emails', (string) $email['html']);
+        $this->assertStringContainsString('/alerts/unsubscribe?token=', (string) $email['html']);
+        \parse_str((string) \parse_url(\html_entity_decode($header[1]), PHP_URL_QUERY), $query);
+        $token = (string) $query['token'];
+
+        // Paused, so only the test evaluates it from here on.
+        $this->assertSame(200, $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $this->headers(), ['enabled' => false])['headers']['status-code']);
+        \sleep(2);
+
+        // One click from the mail client, as RFC 8058 describes it.
+        $unsubscribed = $this->client->call(Client::METHOD_POST, '/console/alerts/unsubscribe?project=console&token=' . \urlencode($token), [
+            'content-type' => 'application/x-www-form-urlencoded',
+        ], ['List-Unsubscribe' => 'One-Click']);
+        $this->assertSame(204, $unsubscribed['headers']['status-code']);
+
+        // Another monitor, not unsubscribed from.
+        $other = $this->createPausedMonitor('Other ' . \uniqid());
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($monitorId, $root['$id']));
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
+
+        // Every monitor's emails stop with the "all" link; console notifications stay.
+        $all = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root['$id'], Unsubscribe::ALL);
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $all)['headers']['status-code']);
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($other, $root['$id']));
+
+        // Resuming undoes each, with the same token.
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $all)['headers']['status-code']);
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE], $this->ownerChannels($monitorId, $root['$id']));
+        $this->assertSame(204, $this->unsubscribe(Client::METHOD_DELETE, $token)['headers']['status-code']);
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($monitorId, $root['$id']));
+
+        /**
+         * Test for FAILURE
+         */
+        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        [$head, $claims, $signature] = \explode('.', $token);
+        $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['scope' => Unsubscribe::ALL] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
+        foreach ([
+            'tampered' => $forged,
+            'expired' => $unsubscribe->token($root['$id'], $monitorId, \time() - ALERT_UNSUBSCRIBE_TTL - 60),
+            'another secret' => (new Unsubscribe('another-secret'))->token($root['$id'], $monitorId),
+            'missing' => '',
+        ] as $case => $invalid) {
+            $refused = $this->unsubscribe(Client::METHOD_POST, $invalid);
+            $this->assertSame(401, $refused['headers']['status-code'], $case);
+            $this->assertSame('user_invalid_token', $refused['body']['type'], $case);
+        }
+        // None of them changed anything.
+        $this->assertSame([NOTIFICATION_TYPE_CONSOLE, NOTIFICATION_TYPE_EMAIL], $this->ownerChannels($other, $root['$id']));
     }
 
     public function testTransferredProjectAlertsItsNewOrganizationsOwners(): void
@@ -1242,10 +1370,17 @@ final class EvaluationCustomServerTest extends Scope
      * Runs the alerts worker's evaluation of the monitor against a measured value,
      * with a queue that accepts or refuses its announcements.
      */
-    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true): void
+    /**
+     * @param list<NotificationMessage> $messages receives what the evaluation published
+     */
+    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = []): void
     {
         $publisher = $this->createStub(NotificationPublisher::class);
-        $publisher->method('enqueue')->willReturn($accepted);
+        $publisher->method('enqueue')->willReturnCallback(function (NotificationMessage $message) use ($accepted, &$messages): bool {
+            $messages[] = $message;
+
+            return $accepted;
+        });
 
         $evaluator = new class () extends Alerts {
             public function evaluateNow(Document $monitor, Document $project, float $value, Database $dbForPlatform, NotificationPublisher $publisher): void
@@ -1363,6 +1498,108 @@ final class EvaluationCustomServerTest extends Scope
         }, self::TIMEOUT_MS, 1_000);
 
         return $evaluatedAt;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function consoleHeaders(): array
+    {
+        return [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+    }
+
+    /**
+     * Invites a new console user to the organization with `$roles` and confirms them.
+     *
+     * @param list<string> $roles
+     * @return string the member's email
+     */
+    private function addMember(string $teamId, array $roles): string
+    {
+        $email = 'member-' . \uniqid() . '@localhost.test';
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $this->consoleHeaders(), [
+            'email' => $email,
+            'roles' => $roles,
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+        $invite = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email, function (array $email) {
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
+        })['html']);
+        $confirmed = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $invite['userId'],
+            'secret' => $invite['secret'],
+        ]);
+        $this->assertSame(200, $confirmed['headers']['status-code']);
+
+        return $email;
+    }
+
+    /**
+     * Subjects of the alert emails `$address` received for the monitor named `$name`.
+     *
+     * @return list<string>
+     */
+    private function emailSubjects(string $address, string $name): array
+    {
+        $subjects = [];
+        foreach (\json_decode((string) \file_get_contents('http://maildev:1080/email'), true) ?: [] as $email) {
+            $to = \array_column($email['to'] ?? [], 'address');
+            if (\in_array($address, $to, true) && \str_contains((string) ($email['subject'] ?? ''), ' ' . $name . ' · ')) {
+                $subjects[] = (string) $email['subject'];
+            }
+        }
+
+        return $subjects;
+    }
+
+    /**
+     * Posts or deletes an unsubscribe with `$token`, as the console page does.
+     *
+     * @return array<string, mixed>
+     */
+    private function unsubscribe(string $method, string $token): array
+    {
+        return $this->client->call($method, '/console/alerts/unsubscribe', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], ['token' => $token]);
+    }
+
+    /**
+     * The channels the alerts worker sends the user when the paused monitor
+     * fires and resolves, evaluated in-process.
+     *
+     * @return list<string>
+     */
+    private function ownerChannels(string $monitorId, string $userId): array
+    {
+        $channels = [];
+        $this->inCoroutine(function () use ($monitorId, $userId, &$channels): void {
+            $messages = [];
+            $this->evaluateMonitor($this->platform(), $monitorId, 20, messages: $messages);
+            $this->evaluateMonitor($this->platform(), $monitorId, 0, messages: $messages);
+            foreach ($messages as $message) {
+                foreach ($message->recipients as $recipient) {
+                    if (($recipient['resourceId'] ?? '') === $userId) {
+                        $channels[] = $recipient['channel'];
+                    }
+                }
+            }
+        });
+        $channels = \array_values(\array_unique($channels));
+        \sort($channels);
+
+        return $channels;
     }
 
     /**
