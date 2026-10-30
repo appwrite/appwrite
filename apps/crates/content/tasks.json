@@ -86,8 +86,8 @@
       "title": "Migrate the next services",
       "area": "Services",
       "status": "todo",
-      "note": "After Users and Teams, which Rust serves, and Account, implemented but not routed yet: the next services to port, each with its parity diff matrix and benchmarks.",
-      "updated": "2026-10-17T19:50:00Z"
+      "note": "Users, Teams and Storage are served by Rust. Account is implemented and waiting for routing. Each service still to port gets a parity diff and a benchmark.",
+      "updated": "2026-10-19T16:00:00Z"
     },
     {
       "id": "account-dedupe",
@@ -584,6 +584,14 @@
       "status": "done",
       "note": "About 88 routes: sessions, tokens, JWTs, MFA, passkeys, profile, recovery, verifications, identities and targets.",
       "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "storage",
+      "title": "Storage service in Rust",
+      "area": "Services",
+      "status": "done",
+      "updated": "2026-10-19T16:00:00Z",
+      "note": "14 routes: buckets, files, preview, download, view and push. Traefik sends /v1/storage to Rust. The PHP suite through Traefik passed, 108 tests and 2,711 assertions, with one skipped because antivirus is disabled. The benchmark is on the service page."
     },
     {
       "id": "teams",

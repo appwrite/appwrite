@@ -41,6 +41,7 @@ fn routes() -> Vec<(String, &'static str)> {
         appwrite_users::Users.routes().into_iter().map(|r| (r.method.to_string(), r.path)).collect();
     out.extend(appwrite_account::Account.routes().into_iter().map(|r| (r.method.to_string(), r.path)));
     out.extend(appwrite_teams::Teams.routes().into_iter().map(|r| (r.method.to_string(), r.path)));
+    out.extend(appwrite_storage::Storage.routes().into_iter().map(|r| (r.method.to_string(), r.path)));
     out.extend(health::Health.routes().into_iter().map(|r| (r.method.to_string(), r.path)));
     out
 }
@@ -78,10 +79,26 @@ fn serve() {
         let platform = Platform::new(state)
             .module(&appwrite_users::Users)
             .module(&appwrite_teams::Teams)
+            .module(&appwrite_storage::Storage)
             .module(&appwrite_account::Account)
             .module(&health::Health);
         let addr = SocketAddr::from(([0, 0, 0, 0], port));
-        let options = ServerOptions::default();
+        // `app/http.php` sets Swoole's package_max_length to 12MB. A larger body is 413.
+        let max_body = 12 * 1024 * 1024;
+        // Most requests carry no body, so the concurrency cap alone does not
+        // bound memory (4,096 × 12 MiB is 48 GiB). Request bodies in memory
+        // are bounded together instead: past 1 GiB, a request gets a 503.
+        let body_memory = appwrite_core::config::env_int("_APP_RUST_MAX_BODY_MEMORY", 1024 * 1024 * 1024);
+        let options = ServerOptions {
+            max_body,
+            // The shared default of 1,000 rejects this process once a slow minute
+            // (a busy machine, preview renders, chunked uploads) holds that many
+            // requests. The benchmark client opens up to 1,040 of them at 500
+            // req/s, and each rejection was a 503. 4,096 still bounds a flood.
+            max_concurrency: appwrite_core::config::env_int("_APP_RUST_MAX_CONCURRENCY", 4_096).max(1) as usize,
+            max_body_memory: body_memory.max(max_body as i64) as usize,
+            ..ServerOptions::default()
+        };
         tracing::info!(workers, "appwrite rust api starting");
         if let Err(e) = utopia_http::serve(addr, Arc::new(platform), options, shutdown_signal()).await {
             tracing::error!(error = %e, "server error");

@@ -76,6 +76,9 @@ pub struct Response {
     /// A body staged by [`Response::with_body`], sent by the server when the
     /// application did not send one itself.
     staged: Option<Bytes>,
+    /// A body staged by [`Response::stage_stream`]: produced as the client reads
+    /// it, with its length.
+    staged_body: Option<(Body, usize)>,
     stream: Option<Stream>,
 }
 
@@ -98,6 +101,7 @@ impl Clone for Response {
             compression_supported: self.compression_supported.clone(),
             wire: self.wire.clone(),
             staged: self.staged.clone(),
+            staged_body: None,
             stream: None,
         }
     }
@@ -139,6 +143,7 @@ impl Response {
             compression_supported: Vec::new(),
             wire: Wire::default(),
             staged: None,
+            staged_body: None,
             stream: None,
         }
     }
@@ -185,12 +190,46 @@ impl Response {
         self.staged = Some(body.into());
     }
 
+    /// Stages the body `chunks` yields, `length` bytes produced as the client
+    /// reads them rather than held in memory (a large file), to be sent by
+    /// [`Response::flush`] uncompressed, as PHP sends a body written with
+    /// `chunk()`. The length counts toward the response size; the body goes
+    /// out chunked, and an [`Aborted`] item cuts it short (the client sees
+    /// it incomplete).
+    ///
+    /// Rust only: a PHP action loops over `chunk()` instead. Only a response
+    /// turned into a hyper response with [`Response::into_http`] sends it.
+    pub fn stage_stream(
+        &mut self,
+        chunks: impl futures_util::Stream<Item = std::result::Result<Bytes, Aborted>> + Send + 'static,
+        length: usize,
+    ) {
+        use futures_util::TryStreamExt;
+        use http_body_util::BodyExt;
+        let chunks = Exclusive(std::sync::Mutex::new(Box::pin(chunks)));
+        let body = http_body_util::StreamBody::new(chunks.map_ok(hyper::body::Frame::data)).boxed();
+        self.staged = None;
+        self.staged_body = Some((body, length));
+    }
+
     /// Sends the staged body, if any, unless the response was sent.
     pub fn flush(&mut self) {
-        if !self.sent
-            && !self.headers_sent
-            && let Some(body) = self.staged.take()
-        {
+        if self.sent || self.headers_sent {
+            return;
+        }
+        if let Some((body, length)) = self.staged_body.take() {
+            self.append_cookies();
+            self.debug_speed();
+            self.append_headers();
+            self.headers_sent = true;
+            self.sent = true;
+            self.wire.ended = true;
+            if !self.disable_payload {
+                self.size += self.headers_size() + length;
+                self.staged_body = Some((body, length));
+            }
+            self.disable_payload = true;
+        } else if let Some(body) = self.staged.take() {
             self.send(&body);
         }
     }
@@ -737,9 +776,31 @@ impl Response {
     pub fn into_http(mut self) -> http::Response<Body> {
         use http_body_util::BodyExt;
         self.flush();
+        let streamed = self.staged_body.take();
         let wire = self.wire;
-        let body = http_body_util::Full::new(Bytes::from(wire.body)).map_err(|never| match never {}).boxed();
+        let body = match streamed {
+            Some((body, _)) => body,
+            None => http_body_util::Full::new(Bytes::from(wire.body)).map_err(|never| match never {}).boxed(),
+        };
         head_response(wire.status.unwrap_or(200), &wire.headers, &wire.cookies, body)
+    }
+}
+
+type Chunks = std::pin::Pin<Box<dyn futures_util::Stream<Item = std::result::Result<Bytes, Aborted>> + Send>>;
+
+/// A stream that is `Sync` because only its owner, through `&mut`, polls it
+/// ([`Body`] must be `Sync`; a file being read need not be).
+struct Exclusive(std::sync::Mutex<Chunks>);
+
+impl futures_util::Stream for Exclusive {
+    type Item = std::result::Result<Bytes, Aborted>;
+
+    fn poll_next(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        let chunks = self.get_mut().0.get_mut().unwrap_or_else(|e| e.into_inner());
+        chunks.as_mut().poll_next(cx)
     }
 }
 
@@ -784,6 +845,28 @@ pub(crate) fn head_response(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn staged_stream() {
+        use http_body_util::BodyExt;
+        let chunks = futures_util::stream::iter([Ok(Bytes::from_static(b"ab")), Ok(Bytes::from_static(b"cd"))]);
+        let mut r = Response::with_body(StatusCode::OK, "text/plain", "ignored");
+        r.stage_stream(chunks, 4);
+        r.add_header("x-late", "1");
+        r.flush();
+        assert!(r.is_sent());
+        assert!(r.size() >= 4);
+        let http = r.into_http();
+        assert_eq!(http.headers()["x-late"], "1");
+        assert!(!http.headers().contains_key("content-length"));
+        let body = utopia_async::run(http.into_body().collect()).unwrap().to_bytes();
+        assert_eq!(&body[..], b"abcd");
+
+        let chunks = futures_util::stream::iter([Ok(Bytes::from_static(b"ab")), Err(Aborted)]);
+        let mut r = Response::new();
+        r.stage_stream(chunks, 4);
+        assert!(utopia_async::run(r.into_http().into_body().collect()).is_err());
+    }
 
     #[test]
     fn send_once() {

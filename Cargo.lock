@@ -193,6 +193,7 @@ version = "0.1.0"
 dependencies = [
  "appwrite-account",
  "appwrite-core",
+ "appwrite-storage",
  "appwrite-teams",
  "appwrite-users",
  "mimalloc",
@@ -201,6 +202,33 @@ dependencies = [
  "tracing-subscriber",
  "utopia-async",
  "utopia-http",
+]
+
+[[package]]
+name = "appwrite-storage"
+version = "0.1.0"
+dependencies = [
+ "appwrite-core",
+ "bytes",
+ "futures-util",
+ "hex",
+ "indexmap",
+ "php-std",
+ "serde",
+ "serde_json",
+ "tracing",
+ "utopia-async",
+ "utopia-client",
+ "utopia-compression",
+ "utopia-database",
+ "utopia-dsn",
+ "utopia-http",
+ "utopia-image",
+ "utopia-lock",
+ "utopia-query",
+ "utopia-storage",
+ "utopia-system",
+ "utopia-validators",
 ]
 
 [[package]]

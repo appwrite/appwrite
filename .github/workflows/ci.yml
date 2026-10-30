@@ -1052,12 +1052,12 @@ jobs:
           cache-from: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:rust-buildcache
           cache-to: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:rust-buildcache,mode=max
 
-  # The PHP Users suite, sent through Traefik so /v1/users/* is served by the
-  # Rust API while every other route (account, teams, projects...) stays on PHP.
+  # PHP suites sent through Traefik so migrated paths are served by the Rust
+  # API while every other route stays on PHP.
   e2e_rust:
-    name: Tests / E2E / PostgreSQL (${{ matrix.mode }}) / Users (Rust)
+    name: Tests / E2E / PostgreSQL (${{ matrix.mode }}) / Users and Storage (Rust)
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 75
+    timeout-minutes: 100
     needs: [build, build_rust]
     permissions:
       contents: read
@@ -1112,6 +1112,7 @@ jobs:
               done
 
       - name: Load and Start Appwrite
+        id: start
         timeout-minutes: 5
         env:
           _APP_BROWSER_HOST: http://invalid-browser/v1
@@ -1120,10 +1121,30 @@ jobs:
           _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
         run: docker compose up -d --quiet-pull --no-build --wait
 
-      - name: Verify /v1/users is served by Rust
+      # Traefik marks what its Rust router served (X-Appwrite-Backend: rust,
+      # docker-compose.override.yml): the migrated paths must carry it and a
+      # PHP path must not.
+      - name: Verify /v1/users, /v1/teams and /v1/storage are served by Rust
         run: |
-          docker compose exec -T appwrite curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: appwrite.test' http://appwrite.test/v1/users
           docker compose exec -T appwrite-rust /usr/local/bin/appwrite-rust health
+          backend() {
+            docker compose exec -T appwrite curl -s -o /dev/null -D - -H 'Host: appwrite.test' "http://appwrite.test$1" \
+              | tr -d '\r' | awk -F': ' 'tolower($1) == "x-appwrite-backend" { print $2 }'
+          }
+          for path in /v1/users /v1/teams /v1/storage/buckets /v1/storage/buckets/unknown/files; do
+            served="$(backend "$path")"
+            echo "$path: ${served:-php}"
+            if [ "$served" != "rust" ]; then
+              echo "::error::$path did not reach the Rust container"
+              exit 1
+            fi
+          done
+          served="$(backend /v1/health/version)"
+          echo "/v1/health/version: ${served:-php}"
+          if [ -n "$served" ]; then
+            echo "::error::/v1/health/version should be served by PHP"
+            exit 1
+          fi
 
       - name: Install toolchain
         run: |
@@ -1156,6 +1177,8 @@ jobs:
         run: bin/compat appwrite diff
 
       - name: Run tests
+        # Each suite reports even when the lifecycle diff or another suite failed.
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
         timeout-minutes: 15
         env:
           RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
@@ -1165,6 +1188,19 @@ jobs:
             -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
             appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Users \
             --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
+
+      - name: Run Storage tests
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        timeout-minutes: 25
+        env:
+          RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
+        run: |
+          docker compose exec -T \
+            -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
+            appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Storage \
+            --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --exclude-group usageOutage \
+            --log-junit tests/e2e/Services/Storage/junit-rust.xml
 
       - name: Failure Logs
         if: failure()

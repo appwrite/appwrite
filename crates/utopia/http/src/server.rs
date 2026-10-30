@@ -23,7 +23,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use http_body_util::{BodyExt, Limited};
+use bytes::Bytes;
+use http_body_util::BodyExt;
 use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
@@ -66,6 +67,7 @@ where
     let (stop_tx, stop_rx) = watch::channel(false);
     let options = Arc::new(options);
     let in_flight = Arc::new(AtomicUsize::new(0));
+    let buffered = Arc::new(AtomicUsize::new(0));
     utopia_async::pin!(shutdown);
 
     loop {
@@ -84,6 +86,7 @@ where
         let handler = handler.clone();
         let options = options.clone();
         let in_flight = in_flight.clone();
+        let buffered = buffered.clone();
         let mut stop = stop_rx.clone();
         utopia_async::spawn(async move {
             let keep_alive = options.keep_alive;
@@ -92,7 +95,8 @@ where
                 let handler = handler.clone();
                 let options = options.clone();
                 let in_flight = in_flight.clone();
-                async move { Ok::<_, Infallible>(dispatch(&handler, req, remote, &options, &in_flight).await) }
+                let buffered = buffered.clone();
+                async move { Ok::<_, Infallible>(dispatch(&handler, req, remote, &options, &in_flight, &buffered).await) }
             });
             let conn = http1::Builder::new()
                 .keep_alive(keep_alive)
@@ -130,24 +134,141 @@ async fn dispatch<H: Handler>(
     remote: SocketAddr,
     options: &ServerOptions,
     in_flight: &AtomicUsize,
+    buffered: &AtomicUsize,
 ) -> http::Response<Body> {
     let current = in_flight.fetch_add(1, Ordering::SeqCst);
     let _guard = InFlight(in_flight);
+    let (parts, mut body) = req.into_parts();
     if current >= options.max_concurrency {
-        let mut r = Response::new();
-        r.set_status(http::StatusCode::SERVICE_UNAVAILABLE);
-        r.force_status();
-        return r.into_http();
+        // Read the body before answering, within bounds. Closing here makes
+        // the client see a reset while it is still writing the upload, the
+        // same failure a 413 used to cause in front of Traefik.
+        drain(&mut body, 0, options).await;
+        return busy();
     }
-    let (parts, body) = req.into_parts();
-    let body = match Limited::new(body, options.max_body).collect().await {
-        Ok(collected) => collected.to_bytes(),
-        Err(_) => {
+    let mut held = Held { buffered, bytes: 0 };
+    let body = match collect_body(&mut body, options, &mut held).await {
+        Collected::Body(collected) => collected,
+        Collected::TooLarge(read) => {
+            drop(held);
+            drain(&mut body, read, options).await;
+            // Read the body first. Closing early makes Traefik answer 502
+            // instead of forwarding this 413, which is what Swoole returns.
             let mut r = Response::text_bytes(http::StatusCode::PAYLOAD_TOO_LARGE, "Request body too large");
+            r.add_header("connection", "close");
             r.flush();
             return r.into_http();
         }
+        Collected::Busy(read) => {
+            drop(held);
+            drain(&mut body, read, options).await;
+            return busy();
+        }
+        Collected::Failed => return closed(),
     };
     let request = Request::from_http(&parts, body, Some(remote)).with_trusted(options.trusted.clone());
     handler.respond(request).await
+}
+
+/// The 503 of a busy server.
+fn busy() -> http::Response<Body> {
+    let mut r = Response::new();
+    r.set_status(http::StatusCode::SERVICE_UNAVAILABLE);
+    r.add_header("connection", "close");
+    r.force_status();
+    r.flush();
+    r.into_http()
+}
+
+/// An answer to a client that sent its body too slowly or broke it off: the
+/// connection closes.
+fn closed() -> http::Response<Body> {
+    let mut r = Response::new();
+    r.set_status(http::StatusCode::REQUEST_TIMEOUT);
+    r.add_header("connection", "close");
+    r.force_status();
+    r.flush();
+    r.into_http()
+}
+
+/// What reading a request body gave.
+enum Collected {
+    /// The whole body, within every limit.
+    Body(Bytes),
+    /// Larger than `max_body`, after this many bytes.
+    TooLarge(usize),
+    /// Past the server-wide body memory, after this many bytes.
+    Busy(usize),
+    /// Broken off, or not sent in time.
+    Failed,
+}
+
+/// Bytes of one body counted in the server-wide total until the request ends.
+struct Held<'a> {
+    buffered: &'a AtomicUsize,
+    bytes: usize,
+}
+
+impl Held<'_> {
+    /// Counts `bytes` more, unless that takes the total past `max`.
+    fn reserve(&mut self, bytes: usize, max: usize) -> bool {
+        let reserved = self.buffered.fetch_update(Ordering::SeqCst, Ordering::SeqCst, |total| {
+            total.checked_add(bytes).filter(|&next| next <= max)
+        });
+        if reserved.is_ok() {
+            self.bytes += bytes;
+        }
+        reserved.is_ok()
+    }
+}
+
+impl Drop for Held<'_> {
+    fn drop(&mut self) {
+        self.buffered.fetch_sub(self.bytes, Ordering::SeqCst);
+    }
+}
+
+/// The body, read within `max_body`, the server-wide body memory and
+/// `body_read_timeout`.
+async fn collect_body(body: &mut Incoming, options: &ServerOptions, held: &mut Held<'_>) -> Collected {
+    let mut collected = Vec::new();
+    let read = async {
+        loop {
+            match body.frame().await {
+                Some(Ok(frame)) => {
+                    let Ok(data) = frame.into_data() else { continue };
+                    let read = collected.len().saturating_add(data.len());
+                    if read > options.max_body {
+                        return Collected::TooLarge(read);
+                    }
+                    if !held.reserve(data.len(), options.max_body_memory) {
+                        return Collected::Busy(read);
+                    }
+                    collected.extend_from_slice(&data);
+                }
+                Some(Err(_)) => return Collected::Failed,
+                None => return Collected::Body(Bytes::new()),
+            }
+        }
+    };
+    match utopia_async::timeout(options.body_read_timeout, read).await {
+        Ok(Collected::Body(_)) => Collected::Body(Bytes::from(collected)),
+        Ok(other) => other,
+        Err(_) => Collected::Failed,
+    }
+}
+
+/// Reads and drops what is left of a rejected body, `read` bytes in, until
+/// it ends, `drain_limit` bytes were read or `drain_timeout` passed. Past a
+/// bound the connection closes once the answer is written.
+async fn drain(body: &mut Incoming, mut read: usize, options: &ServerOptions) {
+    let rest = async {
+        while read <= options.drain_limit {
+            match body.frame().await {
+                Some(Ok(frame)) => read = read.saturating_add(frame.data_ref().map_or(0, Bytes::len)),
+                Some(Err(_)) | None => return,
+            }
+        }
+    };
+    let _ = utopia_async::timeout(options.drain_timeout, rest).await;
 }
