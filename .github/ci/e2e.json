@@ -52,7 +52,6 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Network/Validator/Origin.php",
         "src/Appwrite/Network/Validator/Redirect.php",
         "src/Appwrite/Auth/OAuth2",
@@ -147,7 +146,6 @@
       "processes": null,
       "paths": [
         "app/controllers/api/graphql.php",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Account/",
         "src/Appwrite/Platform/Modules/Avatars/",
         "src/Appwrite/Platform/Modules/Databases/",
@@ -222,7 +220,6 @@
         "app/realtime.php",
         "src/Appwrite/Realtime/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
@@ -346,7 +343,6 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Webhooks/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
