@@ -737,8 +737,8 @@ final class EvaluationCustomServerTest extends Scope
 
     /**
      * The resources monitors are scoped to: a bucket holding a file, a TablesDB
-     * and a DocumentsDB database with a table or collection each, a function, a
-     * site, and users, one of them active this month.
+     * database with a row and a DocumentsDB database with a collection, a
+     * function, a site, and users, one of them active this month.
      *
      * @return array<string, string> resource IDs by kind
      */
@@ -768,6 +768,16 @@ final class EvaluationCustomServerTest extends Scope
             'permissions' => [],
         ]);
         $this->assertSame(201, $table['headers']['status-code']);
+        // A row, so the table has pages for the sweep to measure.
+        $entries = '/tablesdb/' . $tables['body']['$id'] . '/tables/' . $table['body']['$id'];
+        $column = $this->client->call(Client::METHOD_POST, $entries . '/columns/integer', $headers, ['key' => 'amount', 'required' => true]);
+        $this->assertSame(202, $column['headers']['status-code']);
+        $this->assertEventually(function () use ($entries, $headers) {
+            $column = $this->client->call(Client::METHOD_GET, $entries . '/columns/amount', $headers);
+            $this->assertSame('available', $column['body']['status'] ?? null);
+        });
+        $row = $this->client->call(Client::METHOD_POST, $entries . '/rows', $headers, ['rowId' => Id::unique(), 'data' => ['amount' => 1]]);
+        $this->assertSame(201, $row['headers']['status-code']);
 
         $documents = $this->client->call(Client::METHOD_POST, '/documentsdb', $headers, ['databaseId' => Id::unique(), 'name' => 'Catalog']);
         $this->assertSame(201, $documents['headers']['status-code']);
