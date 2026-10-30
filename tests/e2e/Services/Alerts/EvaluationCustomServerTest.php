@@ -336,10 +336,10 @@ final class EvaluationCustomServerTest extends Scope
                             ->disableOriginalConstructor()
                             ->onlyMethods(['getDocument', 'findOne', 'find', 'createDocument', 'updateDocument'])
                             ->getMock();
-                        $held->method('getDocument')->willReturnCallback(fn (mixed ...$arguments) => $platform->getDocument(...$arguments));
-                        $held->method('findOne')->willReturnCallback(fn (mixed ...$arguments) => $platform->findOne(...$arguments));
-                        $held->method('find')->willReturnCallback(fn (mixed ...$arguments) => $platform->find(...$arguments));
-                        $held->method('updateDocument')->willReturnCallback(fn (mixed ...$arguments) => $platform->updateDocument(...$arguments));
+                        $held->method('getDocument')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->getDocument(...$arguments));
+                        $held->method('findOne')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->findOne(...$arguments));
+                        $held->method('find')->willReturnCallback(fn (mixed ...$arguments): array => $platform->find(...$arguments));
+                        $held->method('updateDocument')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->updateDocument(...$arguments));
                         $held->method('createDocument')->willReturnCallback(function (string $collection, Document $document) use ($platform, $barrier, &$arrivals): Document {
                             if ($collection === 'monitorAlerts') {
                                 if (++$arrivals === 1) {
