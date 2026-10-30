@@ -659,10 +659,10 @@ final class EvaluationCustomServerTest extends Scope
     private function heldPlatform(callable $beforeAlertCreate): Database
     {
         $platform = $this->platform();
-        $held = $this->getMockBuilder(Database::class)
+        $held = self::getStubBuilder(Database::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['getDocument', 'findOne', 'find', 'createDocument', 'updateDocument'])
-            ->getMock();
+            ->getStub();
         $held->method('getDocument')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->getDocument(...$arguments));
         $held->method('findOne')->willReturnCallback(fn (mixed ...$arguments): Document => $platform->findOne(...$arguments));
         $held->method('find')->willReturnCallback(fn (mixed ...$arguments): array => $platform->find(...$arguments));
