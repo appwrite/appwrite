@@ -9,15 +9,19 @@ publish.workspace = true
 
 [dependencies]
 appwrite-core.workspace = true
+bytes.workspace = true
+futures-util.workspace = true
 hex.workspace = true
 indexmap.workspace = true
 php-std.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+tracing.workspace = true
 utopia-async.workspace = true
 utopia-client.workspace = true
 utopia-compression.workspace = true
 utopia-database.workspace = true
+utopia-dsn.workspace = true
 utopia-http.workspace = true
 utopia-image.workspace = true
 utopia-lock.workspace = true

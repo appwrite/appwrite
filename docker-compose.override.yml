@@ -642,14 +642,18 @@ services:
       - traefik.constraint-label-stack=appwrite
       - traefik.docker.network=appwrite
       - traefik.http.services.appwrite_rust.loadbalancer.server.port=8080
+      # Marks what Rust served, so CI can tell the routing works (the API itself matches PHP header for header).
+      - traefik.http.middlewares.appwrite_rust_backend.headers.customresponseheaders.X-Appwrite-Backend=rust
       - traefik.http.routers.appwrite_rust_http.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_rust_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`) || Path(`/v1/teams`) || PathPrefix(`/v1/teams/`) || Path(`/v1/storage`) || PathPrefix(`/v1/storage/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
       - traefik.http.routers.appwrite_rust_http.priority=1000
       - traefik.http.routers.appwrite_rust_http.service=appwrite_rust
+      - traefik.http.routers.appwrite_rust_http.middlewares=appwrite_rust_backend
       - traefik.http.routers.appwrite_rust_https.entrypoints=appwrite_websecure
       - traefik.http.routers.appwrite_rust_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`) || Path(`/v1/teams`) || PathPrefix(`/v1/teams/`) || Path(`/v1/storage`) || PathPrefix(`/v1/storage/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
       - traefik.http.routers.appwrite_rust_https.priority=1000
       - traefik.http.routers.appwrite_rust_https.service=appwrite_rust
+      - traefik.http.routers.appwrite_rust_https.middlewares=appwrite_rust_backend
       - traefik.http.routers.appwrite_rust_https.tls=true
     environment:
       - _APP_ENV
@@ -696,6 +700,23 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
+      - _APP_STORAGE_DO_SPACES_ACCESS_KEY
+      - _APP_STORAGE_DO_SPACES_SECRET
+      - _APP_STORAGE_DO_SPACES_REGION
+      - _APP_STORAGE_DO_SPACES_BUCKET
+      - _APP_STORAGE_BACKBLAZE_ACCESS_KEY
+      - _APP_STORAGE_BACKBLAZE_SECRET
+      - _APP_STORAGE_BACKBLAZE_REGION
+      - _APP_STORAGE_BACKBLAZE_BUCKET
+      - _APP_STORAGE_LINODE_ACCESS_KEY
+      - _APP_STORAGE_LINODE_SECRET
+      - _APP_STORAGE_LINODE_REGION
+      - _APP_STORAGE_LINODE_BUCKET
+      - _APP_STORAGE_WASABI_ACCESS_KEY
+      - _APP_STORAGE_WASABI_SECRET
+      - _APP_STORAGE_WASABI_REGION
+      - _APP_STORAGE_WASABI_BUCKET
       - _APP_CONNECTIONS_STORAGE
       - _APP_IMAGES_RESOURCE_LIMIT_MEMORY
       - _APP_AUTOGRAVITY_HOST

@@ -162,33 +162,149 @@ impl Stored {
     }
 }
 
+/// The device under `root`, built as `getDevice()` in `app/init/resources.php`
+/// builds it: `_APP_STORAGE_DEVICE` with the generic S3 settings or the
+/// provider's own (`_APP_STORAGE_{DO_SPACES,BACKBLAZE,LINODE,WASABI}_*`),
+/// else the `_APP_CONNECTIONS_STORAGE` DSN, else the local disk.
 fn for_root(root: &str) -> Result<Stored> {
-    let configured = utopia_system::env("_APP_STORAGE_DEVICE").unwrap_or_else(|| "local".to_owned());
-    let key = utopia_system::env("_APP_STORAGE_S3_ACCESS_KEY").unwrap_or_default();
-    let secret = utopia_system::env("_APP_STORAGE_S3_SECRET").unwrap_or_default();
-    let region = utopia_system::env("_APP_STORAGE_S3_REGION").unwrap_or_default();
-    let bucket = utopia_system::env("_APP_STORAGE_S3_BUCKET").unwrap_or_default();
-    let endpoint = utopia_system::env("_APP_STORAGE_S3_ENDPOINT").unwrap_or_default();
-    let s3 =
-        matches!(configured.as_str(), "s3" | "awss3") && !key.is_empty() && !secret.is_empty() && !bucket.is_empty();
-    if !s3 {
-        return Ok(Stored::Local(Local::new(root)));
+    let configured = Settings::from_env(|key| utopia_system::env(key).unwrap_or_default()).resolve();
+    build(root, configured, utopia_system::env("_APP_STORAGE_S3_ENDPOINT").unwrap_or_default(), {
+        match utopia_system::env("_APP_STORAGE_S3_PATH_STYLE").as_deref() {
+            Some("enabled") => Some(true),
+            Some("disabled") => Some(false),
+            // Unset lets the device infer it from the endpoint and bucket.
+            _ => None,
+        }
+    })
+}
+
+/// The device settings `getDevice()` resolves before it builds a device.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Resolved {
+    kind: DeviceType,
+    key: String,
+    secret: String,
+    bucket: String,
+    region: String,
+}
+
+/// The environment `getDevice()` reads.
+struct Settings {
+    configured: DeviceType,
+    s3: [String; 4],
+    connection: String,
+    provider: Box<dyn Fn(&str) -> String>,
+}
+
+impl Settings {
+    fn from_env(env: impl Fn(&str) -> String + 'static) -> Self {
+        let configured = parse_kind(&env("_APP_STORAGE_DEVICE")).unwrap_or(DeviceType::Local);
+        Settings {
+            configured,
+            s3: [
+                env("_APP_STORAGE_S3_ACCESS_KEY"),
+                env("_APP_STORAGE_S3_SECRET"),
+                env("_APP_STORAGE_S3_BUCKET"),
+                env("_APP_STORAGE_S3_REGION"),
+            ],
+            connection: env("_APP_CONNECTIONS_STORAGE"),
+            provider: Box::new(env),
+        }
     }
-    let bucket_name = bucket.trim_matches('/').split('/').next().unwrap_or("").to_owned();
-    let device = if endpoint.is_empty() {
-        S3::aws(root, key, secret, bucket_name, region)
-    } else {
-        let bucket_root = if bucket.is_empty() {
-            root.trim_start_matches('/').to_owned()
-        } else {
-            format!("{}/{}", bucket.trim_end_matches('/'), root.trim_start_matches('/'))
+
+    fn resolve(self) -> Resolved {
+        let [s3_key, s3_secret, s3_bucket, s3_region] = self.s3;
+        let has_s3 = !s3_key.is_empty() && !s3_secret.is_empty() && !s3_bucket.is_empty();
+        let generic = matches!(self.configured, DeviceType::S3 | DeviceType::AwsS3);
+        let local = || Resolved {
+            kind: DeviceType::Local,
+            key: String::new(),
+            secret: String::new(),
+            bucket: String::new(),
+            region: String::new(),
         };
-        S3::new(bucket_root, key, secret, &endpoint, region)
-            .and_then(|device| if bucket_name.is_empty() { Ok(device) } else { device.with_bucket(bucket_name) })
+
+        // The generic S3 configuration takes precedence; the legacy DSN is a fallback.
+        if (!generic || !has_s3) && !self.connection.is_empty() {
+            return match utopia_dsn::Dsn::parse(&self.connection) {
+                Ok(dsn) => {
+                    let text = |bytes: &[u8]| String::from_utf8_lossy(bytes).into_owned();
+                    Resolved {
+                        kind: parse_kind(dsn.scheme()).unwrap_or(DeviceType::Local),
+                        key: text(dsn.user().unwrap_or_default()),
+                        secret: text(dsn.password().unwrap_or_default()),
+                        bucket: text(dsn.path()),
+                        region: text(dsn.param("region").ok().flatten().unwrap_or_default()),
+                    }
+                }
+                Err(_) => local(),
+            };
+        }
+
+        let prefix = match self.configured {
+            DeviceType::Local => return local(),
+            DeviceType::S3 | DeviceType::AwsS3 => None,
+            DeviceType::DoSpaces => Some("DO_SPACES"),
+            DeviceType::Backblaze => Some("BACKBLAZE"),
+            DeviceType::Linode => Some("LINODE"),
+            DeviceType::Wasabi => Some("WASABI"),
+        };
+        match prefix {
+            Some(prefix) if !has_s3 => {
+                let env = &self.provider;
+                Resolved {
+                    kind: self.configured,
+                    key: env(&format!("_APP_STORAGE_{prefix}_ACCESS_KEY")),
+                    secret: env(&format!("_APP_STORAGE_{prefix}_SECRET")),
+                    bucket: env(&format!("_APP_STORAGE_{prefix}_BUCKET")),
+                    region: env(&format!("_APP_STORAGE_{prefix}_REGION")),
+                }
+            }
+            _ => {
+                Resolved { kind: self.configured, key: s3_key, secret: s3_secret, bucket: s3_bucket, region: s3_region }
+            }
+        }
+    }
+}
+
+fn build(root: &str, resolved: Resolved, endpoint: String, path_style: Option<bool>) -> Result<Stored> {
+    let Resolved { kind, key, secret, bucket, region } = resolved;
+    let device = match kind {
+        DeviceType::Local => return Ok(Stored::Local(Local::new(root))),
+        DeviceType::S3 | DeviceType::AwsS3 if !endpoint.is_empty() => {
+            let prefix = if bucket.is_empty() { String::new() } else { format!("{bucket}/") };
+            let bucket_root = format!("{prefix}{}", root.trim_start_matches('/'));
+            // A configured bucket may carry a key prefix (`bucket/prefix`); the bucket is its first segment.
+            let bucket_name = bucket.trim_matches('/').split('/').next().unwrap_or("").to_owned();
+            S3::new(bucket_root, key, secret, &endpoint, region)
+                .and_then(|device| if bucket_name.is_empty() { Ok(device) } else { device.with_bucket(bucket_name) })
+                .and_then(|device| device.with_path_style(path_style))
+        }
+        DeviceType::S3 | DeviceType::AwsS3 => S3::aws(root, key, secret, bucket, region),
+        DeviceType::DoSpaces => S3::do_spaces(root, key, secret, bucket, region),
+        DeviceType::Backblaze => S3::backblaze(root, key, secret, bucket, region),
+        DeviceType::Linode => S3::linode(root, key, secret, bucket, region),
+        DeviceType::Wasabi => S3::wasabi(root, key, secret, bucket, region),
     };
     device
         .map(|device| Stored::S3(Box::new(device)))
         .map_err(|e| Error::with_message(ErrorType::StorageDeviceNotFound, e.to_string()))
+}
+
+/// `DeviceType::tryFrom(strtolower($value))`.
+fn parse_kind(value: &str) -> Option<DeviceType> {
+    let value = value.to_ascii_lowercase();
+    [
+        DeviceType::Local,
+        DeviceType::S3,
+        DeviceType::AwsS3,
+        DeviceType::DoSpaces,
+        DeviceType::Wasabi,
+        DeviceType::Backblaze,
+        DeviceType::Linode,
+    ]
+    .into_iter()
+    .find(|kind| kind.as_str() == value)
 }
 
 /// How many chunks a content-range total takes, and which chunk `start` is.
@@ -197,4 +313,105 @@ pub fn chunk_index(start: i64, total: i64) -> (i64, i64) {
         if total <= 0 { 0 } else { total.div_euclid(CHUNK_SIZE) + i64::from(total.rem_euclid(CHUNK_SIZE) != 0) };
     let chunk = start.div_euclid(CHUNK_SIZE) + 1;
     (chunk, chunks)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+
+    fn resolve(vars: &[(&str, &str)]) -> Resolved {
+        let vars: HashMap<String, String> = vars.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect();
+        Settings::from_env(move |key| vars.get(key).cloned().unwrap_or_default()).resolve()
+    }
+
+    fn resolved(kind: DeviceType, key: &str, secret: &str, bucket: &str, region: &str) -> Resolved {
+        Resolved {
+            kind,
+            key: key.to_owned(),
+            secret: secret.to_owned(),
+            bucket: bucket.to_owned(),
+            region: region.to_owned(),
+        }
+    }
+
+    #[test]
+    fn defaults_to_local() {
+        assert_eq!(resolve(&[]), resolved(DeviceType::Local, "", "", "", ""));
+        assert_eq!(resolve(&[("_APP_STORAGE_DEVICE", "unknown")]), resolved(DeviceType::Local, "", "", "", ""));
+    }
+
+    #[test]
+    fn generic_s3_settings() {
+        let vars = [
+            ("_APP_STORAGE_DEVICE", "S3"),
+            ("_APP_STORAGE_S3_ACCESS_KEY", "k"),
+            ("_APP_STORAGE_S3_SECRET", "s"),
+            ("_APP_STORAGE_S3_BUCKET", "b"),
+            ("_APP_STORAGE_S3_REGION", "r"),
+            ("_APP_CONNECTIONS_STORAGE", "wasabi://dk:ds@wasabi/db?region=dr"),
+        ];
+        assert_eq!(resolve(&vars), resolved(DeviceType::S3, "k", "s", "b", "r"));
+    }
+
+    #[test]
+    fn provider_settings() {
+        let vars = [
+            ("_APP_STORAGE_DEVICE", "dospaces"),
+            ("_APP_STORAGE_DO_SPACES_ACCESS_KEY", "k"),
+            ("_APP_STORAGE_DO_SPACES_SECRET", "s"),
+            ("_APP_STORAGE_DO_SPACES_BUCKET", "b"),
+            ("_APP_STORAGE_DO_SPACES_REGION", "nyc3"),
+        ];
+        assert_eq!(resolve(&vars), resolved(DeviceType::DoSpaces, "k", "s", "b", "nyc3"));
+        for (name, prefix, kind) in [
+            ("backblaze", "BACKBLAZE", DeviceType::Backblaze),
+            ("linode", "LINODE", DeviceType::Linode),
+            ("wasabi", "WASABI", DeviceType::Wasabi),
+        ] {
+            let key = format!("_APP_STORAGE_{prefix}_ACCESS_KEY");
+            let bucket = format!("_APP_STORAGE_{prefix}_BUCKET");
+            let vars = [("_APP_STORAGE_DEVICE", name), (key.as_str(), "k"), (bucket.as_str(), "b")];
+            assert_eq!(resolve(&vars), resolved(kind, "k", "", "b", ""));
+        }
+    }
+
+    #[test]
+    fn provider_prefers_generic_s3_settings() {
+        let vars = [
+            ("_APP_STORAGE_DEVICE", "wasabi"),
+            ("_APP_STORAGE_S3_ACCESS_KEY", "k"),
+            ("_APP_STORAGE_S3_SECRET", "s"),
+            ("_APP_STORAGE_S3_BUCKET", "b"),
+            ("_APP_STORAGE_WASABI_ACCESS_KEY", "wk"),
+        ];
+        assert_eq!(resolve(&vars), resolved(DeviceType::Wasabi, "k", "s", "b", ""));
+    }
+
+    #[test]
+    fn connection_dsn() {
+        let vars = [
+            ("_APP_STORAGE_DEVICE", "s3"),
+            ("_APP_CONNECTIONS_STORAGE", "backblaze://key:secret@backblaze/bucket?region=us-west-004"),
+        ];
+        assert_eq!(resolve(&vars), resolved(DeviceType::Backblaze, "key", "secret", "bucket", "us-west-004"));
+        let vars = [("_APP_CONNECTIONS_STORAGE", "local://localhost")];
+        assert_eq!(resolve(&vars), resolved(DeviceType::Local, "", "", "", ""));
+        let vars = [("_APP_CONNECTIONS_STORAGE", "not a dsn")];
+        assert_eq!(resolve(&vars).kind, DeviceType::Local);
+    }
+
+    #[test]
+    fn builds_devices() {
+        let linode = resolved(DeviceType::Linode, "k", "s", "b", "eu-central-1");
+        let device = build("/storage/uploads/app-p", linode, String::new(), None).unwrap();
+        assert_eq!(device.kind(), DeviceType::Linode);
+        let minio = resolved(DeviceType::S3, "k", "s", "bucket/prefix", "us-east-1");
+        let device = build("/storage/uploads/app-p", minio, "http://minio:9000".to_owned(), Some(true)).unwrap();
+        assert_eq!(device.kind(), DeviceType::S3);
+        assert_eq!(device.root(), "bucket/prefix/storage/uploads/app-p");
+        let local = resolved(DeviceType::Local, "", "", "", "");
+        assert!(build("/storage/uploads/app-p", local, String::new(), None).unwrap().is_local());
+    }
 }
