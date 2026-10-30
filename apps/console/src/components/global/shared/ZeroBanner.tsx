@@ -11,6 +11,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { useAccountZero } from '@/lib/react-query/hooks/zero'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
+import { getZeroPhase } from '@/lib/zero/phase'
 import { getZeroTransferSearch, isZeroAccount } from '@/lib/zero/session'
 
 /**
@@ -38,7 +39,7 @@ function ZeroBannerContent({ className }: { className?: string }) {
       to="/transfer"
       search={transfer}
       className={headerAlertOutlineButtonClass(
-        expiresAt && getRemainingMs(expiresAt, now) > 0 ? 'info' : 'warning',
+        zero && getZeroPhase(zero, now) === 'building' ? 'info' : 'warning',
       )}
       {...analyticsAttrs('zero-claim')}
     >
@@ -61,10 +62,11 @@ function ZeroBannerContent({ className }: { className?: string }) {
     )
   }
 
-  const buildRemaining = getRemainingMs(expiresAt, now)
-  const claimRemaining = getRemainingMs(claimBy, now)
+  const phase = getZeroPhase(zero, now)
 
-  if (zero?.status === 'deleted' || claimRemaining === 0) {
+  if (phase === 'claimed') return null
+
+  if (phase === 'deleted') {
     return (
       <HeaderAlertBar
         variant="danger"
@@ -77,7 +79,7 @@ function ZeroBannerContent({ className }: { className?: string }) {
     )
   }
 
-  if (zero?.status === 'expired' || buildRemaining === 0) {
+  if (phase === 'expired') {
     return (
       <HeaderAlertBar
         variant="warning"
@@ -89,7 +91,7 @@ function ZeroBannerContent({ className }: { className?: string }) {
         {t('Build window ended.')}{' '}
         {t('Claim within {time} or the project is deleted.').replace(
           '{time}',
-          formatRemaining(claimRemaining),
+          formatRemaining(getRemainingMs(claimBy, now)),
         )}
       </HeaderAlertBar>
     )
@@ -107,7 +109,7 @@ function ZeroBannerContent({ className }: { className?: string }) {
       {' · '}
       {t('{time} left to build').replace(
         '{time}',
-        formatRemaining(buildRemaining),
+        formatRemaining(getRemainingMs(expiresAt, now)),
       )}
       {' · '}
       {t('Claim it to keep it')}

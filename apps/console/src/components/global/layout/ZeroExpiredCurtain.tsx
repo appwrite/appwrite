@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Clock, ShieldCheck } from 'lucide-react'
+import { Clock, ShieldCheck, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FullScreenCurtain } from '@/components/global/shared/FullScreenCurtain'
 import { useNow } from '@/hooks/use-now'
@@ -7,6 +7,7 @@ import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
 import { useAccountZero } from '@/lib/react-query/hooks/zero'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
+import { getZeroPhase } from '@/lib/zero/phase'
 import { getZeroTransferSearch } from '@/lib/zero/session'
 
 /**
@@ -18,6 +19,31 @@ export function ZeroExpiredCurtain() {
   const now = useNow()
   const { data: zero } = useAccountZero({ poll: true })
   const transfer = getZeroTransferSearch(zero?.claimUrl)
+  const phase = zero ? getZeroPhase(zero, now) : null
+
+  if (phase === 'deleted') {
+    return (
+      <FullScreenCurtain
+        icon={TriangleAlert}
+        title={t('Project deleted')}
+        description={t(
+          'This project was not claimed in time, so it and its data were deleted.',
+        )}
+      />
+    )
+  }
+
+  if (phase === 'claimed') {
+    return (
+      <FullScreenCurtain
+        icon={ShieldCheck}
+        title={t('Project already claimed')}
+        description={t(
+          'This project now belongs to an account. Sign in to that account to open it.',
+        )}
+      />
+    )
+  }
 
   return (
     <FullScreenCurtain

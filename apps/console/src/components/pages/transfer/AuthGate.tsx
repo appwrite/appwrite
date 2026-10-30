@@ -18,6 +18,7 @@ import { useT, type Translator } from '@/lib/i18n/translate'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
 import { useAccountZero } from '@/lib/react-query/hooks/zero'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
+import { getZeroPhase } from '@/lib/zero/phase'
 
 type AuthPage = '/sign-up' | '/sign-in'
 
@@ -89,7 +90,7 @@ export function TransferAuthGate({
               ) : null}
             </div>
             <div className="flex flex-col gap-2">
-              {copy.state !== 'claimed' && (
+              {copy.state === 'claim' && (
                 <Button
                   variant="brandCta"
                   className="w-full"
@@ -98,6 +99,15 @@ export function TransferAuthGate({
                   {...(anonymous ? analyticsAttrs('zero-claim') : {})}
                 >
                   {t('Create an account')}
+                </Button>
+              )}
+              {copy.state === 'deleted' && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate({ to: '/' })}
+                >
+                  {t('Go to console')}
                 </Button>
               )}
               {copy.state !== 'deleted' && (
@@ -136,7 +146,9 @@ export function describeTransferGate(
     }
   }
 
-  if (zero.status === 'claimed') {
+  const phase = getZeroPhase(zero, now)
+
+  if (phase === 'claimed') {
     return {
       icon: Check,
       title: t('Project already claimed'),
@@ -148,7 +160,7 @@ export function describeTransferGate(
     }
   }
 
-  if (zero.status === 'deleted' || getRemainingMs(zero.claimBy, now) === 0) {
+  if (phase === 'deleted') {
     return {
       icon: TriangleAlert,
       title: t('Project deleted'),
@@ -160,8 +172,7 @@ export function describeTransferGate(
     }
   }
 
-  const expired =
-    zero.status === 'expired' || getRemainingMs(zero.expiresAt, now) === 0
+  const expired = phase === 'expired'
   return {
     icon: Clock,
     title: t('Claim your project'),

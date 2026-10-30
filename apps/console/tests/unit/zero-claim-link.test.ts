@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { describeTransferGate } from '@/components/pages/transfer/AuthGate'
 import type { ZeroProject } from '@/lib/appwrite/zero'
+import { getZeroPhase } from '@/lib/zero/phase'
 import { getZeroTransferSearch } from '@/lib/zero/session'
 
 describe('getZeroTransferSearch', () => {
@@ -54,5 +55,77 @@ describe('describeTransferGate', () => {
 
   test('shows the deleted state once the claim window has passed', () => {
     expect(describeTransferGate(t, now, zero('deleted')).state).toBe('deleted')
+  })
+})
+
+describe('getZeroPhase', () => {
+  const now = Date.parse('2026-10-30T12:00:00Z')
+  const deadlines = {
+    expiresAt: '2026-10-30T13:00:00Z',
+    claimBy: '2026-11-06T12:00:00Z',
+  }
+
+  test('reads the status the server reports', () => {
+    expect(getZeroPhase({ status: 'active', ...deadlines }, now)).toBe(
+      'building',
+    )
+    expect(getZeroPhase({ status: 'expired', ...deadlines }, now)).toBe(
+      'expired',
+    )
+    expect(getZeroPhase({ status: 'claimed', ...deadlines }, now)).toBe(
+      'claimed',
+    )
+    expect(getZeroPhase({ status: 'deleted', ...deadlines }, now)).toBe(
+      'deleted',
+    )
+  })
+
+  test('treats a passed claim deadline as deleted before the next poll', () => {
+    expect(
+      getZeroPhase(
+        {
+          status: 'expired',
+          expiresAt: '2026-10-30T10:00:00Z',
+          claimBy: '2026-10-30T11:59:59Z',
+        },
+        now,
+      ),
+    ).toBe('deleted')
+  })
+
+  test('treats a passed build deadline as expired before the next poll', () => {
+    expect(
+      getZeroPhase(
+        {
+          status: 'active',
+          expiresAt: '2026-10-30T11:00:00Z',
+          claimBy: deadlines.claimBy,
+        },
+        now,
+      ),
+    ).toBe('expired')
+  })
+})
+
+describe('describeTransferGate on a dead link', () => {
+  test('a passed claim deadline offers no way into the claim', () => {
+    const gate = describeTransferGate(
+      (text: string) => text,
+      Date.parse('2026-10-30T12:00:00Z'),
+      {
+        $id: 'zero',
+        $createdAt: '2026-10-23T12:00:00Z',
+        status: 'expired',
+        organizationId: 'org',
+        projectId: 'project',
+        region: 'fra',
+        endpoint: 'https://fra.example.com/v1',
+        consoleUrl: 'https://console.example.com',
+        expiresAt: '2026-10-23T13:00:00Z',
+        claimBy: '2026-10-30T11:00:00Z',
+      },
+    )
+    expect(gate.state).toBe('deleted')
+    expect(gate.deadline).toBeNull()
   })
 })
