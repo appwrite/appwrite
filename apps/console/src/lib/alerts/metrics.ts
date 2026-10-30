@@ -203,10 +203,10 @@ export const COOLDOWNS: { value: number; label: string }[] = [
 export function thresholdRatio(rule: {
   comparator: AlertComparator
   threshold: number
-  value: number | null
+  value?: number | null
 }): string | null {
   if (
-    rule.value === null ||
+    rule.value == null ||
     rule.threshold <= 0 ||
     (rule.comparator !== 'greaterThan' &&
       rule.comparator !== 'greaterThanEqual')

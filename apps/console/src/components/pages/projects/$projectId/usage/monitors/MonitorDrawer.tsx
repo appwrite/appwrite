@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Pause, Pencil, Play, Trash2 } from 'lucide-react'
+import { MonitorChannel } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -105,12 +106,12 @@ function MonitorStatusSummary({ monitor }: { monitor: ParsedMonitor }) {
       <Stat
         label={t('Last value')}
         value={
-          monitor.value === null
+          monitor.value == null
             ? '–'
             : formatMetricValue(monitor.metric, monitor.value)
         }
         note={
-          monitor.value === null
+          monitor.value == null
             ? t('Waiting for the first check')
             : ratio
               ? t('{ratio} the {threshold} threshold')
@@ -401,9 +402,9 @@ export function MonitorDrawer({
                   {monitor.channels
                     .map((channel) =>
                       t(
-                        channel === 'email'
+                        channel === MonitorChannel.Email
                           ? 'Email'
-                          : channel === 'console'
+                          : channel === MonitorChannel.Console
                             ? 'Console'
                             : 'Webhook',
                       ),

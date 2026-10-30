@@ -5,7 +5,7 @@
 
 interface Started {
   $createdAt: string
-  resolvedAt: string | null
+  resolvedAt?: string | null
 }
 
 export interface AlertDay<T extends Started> {

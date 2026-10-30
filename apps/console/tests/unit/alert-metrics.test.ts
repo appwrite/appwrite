@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, mock, test } from 'bun:test'
 import { MutationObserver, QueryClient } from '@tanstack/react-query'
+import { MonitorChannel } from '@appwrite.io/console'
 import * as actualSdk from '@/lib/appwrite/sdk'
 import {
   formatLength,
@@ -90,7 +91,8 @@ describe('alert rule form', () => {
     const form = { ...emptyRuleForm(), webhookUrl: 'https://example.com' }
     expect(monitorInputFromForm(form, t).webhookUrl).toBeUndefined()
     expect(
-      monitorInputFromForm({ ...form, channels: ['webhook'] }, t).webhookUrl,
+      monitorInputFromForm({ ...form, channels: [MonitorChannel.Webhook] }, t)
+        .webhookUrl,
     ).toBe('https://example.com')
   })
 
@@ -301,15 +303,22 @@ describe('budget monitor webhook', () => {
         rules: [],
         channels: ['email'],
       } as unknown as Monitor)
-    let calls = 0
+    const requests: { method: string; path: string; body: unknown }[] = []
     mock.module('@/lib/appwrite/sdk', () => ({
       ...actualSdk,
       sdk: {
         forConsole: {
-          monitors: {
-            updateBudgetMonitor: async (input: { monitorId: string }) => {
-              if (++calls > 1) throw new Error('rejected')
-              return { $id: input.monitorId, type: 'budget', rules: [] }
+          client: {
+            config: { endpoint: 'https://cloud.test/v1', project: 'console' },
+            call: async (
+              method: string,
+              uri: URL,
+              _: unknown,
+              body: unknown,
+            ) => {
+              requests.push({ method, path: uri.pathname, body })
+              if (requests.length > 1) throw new Error('rejected')
+              return { $id: 'first', type: 'budget', rules: [] }
             },
           },
         },
@@ -334,7 +343,22 @@ describe('budget monitor webhook', () => {
       }),
     ).rejects.toThrow('rejected')
 
-    expect(calls).toBe(2)
+    expect(requests.map(({ path }) => path)).toEqual([
+      '/v1/organizations/org/monitors/budget/first',
+      '/v1/organizations/org/monitors/budget/second',
+    ])
+    // The budget route takes delivery settings only.
+    expect(requests[0]).toMatchObject({
+      method: 'put',
+      body: {
+        channels: ['email', 'webhook'],
+        webhookUrl: 'https://example.com/hook',
+      },
+    })
+    expect(Object.keys(requests[0].body as object).sort()).toEqual([
+      'channels',
+      'webhookUrl',
+    ])
     expect(queryClient.getQueryState(queryKey)?.isInvalidated).toBe(true)
   })
 })

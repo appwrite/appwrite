@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Webhook } from 'lucide-react'
+import { MonitorChannel } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -55,8 +56,9 @@ export function BudgetMonitors({ orgId }: { orgId?: string }) {
 
   const budget = Number(organization?.billingBudget ?? 0)
   const webhookUrl =
-    monitors.data.find((monitor) => monitor.channels.includes('webhook'))
-      ?.webhookUrl ?? ''
+    monitors.data.find((monitor) =>
+      monitor.channels.includes(MonitorChannel.Webhook),
+    )?.webhookUrl ?? ''
 
   const save = (next: string) => {
     setWebhook.mutate(
@@ -142,10 +144,10 @@ export function BudgetMonitors({ orgId }: { orgId?: string }) {
                     state === 'firing' ? 'text-red-500' : 'text-foreground',
                   )}
                 >
-                  {monitor.value === null ? '–' : usd((budget * percent) / 100)}
+                  {monitor.value == null ? '–' : usd((budget * percent) / 100)}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {monitor.value === null
+                  {monitor.value == null
                     ? t('Waiting for the first check')
                     : `${percent}%`}
                 </p>

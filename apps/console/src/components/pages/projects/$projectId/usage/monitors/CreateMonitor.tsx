@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Check, Copy } from 'lucide-react'
+import { MonitorChannel } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -96,7 +97,10 @@ export function CreateMonitor({
       onSuccess: (monitor) => {
         toast.success(t('Monitor has been created'))
         onOpenChange(false)
-        if (monitor.channels.includes('webhook') && monitor.webhookSecret) {
+        if (
+          monitor.channels.includes(MonitorChannel.Webhook) &&
+          monitor.webhookSecret
+        ) {
           openDialogAfterOverlayCloses(() => setSecret(monitor.webhookSecret))
         }
       },

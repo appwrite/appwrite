@@ -1,21 +1,23 @@
 /**
- * Monitors response models. The Console SDK does not carry the monitors API
- * yet; delete with `service.ts` once it does.
+ * Monitor and alert models: the generated `Models.Monitor` and `Models.Alert`,
+ * with the enums the console matches on read as string unions. Editions add
+ * metrics, resource types and monitor types this spec does not enumerate, and
+ * the console renders those too, so the unions carry them alongside.
  */
 
-export type AlertResourceType =
-  | 'project'
-  | 'database'
-  | 'bucket'
-  | 'dedicatedDatabase'
+import type {
+  AlertComparator as Comparator,
+  AlertMetric as Metric,
+  AlertStatus as Status,
+  Models,
+  MonitorChannel,
+  MonitorResourceType,
+  MonitorStatus as State,
+  MonitorType as Kind,
+} from '@appwrite.io/console'
 
 export type AlertMetric =
-  | 'bandwidth.inbound'
-  | 'bandwidth.outbound'
-  | 'databases.reads'
-  | 'databases.writes'
-  | 'databases.storage'
-  | 'files.storage'
+  | `${Metric}`
   | 'dedicatedDatabases.cpu'
   | 'dedicatedDatabases.memory'
   | 'dedicatedDatabases.storage'
@@ -24,119 +26,57 @@ export type AlertMetric =
   | 'dedicatedDatabases.iopsRead'
   | 'dedicatedDatabases.iopsWrite'
 
-export type AlertComparator =
-  | 'greaterThan'
-  | 'greaterThanEqual'
-  | 'lessThan'
-  | 'lessThanEqual'
+export type AlertResourceType =
+  | `${MonitorResourceType}`
+  | 'dedicatedDatabase'
+  | 'organization'
 
-export type AlertChannel = 'email' | 'console' | 'webhook'
+export type AlertComparator = `${Comparator}`
 
-/**
- * What a monitor checks; each type has its own create and update routes.
- * `budget` exists only in editions that add it, on organization routes.
- */
-export type MonitorType = 'usage' | 'budget'
+/** `budget` monitors live on organization routes, where an edition has them. */
+export type MonitorType = `${Kind}` | 'budget'
 
-export type MonitorStatus = 'ok' | 'firing'
+export type MonitorStatus = `${State}`
 
-export type AlertStatus = 'firing' | 'resolved'
+export type AlertStatus = `${Status}`
 
-/**
- * Monitor: watches a usage metric and raises an alert while its rules hold.
- */
-export type Monitor = {
-  $id: string
-  $createdAt: string
-  $updatedAt: string
-  name: string
+export type Monitor = Omit<
+  Models.Monitor,
+  'type' | 'resourceType' | 'status'
+> & {
   type: MonitorType
-  /**
-   * Query strings that must all hold for the monitor to fire: one metric
-   * comparison, optionally scoped by `resourceType` and `resourceId`.
-   */
-  rules: string[]
-  /**
-   * The scope the rules select; `project` when they select none.
-   */
   resourceType: AlertResourceType
-  /**
-   * Watched database or bucket ID. Empty for project-wide monitors.
-   */
-  resourceId: string
-  /**
-   * Seconds a counter metric is summed over. Ignored for gauges.
-   */
-  window: number
-  /**
-   * Minimum seconds between two firing notifications.
-   */
-  cooldown: number
-  channels: AlertChannel[]
-  webhookUrl: string
-  /**
-   * Key the webhook payload signature is computed with. Only in the create response.
-   */
-  webhookSecret: string
-  enabled: boolean
   status: MonitorStatus
-  /**
-   * Metric value at the last evaluation.
-   */
-  value: number | null
-  evaluatedAt: string | null
-  /**
-   * The open alert while firing, else empty.
-   */
-  alertId: string
-  triggeredAt: string | null
 }
 
-export type MonitorList = {
-  total: number
+export type MonitorList = Omit<Models.MonitorList, 'monitors'> & {
   monitors: Monitor[]
 }
 
-/**
- * Alert: raised by a monitor when it starts firing, resolved when it recovers.
- */
-export type Alert = {
-  $id: string
-  /**
-   * When the monitor started firing.
-   */
-  $createdAt: string
-  $updatedAt: string
-  monitorId: string
-  /**
-   * The monitor's name when the alert fired.
-   */
-  name: string
-  status: AlertStatus
-  resolvedAt: string | null
-  rules: string[]
-  metric: AlertMetric
-  comparator: AlertComparator
-  threshold: number
-  /**
-   * Latest reading while firing.
-   */
-  value: number
-  /**
-   * Worst reading while firing.
-   */
-  peak: number
+export type Alert = Omit<
+  Models.Alert,
+  'type' | 'resourceType' | 'status' | 'metric' | 'comparator'
+> & {
   type: MonitorType
   resourceType: AlertResourceType
-  resourceId: string
-  channels: AlertChannel[]
-  /**
-   * Firing announcements sent; repeats after the cooldown.
-   */
-  notifications: number
+  status: AlertStatus
+  metric: AlertMetric
+  comparator: AlertComparator
 }
 
-export type AlertList = {
-  total: number
+export type AlertList = Omit<Models.AlertList, 'alerts'> & {
   alerts: Alert[]
+}
+
+/** A usage monitor's writable fields, as `createUsageMonitor` takes them. */
+export type MonitorInput = {
+  name: string
+  /** Metric comparisons; build them with `buildRules`. */
+  rules: string[]
+  /** Ignored for gauge metrics. */
+  window?: number
+  cooldown?: number
+  channels?: MonitorChannel[]
+  webhookUrl?: string
+  enabled?: boolean
 }

@@ -1,6 +1,7 @@
 import { useState, type ComponentType, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Bell, Check, ChevronDown, Mail, Webhook } from 'lucide-react'
+import { MonitorChannel } from '@appwrite.io/console'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -18,7 +19,6 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   buildRules,
-  type AlertChannel,
   type AlertComparator,
   type AlertMetric,
   type AlertResourceType,
@@ -52,32 +52,32 @@ export type RuleForm = {
   byteUnit: ByteUnit
   window: number
   cooldown: number
-  channels: AlertChannel[]
+  channels: MonitorChannel[]
   webhookUrl: string
 }
 
 const RESOURCE_PICKER_LIMIT = 100
 
 const CHANNELS: {
-  value: AlertChannel
+  value: MonitorChannel
   label: string
   description: string
   icon: ComponentType<{ className?: string }>
 }[] = [
   {
-    value: 'email',
+    value: MonitorChannel.Email,
     label: 'Email',
     description: 'Organization owners',
     icon: Mail,
   },
   {
-    value: 'console',
+    value: MonitorChannel.Console,
     label: 'Console',
     description: 'Notification bell',
     icon: Bell,
   },
   {
-    value: 'webhook',
+    value: MonitorChannel.Webhook,
     label: 'Webhook',
     description: 'Signed POST request',
     icon: Webhook,
@@ -95,7 +95,7 @@ export function emptyRuleForm(): RuleForm {
     byteUnit: 'GB',
     window: 3600,
     cooldown: 3600,
-    channels: ['email', 'console'],
+    channels: [MonitorChannel.Email, MonitorChannel.Console],
     webhookUrl: '',
   }
 }
@@ -154,7 +154,7 @@ export function monitorInputFromForm(
   form: RuleForm,
   t: (text: string) => string,
 ): MonitorInput {
-  const webhook = form.channels.includes('webhook')
+  const webhook = form.channels.includes(MonitorChannel.Webhook)
   return {
     name: form.name.trim() || suggestedName(form, t),
     rules: buildRules({
@@ -185,7 +185,10 @@ export function ruleFormError(
     return t('Enter a threshold of 0 or more.')
   }
   if (form.channels.length === 0) return t('Select at least one channel.')
-  if (form.channels.includes('webhook') && !form.webhookUrl.trim()) {
+  if (
+    form.channels.includes(MonitorChannel.Webhook) &&
+    !form.webhookUrl.trim()
+  ) {
     return t('Enter a webhook URL.')
   }
   return undefined
@@ -365,7 +368,7 @@ export function RuleFields({
     })
   }
 
-  const toggleChannel = (channel: AlertChannel) => {
+  const toggleChannel = (channel: MonitorChannel) => {
     onChange({
       channels: form.channels.includes(channel)
         ? form.channels.filter((entry) => entry !== channel)
@@ -627,7 +630,7 @@ export function RuleFields({
           })}
         </div>
 
-        {form.channels.includes('webhook') && (
+        {form.channels.includes(MonitorChannel.Webhook) && (
           <div className="mt-4 space-y-2">
             <Label
               htmlFor="alert-webhook-url"

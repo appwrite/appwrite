@@ -10,10 +10,12 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query'
-import { ID, Query } from '@appwrite.io/console'
+import { ID, MonitorChannel, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
+  listOrganizationMonitors,
   parseMonitor,
+  updateBudgetMonitor,
   type Alert,
   type AlertMetric,
   type AlertResourceType,
@@ -250,7 +252,7 @@ export function organizationBudgetMonitorsQueryOptions(
   return queryOptions({
     queryKey: ['monitors', 'organization', organizationId, 'budget'],
     queryFn: async () => {
-      const response = await sdk.forConsole.monitors.listForOrganization({
+      const response = await listOrganizationMonitors(sdk.forConsole.client, {
         organizationId: organizationId!,
         queries: [Query.equal('type', ['budget']), Query.limit(25)],
       })
@@ -289,14 +291,17 @@ export function budgetMonitorsWebhookMutationOptions(
       const updated: ParsedMonitor[] = []
       for (const monitor of monitors) {
         const others = monitor.channels.filter(
-          (channel) => channel !== 'webhook',
+          (channel) => channel !== MonitorChannel.Webhook,
         )
         updated.push(
           parseMonitor(
-            await sdk.forConsole.monitors.updateBudgetMonitor({
+            await updateBudgetMonitor(sdk.forConsole.client, {
               organizationId,
               monitorId: monitor.$id,
-              channels: webhookUrl === '' ? others : [...others, 'webhook'],
+              channels:
+                webhookUrl === ''
+                  ? others
+                  : [...others, MonitorChannel.Webhook],
               webhookUrl: webhookUrl === '' ? undefined : webhookUrl,
             }),
           ),

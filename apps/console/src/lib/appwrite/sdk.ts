@@ -9,6 +9,7 @@ import {
   Account,
   Activities,
   Affiliates,
+  Alerts,
   Analytics,
   Apps,
   Avatars,
@@ -22,6 +23,7 @@ import {
   Manager,
   Messaging,
   Migrations,
+  Monitors,
   Oauth2,
   Project,
   Project as ProjectApi,
@@ -51,7 +53,6 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
-import { Alerts, Monitors } from '@/lib/appwrite/monitors'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,

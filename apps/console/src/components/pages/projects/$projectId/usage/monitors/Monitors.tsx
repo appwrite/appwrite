@@ -58,7 +58,8 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import type { AlertChannel, ParsedMonitor } from '@/lib/appwrite/monitors'
+import type { MonitorChannel } from '@appwrite.io/console'
+import type { ParsedMonitor } from '@/lib/appwrite/monitors'
 import {
   COMPARATORS,
   METRICS,
@@ -89,7 +90,7 @@ const STATE_ORDER: Record<RuleState, number> = {
   paused: 3,
 }
 
-const CHANNELS: Record<AlertChannel, { label: string; icon: LucideIcon }> = {
+const CHANNELS: Record<MonitorChannel, { label: string; icon: LucideIcon }> = {
   email: { label: 'Email', icon: Mail },
   console: { label: 'Console', icon: Bell },
   webhook: { label: 'Webhook', icon: Webhook },
@@ -610,7 +611,7 @@ export function Monitors({
 }
 
 /** The channels a monitor notifies, as icons named in their tooltips. */
-function ChannelIcons({ channels }: { channels: AlertChannel[] }) {
+function ChannelIcons({ channels }: { channels: MonitorChannel[] }) {
   const t = useT()
   return (
     <div
@@ -654,9 +655,7 @@ function MonitorState({
   const t = useT()
   const style = STATE_STYLES[state]
   const ratio =
-    state === 'firing' && monitor.value !== null
-      ? thresholdRatio(monitor)
-      : null
+    state === 'firing' && monitor.value != null ? thresholdRatio(monitor) : null
   const label = (
     <span
       className={cn(
@@ -689,7 +688,7 @@ function MonitorState({
           t('Waiting for the first check')
         ) : (
           <>
-            {monitor.value !== null &&
+            {monitor.value != null &&
               formatMetricValue(monitor.metric, monitor.value)}
             {ratio && (
               <span className="text-red-600 dark:text-red-400"> ({ratio})</span>
