@@ -9,7 +9,7 @@ use Utopia\Cache\Feature;
 use Utopia\CircuitBreaker\CircuitBreaker as UtopiaCircuitBreaker;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Feature\Telemetry
+class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Feature\Telemetry, \Utopia\Cache\Feature\Versioned
 {
     public function __construct(
         private readonly Adapter $adapter,
@@ -188,5 +188,39 @@ class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Fe
         if ($this->adapter instanceof Feature\Telemetry) {
             $this->adapter->setTelemetry($telemetry);
         }
+    }
+
+    public function supportsVersioning(): bool
+    {
+        return $this->adapter instanceof \Utopia\Cache\Feature\Versioned && $this->adapter->supportsVersioning();
+    }
+
+    // Coordination reads/writes must throw on transport failures; breaker fallbacks
+    // would confuse an unavailable record with eviction and lose live writers.
+    public function getVersion(string $key): string
+    {
+        return $this->versionedAdapter()->getVersion($key);
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return $this->versionedAdapter()->loadVersioned($key);
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): bool
+    {
+        return $this->versionedAdapter()->compareAndSwap($key, $data, $hash, $version);
+    }
+
+    private function versionedAdapter(): \Utopia\Cache\Feature\Versioned
+    {
+        $adapter = $this->adapter;
+        if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+            throw new \Utopia\Cache\Exception\Unavailable('Versioned cache required');
+        }
+
+        return $adapter;
     }
 }

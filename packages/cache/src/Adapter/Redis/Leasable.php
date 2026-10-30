@@ -24,7 +24,7 @@ use Utopia\Cache\Envelope;
  * Implements the transport-agnostic \Utopia\Cache\Feature\Leasable capability,
  * referenced by FQN to avoid shadowing this class's own short name.
  */
-abstract class Leasable implements \Utopia\Cache\Feature\Leasable
+abstract class Leasable implements \Utopia\Cache\Feature\Leasable, \Utopia\Cache\Feature\Versioned
 {
     /**
      * Reserved hash field that holds a key's generation alongside its value
@@ -35,6 +35,8 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
      * Callers must not use this as a cache hash/field.
      */
     protected const GENERATION_FIELD = '__utopia_gen__';
+
+    protected const VERSION_FIELD = '__utopia_version__';
 
     /**
      * Reserved hash field: epoch-µs deadline until which saveWithLease() is
@@ -68,7 +70,7 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
                 redis.call('HDEL', KEYS[1], '__utopia_tomb__')
             end
         end
-        redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
+        redis.call('HSET', KEYS[1], ARGV[1], ARGV[2], '__utopia_version__', ARGV[5])
         return 1
         LUA;
 
@@ -81,7 +83,7 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
     protected const LUA_PURGE_BUMP = <<<'LUA'
         local gen = '__utopia_gen__'
         local tomb = '__utopia_tomb__'
-        local removed = redis.call('HLEN', KEYS[1]) - redis.call('HEXISTS', KEYS[1], gen) - redis.call('HEXISTS', KEYS[1], tomb)
+        local removed = redis.call('HLEN', KEYS[1]) - redis.call('HEXISTS', KEYS[1], gen) - redis.call('HEXISTS', KEYS[1], tomb) - redis.call('HEXISTS', KEYS[1], '__utopia_version__')
         local current = redis.call('HGET', KEYS[1], gen)
         local next = (tonumber(current) or 0) + 1
         redis.call('DEL', KEYS[1])
@@ -105,6 +107,7 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
         local current = redis.call('HGET', KEYS[1], '__utopia_gen__')
         local next = (tonumber(current) or 0) + 1
         redis.call('HSET', KEYS[1], '__utopia_gen__', next)
+        redis.call('HDEL', KEYS[1], '__utopia_version__')
         local window = tonumber(ARGV[2]) or 0
         if window > 0 then
             local t = redis.call('TIME')
@@ -113,6 +116,73 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
         end
         return removed
         LUA;
+
+    private const string LUA_VERSION = <<<'LUA'
+        local version = redis.call('HGET', KEYS[1], '__utopia_version__')
+        if version == false then
+            version = ARGV[1]
+            redis.call('HSET', KEYS[1], '__utopia_version__', version)
+        end
+        local value = false
+        if ARGV[2] ~= '' then value = redis.call('HGET', KEYS[1], ARGV[2]) end
+        return {version, value}
+        LUA;
+
+    private const string LUA_COMPARE_AND_SWAP = <<<'LUA'
+        if redis.call('HGET', KEYS[1], '__utopia_version__') ~= ARGV[1] then return 0 end
+        local deadline = tonumber(redis.call('HGET', KEYS[1], '__utopia_tomb__'))
+        local window = tonumber(ARGV[5])
+        if deadline ~= nil and window > 0 then
+            local t = redis.call('TIME')
+            local now = tonumber(t[1]) * 1000000 + tonumber(t[2])
+            if now < deadline and deadline - now <= window * 1000 then return 0 end
+        end
+        redis.call('HSET', KEYS[1], ARGV[2], ARGV[3], '__utopia_version__', ARGV[4])
+        return 1
+        LUA;
+
+    public function supportsVersioning(): bool
+    {
+        return true;
+    }
+
+    public function getVersion(string $key): string
+    {
+        $result = $this->leaseRun(self::LUA_VERSION, $key, [\bin2hex(\random_bytes(16)), '']);
+        if (! \is_array($result) || ! \is_string($result[0] ?? null)) {
+            throw new \Utopia\Cache\Exception\Unavailable('Unable to obtain cache version');
+        }
+
+        return $result[0];
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        $result = $this->leaseRun(self::LUA_VERSION, $key, [\bin2hex(\random_bytes(16)), $key]);
+        if (! \is_array($result) || ! \is_string($result[0] ?? null)) {
+            throw new \Utopia\Cache\Exception\Unavailable('Unable to read cache snapshot');
+        }
+
+        return [
+            'version' => $result[0],
+            'value' => \is_string($result[1] ?? null) ? $this->envelope->decode($result[1], PHP_INT_MAX, \time()) : false,
+        ];
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): bool
+    {
+        $hash = $hash === '' ? $key : $hash;
+        if ($this->isReserved($hash)) {
+            return false;
+        }
+
+        return (bool) $this->leaseRun(self::LUA_COMPARE_AND_SWAP, $key, [
+            $version, $hash, $this->envelope->encode($data, \time()),
+            \bin2hex(\random_bytes(16)), (string) $this->leaseGraceWindow,
+        ]);
+    }
 
     /**
      * Milliseconds after a purge during which saveWithLease() is refused. Size to
@@ -166,7 +236,7 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
         try {
             $value = $this->envelope->encode($data, time());
             $stored = $this->leaseRun(self::LUA_SAVE_WITH_LEASE, $key, [
-                $hash, $value, $generation, (string) $this->leaseGraceWindow,
+                $hash, $value, $generation, (string) $this->leaseGraceWindow, \bin2hex(\random_bytes(16)),
             ]);
 
             return $stored ? $data : false;
@@ -200,7 +270,7 @@ abstract class Leasable implements \Utopia\Cache\Feature\Leasable
     /** Reserved internal fields must never be reachable through the public field API. */
     protected function isReserved(string $hash): bool
     {
-        return $hash === self::GENERATION_FIELD || $hash === self::TOMBSTONE_FIELD;
+        return in_array($hash, [self::GENERATION_FIELD, self::TOMBSTONE_FIELD, self::VERSION_FIELD], true);
     }
 
     /**

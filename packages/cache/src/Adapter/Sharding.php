@@ -6,7 +6,7 @@ use Utopia\Cache\Adapter;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Leasable;
 
-class Sharding implements Adapter, Batchable, Leasable
+class Sharding implements Adapter, Batchable, Leasable, \Utopia\Cache\Feature\Versioned
 {
     /**
      * @var Adapter[]
@@ -170,5 +170,37 @@ class Sharding implements Adapter, Batchable, Leasable
         $index = $hash % $this->count;
 
         return $this->adapters[$index];
+    }
+
+    public function supportsVersioning(): bool
+    {
+        return \array_all($this->adapters, fn (Adapter $adapter): bool => $adapter instanceof \Utopia\Cache\Feature\Versioned && $adapter->supportsVersioning());
+    }
+
+    public function getVersion(string $key): string
+    {
+        return $this->versionedAdapter($key)->getVersion($key);
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return $this->versionedAdapter($key)->loadVersioned($key);
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): bool
+    {
+        return $this->versionedAdapter($key)->compareAndSwap($key, $data, $hash, $version);
+    }
+
+    private function versionedAdapter(string $key): \Utopia\Cache\Feature\Versioned
+    {
+        $adapter = $this->getAdapter($key);
+        if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+            throw new \Utopia\Cache\Exception\Unavailable('Versioned cache required');
+        }
+
+        return $adapter;
     }
 }

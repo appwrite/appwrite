@@ -247,7 +247,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
 
         try {
             $value = $this->envelope->encode($data, time());
-            $this->command(['HSET', $key, $hash, $value]);
+            $this->command(['HSET', $key, $hash, $value, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]);
 
             if ($ttl > 0) {
                 $this->command(['EXPIRE', $key, (string) $ttl]);
@@ -284,6 +284,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
+        $args[] = self::VERSION_FIELD;
+        $args[] = \bin2hex(\random_bytes(16));
+
         try {
             $this->command($args);
 
@@ -319,7 +322,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
-        return $this->command(['HSET', $key, $hash, $payload]) !== false;
+        return $this->command(['HSET', $key, $hash, $payload, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]) !== false;
     }
 
     /**

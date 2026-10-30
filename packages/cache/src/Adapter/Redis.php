@@ -178,7 +178,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
 
         try {
             $value = $this->envelope->encode($data, time());
-            $this->execute(fn (): \Redis|int|false => $this->redis->hSet($key, $hash, $value));
+            $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, [$hash => $value, self::VERSION_FIELD => \bin2hex(\random_bytes(16))]));
 
             if ($ttl > 0) {
                 $this->execute(fn (): \Redis|bool => $this->redis->expire($key, $ttl));
@@ -213,6 +213,8 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
         if ($map === []) {
             return false;
         }
+
+        $map[self::VERSION_FIELD] = \bin2hex(\random_bytes(16));
 
         try {
             $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, $map));
@@ -253,7 +255,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return false;
         }
 
-        return $this->execute(fn (): \Redis|int|false => $this->redis->hSet($key, $hash, $value)) !== false;
+        return $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, [$hash => $value, self::VERSION_FIELD => \bin2hex(\random_bytes(16))])) !== false;
     }
 
     /**

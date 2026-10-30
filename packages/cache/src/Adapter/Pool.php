@@ -7,7 +7,7 @@ use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Leasable;
 use Utopia\Pools\Pool as UtopiaPool;
 
-class Pool implements Adapter, Batchable, Leasable
+class Pool implements Adapter, Batchable, Leasable, \Utopia\Cache\Feature\Versioned
 {
     /**
      * @param  UtopiaPool<covariant Adapter>  $pool The pool to use for connections. Must contain instances of Adapter.
@@ -161,5 +161,45 @@ class Pool implements Adapter, Batchable, Leasable
         $result = $this->delegate(__FUNCTION__, \func_get_args());
 
         return $result;
+    }
+
+    public function supportsVersioning(): bool
+    {
+        return $this->pool->use(fn (Adapter $adapter): bool => $adapter instanceof \Utopia\Cache\Feature\Versioned && $adapter->supportsVersioning());
+    }
+
+    public function getVersion(string $key): string
+    {
+        return $this->pool->use(function (Adapter $adapter) use ($key): string {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+                throw new \Utopia\Cache\Exception\Unavailable("Versioned cache required");
+            }
+
+            return $adapter->getVersion($key);
+        });
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return $this->pool->use(function (Adapter $adapter) use ($key): array {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+                throw new \Utopia\Cache\Exception\Unavailable("Versioned cache required");
+            }
+
+            return $adapter->loadVersioned($key);
+        });
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): bool
+    {
+        return $this->pool->use(function (Adapter $adapter) use ($key, $data, $hash, $version): bool {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+                throw new \Utopia\Cache\Exception\Unavailable("Versioned cache required");
+            }
+
+            return $adapter->compareAndSwap($key, $data, $hash, $version);
+        });
     }
 }

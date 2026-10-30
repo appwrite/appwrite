@@ -197,6 +197,45 @@ class Cache
         }
     }
 
+    public function supportsVersioning(): bool
+    {
+        return $this->adapter instanceof Feature\Versioned && $this->adapter->supportsVersioning();
+    }
+
+    /** A lease identity that cannot return to zero after eviction, when supported. */
+    public function getLease(string $key): string
+    {
+        if (! $this->supportsVersioning()) {
+            return $this->getGeneration($key);
+        }
+        $key = $this->caseSensitive ? $key : \strtolower($key);
+
+        return 'version:'.$this->versionedAdapter()->getVersion($key);
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return $this->versionedAdapter()->loadVersioned($this->caseSensitive ? $key : \strtolower($key));
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $version): bool
+    {
+        $key = $this->caseSensitive ? $key : \strtolower($key);
+
+        return $this->versionedAdapter()->compareAndSwap($key, $data, '', $version);
+    }
+
+    private function versionedAdapter(): Feature\Versioned
+    {
+        if (! $this->adapter instanceof Feature\Versioned) {
+            throw new \Utopia\Cache\Exception\Unavailable('Versioned cache required');
+        }
+
+        return $this->adapter;
+    }
+
     /**
      * Current generation token for $key (advances on each purge). Returns '0'
      * when the underlying adapter does not support leasing.
@@ -228,6 +267,10 @@ class Cache
         $start = microtime(true);
 
         try {
+            if (\str_starts_with($generation, 'version:')) {
+                return $this->versionedAdapter()->compareAndSwap($key, $data, $hash, \substr($generation, 8)) ? $data : false;
+            }
+
             if (! $this->adapter instanceof Leasable) {
                 return $this->adapter->save($key, $data, $hash);
             }
