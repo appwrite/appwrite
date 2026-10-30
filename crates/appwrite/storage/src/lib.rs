@@ -91,7 +91,7 @@ impl Module for Storage {
     }
 
     fn routes(&self) -> Vec<Route> {
-        use http::*;
+        use http::buckets::{self, files};
         vec![
             route!(
                 POST,
@@ -102,7 +102,7 @@ impl Module for Storage {
                 Some("buckets.[bucketId].create"),
                 audit("bucket.create", "bucket/{response.$id}"),
                 Labels::NONE,
-                buckets::create
+                buckets::create::create
             ),
             route!(
                 GET,
@@ -113,7 +113,7 @@ impl Module for Storage {
                 None,
                 None,
                 Labels::NONE,
-                buckets::list
+                buckets::xlist::xlist
             ),
             route!(
                 GET,
@@ -124,7 +124,7 @@ impl Module for Storage {
                 None,
                 None,
                 Labels::NONE,
-                buckets::get
+                buckets::get::get
             ),
             route!(
                 PUT,
@@ -135,7 +135,7 @@ impl Module for Storage {
                 Some("buckets.[bucketId].update"),
                 audit("bucket.update", "bucket/{response.$id}"),
                 Labels::NONE,
-                buckets::update
+                buckets::update::update
             ),
             route!(
                 DELETE,
@@ -146,7 +146,7 @@ impl Module for Storage {
                 Some("buckets.[bucketId].delete"),
                 audit("bucket.delete", "bucket/{request.bucketId}"),
                 Labels::NONE,
-                buckets::delete
+                buckets::delete::delete
             ),
             route!(
                 POST,
@@ -157,7 +157,7 @@ impl Module for Storage {
                 Some("buckets.[bucketId].files.[fileId].create"),
                 audit("file.create", "file/{response.$id}"),
                 FILE_CREATE,
-                files::create
+                files::create::create
             ),
             route!(
                 GET,
@@ -168,7 +168,7 @@ impl Module for Storage {
                 None,
                 None,
                 Labels::NONE,
-                files::list
+                files::xlist::xlist
             ),
             route!(
                 GET,
@@ -179,7 +179,7 @@ impl Module for Storage {
                 None,
                 None,
                 Labels::NONE,
-                files::get
+                files::get::get
             ),
             route!(
                 PUT,
@@ -190,7 +190,7 @@ impl Module for Storage {
                 Some("buckets.[bucketId].files.[fileId].update"),
                 audit("file.update", "file/{response.$id}"),
                 FILE_MUTATE,
-                files::update
+                files::update::update
             ),
             route!(
                 DELETE,
@@ -201,7 +201,7 @@ impl Module for Storage {
                 Some("buckets.[bucketId].files.[fileId].delete"),
                 audit("file.delete", "file/{request.fileId}"),
                 FILE_MUTATE,
-                files::delete
+                files::delete::delete
             ),
             route!(
                 GET,
@@ -212,7 +212,7 @@ impl Module for Storage {
                 None,
                 None,
                 PREVIEW,
-                content::preview
+                files::preview::get::get
             ),
             route!(
                 GET,
@@ -223,7 +223,7 @@ impl Module for Storage {
                 None,
                 None,
                 Labels::NONE,
-                content::download
+                files::download::get::get
             ),
             route!(
                 GET,
@@ -234,7 +234,7 @@ impl Module for Storage {
                 None,
                 None,
                 Labels::NONE,
-                content::view
+                files::view::get::get
             ),
             route!(
                 GET,
@@ -245,7 +245,7 @@ impl Module for Storage {
                 None,
                 None,
                 Labels::NONE,
-                content::push
+                files::push::get::get
             ),
         ]
     }

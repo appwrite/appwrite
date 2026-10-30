@@ -1,9 +1,8 @@
 //! Storage HTTP actions.
+//!
+//! One file per PHP action under `Http/Buckets`.
 
 pub mod buckets;
-pub mod content;
-pub mod files;
-mod meta;
 
 use utopia_database::{Database, Document};
 

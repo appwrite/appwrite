@@ -1,19 +1,16 @@
-//! File actions, including the chunked upload.
+//! `POST /v1/storage/buckets/:bucketId/files`, including the chunked upload.
+//! PHP `Http/Buckets/Files/Create.php`.
 
 use serde_json::{Value as Json, json};
 use utopia_compression::{Algorithm, Gzip, Zstd};
 use utopia_database::validator::permissions::Permissions;
-use utopia_database::validator::query::cursor::Cursor as CursorValidator;
-use utopia_database::{Database, Document, Kind, PermissionType, Query, Value};
+use utopia_database::{Database, Document, Kind, PermissionType, Value};
 use utopia_http::{Response, StatusCode};
 use utopia_lock::{Distributed, Lock, Wait};
-use utopia_query::Method;
 use utopia_storage::Metadata;
 use utopia_storage::validator::{FileExt, FileSize, Upload};
 use utopia_validators::{Text, Validator};
 
-use appwrite_core::database::LIMIT_COUNT;
-use appwrite_core::database::collections;
 use appwrite_core::database::documents::{self, Attributes};
 use appwrite_core::platform::Context;
 use appwrite_core::validators::{CustomId, uid};
@@ -25,11 +22,10 @@ use crate::base::{
 };
 use crate::device::{self, Stored};
 use crate::filename::Filename;
-use crate::model::{FileList, FileModel};
+use crate::model::FileModel;
 
 use super::meta;
 
-/// `POST /v1/storage/buckets/:bucketId/files`.
 pub async fn create(ctx: &mut Context) -> Result<Response> {
     let bucket_id = ctx.required_str("bucketId", &uid())?;
     let mut file_id = id_or_unique(ctx.required_str("fileId", &CustomId)?);
@@ -37,7 +33,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let folder =
         crate::folder::Folder::normalize(&ctx.optional_str("folder", "", &crate::folder::Folder)?.unwrap_or_default());
     let db = ctx.db()?;
-    let bucket = super::visible_bucket(ctx, &db, &bucket_id).await?;
+    let bucket = crate::http::visible_bucket(ctx, &db, &bucket_id).await?;
     if !allows(ctx, &bucket, PermissionType::Create)? {
         return Err(unauthorized(ctx));
     }
@@ -133,169 +129,6 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     .await;
     let _ = lock.release().await;
     result
-}
-
-/// `GET /v1/storage/buckets/:bucketId/files`.
-pub async fn list(ctx: &mut Context) -> Result<Response> {
-    let bucket_id = ctx.required_str("bucketId", &uid())?;
-    let mut queries = ctx.queries(&collections::FILES)?;
-    let search = ctx.optional_str("search", "", &Text::with_min(256, 0))?.unwrap_or_default();
-    let include_total = ctx.optional_bool("total", true)?;
-    if !search.is_empty() {
-        queries.push(Query::search("search", &search));
-    }
-    let db = ctx.db()?;
-    let bucket = super::visible_bucket(ctx, &db, &bucket_id).await?;
-    let secured = bucket.boolean("fileSecurity").unwrap_or(false);
-    let readable = allows(ctx, &bucket, PermissionType::Read)?;
-    if !secured && !readable {
-        return Err(unauthorized(ctx));
-    }
-    let collection = bucket_collection(&bucket);
-    resolve_file_cursor(&db, &collection, &mut queries, secured && !readable).await?;
-    let filters = Query::group_by_type(&queries)?.filters;
-    let (files, total) = if secured && !readable {
-        let files = db.find(&collection, queries, PermissionType::Read).await.map_err(base::map_db)?;
-        let total = if include_total {
-            db.count(&collection, filters, Some(LIMIT_COUNT)).await.map_err(base::map_db)?
-        } else {
-            0
-        };
-        (files, total)
-    } else {
-        let auth = db.authorization();
-        let files = auth.skip(db.find(&collection, queries, PermissionType::Read)).await.map_err(base::map_db)?;
-        let total = if include_total {
-            auth.skip(db.count(&collection, filters, Some(LIMIT_COUNT))).await.map_err(base::map_db)?
-        } else {
-            0
-        };
-        (files, total)
-    };
-    Ok(ctx.json(StatusCode::OK, &FileList { total, files: &files }))
-}
-
-/// `GET /v1/storage/buckets/:bucketId/files/:fileId`.
-pub async fn get(ctx: &mut Context) -> Result<Response> {
-    let bucket_id = ctx.required_str("bucketId", &uid())?;
-    let file_id = ctx.required_str("fileId", &uid())?;
-    let db = ctx.db()?;
-    let bucket = super::visible_bucket(ctx, &db, &bucket_id).await?;
-    let file = readable_file(ctx, &db, &bucket, &file_id, PermissionType::Read).await?;
-    Ok(ctx.json(StatusCode::OK, &FileModel { document: &file }))
-}
-
-/// `PUT /v1/storage/buckets/:bucketId/files/:fileId`.
-pub async fn update(ctx: &mut Context) -> Result<Response> {
-    let bucket_id = ctx.required_str("bucketId", &uid())?;
-    let file_id = ctx.required_str("fileId", &uid())?;
-    let name = match ctx.param("name") {
-        None => None,
-        Some(value) if value.is_null() => None,
-        Some(_) => Some(ctx.required_str("name", &Filename(Text::new(128)))?),
-    };
-    let raw = ctx.param("permissions").cloned().unwrap_or(Json::Null);
-    let db = ctx.db()?;
-    let bucket = super::visible_bucket(ctx, &db, &bucket_id).await?;
-    let secured = bucket.boolean("fileSecurity").unwrap_or(false);
-    let permitted = allows(ctx, &bucket, PermissionType::Update)?;
-    if !secured && !permitted {
-        return Err(unauthorized(ctx));
-    }
-    let collection = bucket_collection(&bucket);
-    let file = db
-        .authorization()
-        .skip(db.get_document(&collection, &file_id, Vec::new(), false))
-        .await
-        .map_err(base::map_db)?;
-    if file.is_empty() {
-        return Err(Error::new(ErrorType::StorageFileNotFound));
-    }
-    let permissions = match permission_list(&raw)? {
-        None => file.permissions().map_err(Error::from)?,
-        Some(items) => {
-            let permissions = aggregate(&items, file_permissions())?;
-            assert_assignable(ctx, &permissions)?;
-            permissions
-        }
-    };
-    let mut updates = Document::default();
-    updates.put("$permissions", list_value(&permissions));
-    if let Some(name) = &name {
-        let allowed = bucket.strings("allowedFileExtensions");
-        if !allowed.is_empty()
-            && *name != file.string_or_empty("name")
-            && !FileExt::new(allowed).is_valid(&Json::String(name.clone()))
-        {
-            return Err(Error::with_message(ErrorType::StorageFileTypeUnsupported, "File extension not allowed"));
-        }
-        updates.put("name", Value::from(name.as_str()));
-    }
-    let file = if secured && !permitted {
-        db.update_document(&collection, &file_id, updates).await.map_err(base::map_db)?
-    } else {
-        db.authorization().skip(db.update_document(&collection, &file_id, updates)).await.map_err(base::map_db)?
-    };
-    ctx.event_param("bucketId", bucket.id().to_owned());
-    ctx.event_param("fileId", file.id().to_owned());
-    Ok(ctx.json(StatusCode::OK, &FileModel { document: &file }))
-}
-
-/// `DELETE /v1/storage/buckets/:bucketId/files/:fileId`.
-pub async fn delete(ctx: &mut Context) -> Result<Response> {
-    let bucket_id = ctx.required_str("bucketId", &uid())?;
-    let file_id = ctx.required_str("fileId", &uid())?;
-    let db = ctx.db()?;
-    let bucket = super::visible_bucket(ctx, &db, &bucket_id).await?;
-    let secured = bucket.boolean("fileSecurity").unwrap_or(false);
-    let permitted = allows(ctx, &bucket, PermissionType::Delete)?;
-    if !secured && !permitted {
-        return Err(unauthorized(ctx));
-    }
-    let collection = bucket_collection(&bucket);
-    let file = db
-        .authorization()
-        .skip(db.get_document(&collection, &file_id, Vec::new(), false))
-        .await
-        .map_err(base::map_db)?;
-    if file.is_empty() {
-        return Err(Error::new(ErrorType::StorageFileNotFound));
-    }
-    if secured && !permitted && !allows(ctx, &file, PermissionType::Delete)? {
-        return Err(unauthorized(ctx));
-    }
-    let device = Stored::for_project(&ctx.project.id)?;
-    let path = file.string_or_empty("path");
-    let device_deleted = if !chunks_settled(&file) {
-        device.abort(&path, &meta::upload_id(&file)).await.unwrap_or(true)
-    } else {
-        device.delete(&path).await?
-    };
-    if !device_deleted {
-        return Err(Error::with_message(ErrorType::GeneralServerError, "Failed to delete file from device"));
-    }
-    let project = ctx.project.message_payload();
-    ctx.events.deletes.push(base::cache_delete(&project, &file_id, bucket.id()));
-    let deleted = if secured && !permitted {
-        db.delete_document(&collection, &file_id).await.map_err(base::map_db)?
-    } else {
-        db.authorization().skip(db.delete_document(&collection, &file_id)).await.map_err(base::map_db)?
-    };
-    if !deleted {
-        let exists = db
-            .authorization()
-            .skip(db.get_document(&collection, &file_id, Vec::new(), false))
-            .await
-            .map_err(base::map_db)?;
-        if !exists.is_empty() {
-            return Err(Error::with_message(ErrorType::GeneralServerError, "Failed to remove file from DB"));
-        }
-        return Err(Error::new(ErrorType::StorageFileNotFound));
-    }
-    ctx.event_param("bucketId", bucket.id().to_owned());
-    ctx.event_param("fileId", file.id().to_owned());
-    ctx.event_payload(&FileModel { document: &file });
-    Ok(ctx.no_content())
 }
 
 struct Incoming {
@@ -784,67 +617,4 @@ fn rewrite_mime(mime: &str, name: &str) -> String {
 fn busy(ctx: &mut Context) -> Error {
     ctx.response_headers.push(("retry-after", "5".to_owned()));
     Error::with_message(ErrorType::GeneralRateLimitExceeded, "File upload is busy. Try again.")
-}
-
-fn chunks_settled(file: &Document) -> bool {
-    match (file.get("chunksTotal"), file.get("chunksUploaded")) {
-        (None, None) => true,
-        (Some(total), Some(uploaded)) => {
-            utopia_database::value::to_long(total) == utopia_database::value::to_long(uploaded)
-        }
-        _ => false,
-    }
-}
-
-async fn readable_file(
-    ctx: &Context,
-    db: &Database,
-    bucket: &Document,
-    file_id: &str,
-    kind: PermissionType,
-) -> Result<Document> {
-    let secured = bucket.boolean("fileSecurity").unwrap_or(false);
-    let permitted = allows(ctx, bucket, kind)?;
-    if !secured && !permitted {
-        return Err(unauthorized(ctx));
-    }
-    let collection = bucket_collection(bucket);
-    let file = if secured && !permitted {
-        db.get_document(&collection, file_id, Vec::new(), false).await.map_err(base::map_db)?
-    } else {
-        db.authorization().skip(db.get_document(&collection, file_id, Vec::new(), false)).await.map_err(base::map_db)?
-    };
-    if file.is_empty() {
-        return Err(Error::new(ErrorType::StorageFileNotFound));
-    }
-    Ok(file)
-}
-
-async fn resolve_file_cursor(db: &Database, collection: &str, queries: &mut [Query], enforce: bool) -> Result<()> {
-    let Some(cursor) =
-        queries.iter().position(|query| matches!(query.method(), Method::CursorAfter | Method::CursorBefore))
-    else {
-        return Ok(());
-    };
-    let validator = CursorValidator::default();
-    if !validator.check(&queries[cursor]) {
-        return Err(Error::with_message(ErrorType::GeneralQueryInvalid, validator.description()));
-    }
-    let id = queries[cursor]
-        .value()
-        .map(|value| utopia_database::value::to_text(&utopia_database::value::from_query(value)))
-        .unwrap_or_default();
-    let document = if enforce {
-        db.get_document(collection, &id, Vec::new(), false).await.map_err(base::map_db)?
-    } else {
-        db.authorization().skip(db.get_document(collection, &id, Vec::new(), false)).await.map_err(base::map_db)?
-    };
-    if document.is_empty() {
-        return Err(Error::with_message(
-            ErrorType::GeneralCursorNotFound,
-            format!("File '{id}' for the 'cursor' value not found."),
-        ));
-    }
-    queries[cursor].set_value(utopia_database::value::to_query(&Value::from(document)));
-    Ok(())
 }
