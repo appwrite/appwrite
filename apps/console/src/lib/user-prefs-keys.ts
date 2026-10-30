@@ -4051,6 +4051,35 @@ export function mergeServiceListViewModeIntoPrefs(
 }
 
 // ---------------------------------------------------------------------------
+// Playground mode (account prefs, shared across all projects)
+// ---------------------------------------------------------------------------
+
+export type PlaygroundMode = 'rest' | 'realtime'
+
+export const PLAYGROUND_MODE_DEFAULT: PlaygroundMode = 'rest'
+
+/** Full key: `console.playground.mode` - `"rest"` or `"realtime"`. */
+export const USER_PREFS_KEY_PLAYGROUND_MODE = 'console.playground.mode'
+
+export function parsePlaygroundMode(
+  prefs: UserPrefs | null | undefined,
+): PlaygroundMode {
+  const raw = prefs?.[USER_PREFS_KEY_PLAYGROUND_MODE]
+  if (raw === 'rest' || raw === 'realtime') return raw
+  return PLAYGROUND_MODE_DEFAULT
+}
+
+export function mergePlaygroundModeIntoPrefs(
+  prefs: UserPrefs,
+  mode: PlaygroundMode,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_PLAYGROUND_MODE]: mode,
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Console operator impersonation - recent targets (quick access in picker)
 //
 // Account prefs store only ordered user ID references (small). Display fields

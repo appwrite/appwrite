@@ -103,6 +103,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionLimit\Update as UpdateSessionLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as UpdateUserLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
+use Appwrite\Platform\Modules\Project\Http\Project\Prefs\Get as GetPrefs;
+use Appwrite\Platform\Modules\Project\Http\Project\Prefs\Update as UpdatePrefs;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
 use Appwrite\Platform\Modules\Project\Http\Project\Sessions\Delete as DeleteSessions;
@@ -133,6 +135,10 @@ class Http extends Service
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
         $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
         $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
+
+        // Prefs
+        $this->addAction(GetPrefs::getName(), new GetPrefs());
+        $this->addAction(UpdatePrefs::getName(), new UpdatePrefs());
 
         // Sessions
         $this->addAction(DeleteSessions::getName(), new DeleteSessions());

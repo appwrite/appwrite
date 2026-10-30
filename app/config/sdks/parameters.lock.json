@@ -3017,6 +3017,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -3425,6 +3426,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -7083,6 +7087,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -7491,6 +7496,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
