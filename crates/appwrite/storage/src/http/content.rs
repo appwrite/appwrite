@@ -5,7 +5,7 @@ use std::str::FromStr;
 use serde_json::{Value as Json, json};
 use utopia_compression::{Algorithm, Gzip, Zstd};
 use utopia_database::{Database, Document};
-use utopia_http::{Response, StatusCode};
+use utopia_http::{Aborted, Response, StatusCode};
 use utopia_image::{FocalPoint, Gravity, Image, OutputFormat, Resource, set_resource_limit};
 use utopia_validators::php::Number;
 use utopia_validators::{HexColor, Range, Text, Type, WhiteList};
@@ -281,18 +281,41 @@ async fn serve(
     if !device.exists(&path).await? {
         return Err(Error::new(ErrorType::StorageFileNotFound));
     }
-    let mut bytes = base::read_all(device, &path).await?;
-    if !file.string_or_empty("openSSLCipher").is_empty() {
-        bytes = decrypt(&ctx.state.config.openssl_key_v1, file, &bytes)?;
-    }
-    bytes = decompress(&file.string_or_empty("algorithm"), bytes)?;
     let size = base::long(file, "sizeOriginal");
     let ranged = range_of(ctx, size, open_end)?;
-    let (status, body) = match ranged {
-        Some((start, end)) => (StatusCode::PARTIAL_CONTENT, slice(&bytes, start, end)),
-        None => (StatusCode::OK, bytes),
+    let status = if ranged.is_some() { StatusCode::PARTIAL_CONTENT } else { StatusCode::OK };
+    let encrypted = !file.string_or_empty("openSSLCipher").is_empty();
+    let algorithm = file.string_or_empty("algorithm");
+    let mut response = if encrypted || matches!(algorithm.as_str(), "zstd" | "gzip") {
+        // Like PHP, the whole object: encrypted and compressed files are at
+        // most `APP_STORAGE_READ_BUFFER` (20 MB) before the transformation.
+        let mut bytes = base::read_all(device, &path).await?;
+        if encrypted {
+            bytes = decrypt(&ctx.state.config.openssl_key_v1, file, &bytes)?;
+        }
+        bytes = decompress(&algorithm, bytes)?;
+        let body = match ranged {
+            Some((start, end)) => slice(&bytes, start, end),
+            None => bytes,
+        };
+        Response::with_body(status, content_type, body)
+    } else if let Some((start, end)) = ranged {
+        // Only the requested bytes (at most `APP_STORAGE_READ_BUFFER`).
+        let length = u64::try_from(end - start + 1).unwrap_or(0);
+        let body = device.read(&path, u64::try_from(start).unwrap_or(0), Some(length)).await?;
+        let bytes =
+            body.bytes().await.map_err(|e| Error::with_message(ErrorType::GeneralServerError, e.to_string()))?;
+        Response::with_body(status, content_type, bytes)
+    } else if size <= READ_BUFFER {
+        Response::with_body(status, content_type, base::read_all(device, &path).await?)
+    } else {
+        // One read pins the object; its chunks go out as the client takes them.
+        let body = device.read(&path, 0, None).await?;
+        let mut response = Response::with_body(status, content_type, Vec::new());
+        let length = u64::try_from(size).unwrap_or(0);
+        response.stage_stream(chunks(body, length), usize::try_from(length).unwrap_or(usize::MAX));
+        response
     };
-    let mut response = Response::with_body(status, content_type, body);
     if let Some((start, end)) = ranged {
         response.add("accept-ranges", "bytes");
         response.add("content-range", &format!("bytes {start}-{end}/{size}"));
@@ -338,10 +361,42 @@ fn slice(bytes: &[u8], start: i64, end: i64) -> Vec<u8> {
     bytes[start..end.min(bytes.len())].to_vec()
 }
 
-fn decrypt(key: &str, file: &Document, data: &[u8]) -> Result<Vec<u8>> {
+/// The `length` bytes of a stored file, in chunks of at most
+/// [`utopia_http::CHUNK_SIZE`]. Like PHP, a read that runs past or short of
+/// the captured size cuts the response short instead of ending it.
+fn chunks(
+    body: utopia_storage::Body,
+    length: u64,
+) -> impl futures_util::Stream<Item = std::result::Result<bytes::Bytes, Aborted>> + Send + 'static {
+    futures_util::stream::unfold(Some((body, length)), |state| async move {
+        let (mut body, remaining) = state?;
+        match body.read(utopia_http::CHUNK_SIZE).await {
+            Ok(chunk) if chunk.is_empty() && remaining == 0 => None,
+            Ok(chunk) if !chunk.is_empty() && chunk.len() as u64 <= remaining => {
+                let remaining = remaining - chunk.len() as u64;
+                Some((Ok(chunk), Some((body, remaining))))
+            }
+            Ok(_) | Err(_) => {
+                tracing::warn!(remaining, "file read did not match its captured size");
+                Some((Err(Aborted), None))
+            }
+        }
+    })
+}
+
+/// `OpenSSL::decrypt($data, $cipher, _APP_OPENSSL_KEY_V{openSSLVersion}, 0, $iv, $tag)`:
+/// base64 ciphertext, as PHP and this service write it.
+fn decrypt(key_v1: &str, file: &Document, data: &[u8]) -> Result<Vec<u8>> {
     let iv = hex::decode(file.string_or_empty("openSSLIV")).unwrap_or_default();
     let tag = hex::decode(file.string_or_empty("openSSLTag")).unwrap_or_default();
-    appwrite_core::crypto::open(key, data, &iv, &tag)
+    let version = file.string_or_empty("openSSLVersion");
+    let key = match version.as_str() {
+        "" | "1" => key_v1.to_owned(),
+        version => appwrite_core::crypto::env_key(version).unwrap_or_default(),
+    };
+    appwrite_core::crypto::open_encoded(&key, data, &iv, &tag)
+        // Raw ciphertext, as early Rust builds of this service wrote it.
+        .or_else(|| appwrite_core::crypto::open(&key, data, &iv, &tag))
         .ok_or_else(|| Error::with_message(ErrorType::GeneralServerError, "Failed to decrypt file"))
 }
 

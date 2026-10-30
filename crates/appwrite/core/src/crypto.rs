@@ -89,6 +89,27 @@ pub fn open(key: &str, data: &[u8], iv: &[u8], tag: &[u8]) -> Option<Vec<u8>> {
     Some(buffer)
 }
 
+/// `openssl_encrypt($plain, 'aes-128-gcm', $key, 0, $iv, $tag)` with a
+/// random IV: options `0` gives the ciphertext base64-encoded, as Storage
+/// writes encrypted files (`Buckets/Files/Create.php`).
+pub fn seal_encoded(key: &str, plain: &[u8]) -> (Vec<u8>, [u8; 12], [u8; 16]) {
+    let (data, iv, tag) = seal(key, plain);
+    (base64::engine::general_purpose::STANDARD.encode(data).into_bytes(), iv, tag)
+}
+
+/// `openssl_decrypt($data, 'aes-128-gcm', $key, 0, $iv, $tag)`: [`open`] of
+/// base64-encoded ciphertext ([`seal_encoded`]'s output). OpenSSL's decoder
+/// skips line breaks.
+pub fn open_encoded(key: &str, data: &[u8], iv: &[u8], tag: &[u8]) -> Option<Vec<u8>> {
+    let decoded = if data.iter().any(|b| matches!(b, b'\n' | b'\r')) {
+        let compact: Vec<u8> = data.iter().copied().filter(|b| !matches!(b, b'\n' | b'\r')).collect();
+        base64::engine::general_purpose::STANDARD.decode(compact)
+    } else {
+        base64::engine::general_purpose::STANDARD.decode(data)
+    };
+    open(key, &decoded.ok()?, iv, tag)
+}
+
 /// The cipher of `key`, kept: expanding a key costs more than decrypting
 /// the short values stored with it (every listed user's password).
 fn cipher(key: &str) -> Aes128Gcm {
@@ -147,5 +168,33 @@ mod tests {
             assert!(!stored.contains("\\/"), "{stored}");
             assert!(stored.starts_with("{\"data\":\""), "{stored}");
         }
+    }
+
+    /// `openssl_encrypt('hello appwrite storage', 'aes-128-gcm', 'your-secret-key', 0, '0123456789ab', $tag)`
+    /// in PHP: the format of an encrypted Storage file.
+    const PHP_FILE: &[u8] = b"yQlXnzXsDqUCvH1HemkVjNzVMip7lw==";
+    const PHP_TAG: &str = "5685dd95b028fa4ebec062ae8073219e";
+
+    #[test]
+    fn opens_php_encoded_files() {
+        let tag = hex::decode(PHP_TAG).unwrap();
+        let plain = open_encoded("your-secret-key", PHP_FILE, b"0123456789ab", &tag);
+        assert_eq!(plain.as_deref(), Some(&b"hello appwrite storage"[..]));
+        // Raw ciphertext is not what PHP's options `0` reads.
+        assert!(open("your-secret-key", PHP_FILE, b"0123456789ab", &tag).is_none());
+    }
+
+    #[test]
+    fn seals_files_as_php_does() {
+        let (data, iv, tag) = seal_encoded("your-secret-key", b"hello appwrite storage");
+        assert!(data.iter().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'+' | b'/' | b'=')));
+        assert_eq!(open_encoded("your-secret-key", &data, &iv, &tag).as_deref(), Some(&b"hello appwrite storage"[..]));
+        // Same IV, same output as PHP.
+        let mut buffer = b"hello appwrite storage".to_vec();
+        let sealed = cipher("your-secret-key")
+            .encrypt_in_place_detached(Nonce::from_slice(b"0123456789ab"), b"", &mut buffer)
+            .unwrap();
+        assert_eq!(base64::engine::general_purpose::STANDARD.encode(&buffer).as_bytes(), PHP_FILE);
+        assert_eq!(hex::encode(sealed), PHP_TAG);
     }
 }

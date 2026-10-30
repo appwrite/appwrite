@@ -581,7 +581,8 @@ async fn persist(
         .map_err(|err| Error::with_message(ErrorType::GeneralServerError, err.to_string()))?;
     }
     let sealed = if encrypt {
-        let (encrypted, iv, tag) = appwrite_core::crypto::seal(&ctx.state.config.openssl_key_v1, &data);
+        // Options `0`, as PHP writes it: base64 ciphertext that either runtime reads.
+        let (encrypted, iv, tag) = appwrite_core::crypto::seal_encoded(&ctx.state.config.openssl_key_v1, &data);
         data = encrypted;
         Some(Sealed { iv: hex::encode(iv), tag: hex::encode(tag) })
     } else {
