@@ -198,6 +198,33 @@ class Action extends AppwriteAction
         }
     }
 
+    protected function parseStagedOperators(string $action, array $data, Document $collection): array
+    {
+        switch ($action) {
+            case 'update':
+            case 'upsert':
+                return $this->parseOperators($data, $collection);
+            case 'bulkUpdate':
+                if (\is_array($data['data'] ?? null)) {
+                    $data['data'] = $this->parseOperators($data['data'], $collection);
+                }
+                return $data;
+            case 'bulkUpsert':
+                foreach ($data as $index => $row) {
+                    if ($row instanceof Document) {
+                        $row = $row->getArrayCopy();
+                    }
+                    if (\is_array($row)) {
+                        $data[$index] = $this->parseOperators($row, $collection);
+                    }
+                }
+                return $data;
+            default:
+                $this->assertNoOperators($data);
+                return $data;
+        }
+    }
+
     /**
      * Stable Redis key for a collection's cached list responses.
      *

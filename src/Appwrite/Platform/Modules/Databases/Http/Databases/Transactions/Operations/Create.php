@@ -157,8 +157,8 @@ class Create extends Action
                 }
             }
 
-            if (\in_array($operation['action'], ['create', 'bulkCreate'])) {
-                $this->assertNoOperators($operation['data'] ?? []);
+            if (\is_array($operation['data'] ?? null)) {
+                $this->parseStagedOperators($operation['action'], $operation['data'], $collection);
             }
 
             $document = null;
