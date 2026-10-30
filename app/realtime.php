@@ -468,6 +468,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         unit: 'ms',
         advisory: ['ExplicitBucketBoundaries' => $realtimeDelayBuckets],
     ));
+    $register->set('telemetry.eventsReceivedCounter', fn () => $telemetry->createCounter('realtime.server.events.received'));
+    $register->set('telemetry.eventsDroppedCounter', fn () => $telemetry->createCounter('realtime.server.events.dropped'));
+    $register->set('telemetry.eventsFailedCounter', fn () => $telemetry->createCounter('realtime.server.events.failed'));
+    $register->set('telemetry.eventStageGauge', fn () => $telemetry->createObservableGauge('realtime.server.event.stage', 's', 'Seconds the event being handled has spent in its current step, 0 when idle.'));
     $register->get('telemetry.workerCounter')->add(1);
 
     $attempts = 0;
@@ -599,6 +603,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         deliveryDelay: $register->get('telemetry.deliveryDelayHistogram'),
         messagesSent: $register->get('telemetry.messageSentCounter'),
         outboundBytes: $register->get('telemetry.outboundBytesCounter'),
+        eventsReceived: $register->get('telemetry.eventsReceivedCounter'),
+        eventsDropped: $register->get('telemetry.eventsDroppedCounter'),
+        eventsFailed: $register->get('telemetry.eventsFailedCounter'),
+        eventStage: $register->get('telemetry.eventStageGauge'),
         subscriptions: $register->get('telemetry.workerSubscriptionCounter'),
         workerAttributes: $workerTelemetryAttributes,
         unauthorized: $unauthorized,

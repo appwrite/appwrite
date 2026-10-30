@@ -17,6 +17,7 @@ use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Counter;
 use Utopia\Telemetry\Histogram;
+use Utopia\Telemetry\ObservableGauge;
 use Utopia\Telemetry\UpDownCounter;
 use Utopia\WebSocket\Server;
 
@@ -25,6 +26,10 @@ class Handler
 {
     // Permission checks running on this worker, stuck ones included.
     private int $checks = 0;
+
+    // The step the event being handled is in, and since when.
+    private string $stage = 'idle';
+    private float $stageSince;
 
     /**
      * @param array<string, string> $workerAttributes
@@ -39,6 +44,10 @@ class Handler
         private readonly Histogram $deliveryDelay,
         private readonly Counter $messagesSent,
         private readonly Counter $outboundBytes,
+        private readonly Counter $eventsReceived,
+        private readonly Counter $eventsDropped,
+        private readonly Counter $eventsFailed,
+        ObservableGauge $eventStage,
         private readonly UpDownCounter $subscriptions,
         private readonly array $workerAttributes,
         private readonly AppwriteException $unauthorized,
@@ -47,15 +56,37 @@ class Handler
         private readonly int $workerId,
         private readonly int $checkLimit,
     ) {
+        $this->stageSince = \microtime(true);
+        $eventStage->observe(fn (callable $observe) => $observe(
+            $this->stage === 'idle' ? 0.0 : \microtime(true) - $this->stageSince,
+            $this->workerAttributes + ['stage' => $this->stage],
+        ));
     }
 
     public function handle(mixed $redis, string $channel, string $payload): void
     {
+        $this->eventsReceived->add(1);
+        $arrivedAt = \microtime(true);
+        $this->enter('decode');
         $event = \json_decode($payload, true);
+        if (!\is_array($event)) {
+            $this->eventsDropped->add(1, ['reason' => 'invalid_payload']);
+            $this->enter('idle');
+            return;
+        }
 
+        $span = Span::init('realtime.event');
+        $span
+            ->set('project.id', $event['project'] ?? '')
+            ->set('realtime.event.name', $event['data']['events'][0] ?? '')
+            ->set('realtime.arrived_at', $arrivedAt);
+
+        $error = null;
         try {
+            $this->enter('arrival');
             $this->recordArrival($event);
 
+            $this->enter('permissions');
             $closing = [];
             if ($event['permissionsChanged'] && isset($event['userId'])) {
                 $closing += $this->revalidateUser($event);
@@ -63,21 +94,35 @@ class Handler
                 $closing += $this->revalidateProject($event);
             }
             $closing += $this->endDeletedTeams($event);
-            $closing += $this->deliver($event, $payload);
+
+            $this->enter('deliver');
+            $closing += $this->deliver($event, $payload, $span);
 
             // After delivery, so revoked connections see the event that ended their access.
+            $this->enter('close');
             foreach (\array_keys($closing) as $connection) {
                 $this->server->send([$connection], $this->unauthorizedPayload);
                 $this->server->close($connection, $this->unauthorized->getCode());
             }
 
+            $this->enter('tail');
             $this->tail($event);
         } catch (\Throwable $th) {
-            // Only a failed event gets a span, so the firehose stays out of the logs.
-            $span = Span::init('realtime.event');
-            $span->set('project.id', $event['project'] ?? '');
-            $span->finish(error: $th);
+            $this->eventsFailed->add(1, ['stage' => $this->stage]);
+            $span->set('realtime.result', 'failed');
+            $error = $th;
+        } finally {
+            $this->enter('idle');
         }
+
+        $span->set('realtime.resolved_at', \microtime(true));
+        $span->finish(error: $error);
+    }
+
+    private function enter(string $stage): void
+    {
+        $this->stage = $stage;
+        $this->stageSince = \microtime(true);
     }
 
     private function recordArrival(array $event): void
@@ -90,7 +135,7 @@ class Handler
         try {
             $this->arrivalDelay->record($this->delayMs($timestamp));
         } catch (\Throwable) {
-            // Ignore invalid timestamp payloads.
+            $this->eventsFailed->add(1, ['stage' => 'arrival']);
         }
     }
 
@@ -546,10 +591,13 @@ class Handler
      *
      * @return array<int, true> expired receivers, to close
      */
-    private function deliver(array $event, string $payload): array
+    private function deliver(array $event, string $payload, Span $span): array
     {
         $closing = [];
         $receivers = $this->realtime->getSubscribers($event);
+        if ($receivers === []) {
+            $this->eventsDropped->add(1, ['reason' => 'no_subscriber']);
+        }
 
         if (System::getEnv('_APP_ENV', 'production') === 'development' && !empty($receivers)) {
             Console::log("[Debug][Worker {$this->workerId}] Receivers: " . \count($receivers));
@@ -587,6 +635,10 @@ class Handler
             $outboundBytes += \strlen($payloadJson);
         }
 
+        $span
+            ->set('realtime.result', $total > 0 ? 'delivered' : 'no_subscriber')
+            ->set('realtime.receivers', $total);
+
         if ($total === 0) {
             return $closing;
         }
@@ -600,7 +652,7 @@ class Handler
             try {
                 $this->deliveryDelay->record($this->delayMs($updatedAt));
             } catch (\Throwable) {
-                // Ignore invalid timestamp payloads.
+                $this->eventsFailed->add(1, ['stage' => 'delivery_delay']);
             }
         }
 
