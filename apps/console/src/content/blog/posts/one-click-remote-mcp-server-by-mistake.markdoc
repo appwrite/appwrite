@@ -17,10 +17,10 @@ faqs:
     answer: "Claude Code uses a client ID metadata document: its client ID is a URL it controls, and the authorization server fetches that URL to read the client's name and redirect URIs. Other clients use dynamic client registration and receive a client ID from a registration endpoint on the spot. An Appwrite project's discovery document advertises both."
   - question: "Is it safe to let any AI client register with my project?"
     answer: "Yes, because a client ID grants nothing on its own. It only lets a tool start an authorization request. The user still has to sign in to your product and approve the requested scopes on your consent screen, and the resulting access token is short-lived, bound to your MCP server's URL, and limited to those scopes."
-  - question: "Can an MCP server run on Appwrite Functions?"
-    answer: "Yes. An [Appwrite Function](/docs/products/functions) gets a public HTTPS domain on deploy, can serve the MCP endpoint and its metadata documents, and verifies access tokens offline against the project's JWKS. Functions return one response per request, so the server answers tool calls with JSON instead of a long-lived stream."
+  - question: "Can an MCP server run on Appwrite Functions or Appwrite Sites?"
+    answer: "Yes, on either. An [Appwrite Function](/docs/products/functions) gets its own HTTPS domain on deploy and scales separately from your web app. A server route on an [Appwrite Site](/docs/products/sites) rendered with SSR can serve the same endpoint next to your consent page, on your app's domain. Either way, the server answers `/mcp` and its metadata document and verifies access tokens offline against the project's JWKS."
   - question: "How do I add a remote MCP server to my Appwrite project?"
-    answer: "Connect your AI agent to the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) at `https://mcp.appwrite.io/`, sign in to your Appwrite account, and ask the agent to add a secure remote MCP server to your project. The agent enables the OAuth2 server, defines scopes, adds a consent page to your Site, and deploys the MCP endpoint as a Function. You do not configure anything yourself."
+    answer: "Connect your AI agent to the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) at `https://mcp.appwrite.io/`, sign in to your Appwrite account, and ask the agent to add a secure remote MCP server to your project. The agent enables the OAuth2 server, defines scopes, adds a consent page to your Site, and deploys the MCP endpoint as a Function or as a route on your Site. You do not configure anything yourself."
   - question: "Is the Appwrite Email app open source?"
     answer: "Yes. The full source, including the Site, the Functions, the MCP server, and the setup scripts, is at [github.com/appwrite/email](https://github.com/appwrite/email)."
 ---
@@ -68,7 +68,7 @@ Stitched across vendors, the work moves into the seams:
 
 To be fair, several auth providers now ship MCP authorization, and it works. But their tokens still prove who the user is in one system while the data lives in another, and the bridge between the two is still yours to write and operate.
 
-In an Appwrite project, there is no bridge. The user who signs in to the mail app, the `sub` in the access token Claude presents, and the owner on the database rows are **the same user ID in the same project**. The consent page is a route on the same [Site](/docs/products/sites). The MCP endpoint is a [Function](/docs/products/functions) in the same project, reading the same tables with the same permission model. That is not a clever integration. It is what happens when hosting, data, and auth share one roof, and it only became an MCP story when we released the [OAuth2 server](/blog/post/announcing-oauth2-server), which lets an Appwrite project act as an OAuth 2.1 and OpenID Connect provider.
+In an Appwrite project, there is no bridge. The user who signs in to the mail app, the `sub` in the access token Claude presents, and the owner on the database rows are **the same user ID in the same project**. The consent page is a route on the same [Site](/docs/products/sites). The MCP endpoint runs in the same project, either as a [Function](/docs/products/functions) or as a server route on that same Site, reading the same tables with the same permission model. That is not a clever integration. It is what happens when hosting, data, and auth share one roof, and it only became an MCP story when we released the [OAuth2 server](/blog/post/announcing-oauth2-server), which lets an Appwrite project act as an OAuth 2.1 and OpenID Connect provider.
 
 # How the mail app's MCP server works
 
@@ -84,7 +84,11 @@ Here is the whole app, one row per Appwrite product:
 | **Realtime** | New mail and state changes synced across tabs |
 | **Sites** | The web app, including the OAuth consent screen at `/oauth/consent` |
 
-The MCP server is the `public` function, served from its own domain. In the same change, the agent added the consent route to the Site and a developer page that gives users the server URL, an install path for each major client, and the scope every tool needs:
+The MCP server is the `public` function, served from its own domain.
+
+**A Function is one option, not a requirement.** An MCP server is a handful of HTTP routes, so it runs just as well as a server route on an [Appwrite Site](/docs/products/sites) rendered with SSR, next to the consent page and on the app's own domain. We used a Function so the MCP server deploys and scales on its own. Pick a Site route when you want the app and its MCP server to ship as one deployment. Everything below works the same either way.
+
+In the same change, the agent added the consent route to the Site and a developer page that gives users the server URL, an install path for each major client, and the scope every tool needs:
 
 ![The mail app's developer page: the MCP server URL, setup steps for Claude, ChatGPT, Cursor, VS Code, and Claude Code, and a table of eight tools with their scopes](/images/blog/one-click-remote-mcp-server-by-mistake/mcp-config.avif)
 
@@ -193,7 +197,7 @@ The agent did not implement any of those guarantees, so it could not get any of 
 This is not free of constraints, and you should know them before you copy the pattern:
 
 - **The OAuth2 server is an Appwrite Cloud feature.** Self-hosted Appwrite does not include it today.
-- **Functions return one response per request.** The server answers tool calls with plain JSON rather than a long-lived stream. That fits request and response tools like these. If your tools stream long-running progress, design for that.
+- **Functions return one response per request.** The mail app's server answers tool calls with plain JSON rather than a long-lived stream. That fits request and response tools like these. If your tools stream long-running progress, design for that.
 - **Consolidation is a choice.** Putting hosting, data, and identity in one project is exactly why this was fast. It also means one platform carries all three. The mitigation is that every interface here is an open standard: OAuth 2.1, OpenID Connect, JWKS, and MCP. Any OAuth library works against the project, any JWT library verifies its tokens, and the rest of Appwrite is [open source](https://github.com/appwrite/appwrite) and self-hostable.
 - **Email triggers have not shipped yet.** The mail app runs on a preview of the feature. We will write about it properly when it is generally available.
 
@@ -213,7 +217,7 @@ Run `/mcp`, choose **appwrite**, and sign in to your Appwrite account. Then ask 
 > Add a secure remote MCP server to my "Acme" project.
 ```
 
-That is the whole setup. The agent turns on the OAuth2 server, defines scopes for your data, adds a consent page to your Site, writes and deploys the MCP function, and hands you the URL to share. Nothing for you to configure, and nothing to wire between vendors.
+That is the whole setup. The agent turns on the OAuth2 server, defines scopes for your data, adds a consent page to your Site, writes the MCP server and deploys it as a Function or as a route on your Site, and hands you the URL to share. Nothing for you to configure, and nothing to wire between vendors.
 
 Everything above this section is what happens behind the scenes, and it is worth knowing if you want to audit the result. Review what the agent builds the way you would review any pull request: the scopes it defined and the tools it exposed. But the scary truth is that you do not need to understand any of it. It just works.
 
