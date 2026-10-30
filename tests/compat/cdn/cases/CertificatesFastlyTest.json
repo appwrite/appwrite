@@ -859,6 +859,10 @@
               {
                 "status": 200,
                 "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\"}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[{\"name\":\"example.com\"}]}}"
               }
             ]
           },
@@ -868,6 +872,16 @@
               {
                 "method": "GET",
                 "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
                 "headers": {
                   "accept": "application/json",
                   "fastly-key": "token",
@@ -890,6 +904,10 @@
               {
                 "status": 200,
                 "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":\"\"}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[{\"name\":\"example.com\"}]}}"
               }
             ]
           },
@@ -899,6 +917,16 @@
               {
                 "method": "GET",
                 "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
                 "headers": {
                   "accept": "application/json",
                   "fastly-key": "token",
@@ -921,6 +949,10 @@
               {
                 "status": 200,
                 "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\"}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[{\"name\":\"example.com\"}]}}"
               }
             ]
           },
@@ -930,6 +962,16 @@
               {
                 "method": "GET",
                 "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
                 "headers": {
                   "accept": "application/json",
                   "fastly-key": "token",
@@ -2283,6 +2325,10 @@
               {
                 "status": 200,
                 "body": "{\"data\":[{\"fqdn\":\"other.com\"},\"x\",{\"fqdn\":\"example.com\",\"service_id\":7}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[{\"name\":\"example.com\"}]}}"
               }
             ]
           },
@@ -2292,6 +2338,16 @@
               {
                 "method": "GET",
                 "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
                 "headers": {
                   "accept": "application/json",
                   "fastly-key": "token",
@@ -2575,6 +2631,1392 @@
                   "user-agent": "Utopia CDN Fastly TLS Provider"
                 },
                 "body": "{\"data\":{\"type\":\"tls_subscription\",\"attributes\":{\"certificate_authority\":\"lets-encrypt\"},\"relationships\":{\"tls_domains\":{\"data\":[{\"type\":\"tls_domain\",\"id\":\"example.com\"}]},\"common_name\":{\"data\":{\"type\":\"tls_domain\",\"id\":\"example.com\"}},\"tls_configuration\":{\"data\":{\"type\":\"tls_configuration\",\"id\":\"cfg\"}}}}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "issue continues with domain added since lookup",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              },
+              {
+                "status": 400,
+                "body": "{\"errors\":[{\"title\":\"Invalid value for fqdn\",\"detail\":\"fqdn Domain name has already been taken\"}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":\"service_1\",\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              },
+              {
+                "status": 201,
+                "body": "{\"data\":{\"id\":\"sub_1\",\"attributes\":{\"state\":\"pending\"}}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/domain-management/v1/domains",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": "{\"fqdn\":\"example.com\",\"service_id\":\"service_1\"}"
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/tls/subscriptions",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": "{\"data\":{\"type\":\"tls_subscription\",\"attributes\":{\"certificate_authority\":\"certainly\"},\"relationships\":{\"tls_domains\":{\"data\":[{\"type\":\"tls_domain\",\"id\":\"example.com\"}]}}}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "issue fails when taken domain is not listed",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              },
+              {
+                "status": 400,
+                "body": "{\"errors\":[{\"title\":\"Invalid value for fqdn\",\"detail\":\"fqdn Domain name has already been taken\"}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly reports example.com as already taken, but no domain record in this account matches it. Another Fastly account or a classic service may hold it."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/domain-management/v1/domains",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": "{\"fqdn\":\"example.com\",\"service_id\":\"service_1\"}"
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "issue fails on other domain creation errors",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[]}"
+              },
+              {
+                "status": 400,
+                "body": "{\"errors\":[{\"title\":\"Invalid value for fqdn\",\"detail\":\"fqdn is invalid\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to add Fastly domain with status 400: fqdn is invalid"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/domain-management/v1/domains",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": "{\"fqdn\":\"example.com\",\"service_id\":\"service_1\"}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "issue reassigns detached domain once tls is issued",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[{\"name\":\"other.example.com\"}]}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"sub_1\",\"attributes\":{\"state\":\"issued\"}}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"sub_1\",\"attributes\":{\"state\":\"issued\"}}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":\"service_1\",\"routing_configuration_id\":null}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "PATCH",
+                "url": "https://api.fastly.com/domain-management/v1/domains/domain_1",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": "{\"service_id\":\"service_1\"}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "issue does not reassign detached domain while tls is pending",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[]}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"sub_1\",\"attributes\":{\"state\":\"pending\"}}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"sub_1\",\"attributes\":{\"state\":\"pending\"}}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/tls/subscriptions?filter%5Btls_domains.id%5D=example.com&include=tls_certificates%2Ctls_authorizations&page%5Bsize%5D=1",
+                "headers": {
+                  "accept": "application/vnd.api+json",
+                  "content-type": "application/vnd.api+json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly TLS Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "issue leaves classic domain on the service untouched",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[{\"name\":\"example.com\"}]}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "issue leaves routed domain untouched",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":\"routing_1\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "renew is required for detached domain",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"number\":3,\"domains\":[{\"name\":\"other.example.com\"}]}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "renew is not required for routed domain",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":\"routing_1\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete leaves routed domain untouched",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":\"routing_1\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "renew is required for detached domain on service without active version",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":null}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "delete on service without active version leaves tls untouched",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":null}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "service details with a malformed active version",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly service details response was missing its active version."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":\"x\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly service details response had an invalid active version."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"service_id\":null,\"routing_configuration_id\":null}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":{\"domains\":[{\"name\":\"example.com\"}]}}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly active service version was missing its number."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"routing_configuration_id\":\"\"}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"active_version\":null}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/service/service_1/details",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"id\":\"domain_1\",\"fqdn\":\"example.com\",\"routing_configuration_id\":7}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain lookup follows next cursor",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c1\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"example.com\",\"service_id\":\"other\"}],\"meta\":{\"next_cursor\":\"c2\"}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c1",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"\"}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":7}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain lookup stops after its page limit",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "service": "service_1"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c1\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c2\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c3\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c4\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c5\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c6\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c7\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c8\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c9\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c10\"}}"
+              },
+              {
+                "status": 200,
+                "body": "{\"data\":[{\"fqdn\":\"a.example.com\"}],\"meta\":{\"next_cursor\":\"c11\"}}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly domains matching example.com span more than 10 pages without an exact match."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c1",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c2",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c3",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c4",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c5",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c6",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c7",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c8",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "url": "https://api.fastly.com/domain-management/v1/domains?fqdn=example.com&limit=100&cursor=c9",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Certificates Provider"
+                },
+                "body": ""
               }
             ]
           }

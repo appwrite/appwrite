@@ -94,6 +94,15 @@ pub(crate) fn get<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
     }
 }
 
+/// `array_key_exists($key, $value)` for an array, null values included;
+/// `false` for anything else.
+pub(crate) fn has(value: &Value, key: &str) -> bool {
+    match value {
+        Value::Array(a) => a.get_ref(KeyRef::normalize(key.as_bytes())).is_some(),
+        _ => false,
+    }
+}
+
 /// `$value[$index] ?? null` for an array; `None` for anything else.
 pub(crate) fn at(value: &Value, index: i64) -> Option<&Value> {
     match value {

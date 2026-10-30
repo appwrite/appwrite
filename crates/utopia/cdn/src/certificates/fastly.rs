@@ -11,15 +11,23 @@ use crate::api::{self, DefaultClient, Reply};
 use crate::certificates::{FastlyTls, Provider, Status};
 use crate::{BoxFuture, Error, domain};
 
+/// Pages of 100 records read when looking up a domain: Fastly's `fqdn`
+/// filter is a partial match, so a name contained in many others spans
+/// several pages before its exact record turns up.
+const DOMAIN_PAGES: usize = 10;
+
 /// Certificates for domains a Fastly service serves: the domain is added to
 /// the service through Fastly's domain management, then certified by a
 /// [`FastlyTls`] subscription sharing this provider's client.
 ///
 /// A domain on another service moves to this one only once its certificate
-/// is issued, so a failure never moves a live hostname. A domain on a
-/// classic service version is left alone when issuing; deleting it clones
-/// and activates a version without it, polls until that version is
-/// deployed, then deletes its subscription.
+/// is issued, so a failure never moves a live hostname. A record naming no
+/// service is left alone while a routing configuration or the configured
+/// service's active version serves it; when neither does, it is detached:
+/// renewal is required and issuing reassigns it like a domain on another
+/// service. Deleting a classic domain clones and activates a version
+/// without it, polls until that version is deployed, then deletes its
+/// subscription; a routed or detached record is left alone.
 ///
 /// ```no_run
 /// use utopia_cdn::certificates::{Fastly, Provider};
@@ -158,58 +166,103 @@ impl<C: Client> Fastly<C> {
         .await
     }
 
+    /// The domain-management record for exactly this domain, read page by
+    /// page because the `fqdn` filter also returns every name containing it.
     async fn find_domain(&self, domain: &str) -> Result<Option<Value>, Error> {
-        let query = api::query(&[("fqdn", domain), ("limit", "100")]);
-        let reply = self.request("GET", &format!("/domain-management/v1/domains?{query}"), None).await?;
-        assert_success("fetch Fastly domains", &reply, None)?;
-        let Some(body) = reply.array() else {
-            return Err(Error::Runtime("Fastly domains response was not valid JSON.".into()));
-        };
-        let Some(domains @ Value::Array(_)) = api::get(body, "data") else {
-            return Err(Error::Runtime("Fastly domains response was missing its data list.".into()));
-        };
-        Ok(api::elements(Some(domains))
-            .find(|c| matches!(c, Value::Array(_)) && api::string(api::get(c, "fqdn")) == Some(domain))
-            .cloned())
+        let mut cursor: Option<String> = None;
+        for _ in 0..DOMAIN_PAGES {
+            let query = match &cursor {
+                Some(cursor) => api::query(&[("fqdn", domain), ("limit", "100"), ("cursor", cursor)]),
+                None => api::query(&[("fqdn", domain), ("limit", "100")]),
+            };
+            let reply = self.request("GET", &format!("/domain-management/v1/domains?{query}"), None).await?;
+            assert_success("fetch Fastly domains", &reply, None)?;
+            let Some(body) = reply.array() else {
+                return Err(Error::Runtime("Fastly domains response was not valid JSON.".into()));
+            };
+            let Some(domains @ Value::Array(_)) = api::get(body, "data") else {
+                return Err(Error::Runtime("Fastly domains response was missing its data list.".into()));
+            };
+            if let Some(found) = api::elements(Some(domains))
+                .find(|c| matches!(c, Value::Array(_)) && api::string(api::get(c, "fqdn")) == Some(domain))
+            {
+                return Ok(Some(found.clone()));
+            }
+            match api::string(api::path(body, &["meta", "next_cursor"])) {
+                Some(next) if !next.is_empty() => cursor = Some(next.to_owned()),
+                _ => return Ok(None),
+            }
+        }
+        // Reporting the domain missing here would let a caller create or
+        // delete around a record that only sits on a later page.
+        Err(Error::Runtime(format!(
+            "Fastly domains matching {domain} span more than {DOMAIN_PAGES} pages without an exact match."
+        )))
+    }
+
+    /// Whether a record with no service is detached: neither a routing
+    /// configuration nor the configured service's active version serves it.
+    async fn is_detached(&self, domain: &str, info: &Value) -> Result<bool, Error> {
+        if routed(info) {
+            return Ok(false);
+        }
+        Ok(self.find_classic_version(domain).await?.is_none())
     }
 
     async fn issue(&self, domain: &str) -> Result<Option<String>, Error> {
         let domain = domain::validate(domain)?;
-        let info = self.find_domain(&domain).await?;
-        if let Some(info) = &info {
-            let Some(existing) = api::string(api::get(info, "service_id")).filter(|s| !s.is_empty()) else {
-                // A classic domain cannot move without activating a new
-                // service version, so its certificate is left untouched.
-                return Ok(None);
-            };
-            if existing != self.service_id {
-                let Some(id) = api::string(api::get(info, "id")).filter(|s| !s.is_empty()) else {
-                    return Err(Error::Runtime("Fastly domain response was missing its ID.".into()));
-                };
-                // Finish the certificate while ownership is unchanged: a TLS
-                // failure must not move a live hostname.
-                let renew_date = self.tls.issue(&domain).await?;
-                let status = match self.tls.status(&domain).await {
-                    Ok(status) => status,
-                    // Waiting on the domain owner: nothing is issued yet, so
-                    // the hostname stays on its current service.
-                    Err(Error::Certificate(blocked)) if blocked.is_blocked() => return Ok(renew_date),
-                    Err(e) => return Err(e),
-                };
-                if status != Status::Issued && status != Status::Renewing {
-                    return Ok(renew_date);
+        let info = match self.find_domain(&domain).await? {
+            Some(info) => info,
+            None => {
+                let body = api::object([("fqdn", api::text(&domain)), ("service_id", api::text(&self.service_id))]);
+                let reply = self.request("POST", "/domain-management/v1/domains", Some(&body)).await?;
+                let taken = reply.status == 400
+                    && api::elements(reply.array().and_then(|b| api::get(b, "errors"))).any(|error| {
+                        api::string(api::get(error, "detail")).is_some_and(|d| d.contains("already been taken"))
+                    });
+                if !taken {
+                    assert_success("add Fastly domain", &reply, Some(&[201]))?;
+                    return self.tls.issue(&domain).await;
                 }
-                let body = api::object([("service_id", api::text(&self.service_id))]);
-                let path = format!("/domain-management/v1/domains/{}", rawurlencode(id.as_bytes()));
-                let reply = self.request("PATCH", &path, Some(&body)).await?;
-                assert_success("reassign Fastly domain", &reply, None)?;
+                // The hostname was added since it was looked up, so carry on
+                // with the record that holds it now.
+                self.find_domain(&domain).await?.ok_or_else(|| {
+                    Error::Runtime(format!(
+                        "Fastly reports {domain} as already taken, but no domain record in this account matches it. Another Fastly account or a classic service may hold it."
+                    ))
+                })?
+            }
+        };
+        let existing = api::string(api::get(&info, "service_id"));
+        if existing.is_none_or(str::is_empty) && !self.is_detached(&domain, &info).await? {
+            // A classic domain cannot move without activating a new service
+            // version, and a routing configuration serves its own domains, so
+            // the certificate is left untouched.
+            return Ok(None);
+        }
+        if existing != Some(self.service_id.as_str()) {
+            let Some(id) = api::string(api::get(&info, "id")).filter(|s| !s.is_empty()) else {
+                return Err(Error::Runtime("Fastly domain response was missing its ID.".into()));
+            };
+            // Finish the certificate while ownership is unchanged: a TLS
+            // failure must not move a live hostname, and a detached record
+            // may still be another service's classic domain.
+            let renew_date = self.tls.issue(&domain).await?;
+            let status = match self.tls.status(&domain).await {
+                Ok(status) => status,
+                // Waiting on the domain owner: nothing is issued yet, so the
+                // hostname stays where it is.
+                Err(Error::Certificate(blocked)) if blocked.is_blocked() => return Ok(renew_date),
+                Err(e) => return Err(e),
+            };
+            if status != Status::Issued && status != Status::Renewing {
                 return Ok(renew_date);
             }
-        }
-        if info.is_none() {
-            let body = api::object([("fqdn", api::text(&domain)), ("service_id", api::text(&self.service_id))]);
-            let reply = self.request("POST", "/domain-management/v1/domains", Some(&body)).await?;
-            assert_success("add Fastly domain", &reply, Some(&[201]))?;
+            let body = api::object([("service_id", api::text(&self.service_id))]);
+            let path = format!("/domain-management/v1/domains/{}", rawurlencode(id.as_bytes()));
+            let reply = self.request("PATCH", &path, Some(&body)).await?;
+            assert_success("reassign Fastly domain", &reply, None)?;
+            return Ok(renew_date);
         }
         self.tls.issue(&domain).await
     }
@@ -226,7 +279,7 @@ impl<C: Client> Fastly<C> {
                 }
                 self.tls.renew_required(&domain).await
             }
-            _ => Ok(false),
+            _ => self.is_detached(&domain, &info).await,
         }
     }
 
@@ -242,6 +295,9 @@ impl<C: Client> Fastly<C> {
                 }
                 self.delete_versionless(&info).await
             }
+            // A routing configuration serves the hostname, so neither a
+            // version entry nor its TLS is ours to remove.
+            _ if routed(&info) => Ok(()),
             _ => self.delete_classic(&domain).await,
         }
     }
@@ -259,26 +315,13 @@ impl<C: Client> Fastly<C> {
     }
 
     async fn delete_classic(&self, domain: &str) -> Result<(), Error> {
-        let service = rawurlencode(self.service_id.as_bytes());
-        let reply = self.request("GET", &format!("/service/{service}/details"), None).await?;
-        assert_success("fetch Fastly service details", &reply, None)?;
-        let Some(body) = reply.array() else {
-            return Err(Error::Runtime("Fastly service details response was not valid JSON.".into()));
-        };
-        let Some(active @ Value::Array(_)) = api::get(body, "active_version") else {
-            return Err(Error::Runtime("Fastly service details response was missing its active version.".into()));
-        };
-        let contains = api::elements(api::get(active, "domains"))
-            .any(|c| matches!(c, Value::Array(_)) && api::string(api::get(c, "name")) == Some(domain));
-        if !contains {
+        let Some(current) = self.find_classic_version(domain).await? else {
             // Classic domain records do not name their service: a match
             // missing from this service may belong to another, whose TLS
             // must stay.
             return Ok(());
-        }
-        let Some(Value::Int(current)) = api::get(active, "number") else {
-            return Err(Error::Runtime("Fastly active service version was missing its number.".into()));
         };
+        let service = rawurlencode(self.service_id.as_bytes());
         let versions = format!("/service/{service}/version/");
         let reply = self.request("PUT", &format!("{versions}{current}/clone"), None).await?;
         assert_success("clone Fastly service version", &reply, None)?;
@@ -295,6 +338,36 @@ impl<C: Client> Fastly<C> {
         self.tls.delete(domain).await
     }
 
+    /// The configured service's active version number when that version
+    /// holds the domain.
+    async fn find_classic_version(&self, domain: &str) -> Result<Option<i64>, Error> {
+        let service = rawurlencode(self.service_id.as_bytes());
+        let reply = self.request("GET", &format!("/service/{service}/details"), None).await?;
+        assert_success("fetch Fastly service details", &reply, None)?;
+        let Some(body) = reply.array() else {
+            return Err(Error::Runtime("Fastly service details response was not valid JSON.".into()));
+        };
+        if !api::has(body, "active_version") {
+            return Err(Error::Runtime("Fastly service details response was missing its active version.".into()));
+        }
+        // A service that was never activated has no version to hold the domain.
+        let Some(active) = api::get(body, "active_version") else {
+            return Ok(None);
+        };
+        if !matches!(active, Value::Array(_)) {
+            return Err(Error::Runtime("Fastly service details response had an invalid active version.".into()));
+        }
+        let contains = api::elements(api::get(active, "domains"))
+            .any(|c| matches!(c, Value::Array(_)) && api::string(api::get(c, "name")) == Some(domain));
+        if !contains {
+            return Ok(None);
+        }
+        let Some(Value::Int(number)) = api::get(active, "number") else {
+            return Err(Error::Runtime("Fastly active service version was missing its number.".into()));
+        };
+        Ok(Some(*number))
+    }
+
     async fn wait_for_deployment(&self, service: &str, version: i64) -> Result<(), Error> {
         let path = format!("/service/{service}/version/{version}");
         for attempt in 1..=self.poll_attempts {
@@ -308,6 +381,16 @@ impl<C: Client> Fastly<C> {
             }
         }
         Err(Error::Runtime(format!("Fastly service version was not deployed after {} attempts.", self.poll_attempts)))
+    }
+}
+
+/// Whether a routing configuration serves the record
+/// (`routing_configuration_id` is neither null nor empty).
+fn routed(info: &Value) -> bool {
+    match api::get(info, "routing_configuration_id") {
+        None => false,
+        Some(Value::Str(id)) => !id.is_empty(),
+        Some(_) => true,
     }
 }
 
