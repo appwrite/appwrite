@@ -162,6 +162,11 @@ class Alerts extends Action
         // can link to it. A retry, or an overlapping evaluation, opens the same one.
         if ($status === Status::Firing) {
             $alert = $this->open($monitor, $project, $value, $comparator, $dbForPlatform);
+            // Overlapping evaluations already opened and resolved this firing after this one read
+            // the monitor; its state is stale, so the next evaluation decides from theirs.
+            if ($alert->getAttribute('status') !== State::Firing->value) {
+                return;
+            }
             $changes->setAttribute('alertId', $alert->getId());
         } else {
             // Looked up by monitor rather than by `alertId`: an evaluation that opened an
@@ -192,7 +197,8 @@ class Alerts extends Action
     /**
      * The monitor's open alert, created when it starts firing. Its ID is derived
      * from the monitor's state it opens from, so evaluations that overlap or retry
-     * from that state open the same alert: the first creates it, the rest reuse it.
+     * from that state open the same alert: the first creates it, the rest reuse it,
+     * or find it already resolved when they read the monitor before it recovered.
      * It belongs to the organization that owns the project when it opens.
      */
     protected function open(Document $monitor, Document $project, float $value, Comparator $comparator, Database $dbForPlatform): Document
