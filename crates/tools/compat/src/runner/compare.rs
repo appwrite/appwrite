@@ -31,12 +31,15 @@ fn replace_ns(s: &str, ns: &str) -> String {
     // libpq's error position cuts the statement line to `...` and a tail
     // of the namespace (`LINE 1: ...005399p"."t" ...`): the tail is the
     // namespace too, however short, up to the identifier's closing quote.
+    // A one-character tail is only the runtime's tag letter, which also ends
+    // plenty of column names (`...r" NOT ILIKE`), so it must name a schema.
     if !ns.is_empty() && out.contains("...") {
         'cut: for i in 1..ns.len() {
             for quote in ['"', '`'] {
-                let tail = format!("...{}{quote}", &ns[i..]);
+                let schema = if i + 1 == ns.len() { format!(".{quote}") } else { String::new() };
+                let tail = format!("...{}{quote}{schema}", &ns[i..]);
                 if out.contains(&tail) {
-                    out = out.replace(&tail, &format!("...${{ns}}{quote}"));
+                    out = out.replace(&tail, &format!("...${{ns}}{quote}{schema}"));
                     break 'cut;
                 }
             }
@@ -345,6 +348,8 @@ mod tests {
         assert_eq!(cut, json!("LINE 1: ...${ns}\".\"t\" WHERE"));
         let cut = normalize(&json!("LINE 1: ...p\".\"t\" WHERE ...p"), "cx7005399p");
         assert_eq!(cut, json!("LINE 1: ...${ns}\".\"t\" WHERE ...p"));
+        let column = normalize(&json!("LINE 1: ...r\" NOT ILIKE 'x'"), "cx7005399r");
+        assert_eq!(column, json!("LINE 1: ...r\" NOT ILIKE 'x'"));
     }
 
     #[test]
