@@ -1162,10 +1162,21 @@ final class EvaluationCustomServerTest extends Scope
         ]);
         $this->assertSame(201, $created['headers']['status-code']);
         $monitorId = $created['body']['$id'];
-        $this->inCoroutine(fn () => $this->evaluateMonitor($this->platform(), $monitorId, 20));
+        $messages = [];
+        $this->inCoroutine(function () use ($monitorId, &$messages): void {
+            $platform = $this->platform();
+            global $register;
+            $dbForProject = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), new Authorization(false))->project($platform->getDocument('projects', $this->getProject()['$id']));
+            $this->evaluateMonitor($platform, $monitorId, 20, messages: $messages, dbForProject: $dbForProject);
+        });
         $alertId = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers())['body']['alertId'];
         $this->assertNotEmpty($alertId);
         $this->assertSame('firing', $this->getAlert($alertId)['status']);
+        // The email names the watched resource by its type and name, not its raw type and ID.
+        $this->assertNotEmpty($messages);
+        $body = $messages[0]->body;
+        $this->assertMatchesRegularExpression('#<td[^>]*>Bucket</td><td[^>]*>Short-lived</td>#', $body);
+        $this->assertStringNotContainsString('bucket ' . $bucketId, \strtolower($body));
 
         $deleted = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, $this->headers());
         $this->assertSame(204, $deleted['headers']['status-code']);
@@ -1638,7 +1649,7 @@ final class EvaluationCustomServerTest extends Scope
     /**
      * @param list<NotificationMessage> $messages receives what the evaluation published
      */
-    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = [], ?\DateTimeImmutable $now = null): void
+    private function evaluateMonitor(Database $dbForPlatform, string $monitorId, float $value, bool $accepted = true, array &$messages = [], ?\DateTimeImmutable $now = null, ?Database $dbForProject = null): void
     {
         $publisher = $this->createStub(NotificationPublisher::class);
         $publisher->method('enqueue')->willReturnCallback(function (NotificationMessage $message) use ($accepted, &$messages): bool {
@@ -1648,7 +1659,7 @@ final class EvaluationCustomServerTest extends Scope
         });
 
         $evaluator = new class () extends Alerts {
-            public function evaluateNow(Document $monitor, Document $project, float $value, Database $dbForPlatform, NotificationPublisher $publisher, \DateTimeImmutable $now): void
+            public function evaluateNow(Document $monitor, Document $project, float $value, Database $dbForPlatform, NotificationPublisher $publisher, \DateTimeImmutable $now, ?Database $dbForProject): void
             {
                 $events = new MockPublisher();
                 $realtime = new class () extends Realtime {
@@ -1658,7 +1669,7 @@ final class EvaluationCustomServerTest extends Scope
                     }
                 };
 
-                $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisher, new Event($events), new Webhook($events), new FunctionPublisher($events, new Queue(Event::FUNCTIONS_QUEUE_NAME)), $realtime, []);
+                $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisher, new Event($events), new Webhook($events), new FunctionPublisher($events, new Queue(Event::FUNCTIONS_QUEUE_NAME)), $realtime, [], $dbForProject);
             }
         };
 
@@ -1669,6 +1680,7 @@ final class EvaluationCustomServerTest extends Scope
             $dbForPlatform,
             $publisher,
             $now ?? new \DateTimeImmutable(),
+            $dbForProject,
         );
     }
 
