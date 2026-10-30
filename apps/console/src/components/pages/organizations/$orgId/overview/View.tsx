@@ -145,6 +145,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 import {
   useState,
   useEffect,
@@ -2348,32 +2349,44 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )}
                 </div>
               ) : null}
-              {supportsMultiTenancy && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex">
+              {supportsMultiTenancy &&
+                (zeroAccount ? (
+                  <ClaimToUnlock
+                    locked
+                    reason={t('Claim this project to create organizations')}
+                    className="inline-flex"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
+                      aria-label={t('Create organization')}
+                      onClick={handleOpenCreateOrganization}
+                      disabled
+                      {...analyticsAttrs('create-organization')}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </ClaimToUnlock>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
                         aria-label={t('Create organization')}
                         onClick={handleOpenCreateOrganization}
-                        disabled={zeroAccount}
                         {...analyticsAttrs('create-organization')}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {zeroAccount
-                        ? t('Claim this project to create organizations')
-                        : t('Create organization')}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t('Create organization')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
             </div>
 
             {/* Right: same fixed h-8 band as left; hide members + invite on small screens */}
