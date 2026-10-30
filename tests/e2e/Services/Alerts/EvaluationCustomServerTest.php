@@ -141,6 +141,86 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame($firing['alertId'], $webhook['data']['params']['alertId']);
     }
 
+    public function testTransferredProjectAlertsItsNewOrganizationsOwners(): void
+    {
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+        $name = 'Transferred ' . \uniqid();
+
+        // Created before the transfer, and paused until it, so it cannot fire for the old organization.
+        $created = $this->client->call(Client::METHOD_POST, '/monitors/usage', $headers, [
+            'monitorId' => 'unique()',
+            'name' => $name,
+            'rules' => [Query::greaterThan('bandwidth.outbound', 0)->toString()],
+            'cooldown' => 0,
+            'channels' => ['email'],
+            'enabled' => false,
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+        $monitorId = $created['body']['$id'];
+
+        // The destination has an owner the source organization does not.
+        $destination = $this->createTeamFixture($console, [
+            'teamId' => 'unique()',
+            'name' => 'Destination ' . \uniqid(),
+        ]);
+        $this->assertSame(200, $destination['headers']['status-code']);
+        $teamId = $destination['body']['$id'];
+
+        $email = 'owner-' . \uniqid() . '@localhost.test';
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $console, [
+            'email' => $email,
+            'roles' => ['owner'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+        $invite = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email, function (array $email) {
+            $this->assertStringContainsString('/join-us', $email['html'] ?? '');
+        })['html']);
+        $confirmed = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $invite['userId'],
+            'secret' => $invite['secret'],
+        ]);
+        $this->assertSame(200, $confirmed['headers']['status-code']);
+
+        $transferred = $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['$id'] . '/team', $console, [
+            'teamId' => $teamId,
+        ]);
+        $this->assertSame(200, $transferred['headers']['status-code']);
+        $this->assertSame($teamId, $transferred['body']['teamId']);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->assertSame(200, $this->client->call(Client::METHOD_GET, '/monitors', $headers)['headers']['status-code']);
+        }
+
+        $resumed = $this->client->call(Client::METHOD_PUT, '/monitors/usage/' . $monitorId, $headers, ['enabled' => true]);
+        $this->assertSame(200, $resumed['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $this->waitForStatus($monitorId, 'firing', $headers);
+
+        $alert = $this->getLastEmailByAddress($email, function (array $email) use ($name) {
+            $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
+        });
+        $this->assertStringContainsString('owner of ' . $destination['body']['name'], (string) $alert['html']);
+    }
+
     public function testEachFiringOpensAnAlertThatOutlivesItsMonitor(): void
     {
         for ($i = 0; $i < 5; $i++) {
@@ -463,11 +543,12 @@ final class EvaluationCustomServerTest extends Scope
     /**
      * @return array<string, mixed>
      */
-    private function waitForStatus(string $monitorId, string $status): array
+    private function waitForStatus(string $monitorId, string $status, ?array $headers = null): array
     {
         $monitor = [];
-        $this->assertEventually(function () use ($monitorId, $status, &$monitor) {
-            $response = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $this->headers());
+        $headers ??= $this->headers();
+        $this->assertEventually(function () use ($monitorId, $status, $headers, &$monitor) {
+            $response = $this->client->call(Client::METHOD_GET, '/monitors/' . $monitorId, $headers);
             $this->assertSame(200, $response['headers']['status-code']);
             $this->assertSame($status, $response['body']['status'], 'Monitor ' . $monitorId . ' last evaluated as ' . \json_encode($response['body']));
             $monitor = $response['body'];

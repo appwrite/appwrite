@@ -39,7 +39,6 @@ readonly class Schedules
                 // An ID column, which takes no empty string for a monitor without a project.
                 'projectInternalId' => $monitor->getAttribute('projectInternalId') ?: null,
                 'schedule' => '',
-                'data' => ['teamInternalId' => (string) $monitor->getAttribute('teamInternalId')],
                 ...$changes,
             ]))
             : $this->dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document($changes)));

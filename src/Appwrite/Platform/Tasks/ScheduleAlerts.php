@@ -70,7 +70,8 @@ class ScheduleAlerts extends Action
      * Seconds between two evaluations of each rule in one page of its
      * schedules, keyed by schedule ID. Every rule shares `_APP_ALERTS_INTERVAL`;
      * an edition that sets the interval per organization overrides this and
-     * reads the page's `teamInternalId`s (in each schedule's `data`) in one query.
+     * looks up the organizations of the page's projects (`projectInternalId`),
+     * which follow a project across transfers.
      *
      * @param list<Document> $schedules
      * @return array<string, int>

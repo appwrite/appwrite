@@ -162,7 +162,7 @@ class Alerts extends Action
         // can link to it. A retry that finds it already open keeps using it.
         $alert = new Document();
         if ($status === Status::Firing) {
-            $alert = $this->open($monitor, $value, $comparator, $dbForPlatform);
+            $alert = $this->open($monitor, $project, $value, $comparator, $dbForPlatform);
             $changes->setAttribute('alertId', $alert->getId());
         } elseif ($previous === Status::Firing) {
             $alert = $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', ''));
@@ -186,9 +186,10 @@ class Alerts extends Action
     /**
      * The monitor's open alert, created when it starts firing. The monitor
      * points at it once its state is stored; until then, a retry finds the
-     * alert it opened by its monitor and status.
+     * alert it opened by its monitor and status. It belongs to the organization
+     * that owns the project when it opens.
      */
-    protected function open(Document $monitor, float $value, Comparator $comparator, Database $dbForPlatform): Document
+    protected function open(Document $monitor, Document $project, float $value, Comparator $comparator, Database $dbForPlatform): Document
     {
         $alert = $dbForPlatform->getDocument('monitorAlerts', (string) $monitor->getAttribute('alertId', ''));
         if ($alert->isEmpty()) {
@@ -209,8 +210,8 @@ class Alerts extends Action
             'name' => (string) $monitor->getAttribute('name'),
             'monitorId' => $monitor->getId(),
             'monitorInternalId' => (string) $monitor->getSequence(),
-            'teamId' => (string) $monitor->getAttribute('teamId'),
-            'teamInternalId' => (string) $monitor->getAttribute('teamInternalId'),
+            'teamId' => (string) $project->getAttribute('teamId', ''),
+            'teamInternalId' => (string) $project->getAttribute('teamInternalId', ''),
             'projectId' => (string) $monitor->getAttribute('projectId', ''),
             // An ID column, which takes no empty string for a monitor without a project.
             'projectInternalId' => $monitor->getAttribute('projectInternalId') ?: null,
@@ -320,7 +321,9 @@ class Alerts extends Action
         $unit = (string) ($definition['unit'] ?? '');
         $resourceType = (string) $monitor->getAttribute('resourceType');
         $projectName = (string) $project->getAttribute('name');
-        $team = $dbForPlatform->getDocument('teams', (string) $monitor->getAttribute('teamId'));
+        // The project's organization, not the one stored on the monitor: a transferred
+        // project's alerts go to the owners of the organization it moved to.
+        $team = $dbForPlatform->getDocument('teams', (string) $project->getAttribute('teamId', ''));
         $region = (string) $project->getAttribute('region', '');
         $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
         $url = ($platform['consoleUrl'] ?? '') . $this->path($project) . '/alerts?alert=' . $alert->getId();
@@ -390,7 +393,7 @@ class Alerts extends Action
         }
 
         $body = $notice->render(APP_CE_CONFIG_DIR . '/locale/templates/email-alert.tpl');
-        foreach ($this->owners($dbForPlatform, (string) $monitor->getAttribute('teamInternalId')) as $user) {
+        foreach ($this->owners($dbForPlatform, (string) $project->getAttribute('teamInternalId', '')) as $user) {
             $resource = [
                 'resourceType' => RESOURCE_TYPE_USERS,
                 'resourceId' => $user->getId(),
