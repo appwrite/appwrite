@@ -11,8 +11,8 @@ use Utopia\Cache\Envelope;
 abstract class Versioned implements \Utopia\Cache\Feature\Versioned
 {
     /**
-     * Reserved hash field that holds a key's generation alongside its value
-     * fields. Keeping the generation inside the value's own hash makes every
+     * Reserved hash field that holds a key's version alongside its value
+     * fields. Keeping the version inside the value's own hash makes every
      * lease operation single-key (one shard): no sidecar key to collide with or
      * scan, and the scripts stay correct under Redis Cluster / multi-threaded
      * backends (e.g. Dragonfly), where a multi-key script would span shards.
@@ -23,7 +23,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned
     /**
      * Reserved hash field: epoch-µs deadline until which saveWithLease() is
      * refused after a purge, so a reader whose DB read lagged the write can't
-     * re-cache stale data under a still-valid generation token. Not a cache field.
+     * re-cache stale data under a still-valid version token. Not a cache field.
      */
     protected const TOMBSTONE_FIELD = '__utopia_tomb__';
 
@@ -223,7 +223,4 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned
      */
     abstract protected function leaseEval(string $script, string $key, array $args): mixed;
 
-    /**
-     * HGET $field from hash $key; returns the raw value, or false when absent.
-     */
 }

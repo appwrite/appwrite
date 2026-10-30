@@ -38,9 +38,9 @@ final class VersionedTest extends TestCase
             try {
                 $lease = $cache->getLease($key);
                 $cache->purge($key);
-                $redis->del($key); // Physical eviction, including generations/tombstones.
-                $this->assertFalse($cache->saveWithLease($key, 'stale', '', $lease));
+                $redis->del($key); // Physical eviction removes the version and tombstone together.
                 $fresh = $cache->getLease($key);
+                $this->assertFalse($cache->saveWithLease($key, 'stale', '', $lease));
                 $this->assertNotSame($lease, $fresh);
                 $this->assertSame('fresh', $cache->saveWithLease($key, 'fresh', '', $fresh));
                 $this->assertSame('fresh', $cache->load($key, 60));

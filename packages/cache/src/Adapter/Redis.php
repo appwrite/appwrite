@@ -270,7 +270,7 @@ class Redis extends Versioned implements Adapter, Batchable, Retryable
             return [];
         }
 
-        // Don't expose reserved internal fields (generation, tombstone) as listable cache fields.
+        // Don't expose reserved internal fields (version, tombstone) as listable cache fields.
         return array_values(array_filter($keys, fn (string $field): bool => ! $this->isReserved($field)));
     }
 
