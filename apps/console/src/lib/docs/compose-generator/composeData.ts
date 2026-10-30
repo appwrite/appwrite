@@ -377,6 +377,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
+      - _APP_REALTIME_PERMISSION_TIMEOUT
       - _APP_LIMIT_REALTIME_SUBSCRIPTIONS
       - _APP_LIMIT_REALTIME_CHANNELS
       - _APP_LIMIT_REALTIME_QUERIES
@@ -683,6 +684,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
@@ -1065,6 +1067,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {
@@ -1123,6 +1126,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL`,
   },
   {

@@ -20,7 +20,7 @@ The combined topology runs two containers alongside the rest of the Appwrite sta
 | Container | Role |
 | --------- | ---- |
 | `appwrite-worker` | Consumes every queue in a single process. Each queue gets its own pool of coroutines, so a busy queue doesn't block the others. |
-| `appwrite-task-scheduler` | Runs the function, execution, message, inactive project maintenance, and resource stats schedulers in one process. |
+| `appwrite-task-scheduler` | Runs the function, execution, message, project maintenance, and resource stats schedulers in one process. |
 
 This is what starts when you install Appwrite or bring up the stack with the default configuration:
 
