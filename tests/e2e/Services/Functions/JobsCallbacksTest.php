@@ -35,6 +35,7 @@ use Utopia\Storage\DeviceType;
 final class JobsCallbacksTest extends TestCase
 {
     private PDO $pdo;
+    private Realtime $realtime;
     private Jobs $worker;
     private Database $database;
     private Cache $cache;
@@ -44,6 +45,7 @@ final class JobsCallbacksTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->realtime = $this->createStub(Realtime::class);
         $this->worker = new Jobs();
         $this->cache = new Cache(new Memory());
         $this->pdo = new PDO('sqlite::memory:');
@@ -119,6 +121,22 @@ final class JobsCallbacksTest extends TestCase
         $this->assertSame('static', $deployment->getAttribute('adapter'));
         $this->assertSame(['manifest'], $deployment->getAttribute('callbacks'));
         $this->assertSame('', $this->database->getDocument('sites', 'site')->getAttribute('adapter'));
+    }
+
+    public function testLogReplayAfterRealtimeFailureDoesNotAppendAgain(): void
+    {
+        $this->realtime = $this->createPartialMock(Realtime::class, ['trigger']);
+        $this->realtime->expects($this->once())->method('trigger')->willThrowException(new \RuntimeException('Realtime unavailable'));
+        try {
+            $this->send('log');
+            $this->fail('Realtime delivery must fail after the log was appended.');
+        } catch (\RuntimeException) {
+        }
+        $this->assertSame("build log\n", $this->database->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
+
+        $this->send('log');
+
+        $this->assertSame("build log\n", $this->database->getDocument('deployments', 'deployment')->getAttribute('buildLogs'));
     }
 
     public function testManifestWriteFailureDoesNotSuppressRedelivery(): void
@@ -255,6 +273,7 @@ final class JobsCallbacksTest extends TestCase
     private function send(string $callback, array $override = []): void
     {
         $data = match ($callback) {
+            'log' => ['lines' => ['build log'], 'stream' => 'stdout'],
             'exit' => ['exitCode' => 0, 'image' => 'openruntimes/static:v5-1', 'durationSeconds' => 7],
             'manifest' => ['artifactId' => 'manifest', 'artifactType' => 'read', 'status' => 'success', 'content' => ['files' => ['index.html']]],
             'output' => ['artifactId' => 'output', 'artifactType' => 'upload', 'status' => 'success'],
@@ -274,7 +293,7 @@ final class JobsCallbacksTest extends TestCase
             project: $this->project,
             dbForProject: $this->database,
             dbForPlatform: $this->createStub(Database::class),
-            queueForRealtime: $this->createStub(Realtime::class),
+            queueForRealtime: $this->realtime,
             queueForEvents: $this->createStub(Event::class),
             queueForWebhooks: $this->createStub(Webhook::class),
             publisherForFunctions: $this->createStub(FunctionPublisher::class),

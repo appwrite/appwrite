@@ -49,8 +49,8 @@ use Utopia\System\System;
  * processing for a deployment is serialized under a per-deployment lock — that
  * keeps its buildLogs a clean, monotonic append while letting different
  * deployments build in parallel. Callbacks are at-least-once, so events are
- * de-duplicated on the CloudEvent id after application, inside the lock, so
- * a failed state write does not suppress the callback retry.
+ * de-duplicated inside the lock. Log chunks retain deduplication before append;
+ * state callbacks are recorded after application so failed writes can retry.
  *
  * Handlers are protected extension points: downstream workers (e.g. cloud)
  * override finalize() and wrap parent:: for post-activation work.
@@ -180,6 +180,9 @@ class Jobs extends Action
                 if ($cache->load($key, self::DEDUPE_TTL) !== false) {
                     return; // already processed
                 }
+                if ($callback === CallbackEvent::Log && $cache->save($key, true) === false) {
+                    throw new \RuntimeException('Failed to record build log callback.');
+                }
             }
 
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -252,7 +255,7 @@ class Jobs extends Action
                 $failure = new PermanentFailure("Build artifact '{$artifact->artifactId}' failed: " . ($artifact->error->message ?? 'no error reported'), 500);
             }
 
-            if ($event->id !== '' && $cache->save($key, true) === false) {
+            if ($event->id !== '' && $callback !== CallbackEvent::Log && $cache->save($key, true) === false) {
                 throw new \RuntimeException('Failed to record processed build callback.');
             }
         }, self::LOCK_TIMEOUT);
