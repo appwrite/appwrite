@@ -20,6 +20,7 @@ use Utopia\Messaging\Adapter\SMS\Inforu;
 use Utopia\Messaging\Adapter\SMS\Mock;
 use Utopia\Messaging\Adapter\SMS\Msg91;
 use Utopia\Messaging\Adapter\SMS\Telesign;
+use Utopia\Messaging\Adapter\SMS\TextKit;
 use Utopia\Messaging\Adapter\SMS\TextMagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
@@ -55,6 +56,9 @@ class Provider
                 $credentials['authToken'] ?? '',
                 null,
                 $credentials['messagingServiceSid'] ?? null
+            ),
+            'textkit' => new TextKit(
+                $credentials['apiKey'] ?? ''
             ),
             'textmagic' => new TextMagic(
                 $credentials['username'] ?? '',
@@ -216,6 +220,9 @@ class Provider
                     // Messaging Service SIDs are always 34 characters; alphanumeric sender IDs, at most 11, can also start with MG
                     // https://www.twilio.com/docs/messaging/api/service-resource
                     'messagingServiceSid' => \str_starts_with($from, 'MG') && \strlen($from) === 34 ? $from : null
+                ],
+                'textkit' => [
+                    'apiKey' => $password
                 ],
                 'textmagic' => [
                     'username' => $user,

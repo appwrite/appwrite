@@ -88,6 +88,12 @@ trait MessagingBase
                 'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
+            'textkit' => [
+                'providerId' => Id::unique(),
+                'name' => 'TextKit1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'textmagic' => [
                 'providerId' => Id::unique(),
                 'name' => 'Textmagic1',
@@ -189,6 +195,10 @@ trait MessagingBase
                 'name' => 'Telesign2',
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
+            ],
+            'textkit' => [
+                'name' => 'TextKit2',
+                'apiKey' => 'my-apikey',
             ],
             'textmagic' => [
                 'name' => 'Textmagic2',
@@ -801,6 +811,12 @@ trait MessagingBase
                 'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
+            'textkit' => [
+                'providerId' => Id::unique(),
+                'name' => 'TextKit1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'textmagic' => [
                 'providerId' => Id::unique(),
                 'name' => 'Textmagic1',
@@ -1193,6 +1209,10 @@ trait MessagingBase
                 'name' => 'Telesign2',
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
+            ],
+            'textkit' => [
+                'name' => 'TextKit2',
+                'apiKey' => 'my-apikey',
             ],
             'textmagic' => [
                 'name' => 'Textmagic2',

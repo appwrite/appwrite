@@ -146,6 +146,7 @@ $messaging->send($message);
 - [x] [Twilio](https://www.twilio.com/)
 - [x] [Twilio Notify](https://www.twilio.com/notify)
 - [x] [Telesign](https://www.telesign.com/)
+- [x] [TextKit](https://jointextkit.com/)
 - [x] [Textmagic](https://www.textmagic.com/)
 - [x] [Msg91](https://msg91.com/)
 - [x] [Vonage](https://www.vonage.com/)
