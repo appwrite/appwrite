@@ -34,7 +34,7 @@ The email trigger is off by default, so you turn it on for each function that sh
 
 Appwrite handles each email in this order:
 
-1. Checks that each recipient address belongs to a function that has the email trigger on and an active deployment. An address on a custom domain also needs a verified domain.
+1. Checks that each recipient address belongs to an enabled function that has the email trigger on and an active deployment. An address on a custom domain also needs a verified domain.
 2. Receives the email over SMTP and scores it with a spam filter.
 3. Parses the headers, the plain text body, the HTML body, and the attachments.
 4. Executes each function with the email in the request body, while the sending mail server waits.
