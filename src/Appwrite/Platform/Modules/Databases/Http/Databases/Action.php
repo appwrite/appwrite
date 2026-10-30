@@ -154,6 +154,10 @@ class Action extends AppwriteAction
 
         foreach ($data as $key => $value) {
             if (!\is_string($key)) {
+                // Bulk rows read back from transaction logs are Documents
+                if ($value instanceof Document) {
+                    $value = $value->getArrayCopy();
+                }
                 if (\is_array($value)) {
                     $data[$key] = $this->parseOperators($value, $collection);
                 }
@@ -295,6 +299,54 @@ class Action extends AppwriteAction
             : [];
 
         return ListCache::purged($caches, $write);
+    }
+
+    /**
+     * Adds staged operations to a transaction. The status and limit are checked again under
+     * a lock on the transaction, so concurrent staging cannot pass the limit, and a commit
+     * cannot claim the transaction between these checks and the write.
+     *
+     * @param array<Document> $logs
+     * @throws Exception
+     */
+    protected function stage(Database $dbForProject, string $transactionId, array $logs, int $max): Document
+    {
+        $current = new Document();
+        $expired = false;
+
+        $transaction = $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $logs, $max, &$current, &$expired) {
+            $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
+            $expired = new \DateTime() > new \DateTime($current->getAttribute('expiresAt', 'now'));
+
+            // Returned rather than thrown, withTransaction() retries on exceptions it does not know
+            if ($current->getAttribute('status', '') !== 'pending' || $expired || $current->getAttribute('operations', 0) + \count($logs) > $max) {
+                return new Document();
+            }
+
+            $dbForProject->createDocuments('transactionLogs', $logs);
+
+            return $dbForProject->increaseDocumentAttribute('transactions', $transactionId, 'operations', \count($logs));
+        });
+
+        // The increment purges the cache before COMMIT, so a concurrent read can cache the old count again
+        $dbForProject->purgeCachedDocument('transactions', $transactionId);
+
+        if ($current->getAttribute('status', '') !== 'pending') {
+            throw new Exception(Exception::TRANSACTION_NOT_READY);
+        }
+
+        if ($expired) {
+            throw new Exception(Exception::TRANSACTION_EXPIRED);
+        }
+
+        if ($transaction->isEmpty()) {
+            throw new Exception(
+                Exception::TRANSACTION_LIMIT_EXCEEDED,
+                'Transaction already has ' . $current->getAttribute('operations', 0) . ' operations, adding ' . \count($logs) . ' would exceed the maximum of ' . $max
+            );
+        }
+
+        return $transaction;
     }
 
     /**

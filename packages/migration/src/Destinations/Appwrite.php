@@ -4001,6 +4001,7 @@ class Appwrite extends Destination
             'corporateEmails' => $resource->getDenyCorporateEmail(),
             'passwordPwned' => $resource->getPasswordPwned(),
             'passwordRotation' => $resource->getPasswordRotation(),
+            'realtimeGuests' => $resource->getDenyRealtimeGuests(),
             'passkeyRpId' => $this->resolvePasskeyRpId($resource->getPasskeyRpId(), \is_array($auths) ? $this->optionalString($auths, 'passkeyRpId') ?? '' : ''),
         ];
         foreach ($reported as $key => $value) {

@@ -22,7 +22,6 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   type ProjectListItem,
-  type ProjectListPlatformsEntry,
   PROJECT_NAME_DISPLAY_MAX_WIDE,
 } from '@/lib/react-query/hooks/projects'
 import type { ProjectListRequestsUsageEntry } from '@/lib/react-query/hooks/usage-events'
@@ -30,13 +29,11 @@ import { cn } from '@/lib/utils'
 import { ProjectContextMenu } from './ProjectContextMenu'
 import { ProjectListIdentities } from './ProjectListIdentities'
 import { ProjectListName } from './ProjectListName'
-import {
-  PROJECT_LIST_TABLE_ROW_HEIGHT_CLASS,
-  ProjectListPlatformAvatars,
-} from './ProjectListPlatformAvatars'
 import { ProjectListTableRequestsCell } from './ProjectListRequestsChart'
 import { MAX_PINNED_PROJECTS } from '@/lib/team-prefs-keys'
 import { useT } from '@/lib/i18n/translate'
+
+const PROJECT_LIST_TABLE_ROW_HEIGHT_CLASS = 'h-14 py-0 align-middle'
 
 function getProjectListRegionLabel(project: ProjectListItem): string | null {
   if (!project.region || project.region === 'unknown') return null
@@ -54,7 +51,6 @@ type ProjectsListTableProps = {
   budgetLimitReached?: boolean
   showUsageCharts?: boolean
   projectRequestsUsageById: Map<string, ProjectListRequestsUsageEntry>
-  projectPlatformsById: Map<string, ProjectListPlatformsEntry>
   canPinProjects?: boolean
   pinnedIds?: string[]
   onPinProject?: (projectId: string) => void
@@ -75,23 +71,14 @@ function getRequestsColumnWidth(showRegionColumn: boolean): string {
   return showRegionColumn ? 'w-[30%]' : 'w-[34%]'
 }
 
-function getPlatformsColumnWidth(
-  showRegionColumn: boolean,
-  showUsageCharts: boolean,
-): string {
-  if (showUsageCharts && showRegionColumn) return 'w-[12%]'
-  if (showUsageCharts) return 'w-[14%]'
-  if (showRegionColumn) return 'w-[14%]'
-  return 'w-[16%]'
-}
-
 function getActionsColumnWidth(
   showRegionColumn: boolean,
   showUsageCharts: boolean,
 ): string {
-  if (showUsageCharts) return 'w-[30%]'
-  if (showRegionColumn) return 'w-[50%]'
-  return 'w-[52%]'
+  if (showUsageCharts && showRegionColumn) return 'w-[42%]'
+  if (showUsageCharts) return 'w-[44%]'
+  if (showRegionColumn) return 'w-[64%]'
+  return 'w-[68%]'
 }
 
 const listTableCellClassName = cn(
@@ -109,7 +96,6 @@ export function ProjectsListTable({
   budgetLimitReached = false,
   showUsageCharts = false,
   projectRequestsUsageById,
-  projectPlatformsById,
   canPinProjects = false,
   pinnedIds = [],
   onPinProject,
@@ -145,11 +131,6 @@ export function ProjectsListTable({
               </TableHead>
             ) : null}
             <TableHead
-              className={`${getPlatformsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-[12px] font-semibold uppercase tracking-wider text-muted-foreground`}
-            >
-              {t('Platforms')}
-            </TableHead>
-            <TableHead
               className={`${getActionsColumnWidth(showRegionColumn, showUsageCharts)} px-4 py-3 text-end`}
             />
           </TableRow>
@@ -157,7 +138,6 @@ export function ProjectsListTable({
         <TableBody>
           {projects.map((project) => {
             const regionLabel = getProjectListRegionLabel(project)
-            const platformsEntry = projectPlatformsById.get(project.$id)
             const isPinned = pinnedSet.has(project.$id)
             const showPinControl =
               canPinProjects && onPinProject && (isPinned || canPinMore)
@@ -239,17 +219,6 @@ export function ProjectsListTable({
                       />
                     </TableCell>
                   ) : null}
-                  <TableCell className={listTableCellClassName}>
-                    <div className="flex h-full items-center">
-                      <ProjectListPlatformAvatars
-                        projectId={project.$id}
-                        platforms={platformsEntry?.platforms ?? []}
-                        isLoading={platformsEntry?.isLoading ?? true}
-                        unavailable={platformsEntry?.unavailable === true}
-                        variant="table"
-                      />
-                    </div>
-                  </TableCell>
                   <TableCell
                     className={cn(listTableCellClassName, 'text-end')}
                     onClick={(event) => event.stopPropagation()}
