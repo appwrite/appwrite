@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Alerts;
 
-use Appwrite\Alert\Channel;
 use Appwrite\Alert\Rules;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\Status;
@@ -46,7 +45,7 @@ class Base extends Action
     }
 
     /**
-     * @param array<string> $channels
+     * @param array<string> $rules
      */
     protected function createMonitor(
         string $type,
@@ -55,8 +54,6 @@ class Base extends Action
         array $rules,
         int $window,
         int $cooldown,
-        array $channels,
-        string $webhookUrl,
         bool $enabled,
         Response $response,
         Document $project,
@@ -64,10 +61,7 @@ class Base extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $channels = \array_values(\array_unique($channels));
         $parsed = $this->parseRules($rules);
-
-        $this->assertWebhook($channels, $webhookUrl);
 
         [$resourceId, $resourceInternalId] = $this->resolveResource($parsed, $project, $dbForProject, $authorization);
 
@@ -86,9 +80,6 @@ class Base extends Action
             ...$this->ruleAttributes($parsed, $resourceId, $resourceInternalId),
             'window' => $window,
             'cooldown' => $cooldown,
-            'channels' => $channels,
-            'webhookUrl' => $webhookUrl,
-            'webhookSecret' => \bin2hex(\random_bytes(32)),
             'enabled' => $enabled,
             'status' => Status::Ok->value,
             'search' => $this->search($monitorId, $name, $parsed->metric, $parsed->resourceType, $resourceId),
@@ -108,11 +99,9 @@ class Base extends Action
     }
 
     /**
-     * Changes only what is passed; the monitor's state, its open alert and its
-     * webhook secret are kept.
+     * Changes only what is passed; the monitor's state and its open alert are kept.
      *
      * @param array<string>|null $rules
-     * @param array<string>|null $channels
      */
     protected function updateMonitor(
         string $type,
@@ -121,8 +110,6 @@ class Base extends Action
         ?array $rules,
         ?int $window,
         ?int $cooldown,
-        ?array $channels,
-        ?string $webhookUrl,
         ?bool $enabled,
         Response $response,
         Document $project,
@@ -146,18 +133,10 @@ class Base extends Action
             }
         }
 
-        if ($channels !== null) {
-            $channels = \array_values(\array_unique($channels));
-            $changes->setAttribute('channels', $channels);
-        }
-
-        $this->assertWebhook($channels ?? $monitor->getAttribute('channels', []), $webhookUrl ?? (string) $monitor->getAttribute('webhookUrl', ''));
-
         foreach ([
             'name' => $name,
             'window' => $window,
             'cooldown' => $cooldown,
-            'webhookUrl' => $webhookUrl,
             'enabled' => $enabled,
         ] as $key => $value) {
             if ($value !== null) {
@@ -178,8 +157,6 @@ class Base extends Action
             (new Schedules($dbForPlatform))->write($monitor);
         }
 
-        $monitor->removeAttribute('webhookSecret');
-
         $response->dynamic($monitor, Response::MODEL_MONITOR);
     }
 
@@ -192,16 +169,6 @@ class Base extends Action
             return Rules::parse($rules, Config::getParam('alerts', []));
         } catch (\InvalidArgumentException $e) {
             throw new Exception(Exception::MONITOR_RULES_INVALID, $e->getMessage());
-        }
-    }
-
-    /**
-     * @param array<string> $channels
-     */
-    private function assertWebhook(array $channels, string $webhookUrl): void
-    {
-        if (\in_array(Channel::Webhook->value, $channels, true) && $webhookUrl === '') {
-            throw new Exception(Exception::MONITOR_WEBHOOK_URL_MISSING);
         }
     }
 

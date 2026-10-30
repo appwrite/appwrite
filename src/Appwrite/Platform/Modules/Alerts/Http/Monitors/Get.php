@@ -61,7 +61,6 @@ class Get extends Base
         Authorization $authorization,
     ): void {
         $monitor = $this->getMonitor($dbForPlatform, $authorization, $project, $monitorId);
-        $monitor->removeAttribute('webhookSecret');
 
         $response->dynamic($monitor, Response::MODEL_MONITOR);
     }

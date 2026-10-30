@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Alert\Channel;
 use Appwrite\Alert\Status;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
@@ -84,30 +83,9 @@ class Monitor extends Model
             ])
             ->addRule('cooldown', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Minimum seconds between two firing notifications for this monitor.',
+                'description' => 'Minimum seconds between two team notifications of this monitor firing. Events fire on every change regardless.',
                 'default' => 3600,
                 'example' => 3600,
-            ])
-            ->addRule('channels', [
-                'type' => self::TYPE_ENUM,
-                'description' => 'Channels an alert is announced on when it fires and resolves.',
-                'default' => [],
-                'example' => [Channel::Email->value, Channel::Webhook->value],
-                'array' => true,
-                'enum' => Channel::values(),
-                'enumSDKName' => 'MonitorChannel',
-            ])
-            ->addRule('webhookUrl', [
-                'type' => self::TYPE_STRING,
-                'description' => 'URL the webhook channel posts to.',
-                'default' => '',
-                'example' => 'https://example.com/alerts',
-            ])
-            ->addRule('webhookSecret', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Key the webhook channel signs requests with: `X-Appwrite-Webhook-Signature` is `sha256=` followed by the hex HMAC-SHA256 of `<timestamp>.<body>`, where the timestamp is the `X-Appwrite-Webhook-Timestamp` header. Only returned on creation.',
-                'default' => '',
-                'example' => 'ad3d581ca230e2b7059c545e5a',
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,

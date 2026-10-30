@@ -111,10 +111,6 @@ class XList extends Base
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        foreach ($monitors as $monitor) {
-            $monitor->removeAttribute('webhookSecret');
-        }
-
         $response->dynamic(new Document([
             'monitors' => $monitors,
             'total' => $total,

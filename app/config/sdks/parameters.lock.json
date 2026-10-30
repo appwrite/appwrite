@@ -2835,8 +2835,6 @@
             "rules",
             "window",
             "cooldown",
-            "channels",
-            "webhookUrl",
             "enabled"
         ],
         "monitors.delete": [
@@ -2855,8 +2853,6 @@
             "rules",
             "window",
             "cooldown",
-            "channels",
-            "webhookUrl",
             "enabled"
         ],
         "notifications.list": [
@@ -6984,8 +6980,6 @@
             "rules",
             "window",
             "cooldown",
-            "channels",
-            "webhookUrl",
             "enabled"
         ],
         "monitors.delete": [
@@ -7004,8 +6998,6 @@
             "rules",
             "window",
             "cooldown",
-            "channels",
-            "webhookUrl",
             "enabled"
         ],
         "organization.createEphemeralProjectKey": [

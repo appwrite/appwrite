@@ -2,7 +2,6 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
-use Appwrite\Alert\Channel;
 use Appwrite\Alert\Comparator;
 use Appwrite\Alert\State;
 use Appwrite\Utopia\Response;
@@ -126,15 +125,6 @@ class Alert extends Model
                 'description' => 'ID of the resource the alert fired on. The project ID for a project-wide monitor.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
-            ])
-            ->addRule('channels', [
-                'type' => self::TYPE_ENUM,
-                'description' => 'Channels the alert is announced on.',
-                'default' => [],
-                'example' => [Channel::Email->value],
-                'array' => true,
-                'enum' => Channel::values(),
-                'enumSDKName' => 'MonitorChannel',
             ])
             ->addRule('notifications', [
                 'type' => self::TYPE_INTEGER,

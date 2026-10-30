@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Alerts\Workers;
 
-use Appwrite\Alert\Channel;
 use Appwrite\Alert\Comparator;
 use Appwrite\Alert\Email;
 use Appwrite\Alert\Meter;
@@ -10,11 +9,17 @@ use Appwrite\Alert\Quantity;
 use Appwrite\Alert\Schedules;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
+use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
+use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Message\Notification as NotificationMessage;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Realtime;
+use Appwrite\Event\Webhook;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
+use Appwrite\Utopia\Response\Model\Alert as AlertModel;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -27,9 +32,11 @@ use Utopia\Usage\Tenant;
 
 /**
  * Measures one monitor, compares it with its threshold and records the result
- * on the monitor and on the alert it opens while firing. The alert is announced
- * only when the monitor changes state: entering `firing` (at most once per
- * cooldown) and returning to `ok`.
+ * on the monitor and on the alert it opens while firing. Every change of state
+ * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
+ * `.resolved`) for webhooks, functions and realtime. The organization's owners
+ * are notified by email and in the console: on entering `firing` (at most once
+ * per cooldown) and on returning to `ok`.
  */
 class Alerts extends Action
 {
@@ -48,6 +55,10 @@ class Alerts extends Action
             ->inject('dbForPlatform')
             ->inject('usageConnection')
             ->inject('publisherForNotifications')
+            ->inject('queueForEvents')
+            ->inject('queueForWebhooks')
+            ->inject('publisherForFunctions')
+            ->inject('queueForRealtime')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -62,6 +73,10 @@ class Alerts extends Action
         Database $dbForPlatform,
         Connection $usageConnection,
         NotificationPublisher $publisherForNotifications,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Realtime $queueForRealtime,
         array $platform,
     ): void {
         $monitorId = AlertMessage::fromArray($message->getPayload())->monitorId;
@@ -97,15 +112,15 @@ class Alerts extends Action
         $now = new \DateTimeImmutable();
         $value = $this->measure($monitor, $project, $dbForProject, $usageConnection, $now);
 
-        $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $platform);
+        $this->evaluate($monitor, $project, $value, $now, $dbForPlatform, $publisherForNotifications, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $platform);
     }
 
     /**
      * Compares a measured value with the monitor's rules, keeps its alert and
-     * announces it. Entering `firing` opens an alert; it is announced once, as
-     * soon as the cooldown since the last announcement allows (on entering
-     * firing, or later while it keeps firing), and its resolution is announced
-     * only if the firing was. Recovering resolves the alert.
+     * announces it. Entering `firing` opens an alert and recovering resolves it;
+     * each fires its project event. The team is notified once, as soon as the
+     * cooldown since the last notification allows (on entering firing, or later
+     * while it keeps firing), and of the resolution only if of the firing.
      * Editions that measure monitors outside a project's usage call this with their value.
      *
      * @param array<string, mixed> $platform
@@ -117,6 +132,10 @@ class Alerts extends Action
         \DateTimeImmutable $now,
         Database $dbForPlatform,
         NotificationPublisher $publisherForNotifications,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Realtime $queueForRealtime,
         array $platform,
     ): void {
         $comparator = Comparator::from((string) $monitor->getAttribute('comparator'));
@@ -180,6 +199,8 @@ class Alerts extends Action
             }
         }
 
+        $reading = $alert->isEmpty() ? new Document() : $this->record($alert, $status, $value, $comparator, $notify, $evaluatedAt);
+
         // Publish before the new state is stored: if publishing fails, the retry
         // still sees the transition instead of finding it already recorded.
         if ($notify) {
@@ -187,8 +208,21 @@ class Alerts extends Action
             $this->notify($monitor, $alert, $project, $status, $value, $evaluatedAt, $dbForPlatform, $publisherForNotifications, $platform);
         }
 
-        if (!$alert->isEmpty()) {
-            $this->record($alert, $status, $value, $comparator, $notify, $evaluatedAt, $dbForPlatform);
+        // Every change of state is an event, whatever the cooldown holds back from the team.
+        if (!$alert->isEmpty() && $status !== $previous) {
+            $this->trigger(
+                $status === Status::Firing ? State::Firing : State::Resolved,
+                new Document(\array_merge($alert->getArrayCopy(), $reading->getArrayCopy())),
+                $project,
+                $queueForEvents,
+                $queueForWebhooks,
+                $publisherForFunctions,
+                $queueForRealtime,
+            );
+        }
+
+        if (!$reading->isEmpty()) {
+            $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $reading);
         }
 
         $dbForPlatform->updateDocument('monitors', $monitor->getId(), $changes);
@@ -233,7 +267,6 @@ class Alerts extends Action
                 'threshold' => (float) $monitor->getAttribute('threshold'),
                 'value' => $value,
                 'peak' => $value,
-                'channels' => $monitor->getAttribute('channels', []),
                 'notifications' => 0,
                 'search' => \implode(' ', \array_filter([$alertId, $monitor->getId(), (string) $monitor->getAttribute('name'), (string) $monitor->getAttribute('metric')])),
             ]));
@@ -243,14 +276,14 @@ class Alerts extends Action
     }
 
     /**
-     * Stores a reading on the monitor's alert: the latest value, the one
-     * furthest past the threshold, how often it was announced, and its
-     * resolution once the monitor recovers.
+     * The reading to store on the monitor's alert: the latest value, the one
+     * furthest past the threshold, how often the team was notified, and its
+     * resolution once the monitor recovers. Empty for an alert already resolved.
      */
-    protected function record(Document $alert, Status $status, float $value, Comparator $comparator, bool $announced, string $evaluatedAt, Database $dbForPlatform): void
+    protected function record(Document $alert, Status $status, float $value, Comparator $comparator, bool $announced, string $evaluatedAt): Document
     {
         if ($alert->getAttribute('status') !== State::Firing->value) {
-            return;
+            return new Document();
         }
 
         $changes = new Document(['value' => $value]);
@@ -267,7 +300,53 @@ class Alerts extends Action
             $changes->setAttribute('resolvedAt', $evaluatedAt);
         }
 
-        $dbForPlatform->updateDocument('monitorAlerts', $alert->getId(), $changes);
+        return $changes;
+    }
+
+    /**
+     * Fires the alert's project event, `monitors.[monitorId].alerts.[alertId].firing`
+     * or `.resolved`, with the alert as its payload: to the project's webhooks,
+     * the functions that listen to it, and realtime. A monitor outside a project,
+     * which has no webhooks or functions, fires none.
+     */
+    protected function trigger(
+        State $state,
+        Document $alert,
+        Document $project,
+        Event $queueForEvents,
+        Webhook $queueForWebhooks,
+        FunctionPublisher $publisherForFunctions,
+        Realtime $queueForRealtime,
+    ): void {
+        if ($project->isEmpty() || $project->getId() === 'console' || (string) $alert->getAttribute('projectId', '') !== $project->getId()) {
+            return;
+        }
+
+        $queueForEvents
+            ->setProject($project)
+            ->setEvent('monitors.[monitorId].alerts.[alertId].' . $state->value)
+            ->setParam('monitorId', (string) $alert->getAttribute('monitorId'))
+            ->setParam('alertId', $alert->getId())
+            ->setPayload((new AlertModel())->payload($alert));
+
+        if ($queueForWebhooks->from($queueForEvents)->trigger() === false) {
+            throw new \RuntimeException('The alert event for webhooks was not accepted by the queue.');
+        }
+
+        $function = $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
+            event: $queueForEvents->getEvent(),
+            params: $queueForEvents->getParams(),
+            project: $queueForEvents->getProject(),
+            payload: $queueForEvents->getPayload(),
+        ));
+        if ($function === false) {
+            throw new \RuntimeException('The alert event for functions was not accepted by the queue.');
+        }
+
+        $queueForRealtime
+            ->setSubscribers(['console', $project->getId()])
+            ->from($queueForEvents)
+            ->trigger();
     }
 
     /**
@@ -297,9 +376,8 @@ class Alerts extends Action
     }
 
     /**
-     * Announces the monitor's alert firing or resolving: one message for the
-     * monitor's webhook, and one per organization owner for the console bell
-     * and email. Each links to the alert.
+     * Notifies the team of the monitor's alert firing or resolving: one message
+     * per organization owner, for the console bell and email. Each links to the alert.
      *
      * The deduplication key names the monitor, its new status and the moment it
      * changed, so an at-least-once redelivery of the same evaluation sends
@@ -318,7 +396,6 @@ class Alerts extends Action
         NotificationPublisher $publisherForNotifications,
         array $platform,
     ): void {
-        $channels = $monitor->getAttribute('channels', []);
         // Named after the evaluation the decision was made against, so a retried
         // evaluation of the same state reuses the key instead of sending twice.
         $deduplicationKey = 'monitor:' . $monitor->getId() . ':' . $status->value . ':' . ($monitor->getAttribute('evaluatedAt') ?? $monitor->getCreatedAt());
@@ -363,47 +440,6 @@ class Alerts extends Action
         $subject = $notice->subject();
         $summary = $notice->summary();
 
-        if (\in_array(Channel::Webhook->value, $channels, true) && $monitor->getAttribute('webhookUrl', '') !== '') {
-            $this->publish($publisherForNotifications, new NotificationMessage(
-                project: $project,
-                recipients: [[
-                    'address' => (string) $monitor->getAttribute('webhookUrl'),
-                    'channel' => NOTIFICATION_TYPE_WEBHOOK,
-                    'signatureKey' => (string) $monitor->getAttribute('webhookSecret', ''),
-                    'resourceType' => RESOURCE_TYPE_MONITORS,
-                    'resourceId' => $monitor->getId(),
-                    'resourceInternalId' => (string) $monitor->getSequence(),
-                    ...$parent,
-                ]],
-                templateParams: [
-                    'alertId' => $alert->getId(),
-                    'monitorId' => $monitor->getId(),
-                    'monitorName' => $monitor->getAttribute('name'),
-                    'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
-                    'type' => $monitor->getAttribute('type'),
-                    'projectId' => $project->getId(),
-                    'resourceType' => $monitor->getAttribute('resourceType'),
-                    'resourceId' => $monitor->getAttribute('resourceId'),
-                    'metric' => $metric,
-                    'comparator' => $monitor->getAttribute('comparator'),
-                    'threshold' => (float) $monitor->getAttribute('threshold'),
-                    'window' => $monitor->getAttribute('window'),
-                    'value' => $value,
-                    'changedAt' => (new \DateTimeImmutable($changedAt))->format(\DateTimeInterface::RFC3339_EXTENDED),
-                ],
-                deduplicationKey: $deduplicationKey,
-                subject: $subject,
-                body: $summary,
-                events: ['alerts.' . ($status === Status::Firing ? State::Firing->value : State::Resolved->value)],
-            ));
-        }
-
-        $email = \in_array(Channel::Email->value, $channels, true);
-        $console = \in_array(Channel::Console->value, $channels, true);
-        if (!$email && !$console) {
-            return;
-        }
-
         $body = $notice->render(APP_CE_CONFIG_DIR . '/locale/templates/email-alert.tpl');
         foreach ($this->owners($dbForPlatform, (string) $project->getAttribute('teamInternalId', '')) as $user) {
             $resource = [
@@ -413,15 +449,9 @@ class Alerts extends Action
                 ...$parent,
             ];
 
-            $recipients = [];
-            if ($console) {
-                $recipients[] = ['address' => $user->getId(), 'channel' => NOTIFICATION_TYPE_CONSOLE, ...$resource];
-            }
-            if ($email && (string) $user->getAttribute('email', '') !== '') {
+            $recipients = [['address' => $user->getId(), 'channel' => NOTIFICATION_TYPE_CONSOLE, ...$resource]];
+            if ((string) $user->getAttribute('email', '') !== '') {
                 $recipients[] = ['address' => (string) $user->getAttribute('email'), 'channel' => NOTIFICATION_TYPE_EMAIL, ...$resource];
-            }
-            if ($recipients === []) {
-                continue;
             }
 
             $this->publish($publisherForNotifications, new NotificationMessage(

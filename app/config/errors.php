@@ -1352,11 +1352,6 @@ return [
         'description' => 'The resource the monitor watches could not be found in this project.',
         'code' => 400,
     ],
-    Exception::MONITOR_WEBHOOK_URL_MISSING => [
-        'name' => Exception::MONITOR_WEBHOOK_URL_MISSING,
-        'description' => 'A webhook URL is required when the webhook channel is selected.',
-        'code' => 400,
-    ],
     Exception::ALERT_NOT_FOUND => [
         'name' => Exception::ALERT_NOT_FOUND,
         'description' => 'Alert with the requested ID could not be found.',
