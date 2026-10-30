@@ -83,14 +83,22 @@ fn serve() {
             .module(&appwrite_account::Account)
             .module(&health::Health);
         let addr = SocketAddr::from(([0, 0, 0, 0], port));
-        let mut options = ServerOptions::default();
         // `app/http.php` sets Swoole's package_max_length to 12MB. A larger body is 413.
-        options.max_body = 12 * 1024 * 1024;
-        // The shared default of 1,000 rejects this process once a slow minute
-        // (a busy machine, preview renders, chunked uploads) holds that many
-        // requests. The benchmark client opens up to 1,040 of them at 500
-        // req/s, and each rejection was a 503. 4,096 still bounds a flood.
-        options.max_concurrency = appwrite_core::config::env_int("_APP_RUST_MAX_CONCURRENCY", 4_096).max(1) as usize;
+        let max_body = 12 * 1024 * 1024;
+        // Most requests carry no body, so the concurrency cap alone does not
+        // bound memory (4,096 × 12 MiB is 48 GiB). Request bodies in memory
+        // are bounded together instead: past 1 GiB, a request gets a 503.
+        let body_memory = appwrite_core::config::env_int("_APP_RUST_MAX_BODY_MEMORY", 1024 * 1024 * 1024);
+        let options = ServerOptions {
+            max_body,
+            // The shared default of 1,000 rejects this process once a slow minute
+            // (a busy machine, preview renders, chunked uploads) holds that many
+            // requests. The benchmark client opens up to 1,040 of them at 500
+            // req/s, and each rejection was a 503. 4,096 still bounds a flood.
+            max_concurrency: appwrite_core::config::env_int("_APP_RUST_MAX_CONCURRENCY", 4_096).max(1) as usize,
+            max_body_memory: body_memory.max(max_body as i64) as usize,
+            ..ServerOptions::default()
+        };
         tracing::info!(workers, "appwrite rust api starting");
         if let Err(e) = utopia_http::serve(addr, Arc::new(platform), options, shutdown_signal()).await {
             tracing::error!(error = %e, "server error");
