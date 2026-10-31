@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { describeTransferGate } from '@/components/pages/transfer/AuthGate'
 import type { ZeroProject } from '@/lib/appwrite/zero'
+import { resolveMagicUrlRedirect } from '@/lib/post-auth-navigation'
 import { getZeroPhase } from '@/lib/zero/phase'
 import { getZeroTransferSearch } from '@/lib/zero/session'
 
@@ -127,5 +128,37 @@ describe('describeTransferGate on a dead link', () => {
     )
     expect(gate.state).toBe('deleted')
     expect(gate.deadline).toBeNull()
+  })
+})
+
+describe('resolveMagicUrlRedirect', () => {
+  test('opens the project a sign-in link names, from its legacy console path', () => {
+    expect(resolveMagicUrlRedirect('/console/project-fra-abc123')).toBe(
+      '/projects/abc123',
+    )
+  })
+
+  test('keeps a current console path and its query', () => {
+    expect(resolveMagicUrlRedirect('/projects/abc123/auth?tab=users')).toBe(
+      '/projects/abc123/auth?tab=users',
+    )
+  })
+
+  test('falls back to the home page for anything but a same-origin path', () => {
+    for (const redirect of [
+      null,
+      undefined,
+      '',
+      'projects/abc123',
+      'https://evil.example.com/projects/abc123',
+      'javascript:alert(1)',
+      '//evil.example.com',
+      '/\\evil.example.com',
+      '/%2F%2Fevil.example.com',
+      '/sign-in',
+      '/auth/magic-url?userId=a&secret=b',
+    ]) {
+      expect(resolveMagicUrlRedirect(redirect)).toBe('/')
+    }
   })
 })

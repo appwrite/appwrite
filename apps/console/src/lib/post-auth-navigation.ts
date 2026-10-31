@@ -11,6 +11,10 @@ import {
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
+import {
+  isLegacyConsolePath,
+  rewriteLegacyConsolePath,
+} from '@/lib/legacy-console-path'
 import { isZeroAccount } from '@/lib/zero/session'
 
 /**
@@ -104,6 +108,22 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
   if (isMarketingPagePath(pathname)) return undefined
 
   return redirect
+}
+
+/**
+ * Destination after a magic URL sign-in, `/` when the link names none or an
+ * unsafe one. Links may carry a legacy `/console/...` path, which the server
+ * only rewrites on a document load, so it is rewritten here.
+ */
+export function resolveMagicUrlRedirect(redirect?: string | null): string {
+  let destination = redirect || undefined
+  if (destination && isValidRelativeRedirect(destination)) {
+    const url = new URL(destination, 'https://console.invalid')
+    if (isLegacyConsolePath(url.pathname)) {
+      destination = `${rewriteLegacyConsolePath(url.pathname, url.search)}${url.search}${url.hash}`
+    }
+  }
+  return resolvePostAuthRedirect(destination) ?? '/'
 }
 
 /**

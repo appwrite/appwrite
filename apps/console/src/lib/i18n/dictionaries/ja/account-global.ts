@@ -1294,6 +1294,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Signing you in': 'サインインしています',
   'Please wait while we confirm your magic URL.':
     'Magic URL を確認しています。しばらくお待ちください。',
+  'Continue and sign in to this project instead?':
+    '続行して、代わりにこのプロジェクトにサインインしますか？',
   'Unable to sign you in': 'サインインできませんでした',
   'Go to sign in': 'サインインへ',
   'Access granted': 'アクセスが許可されました',

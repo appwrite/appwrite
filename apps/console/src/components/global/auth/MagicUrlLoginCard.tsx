@@ -15,11 +15,19 @@ import { useT } from '@/lib/i18n/translate'
 type MagicUrlLoginCardProps = {
   errorMessage?: string | null
   signInTo?: string
+  /** Ask before replacing the account this browser is signed in to. */
+  switchAccount?: {
+    email: string
+    pending?: boolean
+    onContinue: () => void
+    onCancel: () => void
+  }
 }
 
 export function MagicUrlLoginCard({
   errorMessage,
   signInTo = '/sign-in',
+  switchAccount,
 }: MagicUrlLoginCardProps) {
   const t = useT()
   const hasError = !!errorMessage
@@ -39,6 +47,43 @@ export function MagicUrlLoginCard({
                   {t('Go to sign in')}
                 </Button>
               </Link>
+            </>
+          ) : switchAccount ? (
+            <>
+              <div className="space-y-2">
+                <AuthFlowTitle>{t('Switch account')}</AuthFlowTitle>
+                <AuthFlowDescription>
+                  {t("You're signed in as")}{' '}
+                  <span className="text-foreground font-medium break-all">
+                    {switchAccount.email}
+                  </span>
+                  .
+                </AuthFlowDescription>
+                <AuthFlowDescription>
+                  {t('Continue and sign in to this project instead?')}
+                </AuthFlowDescription>
+              </div>
+              <div className="space-y-2">
+                <Button
+                  variant="brandCta"
+                  className="w-full"
+                  disabled={switchAccount.pending}
+                  onClick={switchAccount.onContinue}
+                >
+                  {switchAccount.pending && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                  {t('Continue')}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={switchAccount.pending}
+                  onClick={switchAccount.onCancel}
+                >
+                  {t('Cancel')}
+                </Button>
+              </div>
             </>
           ) : (
             <div className="space-y-2">
