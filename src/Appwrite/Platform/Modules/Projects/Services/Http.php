@@ -2,8 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Projects\Services;
 
+use Appwrite\Platform\Modules\Projects\Http\Init;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Auth\MockNumbers\Update as UpdateProjectMockNumbers;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Create as CreateProject;
+use Appwrite\Platform\Modules\Projects\Http\Projects\OAuth2\Update as UpdateProjectOAuth2;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Templates\Email\Delete as DeleteProjectEmailTemplate;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\XList as ListProjects;
 use Appwrite\Platform\Modules\Projects\Http\Schedules\Create as CreateSchedule;
@@ -18,10 +22,16 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
+
+        $this->addAction(Init::getName(), new Init());
+
         $this->addAction(CreateProject::getName(), new CreateProject());
         $this->addAction(UpdateProject::getName(), new UpdateProject());
         $this->addAction(ListProjects::getName(), new ListProjects());
         $this->addAction(UpdateProjectTeam::getName(), new UpdateProjectTeam());
+        $this->addAction(UpdateProjectOAuth2::getName(), new UpdateProjectOAuth2());
+        $this->addAction(UpdateProjectMockNumbers::getName(), new UpdateProjectMockNumbers());
+        $this->addAction(DeleteProjectEmailTemplate::getName(), new DeleteProjectEmailTemplate());
 
         $this->addAction(CreateSchedule::getName(), new CreateSchedule());
         $this->addAction(GetSchedule::getName(), new GetSchedule());

@@ -194,7 +194,6 @@
       "documentsdb": true,
       "paths": [
         "src/Appwrite/Platform/Modules/Projects/",
-        "app/controllers/api/projects.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
