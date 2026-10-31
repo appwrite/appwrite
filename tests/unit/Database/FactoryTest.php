@@ -43,21 +43,28 @@ final class FactoryTest extends TestCase
         );
     }
 
-    public function testDirectFactoryConstructionHonorsTheMigrationNamespace(): void
+    public function testFactoryPreservesTheSuppliedCacheNamespace(): void
     {
-        $previous = \getenv('_APP_CACHE_MIGRATION');
-        \putenv('_APP_CACHE_MIGRATION=v2');
-        try {
-            $cache = new Cache(new MemoryCache());
-            $cache->save('migration-setting', 'legacy');
-            $database = $this->factory($cache)->project($this->project());
-            $this->assertFalse($database->getCache()->load('migration-setting', 60));
-            $database->getCache()->save('migration-setting', 'versioned');
-            $this->assertSame('versioned', $database->getCache()->load('migration-setting', 60));
-            $this->assertSame('legacy', $cache->load('migration-setting', 60));
-        } finally {
-            \putenv($previous === false ? '_APP_CACHE_MIGRATION' : '_APP_CACHE_MIGRATION='.$previous);
-        }
+        $cache = new Cache(new MemoryCache());
+        $cache->save('setting', 'unprefixed');
+        $cache->save('v2:setting', 'warm');
+        $database = $this->factory($cache->withNamespace('v2:'))->project($this->project());
+
+        $this->assertSame('warm', $database->getCache()->load('setting', 60));
+        $database->getCache()->save('setting', 'updated');
+        $this->assertSame('updated', $cache->load('v2:setting', 60));
+        $this->assertSame('unprefixed', $cache->load('setting', 60));
+    }
+
+    public function testFactoryKeepsOrdinaryUnprefixedCacheEntriesWarm(): void
+    {
+        $cache = new Cache(new MemoryCache());
+        $cache->save('setting', 'warm');
+        $database = $this->factory($cache)->project($this->project());
+
+        $this->assertSame('warm', $database->getCache()->load('setting', 60));
+        $database->getCache()->save('setting', 'updated');
+        $this->assertSame('updated', $cache->load('setting', 60));
     }
 
     private function factory(?Cache $cache = null): Factory
