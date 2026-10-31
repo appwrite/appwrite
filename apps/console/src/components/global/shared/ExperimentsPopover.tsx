@@ -23,7 +23,7 @@ import {
   countUnseenExperiments,
   EXPERIMENTS,
   setExperimentEnabled,
-  type Experiment,
+  type ExperimentFlag,
 } from '@/lib/experiments'
 import { useT } from '@/lib/i18n/translate'
 import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
@@ -33,7 +33,7 @@ const EXPERIMENT_ICONS = {
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
   projectTransfers: ArrowLeftRight,
-} as const satisfies Record<Experiment['flag'], LucideIcon>
+} as const satisfies Record<ExperimentFlag, LucideIcon>
 
 export function ExperimentsPopover() {
   const t = useT()

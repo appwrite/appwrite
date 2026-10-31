@@ -27,7 +27,8 @@ export const Route = createFileRoute(
       tableId: params.tableId,
     })
   },
-  loader: ({ params, search }) => {
+  loaderDeps: ({ search }) => ({ tab: search.tab }),
+  loader: ({ params, deps }) => {
     const { projectId, dbKind, databaseId, tableId } = params
     const kind = dbKind as DatabaseRouteKind
     const nav = dbNavLink(kind)
@@ -37,7 +38,7 @@ export const Route = createFileRoute(
       databaseId,
       resourceId: tableId,
     }
-    const tab = search?.tab ?? 'rows'
+    const tab = deps.tab
     if (tab === 'rows') {
       throw redirect({ ...nav.dataGrid(p) })
     }
