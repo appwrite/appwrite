@@ -86,7 +86,6 @@ class Create extends Action
         if (
             $enabled === true
             && \array_key_exists('apiKey', $credentials)
-            && \array_key_exists('from', $options)
         ) {
             $enabled = true;
         } else {

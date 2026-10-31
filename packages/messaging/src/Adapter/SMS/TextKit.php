@@ -18,7 +18,7 @@ class TextKit extends SMSAdapter
     private const string ENDPOINT = 'https://api.jointextkit.com/v1/messages';
 
     /**
-     * @param  string  $apiKey TextKit API key, `ssms_sk_...`.
+     * @param  string  $apiKey TextKit API key, `tk_sk_...`.
      * @param  string|null  $from Sender number on the account, in E.164. Falls back to the message sender; TextKit picks the sender itself when the account has only one number.
      */
     public function __construct(

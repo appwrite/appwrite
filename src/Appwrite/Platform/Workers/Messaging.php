@@ -1595,7 +1595,7 @@ class Messaging extends Action
     {
         $to = $message['to'];
         $content = $message['data']['content'];
-        $from = $provider['options']['from'];
+        $from = $provider['options']['from'] ?? null;
 
         return new SMS(
             $to,
