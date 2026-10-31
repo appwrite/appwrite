@@ -1,13 +1,10 @@
 import { useCallback } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { ApiExplorer } from '@/components/global/api-explorer'
-import { ServiceHeader } from '../shared/ServiceHeader'
 import { useProject } from '@/lib/react-query/hooks'
-import { useT } from '@/lib/i18n/translate'
 import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
 
-export function View() {
-  const t = useT()
+export function Rest() {
   const { projectId } = useParams({ strict: false })
   const search = useSearch({ strict: false }) as {
     service?: string
@@ -24,21 +21,14 @@ export function View() {
       serviceId: string
       operationId: string
     }) => {
-      if (
-        search.service === serviceId &&
-        search.operation === operationId
-      ) {
+      if (search.service === serviceId && search.operation === operationId) {
         return
       }
       if (!projectId) return
       navigate({
-        to: '/projects/$projectId/explorer',
+        to: '/projects/$projectId/playground',
         params: { projectId },
-        search: (prev) => ({
-          ...prev,
-          service: serviceId,
-          operation: operationId,
-        }),
+        search: { service: serviceId, operation: operationId },
         replace: true,
       })
     },
@@ -50,19 +40,16 @@ export function View() {
   const endpoint = getProjectApiEndpoint(projectId)
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <ServiceHeader title={t('Explorer')} fullWidthBorder fullWidth />
-      <ApiExplorer
-        config={{
-          endpoint,
-          projectId,
-          platform: 'server',
-        }}
-        initialServiceId={search.service}
-        initialOperationId={search.operation}
-        onSelectionChange={handleSelectionChange}
-        className="min-h-0 flex-1"
-      />
-    </div>
+    <ApiExplorer
+      config={{
+        endpoint,
+        projectId,
+        platform: 'server',
+      }}
+      initialServiceId={search.service}
+      initialOperationId={search.operation}
+      onSelectionChange={handleSelectionChange}
+      className="min-h-0 flex-1"
+    />
   )
 }

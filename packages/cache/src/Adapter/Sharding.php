@@ -4,9 +4,8 @@ namespace Utopia\Cache\Adapter;
 
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Feature\Batchable;
-use Utopia\Cache\Feature\Leasable;
 
-class Sharding implements Adapter, Batchable, Leasable
+class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
 {
     /**
      * @var Adapter[]
@@ -87,22 +86,6 @@ class Sharding implements Adapter, Batchable, Leasable
         return $adapter instanceof Batchable ? $adapter->saveMany($key, $data, $ttl) : false;
     }
 
-    public function getGeneration(string $key): string
-    {
-        $adapter = $this->getAdapter($key);
-
-        return $adapter instanceof Leasable ? $adapter->getGeneration($key) : '0';
-    }
-
-    public function saveWithLease(string $key, array|string $data, string $hash, string $generation): bool|string|array
-    {
-        $adapter = $this->getAdapter($key);
-
-        return $adapter instanceof Leasable
-            ? $adapter->saveWithLease($key, $data, $hash, $generation)
-            : $adapter->save($key, $data, $hash);
-    }
-
     /**
      * @param  string  $hash optional
      */
@@ -170,5 +153,63 @@ class Sharding implements Adapter, Batchable, Leasable
         $index = $hash % $this->count;
 
         return $this->adapters[$index];
+    }
+
+    public function getGeneration(string $key): string
+    {
+        return $this->legacyAdapter($key)->getGeneration($key);
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
+    {
+        return $this->legacyAdapter($key)->saveWithGeneration($key, $data, $hash, $generation, $ttl);
+    }
+
+    public function purgeLegacy(string $key, string $hash = ''): bool
+    {
+        return $this->legacyAdapter($key)->purgeLegacy($key, $hash);
+    }
+
+    private function legacyAdapter(string $key): \Utopia\Cache\Feature\Legacy
+    {
+        $adapter = $this->getAdapter($key);
+        if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+            throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+        }
+
+        return $adapter;
+    }
+
+    public function supportsVersioning(): bool
+    {
+        return \array_all($this->adapters, fn (Adapter $adapter): bool => $adapter instanceof \Utopia\Cache\Feature\Versioned && $adapter->supportsVersioning());
+    }
+
+    public function getVersion(string $key): string
+    {
+        return $this->versionedAdapter($key)->getVersion($key);
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return $this->versionedAdapter($key)->loadVersioned($key);
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
+    {
+        return $this->versionedAdapter($key)->compareAndSwap($key, $data, $hash, $version);
+    }
+
+    private function versionedAdapter(string $key): \Utopia\Cache\Feature\Versioned
+    {
+        $adapter = $this->getAdapter($key);
+        if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+            throw new \Utopia\Cache\Exception\Unavailable('Versioned cache required');
+        }
+
+        return $adapter;
     }
 }

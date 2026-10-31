@@ -70,6 +70,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
 
   // Explorer
   Explorer: 'אקספלורר',
+  'Playground mode': 'מצב סביבת הניסוי',
   APIs: 'ממשקי API',
   Other: 'אחר',
 
@@ -764,8 +765,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '1 hour': 'שעה אחת',
   '30 days': '30 ימים',
   'Activity retention': 'שמירת נתוני פעילות',
-  'Upgrade or contact sales for longer retention.':
-    'שדרגו או פנו למכירות לשמירת נתונים ממושכת יותר.',
+  'Upgrade for longer retention.': 'שדרגו לשמירת נתונים ממושכת יותר.',
+  'Longer retention is available on Enterprise.':
+    'שמירת נתונים ממושכת יותר זמינה בתוכנית Enterprise.',
   'Limited activity history': 'היסטוריית פעילות מוגבלת',
   'of activity history.': 'של היסטוריית פעילות.',
   'of activity history. Upgrade for longer retention.':
@@ -3304,10 +3306,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Create environment': 'יצירת סביבה',
   'Rename environment': 'שינוי שם הסביבה',
   'Delete environment': 'מחיקת סביבה',
-  'Environment ID': 'מזהה סביבה',
   'Enter environment name': 'הזינו שם סביבה',
-  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
-    'לכל סביבה יש משאבים ומשתמשים משלה, באותו אזור של הפרויקט הזה. השימוש בה מחויב תחת הפרויקט הזה.',
   'Only the name changes. The environment ID stays the same.':
     'רק השם משתנה. מזהה הסביבה נשאר זהה.',
   'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
@@ -3320,6 +3319,41 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to delete environment': 'מחיקת הסביבה נכשלה',
   'Too many environments created for this project in the last hour. Try again later.':
     'נוצרו יותר מדי סביבות לפרויקט הזה בשעה האחרונה. נסו שוב מאוחר יותר.',
+  // Migration resource types copied into an environment
+  'Function variable': 'משתנה פונקציה',
+  'Function variables': 'משתני פונקציה',
+  'Messaging providers': 'ספקי הודעות',
+  'OAuth2 provider': 'ספק OAuth2',
+  'Project variable': 'משתנה פרויקט',
+  'SMTP settings': 'הגדרות SMTP',
+  'Security policies': 'מדיניות אבטחה',
+  'Site deployment': 'פריסת אתר',
+  'Site deployments': 'פריסות אתר',
+  'Site variable': 'משתנה אתר',
+  'Site variables': 'משתני אתר',
+  // Environment switcher order, banner and creation wizard
+  'The copy from the project is under way. Its progress shows in the corner of the environment.':
+    'ההעתקה מהפרויקט בעיצומה. ההתקדמות שלה מוצגת בפינת הסביבה.',
+  'Failed to update environment order': 'עדכון סדר הסביבות נכשל',
+  'Project environment': 'סביבת פרויקט',
+  'Switch to production': 'מעבר לפרודקשן',
+  'Changes here do not affect production.':
+    'שינויים כאן לא משפיעים על פרודקשן.',
+  'Name the environment and choose where it starts.':
+    'תנו שם לסביבה ובחרו מאיפה היא מתחילה.',
+  'An environment is a separate project. Copying keeps the IDs of what it brings over.':
+    'סביבה היא פרויקט נפרד. בהעתקה נשמרים המזהים של מה שמועתק.',
+  'Structure and settings are cloned, data only where you ask for it.':
+    'מבנה והגדרות משובטים. נתונים רק היכן שתבקשו.',
+  'Structure is selected by default. Include data only where you need it.':
+    'המבנה מסומן כברירת מחדל. כללו נתונים רק היכן שצריך.',
+  'Pick what to copy from the project.': 'בחרו מה להעתיק מהפרויקט.',
+  'Point your app at the new environment.':
+    'כוונו את האפליקציה שלכם לסביבה החדשה.',
+  'Open environment': 'פתיחת הסביבה',
+  'An environment is a project of its own. Point an app at it with this project ID; the API endpoint is the one your project already uses.':
+    'סביבה היא פרויקט בפני עצמו. כוונו אליה אפליקציה באמצעות מזהה הפרויקט הזה; ה-Endpoint של ה-API הוא זה שהפרויקט שלכם כבר משתמש בו.',
+  'API endpoint': 'Endpoint של ה-API',
   'Send your first message': 'שליחת ההודעה הראשונה שלכם',
   'Reach your users by email, SMS, and push notifications from one place.':
     'הגיעו למשתמשים שלכם באימייל, ב-SMS ובהתראות Push, הכול ממקום אחד.',
@@ -3479,8 +3513,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Transfer link': 'קישור ההעברה',
   'Expires in': 'תוקף הקישור',
   'Recipient organization ID (optional)': 'מזהה הארגון הנמען (אופציונלי)',
-  'Leave empty to let any organization claim the project.':
-    'השאירו ריק כדי לאפשר לכל ארגון לקבל את הפרויקט.',
+  'Recommended. Only this organization can claim the project, so the link is useless to anyone else who gets it. Leave empty to let any organization with the link claim it.':
+    'מומלץ. רק הארגון הזה יוכל לקבל את הפרויקט, כך שהקישור לא יועיל לאף אחד אחר שיגיע אליו. השאירו ריק כדי לאפשר לכל ארגון שבידיו הקישור לקבל את הפרויקט.',
   'Failed to create transfer link': 'יצירת קישור ההעברה נכשלה',
   'Delete transfer link': 'מחיקת קישור העברה',
   'The link will stop working and the project can no longer be claimed with it.':
@@ -3507,6 +3541,47 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'רק ארגון זה יכול לקבל את הקישור הזה.',
   'This transfer is reserved for an organization you are not part of:':
     'ההעברה הזו שמורה לארגון שאינכם חברים בו:',
+  "Resolve this organization's billing issues before transferring.":
+    'פתרו את בעיות החיוב של הארגון הזה לפני ההעברה.',
+  'This organization has a failed or unauthorized payment. Resolve its billing issues before transferring this project.':
+    'לארגון הזה יש תשלום שנכשל או שלא אושר. פתרו את בעיות החיוב שלו לפני העברת הפרויקט.',
+  'Go to billing': 'מעבר לחיוב',
+  'Checking...': 'בודקים...',
+  'Billing issue': 'בעיית חיוב',
+  'Project limit reached': 'הגעתם למגבלת הפרויקטים',
+  "You don't have permission to add projects to this organization.":
+    'אין לכם הרשאה להוסיף פרויקטים לארגון הזה.',
+  'This organization has billing issues. Resolve them before it can receive projects.':
+    'לארגון הזה יש בעיות חיוב. פתרו אותן כדי שהוא יוכל לקבל פרויקטים.',
+  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.":
+    'הארגון הזה הגיע למגבלת הפרויקטים של התוכנית שלו. שדרגו את התוכנית כדי לקבל את הפרויקט.',
+  "Change which organization owns this project. Its resources and data move with it, and the new organization's plan and members apply from then on.":
+    'שנו את הארגון שהפרויקט שייך אליו. המשאבים והנתונים עוברים יחד עם הפרויקט, ומאותו רגע חלים עליו התוכנית והחברים של הארגון החדש.',
+  'Move to another organization': 'העברה לארגון אחר',
+  'Move this project to another organization you are a member of. The move happens right away.':
+    'העבירו את הפרויקט לארגון אחר שאתם חברים בו. ההעברה מתבצעת מיד.',
+  'Destination organization': 'ארגון יעד',
+  'Move project': 'העברת הפרויקט',
+  'Failed to move project': 'העברת הפרויקט נכשלה',
+  'You are not a member of any other organization.': 'אינכם חברים בארגון אחר.',
+  'Select an organization to move this project to.':
+    'בחרו ארגון שאליו יועבר הפרויקט.',
+  'Hand off with a transfer link': 'מסירה באמצעות קישור העברה',
+  "Share a single-use link with someone in another organization. The project moves when they claim it, and you don't need to be a member of their organization.":
+    'שתפו קישור חד-פעמי עם מישהו בארגון אחר. הפרויקט יועבר כשיקבלו אותו, ואין צורך שתהיו חברים בארגון שלהם.',
+  'Pending transfer links': 'קישורי העברה ממתינים',
+  'Links that have not been claimed yet. Expired links can no longer be claimed. Delete a link to stop it from working sooner.':
+    'קישורים שעדיין לא מומשו. לא ניתן לממש קישורים שפג תוקפם. מחקו קישור כדי שיפסיק לפעול מוקדם יותר.',
+  'The project already belongs to this organization.':
+    'הפרויקט כבר שייך לארגון זה.',
+  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'רק חברי ארגון שהתפקיד שלהם מאפשר לנהל פרויקטים יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'No permission': 'אין הרשאה',
+  "You don't have permission to transfer projects in this organization.":
+    'אין לכם הרשאה להעביר פרויקטים בארגון זה.',
+  'Transfer links': 'קישורי העברה',
+  'Active transfer links for this project stop working after the move.':
+    'קישורי ההעברה הפעילים של הפרויקט יפסיקו לפעול אחרי ההעברה.',
   'Choose how long to keep inactive deployments. Active deployments and deployments linked to a custom domain are always retained.':
     'בחרו כמה זמן לשמור פריסות לא פעילות. פריסות פעילות ופריסות שמקושרות לדומיין מותאם אישית נשמרות תמיד.',
   'From November 5, 2026, Appwrite Cloud will delete inactive deployments after 30 days by default. To keep more history, choose a longer retention period and click Update before then.':
@@ -3526,15 +3601,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // Environment copy at creation, its progress card, and backups in environments
   'Start from': 'נקודת התחלה',
   'Empty environment': 'סביבה ריקה',
-  'Nothing is copied from the project.': 'דבר לא מועתק מהפרויקט.',
-  'Copy of the project': 'עותק של הפרויקט',
+  'Nothing is copied from the project. You handle the scaffolding.':
+    'דבר לא מועתק מהפרויקט. אתם מטפלים במבנה.',
+  'Clone of the project': 'שכפול של הפרויקט',
   'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
     'המבנה וההגדרות מועתקים, והנתונים רק היכן שתבקשו זאת. ההעתקה מתבצעת לאחר יצירת הסביבה ושומרת על המזהים של מה שהיא מעתיקה.',
   'What to copy': 'מה להעתיק',
   'Pick what to copy, or start from an empty environment.':
     'בחרו מה להעתיק, או התחילו מסביבה ריקה.',
-  'Environment created. The copy from the project is under way.':
-    'הסביבה נוצרה. ההעתקה מהפרויקט מתבצעת כעת.',
   'Databases, tables, columns and indexes':
     'מסדי נתונים, טבלאות, עמודות ואינדקסים',
   'Rows and documents': 'שורות ומסמכים',

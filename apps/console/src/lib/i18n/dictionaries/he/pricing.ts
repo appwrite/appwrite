@@ -184,7 +184,6 @@ export const hePricingDictionary: Record<string, string> = {
   'DocumentsDB, VectorsDB,\nPostgreSQL, MySQL,\nor upgraded TablesDB':
     'DocumentsDB, VectorsDB,\nPostgreSQL, MySQL,\nאו TablesDB משודרג',
   'Email support': 'תמיכה באימייל',
-  'Everything in Pro, plus:': 'כל מה שיש ב-Pro, ובנוסף:',
   'Fewer systems to integrate, secure, and maintain':
     'פחות מערכות לשלב, לאבטח ולתחזק',
   'Firewall': 'Firewall',

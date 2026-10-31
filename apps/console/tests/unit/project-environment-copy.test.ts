@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test'
 import {
   PROJECT_ENVIRONMENT_COPY_GROUPS,
   defaultProjectEnvironmentCopySelection,
+  emptyProjectEnvironmentCopySelection,
+  fullProjectEnvironmentCopySelection,
   migrationProgress,
   projectEnvironmentCopyResources,
 } from '@/lib/project-environments'
@@ -44,13 +46,25 @@ describe('project environment copy', () => {
     expect(resources).not.toContain('file')
   })
 
-  test('nothing selected sends nothing', () => {
-    const selection = defaultProjectEnvironmentCopySelection()
-    for (const group of PROJECT_ENVIRONMENT_COPY_GROUPS) {
-      selection[group.id] = { structure: false, data: false }
-    }
+  test('a full selection copies structure and data', () => {
+    const resources = projectEnvironmentCopyResources(
+      fullProjectEnvironmentCopySelection(),
+    )
 
-    expect(projectEnvironmentCopyResources(selection)).toEqual([])
+    expect(resources).toContain('database')
+    expect(resources).toContain('row')
+    expect(resources).toContain('file')
+    expect(resources).toContain('user')
+    expect(resources).toContain('deployment')
+    expect(resources).toContain('site-deployment')
+    expect(resources).toContain('provider')
+    expect(resources).toContain('platform')
+  })
+
+  test('nothing selected sends nothing', () => {
+    expect(
+      projectEnvironmentCopyResources(emptyProjectEnvironmentCopySelection()),
+    ).toEqual([])
   })
 
   test('no resource type belongs to two groups', () => {

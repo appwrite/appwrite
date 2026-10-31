@@ -12,7 +12,11 @@ import { toast } from 'sonner'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
 import { PERSONAL_ORG_NAME } from '@/lib/ensure-personal-org'
-import { useOrganizations } from '@/lib/react-query/hooks'
+import {
+  TRANSFER_DESTINATION_BLOCK_LABELS,
+  useOrganizations,
+  useTransferDestinations,
+} from '@/lib/react-query/hooks'
 import {
   createOrganization,
   organizationScopesQueryOptions,
@@ -60,6 +64,7 @@ export function ClaimProjectTransfer({
   const hasLink = transferId !== '' && secret !== ''
   const hasOrganizations = organizationsLoading || organizations.length > 0
   const { features } = useConsoleProfile()
+  const destinations = useTransferDestinations(organizations)
 
   // The server only moves a project into an organization the user owns
   const scopes = useQueries({
@@ -68,15 +73,25 @@ export function ClaimProjectTransfer({
     ),
   })
   const rolesLoading = scopes.some((scope) => scope.isLoading)
-  const transferOrganizations = getTransferOrganizations(
-    organizations.map((organization) => organization.$id),
-    Object.fromEntries(
-      organizations.map((organization, index) => [
-        organization.$id,
-        scopes[index]?.data?.roles,
-      ]),
-    ),
+  const ownedIds = new Set(
+    getTransferOrganizations(
+      organizations.map((organization) => organization.$id),
+      Object.fromEntries(
+        organizations.map((organization, index) => [
+          organization.$id,
+          scopes[index]?.data?.roles,
+        ]),
+      ),
+    )
+      .filter((organization) => organization.eligible)
+      .map((organization) => organization.id),
   )
+  // Owned, and not blocked by its role, billing or project limit
+  const transferOrganizations = destinations.map(({ organization, block }) => ({
+    id: organization.$id,
+    eligible: block === null && ownedIds.has(organization.$id),
+  }))
+  const destinationsChecking = destinations.some((check) => check.isChecking)
   const eligibleIds = new Set(
     transferOrganizations
       .filter((organization) => organization.eligible)
@@ -85,6 +100,9 @@ export function ClaimProjectTransfer({
   const hasEligible = eligibleIds.size > 0
   const canCreateOrganization =
     features.multiTenancy || organizations.length === 0
+  const selected = destinations.find(
+    (check) => check.organization.$id === teamId,
+  )
 
   // The preview runs as the selected organization, so it reports whether that organization may claim it
   const preview = useQuery({
@@ -147,7 +165,12 @@ export function ClaimProjectTransfer({
       if (isRecipientMember && teamId !== recipientId) setTeamId(recipientId)
       return
     }
-    if (!organizationsLoading && !rolesLoading && pickedId !== teamId) {
+    if (
+      !organizationsLoading &&
+      !rolesLoading &&
+      !destinationsChecking &&
+      pickedId !== teamId
+    ) {
       setTeamId(pickedId)
     }
   }, [
@@ -157,6 +180,7 @@ export function ClaimProjectTransfer({
     pickedId,
     organizationsLoading,
     rolesLoading,
+    destinationsChecking,
   ])
 
   const isAlreadyOwner = preview.data?.senderId === teamId
@@ -166,6 +190,8 @@ export function ClaimProjectTransfer({
     !isAlreadyOwner &&
     isEligible &&
     (recipientId === '' || teamId === recipientId) &&
+    selected?.block === null &&
+    !selected.isChecking &&
     !claimMutation.isPending
 
   const problem = preview.isError
@@ -177,13 +203,23 @@ export function ClaimProjectTransfer({
       ? t(
           'The project already belongs to this organization. Select a different one.',
         )
-      : teamId !== '' && !isEligible && !rolesLoading
-        ? hasEligible || !canCreateOrganization
+      : teamId !== '' && !ownedIds.has(teamId) && !rolesLoading
+        ? ownedIds.size > 0 || !canCreateOrganization
           ? t('Only an owner of the organization can claim a project into it.')
           : t(
               'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.',
             )
-        : null
+        : selected?.block === 'permission'
+          ? t("You don't have permission to add projects to this organization.")
+          : selected?.block === 'billing'
+            ? t(
+                'This organization has billing issues. Resolve them before it can receive projects.',
+              )
+            : selected?.block === 'projectLimit'
+              ? t(
+                  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.",
+                )
+              : null
 
   const switchAccount = useAuthAccountSwitch()
   const goToDashboard = () => navigate({ to: '/' })
@@ -348,19 +384,25 @@ export function ClaimProjectTransfer({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {organizations.map((organization) => {
-                      const eligible = eligibleIds.has(organization.$id)
+                    {destinations.map(({ organization, block, isChecking }) => {
+                      const owned = ownedIds.has(organization.$id)
+                      const reason = isChecking
+                        ? t('Checking...')
+                        : block !== null
+                          ? t(TRANSFER_DESTINATION_BLOCK_LABELS[block])
+                          : owned
+                            ? null
+                            : t('Owner role required')
                       return (
                         <SelectItem
                           key={organization.$id}
                           value={organization.$id}
-                          disabled={!eligible}
+                          disabled={reason !== null}
                         >
-                          {organization.name}
-                          {eligible ? null : (
-                            <span className="text-muted-foreground">
-                              {' · '}
-                              {t('Owner role required')}
+                          <span className="truncate">{organization.name}</span>
+                          {reason !== null && (
+                            <span className="ms-2 text-[12px] text-muted-foreground">
+                              {reason}
                             </span>
                           )}
                         </SelectItem>

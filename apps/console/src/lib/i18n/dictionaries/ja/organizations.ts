@@ -428,6 +428,14 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Name must be no longer than': '名前は次より長くできません',
   'Need 24/7 or enterprise support?':
     '24時間365日またはエンタープライズサポートが必要ですか?',
+  'Need SSO or custom organization roles?':
+    'SSO やカスタム組織ロールが必要ですか?',
+  'Need a custom SLA or a private Slack channel?':
+    'カスタム SLA やプライベート Slack チャンネルが必要ですか?',
+  'Running Appwrite at scale?': '大規模に Appwrite を運用していますか?',
+  'Get a custom SLA, a private Slack channel, and SOC 2 and HIPAA without add-ons.':
+    'カスタム SLA、プライベート Slack チャンネル、アドオン不要の SOC 2 と HIPAA をご利用いただけます。',
+  'Talk to sales': '営業に相談',
   'Next page': '次のページ',
   'Next payment of': '次回の支払い額',
   'Next projects page': '次のプロジェクトページ',
