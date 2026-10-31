@@ -249,7 +249,7 @@ class Cache
      */
     public function saveWithLease(string $key, array|string $data, string $hash, string $version): bool|string|array
     {
-        if (! $this->supportsVersioning() || $version === '') {
+        if ($key === '' || $key === '0' || empty($data) || ! $this->supportsVersioning() || $version === '') {
             return false;
         }
         $key = $this->caseSensitive ? $key : \strtolower($key);

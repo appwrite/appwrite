@@ -70,6 +70,22 @@ final class VersionedTest extends TestCase
             $legacy = $cache->legacy();
             $key = 'legacy:'.\bin2hex(\random_bytes(8));
             try {
+                $this->assertSame('zero', $legacy->save($key, 'zero', '0'));
+                $this->assertSame('zero', $legacy->load($key, 60, '0'));
+                $this->assertTrue($legacy->purge($key, '0'));
+                $this->assertFalse($legacy->load($key, 60, '0'));
+                $this->assertSame([], $legacy->list($key));
+                $this->assertSame('1', $legacy->getLease($key));
+                $redis->del($key);
+                $before = $redis->hGetAll($key);
+                foreach (['snapshot', 'cas'] as $operation) {
+                    try {
+                        $operation === 'snapshot' ? $legacy->loadVersioned($key) : $legacy->compareAndSwap($key, 'value', 'unused');
+                        $this->fail('Opaque operations must not touch legacy hashes');
+                    } catch (\Utopia\Cache\Exception\Unavailable) {
+                        $this->assertSame($before, $redis->hGetAll($key));
+                    }
+                }
                 $this->assertSame('0', $legacy->getLease($key));
                 $this->assertSame('owner', $legacy->save($key, 'owner', 'owner'));
                 $this->assertSame(['owner'], $redis->hKeys($key), 'Old clients must never enumerate opaque version fields as owners');

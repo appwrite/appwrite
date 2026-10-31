@@ -93,6 +93,7 @@ class Memory implements Adapter, \Utopia\Cache\Feature\Versioned
         /** @var array{time: int, data: string|array<int|string, mixed>} $saved */
         $saved = $this->store[$key];
         $saved['time'] = time();
+        $saved['version'] = \bin2hex(\random_bytes(16));
         $this->store[$key] = $saved;
 
         return true;

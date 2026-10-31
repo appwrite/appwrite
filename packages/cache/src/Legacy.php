@@ -61,7 +61,11 @@ final class Legacy extends Cache
 
     public function saveWithLease(string $key, array|string $data, string $hash, string $version): bool|string|array
     {
+        if ($key === '' || $key === '0' || empty($data)) {
+            return false;
+        }
         $key = $this->caseSensitive ? $key : \strtolower($key);
+        $hash = $hash === '0' ? '' : $hash;
         $hash = $this->caseSensitive ? $hash : \strtolower($hash);
 
         return $this->legacyAdapter()->saveWithGeneration($key, $data, $hash, $version) ? $data : false;
@@ -69,6 +73,7 @@ final class Legacy extends Cache
 
     public function purge(string $key, string $hash = ''): bool
     {
+        $hash = $hash === '0' ? '' : $hash;
         $this->recordPurge($key, $hash);
 
         return $this->legacyAdapter()->purgeLegacy(

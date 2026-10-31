@@ -309,7 +309,7 @@ $register->set('cache', function () use ($register) {
 // differently overrides one entry; Cloud registers its own.
 $register->set('databaseFactory', fn () => fn (Group $pools, Cache $cache, Authorization $authorization): DatabaseFactory => new DatabaseFactory(
     $pools,
-    \Utopia\Database\Cache\Bridge::wrap($cache, System::getEnv('_APP_CACHE_MIGRATION', '')),
+    $cache,
     $authorization
 ));
 
