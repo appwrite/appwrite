@@ -1,5 +1,6 @@
 // Table spreadsheet UI (rows, columns, indexes, security, settings) for this database product.
 import { cn } from '@/lib/utils'
+import { parseRowNumericInput } from '@/lib/numeric-field'
 import { resolveRowSaveTarget } from '@/lib/database-row-save'
 import {
   horizontalResizeDeltaPx,
@@ -2104,22 +2105,10 @@ function RowEditDrawer({
                                   }}
                                   autoFocus={shouldFocus}
                                   onChange={(e) => {
-                                    const val =
-                                      e.target.value === ''
-                                        ? null
-                                        : fieldType === 'bigint'
-                                          ? (() => {
-                                              try {
-                                                return BigInt(e.target.value)
-                                              } catch {
-                                                return null
-                                              }
-                                            })()
-                                          : fieldType === 'integer'
-                                            ? parseInt(e.target.value, 10) ||
-                                              null
-                                            : parseFloat(e.target.value) ||
-                                              null
+                                    const val = parseRowNumericInput(
+                                      e.target.value,
+                                      fieldType,
+                                    )
                                     handleFieldChange(key, val)
                                   }}
                                   min={
