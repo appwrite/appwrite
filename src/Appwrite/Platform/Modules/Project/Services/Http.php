@@ -61,6 +61,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
@@ -261,6 +262,7 @@ class Http extends Service
         $this->addAction(UpdateOAuth2Oidc::getName(), new UpdateOAuth2Oidc());
         $this->addAction(UpdateOAuth2Okta::getName(), new UpdateOAuth2Okta());
         $this->addAction(UpdateOAuth2Kick::getName(), new UpdateOAuth2Kick());
+        $this->addAction(UpdateOAuth2Vipps::getName(), new UpdateOAuth2Vipps());
         $this->addAction(UpdateOAuth2Apple::getName(), new UpdateOAuth2Apple());
         $this->addAction(UpdateOAuth2Microsoft::getName(), new UpdateOAuth2Microsoft());
         $this->addAction(UpdateOAuth2HuggingFace::getName(), new UpdateOAuth2HuggingFace());
