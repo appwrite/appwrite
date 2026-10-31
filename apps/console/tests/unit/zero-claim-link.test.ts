@@ -144,6 +144,15 @@ describe('resolveMagicUrlRedirect', () => {
     )
   })
 
+  test('drops a fragment, which route navigation cannot carry', () => {
+    expect(resolveMagicUrlRedirect('/console/project-fra-abc123#usage')).toBe(
+      '/projects/abc123',
+    )
+    expect(resolveMagicUrlRedirect('/projects/abc123/auth?tab=users#x')).toBe(
+      '/projects/abc123/auth?tab=users',
+    )
+  })
+
   test('falls back to the home page for anything but a same-origin path', () => {
     for (const redirect of [
       null,

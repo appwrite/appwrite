@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import { Loader2, TriangleAlert } from 'lucide-react'
 import {
   AuthFlowDescription,
   AuthFlowIllustrationCard,
@@ -19,6 +19,7 @@ type MagicUrlLoginCardProps = {
   switchAccount?: {
     email: string
     pending?: boolean
+    error?: string | null
     onContinue: () => void
     onCancel: () => void
   }
@@ -63,6 +64,20 @@ export function MagicUrlLoginCard({
                   {t('Continue and sign in to this project instead?')}
                 </AuthFlowDescription>
               </div>
+              {switchAccount.error ? (
+                <div
+                  role="alert"
+                  className="border-destructive/20 bg-destructive/10 flex items-start gap-2 rounded-lg border p-3"
+                >
+                  <TriangleAlert
+                    aria-hidden="true"
+                    className="text-destructive mt-0.5 size-4 shrink-0"
+                  />
+                  <p className="text-destructive text-[13px]">
+                    {switchAccount.error}
+                  </p>
+                </div>
+              ) : null}
               <div className="space-y-2">
                 <Button
                   variant="brandCta"

@@ -113,15 +113,16 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
 /**
  * Destination after a magic URL sign-in, `/` when the link names none or an
  * unsafe one. Links may carry a legacy `/console/...` path, which the server
- * only rewrites on a document load, so it is rewritten here.
+ * only rewrites on a document load, so it is rewritten here. A fragment is
+ * dropped: route navigation carries only the path and query.
  */
 export function resolveMagicUrlRedirect(redirect?: string | null): string {
   let destination = redirect || undefined
   if (destination && isValidRelativeRedirect(destination)) {
     const url = new URL(destination, 'https://console.invalid')
-    if (isLegacyConsolePath(url.pathname)) {
-      destination = `${rewriteLegacyConsolePath(url.pathname, url.search)}${url.search}${url.hash}`
-    }
+    destination = isLegacyConsolePath(url.pathname)
+      ? `${rewriteLegacyConsolePath(url.pathname, url.search)}${url.search}`
+      : destination.split('#')[0]
   }
   return resolvePostAuthRedirect(destination) ?? '/'
 }

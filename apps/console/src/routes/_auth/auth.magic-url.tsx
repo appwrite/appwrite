@@ -49,6 +49,7 @@ function MagicUrlPage() {
   const [params] = useState(getMagicUrlParamsFromUrl)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSwitchingAccount, setIsSwitchingAccount] = useState(false)
+  const [switchError, setSwitchError] = useState<string | null>(null)
 
   const openDestination = useCallback(() => {
     const destination = resolveMagicUrlRedirect(params?.redirect)
@@ -85,6 +86,7 @@ function MagicUrlPage() {
   const switchAccount = useCallback(async () => {
     if (isSwitchingAccount) return
     setIsSwitchingAccount(true)
+    setSwitchError(null)
     try {
       await performConsoleSignOut(queryClient, {
         destination: `${window.location.pathname}${window.location.search}`,
@@ -92,7 +94,7 @@ function MagicUrlPage() {
       })
     } catch {
       setIsSwitchingAccount(false)
-      setErrorMessage(t('Could not sign out. Try switching accounts again.'))
+      setSwitchError(t('Could not sign out. Try switching accounts again.'))
     }
   }, [isSwitchingAccount, queryClient, t])
 
@@ -132,12 +134,14 @@ function MagicUrlPage() {
 
   return (
     <MagicUrlLoginCard
-      errorMessage={errorMessage}
+      // The prompt shows its own sign-out error; an automatic switch has none.
+      errorMessage={errorMessage ?? (needsSwitchConfirm ? null : switchError)}
       switchAccount={
         needsSwitchConfirm && account
           ? {
               email: account.email || account.name || account.$id,
               pending: isSwitchingAccount,
+              error: switchError,
               onContinue: () => void switchAccount(),
               onCancel: () => navigate({ to: '/', replace: true }),
             }
