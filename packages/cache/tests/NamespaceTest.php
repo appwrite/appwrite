@@ -49,7 +49,7 @@ final class NamespaceTest extends TestCase
     {
         $backing = new Cache(new Memory());
         $cache = $backing->withNamespace('v2:');
-        $otherRegion = (new Cache(new Memory()))->withNamespace('v2:');
+        $otherRegion = new Cache(new Memory())->withNamespace('v2:');
         $cache->save('users', 'local', 'list');
         $otherRegion->save('users', 'remote', 'list');
 
