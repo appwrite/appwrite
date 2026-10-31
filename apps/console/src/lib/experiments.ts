@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: keyof ConsoleProfileFeatures
+  flag: 'analytics' | 'projectEnvironments' | 'projectTransfers'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
