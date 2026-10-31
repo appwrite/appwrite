@@ -1,5 +1,5 @@
 import { useMemo, useState, type KeyboardEvent } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import {
   DndContext,
@@ -228,7 +228,6 @@ export function EnvironmentSwitcher({
   const parentProjectId = projectData
     ? projectData.parentId || projectData.$id
     : undefined
-  const { project: parentProject } = useProject(parentProjectId)
   const region = project?.region
   const { environments, error, refetch } = useProjectEnvironments(
     parentProjectId,
@@ -258,18 +257,19 @@ export function EnvironmentSwitcher({
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
   )
 
-  // The parent is the default environment and is never one of the rows the
-  // list endpoint returns.
+  // The parent is production. It has no environment document of its own, so it
+  // is never in the list endpoint; the switcher always labels it Production.
+  const productionName = t('Production')
   const production = useMemo<ProjectEnvironmentOption | null>(
     () =>
       parentProjectId
         ? {
             id: parentProjectId,
-            name: parentProject?.name || parentProjectId,
+            name: productionName,
             isDefault: true,
           }
         : null,
-    [parentProjectId, parentProject?.name],
+    [parentProjectId, productionName],
   )
   const environmentOptions = useMemo<ProjectEnvironmentOption[]>(
     () =>
@@ -292,11 +292,14 @@ export function EnvironmentSwitcher({
     return null
   }
 
-  const selected: ProjectEnvironmentOption = {
-    id: project.$id,
-    name: project.name || project.$id,
-    isDefault: project.$id === parentProjectId,
-  }
+  const selected: ProjectEnvironmentOption =
+    project.$id === parentProjectId
+      ? production
+      : {
+          id: project.$id,
+          name: project.name || project.$id,
+          isDefault: false,
+        }
 
   // The update replaces the whole prefs object, so nothing is saved over
   // prefs that never loaded; one environment has nothing to be ordered against
@@ -313,13 +316,6 @@ export function EnvironmentSwitcher({
       params: { projectId: nextProjectId },
     })
   }
-
-  // Environments are created from the parent, on its own wizard route
-  const openCreate = () =>
-    navigate({
-      to: '/projects/$projectId/environments/create',
-      params: { projectId: parentProjectId },
-    })
 
   const saveOrder = (ids: string[]) => {
     setPendingOrder(ids)
@@ -474,13 +470,15 @@ export function EnvironmentSwitcher({
             </SortableContext>
           </DndContext>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onSelect={() => void openCreate()}
-            className="text-[13px]"
-          >
-            <MenuItemContent icon={Plus}>
-              {t('Create environment')}
-            </MenuItemContent>
+          <DropdownMenuItem asChild className="text-[13px]">
+            <Link
+              to="/projects/$projectId/environments/create"
+              params={{ projectId: parentProjectId }}
+            >
+              <MenuItemContent icon={Plus}>
+                {t('Create environment')}
+              </MenuItemContent>
+            </Link>
           </DropdownMenuItem>
           {/* The parent is managed from its own settings, so rename and delete
               only apply to the environment being shown. */}

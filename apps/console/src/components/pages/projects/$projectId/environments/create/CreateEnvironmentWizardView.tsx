@@ -1,48 +1,39 @@
 /**
- * Creates an environment of a project in steps: its details, what to copy when
- * it starts as a copy, and how an app reaches it once created. A copy runs on
- * the environment, where the progress card follows it. Cloud only, behind the
- * projectEnvironments feature like the switcher that opens this.
+ * Creates an environment of a project on one page: a name, and whether to
+ * start empty or as a copy. The id is generated. A copy's progress card
+ * follows the environment, so the wizard does not wait. Cloud only, behind
+ * the projectEnvironments feature like the switcher that opens this.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { AppwriteException, type Models } from '@appwrite.io/console'
+import { AppwriteException } from '@appwrite.io/console'
+import { Box, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
-import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import {
   PROJECT_NAME_MAX_LENGTH,
   useCreateProjectEnvironment,
-  useEnvironmentCopyMigration,
   useProject,
+  useProjectEnvironments,
 } from '@/lib/react-query/hooks'
-import { isValidProjectId } from '@/lib/project-id'
 import {
   defaultProjectEnvironmentCopySelection,
   projectEnvironmentCopyResources,
+  suggestProjectEnvironmentName,
   type ProjectEnvironmentCopyGroupId,
   type ProjectEnvironmentCopySelection,
 } from '@/lib/project-environments'
+import { cn } from '@/lib/utils'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
-import { ConnectStep } from './_components/ConnectStep'
-import {
-  DetailsStep,
-  type EnvironmentStartFrom,
-} from './_components/DetailsStep'
-import { ResourcesStep } from './_components/ResourcesStep'
-import { WizardSteps, type WizardStep } from './_components/WizardSteps'
+import { CopyResources } from './_components/CopyResources'
 
-type StepId = 'details' | 'resources' | 'connect'
-
-const STEP_DESCRIPTIONS: Record<StepId, string> = {
-  details: 'Name the environment and choose where it starts.',
-  resources: 'Pick what to copy from the project.',
-  connect: 'Point your app at the new environment.',
-}
+type EnvironmentStartFrom = 'empty' | 'project'
 
 /**
  * Create fails with its own copy for the per-hour creation limit and for the
@@ -72,22 +63,21 @@ export function CreateEnvironmentWizardView({
 }) {
   const t = useT()
   const navigate = useNavigate()
-  const { features } = useConsoleProfile()
   const { project, projectData } = useProject(projectId)
   const region = project?.region
 
-  const [step, setStep] = useState<StepId>('details')
   const [name, setName] = useState('')
-  const [environmentId, setEnvironmentId] = useState<string | undefined>(
-    undefined,
-  )
   const [startFrom, setStartFrom] = useState<EnvironmentStartFrom>('empty')
   const [selection, setSelection] = useState<ProjectEnvironmentCopySelection>(
     defaultProjectEnvironmentCopySelection,
   )
   const [nameError, setNameError] = useState<string | undefined>(undefined)
-  const [environment, setEnvironment] = useState<Models.Project | null>(null)
+  const nameTouched = useRef(false)
+  const nameSuggested = useRef(false)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
+  const { environments, isLoading: isLoadingEnvironments } =
+    useProjectEnvironments(projectId, region)
   const createEnvironmentMutation = useCreateProjectEnvironment(
     projectId,
     region,
@@ -95,24 +85,12 @@ export function CreateEnvironmentWizardView({
   const isCreating = createEnvironmentMutation.isPending
   const isCopy = startFrom === 'project'
 
-  // The copy is looked up once the environment exists and was asked to copy,
-  // and handed to the environment's progress card before the wizard is left:
-  // the session outlives the switch of project, so the card shows the copy at
-  // once, finished or not, instead of looking it up on arrival
-  const migration = useEnvironmentCopyMigration(
-    environment?.$id,
-    environment?.region || region,
-    isCopy && !!environment,
-  )
-  const { addCopyId } = useSessionMigrations(environment?.$id)
-  useEffect(() => {
-    if (environment && migration) addCopyId(environment.$id, migration.$id)
-  }, [environment, migration, addCopyId])
-
   // Environments are created from the production project: an environment's own
-  // URL here goes to its parent's, and the wizard is Cloud only like the switcher
+  // URL here goes to its parent's. Read the live profile (including the
+  // experiment override); useConsoleProfile's first paint is the canonical
+  // cloud default, which has this flag off and would bounce to overview.
   useEffect(() => {
-    if (!features.projectEnvironments) {
+    if (!getActiveProfileFeatures().projectEnvironments) {
       void navigate({ to: '/projects/$projectId', params: { projectId } })
       return
     }
@@ -123,30 +101,30 @@ export function CreateEnvironmentWizardView({
         replace: true,
       })
     }
-  }, [features.projectEnvironments, projectData?.parentId, projectId, navigate])
+  }, [projectData?.parentId, projectId, navigate])
 
-  const steps = useMemo<WizardStep[]>(
-    () => [
-      { id: 'details', title: 'Details' },
-      ...(isCopy ? [{ id: 'resources', title: 'Resources' }] : []),
-      { id: 'connect', title: 'Connect' },
-    ],
-    [isCopy],
-  )
+  useEffect(() => {
+    if (nameSuggested.current || nameTouched.current || isLoadingEnvironments) {
+      return
+    }
+    nameSuggested.current = true
+    const suggested = suggestProjectEnvironmentName([
+      ...environments.map((environment) => environment.name),
+      project?.name ?? '',
+    ])
+    setName(suggested)
+    if (suggested) {
+      requestAnimationFrame(() => nameInputRef.current?.select())
+    }
+  }, [environments, isLoadingEnvironments, project?.name])
 
-  // `IdInput` reports a bad id inline but still hands it up, so the wizard is
-  // what keeps a server-side `ProjectId` rejection from being the first signal.
-  const trimmedEnvironmentId = environmentId?.trim() ?? ''
-  const isEnvironmentIdValid = isValidProjectId(trimmedEnvironmentId)
-
-  // What the API is asked to copy; a copy with nothing picked has no meaning
   const resources = isCopy ? projectEnvironmentCopyResources(selection) : []
   const isCopyEmpty = isCopy && resources.length === 0
-
   const trimmedName = name.trim()
-  const isNameValid =
-    trimmedName.length > 0 && trimmedName.length <= PROJECT_NAME_MAX_LENGTH
-  const detailsValid = isNameValid && isEnvironmentIdValid
+  const canCreate =
+    trimmedName.length > 0 &&
+    trimmedName.length <= PROJECT_NAME_MAX_LENGTH &&
+    !isCopyEmpty
 
   const setGroup = (
     groupId: ProjectEnvironmentCopyGroupId,
@@ -173,144 +151,173 @@ export function CreateEnvironmentWizardView({
     return true
   }
 
-  const openEnvironment = () => {
-    if (!environment) return
+  const close = () =>
     void navigate({
       to: '/projects/$projectId',
-      params: { projectId: environment.$id },
+      params: { projectId },
     })
-  }
 
-  const handleCreate = async () => {
-    if (!validateName() || !isEnvironmentIdValid || isCopyEmpty) return
+  const handleCreate = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!validateName() || isCopyEmpty) return
 
     try {
       const created = await createEnvironmentMutation.mutateAsync({
-        environmentId,
         name: trimmedName,
         resources,
       })
-      setEnvironment(created)
-      setStep('connect')
+      await navigate({
+        to: '/projects/$projectId',
+        params: { projectId: created.$id },
+      })
     } catch (error: unknown) {
       toast.error(getCreateErrorMessage(error, t))
     }
   }
 
-  const handleDetailsContinue = () => {
-    if (!validateName() || !isEnvironmentIdValid) return
-    setStep('resources')
-  }
-
-  const footer = (
-    <div className="flex w-full justify-end gap-2">
-      {step === 'details' && (
+  return (
+    <WizardLayout
+      title={t('Create environment')}
+      fullscreen
+      useSidebar={false}
+      constrainWidth
+      maxWidth="max-w-4xl"
+      fallbackPath={`/projects/${projectId}`}
+      footerAlign="right"
+      footer={
         <>
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
-              void navigate({
-                to: '/projects/$projectId',
-                params: { projectId },
-              })
-            }
+            onClick={close}
             disabled={isCreating}
           >
             {t('Cancel')}
           </Button>
-          {isCopy ? (
-            <Button
-              type="button"
-              onClick={handleDetailsContinue}
-              disabled={!detailsValid}
-            >
-              {t('Continue')}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="brandCta"
-              onClick={() => void handleCreate()}
-              disabled={!detailsValid || isCreating}
-            >
-              {t('Create')}
-            </Button>
-          )}
-        </>
-      )}
-      {step === 'resources' && (
-        <>
           <Button
-            type="button"
-            variant="outline"
-            onClick={() => setStep('details')}
-            disabled={isCreating}
+            type="submit"
+            form="create-environment"
+            disabled={!canCreate || isCreating}
           >
-            {t('Back')}
-          </Button>
-          <Button
-            type="button"
-            variant="brandCta"
-            onClick={() => void handleCreate()}
-            disabled={!detailsValid || isCopyEmpty || isCreating}
-          >
-            {t('Create')}
+            {isCreating ? t('Creating...') : t('Create environment')}
           </Button>
         </>
-      )}
-      {step === 'connect' && (
-        <Button type="button" variant="brandCta" onClick={openEnvironment}>
-          {t('Open environment')}
-        </Button>
-      )}
-    </div>
-  )
-
-  return (
-    <WizardLayout
-      title={t('Create environment')}
-      description={t(STEP_DESCRIPTIONS[step])}
-      fullscreen
-      useSidebar={false}
-      maxWidth="max-w-3xl"
-      fallbackPath={`/projects/${projectId}`}
-      footer={footer}
-      footerAlign="right"
-      skipInitialFieldFocus={step !== 'details'}
+      }
     >
-      <div className="space-y-6">
-        <WizardSteps steps={steps} current={step} />
+      <form
+        id="create-environment"
+        onSubmit={(event) => void handleCreate(event)}
+        className="w-full space-y-8"
+      >
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="environment-name">
+              {t('Name')} <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="environment-name"
+              ref={nameInputRef}
+              type="text"
+              placeholder={t('Enter environment name')}
+              value={name}
+              autoFocus
+              onChange={(event) => {
+                nameTouched.current = true
+                setName(event.target.value)
+                if (nameError) setNameError(undefined)
+              }}
+              disabled={isCreating}
+              maxLength={PROJECT_NAME_MAX_LENGTH}
+              className={nameError ? 'border-destructive' : ''}
+            />
+            {nameError && (
+              <p className="text-[12px] text-destructive">{nameError}</p>
+            )}
+          </div>
+        </section>
 
-        {step === 'details' && (
-          <DetailsStep
-            name={name}
-            onNameChange={(value) => {
-              setName(value)
-              if (nameError) setNameError(undefined)
-            }}
-            nameError={nameError}
-            environmentId={environmentId}
-            onEnvironmentIdChange={setEnvironmentId}
-            startFrom={startFrom}
-            onStartFromChange={setStartFrom}
-            disabled={isCreating}
-          />
-        )}
+        <section className="space-y-3">
+          <div>
+            <Label>{t('Start from')}</Label>
+            <p className="mt-1 text-[12px] text-muted-foreground">
+              {t(
+                'An environment is a separate project. Copying keeps the IDs of what it brings over.',
+              )}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <StartFromCard
+              selected={startFrom === 'empty'}
+              icon={Box}
+              title={t('Empty environment')}
+              description={t(
+                'Nothing is copied from the project. You handle the scaffolding.',
+              )}
+              disabled={isCreating}
+              onSelect={() => setStartFrom('empty')}
+            />
+            <StartFromCard
+              selected={startFrom === 'project'}
+              icon={Copy}
+              title={t('Clone of the project')}
+              description={t(
+                'Structure and settings are cloned, data only where you ask for it.',
+              )}
+              disabled={isCreating}
+              onSelect={() => setStartFrom('project')}
+            />
+          </div>
+        </section>
 
-        {step === 'resources' && (
-          <ResourcesStep
+        {isCopy ? (
+          <CopyResources
             selection={selection}
             onGroupChange={setGroup}
+            onSelectionChange={setSelection}
             isCopyEmpty={isCopyEmpty}
             disabled={isCreating}
           />
-        )}
-
-        {step === 'connect' && environment && (
-          <ConnectStep environment={environment} copying={isCopy} />
-        )}
-      </div>
+        ) : null}
+      </form>
     </WizardLayout>
+  )
+}
+
+function StartFromCard({
+  selected,
+  icon: Icon,
+  title,
+  description,
+  disabled,
+  onSelect,
+}: {
+  selected: boolean
+  icon: typeof Box
+  title: string
+  description: string
+  disabled: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={disabled}
+      className={cn(
+        'flex w-full cursor-pointer items-start gap-3 rounded-xl border border-border bg-card/50 p-3.5 text-start transition-all hover:border-border/80 hover:bg-card/60 disabled:cursor-not-allowed disabled:opacity-60',
+        selected &&
+          'border-primary ring-1 ring-primary/20 hover:border-primary',
+      )}
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[13px] font-medium text-foreground">{title}</p>
+        <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+          {description}
+        </p>
+      </div>
+    </button>
   )
 }

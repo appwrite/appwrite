@@ -3410,6 +3410,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'ここでの変更は本番に影響しません。',
   'Name the environment and choose where it starts.':
     '環境に名前を付け、開始方法を選択します。',
+  'An environment is a separate project. Copying keeps the IDs of what it brings over.':
+    '環境は別のプロジェクトです。コピーしたものの ID はそのまま残ります。',
+  'Structure and settings are cloned, data only where you ask for it.':
+    '構成と設定がクローンされます。データは指定した分だけです。',
+  'Structure is selected by default. Include data only where you need it.':
+    '構成は最初から選択されています。データは必要な分だけ含めてください。',
   'Pick what to copy from the project.':
     'プロジェクトからコピーする内容を選択します。',
   'Point your app at the new environment.': 'アプリを新しい環境に接続します。',
@@ -3666,9 +3672,9 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   // Environment copy at creation, its progress card, and backups in environments
   'Start from': '開始方法',
   'Empty environment': '空の環境',
-  'Nothing is copied from the project.':
-    'プロジェクトからは何もコピーしません。',
-  'Copy of the project': 'プロジェクトのコピー',
+  'Nothing is copied from the project. You handle the scaffolding.':
+    'プロジェクトからは何もコピーしません。スキャフォールディングはご自身で行います。',
+  'Clone of the project': 'プロジェクトのクローン',
   'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
     '構造と設定をコピーし、データは指定した場合のみコピーします。コピーは環境の作成後に実行され、コピーしたものの ID はそのまま保持されます。',
   'What to copy': 'コピーする内容',
