@@ -126,7 +126,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Migrations",
     "description": "Learn how to use Appwrite Migrations service to move projects from other vendors to Appwrite Cloud or from self-hosting to Cloud and the other way around.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "advanced/migrations/cloud",
@@ -148,6 +148,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Transition to Appwrite from NHost with confidence. Explore migration steps, considerations, and tools to ensure a successful migration process.",
     "layout": "article",
     "readingTimeMinutes": 3
+  },
+  {
+    "slug": "advanced/migrations/railway",
+    "title": "Migrate from Railway",
+    "description": "Move a Railway project to Appwrite. Copy PostgreSQL, MySQL, and bucket data, redeploy services on Sites and Functions, and re-create variables, cron jobs, and domains.",
+    "layout": "article",
+    "readingTimeMinutes": 18
   },
   {
     "slug": "advanced/migrations/self-hosted",

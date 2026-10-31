@@ -142,6 +142,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/advanced/migrations/nhost',
           },
           {
+            label: 'From Railway',
+            href: '/docs/advanced/migrations/railway',
+          },
+          {
             label: 'From Cloud',
             href: '/docs/advanced/migrations/cloud',
           },
