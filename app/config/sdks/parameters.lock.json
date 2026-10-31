@@ -2409,6 +2409,13 @@
             "apiKey",
             "enabled"
         ],
+        "messaging.createTextkitProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createTextmagicProvider": [
             "providerId",
             "name",
@@ -2678,6 +2685,13 @@
             "name",
             "enabled",
             "customerId",
+            "apiKey",
+            "from"
+        ],
+        "messaging.updateTextkitProvider": [
+            "providerId",
+            "name",
+            "enabled",
             "apiKey",
             "from"
         ],
@@ -6521,6 +6535,13 @@
             "apiKey",
             "enabled"
         ],
+        "messaging.createTextkitProvider": [
+            "providerId",
+            "name",
+            "from",
+            "apiKey",
+            "enabled"
+        ],
         "messaging.createTextmagicProvider": [
             "providerId",
             "name",
@@ -6790,6 +6811,13 @@
             "name",
             "enabled",
             "customerId",
+            "apiKey",
+            "from"
+        ],
+        "messaging.updateTextkitProvider": [
+            "providerId",
+            "name",
+            "enabled",
             "apiKey",
             "from"
         ],

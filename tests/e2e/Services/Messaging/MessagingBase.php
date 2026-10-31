@@ -88,6 +88,12 @@ trait MessagingBase
                 'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
+            'textkit' => [
+                'providerId' => Id::unique(),
+                'name' => 'TextKit1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'textmagic' => [
                 'providerId' => Id::unique(),
                 'name' => 'Textmagic1',
@@ -189,6 +195,10 @@ trait MessagingBase
                 'name' => 'Telesign2',
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
+            ],
+            'textkit' => [
+                'name' => 'TextKit2',
+                'apiKey' => 'my-apikey',
             ],
             'textmagic' => [
                 'name' => 'Textmagic2',
@@ -801,6 +811,12 @@ trait MessagingBase
                 'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
+            'textkit' => [
+                'providerId' => Id::unique(),
+                'name' => 'TextKit1',
+                'apiKey' => 'my-apikey',
+                'from' => '+123456789',
+            ],
             'textmagic' => [
                 'providerId' => Id::unique(),
                 'name' => 'Textmagic1',
@@ -1194,6 +1210,10 @@ trait MessagingBase
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
             ],
+            'textkit' => [
+                'name' => 'TextKit2',
+                'apiKey' => 'my-apikey',
+            ],
             'textmagic' => [
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
@@ -1497,6 +1517,51 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testTextkitProviderEnableCredentialCheck(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // An API key alone is enough: TextKit picks the sender itself
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/textkit', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'TextKit3',
+            'apiKey' => 'my-apikey',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['enabled']);
+
+        // Create with no API key
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/textkit', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'TextKit4',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $this->assertFalse($provider['body']['enabled']);
+
+        // Enable with no API key
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/textkit/' . $provider['body']['$id'], $headers, [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Enable with an API key and no sender
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/textkit/' . $provider['body']['$id'], $headers, [
+            'apiKey' => 'my-apikey',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertTrue($response['body']['enabled']);
     }
 
     public function testListProviders(): array
