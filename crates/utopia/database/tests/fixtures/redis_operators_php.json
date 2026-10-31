@@ -1,0 +1,1149 @@
+[
+    {
+        "current": 5,
+        "method": "increment",
+        "values": [
+            3
+        ],
+        "result": [
+            "ok",
+            "8"
+        ]
+    },
+    {
+        "current": 5.5,
+        "method": "increment",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "7.5"
+        ]
+    },
+    {
+        "current": "7",
+        "method": "increment",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "8"
+        ]
+    },
+    {
+        "current": null,
+        "method": "increment",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "2"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "increment",
+        "values": [
+            5,
+            12
+        ],
+        "result": [
+            "ok",
+            "10"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "increment",
+        "values": [
+            1.5
+        ],
+        "result": [
+            "ok",
+            "11.5"
+        ]
+    },
+    {
+        "current": 9223372036854775807,
+        "method": "increment",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "'9223372036854775808'"
+        ]
+    },
+    {
+        "current": "abc",
+        "method": "increment",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "1"
+        ]
+    },
+    {
+        "current": true,
+        "method": "increment",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "1"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "increment",
+        "values": [
+            2,
+            "11"
+        ],
+        "result": [
+            "ok",
+            "10"
+        ]
+    },
+    {
+        "current": 1,
+        "method": "increment",
+        "values": [
+            "2"
+        ],
+        "result": [
+            "ok",
+            "3"
+        ]
+    },
+    {
+        "current": 5,
+        "method": "decrement",
+        "values": [
+            3,
+            4
+        ],
+        "result": [
+            "ok",
+            "5"
+        ]
+    },
+    {
+        "current": 5,
+        "method": "decrement",
+        "values": [
+            10
+        ],
+        "result": [
+            "ok",
+            "-5"
+        ]
+    },
+    {
+        "current": -9223372036854775807,
+        "method": "decrement",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "'-9223372036854775809'"
+        ]
+    },
+    {
+        "current": 3.5,
+        "method": "decrement",
+        "values": [
+            0.5
+        ],
+        "result": [
+            "ok",
+            "3.0"
+        ]
+    },
+    {
+        "current": 3,
+        "method": "multiply",
+        "values": [
+            2.5
+        ],
+        "result": [
+            "ok",
+            "7.5"
+        ]
+    },
+    {
+        "current": 4,
+        "method": "multiply",
+        "values": [
+            0.5
+        ],
+        "result": [
+            "ok",
+            "2"
+        ]
+    },
+    {
+        "current": 3,
+        "method": "multiply",
+        "values": [
+            3,
+            5
+        ],
+        "result": [
+            "ok",
+            "3"
+        ]
+    },
+    {
+        "current": 9223372036854775807,
+        "method": "multiply",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "'18446744073709551614'"
+        ]
+    },
+    {
+        "current": 1.5,
+        "method": "multiply",
+        "values": [
+            "2.5"
+        ],
+        "result": [
+            "ok",
+            "3.75"
+        ]
+    },
+    {
+        "current": 2,
+        "method": "multiply",
+        "values": [
+            1.0e+300
+        ],
+        "result": [
+            "ok",
+            "2.0E+300"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "divide",
+        "values": [
+            4
+        ],
+        "result": [
+            "ok",
+            "2.5"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "divide",
+        "values": [
+            5
+        ],
+        "result": [
+            "ok",
+            "2"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "divide",
+        "values": [
+            0
+        ],
+        "result": [
+            "ok",
+            "10"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "divide",
+        "values": [
+            "0.0"
+        ],
+        "result": [
+            "ok",
+            "10"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "divide",
+        "values": [
+            "x"
+        ],
+        "result": [
+            "ok",
+            "10"
+        ]
+    },
+    {
+        "current": 7,
+        "method": "divide",
+        "values": [
+            2,
+            4
+        ],
+        "result": [
+            "ok",
+            "7"
+        ]
+    },
+    {
+        "current": 7.5,
+        "method": "divide",
+        "values": [
+            2.5
+        ],
+        "result": [
+            "ok",
+            "3.0"
+        ]
+    },
+    {
+        "current": -9223372036854775807,
+        "method": "divide",
+        "values": [
+            -1
+        ],
+        "result": [
+            "ok",
+            "9223372036854775807"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "modulo",
+        "values": [
+            3
+        ],
+        "result": [
+            "ok",
+            "1"
+        ]
+    },
+    {
+        "current": -10,
+        "method": "modulo",
+        "values": [
+            3
+        ],
+        "result": [
+            "ok",
+            "-1"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "modulo",
+        "values": [
+            0.5
+        ],
+        "result": [
+            "error",
+            "DivisionByZeroError",
+            "Modulo by zero"
+        ]
+    },
+    {
+        "current": 10.9,
+        "method": "modulo",
+        "values": [
+            3
+        ],
+        "result": [
+            "ok",
+            "1"
+        ]
+    },
+    {
+        "current": "x",
+        "method": "modulo",
+        "values": [
+            3
+        ],
+        "result": [
+            "ok",
+            "0"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "modulo",
+        "values": [
+            "4"
+        ],
+        "result": [
+            "ok",
+            "2"
+        ]
+    },
+    {
+        "current": 7,
+        "method": "modulo",
+        "values": [
+            -1
+        ],
+        "result": [
+            "ok",
+            "0"
+        ]
+    },
+    {
+        "current": 2,
+        "method": "power",
+        "values": [
+            10
+        ],
+        "result": [
+            "ok",
+            "1024"
+        ]
+    },
+    {
+        "current": 2,
+        "method": "power",
+        "values": [
+            62
+        ],
+        "result": [
+            "ok",
+            "4611686018427387904"
+        ]
+    },
+    {
+        "current": 2,
+        "method": "power",
+        "values": [
+            64
+        ],
+        "result": [
+            "ok",
+            "'18446744073709551616'"
+        ]
+    },
+    {
+        "current": 2,
+        "method": "power",
+        "values": [
+            -1
+        ],
+        "result": [
+            "ok",
+            "0.5"
+        ]
+    },
+    {
+        "current": 0,
+        "method": "power",
+        "values": [
+            -1,
+            5
+        ],
+        "result": [
+            "ok",
+            "0"
+        ]
+    },
+    {
+        "current": -8,
+        "method": "power",
+        "values": [
+            0.5,
+            100
+        ],
+        "result": [
+            "ok",
+            "-8"
+        ]
+    },
+    {
+        "current": 3,
+        "method": "power",
+        "values": [
+            2.0
+        ],
+        "result": [
+            "ok",
+            "9"
+        ]
+    },
+    {
+        "current": 2,
+        "method": "power",
+        "values": [
+            0.5
+        ],
+        "result": [
+            "ok",
+            "1.4142135623730951"
+        ]
+    },
+    {
+        "current": 10,
+        "method": "power",
+        "values": [
+            400,
+            1.0e+300
+        ],
+        "result": [
+            "ok",
+            "'184467440737095516150'"
+        ]
+    },
+    {
+        "current": -2,
+        "method": "power",
+        "values": [
+            3
+        ],
+        "result": [
+            "ok",
+            "-8"
+        ]
+    },
+    {
+        "current": 3,
+        "method": "power",
+        "values": [
+            "2"
+        ],
+        "result": [
+            "ok",
+            "9"
+        ]
+    },
+    {
+        "current": 1.5,
+        "method": "power",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "2.25"
+        ]
+    },
+    {
+        "current": 7,
+        "method": "power",
+        "values": [
+            3,
+            300
+        ],
+        "result": [
+            "ok",
+            "7"
+        ]
+    },
+    {
+        "current": "a",
+        "method": "stringConcat",
+        "values": [
+            "b"
+        ],
+        "result": [
+            "ok",
+            "'ab'"
+        ]
+    },
+    {
+        "current": null,
+        "method": "stringConcat",
+        "values": [
+            "b"
+        ],
+        "result": [
+            "ok",
+            "'b'"
+        ]
+    },
+    {
+        "current": 5,
+        "method": "stringConcat",
+        "values": [
+            "b"
+        ],
+        "result": [
+            "ok",
+            "'b'"
+        ]
+    },
+    {
+        "current": "a",
+        "method": "stringConcat",
+        "values": [
+            5
+        ],
+        "result": [
+            "ok",
+            "'a'"
+        ]
+    },
+    {
+        "current": "aaa",
+        "method": "stringReplace",
+        "values": [
+            "a",
+            "b"
+        ],
+        "result": [
+            "ok",
+            "'bbb'"
+        ]
+    },
+    {
+        "current": null,
+        "method": "stringReplace",
+        "values": [
+            "a",
+            "b"
+        ],
+        "result": [
+            "ok",
+            "NULL"
+        ]
+    },
+    {
+        "current": "abc",
+        "method": "stringReplace",
+        "values": [
+            "",
+            "x"
+        ],
+        "result": [
+            "ok",
+            "'abc'"
+        ]
+    },
+    {
+        "current": "abcabc",
+        "method": "stringReplace",
+        "values": [
+            "bc",
+            ""
+        ],
+        "result": [
+            "ok",
+            "'aa'"
+        ]
+    },
+    {
+        "current": true,
+        "method": "toggle",
+        "values": [],
+        "result": [
+            "ok",
+            "false"
+        ]
+    },
+    {
+        "current": null,
+        "method": "toggle",
+        "values": [],
+        "result": [
+            "ok",
+            "true"
+        ]
+    },
+    {
+        "current": "0",
+        "method": "toggle",
+        "values": [],
+        "result": [
+            "ok",
+            "true"
+        ]
+    },
+    {
+        "current": [
+            1
+        ],
+        "method": "toggle",
+        "values": [],
+        "result": [
+            "ok",
+            "false"
+        ]
+    },
+    {
+        "current": [
+            1
+        ],
+        "method": "arrayAppend",
+        "values": [
+            2,
+            3
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n  2 => 3,\n)"
+        ]
+    },
+    {
+        "current": "[1,2]",
+        "method": "arrayAppend",
+        "values": [
+            3
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n  2 => 3,\n)"
+        ]
+    },
+    {
+        "current": null,
+        "method": "arrayAppend",
+        "values": [
+            "x"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 'x',\n)"
+        ]
+    },
+    {
+        "current": "{\"a\":1}",
+        "method": "arrayAppend",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n)"
+        ]
+    },
+    {
+        "current": "nope",
+        "method": "arrayAppend",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n)"
+        ]
+    },
+    {
+        "current": [
+            1
+        ],
+        "method": "arrayPrepend",
+        "values": [
+            2,
+            3
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 2,\n  1 => 3,\n  2 => 1,\n)"
+        ]
+    },
+    {
+        "current": {
+            "k": 1,
+            "j": 2
+        },
+        "method": "arrayPrepend",
+        "values": [
+            0
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 0,\n  1 => 1,\n  2 => 2,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2,
+            3
+        ],
+        "method": "arrayInsert",
+        "values": [
+            1,
+            "x"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 'x',\n  2 => 2,\n  3 => 3,\n)"
+        ]
+    },
+    {
+        "current": [
+            1
+        ],
+        "method": "arrayInsert",
+        "values": [
+            9,
+            "y"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 'y',\n)"
+        ]
+    },
+    {
+        "current": [
+            1
+        ],
+        "method": "arrayInsert",
+        "values": [
+            -3,
+            "y"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 'y',\n  1 => 1,\n)"
+        ]
+    },
+    {
+        "current": [
+            1
+        ],
+        "method": "arrayInsert",
+        "values": [
+            "1",
+            "z"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 'z',\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2
+        ],
+        "method": "arrayInsert",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => NULL,\n  2 => 2,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            "1",
+            2
+        ],
+        "method": "arrayRemove",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => '1',\n  1 => 2,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2,
+            null
+        ],
+        "method": "arrayRemove",
+        "values": [],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            "1",
+            2,
+            2.0,
+            "a",
+            "A",
+            [
+                1
+            ],
+            [
+                1
+            ]
+        ],
+        "method": "arrayUnique",
+        "values": [],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n  2 => 'a',\n  3 => 'A',\n  4 => \n  array (\n    0 => 1,\n  ),\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2,
+            3,
+            "4",
+            "x"
+        ],
+        "method": "arrayIntersect",
+        "values": [
+            2,
+            4
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 2,\n  1 => '4',\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2,
+            3,
+            "4",
+            "x",
+            0
+        ],
+        "method": "arrayDiff",
+        "values": [
+            2,
+            4,
+            "y"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 3,\n  2 => 'x',\n  3 => 0,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            5,
+            10,
+            null,
+            "7",
+            "z"
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "greaterThan",
+            4
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 5,\n  1 => 10,\n  2 => '7',\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            null,
+            0,
+            ""
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "isNull"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => NULL,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            null
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "isNotNull"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            "1",
+            2,
+            true
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "equal",
+            "1"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => '1',\n  2 => true,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            "1",
+            2
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "notEqual",
+            1
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 2,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "bogus",
+            1
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2,
+            3
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "lessThanEqual",
+            2
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2,
+            3
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "greaterThanEqual",
+            "2"
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 2,\n  1 => 3,\n)"
+        ]
+    },
+    {
+        "current": [
+            1,
+            2,
+            3
+        ],
+        "method": "arrayFilter",
+        "values": [
+            "lessThan",
+            2.5
+        ],
+        "result": [
+            "ok",
+            "array (\n  0 => 1,\n  1 => 2,\n)"
+        ]
+    },
+    {
+        "current": "2026-01-01 00:00:00.000",
+        "method": "dateAddDays",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "'2026-01-03 00:00:00.000'"
+        ]
+    },
+    {
+        "current": null,
+        "method": "dateAddDays",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "NULL"
+        ]
+    },
+    {
+        "current": "not-a-date",
+        "method": "dateAddDays",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "'not-a-date'"
+        ]
+    },
+    {
+        "current": "2026-03-01",
+        "method": "dateAddDays",
+        "values": [
+            -1
+        ],
+        "result": [
+            "ok",
+            "'2026-02-28 00:00:00.000'"
+        ]
+    },
+    {
+        "current": "2026-01-01T10:00:00+02:00",
+        "method": "dateAddDays",
+        "values": [
+            1
+        ],
+        "result": [
+            "ok",
+            "'2026-01-02 10:00:00.000'"
+        ]
+    },
+    {
+        "current": "2026-01-01 00:00:00.000",
+        "method": "dateSubDays",
+        "values": [
+            2
+        ],
+        "result": [
+            "ok",
+            "'2025-12-30 00:00:00.000'"
+        ]
+    },
+    {
+        "current": "2024-03-01 12:30:45.123",
+        "method": "dateSubDays",
+        "values": [
+            "1"
+        ],
+        "result": [
+            "ok",
+            "'2024-02-29 12:30:45.123'"
+        ]
+    }
+]

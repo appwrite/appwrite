@@ -1,0 +1,1317 @@
+{
+  "source": "packages/lock/tests/E2E/DistributedTest.php",
+  "cases": [
+    {
+      "name": "acquire and release",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "acquire respects a fractional timeout",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "waiter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.acquire_elapsed",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            },
+            "timeout": 0.25,
+            "at_least": 0.2,
+            "below": 1.0
+          },
+          "expect": {
+            "acquired": false,
+            "within": true
+          }
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "waiters do not retry in lockstep",
+      "op": "distributed.retry_spread",
+      "args": {
+        "key": "${ns}:k",
+        "runs": 25
+      },
+      "state": [],
+      "expect": {
+        "observed": true,
+        "spread": true
+      }
+    },
+    {
+      "name": "release does not remove a foreign lock",
+      "steps": [
+        {
+          "op": "redis.set",
+          "args": {
+            "key": "${ns}:k",
+            "value": "other-owner",
+            "ex": 30
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.get",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "expect": "other-owner"
+        }
+      ]
+    },
+    {
+      "name": "withLock throws contention on timeout",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "waiter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            },
+            "timeout": 0.2
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Lock\\Exception\\Contention",
+              "message": "Failed to acquire distributed lock: ${ns}:k"
+            }
+          }
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "withLock runs the callback and releases",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.with_lock",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            },
+            "timeout": 1.0,
+            "result": "done"
+          },
+          "expect": "done"
+        },
+        {
+          "op": "redis.get",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "refresh extends the ttl",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 5
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.ttl",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an adopted token refreshes the lease through another connection",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "bind": "token",
+          "expect": "<masked>"
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "refresher",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "distributed.adopt",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            },
+            "token": {
+              "$ref": "token"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            }
+          },
+          "bind": "adopted",
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "token"
+            },
+            "b": {
+              "$ref": "adopted"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an adopted stale token cannot refresh or release a successor",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "bind": "token",
+          "expect": "<masked>"
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "refresher",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "distributed.adopt",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            },
+            "token": {
+              "$ref": "token"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.del",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "expect": 1
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "successor",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "successor"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "refresher"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "successor"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "successor"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an empty token cannot be adopted",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "distributed.adopt",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            },
+            "token": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Token must not be empty"
+            }
+          }
+        },
+        {
+          "op": "distributed.has_token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a held lock cannot replace its token",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "bind": "before",
+          "expect": "<masked>"
+        },
+        {
+          "op": "distributed.adopt",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            },
+            "token": "another-token"
+          },
+          "expect": {
+            "$error": {
+              "class": "LogicException",
+              "message": "Cannot replace the token of a distributed lock"
+            }
+          }
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "bind": "after",
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "before"
+            },
+            "b": {
+              "$ref": "after"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the token is the value on the key and is cleared on release",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "bind": "token",
+          "expect": "<masked>"
+        },
+        {
+          "op": "redis.get",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "bind": "value",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the token itself"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "token"
+            },
+            "b": {
+              "$ref": "value"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "distributed.has_token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "each acquisition mints its own token",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "bind": "first",
+          "expect": "<masked>"
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "bind": "second",
+          "expect": "<masked>"
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "first"
+            },
+            "b": {
+              "$ref": "second"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "the token survives the loss of the lease",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "bind": "token",
+          "expect": "<masked>"
+        },
+        {
+          "op": "redis.del",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "expect": 1
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "successor",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "successor"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "bind": "after",
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "token"
+            },
+            "b": {
+              "$ref": "after"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "successor"
+            }
+          },
+          "bind": "theirs",
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "after"
+            },
+            "b": {
+              "$ref": "theirs"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "successor"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "no token is issued for a failed acquire",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "waiter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "distributed.has_token",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.has_token",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.token",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "bind": "token",
+          "expect": "<masked>"
+        },
+        {
+          "op": "redis.get",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "bind": "value",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the token itself"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "token"
+            },
+            "b": {
+              "$ref": "value"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the logger receives messages",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "holder",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "waiter",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "distributed.set_logger",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "lock.acquire",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            },
+            "timeout": 0.15
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.logs",
+          "args": {
+            "lock": {
+              "$ref": "waiter"
+            }
+          },
+          "expect": [
+            "Failed to acquire lock for ${ns}:k within 0.15s",
+            "Lock contention for ${ns}:k, retrying"
+          ]
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "holder"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the default ttl is ten minutes",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.ttl",
+          "args": {
+            "key": "${ns}:k"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "a zero ttl never acquires",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 0
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "lock.try_acquire",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.has_token",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "refresh and isHeld without a lease",
+      "steps": [
+        {
+          "op": "distributed.new",
+          "args": {
+            "key": "${ns}:k",
+            "ttl": 30
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "distributed.refresh",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "distributed.is_held",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "lock.release",
+          "args": {
+            "lock": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "source": "packages/client/tests/Destinations/PublicInternetTest.php",
+  "cases": [
+    {
+      "name": "refuses reserved addresses",
+      "op": "destinations.allows",
+      "args": {
+        "destinations": {
+          "type": "public"
+        },
+        "addresses": [
+          "0.0.0.0",
+          "10.0.0.1",
+          "172.16.5.10",
+          "192.168.1.1",
+          "100.64.0.1",
+          "127.0.0.1",
+          "169.254.169.254",
+          "224.0.0.1",
+          "240.0.0.1",
+          "255.255.255.255",
+          "192.0.2.1",
+          "198.51.100.1",
+          "203.0.113.1",
+          "198.18.0.1",
+          "::1",
+          "::",
+          "fe80::1",
+          "fc00::1",
+          "fd12:3456:789a::1",
+          "ff02::1",
+          "::ffff:127.0.0.1",
+          "::ffff:10.0.0.1",
+          "::ffff:169.254.169.254",
+          "2002:7f00:1::",
+          "2002:a9fe:a9fe::",
+          "2001:0:1::1",
+          "2001:db8::1",
+          "example.com",
+          "64:ff9b::7f00:1",
+          "100::1",
+          "192.0.0.8"
+        ]
+      },
+      "expect": {
+        "allows": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "proxy": false
+      }
+    },
+    {
+      "name": "allows public addresses",
+      "op": "destinations.allows",
+      "args": {
+        "destinations": {
+          "type": "public"
+        },
+        "addresses": [
+          "8.8.8.8",
+          "1.1.1.1",
+          "208.67.222.222",
+          "2606:4700:4700::1111"
+        ]
+      },
+      "expect": {
+        "allows": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "proxy": false
+      }
+    },
+    {
+      "name": "also allowed ranges admit only themselves",
+      "op": "destinations.allows",
+      "args": {
+        "destinations": {
+          "type": "public",
+          "also": [
+            "10.0.0.0/8",
+            "0:0:0:0:0:0:0:1"
+          ]
+        },
+        "addresses": [
+          "10.1.2.3",
+          "::1",
+          "127.0.0.1",
+          "192.168.1.1"
+        ]
+      },
+      "expect": {
+        "allows": [
+          true,
+          true,
+          false,
+          false
+        ],
+        "proxy": false
+      }
+    },
+    {
+      "name": "anywhere allows everything and permits a proxy",
+      "op": "destinations.allows",
+      "args": {
+        "destinations": {
+          "type": "anywhere"
+        },
+        "addresses": [
+          "127.0.0.1",
+          "not an address",
+          ""
+        ]
+      },
+      "expect": {
+        "allows": [
+          true,
+          true,
+          true
+        ],
+        "proxy": true
+      }
+    },
+    {
+      "name": "a malformed also-allowed range",
+      "op": "destinations.allows",
+      "args": {
+        "destinations": {
+          "type": "public",
+          "also": [
+            "10.0.0.0/"
+          ]
+        },
+        "addresses": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an IP address or range: '10.0.0.0/'."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+[package]
+name = "utopia-openapi"
+description = "OpenAPI 2.0, 3.0 and 3.1 documents read into one version-independent, immutable model."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/openapi"
+publish.workspace = true
+
+[dependencies]
+indexmap.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+category = "utilities"
+php-sync = "45b22879fb44785fecaa31af17ec14aa2d80bf12"

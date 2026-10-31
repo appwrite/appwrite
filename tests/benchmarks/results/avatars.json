@@ -1,0 +1,380 @@
+{
+  "service": "avatars",
+  "file": "tests/benchmarks/results/avatars.json",
+  "workload": {
+    "script": "tests/benchmarks/api/avatars.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "avatars-20261012-003416"
+  },
+  "environment": {
+    "date": "2026-10-11T23:36:36Z",
+    "commit": "ef1e9c030e",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 30.469,
+        "p50": 24.904,
+        "p90": 59.441,
+        "p95": 75.059,
+        "p99": 132.625,
+        "max": 192.861
+      },
+      "cpu_ms_per_request": 24.575,
+      "db_cpu_ms_per_request": 1.89,
+      "memory_mib": {
+        "baseline": 3189.8,
+        "avg": 3222.8,
+        "peak": 3246.1
+      },
+      "endpoints": {
+        "avatars.browsers.get": {
+          "route": "GET /v1/avatars/browsers/:code",
+          "count": 275,
+          "rps": 4.58,
+          "avg": 19.344,
+          "p50": 4.358,
+          "p90": 84.653,
+          "p95": 107.287,
+          "p99": 125.954,
+          "max": 186.468
+        },
+        "avatars.creditCards.get": {
+          "route": "GET /v1/avatars/credit-cards/:code",
+          "count": 241,
+          "rps": 4.02,
+          "avg": 10.609,
+          "p50": 4.623,
+          "p90": 31.813,
+          "p95": 36.121,
+          "p99": 40.649,
+          "max": 44.29
+        },
+        "avatars.flags.get": {
+          "route": "GET /v1/avatars/flags/:code",
+          "count": 440,
+          "rps": 7.33,
+          "avg": 8.063,
+          "p50": 4.429,
+          "p90": 22.201,
+          "p95": 24.771,
+          "p99": 30.739,
+          "max": 44.439
+        },
+        "avatars.initials.get": {
+          "route": "GET /v1/avatars/initials",
+          "count": 607,
+          "rps": 10.12,
+          "avg": 23.037,
+          "p50": 19.888,
+          "p90": 34.677,
+          "p95": 41.912,
+          "p99": 58.791,
+          "max": 88.995
+        },
+        "avatars.qr.get": {
+          "route": "GET /v1/avatars/qr",
+          "count": 254,
+          "rps": 4.23,
+          "avg": 55.455,
+          "p50": 54.142,
+          "p90": 65.951,
+          "p95": 72.861,
+          "p99": 82.974,
+          "max": 87.132
+        },
+        "avatars.image.get": {
+          "route": "GET /v1/avatars/image",
+          "note": "fetches and crops a 300 KB PNG served by the API container itself, under a unique URL (no cache hit)",
+          "count": 173,
+          "rps": 2.88,
+          "avg": 56.787,
+          "p50": 55.897,
+          "p90": 66.857,
+          "p95": 69.73,
+          "p99": 72.788,
+          "max": 83.059
+        },
+        "avatars.favicon.get": {
+          "route": "GET /v1/avatars/favicon",
+          "note": "fetches a page served by the API container itself, then its PNG icon, under a unique URL (no cache hit)",
+          "count": 204,
+          "rps": 3.4,
+          "avg": 37.338,
+          "p50": 36.465,
+          "p90": 44.798,
+          "p95": 47.978,
+          "p99": 61.0,
+          "max": 82.278
+        },
+        "avatars.screenshots.get": {
+          "route": "GET /v1/avatars/screenshots",
+          "note": "renders the dev stack's fixture page in its headless browser service, under a unique URL (no cache hit)",
+          "count": 52,
+          "rps": 0.87,
+          "avg": 133.682,
+          "p50": 131.287,
+          "p90": 155.175,
+          "p95": 171.174,
+          "p99": 188.674,
+          "max": 192.861
+        },
+        "avatars.photo.get": {
+          "route": "GET /v1/avatars/photo",
+          "note": "a user with an uploaded photo",
+          "count": 409,
+          "rps": 6.82,
+          "avg": 33.013,
+          "p50": 31.687,
+          "p90": 46.335,
+          "p95": 52.048,
+          "p99": 67.574,
+          "max": 90.406
+        },
+        "avatars.photo.initials.get": {
+          "route": "GET /v1/avatars/photo",
+          "note": "from a name alone: rendered as initials",
+          "count": 212,
+          "rps": 3.53,
+          "avg": 38.735,
+          "p50": 33.608,
+          "p90": 58.996,
+          "p95": 79.167,
+          "p99": 88.413,
+          "max": 95.466
+        },
+        "avatars.photo.update": {
+          "route": "PUT /v1/avatars/photo",
+          "note": "uploads a 47 KB PNG for the session's user",
+          "count": 88,
+          "rps": 1.47,
+          "avg": 24.586,
+          "p50": 18.026,
+          "p90": 39.546,
+          "p95": 47.392,
+          "p99": 146.528,
+          "max": 151.979
+        },
+        "avatars.photo.delete": {
+          "route": "DELETE /v1/avatars/photo",
+          "note": "replaces the photo with the rendered placeholder",
+          "count": 45,
+          "rps": 0.75,
+          "avg": 80.962,
+          "p50": 78.205,
+          "p90": 94.729,
+          "p95": 100.2,
+          "p99": 130.204,
+          "max": 136.712
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 216.3,
+      "requests": 12977,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 231.381,
+        "p50": 180.361,
+        "p90": 508.057,
+        "p95": 668.171,
+        "p99": 1047.151,
+        "max": 1663.264
+      },
+      "cpu_ms_per_request": 71.963,
+      "db_cpu_ms_per_request": 2.686,
+      "memory_mib": {
+        "baseline": 3229.7,
+        "avg": 3516.9,
+        "peak": 3790.8
+      },
+      "endpoints": {
+        "avatars.browsers.get": {
+          "route": "GET /v1/avatars/browsers/:code",
+          "count": 1088,
+          "rps": 18.13,
+          "avg": 62.046,
+          "p50": 30.445,
+          "p90": 104.435,
+          "p95": 260.16,
+          "p99": 671.632,
+          "max": 903.931
+        },
+        "avatars.creditCards.get": {
+          "route": "GET /v1/avatars/credit-cards/:code",
+          "count": 1120,
+          "rps": 18.67,
+          "avg": 48.963,
+          "p50": 31.691,
+          "p90": 99.62,
+          "p95": 143.405,
+          "p99": 274.909,
+          "max": 688.631
+        },
+        "avatars.flags.get": {
+          "route": "GET /v1/avatars/flags/:code",
+          "count": 1857,
+          "rps": 30.95,
+          "avg": 44.172,
+          "p50": 27.388,
+          "p90": 90.892,
+          "p95": 132.816,
+          "p99": 275.271,
+          "max": 627.265
+        },
+        "avatars.initials.get": {
+          "route": "GET /v1/avatars/initials",
+          "count": 2742,
+          "rps": 45.7,
+          "avg": 330.314,
+          "p50": 283.799,
+          "p90": 539.942,
+          "p95": 697.796,
+          "p99": 1057.193,
+          "max": 1290.76
+        },
+        "avatars.qr.get": {
+          "route": "GET /v1/avatars/qr",
+          "count": 1102,
+          "rps": 18.37,
+          "avg": 287.588,
+          "p50": 239.552,
+          "p90": 507.138,
+          "p95": 627.629,
+          "p99": 1016.026,
+          "max": 1284.448
+        },
+        "avatars.image.get": {
+          "route": "GET /v1/avatars/image",
+          "note": "fetches and crops a 300 KB PNG served by the API container itself, under a unique URL (no cache hit)",
+          "count": 778,
+          "rps": 12.97,
+          "avg": 327.356,
+          "p50": 270.637,
+          "p90": 555.539,
+          "p95": 664.178,
+          "p99": 1060.532,
+          "max": 1525.121
+        },
+        "avatars.favicon.get": {
+          "route": "GET /v1/avatars/favicon",
+          "note": "fetches a page served by the API container itself, then its PNG icon, under a unique URL (no cache hit)",
+          "count": 738,
+          "rps": 12.3,
+          "avg": 245.509,
+          "p50": 206.19,
+          "p90": 411.966,
+          "p95": 533.228,
+          "p99": 927.429,
+          "max": 1294.304
+        },
+        "avatars.screenshots.get": {
+          "route": "GET /v1/avatars/screenshots",
+          "note": "renders the dev stack's fixture page in its headless browser service, under a unique URL (no cache hit)",
+          "count": 196,
+          "rps": 3.27,
+          "avg": 594.179,
+          "p50": 540.63,
+          "p90": 879.917,
+          "p95": 980.25,
+          "p99": 1432.38,
+          "max": 1546.623
+        },
+        "avatars.photo.get": {
+          "route": "GET /v1/avatars/photo",
+          "note": "a user with an uploaded photo",
+          "count": 1881,
+          "rps": 31.35,
+          "avg": 199.475,
+          "p50": 155.951,
+          "p90": 362.705,
+          "p95": 470.52,
+          "p99": 945.934,
+          "max": 1277.596
+        },
+        "avatars.photo.initials.get": {
+          "route": "GET /v1/avatars/photo",
+          "note": "from a name alone: rendered as initials",
+          "count": 898,
+          "rps": 14.97,
+          "avg": 579.185,
+          "p50": 510.703,
+          "p90": 866.307,
+          "p95": 1102.957,
+          "p99": 1377.615,
+          "max": 1663.264
+        },
+        "avatars.photo.update": {
+          "route": "PUT /v1/avatars/photo",
+          "note": "uploads a 47 KB PNG for the session's user",
+          "count": 401,
+          "rps": 6.68,
+          "avg": 132.483,
+          "p50": 106.993,
+          "p90": 230.116,
+          "p95": 282.749,
+          "p99": 510.735,
+          "max": 677.201
+        },
+        "avatars.photo.delete": {
+          "route": "DELETE /v1/avatars/photo",
+          "note": "replaces the photo with the rendered placeholder",
+          "count": 176,
+          "rps": 2.93,
+          "avg": 425.221,
+          "p50": 350.745,
+          "p90": 749.518,
+          "p95": 874.325,
+          "p99": 1192.394,
+          "max": 1362.275
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,2940 @@
+{
+  "source": "packages/span/tests/SpanTest.php",
+  "cases": [
+    {
+      "name": "testConstructorSetsSpanAttributes",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 16,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.started_at"
+          },
+          "expect": {
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSetAndGet",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": "value"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": "value"
+        }
+      ]
+    },
+    {
+      "name": "testSetReturnsself",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": "value"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testGetReturnsNullForMissingKey",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "nonexistent"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testSetAcceptsString",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": "string value"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": "string value"
+        }
+      ]
+    },
+    {
+      "name": "testSetAcceptsInt",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": 42
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": 42
+        }
+      ]
+    },
+    {
+      "name": "testSetAcceptsFloat",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": 3.14
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": 3.14
+        }
+      ]
+    },
+    {
+      "name": "testSetAcceptsBool",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": true
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSetAcceptsNull",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": null
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testGetAttributesReturnsAllAttributes",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key1",
+            "value": "value1"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key2",
+            "value": "value2"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.attributes",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/1",
+              "/1/1",
+              "/2/1"
+            ],
+            "reason": "random ids and start time"
+          },
+          "expect": [
+            [
+              "span.trace_id",
+              "<masked>"
+            ],
+            [
+              "span.id",
+              "<masked>"
+            ],
+            [
+              "span.started_at",
+              "<masked>"
+            ],
+            [
+              "key1",
+              "value1"
+            ],
+            [
+              "key2",
+              "value2"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSetErrorStoresThrowable",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Test error",
+              "file": "/app/src/Test.php",
+              "line": 10,
+              "code": 42
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "span.error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "class": "RuntimeException",
+            "message": "Test error",
+            "code": 42,
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSetErrorReturnsSelf",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Test error",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testFinishSetsFinishedAtAndDuration",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.finished_at"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.duration"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.finished_at"
+          },
+          "expect": {
+            "type": "float"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.duration"
+          },
+          "expect": {
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFinishCalculatesDurationCorrectly",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.sleep",
+          "args": {
+            "us": 10000
+          },
+          "expect": null
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.duration_in",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "min": 0.009,
+            "max": 0.1
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testFinishExportsToAllExporters",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e1"
+              },
+              {
+                "$ref": "e2"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e1"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e2"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testFinishClearsCurrentSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.current",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testInitCreatesAndStoresSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.action",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": "test"
+        },
+        {
+          "op": "span.current",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testCurrentReturnsNullWhenNoSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testAddSetsAttributeOnCurrentSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "key",
+            "value": "value"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": "value"
+        }
+      ]
+    },
+    {
+      "name": "testAddDoesNothingWhenNoCurrentSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "key",
+            "value": "value"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testFinishAcceptsError",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Test",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "class": "RuntimeException",
+            "message": "Test",
+            "code": 0,
+            "previous": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFinishWithErrorSetsLevelError",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Test",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level"
+          },
+          "expect": "error"
+        }
+      ]
+    },
+    {
+      "name": "testFinishWithErrorExportsErrorSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Test",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": "Test"
+            }
+          ]
+        },
+        {
+          "op": "span.recorded_is",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSamplerFiltersExport",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "args": {
+            "sampler": {
+              "kind": "error"
+            }
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_error",
+          "args": {
+            "span": {
+              "$ref": "s2"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Error",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": "Error"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSamplerReceivesSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded_is",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            },
+            "index": 0,
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSetExportersReplacesExistingExporters",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e1"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e2"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e1"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e2"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSetExportersWithMultipleExporters",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.recorder",
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "a"
+              },
+              {
+                "$ref": "b"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "b"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSetExportersWithNoArgumentsClearsExporters",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": []
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testFluentInterface",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key1",
+            "value": "value1"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key2",
+            "value": "value2"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.set_error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Error",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testSetStorageNullClearsStorage",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_storage",
+          "expect": null
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        },
+        {
+          "op": "span.set_storage",
+          "args": {
+            "kind": "memory"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testInitWithoutStorageReturnsSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.set_storage",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.action",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": "test"
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testCurrentWithoutStorageReturnsNull",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.set_storage",
+          "expect": null
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testSetOverwritesExistingAttribute",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": "value1"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key",
+            "value": "value2"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "key"
+          },
+          "expect": "value2"
+        }
+      ]
+    },
+    {
+      "name": "testMultipleSpansInSequence",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s1"
+            },
+            "key": "name",
+            "value": "first"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s2"
+            },
+            "key": "name",
+            "value": "second"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": "first",
+              "error": null
+            },
+            {
+              "action": "test",
+              "name": "second",
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testFinishWithoutExportersDoesNotThrow",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": []
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.current",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testTraceIdIsUniqueBetweenSpans",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "a"
+            },
+            "key": "span.trace_id"
+          },
+          "bind": "ta",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "b"
+            },
+            "key": "span.trace_id"
+          },
+          "bind": "tb",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "ta"
+            },
+            "b": {
+              "$ref": "tb"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testSpanIdIsUniqueBetweenSpans",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.new",
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "a"
+            },
+            "key": "span.id"
+          },
+          "bind": "ia",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "b"
+            },
+            "key": "span.id"
+          },
+          "bind": "ib",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "ia"
+            },
+            "b": {
+              "$ref": "ib"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCanOverwriteBuiltInAttributes",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id",
+            "value": "custom-trace-id-12345678"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": "custom-trace-id-12345678"
+        }
+      ]
+    },
+    {
+      "name": "testSetParentId",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id",
+            "value": "abc123def456"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": "abc123def456"
+        }
+      ]
+    },
+    {
+      "name": "testAddWithAllScalarTypes",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "string",
+            "value": "value"
+          },
+          "expect": null
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "int",
+            "value": 42
+          },
+          "expect": null
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "float",
+            "value": 3.14
+          },
+          "expect": null
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "bool",
+            "value": false
+          },
+          "expect": null
+        },
+        {
+          "op": "span.add",
+          "args": {
+            "key": "null",
+            "value": null
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "string"
+          },
+          "expect": "value"
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "int"
+          },
+          "expect": 42
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "float"
+          },
+          "expect": 3.14
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "bool"
+          },
+          "expect": false
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "null"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testMultipleExportersWithIndependentSamplers",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "args": {
+            "sampler": {
+              "kind": "all"
+            }
+          },
+          "bind": "yes",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.recorder",
+          "args": {
+            "sampler": {
+              "kind": "none"
+            }
+          },
+          "bind": "no",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "yes"
+              },
+              {
+                "$ref": "no"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "yes"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "no"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testSamplerCanFilterByDuration",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.recorder",
+          "args": {
+            "sampler": {
+              "kind": "duration_over",
+              "seconds": 0.005
+            }
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_exporters",
+          "args": {
+            "exporters": [
+              {
+                "$ref": "e"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "fast",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "fast"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "slow",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.sleep",
+          "args": {
+            "us": 6000
+          },
+          "expect": null
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "slow"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.recorded",
+          "args": {
+            "recorder": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            {
+              "action": "test",
+              "name": null,
+              "error": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetTraceparentReturnsValidFormat",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.traceparent",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "bind": "tp",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id",
+            "value": "0af7651916cd43dd8448eb211c80319c"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.id",
+            "value": "b7ad6b7169203331"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.traceparent",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+        }
+      ]
+    },
+    {
+      "name": "testGetTraceparentUsesSpanAttributes",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id",
+            "value": 12
+          },
+          "expect": true
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.id",
+            "value": 1.5
+          },
+          "expect": true
+        },
+        {
+          "op": "span.traceparent",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": "00-12-1.5-01"
+        }
+      ]
+    },
+    {
+      "name": "testTraceparentRoundTrip",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.traceparent",
+          "args": {
+            "span": {
+              "$ref": "s1"
+            }
+          },
+          "bind": "tp",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": {
+              "$ref": "tp"
+            }
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s1"
+            },
+            "key": "span.trace_id"
+          },
+          "bind": "t1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s2"
+            },
+            "key": "span.trace_id"
+          },
+          "bind": "t2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "t1"
+            },
+            "b": {
+              "$ref": "t2"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s1"
+            },
+            "key": "span.id"
+          },
+          "bind": "i1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s2"
+            },
+            "key": "span.parent_id"
+          },
+          "bind": "p2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "i1"
+            },
+            "b": {
+              "$ref": "p2"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testStaticTraceparentReturnsCurrentSpanTraceparent",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.current_traceparent",
+          "bind": "a",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "span.traceparent",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "bind": "b",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random ids and times"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "a"
+            },
+            "b": {
+              "$ref": "b"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testStaticTraceparentReturnsNullWhenNoCurrentSpan",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.current_traceparent",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testInitWithTraceparentSetsTraceIdAndParentId",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": "0af7651916cd43dd8448eb211c80319c"
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": "b7ad6b7169203331"
+        },
+        {
+          "op": "span.current",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testInitWithNullTraceparentGeneratesNewTraceId",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testInitWithInvalidTraceparentCreatesNewTrace",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.init",
+          "args": {
+            "action": "test",
+            "traceparent": "invalid-traceparent"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.parent_id"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testFinishSetsLevelInfoByDefault",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level"
+          },
+          "expect": "info"
+        }
+      ]
+    },
+    {
+      "name": "testFinishSetsLevelErrorWhenErrorSet",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set_error",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "error": {
+              "class": "RuntimeException",
+              "message": "Test",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level"
+          },
+          "expect": "error"
+        }
+      ]
+    },
+    {
+      "name": "testFinishAcceptsLevelOverride",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "level": "warn",
+            "error": {
+              "class": "RuntimeException",
+              "message": "Test",
+              "file": "/app/src/Test.php",
+              "line": 10
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level"
+          },
+          "expect": "warn"
+        }
+      ]
+    },
+    {
+      "name": "testFinishOwnsLevelAttribute",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.set",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level",
+            "value": "warning"
+          },
+          "expect": true
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level"
+          },
+          "expect": "info"
+        }
+      ]
+    },
+    {
+      "name": "testLevelNotSetBeforeFinish",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.get",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "level"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

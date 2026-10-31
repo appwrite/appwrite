@@ -1,0 +1,155 @@
+{
+  "lib": "locale",
+  "environment": {
+    "date": "2026-10-18T14:20:45Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "new",
+      "description": "Create a request locale for German with an English fallback",
+      "php": {
+        "ns": 95.54808780904867,
+        "min": 94.18693481028416,
+        "max": 103.13679646358592,
+        "samples": 15,
+        "calls": 212871,
+        "cpu": 96.17185995274133,
+        "peak": 3008.0,
+        "retained": 0.00011775519759228203,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 43.950502669469536,
+        "min": 42.9998438778113,
+        "max": 62.23512441399207,
+        "samples": 15,
+        "calls": 454772,
+        "cpu": 46.36400188812563,
+        "rss": 22843392.0,
+        "allocations": 2.0000016125296485,
+        "bytes": 4.000411781434799,
+        "peak": 1650.0,
+        "retained": 0.00024246582170113083
+      },
+      "speedup": 2.1739930605030757,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "text",
+      "description": "Translate a key of a 313-key language",
+      "php": {
+        "ns": 110.1723202679732,
+        "min": 108.15246600339967,
+        "max": 119.39431056894311,
+        "samples": 15,
+        "calls": 160016,
+        "cpu": 111.77798886777988,
+        "peak": 3008.0,
+        "retained": 0.00015665100156651003,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 57.25806216913894,
+        "min": 55.955353582976095,
+        "max": 59.8068513522559,
+        "samples": 15,
+        "calls": 343611,
+        "cpu": 57.53522461931273,
+        "rss": 25202688.0,
+        "allocations": 2.134196324719911e-6,
+        "bytes": 0.0005449961341943845,
+        "peak": 1650.0,
+        "retained": 0.0003209055200987939
+      },
+      "speedup": 1.924136376507588,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "placeholders",
+      "description": "Translate a session alert email line with six placeholders",
+      "php": {
+        "ns": 871.8426971151766,
+        "min": 835.8851260758618,
+        "max": 904.2447125989361,
+        "samples": 15,
+        "calls": 23121,
+        "cpu": 869.7144010495509,
+        "peak": 3008.0,
+        "retained": 0.001084151492870839,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 492.3237561317449,
+        "min": 485.3573206389097,
+        "max": 523.7577507672232,
+        "samples": 15,
+        "calls": 41383,
+        "cpu": 496.71120347324586,
+        "rss": 25333760.0,
+        "allocations": 4.0000177206421315,
+        "bytes": 1041.0045252076134,
+        "peak": 1650.0,
+        "retained": 0.002664540189610871
+      },
+      "speedup": 1.7708726955720437,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "fallback",
+      "description": "Translate a key the default language lacks from the English fallback",
+      "php": {
+        "ns": 99.80604861247488,
+        "min": 98.1464416816472,
+        "max": 103.75994380409989,
+        "samples": 15,
+        "calls": 198591,
+        "cpu": 100.45806036863033,
+        "peak": 57752.0,
+        "retained": 0.0001262225713484834,
+        "rss": 107601920.0
+      },
+      "rust": {
+        "ns": 58.59723214030678,
+        "min": 58.28759271425443,
+        "max": 67.76670284783913,
+        "samples": 15,
+        "calls": 210054,
+        "cpu": 59.60824359450427,
+        "rss": 25333760.0,
+        "allocations": 3.491165763724249e-6,
+        "bytes": 0.0008915167845728559,
+        "peak": 1650.0,
+        "retained": 0.0005249443793818098
+      },
+      "speedup": 1.7032553410286788,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

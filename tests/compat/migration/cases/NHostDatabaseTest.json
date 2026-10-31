@@ -1,0 +1,108 @@
+{
+  "source": "packages/migration/tests/Sources/NHostTest.php",
+  "cases": [
+    {
+      "name": "testDatabaseHostJoinsSubdomainAndRegion",
+      "steps": [
+        {
+          "op": "nhost.database",
+          "args": {
+            "subdomain": "abcdefghijklmnopqrst",
+            "region": "eu-central-1",
+            "adminSecret": "secret",
+            "database": "abcdefghijklmnopqrst",
+            "username": "postgres",
+            "password": "password"
+          },
+          "expect": {
+            "host": "abcdefghijklmnopqrst.db.eu-central-1.nhost.run",
+            "dsn": "pgsql:host=abcdefghijklmnopqrst.db.eu-central-1.nhost.run;port=5432;dbname=abcdefghijklmnopqrst"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDatabaseDsnConnectsOnTheGivenAddress",
+      "steps": [
+        {
+          "op": "nhost.database",
+          "args": {
+            "subdomain": "abcdefghijklmnopqrst",
+            "region": "eu-central-1",
+            "adminSecret": "secret",
+            "database": "abcdefghijklmnopqrst",
+            "username": "postgres",
+            "password": "password",
+            "address": "203.0.113.10"
+          },
+          "expect": {
+            "host": "abcdefghijklmnopqrst.db.eu-central-1.nhost.run",
+            "dsn": "pgsql:host=abcdefghijklmnopqrst.db.eu-central-1.nhost.run;hostaddr=203.0.113.10;port=5432;dbname=abcdefghijklmnopqrst"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDatabaseDsnWithoutAnAddressResolvesTheHost",
+      "steps": [
+        {
+          "op": "nhost.database",
+          "args": {
+            "subdomain": "abcdefghijklmnopqrst",
+            "region": "eu-central-1",
+            "adminSecret": "secret",
+            "database": "abcdefghijklmnopqrst",
+            "username": "postgres",
+            "password": "password"
+          },
+          "expect": {
+            "host": "abcdefghijklmnopqrst.db.eu-central-1.nhost.run",
+            "dsn": "pgsql:host=abcdefghijklmnopqrst.db.eu-central-1.nhost.run;port=5432;dbname=abcdefghijklmnopqrst"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a custom port and address in the DSN",
+      "steps": [
+        {
+          "op": "nhost.database",
+          "args": {
+            "subdomain": "proj",
+            "region": "us-east-1",
+            "database": "db",
+            "port": "6543",
+            "address": "::1"
+          },
+          "expect": {
+            "host": "proj.db.us-east-1.nhost.run",
+            "dsn": "pgsql:host=proj.db.us-east-1.nhost.run;hostaddr=::1;port=6543;dbname=db"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Supabase reports its configured host",
+      "steps": [
+        {
+          "op": "supabase.database",
+          "args": {},
+          "expect": {
+            "host": "{host}",
+            "dsn": "pgsql:host={host};port={port};dbname=postgres"
+          }
+        },
+        {
+          "op": "supabase.database",
+          "args": {
+            "address": "203.0.113.10"
+          },
+          "expect": {
+            "host": "{host}",
+            "dsn": "pgsql:host={host};hostaddr=203.0.113.10;port={port};dbname=postgres"
+          }
+        }
+      ]
+    }
+  ]
+}

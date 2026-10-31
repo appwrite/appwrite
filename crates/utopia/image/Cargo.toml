@@ -1,0 +1,23 @@
+[package]
+name = "utopia-image"
+description = "Image previews: decode, crop by gravity or focal point, borders, rounded corners, opacity, rotation and background, then encode to JPEG, PNG, GIF, WebP or AVIF."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/image"
+publish.workspace = true
+
+[dependencies]
+fast_image_resize.workspace = true
+gif.workspace = true
+image.workspace = true
+image-webp.workspace = true
+kamadak-exif.workspace = true
+php-std.workspace = true
+png.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+category = "utilities"
+php-sync = "00c1817a3dc2e54e687b958178837cf4ad06a552"

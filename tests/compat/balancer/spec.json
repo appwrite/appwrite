@@ -1,0 +1,425 @@
+{
+  "lib": "balancer",
+  "description": "utopia-php/balancer: options with state, filters, the First, Last, Random and RoundRobin algorithms, and groups of balancers tried in order.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/balancer/src"
+    ],
+    "tests": [
+      "packages/balancer/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/balancer"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "option.new": {
+      "doc": "new Option(state)",
+      "covers": [
+        "Utopia\\Balancer\\Option::__construct"
+      ]
+    },
+    "option.get_state": {
+      "doc": "$option->getState(key, default?)",
+      "covers": [
+        "Utopia\\Balancer\\Option::getState"
+      ]
+    },
+    "option.set_state": {
+      "doc": "$option->setState(key, value)",
+      "covers": [
+        "Utopia\\Balancer\\Option::setState"
+      ]
+    },
+    "option.delete_state": {
+      "doc": "$option->deleteState(key)",
+      "covers": [
+        "Utopia\\Balancer\\Option::deleteState"
+      ]
+    },
+    "option.get_states": {
+      "doc": "$option->getStates()",
+      "covers": [
+        "Utopia\\Balancer\\Option::getStates"
+      ]
+    },
+    "option.scenario": {
+      "doc": "new Option(state), then setState(k, v) for each of `set` ({k, v}), deleteState for each of `delete`, and getState(key, default) for each of `get`: {states, gets}",
+      "fuzz": [
+        {
+          "name": "keys",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "state": {
+                "gen": "ref",
+                "name": "state"
+              },
+              "set": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "k": {
+                      "gen": "ref",
+                      "name": "key"
+                    },
+                    "v": {
+                      "gen": "ref",
+                      "name": "scalar"
+                    }
+                  }
+                },
+                "min": 0,
+                "max": 4
+              },
+              "delete": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "key"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "get": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "key"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "default": {
+                "gen": "ref",
+                "name": "scalar"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "algorithm.new": {
+      "doc": "new First() | new Last() | new Random() (after mt_srand(seed) when given) | new RoundRobin(index)",
+      "covers": [
+        "Utopia\\Balancer\\Algorithm\\RoundRobin::__construct"
+      ]
+    },
+    "algorithm.name": {
+      "doc": "$algorithm->getName()",
+      "covers": [
+        "Utopia\\Balancer\\Algorithm\\First::getName",
+        "Utopia\\Balancer\\Algorithm\\Last::getName",
+        "Utopia\\Balancer\\Algorithm\\Random::getName",
+        "Utopia\\Balancer\\Algorithm\\RoundRobin::getName"
+      ]
+    },
+    "algorithm.run": {
+      "doc": "$algorithm->run(options): the position of the chosen option in `options`, or null",
+      "covers": [
+        "Utopia\\Balancer\\Algorithm\\First::run",
+        "Utopia\\Balancer\\Algorithm\\Last::run",
+        "Utopia\\Balancer\\Algorithm\\Random::run",
+        "Utopia\\Balancer\\Algorithm\\RoundRobin::run"
+      ]
+    },
+    "round_robin.get_index": {
+      "doc": "$roundRobin->getIndex()",
+      "covers": [
+        "Utopia\\Balancer\\Algorithm\\RoundRobin::getIndex"
+      ]
+    },
+    "round_robin.set_index": {
+      "doc": "$roundRobin->setIndex(index)",
+      "covers": [
+        "Utopia\\Balancer\\Algorithm\\RoundRobin::setIndex"
+      ]
+    },
+    "balancer.new": {
+      "doc": "new Balancer(algorithm)",
+      "covers": [
+        "Utopia\\Balancer\\Balancer::__construct"
+      ]
+    },
+    "balancer.get_algo": {
+      "doc": "$balancer->getAlgo()->getName()",
+      "covers": [
+        "Utopia\\Balancer\\Balancer::getAlgo"
+      ]
+    },
+    "balancer.add_option": {
+      "doc": "$balancer->addOption(option)",
+      "covers": [
+        "Utopia\\Balancer\\Balancer::addOption"
+      ]
+    },
+    "balancer.add_filter": {
+      "doc": "$balancer->addFilter(fn (Option $o) => $o->getState(key) <op> value), op one of ===, !==, ==, <, >, truthy, false",
+      "covers": [
+        "Utopia\\Balancer\\Balancer::addFilter"
+      ]
+    },
+    "balancer.get_options": {
+      "doc": "$balancer->getOptions(): each option's states",
+      "covers": [
+        "Utopia\\Balancer\\Balancer::getOptions"
+      ]
+    },
+    "balancer.get_filtered_options": {
+      "doc": "$balancer->getFilteredOptions(): each option's states",
+      "covers": [
+        "Utopia\\Balancer\\Balancer::getFilteredOptions"
+      ]
+    },
+    "balancer.run": {
+      "doc": "$balancer->run()?->getStates()",
+      "covers": [
+        "Utopia\\Balancer\\Balancer::run"
+      ]
+    },
+    "balancer.scenario": {
+      "doc": "a balancer with `algorithm`, `options` (states) and `filters`, run `runs` times: the position of each choice, or null",
+      "fuzz": [
+        {
+          "name": "algorithms",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "ref",
+                "name": "algorithm"
+              },
+              "options": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "state"
+                },
+                "min": 0,
+                "max": 8
+              },
+              "filters": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "filter"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "runs": {
+                "gen": "int",
+                "min": 1,
+                "max": 12
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "group.new": {
+      "doc": "new Group(name?)",
+      "covers": [
+        "Utopia\\Balancer\\Group::__construct"
+      ]
+    },
+    "group.add": {
+      "doc": "$group->add(balancer)",
+      "covers": [
+        "Utopia\\Balancer\\Group::add"
+      ]
+    },
+    "group.get_options": {
+      "doc": "$group->getOptions(): each option's states",
+      "covers": [
+        "Utopia\\Balancer\\Group::getOptions"
+      ]
+    },
+    "group.run": {
+      "doc": "$group->run()?->getStates()",
+      "covers": [
+        "Utopia\\Balancer\\Group::run"
+      ]
+    },
+    "group.set_telemetry": {
+      "doc": "$group->setTelemetry(telemetry)",
+      "covers": [
+        "Utopia\\Balancer\\Group::setTelemetry"
+      ]
+    },
+    "telemetry.new": {
+      "doc": "fixture: new Utopia\\Telemetry\\Adapter\\Test()"
+    },
+    "telemetry.dump": {
+      "doc": "fixture: [histogram name, values recorded] for every histogram that recorded"
+    }
+  },
+  "generators": {
+    "key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": ["hostname", "online", "cpu", "memory", "0", "1", "01", "-1", "-0", "1.5", " 1", "", "ISONLINE", "9223372036854775807", "9223372036854775808"]
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 6,
+          "alphabet": "alnum"
+        }
+      ]
+    },
+    "scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 120
+        },
+        {
+          "gen": "float",
+          "min": -5,
+          "max": 120
+        },
+        {
+          "gen": "pick",
+          "from": ["", "0", "50", "49.5", "abc", "1e2", " 7", "worker-1"]
+        }
+      ]
+    },
+    "state": {
+      "gen": "object",
+      "fields": {
+        "hostname": {
+          "gen": "string",
+          "min": 1,
+          "max": 8,
+          "alphabet": "alnum"
+        },
+        "online": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "cpu": {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        "0": {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      },
+      "optional": ["hostname", "online", "cpu", "0"]
+    },
+    "filter": {
+      "gen": "object",
+      "fields": {
+        "key": {
+          "gen": "pick",
+          "from": ["online", "cpu", "hostname", "0", "missing"]
+        },
+        "op": {
+          "gen": "pick",
+          "from": ["===", "!==", "==", "<", ">", "truthy", "false"]
+        },
+        "value": {
+          "gen": "ref",
+          "name": "scalar"
+        }
+      }
+    },
+    "algorithm": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "type": {
+              "gen": "const",
+              "value": "First"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "type": {
+              "gen": "const",
+              "value": "Last"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "type": {
+              "gen": "const",
+              "value": "Random"
+            },
+            "seed": {
+              "gen": "int",
+              "min": -9223372036854775808,
+              "max": 9223372036854775807
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "type": {
+              "gen": "const",
+              "value": "RoundRobin"
+            },
+            "index": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "int",
+                  "min": -3,
+                  "max": 10
+                },
+                {
+                  "gen": "int",
+                  "min": -9223372036854775808,
+                  "max": 9223372036854775807
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Balancer\\Algorithm\\Random::run",
+      "description": "An empty options array is not null: array_rand() throws a ValueError (\"array_rand(): Argument #1 ($array) must not be empty\") before `?? null` applies. Balancer::run() never reaches it (it returns null without options); calling the algorithm directly does.",
+      "case": "BalancerTest.json#random with no options throws"
+    },
+    {
+      "symbol": "Utopia\\Balancer\\Algorithm\\RoundRobin::run",
+      "description": "An index at PHP_INT_MAX cannot be incremented: the typed int property throws a TypeError and keeps its value, instead of wrapping to the first option.",
+      "case": "BalancerTest.json#round robin past the largest index"
+    }
+  ],
+  "deviations": [],
+  "bench": {
+    "bound": {}
+  }
+}

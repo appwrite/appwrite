@@ -1,0 +1,245 @@
+{
+  "source": "packages/dns/tests/Adapter/Native/TcpTest.php",
+  "cases": [
+    {
+      "name": "a peer that never reads is dropped within the write timeout",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "tcp": {
+                  "writeTimeout": 1
+                },
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "16": {
+                      "answer": "x",
+                      "repeat": 60000
+                    }
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "stall",
+                "name": "big.test",
+                "type": 16,
+                "queries": 400,
+                "wait": 2.5
+              }
+            ]
+          },
+          "expect": [
+            {
+              "other": {
+                "header": {
+                  "id": 2,
+                  "isResponse": true,
+                  "opcode": 0,
+                  "authoritative": false,
+                  "truncated": false,
+                  "recursionDesired": true,
+                  "recursionAvailable": false,
+                  "responseCode": 0,
+                  "questionCount": 1,
+                  "answerCount": 0,
+                  "authorityCount": 0,
+                  "additionalCount": 0
+                },
+                "questions": [
+                  {
+                    "name": "big.test",
+                    "type": 1,
+                    "class": 1
+                  }
+                ],
+                "answers": [],
+                "authority": [],
+                "additional": []
+              },
+              "closed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "without the deadline elapsing a stalled peer is not dropped",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "tcp": {
+                  "writeTimeout": 30
+                },
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "16": {
+                      "answer": "x",
+                      "repeat": 60000
+                    }
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "stall",
+                "name": "big.test",
+                "type": 16,
+                "queries": 400,
+                "wait": 1,
+                "other": false
+              }
+            ]
+          },
+          "expect": [
+            {
+              "other": null,
+              "closed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a peer that reads promptly is not dropped",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "tcp": {
+                  "writeTimeout": 5
+                },
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "16": {
+                      "answer": "answer",
+                      "repeat": 1
+                    }
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "transport": "tcp",
+                "name": "big.test",
+                "type": 16
+              },
+              {
+                "kind": "query",
+                "transport": "tcp",
+                "name": "big.test",
+                "type": 16,
+                "id": 2
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "big.test",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "big.test",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 60,
+                  "rdata": "answer",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "big.test",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "big.test",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 60,
+                  "rdata": "answer",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

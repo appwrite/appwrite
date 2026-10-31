@@ -1,0 +1,1144 @@
+{
+  "source": "packages/query/tests/API/SpatialTest.php",
+  "cases": [
+    {
+      "name": "testDistanceEqual",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distanceEqual",
+            "class": "Query",
+            "args": [
+              "location",
+              [
+                1.0,
+                2.0
+              ],
+              100
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceEqual"
+            },
+            "attribute": "location",
+            "values": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                100,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::DistanceEqual"
+        },
+        [
+          [
+            [
+              1.0,
+              2.0
+            ],
+            100,
+            false
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "testDistanceEqualWithMeters",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distanceEqual",
+            "class": "Query",
+            "args": [
+              "location",
+              [
+                1.0,
+                2.0
+              ],
+              100,
+              true
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceEqual"
+            },
+            "attribute": "location",
+            "values": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                100,
+                true
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          [
+            [
+              1.0,
+              2.0
+            ],
+            100,
+            true
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "testDistanceNotEqual",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distanceNotEqual",
+            "class": "Query",
+            "args": [
+              "location",
+              [
+                1.0,
+                2.0
+              ],
+              100
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceNotEqual"
+            },
+            "attribute": "location",
+            "values": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                100,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::DistanceNotEqual"
+        }
+      ]
+    },
+    {
+      "name": "testDistanceGreaterThan",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distanceGreaterThan",
+            "class": "Query",
+            "args": [
+              "location",
+              [
+                1.0,
+                2.0
+              ],
+              100
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceGreaterThan"
+            },
+            "attribute": "location",
+            "values": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                100,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::DistanceGreaterThan"
+        }
+      ]
+    },
+    {
+      "name": "testDistanceLessThan",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "location",
+              [
+                1.0,
+                2.0
+              ],
+              100
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "location",
+            "values": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                100,
+                false
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::DistanceLessThan"
+        }
+      ]
+    },
+    {
+      "name": "testIntersects",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Intersects"
+        },
+        [
+          [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "testNotIntersects",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notIntersects",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotIntersects"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotIntersects"
+        }
+      ]
+    },
+    {
+      "name": "testCrosses",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "crosses",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Crosses"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Crosses"
+        }
+      ]
+    },
+    {
+      "name": "testNotCrosses",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notCrosses",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotCrosses"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotCrosses"
+        }
+      ]
+    },
+    {
+      "name": "testOverlaps",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "overlaps",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Overlaps"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Overlaps"
+        }
+      ]
+    },
+    {
+      "name": "testNotOverlaps",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notOverlaps",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotOverlaps"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotOverlaps"
+        }
+      ]
+    },
+    {
+      "name": "testTouches",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "touches",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Touches"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Touches"
+        }
+      ]
+    },
+    {
+      "name": "testNotTouches",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notTouches",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotTouches"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotTouches"
+        }
+      ]
+    },
+    {
+      "name": "testCoversFactory",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "covers",
+            "class": "Query",
+            "args": [
+              "zone",
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Covers"
+            },
+            "attribute": "zone",
+            "values": [
+              [
+                1.0,
+                2.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Covers"
+        },
+        "zone"
+      ]
+    },
+    {
+      "name": "testNotCoversFactory",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notCovers",
+            "class": "Query",
+            "args": [
+              "zone",
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotCovers"
+            },
+            "attribute": "zone",
+            "values": [
+              [
+                1.0,
+                2.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotCovers"
+        }
+      ]
+    },
+    {
+      "name": "testSpatialEqualsFactory",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "spatialEquals",
+            "class": "Query",
+            "args": [
+              "geom",
+              [
+                3.0,
+                4.0
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::SpatialEquals"
+            },
+            "attribute": "geom",
+            "values": [
+              [
+                3.0,
+                4.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::SpatialEquals"
+        },
+        [
+          [
+            3.0,
+            4.0
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "testNotSpatialEqualsFactory",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notSpatialEquals",
+            "class": "Query",
+            "args": [
+              "geom",
+              [
+                3.0,
+                4.0
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotSpatialEquals"
+            },
+            "attribute": "geom",
+            "values": [
+              [
+                3.0,
+                4.0
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotSpatialEquals"
+        }
+      ]
+    },
+    {
+      "name": "testDistanceLessThanWithMeters",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "distanceLessThan",
+            "class": "Query",
+            "args": [
+              "location",
+              [
+                1.0,
+                2.0
+              ],
+              500,
+              true
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::DistanceLessThan"
+            },
+            "attribute": "location",
+            "values": [
+              [
+                [
+                  1.0,
+                  2.0
+                ],
+                500,
+                true
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          [
+            [
+              1.0,
+              2.0
+            ],
+            500,
+            true
+          ]
+        ]
+      ]
+    },
+    {
+      "name": "testIsSpatialQueryTrue",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "intersects",
+            "class": "Query",
+            "args": [
+              "geo",
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "isSpatialQuery",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Intersects"
+            },
+            "attribute": "geo",
+            "values": [
+              [
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testIsSpatialQueryFalseForFilter",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "isSpatialQuery",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        false
+      ]
+    }
+  ]
+}

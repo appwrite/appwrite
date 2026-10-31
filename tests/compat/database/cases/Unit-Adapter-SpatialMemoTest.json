@@ -1,0 +1,141 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SpatialMemoTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SpatialMemoTest::testResolvingSpatialColumnsAcrossNamespacesKeepsMemoryFlat",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 64
+            },
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "point",
+            "args": {
+              "key": "position"
+            },
+            "as": "o2"
+          },
+          "bind": "s1",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "position",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "places",
+                "attributes": [
+                  {
+                    "$obj": "o1"
+                  },
+                  {
+                    "$obj": "o2"
+                  }
+                ]
+              }
+            },
+            "as": "o3"
+          },
+          "expect": {
+            "$document": {
+              "$id": "places",
+              "attributes": [
+                {
+                  "$value": "Attribute",
+                  "fields": {
+                    "key": "name",
+                    "type": {
+                      "$enum": "Query\\Schema\\ColumnType::String"
+                    },
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "filters": [],
+                    "relationship": null,
+                    "side": null
+                  }
+                },
+                {
+                  "$value": "Attribute",
+                  "fields": {
+                    "key": "position",
+                    "type": {
+                      "$enum": "Query\\Schema\\ColumnType::Point"
+                    },
+                    "size": null,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "filters": [
+                      "point"
+                    ],
+                    "relationship": null,
+                    "side": null
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

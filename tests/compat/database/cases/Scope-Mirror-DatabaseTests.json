@@ -1,0 +1,3075 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/DatabaseTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MirrorTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DatabaseTests::testUpdateMovesEveryCollectionUnderTheNewName",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_frombc209e"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$id": "title",
+                            "key": "title",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$id": "byTitle",
+                            "key": "byTitle",
+                            "type": "unique",
+                            "attributes": [
+                              "title"
+                            ],
+                            "lengths": [],
+                            "orders": []
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_relationship",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "relationship": {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "document": {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "author": "tolkien",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "author": "tolkien",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$document": {
+                              "$id": "byTitle",
+                              "key": "byTitle",
+                              "type": "unique",
+                              "attributes": [
+                                "title"
+                              ],
+                              "lengths": [],
+                              "orders": []
+                            }
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "3"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien",
+                        "$collection": "renameAuthors",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1",
+                        "books": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "$permissions": [],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.update",
+          "args": {
+            "database": "${ns}_frombc209e",
+            "new": "${ns}_tobc209e"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}_tobc209e"
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_frombc209e"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_tobc209e"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "renameBooks"
+          },
+          "expect": {
+            "$document": {
+              "name": "renameBooks",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "author",
+                    "key": "author",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "renameAuthors",
+                      "relationType": "oneToMany",
+                      "twoWay": true,
+                      "twoWayKey": "books",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "byTitle",
+                    "key": "byTitle",
+                    "type": "unique",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "_index_author",
+                    "key": "_index_author",
+                    "type": "key",
+                    "attributes": [
+                      "author"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "3",
+              "$id": "renameBooks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "id": "tolkien"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Tolkien",
+                "$sequence": "1",
+                "$id": "tolkien",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "renameAuthors",
+                "books": [
+                  {
+                    "$document": {
+                      "title": "The Hobbit",
+                      "$id": "hobbit",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:reader\")"
+                      ],
+                      "$collection": "renameBooks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "title": "The Silmarillion",
+                      "$id": "silmarillion",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "renameBooks"
+                    }
+                  }
+                ]
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Tolkien",
+                        "$sequence": "1",
+                        "$id": "tolkien",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "renameAuthors",
+                        "books": [
+                          {
+                            "$document": {
+                              "title": "The Hobbit",
+                              "$id": "hobbit",
+                              "$sequence": "1",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [
+                                "read(\"user:reader\")"
+                              ],
+                              "$collection": "renameBooks"
+                            }
+                          },
+                          {
+                            "$document": {
+                              "title": "The Silmarillion",
+                              "$id": "silmarillion",
+                              "$sequence": "2",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [],
+                              "$collection": "renameBooks"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "renameBooks"
+          },
+          "expect": []
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:reader"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "renameBooks"
+          },
+          "expect": [
+            {
+              "$document": {
+                "title": "The Hobbit",
+                "$id": "hobbit",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:reader\")"
+                ],
+                "author": {
+                  "$document": {
+                    "name": "Tolkien",
+                    "$id": "tolkien",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "renameAuthors"
+                  }
+                },
+                "$collection": "renameBooks"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.authorization.remove_role",
+          "args": {
+            "role": "user:reader"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "copy",
+                        "title": "The Hobbit",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_frombc209e"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_tobc209e"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}_tobc209e"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateToAnExistingDatabaseThrowsDuplicate",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$id": "title",
+                            "key": "title",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$id": "byTitle",
+                            "key": "byTitle",
+                            "type": "unique",
+                            "attributes": [
+                              "title"
+                            ],
+                            "lengths": [],
+                            "orders": []
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_relationship",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "relationship": {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "document": {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "author": "tolkien",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "author": "tolkien",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$document": {
+                              "$id": "byTitle",
+                              "key": "byTitle",
+                              "type": "unique",
+                              "attributes": [
+                                "title"
+                              ],
+                              "lengths": [],
+                              "orders": []
+                            }
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "3"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien",
+                        "$collection": "renameAuthors",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1",
+                        "books": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "$permissions": [],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "copy",
+                        "title": "The Hobbit",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_frombd3258"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$id": "title",
+                            "key": "title",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$id": "byTitle",
+                            "key": "byTitle",
+                            "type": "unique",
+                            "attributes": [
+                              "title"
+                            ],
+                            "lengths": [],
+                            "orders": []
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_relationship",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "relationship": {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "document": {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "author": "tolkien",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "author": "tolkien",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$document": {
+                              "$id": "byTitle",
+                              "key": "byTitle",
+                              "type": "unique",
+                              "attributes": [
+                                "title"
+                              ],
+                              "lengths": [],
+                              "orders": []
+                            }
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "3"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien",
+                        "$collection": "renameAuthors",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1",
+                        "books": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "$permissions": [],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_tobd3258"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.update",
+          "args": {
+            "database": "${ns}_frombd3258",
+            "new": "${ns}_tobd3258"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Database already exists"
+            }
+          }
+        },
+        {
+          "op": "database.find_collection",
+          "args": {
+            "collection": "renameAuthors"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_frombd3258"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "id": "tolkien"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Tolkien",
+                "$sequence": "1",
+                "$id": "tolkien",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "renameAuthors",
+                "books": [
+                  {
+                    "$document": {
+                      "title": "The Hobbit",
+                      "$id": "hobbit",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:reader\")"
+                      ],
+                      "$collection": "renameBooks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "title": "The Silmarillion",
+                      "$id": "silmarillion",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "renameBooks"
+                    }
+                  }
+                ]
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Tolkien",
+                        "$sequence": "1",
+                        "$id": "tolkien",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "renameAuthors",
+                        "books": [
+                          {
+                            "$document": {
+                              "title": "The Hobbit",
+                              "$id": "hobbit",
+                              "$sequence": "1",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [
+                                "read(\"user:reader\")"
+                              ],
+                              "$collection": "renameBooks"
+                            }
+                          },
+                          {
+                            "$document": {
+                              "title": "The Silmarillion",
+                              "$id": "silmarillion",
+                              "$sequence": "2",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [],
+                              "$collection": "renameBooks"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_frombd3258"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}_frombd3258"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_tobd3258"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}_tobd3258"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateOfAMissingDatabaseThrowsNotFound",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.update",
+          "args": {
+            "database": "${ns}_frombe4de5",
+            "new": "${ns}_tobe4de5"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Database not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateLeavesNoStaleMetadata",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$id": "title",
+                            "key": "title",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$id": "byTitle",
+                            "key": "byTitle",
+                            "type": "unique",
+                            "attributes": [
+                              "title"
+                            ],
+                            "lengths": [],
+                            "orders": []
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_relationship",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "relationship": {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "document": {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "author": "tolkien",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "author": "tolkien",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$document": {
+                              "$id": "byTitle",
+                              "key": "byTitle",
+                              "type": "unique",
+                              "attributes": [
+                                "title"
+                              ],
+                              "lengths": [],
+                              "orders": []
+                            }
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "3"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien",
+                        "$collection": "renameAuthors",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1",
+                        "books": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "$permissions": [],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "copy",
+                        "title": "The Hobbit",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$id": "title",
+                            "key": "title",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$id": "byTitle",
+                            "key": "byTitle",
+                            "type": "unique",
+                            "attributes": [
+                              "title"
+                            ],
+                            "lengths": [],
+                            "orders": []
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_relationship",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "relationship": {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "document": {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "author": "tolkien",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "author": "tolkien",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection renameAuthors already exists"
+            }
+          }
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_frombe4f70"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ]
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "collection": {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$id": "title",
+                            "key": "title",
+                            "type": "string",
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$id": "byTitle",
+                            "key": "byTitle",
+                            "type": "unique",
+                            "attributes": [
+                              "title"
+                            ],
+                            "lengths": [],
+                            "orders": []
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": []
+                      },
+                      "$class": "Collection"
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_relationship",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "relationship": {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "document": {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien"
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "author": "tolkien",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "renameBooks",
+                    "document": {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "author": "tolkien",
+                        "$permissions": []
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "renameAuthors",
+                        "name": "renameAuthors",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "name",
+                              "key": "name",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": false,
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$document": {
+                        "$id": "renameBooks",
+                        "name": "renameBooks",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "title",
+                              "key": "title",
+                              "type": "string",
+                              "size": 64,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": null,
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [
+                          {
+                            "$document": {
+                              "$id": "byTitle",
+                              "key": "byTitle",
+                              "type": "unique",
+                              "attributes": [
+                                "title"
+                              ],
+                              "lengths": [],
+                              "orders": []
+                            }
+                          }
+                        ],
+                        "documentSecurity": true,
+                        "$permissions": [],
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "3"
+                      },
+                      "$class": "Collection"
+                    },
+                    {
+                      "$value": "Relationship",
+                      "fields": {
+                        "relatedCollection": "renameBooks",
+                        "type": {
+                          "$enum": "RelationshipType::OneToMany"
+                        },
+                        "twoWay": true,
+                        "key": "books",
+                        "twoWayKey": "author",
+                        "onDelete": {
+                          "$enum": "RelationshipDeleteAction::Restrict"
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "tolkien",
+                        "name": "Tolkien",
+                        "$collection": "renameAuthors",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$sequence": "1",
+                        "books": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "hobbit",
+                        "title": "The Hobbit",
+                        "$permissions": [
+                          "read(\"user:reader\")"
+                        ],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "silmarillion",
+                        "title": "The Silmarillion",
+                        "$permissions": [],
+                        "$collection": "renameBooks",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "2",
+                        "author": {
+                          "$document": {
+                            "name": "Tolkien",
+                            "$id": "tolkien",
+                            "$sequence": "1",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$permissions": [],
+                            "$collection": "renameAuthors"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find_collection",
+          "args": {
+            "collection": "renameAuthors"
+          },
+          "expect": {
+            "$document": {
+              "name": "renameAuthors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "renameBooks",
+                      "relationType": "oneToMany",
+                      "twoWay": true,
+                      "twoWayKey": "author",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "renameAuthors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "renameAuthors",
+                    "id": "tolkien"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "Tolkien",
+                "$sequence": "1",
+                "$id": "tolkien",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "renameAuthors",
+                "books": [
+                  {
+                    "$document": {
+                      "title": "The Hobbit",
+                      "$id": "hobbit",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:reader\")"
+                      ],
+                      "$collection": "renameBooks"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "title": "The Silmarillion",
+                      "$id": "silmarillion",
+                      "$sequence": "2",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "renameBooks"
+                    }
+                  }
+                ]
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "name": "Tolkien",
+                        "$sequence": "1",
+                        "$id": "tolkien",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "renameAuthors",
+                        "books": [
+                          {
+                            "$document": {
+                              "title": "The Hobbit",
+                              "$id": "hobbit",
+                              "$sequence": "1",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [
+                                "read(\"user:reader\")"
+                              ],
+                              "$collection": "renameBooks"
+                            }
+                          },
+                          {
+                            "$document": {
+                              "title": "The Silmarillion",
+                              "$id": "silmarillion",
+                              "$sequence": "2",
+                              "$createdAt": "<now>",
+                              "$updatedAt": "<now>",
+                              "$permissions": [],
+                              "$collection": "renameBooks"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_tobe4f70"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.find_collection",
+          "args": {
+            "collection": "renameAuthors"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.update",
+          "args": {
+            "database": "${ns}_frombe4f70",
+            "new": "${ns}_tobe4f70"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.find_collection",
+          "args": {
+            "collection": "renameAuthors"
+          },
+          "expect": {
+            "$document": {
+              "name": "renameAuthors",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "books",
+                    "key": "books",
+                    "type": "relationship",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [],
+                    "options": {
+                      "relatedCollection": "renameBooks",
+                      "relationType": "oneToMany",
+                      "twoWay": true,
+                      "twoWayKey": "author",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "renameAuthors",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}_frombe4f70"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.find_collection",
+          "args": {
+            "collection": "renameAuthors"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_frombe4f70"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}_frombe4f70"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_tobe4f70"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete",
+          "args": {
+            "database": "${ns}_tobe4f70"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateIsRefusedUnderSharedTables",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

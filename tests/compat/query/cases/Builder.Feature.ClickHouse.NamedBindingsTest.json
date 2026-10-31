@@ -1,0 +1,1703 @@
+{
+  "source": "packages/query/tests/Builder/Feature/ClickHouse/NamedBindingsTest.php",
+  "cases": [
+    {
+      "name": "testPositionalPlaceholdersAreStillTheDefault",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                "acme"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              "acme"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `tenant` IN (?)",
+            "bindings": [
+              "acme"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `events` WHERE `tenant` IN (?)",
+        [
+          "acme"
+        ],
+        null
+      ]
+    },
+    {
+      "name": "testWhereChainCompilesToNamedTypedPlaceholdersWhenEnabled",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withParamTypes",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "time": "DateTime64(3)",
+                "tenant": "String",
+                "value": "Int64"
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                "acme"
+              ]
+            ]
+          },
+          {
+            "static": "lessThanEqual",
+            "class": "Query",
+            "args": [
+              "value",
+              100
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              "acme"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThanEqual"
+            },
+            "attribute": "value",
+            "values": [
+              100
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `time` > {param0:DateTime64(3)} AND `tenant` IN ({param1:String}) AND `value` <= {param2:Int64}",
+            "bindings": [
+              "2024-01-01 00:00:00",
+              "acme",
+              100
+            ],
+            "readOnly": true,
+            "namedBindings": {
+              "param0": "2024-01-01 00:00:00",
+              "param1": "acme",
+              "param2": 100
+            }
+          }
+        },
+        "SELECT * FROM `events` WHERE `time` > {param0:DateTime64(3)} AND `tenant` IN ({param1:String}) AND `value` <= {param2:Int64}",
+        [
+          "2024-01-01 00:00:00",
+          "acme",
+          100
+        ],
+        {
+          "param0": "2024-01-01 00:00:00",
+          "param1": "acme",
+          "param2": 100
+        }
+      ]
+    },
+    {
+      "name": "testTypeInferenceFallsBackWhenNoRegistration",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "static": "lessThanEqual",
+            "class": "Query",
+            "args": [
+              "value",
+              100
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                true
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThanEqual"
+            },
+            "attribute": "value",
+            "values": [
+              100
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              true
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `time` > {param0:String} AND `value` <= {param1:Int64} AND `tenant` IN ({param2:UInt8})",
+            "bindings": [
+              "2024-01-01 00:00:00",
+              100,
+              true
+            ],
+            "readOnly": true,
+            "namedBindings": {
+              "param0": "2024-01-01 00:00:00",
+              "param1": 100,
+              "param2": true
+            }
+          }
+        },
+        "SELECT * FROM `events` WHERE `time` > {param0:String} AND `value` <= {param1:Int64} AND `tenant` IN ({param2:UInt8})",
+        {
+          "param0": "2024-01-01 00:00:00",
+          "param1": 100,
+          "param2": true
+        }
+      ]
+    },
+    {
+      "name": "testRegistrationOverridesInference",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "DateTime64(3)"
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `time` > {param0:DateTime64(3)}",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": true,
+            "namedBindings": {
+              "param0": "2024-01-01 00:00:00"
+            }
+          }
+        },
+        "SELECT * FROM `events` WHERE `time` > {param0:DateTime64(3)}",
+        {
+          "param0": "2024-01-01 00:00:00"
+        }
+      ]
+    },
+    {
+      "name": "testLimitAndOffsetBindingsGetInferredTypes",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "limit",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              10
+            ]
+          },
+          {
+            "call": "offset",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              20
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `events` LIMIT {param0:Int64} OFFSET {param1:Int64}",
+            "bindings": [
+              10,
+              20
+            ],
+            "readOnly": true,
+            "namedBindings": {
+              "param0": 10,
+              "param1": 20
+            }
+          }
+        },
+        "SELECT * FROM `events` LIMIT {param0:Int64} OFFSET {param1:Int64}",
+        {
+          "param0": 10,
+          "param1": 20
+        }
+      ]
+    },
+    {
+      "name": "testDeleteUsesNamedTypedPlaceholdersWhenEnabled",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "DateTime64(3)"
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "audit_log"
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "delete",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DELETE FROM `audit_log` WHERE `time` < {param0:DateTime64(3)}",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": false,
+            "namedBindings": {
+              "param0": "2024-01-01 00:00:00"
+            }
+          }
+        },
+        "DELETE FROM `audit_log` WHERE `time` < {param0:DateTime64(3)}",
+        {
+          "param0": "2024-01-01 00:00:00"
+        }
+      ]
+    },
+    {
+      "name": "testStatementWithoutBindingsHasNoNamedBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `events`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `events`",
+        null
+      ]
+    },
+    {
+      "name": "testWithParamTypeRejectsInvalidTypeString",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "DROP TABLE x; --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid ClickHouse type: DROP TABLE x; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testWithParamTypeAcceptsNestedParameterizedType",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "time",
+              "Nullable(DateTime64(3))"
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "time",
+              "2024-01-01 00:00:00"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "time",
+            "values": [
+              "2024-01-01 00:00:00"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `time` > {param0:Nullable(DateTime64(3))}",
+            "bindings": [
+              "2024-01-01 00:00:00"
+            ],
+            "readOnly": true,
+            "namedBindings": {
+              "param0": "2024-01-01 00:00:00"
+            }
+          }
+        },
+        "SELECT * FROM `events` WHERE `time` > {param0:Nullable(DateTime64(3))}",
+        {
+          "param0": "2024-01-01 00:00:00"
+        }
+      ]
+    },
+    {
+      "name": "testResetClearsBindingMetadata",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tenant",
+              "String"
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                "acme"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "value",
+              "Int64"
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "value",
+              1
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              "acme"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "value",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `value` > {param0:Int64}",
+            "bindings": [
+              1
+            ],
+            "readOnly": true,
+            "namedBindings": {
+              "param0": 1
+            }
+          }
+        },
+        "SELECT * FROM `events` WHERE `value` > {param0:Int64}",
+        {
+          "param0": 1
+        }
+      ]
+    },
+    {
+      "name": "testResetDisablesNamedBindingsMode",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tenant",
+              "String"
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                "acme"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                "acme"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "namedBindings",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              "acme"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              "acme"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `tenant` IN (?)",
+            "bindings": [
+              "acme"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `events` WHERE `tenant` IN (?)",
+        [
+          "acme"
+        ],
+        null
+      ]
+    },
+    {
+      "name": "testResetClearsRegisteredParamTypes",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "withParamType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "tenant",
+              "FixedString(36)"
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "useNamedBindings",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "tenant",
+              [
+                "acme"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "tenant",
+            "values": [
+              "acme"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `events` WHERE `tenant` IN ({param0:String})",
+            "bindings": [
+              "acme"
+            ],
+            "readOnly": true,
+            "namedBindings": {
+              "param0": "acme"
+            }
+          }
+        },
+        "SELECT * FROM `events` WHERE `tenant` IN ({param0:String})"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,737 @@
+{
+  "source": "packages/queue/tests/E2E/SwooleTest.php",
+  "cases": [
+    {
+      "name": "events: every payload type reaches the handler",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_string",
+              "value": "lorem ipsum"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_number",
+              "value": 123
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_number",
+              "value": 123.456
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_bool",
+              "value": true
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_null",
+              "value": null
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_array",
+              "value": [
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_assoc",
+              "value": {
+                "string": "ipsum",
+                "number": 123,
+                "bool": true,
+                "null": null
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "p"
+            },
+            "namespace": "${ns}",
+            "jobs": [
+              {
+                "queue": "pool",
+                "params": [
+                  {
+                    "key": "type"
+                  },
+                  {
+                    "key": "value",
+                    "optional": true,
+                    "validator": "any"
+                  },
+                  {
+                    "key": "aliasValue",
+                    "optional": true,
+                    "aliases": [
+                      "alias_value",
+                      "aliased"
+                    ]
+                  }
+                ],
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:pool",
+              [
+                "test_string",
+                "lorem ipsum",
+                null,
+                "message:pid0001"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_number",
+                123,
+                null,
+                "message:pid0002"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_number",
+                123.456,
+                null,
+                "message:pid0003"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_bool",
+                true,
+                null,
+                "message:pid0004"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_null",
+                null,
+                null,
+                "message:pid0005"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_array",
+                [
+                  1,
+                  2,
+                  3
+                ],
+                null,
+                "message:pid0006"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_assoc",
+                {
+                  "$array": [
+                    [
+                      "string",
+                      "ipsum"
+                    ],
+                    [
+                      "number",
+                      123
+                    ],
+                    [
+                      "bool",
+                      true
+                    ],
+                    [
+                      "null",
+                      null
+                    ]
+                  ]
+                },
+                null,
+                "message:pid0007"
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "param aliases resolve in order",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_alias",
+              "aliasValue": "canonical",
+              "value": "canonical"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_alias",
+              "alias_value": "first-alias",
+              "value": "first-alias"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_alias",
+              "aliased": "second-alias",
+              "value": "second-alias"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_alias",
+              "aliasValue": "canonical-wins",
+              "alias_value": "should-lose",
+              "aliased": "should-lose",
+              "value": "canonical-wins"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "p"
+            },
+            "namespace": "${ns}",
+            "jobs": [
+              {
+                "queue": "pool",
+                "params": [
+                  {
+                    "key": "type"
+                  },
+                  {
+                    "key": "value",
+                    "optional": true,
+                    "validator": "any"
+                  },
+                  {
+                    "key": "aliasValue",
+                    "optional": true,
+                    "aliases": [
+                      "alias_value",
+                      "aliased"
+                    ]
+                  }
+                ],
+                "inject": [
+                  "message"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            [
+              "job:pool",
+              [
+                "test_alias",
+                "canonical",
+                "canonical",
+                "message:pid0001"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_alias",
+                "first-alias",
+                "first-alias",
+                "message:pid0002"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_alias",
+                "second-alias",
+                "second-alias",
+                "message:pid0003"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_alias",
+                "canonical-wins",
+                "canonical-wins",
+                "message:pid0004"
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "retry re-drives failed jobs, then a limited number",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_exception",
+              "id": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_exception",
+              "id": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_exception",
+              "id": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "type": "test_exception",
+              "id": 4
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "p"
+            },
+            "namespace": "${ns}",
+            "jobs": [
+              {
+                "queue": "pool",
+                "params": [
+                  {
+                    "key": "type"
+                  },
+                  {
+                    "key": "value",
+                    "optional": true,
+                    "validator": "any"
+                  },
+                  {
+                    "key": "aliasValue",
+                    "optional": true,
+                    "aliases": [
+                      "alias_value",
+                      "aliased"
+                    ]
+                  }
+                ],
+                "inject": [
+                  "message"
+                ],
+                "fail": {
+                  "class": "Exception",
+                  "message": "Forced failure for test_exception"
+                }
+              }
+            ]
+          },
+          "expect": [
+            [
+              "job:pool",
+              [
+                "test_exception",
+                null,
+                null,
+                "message:pid0001"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_exception",
+                null,
+                null,
+                "message:pid0002"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_exception",
+                null,
+                null,
+                "message:pid0003"
+              ]
+            ],
+            [
+              "job:pool",
+              [
+                "test_exception",
+                null,
+                null,
+                "message:pid0004"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 4
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 4
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "p"
+            },
+            "namespace": "${ns}",
+            "jobs": [
+              {
+                "queue": "pool",
+                "params": [
+                  {
+                    "key": "type"
+                  },
+                  {
+                    "key": "value",
+                    "optional": true,
+                    "validator": "any"
+                  },
+                  {
+                    "key": "aliasValue",
+                    "optional": true,
+                    "aliases": [
+                      "alias_value",
+                      "aliased"
+                    ]
+                  }
+                ],
+                "inject": [
+                  "message"
+                ],
+                "fail": {
+                  "class": "Exception",
+                  "message": "Forced failure for test_exception"
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000120
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "limit": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 4
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 0
+        }
+      ]
+    }
+  ]
+}

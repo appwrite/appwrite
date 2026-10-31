@@ -1,0 +1,266 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/AttributeDefinitionFiltersTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AttributeDefinitionFiltersTest::testADeclarationListingItsFiltersAsEnumCasesIsValid",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1171"
+          },
+          "bind": "s2366",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1171"
+              },
+              "capabilities": [],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1172"
+          },
+          "bind": "s2367",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1172"
+              }
+            },
+            "as": "o1173"
+          },
+          "bind": "s2368",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "datetime",
+            "args": {
+              "key": "publishedAt"
+            },
+            "as": "o1174"
+          },
+          "bind": "s2369",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "publishedAt",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1174"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o1175"
+          },
+          "bind": "s2370",
+          "expect": {
+            "$document": {
+              "$id": "publishedAt",
+              "key": "publishedAt",
+              "type": "datetime",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                "datetime"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1175"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "filters",
+              "value": [
+                {
+                  "$enum": "Filter::Datetime"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "publishedAt",
+              "key": "publishedAt",
+              "type": "datetime",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": [
+                {
+                  "$enum": "Filter::Datetime"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1173"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1175"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1173"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid attribute"
+        }
+      ]
+    }
+  ]
+}

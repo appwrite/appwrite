@@ -1,0 +1,686 @@
+{
+  "source": "packages/query/tests/Builder/Feature/PostgreSQL/DistinctOnTest.php",
+  "cases": [
+    {
+      "name": "testDistinctOnSingleColumnEmitsDistinctOnClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "distinctOn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT DISTINCT ON (\"user_id\") * FROM \"events\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT DISTINCT ON (\"user_id\") * FROM \"events\"",
+        [],
+        [],
+        "SELECT DISTINCT ON (\"user_id\") * FROM \"events\"",
+        "SELECT DISTINCT ON (\"user_id\") * FROM \"events\""
+      ]
+    },
+    {
+      "name": "testDistinctOnMultipleColumnsAreCommaSeparatedAndQuoted",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "distinctOn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id",
+                "session_id"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT DISTINCT ON (\"user_id\", \"session_id\") * FROM \"events\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT DISTINCT ON (\"user_id\", \"session_id\") * FROM \"events\"",
+        [],
+        [],
+        "SELECT DISTINCT ON (\"user_id\", \"session_id\") * FROM \"events\"",
+        "SELECT DISTINCT ON (\"user_id\", \"session_id\") * FROM \"events\""
+      ]
+    },
+    {
+      "name": "testDistinctOnReplacesPlainSelectKeyword",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id",
+                "event_at"
+              ]
+            ]
+          },
+          {
+            "call": "distinctOn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT DISTINCT ON (\"user_id\") \"user_id\", \"event_at\" FROM \"events\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT DISTINCT ON (\"user_id\") \"user_id\", \"event_at\" FROM \"events\"",
+        [],
+        [],
+        "SELECT DISTINCT ON (\"user_id\") \"user_id\", \"event_at\" FROM \"events\"",
+        "SELECT DISTINCT ON (\"user_id\") \"user_id\", \"event_at\" FROM \"events\"",
+        "SELECT DISTINCT ON (\"user_id\") \"user_id\", \"event_at\" FROM \"events\""
+      ]
+    },
+    {
+      "name": "testDistinctOnEmptyArrayDoesNotEmitDistinctOn",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "distinctOn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"events\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"events\"",
+        [],
+        [],
+        "SELECT * FROM \"events\"",
+        "SELECT * FROM \"events\""
+      ]
+    },
+    {
+      "name": "testDistinctOnCombinesWithOrderBy",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "distinctOn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "event_at"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT DISTINCT ON (\"user_id\") * FROM \"events\" ORDER BY \"event_at\" ASC",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT DISTINCT ON (\"user_id\") * FROM \"events\" ORDER BY \"event_at\" ASC",
+        [],
+        [],
+        "SELECT DISTINCT ON (\"user_id\") * FROM \"events\" ORDER BY \"event_at\" ASC",
+        "SELECT DISTINCT ON (\"user_id\") * FROM \"events\" ORDER BY \"event_at\" ASC"
+      ]
+    },
+    {
+      "name": "testDistinctOnDoesNotAddBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "distinctOn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id",
+                "session_id"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT DISTINCT ON (\"user_id\", \"session_id\") * FROM \"events\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT DISTINCT ON (\"user_id\", \"session_id\") * FROM \"events\"",
+        [],
+        [],
+        "SELECT DISTINCT ON (\"user_id\", \"session_id\") * FROM \"events\"",
+        []
+      ]
+    },
+    {
+      "name": "testChainableReturnsSameInstance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "distinctOn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "user_id"
+              ]
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        true
+      ]
+    }
+  ]
+}

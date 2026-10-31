@@ -1,0 +1,1519 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Profiler/ProfilerAdvancedTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ProfilerAdvancedTest::testBacktraceCaptureWhenEnabled",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o149"
+          },
+          "bind": "s337",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o149"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o149"
+            },
+            "method": "enableBacktrace",
+            "args": {
+              "enabled": true
+            }
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o149"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT 1",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o149"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT 1",
+                "bindings": [],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "",
+                "backtrace": "<masked>"
+              }
+            }
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testBacktraceIsNullWhenDisabled",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o150"
+          },
+          "bind": "s342",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o150"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o150"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT 1",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o150"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT 1",
+                "bindings": [],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "",
+                "backtrace": "<masked>"
+              }
+            }
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testEnableBacktraceToggle",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o151"
+          },
+          "bind": "s346",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o151"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o151"
+            },
+            "method": "enableBacktrace",
+            "args": {
+              "enabled": true
+            }
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o151"
+            },
+            "method": "log",
+            "args": {
+              "query": "Q1",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o151"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "Q1",
+                "bindings": [],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "",
+                "backtrace": "<masked>"
+              }
+            }
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o151"
+            },
+            "method": "enableBacktrace",
+            "args": {
+              "enabled": false
+            }
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o151"
+            },
+            "method": "log",
+            "args": {
+              "query": "Q2",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o151"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "Q1",
+                "bindings": [],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "Q2",
+                "bindings": [],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "",
+                "backtrace": "<masked>"
+              }
+            }
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testMultipleSlowQueryCallbacks",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o152"
+          },
+          "bind": "s354",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o152"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o152"
+            },
+            "method": "setSlowThreshold",
+            "args": {
+              "milliseconds": 10.0
+            }
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o152"
+            },
+            "method": "onSlowQuery",
+            "args": {
+              "callback": true
+            }
+          },
+          "expect": {
+            "result": {
+              "$profiler": true
+            },
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o152"
+            },
+            "method": "log",
+            "args": {
+              "query": "fast",
+              "bindings": [],
+              "durationMs": 5.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o152"
+            },
+            "method": "getSlowQueries",
+            "args": {}
+          },
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o152"
+            },
+            "method": "log",
+            "args": {
+              "query": "slow",
+              "bindings": [],
+              "durationMs": 20.0
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testDetectNPlusOneWithVariedQueryPatterns",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o153"
+          },
+          "bind": "s361",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 0",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 1",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 2",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 3",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 4",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 5",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 6",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 7",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 8",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 9",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM posts WHERE id = 0",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM posts WHERE id = 1",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM posts WHERE id = 2",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o153"
+            },
+            "method": "detectNPlusOne",
+            "args": {
+              "threshold": 5
+            }
+          },
+          "expect": {
+            "SELECT * FROM users WHERE id = ?": 10
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testDetectNPlusOneBelowThresholdReturnsEmpty",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o154"
+          },
+          "bind": "s377",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o154"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o154"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 1",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o154"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE id = 2",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o154"
+            },
+            "method": "detectNPlusOne",
+            "args": {
+              "threshold": 5
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testGetTotalTimeWithNoLogsReturnsZero",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o155"
+          },
+          "bind": "s382",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o155"
+            },
+            "method": "getTotalTime",
+            "args": {}
+          },
+          "expect": 0.0
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testGetSlowQueriesReturnsEmptyWhenNoneExceedThreshold",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o156"
+          },
+          "bind": "s384",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o156"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o156"
+            },
+            "method": "setSlowThreshold",
+            "args": {
+              "milliseconds": 50.0
+            }
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o156"
+            },
+            "method": "log",
+            "args": {
+              "query": "fast1",
+              "bindings": [],
+              "durationMs": 10.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o156"
+            },
+            "method": "log",
+            "args": {
+              "query": "fast2",
+              "bindings": [],
+              "durationMs": 20.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o156"
+            },
+            "method": "getSlowQueries",
+            "args": {}
+          },
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testLogWithAllParameters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o157"
+          },
+          "bind": "s390",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM orders",
+              "bindings": [
+                "active"
+              ],
+              "durationMs": 15.5,
+              "collection": "orders",
+              "operation": "find"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o157"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM orders",
+                "bindings": [
+                  "active"
+                ],
+                "durationMs": "<masked>",
+                "collection": "orders",
+                "operation": "find",
+                "backtrace": "<masked>"
+              }
+            }
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testResetClearsEverything",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o158"
+          },
+          "bind": "s394",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "log",
+            "args": {
+              "query": "Q1",
+              "bindings": [],
+              "durationMs": 10.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "log",
+            "args": {
+              "query": "Q2",
+              "bindings": [],
+              "durationMs": 20.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "getQueryCount",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "getTotalTime",
+            "args": {}
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o158"
+            },
+            "method": "getSlowQueries",
+            "args": {}
+          },
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testSlowQueryCallbackReceivesTheLogEntry",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o159"
+          },
+          "bind": "s403",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o159"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o159"
+            },
+            "method": "setSlowThreshold",
+            "args": {
+              "milliseconds": 10.0
+            }
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o159"
+            },
+            "method": "onSlowQuery",
+            "args": {
+              "callback": true
+            }
+          },
+          "expect": {
+            "result": {
+              "$profiler": true
+            },
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o159"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT slow",
+              "bindings": [
+                "param"
+              ],
+              "durationMs": 50.0,
+              "collection": "users",
+              "operation": "find"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testDetectNPlusOneNormalizesQueryParameters",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o160"
+          },
+          "bind": "s408",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE name = 'user_0'",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE name = 'user_1'",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE name = 'user_2'",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE name = 'user_3'",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE name = 'user_4'",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "log",
+            "args": {
+              "query": "SELECT * FROM users WHERE name = 'user_5'",
+              "bindings": [],
+              "durationMs": 1.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o160"
+            },
+            "method": "detectNPlusOne",
+            "args": {
+              "threshold": 5
+            }
+          },
+          "expect": {
+            "SELECT * FROM users WHERE name = ?": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testGetSlowQueriesAtExactThreshold",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o161"
+          },
+          "bind": "s417",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o161"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o161"
+            },
+            "method": "setSlowThreshold",
+            "args": {
+              "milliseconds": 50.0
+            }
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o161"
+            },
+            "method": "log",
+            "args": {
+              "query": "exact",
+              "bindings": [],
+              "durationMs": 50.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o161"
+            },
+            "method": "getSlowQueries",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "exact",
+                "bindings": [],
+                "durationMs": "<masked>",
+                "collection": "",
+                "operation": "",
+                "backtrace": "<masked>"
+              }
+            }
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProfilerAdvancedTest::testEnabledProfilerLogsTotalTimeCorrectly",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Profiler",
+            "args": {},
+            "as": "o162"
+          },
+          "bind": "s422",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o162"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o162"
+            },
+            "method": "log",
+            "args": {
+              "query": "Q1",
+              "bindings": [],
+              "durationMs": 1.5
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o162"
+            },
+            "method": "log",
+            "args": {
+              "query": "Q2",
+              "bindings": [],
+              "durationMs": 2.5
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o162"
+            },
+            "method": "log",
+            "args": {
+              "query": "Q3",
+              "bindings": [],
+              "durationMs": 3.0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o162"
+            },
+            "method": "getTotalTime",
+            "args": {}
+          },
+          "expect": 7.0
+        }
+      ]
+    }
+  ]
+}

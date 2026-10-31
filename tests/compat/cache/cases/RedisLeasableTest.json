@@ -1,0 +1,1429 @@
+{
+  "source": "packages/cache/tests/E2E/RedisLeasableTest.php",
+  "cases": [
+    {
+      "name": "testFreshKeyHasZeroGeneration",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "0"
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testSaveWithLeaseStoresWhenGenerationUnchanged",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "0"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": {
+            "$array": [
+              [
+                "v",
+                1
+              ]
+            ]
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testPurgeAdvancesGeneration",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testHashPurgeAdvancesGeneration",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "field-a",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "hash": "field-a"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "stale": true
+            },
+            "hash": "field-a",
+            "generation": "0"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "field-a"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testStaleSaveAfterPurgeIsRejected",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "0"
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "stale": true
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testFreshSaveAfterPurgeSucceeds",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 2
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": {
+            "$array": [
+              [
+                "v",
+                2
+              ]
+            ]
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testLeaseSurvivesScriptCacheFlush",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "raw.script_flush",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "raw.script_flush",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 2
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": {
+            "$array": [
+              [
+                "v",
+                2
+              ]
+            ]
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testPurgePreservesDeletionResult",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:absent"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": true
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testPurgeDropsValueButKeepsGenerationField",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.flush",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": {
+            "$array": [
+              [
+                "v",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "cache.size",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": 1
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testReservedGenerationFieldIsProtected",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": "attacker",
+            "hash": "__utopia_gen__"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": "attacker",
+            "hash": "__utopia_gen__",
+            "generation": "1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "hash": "__utopia_gen__"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "__utopia_gen__"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "hash": "__utopia_gen__"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": "stale",
+            "hash": "${ns}:doc:1",
+            "generation": "0"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testListHidesGenerationField",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "field-a",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": [
+            "field-a"
+          ]
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": []
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testLeaseGraceWindowDefaultsToZero",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.grace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 0
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testTombstoneRejectsTokenValidSaveWithinGraceWindow",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "grace": 500
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.grace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": 500
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "stale": true
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": false
+        },
+        {
+          "op": "raw.tomb",
+          "args": {
+            "key": "${ns}:doc:1",
+            "seconds": -60
+          },
+          "expect": 0
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "fresh": true
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": {
+            "$array": [
+              [
+                "fresh",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "raw.hexists",
+          "args": {
+            "key": "${ns}:doc:1",
+            "field": "__utopia_tomb__"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testFieldPurgeAlsoOpensTombstone",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "grace": 500
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "field-a",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "hash": "field-a"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "stale": true
+            },
+            "hash": "field-a",
+            "generation": "1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "field-a"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testListHidesTombstoneField",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "grace": 500
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "field-a",
+            "generation": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.list",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": []
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testReservedTombstoneFieldIsProtected",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "grace": 500
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": "attacker",
+            "hash": "__utopia_tomb__"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": "attacker",
+            "hash": "__utopia_tomb__",
+            "generation": "0"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "hash": "__utopia_tomb__"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "__utopia_tomb__"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    },
+    {
+      "name": "testTombstoneIgnoresImplausibleFutureDeadline",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {
+            "grace": 500
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.purge",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.generation",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1"
+          },
+          "expect": "1"
+        },
+        {
+          "op": "raw.tomb",
+          "args": {
+            "key": "${ns}:doc:1",
+            "seconds": 3600
+          },
+          "expect": 0
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "data": {
+              "v": 1
+            },
+            "hash": "${ns}:doc:1",
+            "generation": "1"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:doc:1",
+            "ttl": 60,
+            "hash": "${ns}:doc:1"
+          },
+          "expect": {
+            "$array": [
+              [
+                "v",
+                1
+              ]
+            ]
+          }
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
+    }
+  ]
+}

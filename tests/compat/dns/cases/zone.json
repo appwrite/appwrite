@@ -1,0 +1,361 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "zone names and membership",
+      "steps": [
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "EXAMPLE.com",
+              "records": [
+                {
+                  "name": "a.example.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": ""
+                }
+              ],
+              "soa": {
+                "name": "Example.COM",
+                "type": 6,
+                "ttl": 0,
+                "rdata": ""
+              }
+            }
+          },
+          "expect": {
+            "name": "example.com",
+            "records": [
+              {
+                "name": "a.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": "example.com",
+              "type": 6,
+              "class": 1,
+              "ttl": 0,
+              "rdata": "",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": ".",
+              "records": [
+                {
+                  "name": "anything.org",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": ""
+                }
+              ],
+              "soa": {
+                "name": ".",
+                "type": 6,
+                "ttl": 0,
+                "rdata": ""
+              }
+            }
+          },
+          "expect": {
+            "name": ".",
+            "records": [
+              {
+                "name": "anything.org",
+                "type": 1,
+                "class": 1,
+                "ttl": 0,
+                "rdata": "",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "soa": {
+              "name": ".",
+              "type": 6,
+              "class": 1,
+              "ttl": 0,
+              "rdata": "",
+              "priority": null,
+              "weight": null,
+              "port": null
+            }
+          }
+        },
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "xexample.com",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": ""
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Record name 'xexample.com' does not belong to zone 'example.com'"
+            }
+          }
+        },
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com.",
+                  "type": 1,
+                  "ttl": 0,
+                  "rdata": ""
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Record name 'example.com.' does not belong to zone 'example.com'"
+            }
+          }
+        },
+        {
+          "op": "zone.new",
+          "args": {
+            "zone": {
+              "name": " example.com",
+              "records": [],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA record name must match zone name: expected ' example.com', got 'example.com'"
+            }
+          }
+        },
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns.sub.example.com"
+                },
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.example.com"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns.sub.example.com"
+                },
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.example.com"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "sub.example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns.sub.example.com"
+                },
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.example.com"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "www.example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns.sub.example.com"
+                },
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.example.com"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "deep.sub.example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "sub.example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns.sub.example.com"
+                },
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 1,
+                  "rdata": "ns1.example.com"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 1,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "other.org"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

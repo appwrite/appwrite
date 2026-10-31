@@ -1,0 +1,155 @@
+{
+  "lib": "config",
+  "environment": {
+    "date": "2026-10-18T14:19:25Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "get_param",
+      "description": "Read a nested parameter with a dotted key",
+      "php": {
+        "ns": 123.59573206193463,
+        "min": 111.61255160738655,
+        "max": 143.44741948671884,
+        "samples": 15,
+        "calls": 173667,
+        "cpu": 125.7360350555949,
+        "peak": 3008.0,
+        "retained": 0.00014433753486077763,
+        "rss": 107855872.0
+      },
+      "rust": {
+        "ns": 41.228854824888074,
+        "min": 37.13419908219409,
+        "max": 42.55622362108871,
+        "samples": 15,
+        "calls": 499452,
+        "cpu": 40.96766149032673,
+        "rss": 22446080.0,
+        "allocations": 1.4682758970498332e-6,
+        "bytes": 0.0003749442722557256,
+        "peak": 1650.0,
+        "retained": 0.00022077530306549312
+      },
+      "speedup": 2.997796872769923,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "get_param_flat",
+      "description": "Read a top-level parameter",
+      "php": {
+        "ns": 34.41745342899466,
+        "min": 33.67805265184443,
+        "max": 52.58830205620299,
+        "samples": 15,
+        "calls": 594737,
+        "cpu": 35.673022977663514,
+        "peak": 3008.0,
+        "retained": 0.00004214748143577189,
+        "rss": 107855872.0
+      },
+      "rust": {
+        "ns": 12.862058017258507,
+        "min": 12.25604717738981,
+        "max": 13.527640609044578,
+        "samples": 15,
+        "calls": 1514963,
+        "cpu": 12.85961725357869,
+        "rss": 22708224.0,
+        "allocations": 4.840602267734152e-7,
+        "bytes": 0.00012361137972786575,
+        "peak": 1650.0,
+        "retained": 0.00007278505591665716
+      },
+      "speedup": 2.6758900778407932,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "dotenv",
+      "description": "Parse a ten-line dotenv file",
+      "php": {
+        "ns": 1747.5386763710223,
+        "min": 1690.8640825998646,
+        "max": 2044.0962254570074,
+        "samples": 15,
+        "calls": 11816,
+        "cpu": 1762.14737079666,
+        "peak": 3088.0,
+        "retained": 0.0021214172872940644,
+        "rss": 107855872.0
+      },
+      "rust": {
+        "ns": 836.7273931058049,
+        "min": 830.289906454231,
+        "max": 861.9630515569604,
+        "samples": 15,
+        "calls": 23411,
+        "cpu": 840.8530605271027,
+        "rss": 23101440.0,
+        "allocations": 26.00003132430624,
+        "bytes": 2892.0079990887475,
+        "peak": 1726.0,
+        "retained": 0.004710036592485014
+      },
+      "speedup": 2.088540055900912,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "load",
+      "description": "Load a five-property config from parsed variables",
+      "php": {
+        "ns": 2846.464669304692,
+        "min": 2778.3588185415488,
+        "max": 2920.9535048049747,
+        "samples": 15,
+        "calls": 7076,
+        "cpu": 2849.218013943848,
+        "peak": 123288.0,
+        "retained": 0.0035424910495571887,
+        "rss": 107855872.0
+      },
+      "rust": {
+        "ns": 390.3476546243634,
+        "min": 386.34208596738074,
+        "max": 396.6297338538673,
+        "samples": 15,
+        "calls": 50461,
+        "cpu": 390.9907294742474,
+        "rss": 23101440.0,
+        "allocations": 4.000014532675399,
+        "bytes": 1176.003711116836,
+        "peak": 1650.0,
+        "retained": 0.00218518591915869
+      },
+      "speedup": 7.292126993932837,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

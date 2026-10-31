@@ -1,0 +1,29 @@
+[package]
+name = "utopia-client"
+description = "An HTTP/1.1 client with immutable configuration, destination checks on every connection, redirects, retries with backoff, streaming and pooling."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/client"
+publish.workspace = true
+
+[dependencies]
+brotli.workspace = true
+bytes.workspace = true
+flate2.workspace = true
+getrandom.workspace = true
+php-std.workspace = true
+rustls.workspace = true
+thiserror.workspace = true
+utopia-async.workspace = true
+tokio-rustls.workspace = true
+utopia-pools.workspace = true
+utopia-span.workspace = true
+webpki-roots.workspace = true
+zstd.workspace = true
+
+
+[package.metadata.utopia]
+category = "transport"
+php-sync = "6a2c63b752e7095630c4d911e68d24bc54328520"

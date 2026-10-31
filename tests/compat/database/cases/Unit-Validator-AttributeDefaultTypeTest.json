@@ -1,0 +1,1962 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/AttributeDefaultTypeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AttributeDefaultTypeTest::testAScalarDefaultOfATypeWithoutADefaultRuleIsAnUnknownType#object with a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1135"
+          },
+          "bind": "s2313",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1135"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1136"
+          },
+          "bind": "s2314",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1136"
+              }
+            },
+            "as": "o1137"
+          },
+          "bind": "s2315",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "value",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "default": "x",
+                "options": {
+                  "relatedCollection": "others",
+                  "relationType": "oneToOne",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o1138"
+          },
+          "bind": "s2316",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": "x",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1137"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1138"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1137"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDefaultTypeTest::testAScalarDefaultOfATypeWithoutADefaultRuleIsAnUnknownType#point with a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1139"
+          },
+          "bind": "s2319",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1139"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1140"
+          },
+          "bind": "s2320",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1140"
+              }
+            },
+            "as": "o1141"
+          },
+          "bind": "s2321",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "value",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Point"
+                },
+                "default": "POINT(1 2)",
+                "options": {
+                  "relatedCollection": "others",
+                  "relationType": "oneToOne",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o1142"
+          },
+          "bind": "s2322",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": false,
+              "default": "POINT(1 2)",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1141"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1142"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: point. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1141"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: point. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDefaultTypeTest::testAScalarDefaultOfATypeWithoutADefaultRuleIsAnUnknownType#linestring with an integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1143"
+          },
+          "bind": "s2325",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1143"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1144"
+          },
+          "bind": "s2326",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1144"
+              }
+            },
+            "as": "o1145"
+          },
+          "bind": "s2327",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "value",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Linestring"
+                },
+                "default": 5,
+                "options": {
+                  "relatedCollection": "others",
+                  "relationType": "oneToOne",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o1146"
+          },
+          "bind": "s2328",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Linestring"
+              },
+              "size": null,
+              "required": false,
+              "default": 5,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "linestring"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1145"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1146"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: linestring. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1145"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: linestring. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDefaultTypeTest::testAScalarDefaultOfATypeWithoutADefaultRuleIsAnUnknownType#polygon with a boolean",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1147"
+          },
+          "bind": "s2331",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1147"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1148"
+          },
+          "bind": "s2332",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1148"
+              }
+            },
+            "as": "o1149"
+          },
+          "bind": "s2333",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "value",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Polygon"
+                },
+                "default": true,
+                "options": {
+                  "relatedCollection": "others",
+                  "relationType": "oneToOne",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o1150"
+          },
+          "bind": "s2334",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Polygon"
+              },
+              "size": null,
+              "required": false,
+              "default": true,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "polygon"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1149"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1150"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: polygon. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1149"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: polygon. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDefaultTypeTest::testAScalarDefaultOfATypeWithoutADefaultRuleIsAnUnknownType#id with a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1151"
+          },
+          "bind": "s2337",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1151"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1152"
+          },
+          "bind": "s2338",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1152"
+              }
+            },
+            "as": "o1153"
+          },
+          "bind": "s2339",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "value",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Id"
+                },
+                "default": "x",
+                "options": {
+                  "relatedCollection": "others",
+                  "relationType": "oneToOne",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o1154"
+          },
+          "bind": "s2340",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Id"
+              },
+              "size": null,
+              "required": false,
+              "default": "x",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1153"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1154"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: id. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1153"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: id. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDefaultTypeTest::testAScalarDefaultOfATypeWithoutADefaultRuleIsAnUnknownType#relationship with a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1155"
+          },
+          "bind": "s2343",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1155"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1156"
+          },
+          "bind": "s2344",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1156"
+              }
+            },
+            "as": "o1157"
+          },
+          "bind": "s2345",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "value",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Relationship"
+                },
+                "default": "x",
+                "options": {
+                  "relatedCollection": "others",
+                  "relationType": "oneToOne",
+                  "side": "parent"
+                }
+              }
+            },
+            "as": "o1158"
+          },
+          "bind": "s2346",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Relationship"
+              },
+              "size": null,
+              "required": false,
+              "default": "x",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": {
+                "$value": "Relationship",
+                "fields": {
+                  "relatedCollection": "others",
+                  "type": {
+                    "$enum": "RelationshipType::OneToOne"
+                  },
+                  "twoWay": false,
+                  "key": "value",
+                  "twoWayKey": null,
+                  "onDelete": {
+                    "$enum": "RelationshipDeleteAction::Restrict"
+                  }
+                }
+              },
+              "side": {
+                "$enum": "RelationshipSide::Parent"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1157"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1158"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: relationship. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1157"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: relationship. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDefaultTypeTest::testTheListedTypesFollowTheVectorAndSpatialSupport",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1159"
+          },
+          "bind": "s2349",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1159"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Vectors"
+                }
+              ],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1160"
+          },
+          "bind": "s2350",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Vectors"
+                }
+              ],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1160"
+              }
+            },
+            "as": "o1161"
+          },
+          "bind": "s2351",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "value",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Object"
+                },
+                "default": "x"
+              }
+            },
+            "as": "o1162"
+          },
+          "bind": "s2352",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": "x",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1161"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1162"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship, vector, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1161"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship, vector, point, linestring, polygon"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1163"
+          },
+          "bind": "s2355",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1163"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Vectors"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1164"
+          },
+          "bind": "s2356",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Vectors"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1164"
+              }
+            },
+            "as": "o1165"
+          },
+          "bind": "s2357",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "id",
+            "args": {
+              "key": "value",
+              "default": "x"
+            },
+            "as": "o1166"
+          },
+          "bind": "s2358",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Id"
+              },
+              "size": null,
+              "required": false,
+              "default": "x",
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1165"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1166"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: id. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship, vector"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1165"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Unknown attribute type: id. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, float, double, boolean, datetime, relationship, vector"
+        }
+      ]
+    },
+    {
+      "name": "AttributeDefaultTypeTest::testAnArrayDefaultOfASpatialOrObjectTypeIsNotCheckedItemByItem",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o1167"
+          },
+          "bind": "s2361",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o1167"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Vectors"
+                }
+              ],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o1168"
+          },
+          "bind": "s2362",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Vectors"
+                }
+              ],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Spatial"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\AttributeDefinition",
+            "args": {
+              "attributes": [],
+              "profile": {
+                "$obj": "o1168"
+              }
+            },
+            "as": "o1169"
+          },
+          "bind": "s2363",
+          "expect": {
+            "$value": "Validator\\AttributeDefinition",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "value",
+              "default": {
+                "nested": "x"
+              }
+            },
+            "as": "o1170"
+          },
+          "bind": "s2364",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": {
+                "nested": "x"
+              },
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1169"
+            },
+            "method": "checkDefaultValue",
+            "args": {
+              "attribute": {
+                "$obj": "o1170"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

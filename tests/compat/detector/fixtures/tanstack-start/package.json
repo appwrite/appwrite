@@ -1,0 +1,13 @@
+{
+  "name": "tanstack-start",
+  "type": "module",
+  "dependencies": {
+    "@tanstack/react-router": "^1.0.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tanstack/react-start": "^1.0.0",
+    "nitro": "^3.0.0",
+    "vite": "^6.0.0"
+  }
+}

@@ -1,0 +1,1106 @@
+{
+  "source": "packages/mqtt/tests/ServerTest.php",
+  "cases": [
+    {
+      "name": "testSubscribeThatClosedTheConnectionIsNotAnswered",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 60,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0015\u0000\u0004MQTT\u0005\u0002\u0000<\u0000\u0000\bclient-9"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "close"
+            ],
+            "qos": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "ggsAAQAABWNsb3NlAQ=="
+          }
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ],
+              [
+                9,
+                {
+                  "$ref": "s"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "outcomes": [
+              null,
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [],
+              "sent": [
+                [
+                  9,
+                  " \u0003\u0000\u0000\u0000"
+                ]
+              ],
+              "closed": [
+                9
+              ],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  60
+                ],
+                [
+                  "clear",
+                  9
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  5,
+                  "client-9",
+                  true,
+                  60,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ],
+                [
+                  "subscribe",
+                  9,
+                  1,
+                  [
+                    [
+                      "close",
+                      1
+                    ]
+                  ]
+                ],
+                [
+                  "disconnect",
+                  9,
+                  null
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1,
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1,
+                  -1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisabledKeepAliveIsReplacedByTheMaximum",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 0,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0015\u0000\u0004MQTT\u0005\u0002\u0000\u0000\u0000\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0006\u0000\u0000\u0003\u0013\u0000<"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  60
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  5,
+                  "client-9",
+                  true,
+                  0,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testKeepAliveAboveTheMaximumIsLowered",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 600,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0015\u0000\u0004MQTT\u0005\u0002\u0002X\u0000\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0006\u0000\u0000\u0003\u0013\u0000<"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  60
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  5,
+                  "client-9",
+                  true,
+                  600,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testServerKeepAliveReplacesTheHandlersOwn",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 0,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "keepalive",
+                      "600"
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 21,
+                "value": "token"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": "\u0010.\u0000\u0004MQTT\u0005\u0002\u0000\u0000\u0019&\u0000\tkeepalive\u0000\u0003600\u0015\u0000\u0005token\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u000e\u0000\u0000\u000b\u0015\u0000\u0005token\u0013\u0000<"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  60
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  5,
+                  "client-9",
+                  true,
+                  0,
+                  null,
+                  null,
+                  null,
+                  "token",
+                  null,
+                  [
+                    [
+                      "keepalive",
+                      "600"
+                    ]
+                  ],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testKeepAliveWithinTheMaximumIsKept",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 30,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0015\u0000\u0004MQTT\u0005\u0002\u0000\u001e\u0000\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0003\u0000\u0000\u0000"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  30
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  5,
+                  "client-9",
+                  true,
+                  30,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisabledKeepAliveOnA311ClientIsReapedAtTheMaximum",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 0,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0014\u0000\u0004MQTT\u0004\u0002\u0000\u0000\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0002\u0000\u0000"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  60
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  4,
+                  "client-9",
+                  true,
+                  0,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testKeepAliveAboveTheMaximumOnA311ClientIsKept",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 600,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0014\u0000\u0004MQTT\u0004\u0002\u0002X\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0002\u0000\u0000"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  600
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  4,
+                  "client-9",
+                  true,
+                  600,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisabledKeepAliveStandsWithoutAMaximum",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 0,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0015\u0000\u0004MQTT\u0005\u0002\u0000\u0000\u0000\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ]
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0003\u0000\u0000\u0000"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  0
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  5,
+                  "client-9",
+                  true,
+                  0,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a handler's Server Keep Alive passes through when the client's keep-alive stands",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 30,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "keepalive",
+                      "600"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": "\u0010&\u0000\u0004MQTT\u0005\u0002\u0000\u001e\u0011&\u0000\tkeepalive\u0000\u0003600\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0006\u0000\u0000\u0003\u0013\u0002X"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  30
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  5,
+                  "client-9",
+                  true,
+                  30,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [
+                    [
+                      "keepalive",
+                      "600"
+                    ]
+                  ],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a 3.1.1 client within the maximum keeps its keep-alive",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "client-9",
+            "keep_alive": 30,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u0014\u0000\u0004MQTT\u0004\u0002\u0000\u001e\u0000\bclient-9"
+        },
+        {
+          "op": "server.session",
+          "args": {
+            "open": [
+              9
+            ],
+            "packets": [
+              [
+                9,
+                {
+                  "$ref": "c"
+                }
+              ]
+            ],
+            "max_keep_alive": 60
+          },
+          "expect": {
+            "outcomes": [
+              null
+            ],
+            "state": {
+              "started": true,
+              "open": [
+                9
+              ],
+              "sent": [
+                [
+                  9,
+                  " \u0002\u0000\u0000"
+                ]
+              ],
+              "closed": [],
+              "timer": [
+                [
+                  "schedule",
+                  9,
+                  30
+                ],
+                [
+                  "schedule",
+                  9,
+                  30
+                ]
+              ],
+              "log": [
+                [
+                  "connect",
+                  9,
+                  4,
+                  "client-9",
+                  true,
+                  30,
+                  null,
+                  null,
+                  null,
+                  null,
+                  null,
+                  [],
+                  "client-9"
+                ]
+              ]
+            },
+            "metrics": [
+              [
+                "counter",
+                "mqtt.packets.received",
+                [
+                  1
+                ]
+              ],
+              [
+                "counter",
+                "mqtt.connections.opened",
+                [
+                  1
+                ]
+              ],
+              [
+                "up_down_counter",
+                "mqtt.connections.active",
+                [
+                  1
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,633 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/FeatureTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MirrorTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FeatureTests::testSpatialFeatureIsWhetherAPointAttributeCanBeCreated",
+      "state": [
+        "postgres@database-postgres",
+        "postgres@database-postgres-mirror"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "mirror": {
+              "destination": true
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "source"
+          },
+          "bind": "src",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.mirror",
+          "args": {
+            "part": "destination"
+          },
+          "bind": "dst",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_source",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_destination",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.profile",
+          "args": {},
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 4294967295,
+                  "varchar": 16381,
+                  "integer": 4294967295,
+                  "bigInteger": 9223372036854775807,
+                  "attributes": 1017,
+                  "indexes": 64,
+                  "defaultAttributes": 7,
+                  "defaultIndexes": 6,
+                  "indexLength": 768,
+                  "uidLength": 36,
+                  "documentSize": 65535,
+                  "minDateTime": {
+                    "$datetime": "-4713-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T23:59:59.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [
+                    "ACCESSIBLE",
+                    "ADD",
+                    "ALL",
+                    "ALTER",
+                    "ANALYZE",
+                    "AND",
+                    "AS",
+                    "ASC",
+                    "ASENSITIVE",
+                    "BEFORE",
+                    "BETWEEN",
+                    "BIGINT",
+                    "BINARY",
+                    "BLOB",
+                    "BOTH",
+                    "BY",
+                    "CALL",
+                    "CASCADE",
+                    "CASE",
+                    "CHANGE",
+                    "CHAR",
+                    "CHARACTER",
+                    "CHECK",
+                    "COLLATE",
+                    "COLUMN",
+                    "CONDITION",
+                    "CONSTRAINT",
+                    "CONTINUE",
+                    "CONVERT",
+                    "CREATE",
+                    "CROSS",
+                    "CURRENT_DATE",
+                    "CURRENT_ROLE",
+                    "CURRENT_TIME",
+                    "CURRENT_TIMESTAMP",
+                    "CURRENT_USER",
+                    "CURSOR",
+                    "DATABASE",
+                    "DATABASES",
+                    "DAY_HOUR",
+                    "DAY_MICROSECOND",
+                    "DAY_MINUTE",
+                    "DAY_SECOND",
+                    "DEC",
+                    "DECIMAL",
+                    "DECLARE",
+                    "DEFAULT",
+                    "DELAYED",
+                    "DELETE",
+                    "DELETE_DOMAIN_ID",
+                    "DESC",
+                    "DESCRIBE",
+                    "DETERMINISTIC",
+                    "DISTINCT",
+                    "DISTINCTROW",
+                    "DIV",
+                    "DO_DOMAIN_IDS",
+                    "DOUBLE",
+                    "DROP",
+                    "DUAL",
+                    "EACH",
+                    "ELSE",
+                    "ELSEIF",
+                    "ENCLOSED",
+                    "ESCAPED",
+                    "EXCEPT",
+                    "EXISTS",
+                    "EXIT",
+                    "EXPLAIN",
+                    "FALSE",
+                    "FETCH",
+                    "FLOAT",
+                    "FLOAT4",
+                    "FLOAT8",
+                    "FOR",
+                    "FORCE",
+                    "FOREIGN",
+                    "FROM",
+                    "FULLTEXT",
+                    "GENERAL",
+                    "GRANT",
+                    "GROUP",
+                    "HAVING",
+                    "HIGH_PRIORITY",
+                    "HOUR_MICROSECOND",
+                    "HOUR_MINUTE",
+                    "HOUR_SECOND",
+                    "IF",
+                    "IGNORE",
+                    "IGNORE_DOMAIN_IDS",
+                    "IGNORE_SERVER_IDS",
+                    "IN",
+                    "INDEX",
+                    "INFILE",
+                    "INNER",
+                    "INOUT",
+                    "INSENSITIVE",
+                    "INSERT",
+                    "INT",
+                    "INT1",
+                    "INT2",
+                    "INT3",
+                    "INT4",
+                    "INT8",
+                    "INTEGER",
+                    "INTERSECT",
+                    "INTERVAL",
+                    "INTO",
+                    "IS",
+                    "ITERATE",
+                    "JOIN",
+                    "KEY",
+                    "KEYS",
+                    "KILL",
+                    "LEADING",
+                    "LEAVE",
+                    "LEFT",
+                    "LIKE",
+                    "LIMIT",
+                    "LINEAR",
+                    "LINES",
+                    "LOAD",
+                    "LOCALTIME",
+                    "LOCALTIMESTAMP",
+                    "LOCK",
+                    "LONG",
+                    "LONGBLOB",
+                    "LONGTEXT",
+                    "LOOP",
+                    "LOW_PRIORITY",
+                    "MASTER_HEARTBEAT_PERIOD",
+                    "MASTER_SSL_VERIFY_SERVER_CERT",
+                    "MATCH",
+                    "MAXVALUE",
+                    "MEDIUMBLOB",
+                    "MEDIUMINT",
+                    "MEDIUMTEXT",
+                    "MIDDLEINT",
+                    "MINUTE_MICROSECOND",
+                    "MINUTE_SECOND",
+                    "MOD",
+                    "MODIFIES",
+                    "NATURAL",
+                    "NOT",
+                    "NO_WRITE_TO_BINLOG",
+                    "NULL",
+                    "NUMERIC",
+                    "OFFSET",
+                    "ON",
+                    "OPTIMIZE",
+                    "OPTION",
+                    "OPTIONALLY",
+                    "OR",
+                    "ORDER",
+                    "OUT",
+                    "OUTER",
+                    "OUTFILE",
+                    "OVER",
+                    "PAGE_CHECKSUM",
+                    "PARSE_VCOL_EXPR",
+                    "PARTITION",
+                    "POSITION",
+                    "PRECISION",
+                    "PRIMARY",
+                    "PROCEDURE",
+                    "PURGE",
+                    "RANGE",
+                    "READ",
+                    "READS",
+                    "READ_WRITE",
+                    "REAL",
+                    "RECURSIVE",
+                    "REF_SYSTEM_ID",
+                    "REFERENCES",
+                    "REGEXP",
+                    "RELEASE",
+                    "RENAME",
+                    "REPEAT",
+                    "REPLACE",
+                    "REQUIRE",
+                    "RESIGNAL",
+                    "RESTRICT",
+                    "RETURN",
+                    "RETURNING",
+                    "REVOKE",
+                    "RIGHT",
+                    "RLIKE",
+                    "ROWS",
+                    "SCHEMA",
+                    "SCHEMAS",
+                    "SECOND_MICROSECOND",
+                    "SELECT",
+                    "SENSITIVE",
+                    "SEPARATOR",
+                    "SET",
+                    "SHOW",
+                    "SIGNAL",
+                    "SLOW",
+                    "SMALLINT",
+                    "SPATIAL",
+                    "SPECIFIC",
+                    "SQL",
+                    "SQLEXCEPTION",
+                    "SQLSTATE",
+                    "SQLWARNING",
+                    "SQL_BIG_RESULT",
+                    "SQL_CALC_FOUND_ROWS",
+                    "SQL_SMALL_RESULT",
+                    "SSL",
+                    "STARTING",
+                    "STATS_AUTO_RECALC",
+                    "STATS_PERSISTENT",
+                    "STATS_SAMPLE_PAGES",
+                    "STRAIGHT_JOIN",
+                    "TABLE",
+                    "TERMINATED",
+                    "THEN",
+                    "TINYBLOB",
+                    "TINYINT",
+                    "TINYTEXT",
+                    "TO",
+                    "TRAILING",
+                    "TRIGGER",
+                    "TRUE",
+                    "UNDO",
+                    "UNION",
+                    "UNIQUE",
+                    "UNLOCK",
+                    "UNSIGNED",
+                    "UPDATE",
+                    "USAGE",
+                    "USE",
+                    "USING",
+                    "UTC_DATE",
+                    "UTC_TIME",
+                    "UTC_TIMESTAMP",
+                    "VALUES",
+                    "VARBINARY",
+                    "VARCHAR",
+                    "VARCHARACTER",
+                    "VARYING",
+                    "WHEN",
+                    "WHERE",
+                    "WHILE",
+                    "WINDOW",
+                    "WITH",
+                    "WRITE",
+                    "XOR",
+                    "YEAR_MONTH",
+                    "ZEROFILL",
+                    "ACTION",
+                    "BIT",
+                    "DATE",
+                    "ENUM",
+                    "NO",
+                    "TEXT",
+                    "TIME",
+                    "TIMESTAMP",
+                    "BODY",
+                    "ELSIF",
+                    "GOTO",
+                    "HISTORY",
+                    "MINUS",
+                    "OTHERS",
+                    "PACKAGE",
+                    "PERIOD",
+                    "RAISE",
+                    "ROWNUM",
+                    "ROWTYPE",
+                    "SYSDATE",
+                    "SYSTEM",
+                    "SYSTEM_TIME",
+                    "VERSIONING",
+                    "WITHOUT"
+                  ],
+                  "internalIndexKeys": [
+                    "primary",
+                    "_created_at",
+                    "_updated_at",
+                    "_tenant_id"
+                  ]
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Aggregations"
+                },
+                {
+                  "$enum": "Capability::AttributeResizing"
+                },
+                {
+                  "$enum": "Capability::Caching"
+                },
+                {
+                  "$enum": "Capability::IndexArray"
+                },
+                {
+                  "$enum": "Capability::IndexFulltext"
+                },
+                {
+                  "$enum": "Capability::IndexFulltextMultiple"
+                },
+                {
+                  "$enum": "Capability::IndexIdentical"
+                },
+                {
+                  "$enum": "Capability::IndexKey"
+                },
+                {
+                  "$enum": "Capability::IndexObject"
+                },
+                {
+                  "$enum": "Capability::IndexSpatialNull"
+                },
+                {
+                  "$enum": "Capability::IndexTrigram"
+                },
+                {
+                  "$enum": "Capability::IndexUnique"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::Objects"
+                },
+                {
+                  "$enum": "Capability::Operators"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                },
+                {
+                  "$enum": "Capability::SchemaIntrospection"
+                },
+                {
+                  "$enum": "Capability::Schemas"
+                },
+                {
+                  "$enum": "Capability::TransactionNested"
+                },
+                {
+                  "$enum": "Capability::TransactionRetries"
+                },
+                {
+                  "$enum": "Capability::UpdateLock"
+                },
+                {
+                  "$enum": "Capability::Vectors"
+                }
+              ],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Connection",
+                "Utopia\\Database\\Adapter\\Feature\\QueryBuilder",
+                "Utopia\\Database\\Adapter\\Feature\\RawQuery",
+                "Utopia\\Database\\Adapter\\Feature\\Relationships",
+                "Utopia\\Database\\Adapter\\Feature\\Spatial",
+                "Utopia\\Database\\Adapter\\Feature\\Timeouts",
+                "Utopia\\Database\\Adapter\\Feature\\Upserts"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "feature_spatial",
+                "name": "feature_spatial",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "feature_spatial",
+              "name": "feature_spatial",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "feature_spatial",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "location",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Point"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "point"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "location",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Point"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "point"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "feature_spatial"
+          },
+          "expect": {
+            "$document": {
+              "name": "feature_spatial",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "location",
+                    "key": "location",
+                    "type": "point",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "feature_spatial",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "feature_spatial"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,420 @@
+{
+  "source": "packages/nats/tests/ConnectionExtrasTest.php",
+  "cases": [
+    {
+      "name": "server errors map to typed exceptions",
+      "steps": [
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": "Authorization Violation"
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\AuthenticationException",
+            "Authorization Violation"
+          ]
+        },
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": "User Authentication Expired"
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\AuthenticationException",
+            "User Authentication Expired"
+          ]
+        },
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": "Maximum Payload Exceeded"
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\MaxPayloadException",
+            "Maximum Payload Exceeded"
+          ]
+        },
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": "Permissions Violation for Subscription to 'foo.bar'"
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\PermissionException",
+            "Permissions Violation for Subscription to 'foo.bar'"
+          ]
+        },
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": "Permissions Violation for Publish to 'foo.bar'"
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\PermissionException",
+            "Permissions Violation for Publish to 'foo.bar'"
+          ]
+        },
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": "some unexpected error"
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\ProtocolException",
+            "Server error: some unexpected error"
+          ]
+        },
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": "AUTHENTICATION TIMEOUT"
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\AuthenticationException",
+            "AUTHENTICATION TIMEOUT"
+          ]
+        },
+        {
+          "op": "connection.map_server_error",
+          "args": {
+            "message": ""
+          },
+          "expect": [
+            "Utopia\\NATS\\Exception\\ProtocolException",
+            "Server error: "
+          ]
+        }
+      ]
+    },
+    {
+      "name": "lame-duck INFO invokes the callback",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "hooks": {
+                "onLameDuck": true
+              }
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":true}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onLameDuck"
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a non-lame-duck INFO does not invoke the callback",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "hooks": {
+                "onLameDuck": true
+              }
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":false}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "lame-duck mode with another known server moves to it",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "hooks": {
+                "onLameDuck": true,
+                "onDisconnect": true,
+                "onReconnect": true
+              },
+              "noRandomize": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"FAKE\",\"ldm\":true,\"connect_urls\":[\"10.0.0.9:4222\"]}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onLameDuck"
+            ],
+            [
+              "onDisconnect"
+            ],
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "onReconnect"
+            ]
+          ]
+        },
+        {
+          "op": "conn.state",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "closed": false,
+            "reconnecting": false,
+            "status": "connected",
+            "subscriptions": 0
+          }
+        },
+        {
+          "op": "fake.count",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "needle": "CONNECT "
+          },
+          "expect": 2
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an async INFO updates the server info",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "INFO {\"server_id\":\"NEW\",\"max_payload\":64,\"headers\":false}\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.server_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "server_id": "NEW",
+            "server_name": "",
+            "version": "",
+            "proto": 0,
+            "host": "",
+            "port": 0,
+            "headers": false,
+            "auth_required": false,
+            "tls_required": false,
+            "tls_available": false,
+            "max_payload": 64,
+            "connect_urls": [],
+            "nonce": null,
+            "jetstream": false,
+            "client_id": null,
+            "client_ip": null
+          }
+        },
+        {
+          "op": "conn.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "a",
+            "data": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\MaxPayloadException",
+              "message": "Payload size 65 exceeds server maximum of 64"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

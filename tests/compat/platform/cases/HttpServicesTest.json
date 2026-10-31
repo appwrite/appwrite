@@ -1,0 +1,2500 @@
+{
+  "source": "packages/platform/tests/HttpServicesTest.php",
+  "cases": [
+    {
+      "name": "testRootAction",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "testService": {
+              "type": "http",
+              "actions": {
+                "root": {
+                  "groups": [
+                    "test"
+                  ],
+                  "http": {
+                    "method": "GET",
+                    "path": "/"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Hello World!"
+                      }
+                    ]
+                  }
+                },
+                "chunked": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/chunked"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "chunk": [
+                          "Hello ",
+                          false
+                        ]
+                      },
+                      {
+                        "chunk": [
+                          "World!",
+                          true
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "redirect": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/redirect"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "redirect": [
+                          "/"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "initHook": {
+                  "type": "Init",
+                  "groups": [
+                    "test"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "add_header": [
+                          "x-init",
+                          "init-called"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "withParams": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/with-params"
+                  },
+                  "params": [
+                    {
+                      "key": "name",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          128
+                        ]
+                      },
+                      "description": "User name.",
+                      "optional": false,
+                      "example": "John Doe"
+                    },
+                    {
+                      "key": "age",
+                      "default": 0,
+                      "validator": {
+                        "range": [
+                          0,
+                          150
+                        ]
+                      },
+                      "description": "User age.",
+                      "optional": true,
+                      "example": "25"
+                    },
+                    {
+                      "key": "active",
+                      "default": false,
+                      "validator": {
+                        "boolean": true
+                      },
+                      "description": "Is active.",
+                      "optional": true,
+                      "deprecated": true,
+                      "example": "true"
+                    },
+                    {
+                      "key": "email",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          256
+                        ]
+                      },
+                      "description": "User email.",
+                      "optional": true,
+                      "example": "user@example.com",
+                      "aliases": [
+                        "emailAddress",
+                        "userEmail"
+                      ]
+                    },
+                    {
+                      "key": "status",
+                      "default": "draft",
+                      "validator": {
+                        "whitelist": [
+                          [
+                            "draft",
+                            "published"
+                          ]
+                        ]
+                      },
+                      "description": "Status.",
+                      "optional": true,
+                      "enum": {
+                        "name": "ArticleStatus",
+                        "map": {
+                          "draft": "Draft",
+                          "published": "Published"
+                        }
+                      }
+                    }
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "OK"
+                      }
+                    ]
+                  }
+                },
+                "aliased": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/aliased",
+                    "aliases": [
+                      "/alias-one",
+                      "/alias-two",
+                      "/alias-three"
+                    ]
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Aliased!"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "testCli": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                },
+                "build2": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                }
+              }
+            },
+            "testWorker": {
+              "type": "Worker",
+              "actions": {
+                "workerStartHook": {
+                  "type": "WorkerStart",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStart"
+                  }
+                },
+                "workerStopHook": {
+                  "type": "WorkerStop",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/"
+            }
+          }
+        ]
+      },
+      "expect": [
+        null,
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-init": [
+                "init-called"
+              ],
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-init",
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Hello World!",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "testChunkedAction",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "testService": {
+              "type": "http",
+              "actions": {
+                "root": {
+                  "groups": [
+                    "test"
+                  ],
+                  "http": {
+                    "method": "GET",
+                    "path": "/"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Hello World!"
+                      }
+                    ]
+                  }
+                },
+                "chunked": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/chunked"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "chunk": [
+                          "Hello ",
+                          false
+                        ]
+                      },
+                      {
+                        "chunk": [
+                          "World!",
+                          true
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "redirect": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/redirect"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "redirect": [
+                          "/"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "initHook": {
+                  "type": "Init",
+                  "groups": [
+                    "test"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "add_header": [
+                          "x-init",
+                          "init-called"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "withParams": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/with-params"
+                  },
+                  "params": [
+                    {
+                      "key": "name",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          128
+                        ]
+                      },
+                      "description": "User name.",
+                      "optional": false,
+                      "example": "John Doe"
+                    },
+                    {
+                      "key": "age",
+                      "default": 0,
+                      "validator": {
+                        "range": [
+                          0,
+                          150
+                        ]
+                      },
+                      "description": "User age.",
+                      "optional": true,
+                      "example": "25"
+                    },
+                    {
+                      "key": "active",
+                      "default": false,
+                      "validator": {
+                        "boolean": true
+                      },
+                      "description": "Is active.",
+                      "optional": true,
+                      "deprecated": true,
+                      "example": "true"
+                    },
+                    {
+                      "key": "email",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          256
+                        ]
+                      },
+                      "description": "User email.",
+                      "optional": true,
+                      "example": "user@example.com",
+                      "aliases": [
+                        "emailAddress",
+                        "userEmail"
+                      ]
+                    },
+                    {
+                      "key": "status",
+                      "default": "draft",
+                      "validator": {
+                        "whitelist": [
+                          [
+                            "draft",
+                            "published"
+                          ]
+                        ]
+                      },
+                      "description": "Status.",
+                      "optional": true,
+                      "enum": {
+                        "name": "ArticleStatus",
+                        "map": {
+                          "draft": "Draft",
+                          "published": "Published"
+                        }
+                      }
+                    }
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "OK"
+                      }
+                    ]
+                  }
+                },
+                "aliased": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/aliased",
+                    "aliases": [
+                      "/alias-one",
+                      "/alias-two",
+                      "/alias-three"
+                    ]
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Aliased!"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "testCli": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                },
+                "build2": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                }
+              }
+            },
+            "testWorker": {
+              "type": "Worker",
+              "actions": {
+                "workerStartHook": {
+                  "type": "WorkerStart",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStart"
+                  }
+                },
+                "workerStopHook": {
+                  "type": "WorkerStop",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/chunked"
+            }
+          }
+        ]
+      },
+      "expect": [
+        null,
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Hello World!",
+            "writes": 2,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "testRedirectAction",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "testService": {
+              "type": "http",
+              "actions": {
+                "root": {
+                  "groups": [
+                    "test"
+                  ],
+                  "http": {
+                    "method": "GET",
+                    "path": "/"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Hello World!"
+                      }
+                    ]
+                  }
+                },
+                "chunked": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/chunked"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "chunk": [
+                          "Hello ",
+                          false
+                        ]
+                      },
+                      {
+                        "chunk": [
+                          "World!",
+                          true
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "redirect": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/redirect"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "redirect": [
+                          "/"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "initHook": {
+                  "type": "Init",
+                  "groups": [
+                    "test"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "add_header": [
+                          "x-init",
+                          "init-called"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "withParams": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/with-params"
+                  },
+                  "params": [
+                    {
+                      "key": "name",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          128
+                        ]
+                      },
+                      "description": "User name.",
+                      "optional": false,
+                      "example": "John Doe"
+                    },
+                    {
+                      "key": "age",
+                      "default": 0,
+                      "validator": {
+                        "range": [
+                          0,
+                          150
+                        ]
+                      },
+                      "description": "User age.",
+                      "optional": true,
+                      "example": "25"
+                    },
+                    {
+                      "key": "active",
+                      "default": false,
+                      "validator": {
+                        "boolean": true
+                      },
+                      "description": "Is active.",
+                      "optional": true,
+                      "deprecated": true,
+                      "example": "true"
+                    },
+                    {
+                      "key": "email",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          256
+                        ]
+                      },
+                      "description": "User email.",
+                      "optional": true,
+                      "example": "user@example.com",
+                      "aliases": [
+                        "emailAddress",
+                        "userEmail"
+                      ]
+                    },
+                    {
+                      "key": "status",
+                      "default": "draft",
+                      "validator": {
+                        "whitelist": [
+                          [
+                            "draft",
+                            "published"
+                          ]
+                        ]
+                      },
+                      "description": "Status.",
+                      "optional": true,
+                      "enum": {
+                        "name": "ArticleStatus",
+                        "map": {
+                          "draft": "Draft",
+                          "published": "Published"
+                        }
+                      }
+                    }
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "OK"
+                      }
+                    ]
+                  }
+                },
+                "aliased": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/aliased",
+                    "aliases": [
+                      "/alias-one",
+                      "/alias-two",
+                      "/alias-three"
+                    ]
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Aliased!"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "testCli": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                },
+                "build2": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                }
+              }
+            },
+            "testWorker": {
+              "type": "Worker",
+              "actions": {
+                "workerStartHook": {
+                  "type": "WorkerStart",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStart"
+                  }
+                },
+                "workerStopHook": {
+                  "type": "WorkerStop",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/redirect"
+            }
+          }
+        ]
+      },
+      "expect": [
+        null,
+        {
+          "wire": {
+            "status": 301,
+            "headers": {
+              "location": [
+                "/"
+              ],
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "location",
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "testHook",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "testService": {
+              "type": "http",
+              "actions": {
+                "root": {
+                  "groups": [
+                    "test"
+                  ],
+                  "http": {
+                    "method": "GET",
+                    "path": "/"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Hello World!"
+                      }
+                    ]
+                  }
+                },
+                "chunked": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/chunked"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "chunk": [
+                          "Hello ",
+                          false
+                        ]
+                      },
+                      {
+                        "chunk": [
+                          "World!",
+                          true
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "redirect": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/redirect"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "redirect": [
+                          "/"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "initHook": {
+                  "type": "Init",
+                  "groups": [
+                    "test"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "add_header": [
+                          "x-init",
+                          "init-called"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "withParams": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/with-params"
+                  },
+                  "params": [
+                    {
+                      "key": "name",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          128
+                        ]
+                      },
+                      "description": "User name.",
+                      "optional": false,
+                      "example": "John Doe"
+                    },
+                    {
+                      "key": "age",
+                      "default": 0,
+                      "validator": {
+                        "range": [
+                          0,
+                          150
+                        ]
+                      },
+                      "description": "User age.",
+                      "optional": true,
+                      "example": "25"
+                    },
+                    {
+                      "key": "active",
+                      "default": false,
+                      "validator": {
+                        "boolean": true
+                      },
+                      "description": "Is active.",
+                      "optional": true,
+                      "deprecated": true,
+                      "example": "true"
+                    },
+                    {
+                      "key": "email",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          256
+                        ]
+                      },
+                      "description": "User email.",
+                      "optional": true,
+                      "example": "user@example.com",
+                      "aliases": [
+                        "emailAddress",
+                        "userEmail"
+                      ]
+                    },
+                    {
+                      "key": "status",
+                      "default": "draft",
+                      "validator": {
+                        "whitelist": [
+                          [
+                            "draft",
+                            "published"
+                          ]
+                        ]
+                      },
+                      "description": "Status.",
+                      "optional": true,
+                      "enum": {
+                        "name": "ArticleStatus",
+                        "map": {
+                          "draft": "Draft",
+                          "published": "Published"
+                        }
+                      }
+                    }
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "OK"
+                      }
+                    ]
+                  }
+                },
+                "aliased": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/aliased",
+                    "aliases": [
+                      "/alias-one",
+                      "/alias-two",
+                      "/alias-three"
+                    ]
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Aliased!"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "testCli": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                },
+                "build2": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                }
+              }
+            },
+            "testWorker": {
+              "type": "Worker",
+              "actions": {
+                "workerStartHook": {
+                  "type": "WorkerStart",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStart"
+                  }
+                },
+                "workerStopHook": {
+                  "type": "WorkerStop",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/chunked"
+            }
+          }
+        ]
+      },
+      "expect": [
+        null,
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-init": [
+                "init-called"
+              ],
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-init",
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Hello World!",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Hello World!",
+            "writes": 2,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "testAliasedAction",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "testService": {
+              "type": "http",
+              "actions": {
+                "root": {
+                  "groups": [
+                    "test"
+                  ],
+                  "http": {
+                    "method": "GET",
+                    "path": "/"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Hello World!"
+                      }
+                    ]
+                  }
+                },
+                "chunked": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/chunked"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "chunk": [
+                          "Hello ",
+                          false
+                        ]
+                      },
+                      {
+                        "chunk": [
+                          "World!",
+                          true
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "redirect": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/redirect"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "redirect": [
+                          "/"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "initHook": {
+                  "type": "Init",
+                  "groups": [
+                    "test"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "add_header": [
+                          "x-init",
+                          "init-called"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "withParams": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/with-params"
+                  },
+                  "params": [
+                    {
+                      "key": "name",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          128
+                        ]
+                      },
+                      "description": "User name.",
+                      "optional": false,
+                      "example": "John Doe"
+                    },
+                    {
+                      "key": "age",
+                      "default": 0,
+                      "validator": {
+                        "range": [
+                          0,
+                          150
+                        ]
+                      },
+                      "description": "User age.",
+                      "optional": true,
+                      "example": "25"
+                    },
+                    {
+                      "key": "active",
+                      "default": false,
+                      "validator": {
+                        "boolean": true
+                      },
+                      "description": "Is active.",
+                      "optional": true,
+                      "deprecated": true,
+                      "example": "true"
+                    },
+                    {
+                      "key": "email",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          256
+                        ]
+                      },
+                      "description": "User email.",
+                      "optional": true,
+                      "example": "user@example.com",
+                      "aliases": [
+                        "emailAddress",
+                        "userEmail"
+                      ]
+                    },
+                    {
+                      "key": "status",
+                      "default": "draft",
+                      "validator": {
+                        "whitelist": [
+                          [
+                            "draft",
+                            "published"
+                          ]
+                        ]
+                      },
+                      "description": "Status.",
+                      "optional": true,
+                      "enum": {
+                        "name": "ArticleStatus",
+                        "map": {
+                          "draft": "Draft",
+                          "published": "Published"
+                        }
+                      }
+                    }
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "OK"
+                      }
+                    ]
+                  }
+                },
+                "aliased": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/aliased",
+                    "aliases": [
+                      "/alias-one",
+                      "/alias-two",
+                      "/alias-three"
+                    ]
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Aliased!"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "testCli": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                },
+                "build2": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                }
+              }
+            },
+            "testWorker": {
+              "type": "Worker",
+              "actions": {
+                "workerStartHook": {
+                  "type": "WorkerStart",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStart"
+                  }
+                },
+                "workerStopHook": {
+                  "type": "WorkerStop",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/aliased"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/alias-one"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/alias-two"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/alias-three"
+            }
+          }
+        ]
+      },
+      "expect": [
+        null,
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Aliased!",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Aliased!",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Aliased!",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "Aliased!",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "testActionParamFieldsForwardedToRoute",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "testService": {
+              "type": "http",
+              "actions": {
+                "root": {
+                  "groups": [
+                    "test"
+                  ],
+                  "http": {
+                    "method": "GET",
+                    "path": "/"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Hello World!"
+                      }
+                    ]
+                  }
+                },
+                "chunked": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/chunked"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "chunk": [
+                          "Hello ",
+                          false
+                        ]
+                      },
+                      {
+                        "chunk": [
+                          "World!",
+                          true
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "redirect": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/redirect"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "redirect": [
+                          "/"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "initHook": {
+                  "type": "Init",
+                  "groups": [
+                    "test"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "add_header": [
+                          "x-init",
+                          "init-called"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "withParams": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/with-params"
+                  },
+                  "params": [
+                    {
+                      "key": "name",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          128
+                        ]
+                      },
+                      "description": "User name.",
+                      "optional": false,
+                      "example": "John Doe"
+                    },
+                    {
+                      "key": "age",
+                      "default": 0,
+                      "validator": {
+                        "range": [
+                          0,
+                          150
+                        ]
+                      },
+                      "description": "User age.",
+                      "optional": true,
+                      "example": "25"
+                    },
+                    {
+                      "key": "active",
+                      "default": false,
+                      "validator": {
+                        "boolean": true
+                      },
+                      "description": "Is active.",
+                      "optional": true,
+                      "deprecated": true,
+                      "example": "true"
+                    },
+                    {
+                      "key": "email",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          256
+                        ]
+                      },
+                      "description": "User email.",
+                      "optional": true,
+                      "example": "user@example.com",
+                      "aliases": [
+                        "emailAddress",
+                        "userEmail"
+                      ]
+                    },
+                    {
+                      "key": "status",
+                      "default": "draft",
+                      "validator": {
+                        "whitelist": [
+                          [
+                            "draft",
+                            "published"
+                          ]
+                        ]
+                      },
+                      "description": "Status.",
+                      "optional": true,
+                      "enum": {
+                        "name": "ArticleStatus",
+                        "map": {
+                          "draft": "Draft",
+                          "published": "Published"
+                        }
+                      }
+                    }
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "OK"
+                      }
+                    ]
+                  }
+                },
+                "aliased": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/aliased",
+                    "aliases": [
+                      "/alias-one",
+                      "/alias-two",
+                      "/alias-three"
+                    ]
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "statements": [
+                      {
+                        "send": "Aliased!"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "testCli": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                },
+                "build2": {
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": null,
+                      "validator": {
+                        "text": [
+                          0
+                        ]
+                      },
+                      "description": ""
+                    },
+                    {
+                      "key": "list",
+                      "default": null,
+                      "validator": {
+                        "array_list": [
+                          {
+                            "text": [
+                              256
+                            ]
+                          }
+                        ]
+                      },
+                      "description": "List of strings"
+                    }
+                  ],
+                  "callback": {
+                    "id": "build"
+                  }
+                }
+              }
+            },
+            "testWorker": {
+              "type": "Worker",
+              "actions": {
+                "workerStartHook": {
+                  "type": "WorkerStart",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStart"
+                  }
+                },
+                "workerStopHook": {
+                  "type": "WorkerStop",
+                  "groups": [
+                    "test"
+                  ],
+                  "callback": {
+                    "id": "workerStop"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "routes": []
+          }
+        ]
+      },
+      "expect": [
+        null,
+        [
+          {
+            "method": "GET",
+            "template": "",
+            "path": "/",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [
+              "test"
+            ],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          },
+          {
+            "method": "GET",
+            "template": "chunked",
+            "path": "/chunked",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          },
+          {
+            "method": "GET",
+            "template": "redirect",
+            "path": "/redirect",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          },
+          {
+            "method": "GET",
+            "template": "with-params",
+            "path": "/with-params",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": {
+              "name": {
+                "default": "",
+                "validator": "Value must be a valid string and at least 1 chars and no longer than 128 chars",
+                "description": "User name.",
+                "optional": false,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "John Doe",
+                "model": null,
+                "aliases": [],
+                "enum": null
+              },
+              "age": {
+                "default": 0,
+                "validator": "Value must be a valid range between 0 and 150",
+                "description": "User age.",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "25",
+                "model": null,
+                "aliases": [],
+                "enum": null
+              },
+              "active": {
+                "default": false,
+                "validator": "Value must be a valid boolean",
+                "description": "Is active.",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": true,
+                "example": "true",
+                "model": null,
+                "aliases": [],
+                "enum": null
+              },
+              "email": {
+                "default": "",
+                "validator": "Value must be a valid string and at least 1 chars and no longer than 256 chars",
+                "description": "User email.",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "user@example.com",
+                "model": null,
+                "aliases": [
+                  "emailAddress",
+                  "userEmail"
+                ],
+                "enum": null
+              },
+              "status": {
+                "default": "draft",
+                "validator": "Value must be one of (draft, published)",
+                "description": "Status.",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [],
+                "enum": {
+                  "name": "ArticleStatus",
+                  "map": {
+                    "draft": "Draft",
+                    "published": "Published"
+                  },
+                  "exclude": null
+                }
+              }
+            },
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          },
+          {
+            "method": "GET",
+            "template": "aliased",
+            "path": "/aliased",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          },
+          {
+            "method": "GET",
+            "template": "alias-one",
+            "path": "/aliased",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          },
+          {
+            "method": "GET",
+            "template": "alias-two",
+            "path": "/aliased",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          },
+          {
+            "method": "GET",
+            "template": "alias-three",
+            "path": "/aliased",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testActionParamFieldsForwardedToRoute: enum stored on Action params",
+      "op": "service.run",
+      "args": {
+        "type": "http",
+        "steps": [
+          {
+            "add_action": {
+              "key": "withParams",
+              "action": {
+                "http": {
+                  "method": "GET",
+                  "path": "/with-params"
+                },
+                "params": [
+                  {
+                    "key": "name",
+                    "default": "",
+                    "validator": {
+                      "text": [
+                        128
+                      ]
+                    },
+                    "description": "User name.",
+                    "optional": false,
+                    "example": "John Doe"
+                  },
+                  {
+                    "key": "age",
+                    "default": 0,
+                    "validator": {
+                      "range": [
+                        0,
+                        150
+                      ]
+                    },
+                    "description": "User age.",
+                    "optional": true,
+                    "example": "25"
+                  },
+                  {
+                    "key": "active",
+                    "default": false,
+                    "validator": {
+                      "boolean": true
+                    },
+                    "description": "Is active.",
+                    "optional": true,
+                    "deprecated": true,
+                    "example": "true"
+                  },
+                  {
+                    "key": "email",
+                    "default": "",
+                    "validator": {
+                      "text": [
+                        256
+                      ]
+                    },
+                    "description": "User email.",
+                    "optional": true,
+                    "example": "user@example.com",
+                    "aliases": [
+                      "emailAddress",
+                      "userEmail"
+                    ]
+                  },
+                  {
+                    "key": "status",
+                    "default": "draft",
+                    "validator": {
+                      "whitelist": [
+                        [
+                          "draft",
+                          "published"
+                        ]
+                      ]
+                    },
+                    "description": "Status.",
+                    "optional": true,
+                    "enum": {
+                      "name": "ArticleStatus",
+                      "map": {
+                        "draft": "Draft",
+                        "published": "Published"
+                      }
+                    }
+                  }
+                ],
+                "inject": [
+                  "response"
+                ],
+                "callback": {
+                  "statements": [
+                    {
+                      "send": "OK"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "action": "withParams"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "type": "Default",
+          "desc": null,
+          "groups": [],
+          "callback": true,
+          "params": {
+            "name": {
+              "default": "",
+              "validator": "Value must be a valid string and at least 1 chars and no longer than 128 chars",
+              "description": "User name.",
+              "optional": false,
+              "injections": [],
+              "skipValidation": false,
+              "deprecated": false,
+              "example": "John Doe",
+              "aliases": [],
+              "enum": null
+            },
+            "age": {
+              "default": 0,
+              "validator": "Value must be a valid range between 0 and 150",
+              "description": "User age.",
+              "optional": true,
+              "injections": [],
+              "skipValidation": false,
+              "deprecated": false,
+              "example": "25",
+              "aliases": [],
+              "enum": null
+            },
+            "active": {
+              "default": false,
+              "validator": "Value must be a valid boolean",
+              "description": "Is active.",
+              "optional": true,
+              "injections": [],
+              "skipValidation": false,
+              "deprecated": true,
+              "example": "true",
+              "aliases": [],
+              "enum": null
+            },
+            "email": {
+              "default": "",
+              "validator": "Value must be a valid string and at least 1 chars and no longer than 256 chars",
+              "description": "User email.",
+              "optional": true,
+              "injections": [],
+              "skipValidation": false,
+              "deprecated": false,
+              "example": "user@example.com",
+              "aliases": [
+                "emailAddress",
+                "userEmail"
+              ],
+              "enum": null
+            },
+            "status": {
+              "default": "draft",
+              "validator": "Value must be one of (draft, published)",
+              "description": "Status.",
+              "optional": true,
+              "injections": [],
+              "skipValidation": false,
+              "deprecated": false,
+              "example": "",
+              "aliases": [],
+              "enum": {
+                "name": "ArticleStatus",
+                "map": {
+                  "draft": "Draft",
+                  "published": "Published"
+                },
+                "exclude": null
+              }
+            }
+          },
+          "injections": [
+            "response"
+          ],
+          "labels": [],
+          "options": [
+            [
+              "param:name",
+              "param"
+            ],
+            [
+              "param:age",
+              "param"
+            ],
+            [
+              "param:active",
+              "param"
+            ],
+            [
+              "param:email",
+              "param"
+            ],
+            [
+              "param:status",
+              "param"
+            ],
+            [
+              "injection:response",
+              "injection"
+            ]
+          ],
+          "path": "/with-params",
+          "method": "GET",
+          "methods": [
+            "GET"
+          ],
+          "aliases": []
+        }
+      ]
+    }
+  ]
+}

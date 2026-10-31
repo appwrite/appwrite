@@ -1,0 +1,222 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Builder/ContainsAllTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ContainsAllTest::testContainsAllOnAStringMatchesAnyValueAsAWholePattern",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "updateAttributeIntegerOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MariaDB",
+            "args": {},
+            "as": "o1856"
+          },
+          "bind": "s4990",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\MySQL",
+            "args": {},
+            "as": "o1857"
+          },
+          "bind": "s4991",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Builder\\Postgres",
+            "args": {},
+            "as": "o1858"
+          },
+          "bind": "s4992",
+          "expect": {
+            "$builder": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAll",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "alpha",
+                "be%ta"
+              ]
+            },
+            "as": "o1859"
+          },
+          "bind": "s4993",
+          "expect": {
+            "$query": {
+              "method": "containsAll",
+              "attribute": "title",
+              "values": [
+                "alpha",
+                "be%ta"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1856"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1859"
+                }
+              ]
+            },
+            "as": "o1860"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`title` LIKE ? OR `title` LIKE ?)",
+              "bindings": [
+                "alpha",
+                "be%ta"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAll",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "alpha",
+                "be%ta"
+              ]
+            },
+            "as": "o1861"
+          },
+          "bind": "s4995",
+          "expect": {
+            "$query": {
+              "method": "containsAll",
+              "attribute": "title",
+              "values": [
+                "alpha",
+                "be%ta"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1857"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1861"
+                }
+              ]
+            },
+            "as": "o1862"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(`title` LIKE ? OR `title` LIKE ?)",
+              "bindings": [
+                "alpha",
+                "be%ta"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "containsAll",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "alpha",
+                "be%ta"
+              ]
+            },
+            "as": "o1863"
+          },
+          "bind": "s4997",
+          "expect": {
+            "$query": {
+              "method": "containsAll",
+              "attribute": "title",
+              "values": [
+                "alpha",
+                "be%ta"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1858"
+            },
+            "method": "compileFilters",
+            "args": {
+              "filters": [
+                {
+                  "$obj": "o1863"
+                }
+              ]
+            },
+            "as": "o1864"
+          },
+          "expect": {
+            "$value": "Query\\Builder\\Condition",
+            "fields": {
+              "expression": "(\"title\" ILIKE ? OR \"title\" ILIKE ?)",
+              "bindings": [
+                "alpha",
+                "be%ta"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

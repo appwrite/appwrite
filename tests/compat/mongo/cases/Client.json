@@ -1,0 +1,1375 @@
+{
+  "cases": [
+    {
+      "name": "write concerns",
+      "steps": [
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": "majority"
+          },
+          "expect": {
+            "w": "majority"
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": 1
+          },
+          "expect": {
+            "w": 1
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": 0
+          },
+          "expect": {
+            "w": 0
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Write concern w value must be >= 0"
+            }
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": []
+          },
+          "expect": []
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "w": -1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Write concern w value must be >= 0"
+            }
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "w": "majority"
+            }
+          },
+          "expect": {
+            "w": "majority"
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "j": 0
+            }
+          },
+          "expect": {
+            "j": false
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "j": "yes"
+            }
+          },
+          "expect": {
+            "j": true
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "wtimeout": -1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Write concern wtimeout must be a non-negative integer"
+            }
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "wtimeout": "5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Write concern wtimeout must be a non-negative integer"
+            }
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "wtimeout": 1.5
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Write concern wtimeout must be a non-negative integer"
+            }
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": {
+              "w": null,
+              "j": null
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": true
+          },
+          "expect": {
+            "w": 1
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": false
+          },
+          "expect": {
+            "w": 0
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": 2.0
+          },
+          "expect": {
+            "w": 2
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": 1.5
+          },
+          "expect": {
+            "w": 1
+          }
+        },
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": [
+              "x"
+            ]
+          },
+          "expect": []
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "read concerns",
+      "steps": [
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": "local"
+          },
+          "expect": {
+            "level": "local"
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": "available"
+          },
+          "expect": {
+            "level": "available"
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": "majority"
+          },
+          "expect": {
+            "level": "majority"
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": "linearizable"
+          },
+          "expect": {
+            "level": "linearizable"
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": "snapshot"
+          },
+          "expect": {
+            "level": "snapshot"
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": "LOCAL"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: LOCAL"
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: "
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": []
+          },
+          "expect": []
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": {
+              "level": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: x"
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": {
+              "level": null
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": {
+              "level": true
+            }
+          },
+          "expect": {
+            "level": true
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": {
+              "level": 0
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: 0"
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": {
+              "afterClusterTime": {
+                "$bson": {
+                  "$timestamp": {
+                    "t": 1,
+                    "i": 2
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "afterClusterTime": {
+              "$bson": {
+                "$timestamp": {
+                  "t": 1,
+                  "i": 2
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": 5
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: 5"
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: 1"
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: "
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": 1.5
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "Invalid read concern level: 1.5"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "transient and unknown commit errors",
+      "steps": [
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "plain",
+            "code": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "plain",
+            "code": 50
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "plain",
+            "code": 251
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "lost connection",
+            "code": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "a timeout",
+            "code": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "network",
+            "code": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "has TransientTransactionError",
+            "code": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "UnknownTransactionCommitResult",
+            "code": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "x",
+            "code": 91
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "x",
+            "code": 13436
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_transient_transaction_error",
+          "args": {
+            "message": "x",
+            "code": 6
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "plain",
+            "code": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "plain",
+            "code": 50
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "plain",
+            "code": 251
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "lost connection",
+            "code": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "a timeout",
+            "code": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "network",
+            "code": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "has TransientTransactionError",
+            "code": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "UnknownTransactionCommitResult",
+            "code": 0
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "x",
+            "code": 91
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "x",
+            "code": 13436
+          },
+          "expect": true
+        },
+        {
+          "op": "client.is_unknown_transaction_commit_result",
+          "args": {
+            "message": "x",
+            "code": 6
+          },
+          "expect": false
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "exceptions",
+      "steps": [
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "m",
+            "code": 11000
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "m",
+            "code": 11000,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": true,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Duplicate Key Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "m",
+            "code": 11001,
+            "error_labels": [
+              "RetryableWriteError"
+            ]
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "m",
+            "code": 11001,
+            "transient": true,
+            "network": false,
+            "retryable_write": true,
+            "duplicate_key": true,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [
+              "RetryableWriteError"
+            ],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Duplicate Key Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "m",
+            "code": 89
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "m",
+            "code": 89,
+            "transient": true,
+            "network": true,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": true,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Network Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "m",
+            "code": 50
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "m",
+            "code": 50,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": true,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Timeout Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "m",
+            "code": 0,
+            "write_concern_errors": [
+              {
+                "code": 64
+              }
+            ]
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "m",
+            "code": 0,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": true,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": [
+              {
+                "code": 64
+              }
+            ],
+            "operation_type": null,
+            "category": "Write Concern Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "m",
+            "code": 0,
+            "write_concern_errors": []
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "m",
+            "code": 0,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": [],
+            "operation_type": null,
+            "category": "MongoDB Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "message": "m",
+            "code": 0,
+            "error_labels": [
+              "TransientTransactionError"
+            ],
+            "write_errors": [
+              {
+                "index": 0
+              }
+            ],
+            "operation_type": "insert"
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "m",
+            "code": 0,
+            "transient": true,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [
+              "TransientTransactionError"
+            ],
+            "write_errors": [
+              {
+                "index": 0
+              }
+            ],
+            "write_concern_errors": null,
+            "operation_type": "insert",
+            "category": "Transient Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "class": "ConnectionException",
+            "message": "c",
+            "code": 6
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\ConnectionException",
+            "message": "c",
+            "code": 6,
+            "transient": true,
+            "network": true,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Network Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "class": "AuthenticationException",
+            "message": "a",
+            "code": 18
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\AuthenticationException",
+            "message": "a",
+            "code": 18,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "MongoDB Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "class": "TransactionException",
+            "message": "t",
+            "code": 251,
+            "error_labels": [
+              "UnknownTransactionCommitResult"
+            ]
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\TransactionException",
+            "message": "t",
+            "code": 251,
+            "transient": true,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [
+              "UnknownTransactionCommitResult"
+            ],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "Transient Error"
+          }
+        },
+        {
+          "op": "exception.new",
+          "args": {
+            "class": "BulkWriteException",
+            "message": "b",
+            "code": 65,
+            "result": {
+              "nInserted": 1,
+              "writeErrors": [
+                {
+                  "index": 1
+                }
+              ]
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\BulkWriteException",
+            "message": "b",
+            "code": 65,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "MongoDB Error",
+            "result": {
+              "nInserted": 1,
+              "writeErrors": [
+                {
+                  "index": 1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "exception.from_response",
+          "args": {
+            "response": {}
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "Unknown MongoDB error",
+            "code": 0,
+            "transient": false,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": false,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [],
+            "write_errors": null,
+            "write_concern_errors": null,
+            "operation_type": null,
+            "category": "MongoDB Error"
+          }
+        },
+        {
+          "op": "exception.from_response",
+          "args": {
+            "response": {
+              "errmsg": "boom",
+              "code": 112,
+              "errorLabels": [
+                "TransientTransactionError"
+              ],
+              "writeErrors": [
+                {
+                  "index": 0,
+                  "code": 11000
+                }
+              ],
+              "writeConcernErrors": [
+                {
+                  "code": 64
+                }
+              ]
+            },
+            "operation_type": "update"
+          },
+          "expect": {
+            "class": "Utopia\\Mongo\\Exception",
+            "message": "boom",
+            "code": 112,
+            "transient": true,
+            "network": false,
+            "retryable_write": false,
+            "duplicate_key": false,
+            "write_concern": true,
+            "unsent": false,
+            "timeout": false,
+            "error_labels": [
+              "TransientTransactionError"
+            ],
+            "write_errors": [
+              {
+                "index": 0,
+                "code": 11000
+              }
+            ],
+            "write_concern_errors": [
+              {
+                "code": 64
+              }
+            ],
+            "operation_type": "update",
+            "category": "Write Concern Error"
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "credentials",
+      "steps": [
+        {
+          "op": "auth.encode_credentials",
+          "args": {
+            "username": "root",
+            "password": "secret"
+          },
+          "expect": "secret"
+        },
+        {
+          "op": "auth.new",
+          "args": {
+            "authcid": "us=er,name",
+            "secret": "pencil",
+            "authzid": "ad,min"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "challenge": "r=x,s=c2FsdA==,i=1"
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.get_salted_password",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Typed property Utopia\\Mongo\\Auth::$saltedPassword must not be accessed before initialization"
+            }
+          }
+        },
+        {
+          "op": "auth.get_auth_message",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Typed property Utopia\\Mongo\\Auth::$authMessage must not be accessed before initialization"
+            }
+          }
+        },
+        {
+          "op": "auth.verify",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "data": "v=abcd"
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "carries the random client nonce"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "auth.get_cnonce",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "challenge": "garbage"
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "challenge": "r=wrongnonce,s=c2FsdA==,i=1"
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.server_first",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "suffix": "srv",
+            "salt": "pepper",
+            "iterations": 2
+          },
+          "bind": "sf",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "random nonce"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "challenge": {
+              "$ref": "sf"
+            }
+          },
+          "bind": "proof",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "answers a random nonce"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "auth.get_salted_password",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "$bytes": "hqstKUk3ZXDtj+OFI6i6vmjL5+tf3xR3k9vHFxythNU="
+          }
+        },
+        {
+          "op": "auth.get_auth_message",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "carries the random nonce"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "auth.verify",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "data": "v=abcd"
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.verify",
+          "args": {
+            "auth": {
+              "$ref": "a"
+            },
+            "data": "nope"
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.new",
+          "args": {
+            "authcid": "",
+            "secret": "x"
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "auth.start",
+          "args": {
+            "auth": {
+              "$ref": "e"
+            }
+          },
+          "expect": [
+            {
+              "saslStart": 1,
+              "mechanism": "SCRAM-SHA-256",
+              "payload": {
+                "$bson": {
+                  "$binary": {
+                    "base64": "",
+                    "subType": "00"
+                  }
+                }
+              },
+              "autoAuthorize": 1,
+              "options": {
+                "skipEmptyExchange": true
+              }
+            },
+            "admin"
+          ]
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "e"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.new",
+          "args": {
+            "authcid": "0",
+            "secret": "x"
+          },
+          "bind": "z",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "z"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "auth.new",
+          "args": {
+            "authcid": "user",
+            "secret": "x"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "n"
+            },
+            "challenge": "0"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "carries the random client nonce"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "auth.create_response",
+          "args": {
+            "auth": {
+              "$ref": "n"
+            },
+            "challenge": ""
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "carries the random client nonce"
+          },
+          "expect": "<masked>"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "concerns of the wrong type",
+      "steps": [
+        {
+          "op": "client.create_write_concern",
+          "args": {
+            "concern": null
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends the calling PHP file and line to a TypeError's message; the class is compared"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.create_read_concern",
+          "args": {
+            "concern": null
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PHP appends the calling PHP file and line to a TypeError's message; the class is compared"
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "<masked>"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "uuids",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_uuid",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": "<uuid7>"
+        },
+        {
+          "op": "client.create_uuid",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": "<uuid7>"
+        }
+      ]
+    }
+  ]
+}

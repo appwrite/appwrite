@@ -1,0 +1,1142 @@
+{
+  "source": "packages/abuse/tests/TimeLimitTest.php",
+  "cases": [
+    {
+      "name": "remaining counts down",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 3,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "name": "{ip}",
+            "value": "127.0.0.1"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 3,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "peek does not consume",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 3,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "name": "{ip}",
+            "value": "127.0.0.1"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {},
+            "calls": 2
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {
+              "ip:127.0.0.1__1699999980": 1
+            },
+            "calls": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "reset is end of window",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 3,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 2,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 3,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero limit is unlimited without storage",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 0,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 0,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {},
+            "calls": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "reset restores quota",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 2,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.reset",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 1,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 2,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {
+              "ip:{ip}__1699999980": 2
+            },
+            "calls": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "seconds must be positive",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 1,
+            "seconds": 0
+          },
+          "bind": "l",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "seconds must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "instance follows the clock across windows",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.advance",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            },
+            "seconds": 60
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000100
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {
+              "ip:{ip}__1699999980": 1,
+              "ip:{ip}__1700000040": 1
+            },
+            "calls": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "withParams clones count independently",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip:{ip}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "base",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "base"
+            },
+            "params": {
+              "{ip}": "a"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "params": {
+              "{ip}": "b"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": "ip:a"
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "expect": "ip:b"
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": 1,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": "ip:a"
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "base"
+            }
+          },
+          "expect": "ip:{ip}"
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {
+              "ip:a__1699999980": 1,
+              "ip:b__1699999980": 1
+            },
+            "calls": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "negative limit is always limited",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip",
+            "limit": -3,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": -3,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": true,
+            "limit": -3,
+            "remaining": 0,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            }
+          },
+          "expect": {
+            "counts": {},
+            "calls": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "window aligned on the epoch with a long window",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip",
+            "limit": 5,
+            "seconds": 86400
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 1700006400
+          }
+        },
+        {
+          "op": "limit.peek",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 3,
+            "reset": 1700006400
+          }
+        }
+      ]
+    },
+    {
+      "name": "logs of the double",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "now": 1700000017
+          },
+          "bind": "st",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "memory",
+            "memory": {
+              "$ref": "st"
+            },
+            "key": "ip",
+            "limit": 5,
+            "seconds": 60
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 1700000040
+          }
+        },
+        {
+          "op": "memory.advance",
+          "args": {
+            "memory": {
+              "$ref": "st"
+            },
+            "seconds": 120
+          },
+          "expect": null
+        },
+        {
+          "op": "limit.check",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "limited": false,
+            "limit": 5,
+            "remaining": 4,
+            "reset": 1700000160
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            }
+          },
+          "expect": {
+            "ip__1699999980": 1,
+            "ip__1700000100": 1
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": 1
+          },
+          "expect": {
+            "ip__1700000100": 1
+          }
+        },
+        {
+          "op": "limit.logs",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "offset": -1,
+            "count": null
+          },
+          "expect": {
+            "ip__1700000100": 1
+          }
+        },
+        {
+          "op": "limit.cleanup",
+          "args": {
+            "handle": {
+              "$ref": "l"
+            },
+            "timestamp": 0
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

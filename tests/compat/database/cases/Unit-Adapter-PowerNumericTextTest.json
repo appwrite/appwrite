@@ -1,0 +1,2397 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/PowerNumericTextTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PowerNumericTextTest::testANumericTextExponentIsReadAsANumber#integer text",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o546"
+          },
+          "bind": "s1681",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o546"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            2
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o547"
+          },
+          "bind": "s1683",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o547"
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": 2
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"power\",\"attribute\":\"count\",\"values\":[\"2\"]}"
+            },
+            "as": "o548"
+          },
+          "bind": "s1685",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "count",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o548"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testANumericTextExponentIsReadAsANumber#decimal text",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "0.5"
+            },
+            "as": "o549"
+          },
+          "bind": "s1687",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o549"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            0.5
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "0.5"
+            },
+            "as": "o550"
+          },
+          "bind": "s1689",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o550"
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"power\",\"attribute\":\"count\",\"values\":[\"0.5\"]}"
+            },
+            "as": "o551"
+          },
+          "bind": "s1691",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "count",
+              "values": [
+                0.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o551"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            0.5
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testANumericTextExponentIsReadAsANumber#negative text",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "-1"
+            },
+            "as": "o552"
+          },
+          "bind": "s1693",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o552"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            -1
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "-1"
+            },
+            "as": "o553"
+          },
+          "bind": "s1695",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o553"
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": -1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"power\",\"attribute\":\"count\",\"values\":[\"-1\"]}"
+            },
+            "as": "o554"
+          },
+          "bind": "s1697",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "count",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o554"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            -1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testANumericTextExponentIsReadAsANumber#exponent text",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "1e1"
+            },
+            "as": "o555"
+          },
+          "bind": "s1699",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                10.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            10.0
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "1e1"
+            },
+            "as": "o556"
+          },
+          "bind": "s1701",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                10.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o556"
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": 10.0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"power\",\"attribute\":\"count\",\"values\":[\"1e1\"]}"
+            },
+            "as": "o557"
+          },
+          "bind": "s1703",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "count",
+              "values": [
+                10.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            10.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testANumericTextExponentIsReadAsANumber#non-numeric text",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "two"
+            },
+            "as": "o558"
+          },
+          "bind": "s1705",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                "two"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o558"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "two"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "two"
+            },
+            "as": "o559"
+          },
+          "bind": "s1707",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                "two"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o559"
+            },
+            "method": "getValue",
+            "args": {}
+          },
+          "expect": "two"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"power\",\"attribute\":\"count\",\"values\":[\"two\"]}"
+            },
+            "as": "o560"
+          },
+          "bind": "s1709",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "count",
+              "values": [
+                "two"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "two"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testTheLimitOfAPowerIsLeftAsGiven",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2",
+              "max": "18446744073709551615"
+            },
+            "as": "o561"
+          },
+          "bind": "s1711",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2,
+                "18446744073709551615"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o561"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            2,
+            "18446744073709551615"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o562"
+          },
+          "bind": "s1713",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o562"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "power",
+            "attribute": "",
+            "values": [
+              "2"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testANumericTextExponentIsAppliedAndNonNumericTextRefused#SQLite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o563"
+          },
+          "bind": "s1715",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o563"
+              },
+              "cache": "none"
+            },
+            "as": "o564"
+          },
+          "bind": "s1716",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "power_text"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "power_text"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o565"
+          },
+          "bind": "s1719",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o565"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count",
+              "default": 4
+            },
+            "as": "o566"
+          },
+          "bind": "s1722",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": 4,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o567"
+          },
+          "bind": "s1723",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o568"
+          },
+          "bind": "s1724",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o568"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o569"
+          },
+          "bind": "s1726",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o569"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o570"
+          },
+          "bind": "s1728",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o570"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o566"
+                },
+                {
+                  "$obj": "o567"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o571"
+          },
+          "bind": "s1730",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": 4,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o571"
+              }
+            },
+            "as": "o572"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": 4,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "count": 3,
+                "ratio": 1.5
+              }
+            },
+            "as": "o573"
+          },
+          "bind": "s1732",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "count": 3,
+              "ratio": 1.5
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o573"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "count": 3,
+              "ratio": 1.5,
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o574"
+          },
+          "bind": "s1734",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o575"
+          },
+          "bind": "s1735",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "count": {
+                  "$obj": "o574"
+                },
+                "ratio": {
+                  "$obj": "o575"
+                }
+              }
+            },
+            "as": "o576"
+          },
+          "bind": "s1736",
+          "expect": {
+            "$document": {
+              "count": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              },
+              "ratio": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "first",
+              "document": {
+                "$obj": "o576"
+              }
+            },
+            "as": "o577"
+          },
+          "bind": "s1737",
+          "expect": {
+            "$document": {
+              "count": 9,
+              "ratio": 2.25,
+              "$id": "first",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o577"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 9
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o577"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "ratio"
+            }
+          },
+          "expect": 2.25
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2",
+              "max": "50"
+            },
+            "as": "o578"
+          },
+          "bind": "s1740",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2,
+                "50"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "count": {
+                  "$obj": "o578"
+                }
+              }
+            },
+            "as": "o579"
+          },
+          "bind": "s1741",
+          "expect": {
+            "$document": {
+              "count": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    "50"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "first",
+              "document": {
+                "$obj": "o579"
+              }
+            },
+            "as": "o580"
+          },
+          "bind": "s1742",
+          "expect": {
+            "$document": {
+              "count": 9,
+              "ratio": 2.25,
+              "$id": "first",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o580"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 9
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "getAdapter",
+            "args": {}
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o563"
+            },
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Upserts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o581"
+          },
+          "bind": "s1746",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "created",
+                "count": {
+                  "$obj": "o581"
+                }
+              }
+            },
+            "as": "o582"
+          },
+          "bind": "s1747",
+          "expect": {
+            "$document": {
+              "$id": "created",
+              "count": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "upsertDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o582"
+              }
+            },
+            "as": "o583"
+          },
+          "expect": {
+            "$document": {
+              "count": 16,
+              "ratio": null,
+              "$id": "created",
+              "$sequence": "2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "created"
+            },
+            "as": "o584"
+          },
+          "bind": "s1749",
+          "expect": {
+            "$document": {
+              "count": 16,
+              "ratio": null,
+              "$sequence": "2",
+              "$id": "created",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o584"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 16
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "two"
+            },
+            "as": "o585"
+          },
+          "bind": "s1751",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                "two"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "count": {
+                  "$obj": "o585"
+                }
+              }
+            },
+            "as": "o586"
+          },
+          "bind": "s1752",
+          "expect": {
+            "$document": {
+              "count": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    "two"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "first",
+              "document": {
+                "$obj": "o586"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Cannot apply power operator: value must be numeric, got string"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "first"
+            },
+            "as": "o587"
+          },
+          "bind": "s1754",
+          "expect": {
+            "$document": {
+              "count": 9,
+              "ratio": 2.25,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o587"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 9
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testANumericTextExponentIsAppliedAndNonNumericTextRefused#Memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o588"
+          },
+          "bind": "s1756",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o588"
+              },
+              "cache": "none"
+            },
+            "as": "o589"
+          },
+          "bind": "s1757",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "power_text"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "power_text"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o590"
+          },
+          "bind": "s1760",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o590"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count",
+              "default": 4
+            },
+            "as": "o591"
+          },
+          "bind": "s1763",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": 4,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "float",
+            "args": {
+              "key": "ratio"
+            },
+            "as": "o592"
+          },
+          "bind": "s1764",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "ratio",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Float"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o593"
+          },
+          "bind": "s1765",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o593"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o594"
+          },
+          "bind": "s1767",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o594"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o595"
+          },
+          "bind": "s1769",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o595"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o591"
+                },
+                {
+                  "$obj": "o592"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o596"
+          },
+          "bind": "s1771",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": 4,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o596"
+              }
+            },
+            "as": "o597"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": 4,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "ratio",
+                    "key": "ratio",
+                    "type": "float",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "count": 3,
+                "ratio": 1.5
+              }
+            },
+            "as": "o598"
+          },
+          "bind": "s1773",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "count": 3,
+              "ratio": 1.5
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o598"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "count": 3,
+              "ratio": 1.5,
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o599"
+          },
+          "bind": "s1775",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o600"
+          },
+          "bind": "s1776",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "count": {
+                  "$obj": "o599"
+                },
+                "ratio": {
+                  "$obj": "o600"
+                }
+              }
+            },
+            "as": "o601"
+          },
+          "bind": "s1777",
+          "expect": {
+            "$document": {
+              "count": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              },
+              "ratio": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "first",
+              "document": {
+                "$obj": "o601"
+              }
+            },
+            "as": "o602"
+          },
+          "bind": "s1778",
+          "expect": {
+            "$document": {
+              "count": 9,
+              "ratio": 2.25,
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o602"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 9
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o602"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "ratio"
+            }
+          },
+          "expect": 2.25
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2",
+              "max": "50"
+            },
+            "as": "o603"
+          },
+          "bind": "s1781",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2,
+                "50"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "count": {
+                  "$obj": "o603"
+                }
+              }
+            },
+            "as": "o604"
+          },
+          "bind": "s1782",
+          "expect": {
+            "$document": {
+              "count": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    "50"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "first",
+              "document": {
+                "$obj": "o604"
+              }
+            },
+            "as": "o605"
+          },
+          "bind": "s1783",
+          "expect": {
+            "$document": {
+              "count": 9,
+              "ratio": 2.25,
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o605"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 9
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "getAdapter",
+            "args": {}
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o588"
+            },
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Upserts"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "two"
+            },
+            "as": "o606"
+          },
+          "bind": "s1787",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                "two"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "count": {
+                  "$obj": "o606"
+                }
+              }
+            },
+            "as": "o607"
+          },
+          "bind": "s1788",
+          "expect": {
+            "$document": {
+              "count": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    "two"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "items",
+              "id": "first",
+              "document": {
+                "$obj": "o607"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Cannot apply power operator: value must be numeric, got string"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "items",
+              "id": "first"
+            },
+            "as": "o608"
+          },
+          "bind": "s1790",
+          "expect": {
+            "$document": {
+              "count": 9,
+              "ratio": 2.25,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "items"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o608"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "count"
+            }
+          },
+          "expect": 9
+        }
+      ]
+    },
+    {
+      "name": "PowerNumericTextTest::testRedisAppliesANumericTextExponent",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2"
+            },
+            "as": "o609"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": "2",
+              "max": "5"
+            },
+            "as": "o610"
+          },
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2,
+                "5"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

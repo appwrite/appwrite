@@ -1,0 +1,934 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/SkipDuplicatesPermissionTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SkipDuplicatesPermissionTest::testTheMemoryAdapterCountsOnlyInsertedDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o3112"
+          },
+          "bind": "s5406",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o3113"
+          },
+          "bind": "s5407",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o3113"
+              },
+              "cache": "none"
+            },
+            "as": "o3114"
+          },
+          "bind": "s5408",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o3112"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "skip_duplicates_permission"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "skip_duplicates_permission"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "rank"
+            },
+            "as": "o3115"
+          },
+          "bind": "s5413",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "rank",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "slug",
+              "size": 64
+            },
+            "as": "o3116"
+          },
+          "bind": "s5414",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "slug",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "slug",
+              "attributes": [
+                "slug"
+              ]
+            },
+            "as": "o3117"
+          },
+          "bind": "s5415",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "slug",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "slug"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o3118"
+          },
+          "bind": "s5416",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o3118"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o3115"
+                },
+                {
+                  "$obj": "o3116"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o3117"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o3119"
+          },
+          "bind": "s5418",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "rank",
+                    "key": "rank",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o3119"
+              }
+            },
+            "as": "o3120"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "rank",
+                    "key": "rank",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "slug",
+                    "key": "slug",
+                    "type": "unique",
+                    "attributes": [
+                      "slug"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "alice"
+            },
+            "as": "o3121"
+          },
+          "bind": "s5420",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o3121"
+              }
+            }
+          },
+          "expect": "read(\"user:alice\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "existing",
+                "$permissions": [
+                  "read(\"user:alice\")"
+                ],
+                "rank": 5,
+                "slug": "existing"
+              }
+            },
+            "as": "o3122"
+          },
+          "bind": "s5422",
+          "expect": {
+            "$document": {
+              "$id": "existing",
+              "$permissions": [
+                "read(\"user:alice\")"
+              ],
+              "rank": 5,
+              "slug": "existing"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "isTenantPerDocument",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o3122"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "existing",
+              "$permissions": [
+                "read(\"user:alice\")"
+              ],
+              "rank": 5,
+              "slug": "existing",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "ignoreDuplicates",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3123"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3123"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "existing",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "rank": 7,
+                          "slug": "existing"
+                        }
+                      },
+                      "as": "o3124"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3114"
+                      },
+                      "method": "isTenantPerDocument",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3125"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3125"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "other",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "rank": 4,
+                          "slug": "existing"
+                        }
+                      },
+                      "as": "o3126"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3114"
+                      },
+                      "method": "isTenantPerDocument",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3127"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3127"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "fresh",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "rank": 3,
+                          "slug": "fresh"
+                        }
+                      },
+                      "as": "o3128"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3114"
+                      },
+                      "method": "isTenantPerDocument",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Role",
+                      "method": "any",
+                      "args": {},
+                      "as": "o3129"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Permission",
+                      "method": "read",
+                      "args": {
+                        "role": {
+                          "$obj": "o3129"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "fresh",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "rank": 2,
+                          "slug": "fresh"
+                        }
+                      },
+                      "as": "o3130"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3114"
+                      },
+                      "method": "isTenantPerDocument",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o3114"
+                      },
+                      "method": "createDocuments",
+                      "args": {
+                        "collection": "notes",
+                        "documents": [
+                          {
+                            "$obj": "o3124"
+                          },
+                          {
+                            "$obj": "o3126"
+                          },
+                          {
+                            "$obj": "o3128"
+                          },
+                          {
+                            "$obj": "o3130"
+                          }
+                        ],
+                        "onNext": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o3128"
+                                },
+                                "method": "getId",
+                                "args": {}
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s5425",
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "existing",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "rank": 7,
+                        "slug": "existing"
+                      }
+                    },
+                    false,
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "other",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "rank": 4,
+                        "slug": "existing"
+                      }
+                    },
+                    false,
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "fresh",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "rank": 3,
+                        "slug": "fresh"
+                      }
+                    },
+                    false,
+                    {
+                      "$value": "Role",
+                      "fields": {}
+                    },
+                    "read(\"any\")",
+                    {
+                      "$document": {
+                        "$id": "fresh",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "rank": 2,
+                        "slug": "fresh"
+                      }
+                    },
+                    false,
+                    {
+                      "result": 1,
+                      "calls": {
+                        "onNext": [
+                          {
+                            "args": [
+                              {
+                                "$document": {
+                                  "$id": "fresh",
+                                  "$permissions": [
+                                    "read(\"any\")"
+                                  ],
+                                  "rank": 3,
+                                  "slug": "fresh",
+                                  "$collection": "notes",
+                                  "$createdAt": "<now>",
+                                  "$updatedAt": "<now>",
+                                  "$sequence": "2"
+                                }
+                              },
+                              null
+                            ],
+                            "steps": [
+                              "fresh"
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "isTenantPerDocument",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "$id"
+            },
+            "as": "o3131"
+          },
+          "bind": "s5427",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$id",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3114"
+            },
+            "method": "find",
+            "args": {
+              "collection": "notes",
+              "queries": [
+                {
+                  "$obj": "o3131"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "rank": 3,
+                "slug": "fresh",
+                "$id": "fresh",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "2",
+                "$collection": "notes"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "rank": 3,
+                "slug": "fresh",
+                "$id": "fresh",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$sequence": "2",
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "fresh"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3192 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Indexes/CreateReturnsStoredTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CreateReturnsStoredTest::testCreateIndexReturnsTheStoredModel",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1"
+          },
+          "bind": "s0",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1"
+              },
+              "cache": "none"
+            },
+            "as": "o2"
+          },
+          "bind": "s1",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o3"
+          },
+          "bind": "s2",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o3"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_returns_stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_returns_stored_u000000000001"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o4"
+          },
+          "bind": "s7",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "isbn",
+              "size": 32
+            },
+            "as": "o5"
+          },
+          "bind": "s8",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "isbn",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o4"
+                },
+                {
+                  "$obj": "o5"
+                }
+              ]
+            },
+            "as": "o6"
+          },
+          "bind": "s9",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o6"
+              }
+            },
+            "as": "o7"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_title",
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                64
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ]
+            },
+            "as": "o8"
+          },
+          "bind": "s11",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                64
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o8"
+              }
+            },
+            "as": "o9"
+          },
+          "bind": "s12",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Desc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o10"
+          },
+          "bind": "s13",
+          "expect": {
+            "$document": {
+              "$id": "by_title",
+              "key": "by_title",
+              "type": "key",
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o10"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_title",
+            "key": "by_title",
+            "type": "key",
+            "attributes": [
+              "title"
+            ],
+            "lengths": [
+              null
+            ],
+            "orders": [
+              "DESC"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o2"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o11"
+          },
+          "bind": "s15",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_title",
+                    "key": "by_title",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_title",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [
+                  {
+                    "$enum": "Query\\OrderDirection::Desc"
+                  }
+                ],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Index",
+              "fields": {
+                "key": "by_title",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [
+                  null
+                ],
+                "orders": [
+                  {
+                    "$enum": "Query\\OrderDirection::Desc"
+                  }
+                ],
+                "ttl": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o12"
+          },
+          "bind": "s17",
+          "expect": {
+            "$document": {
+              "$id": "by_title",
+              "key": "by_title",
+              "type": "key",
+              "attributes": [
+                "title"
+              ],
+              "lengths": [
+                null
+              ],
+              "orders": [
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o12"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "by_title",
+            "key": "by_title",
+            "type": "key",
+            "attributes": [
+              "title"
+            ],
+            "lengths": [
+              null
+            ],
+            "orders": [
+              "DESC"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateReturnsStoredTest::testCreateIndexRefusesAKeyThatDiffersOnlyInCase",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o13"
+          },
+          "bind": "s19",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o13"
+              },
+              "cache": "none"
+            },
+            "as": "o14"
+          },
+          "bind": "s20",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o15"
+          },
+          "bind": "s21",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o15"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_returns_stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_returns_stored_u000000000002"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o16"
+          },
+          "bind": "s26",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "isbn",
+              "size": 32
+            },
+            "as": "o17"
+          },
+          "bind": "s27",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "isbn",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o16"
+                },
+                {
+                  "$obj": "o17"
+                }
+              ]
+            },
+            "as": "o18"
+          },
+          "bind": "s28",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o18"
+              }
+            },
+            "as": "o19"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_title",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o20"
+          },
+          "bind": "s30",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o20"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "BY_TITLE",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o21"
+          },
+          "bind": "s32",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "BY_TITLE",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o21"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateReturnsStoredTest::testCreateIndexRefusesAnIndexWithoutAttributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o22"
+          },
+          "bind": "s34",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o22"
+              },
+              "cache": "none"
+            },
+            "as": "o23"
+          },
+          "bind": "s35",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o24"
+          },
+          "bind": "s36",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o24"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_returns_stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_returns_stored_u000000000003"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o25"
+          },
+          "bind": "s41",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "isbn",
+              "size": 32
+            },
+            "as": "o26"
+          },
+          "bind": "s42",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "isbn",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o25"
+                },
+                {
+                  "$obj": "o26"
+                }
+              ]
+            },
+            "as": "o27"
+          },
+          "bind": "s43",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o27"
+              }
+            },
+            "as": "o28"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "empty",
+              "attributes": []
+            },
+            "as": "o29"
+          },
+          "bind": "s45",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "empty",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o23"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o29"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Missing attributes"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateReturnsStoredTest::testRenameIndexStoresTheIndexUnderTheNewKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o30"
+          },
+          "bind": "s47",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o30"
+              },
+              "cache": "none"
+            },
+            "as": "o31"
+          },
+          "bind": "s48",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o32"
+          },
+          "bind": "s49",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o32"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_returns_stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_returns_stored_u000000000004"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o33"
+          },
+          "bind": "s54",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "isbn",
+              "size": 32
+            },
+            "as": "o34"
+          },
+          "bind": "s55",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "isbn",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o33"
+                },
+                {
+                  "$obj": "o34"
+                }
+              ]
+            },
+            "as": "o35"
+          },
+          "bind": "s56",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o35"
+              }
+            },
+            "as": "o36"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_title",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o37"
+          },
+          "bind": "s58",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o37"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "renameIndex",
+            "args": {
+              "collection": "books",
+              "old": "by_title",
+              "new": "title_lookup"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o38"
+          },
+          "bind": "s61",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "title_lookup",
+                    "key": "title_lookup",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o38"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "title_lookup",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o31"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o39"
+          },
+          "bind": "s63",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "title_lookup",
+                    "key": "title_lookup",
+                    "type": "key",
+                    "attributes": [
+                      "title"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o39"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "title_lookup",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Key"
+                },
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CreateReturnsStoredTest::testRenameIndexRefusesAKeyInUse",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o40"
+          },
+          "bind": "s65",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o40"
+              },
+              "cache": "none"
+            },
+            "as": "o41"
+          },
+          "bind": "s66",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o42"
+          },
+          "bind": "s67",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o42"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_returns_stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_returns_stored_u000000000005"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o43"
+          },
+          "bind": "s72",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "isbn",
+              "size": 32
+            },
+            "as": "o44"
+          },
+          "bind": "s73",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "isbn",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o43"
+                },
+                {
+                  "$obj": "o44"
+                }
+              ]
+            },
+            "as": "o45"
+          },
+          "bind": "s74",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o45"
+              }
+            },
+            "as": "o46"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_title",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o47"
+          },
+          "bind": "s76",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o47"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_isbn",
+              "attributes": [
+                "isbn"
+              ]
+            },
+            "as": "o48"
+          },
+          "bind": "s78",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_isbn",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "isbn"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o48"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_isbn",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "isbn"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o41"
+            },
+            "method": "renameIndex",
+            "args": {
+              "collection": "books",
+              "old": "by_title",
+              "new": "by_isbn"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Index name already used"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CreateReturnsStoredTest::testDeleteIndexRemovesItFromTheMetadata",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o49"
+          },
+          "bind": "s81",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o49"
+              },
+              "cache": "none"
+            },
+            "as": "o50"
+          },
+          "bind": "s82",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o51"
+          },
+          "bind": "s83",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o51"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_returns_stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_returns_stored_u000000000006"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o52"
+          },
+          "bind": "s88",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "isbn",
+              "size": 32
+            },
+            "as": "o53"
+          },
+          "bind": "s89",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "isbn",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o52"
+                },
+                {
+                  "$obj": "o53"
+                }
+              ]
+            },
+            "as": "o54"
+          },
+          "bind": "s90",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o54"
+              }
+            },
+            "as": "o55"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "by_title",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o56"
+          },
+          "bind": "s92",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o56"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_title",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "by_isbn",
+              "attributes": [
+                "isbn"
+              ]
+            },
+            "as": "o57"
+          },
+          "bind": "s94",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_isbn",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "isbn"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "books",
+              "index": {
+                "$obj": "o57"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_isbn",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "isbn"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "deleteIndex",
+            "args": {
+              "collection": "books",
+              "key": "by_title"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o50"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o58"
+          },
+          "bind": "s97",
+          "expect": {
+            "$document": {
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_isbn",
+                    "key": "by_isbn",
+                    "type": "unique",
+                    "attributes": [
+                      "isbn"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o58"
+            },
+            "method": "indexes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Index",
+              "fields": {
+                "key": "by_isbn",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Unique"
+                },
+                "attributes": [
+                  "isbn"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CreateReturnsStoredTest::testDeleteIndexOfAMissingKeyIsNotFound",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o59"
+          },
+          "bind": "s99",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o59"
+              },
+              "cache": "none"
+            },
+            "as": "o60"
+          },
+          "bind": "s100",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o61"
+          },
+          "bind": "s101",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o60"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o61"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o60"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "index_returns_stored"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o60"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "index_returns_stored_u000000000007"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o60"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o62"
+          },
+          "bind": "s106",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "isbn",
+              "size": 32
+            },
+            "as": "o63"
+          },
+          "bind": "s107",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "isbn",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o62"
+                },
+                {
+                  "$obj": "o63"
+                }
+              ]
+            },
+            "as": "o64"
+          },
+          "bind": "s108",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o60"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o64"
+              }
+            },
+            "as": "o65"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "isbn",
+                    "key": "isbn",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o60"
+            },
+            "method": "deleteIndex",
+            "args": {
+              "collection": "books",
+              "key": "missing"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Index not found"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

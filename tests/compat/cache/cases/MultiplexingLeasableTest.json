@@ -1,0 +1,561 @@
+{
+  "source": "packages/cache/tests/E2E/MultiplexingLeasableTest.php",
+  "cases": [
+    {
+      "name": "testFreshKeyHasZeroGeneration .. testFreshSaveAfterPurgeSucceeds",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "generation",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:1",
+                  "generation": "0"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "generation",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "stale": true
+                  },
+                  "hash": "${ns}:doc:1",
+                  "generation": "0"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 2
+                  },
+                  "hash": "${ns}:doc:1",
+                  "generation": "1"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:2",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "field-a",
+                  "generation": "0"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:2",
+                  "hash": "field-a"
+                }
+              },
+              {
+                "op": "generation",
+                "args": {
+                  "key": "${ns}:doc:2"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:2",
+                  "data": {
+                    "stale": true
+                  },
+                  "hash": "field-a",
+                  "generation": "0"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:absent"
+                }
+              },
+              {
+                "op": "list",
+                "args": {
+                  "key": "${ns}:doc:2"
+                }
+              }
+            ]
+          },
+          "expect": [
+            "0",
+            true,
+            {
+              "$array": [
+                [
+                  "v",
+                  1
+                ]
+              ]
+            },
+            true,
+            "1",
+            false,
+            false,
+            true,
+            {
+              "$array": [
+                [
+                  "v",
+                  2
+                ]
+              ]
+            },
+            true,
+            true,
+            "1",
+            false,
+            false,
+            []
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    },
+    {
+      "name": "testLeaseSurvivesScriptCacheFlush",
+      "steps": [
+        {
+          "op": "raw.script_flush",
+          "args": {
+            "service": "cache-redis-mux"
+          },
+          "expect": true
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:1",
+                  "generation": "0"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "generation",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              }
+            ]
+          },
+          "expect": [
+            true,
+            true,
+            "1"
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    },
+    {
+      "name": "testPurgeDropsValueButKeepsGenerationField, testReservedGenerationFieldIsProtected, testListHidesGenerationField",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "flush",
+                "args": {}
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:1",
+                  "generation": "0"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "generation",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "size",
+                "args": {}
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "attacker",
+                  "hash": "__utopia_gen__"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "attacker",
+                  "hash": "__utopia_gen__",
+                  "generation": "1"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "hash": "__utopia_gen__"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "__utopia_gen__"
+                }
+              },
+              {
+                "op": "touch",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "hash": "__utopia_gen__"
+                }
+              },
+              {
+                "op": "list",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "stale",
+                  "hash": "${ns}:doc:1",
+                  "generation": "0"
+                }
+              }
+            ]
+          },
+          "expect": [
+            true,
+            true,
+            true,
+            false,
+            "1",
+            1,
+            false,
+            false,
+            false,
+            false,
+            false,
+            [],
+            false
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    },
+    {
+      "name": "testLeaseGraceWindowDefaultsToZero .. testTombstoneIgnoresImplausibleFutureDeadline",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "generation",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "stale": true
+                  },
+                  "hash": "${ns}:doc:1",
+                  "generation": "1"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "attacker",
+                  "hash": "__utopia_tomb__"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "hash": "__utopia_tomb__"
+                }
+              },
+              {
+                "op": "list",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              }
+            ]
+          },
+          "expect": [
+            false,
+            "1",
+            false,
+            false,
+            false,
+            false,
+            []
+          ]
+        },
+        {
+          "op": "raw.tomb",
+          "args": {
+            "service": "cache-redis-mux",
+            "key": "${ns}:doc:1",
+            "seconds": -60
+          },
+          "expect": 0
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "fresh": true
+                  },
+                  "hash": "${ns}:doc:1",
+                  "generation": "1"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              }
+            ]
+          },
+          "expect": [
+            true,
+            {
+              "$array": [
+                [
+                  "fresh",
+                  true
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "op": "raw.hexists",
+          "args": {
+            "service": "cache-redis-mux",
+            "key": "${ns}:doc:1",
+            "field": "__utopia_tomb__"
+          },
+          "expect": false
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:9"
+                }
+              }
+            ]
+          },
+          "expect": [
+            false
+          ]
+        },
+        {
+          "op": "raw.tomb",
+          "args": {
+            "service": "cache-redis-mux",
+            "key": "${ns}:doc:9",
+            "seconds": 3600
+          },
+          "expect": 0
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:9",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:9",
+                  "generation": "1"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:9",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:9"
+                }
+              }
+            ]
+          },
+          "expect": [
+            true,
+            {
+              "$array": [
+                [
+                  "v",
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    }
+  ]
+}

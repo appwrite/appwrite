@@ -1,0 +1,2574 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQLiteSharedFulltextTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLiteSharedFulltextTest::testAStringTenantsFulltextIndexSeesOnlyItsOwnRows",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o538"
+          },
+          "bind": "s962",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o538"
+              },
+              "cache": "none"
+            },
+            "as": "o539"
+          },
+          "bind": "s963",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "fulltext"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "fulltext"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant-a"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o540"
+          },
+          "bind": "s968",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o540"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant-a"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 128
+            },
+            "as": "o541"
+          },
+          "bind": "s972",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o542"
+          },
+          "bind": "s973",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o542"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o543"
+          },
+          "bind": "s975",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o543"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o544"
+          },
+          "bind": "s977",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o544"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o545"
+          },
+          "bind": "s979",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o545"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o541"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o546"
+          },
+          "bind": "s981",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o546"
+              }
+            },
+            "as": "o547"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "tenant-a",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "early",
+                "body": "shared word written before the index"
+              }
+            },
+            "as": "o548"
+          },
+          "bind": "s983",
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o548"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant-a",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "body_search",
+              "attributes": [
+                "body"
+              ]
+            },
+            "as": "o549"
+          },
+          "bind": "s985",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "notes",
+              "index": {
+                "$obj": "o549"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "late",
+                "body": "shared word written after the index"
+              }
+            },
+            "as": "o550"
+          },
+          "bind": "s987",
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o550"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant-a",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant'b"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 128
+            },
+            "as": "o551"
+          },
+          "bind": "s990",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o552"
+          },
+          "bind": "s991",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o552"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o553"
+          },
+          "bind": "s993",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o553"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o554"
+          },
+          "bind": "s995",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o554"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o555"
+          },
+          "bind": "s997",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o555"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o551"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o556"
+          },
+          "bind": "s999",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o556"
+              }
+            },
+            "as": "o557"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "tenant'b",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "early",
+                "body": "shared word written before the index"
+              }
+            },
+            "as": "o558"
+          },
+          "bind": "s1001",
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o558"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant'b",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "body_search",
+              "attributes": [
+                "body"
+              ]
+            },
+            "as": "o559"
+          },
+          "bind": "s1003",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "notes",
+              "index": {
+                "$obj": "o559"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "late",
+                "body": "shared word written after the index"
+              }
+            },
+            "as": "o560"
+          },
+          "bind": "s1005",
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o560"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant'b",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant-a"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "body",
+              "value": "shared"
+            },
+            "as": "o561"
+          },
+          "bind": "s1008",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "body",
+              "values": [
+                "shared"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "find",
+            "args": {
+              "collection": "notes",
+              "queries": [
+                {
+                  "$obj": "o561"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "body": "shared word written before the index",
+                "$id": "early",
+                "$sequence": "1",
+                "$tenant": "tenant-a",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            {
+              "$document": {
+                "body": "shared word written after the index",
+                "$id": "late",
+                "$sequence": "2",
+                "$tenant": "tenant-a",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "body": "shared word written before the index",
+                "$id": "early",
+                "$sequence": "1",
+                "$tenant": "tenant-a",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "early"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "body": "shared word written after the index",
+                "$id": "late",
+                "$sequence": "2",
+                "$tenant": "tenant-a",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "late"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant'b"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "body",
+              "value": "shared"
+            },
+            "as": "o562"
+          },
+          "bind": "s1013",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "body",
+              "values": [
+                "shared"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o539"
+            },
+            "method": "find",
+            "args": {
+              "collection": "notes",
+              "queries": [
+                {
+                  "$obj": "o562"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "body": "shared word written before the index",
+                "$id": "early",
+                "$sequence": "3",
+                "$tenant": "tenant'b",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            {
+              "$document": {
+                "body": "shared word written after the index",
+                "$id": "late",
+                "$sequence": "4",
+                "$tenant": "tenant'b",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "body": "shared word written before the index",
+                "$id": "early",
+                "$sequence": "3",
+                "$tenant": "tenant'b",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "early"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "body": "shared word written after the index",
+                "$id": "late",
+                "$sequence": "4",
+                "$tenant": "tenant'b",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "late"
+        }
+      ]
+    },
+    {
+      "name": "SQLiteSharedFulltextTest::testAnotherTenantsWritesLeaveTheIndexAlone",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o563"
+          },
+          "bind": "s1017",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o563"
+              },
+              "cache": "none"
+            },
+            "as": "o564"
+          },
+          "bind": "s1018",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "fulltext"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "fulltext"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant-a"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o565"
+          },
+          "bind": "s1023",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o565"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant-a"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 128
+            },
+            "as": "o566"
+          },
+          "bind": "s1027",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o567"
+          },
+          "bind": "s1028",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o567"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o568"
+          },
+          "bind": "s1030",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o568"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o569"
+          },
+          "bind": "s1032",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o569"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o570"
+          },
+          "bind": "s1034",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o570"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o566"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o571"
+          },
+          "bind": "s1036",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o571"
+              }
+            },
+            "as": "o572"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "tenant-a",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "early",
+                "body": "shared word written before the index"
+              }
+            },
+            "as": "o573"
+          },
+          "bind": "s1038",
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o573"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant-a",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "body_search",
+              "attributes": [
+                "body"
+              ]
+            },
+            "as": "o574"
+          },
+          "bind": "s1040",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "notes",
+              "index": {
+                "$obj": "o574"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "late",
+                "body": "shared word written after the index"
+              }
+            },
+            "as": "o575"
+          },
+          "bind": "s1042",
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o575"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant-a",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant'b"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 128
+            },
+            "as": "o576"
+          },
+          "bind": "s1045",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o577"
+          },
+          "bind": "s1046",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o577"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o578"
+          },
+          "bind": "s1048",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o578"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o579"
+          },
+          "bind": "s1050",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o579"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o580"
+          },
+          "bind": "s1052",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o580"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o576"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o581"
+          },
+          "bind": "s1054",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o581"
+              }
+            },
+            "as": "o582"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 128,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "tenant'b",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "early",
+                "body": "shared word written before the index"
+              }
+            },
+            "as": "o583"
+          },
+          "bind": "s1056",
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o583"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "early",
+              "body": "shared word written before the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant'b",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "body_search",
+              "attributes": [
+                "body"
+              ]
+            },
+            "as": "o584"
+          },
+          "bind": "s1058",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "notes",
+              "index": {
+                "$obj": "o584"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "body_search",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "body"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "late",
+                "body": "shared word written after the index"
+              }
+            },
+            "as": "o585"
+          },
+          "bind": "s1060",
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o585"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "late",
+              "body": "shared word written after the index",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "tenant'b",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant'b"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "body": "rewritten"
+              }
+            },
+            "as": "o586"
+          },
+          "bind": "s1063",
+          "expect": {
+            "$document": {
+              "body": "rewritten"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "notes",
+              "id": "late",
+              "document": {
+                "$obj": "o586"
+              }
+            },
+            "as": "o587"
+          },
+          "expect": {
+            "$document": {
+              "body": "rewritten",
+              "$sequence": "4",
+              "$id": "late",
+              "$tenant": "tenant'b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "deleteDocument",
+            "args": {
+              "collection": "notes",
+              "id": "early"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant-a"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "body",
+              "value": "shared"
+            },
+            "as": "o588"
+          },
+          "bind": "s1067",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "body",
+              "values": [
+                "shared"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "find",
+            "args": {
+              "collection": "notes",
+              "queries": [
+                {
+                  "$obj": "o588"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "body": "shared word written before the index",
+                "$id": "early",
+                "$sequence": "1",
+                "$tenant": "tenant-a",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            {
+              "$document": {
+                "body": "shared word written after the index",
+                "$id": "late",
+                "$sequence": "2",
+                "$tenant": "tenant-a",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "body": "shared word written before the index",
+                "$id": "early",
+                "$sequence": "1",
+                "$tenant": "tenant-a",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "early"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "body": "shared word written after the index",
+                "$id": "late",
+                "$sequence": "2",
+                "$tenant": "tenant-a",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "late"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant'b"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "body",
+              "value": "shared"
+            },
+            "as": "o589"
+          },
+          "bind": "s1072",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "body",
+              "values": [
+                "shared"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "find",
+            "args": {
+              "collection": "notes",
+              "queries": [
+                {
+                  "$obj": "o589"
+                }
+              ]
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": "tenant'b"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "body",
+              "value": "rewritten"
+            },
+            "as": "o590"
+          },
+          "bind": "s1075",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "body",
+              "values": [
+                "rewritten"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o564"
+            },
+            "method": "find",
+            "args": {
+              "collection": "notes",
+              "queries": [
+                {
+                  "$obj": "o590"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "body": "rewritten",
+                "$id": "late",
+                "$sequence": "4",
+                "$tenant": "tenant'b",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "body": "rewritten",
+                "$id": "late",
+                "$sequence": "4",
+                "$tenant": "tenant'b",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$collection": "notes"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "late"
+        }
+      ]
+    }
+  ]
+}

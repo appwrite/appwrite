@@ -1,0 +1,252 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/EmptyDocumentTypeTest.php"
+  ],
+  "cases": [
+    {
+      "name": "EmptyDocumentTypeTest::testEmptyIdReturnsTheMappedDocumentType",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o414"
+          },
+          "bind": "s636",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o414"
+              },
+              "cache": "memory"
+            },
+            "as": "o415"
+          },
+          "bind": "s637",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "utopiaTests"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "empty_type_u000000000025"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "users"
+            },
+            "as": "o416"
+          },
+          "bind": "s641",
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o416"
+              }
+            },
+            "as": "o417"
+          },
+          "expect": {
+            "$document": {
+              "$id": "users",
+              "name": "users",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "setDocumentType",
+            "args": {
+              "collection": "users",
+              "className": "Tests\\Unit\\TypedUser"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Class Tests\\Unit\\TypedUser does not exist"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "users",
+              "id": ""
+            }
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "users",
+              "id": "nobody"
+            }
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "EmptyDocumentTypeTest::testEmptyIdOnAnUnmappedCollectionStaysAPlainDocument",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o418"
+          },
+          "bind": "s646",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o418"
+              },
+              "cache": "memory"
+            },
+            "as": "o419"
+          },
+          "bind": "s647",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o419"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "anything",
+              "id": ""
+            },
+            "as": "o420"
+          },
+          "bind": "s648",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o420"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,303 @@
+//! HTTP calls as `Target::call()` makes them on `Utopia\Client` (cURL), on
+//! `utopia-client`.
+
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{Duration, Instant};
+
+use bytes::Bytes;
+use indexmap::IndexMap;
+use php_std::encoding::{QueryEncoding, http_build_query};
+use php_std::json::{Flags, encode};
+use php_std::{Array, Value};
+use utopia_async::sync::Notify;
+use utopia_client::{Adapter, Anywhere, Client, Http, Request};
+
+use crate::error::{Error, Result};
+use crate::exception::Exception;
+use crate::target::{Body, Destinations, MAX_RESPONSE_SIZE, Shared, Target};
+
+/// One part of a multipart body: a field, or a file with its MIME type and
+/// file name (PHP: a `CURLFile`).
+#[derive(Debug, Clone, PartialEq)]
+pub enum Part {
+    /// A field value.
+    Field(Value),
+    /// A file.
+    File {
+        /// The bytes.
+        data: Bytes,
+        /// The MIME type.
+        mime: String,
+        /// The file name.
+        name: String,
+    },
+}
+
+/// The user agent cURL sends from PHP is `<os>-<release>:php-<version>`;
+/// Rust names its own runtime in the last part.
+pub fn user_agent() -> String {
+    let u = rustix::system::uname();
+    format!("{}-{}:rust", u.sysname().to_string_lossy(), u.release().to_string_lossy())
+}
+
+/// `http_build_query($params, '', '&', PHP_QUERY_RFC3986)`.
+fn query(params: &Array) -> String {
+    String::from_utf8_lossy(&http_build_query(
+        &Value::Array(params.clone()).to_json(),
+        b"",
+        None,
+        QueryEncoding::Rfc3986,
+    ))
+    .into_owned()
+}
+
+/// A multipart body for `parts`, with a fixed boundary.
+pub fn multipart(parts: &[(String, Part)]) -> (String, Vec<u8>) {
+    let boundary = "------------------------migration".to_owned();
+    let mut body = Vec::new();
+    for (name, part) in parts {
+        body.extend_from_slice(format!("--{boundary}\r\n").as_bytes());
+        match part {
+            Part::Field(v) => {
+                let text = crate::resources::cast_string(v);
+                body.extend_from_slice(format!("Content-Disposition: form-data; name=\"{name}\"\r\n\r\n").as_bytes());
+                body.extend_from_slice(text.as_bytes());
+            }
+            Part::File { data, mime, name: file } => {
+                body.extend_from_slice(
+                    format!(
+                        "Content-Disposition: form-data; name=\"{name}\"; filename=\"{file}\"\r\nContent-Type: {mime}\r\n\r\n"
+                    )
+                    .as_bytes(),
+                );
+                body.extend_from_slice(data);
+            }
+        }
+        body.extend_from_slice(b"\r\n");
+    }
+    body.extend_from_slice(format!("--{boundary}--\r\n").as_bytes());
+    (format!("multipart/form-data; boundary={boundary}"), body)
+}
+
+/// How a request connects: its timeouts, whether it follows redirects, the
+/// addresses it is pinned to and where it may connect.
+#[derive(Debug, Clone, Default)]
+pub struct Reach {
+    /// Seconds to wait for the connection.
+    pub connect: i64,
+    /// Seconds without a byte before the request is abandoned.
+    pub stall: i64,
+    /// Whether redirects are followed (up to 50 hops).
+    pub follow: bool,
+    /// `CURLOPT_RESOLVE` entries (`None`: DNS decides).
+    pub resolve: Option<Vec<String>>,
+    /// Where the request may connect (`None`: anywhere).
+    pub destinations: Option<Destinations>,
+}
+
+impl Reach {
+    fn client(&self) -> Result<Client<Http>> {
+        let http = match &self.resolve {
+            Some(entries) => Http::new().with_resolve(entries),
+            None => Http::new(),
+        };
+        let client = Client::new(http);
+        let client = match &self.destinations {
+            Some(d) => client.with_destinations(Shared(d.clone())),
+            None => client.with_destinations(Anywhere),
+        };
+        client
+            .with_timeout(0.0)
+            .and_then(|c| c.with_connect_timeout(self.connect as f64))
+            .and_then(|c| c.with_follow_redirects(self.follow, 50))
+            .map_err(transport)
+    }
+}
+
+/// Sends one request and returns its status, its headers (names
+/// lowercased, each name's values joined by `, `) and its body.
+///
+/// The request has no overall time limit: it fails when connecting takes
+/// over `connect` seconds, or when no byte of the response body arrives
+/// for `stall` seconds (cURL's `CURLOPT_LOW_SPEED_LIMIT` of one byte over
+/// `CURLOPT_LOW_SPEED_TIME`), so a transfer of any length lives while data
+/// keeps arriving.
+pub async fn send(
+    method: &str,
+    url: &str,
+    headers: &[(String, String)],
+    body: Option<Vec<u8>>,
+    reach: &Reach,
+) -> Result<(u16, IndexMap<String, String>, Bytes)> {
+    let stall = reach.stall;
+    let client = reach.client()?;
+    let mut request = Request::new(method, url).map_err(transport)?;
+    request = request.header("User-Agent", &user_agent()).map_err(transport)?;
+    if !headers.iter().any(|(k, _)| k.eq_ignore_ascii_case("Accept")) {
+        // cURL's default.
+        request = request.header("Accept", "*/*").map_err(transport)?;
+    }
+    for (k, v) in headers {
+        request = request.header(k, v).map_err(transport)?;
+    }
+    if let Some(b) = body {
+        request = request.body(b);
+    }
+
+    let started = Instant::now();
+    // Milliseconds after `started` when the last byte arrived.
+    let progress = Arc::new(AtomicU64::new(0));
+    let window = Duration::from_secs(stall.max(0) as u64);
+    let stalled = async {
+        loop {
+            let idle = started.elapsed().saturating_sub(Duration::from_millis(progress.load(Ordering::Relaxed)));
+            if idle >= window {
+                return;
+            }
+            utopia_async::sleep(window - idle).await;
+        }
+    };
+    let fetched = capped(&client, request, |_| progress.store(started.elapsed().as_millis() as u64, Ordering::Relaxed));
+    let (response, received) = utopia_async::select! {
+        fetched = fetched => match fetched.map_err(transport)? {
+            Some(fetched) => fetched,
+            None => return Err(Error::exception(MAX_RESPONSE_SIZE_EXCEEDED, Exception::CODE_INTERNAL)),
+        },
+        () = stalled, if stall > 0 => {
+            return Err(Error::exception(
+                format!("Operation too slow. Less than 1 bytes/sec transferred the last {stall} seconds"),
+                Exception::CODE_INTERNAL,
+            ));
+        }
+    };
+    let mut out = IndexMap::new();
+    for (name, values) in response.headers().iter() {
+        let values: Vec<&str> = values.iter().map(|v| v.trim()).collect();
+        out.insert(name.trim().to_ascii_lowercase(), values.join(", "));
+    }
+    Ok((response.status(), out, received))
+}
+
+/// cURL's error for a body past `CURLOPT_MAXFILESIZE_LARGE`
+/// ([`MAX_RESPONSE_SIZE`]); its code is `CURLE_FILESIZE_EXCEEDED`.
+pub const MAX_RESPONSE_SIZE_EXCEEDED: &str = "Would have exceeded max file size";
+
+/// cURL's `CURLE_FILESIZE_EXCEEDED`.
+pub const CURLE_FILESIZE_EXCEEDED: i64 = 63;
+
+/// Streams a response, its body decoded, and abandons it once the body
+/// decodes past [`MAX_RESPONSE_SIZE`] (`None`), as cURL does with
+/// `CURLOPT_MAXFILESIZE_LARGE`. `on_chunk` sees the size of every chunk.
+pub(crate) async fn capped<A: Adapter>(
+    client: &Client<A>,
+    request: Request,
+    mut on_chunk: impl FnMut(usize) + Send,
+) -> std::result::Result<Option<(utopia_client::Response, Bytes)>, utopia_client::Error> {
+    let exceeded = Notify::new();
+    let mut received = Vec::new();
+    let mut over = false;
+    let mut sink = |chunk: &[u8]| {
+        if chunk.is_empty() || over {
+            return;
+        }
+        on_chunk(chunk.len());
+        if received.len() + chunk.len() > MAX_RESPONSE_SIZE {
+            over = true;
+            received = Vec::new();
+            exceeded.notify_one();
+            return;
+        }
+        received.extend_from_slice(chunk);
+    };
+    let response = utopia_async::select! {
+        response = client.stream(request, &mut sink) => response?,
+        () = exceeded.notified() => return Ok(None),
+    };
+    if over {
+        return Ok(None);
+    }
+    Ok(Some((response, Bytes::from(received))))
+}
+
+fn transport(e: utopia_client::Error) -> Error {
+    Error::exception(e.to_string(), Exception::CODE_INTERNAL)
+}
+
+/// PHP: `Target::call()`.
+pub async fn call(
+    target: &Target,
+    method: &str,
+    path: &str,
+    headers: &IndexMap<String, String>,
+    params: &Array,
+) -> Result<(Body, IndexMap<String, String>)> {
+    let mut headers = headers.clone();
+    let content_type = headers.shift_remove("Content-Type").unwrap_or_default();
+    // An empty value has always meant "do not send this header".
+    let mut sent: Vec<(String, String)> = headers.into_iter().filter(|(_, v)| !v.is_empty()).collect();
+    let has = |sent: &[(String, String)], name: &str| sent.iter().any(|(k, _)| k.eq_ignore_ascii_case(name));
+    let mut url = if path.contains("http") { path.to_owned() } else { format!("{}{path}", target.endpoint) };
+    let body = if method == "GET" || method == "HEAD" {
+        // `Factory::query()`: the parameters appended to the URI's query.
+        if !params.is_empty() {
+            let built = query(params);
+            let (base, existing) = match url.split_once('?') {
+                Some((base, q)) => (base.to_owned(), q.to_owned()),
+                None => (url.clone(), String::new()),
+            };
+            let full = if existing.is_empty() { built } else { format!("{existing}&{built}") };
+            url = if full.is_empty() { base } else { format!("{base}?{full}") };
+        }
+        None
+    } else if content_type == "application/json" {
+        // `Factory::json()`: JSON_THROW_ON_ERROR, and an accept header.
+        let encoded = encode(&Value::Array(params.clone()), Flags::NONE, 512).map_err(|e| Error::Other {
+            class: "JsonException".into(),
+            message: e.message().to_owned(),
+            code: e.code().code(),
+        })?;
+        if !has(&sent, "Content-Type") {
+            sent.push(("Content-Type".to_owned(), "application/json".to_owned()));
+        }
+        if !has(&sent, "Accept") {
+            sent.push(("Accept".to_owned(), "application/json".to_owned()));
+        }
+        Some(encoded.into_bytes())
+    } else {
+        // `Factory::form()`, whatever the content type asked for.
+        if !has(&sent, "Content-Type") {
+            sent.push(("Content-Type".to_owned(), "application/x-www-form-urlencoded".to_owned()));
+        }
+        Some(query(params).into_bytes())
+    };
+    let resolve = match &target.resolver {
+        Some(resolver) => Some(resolver(&url)?),
+        None => None,
+    };
+    let reach = Reach {
+        connect: target.connect_timeout,
+        stall: target.stall_timeout,
+        follow: target.follow_redirects,
+        resolve,
+        destinations: target.destinations.clone(),
+    };
+    let (status, response_headers, raw) = send(method, &url, &sent, body, &reach).await?;
+    let content = response_headers.get("content-type").cloned().unwrap_or_default();
+    let decoded = content
+        .to_ascii_lowercase()
+        .starts_with("application/json")
+        .then(|| php_std::json::decode(&raw, Some(true), 512, Flags::NONE).unwrap_or(Value::Null));
+    if !target.follow_redirects && (300..400).contains(&status) {
+        return Err(Error::exception(format!("{status}: Redirects are not followed"), i64::from(status)));
+    }
+    if status >= 400 {
+        let message = match &decoded {
+            Some(v @ Value::Array(_)) => encode(v, Flags::NONE, 512).unwrap_or_default(),
+            Some(v) => format!("{status}: {}", crate::resources::cast_string(v)),
+            None => format!("{status}: {}", String::from_utf8_lossy(&raw)),
+        };
+        return Err(Error::exception(message, i64::from(status)));
+    }
+    Ok((decoded.map_or(Body::Raw(raw), Body::Json), response_headers))
+}

@@ -1,0 +1,4271 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/DocumentsQueriesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DocumentsQueriesTest::test_valid_queries",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o757"
+          },
+          "bind": "s1268",
+          "expect": {
+            "$document": {
+              "$id": "title",
+              "key": "title",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "description",
+                "key": "description",
+                "type": "string",
+                "size": 1000000,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o758"
+          },
+          "bind": "s1269",
+          "expect": {
+            "$document": {
+              "$id": "description",
+              "key": "description",
+              "type": "string",
+              "size": 1000000,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "integer",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o759"
+          },
+          "bind": "s1270",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "integer",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o760"
+          },
+          "bind": "s1271",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "is_bool",
+                "key": "is_bool",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o761"
+          },
+          "bind": "s1272",
+          "expect": {
+            "$document": {
+              "$id": "is_bool",
+              "key": "is_bool",
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "id",
+                "key": "id",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o762"
+          },
+          "bind": "s1273",
+          "expect": {
+            "$document": {
+              "$id": "id",
+              "key": "id",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex2"
+            }
+          },
+          "expect": "testindex2"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "description",
+                  "price"
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o763"
+          },
+          "bind": "s1275",
+          "expect": {
+            "$document": {
+              "$id": "testindex2",
+              "type": "key",
+              "attributes": [
+                "title",
+                "description",
+                "price"
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex3"
+            }
+          },
+          "expect": "testindex3"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex3",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "orders": []
+              }
+            },
+            "as": "o764"
+          },
+          "bind": "s1277",
+          "expect": {
+            "$document": {
+              "$id": "testindex3",
+              "type": "fulltext",
+              "attributes": [
+                "title"
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o765"
+          },
+          "bind": "s1278",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o765"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o766"
+          },
+          "bind": "s1279",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o757"
+                },
+                {
+                  "$obj": "o758"
+                },
+                {
+                  "$obj": "o759"
+                },
+                {
+                  "$obj": "o760"
+                },
+                {
+                  "$obj": "o761"
+                },
+                {
+                  "$obj": "o762"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o763"
+                },
+                {
+                  "$obj": "o764"
+                }
+              ],
+              "profile": {
+                "$obj": "o766"
+              }
+            },
+            "as": "o767"
+          },
+          "bind": "s1280",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "notEqual",
+            "args": {
+              "attribute": "id",
+              "value": "1000000"
+            },
+            "as": "o768"
+          },
+          "bind": "s1281",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "id",
+              "values": [
+                "1000000"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "description",
+              "values": [
+                "Best movie ever"
+              ]
+            },
+            "as": "o769"
+          },
+          "bind": "s1282",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "description",
+              "values": [
+                "Best movie ever"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "description",
+              "values": [
+                ""
+              ]
+            },
+            "as": "o770"
+          },
+          "bind": "s1283",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "description",
+              "values": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "is_bool",
+              "values": [
+                false
+              ]
+            },
+            "as": "o771"
+          },
+          "bind": "s1284",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "is_bool",
+              "values": [
+                false
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThanEqual",
+            "args": {
+              "attribute": "price",
+              "value": 6.5
+            },
+            "as": "o772"
+          },
+          "bind": "s1285",
+          "expect": {
+            "$query": {
+              "method": "lessThanEqual",
+              "attribute": "price",
+              "values": [
+                6.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "lessThan",
+            "args": {
+              "attribute": "price",
+              "value": 6.5
+            },
+            "as": "o773"
+          },
+          "bind": "s1286",
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "price",
+              "values": [
+                6.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThan",
+            "args": {
+              "attribute": "rating",
+              "value": 4
+            },
+            "as": "o774"
+          },
+          "bind": "s1287",
+          "expect": {
+            "$query": {
+              "method": "greaterThan",
+              "attribute": "rating",
+              "values": [
+                4
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThan",
+            "args": {
+              "attribute": "rating",
+              "value": 0
+            },
+            "as": "o775"
+          },
+          "bind": "s1288",
+          "expect": {
+            "$query": {
+              "method": "greaterThan",
+              "attribute": "rating",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThanEqual",
+            "args": {
+              "attribute": "rating",
+              "value": 6
+            },
+            "as": "o776"
+          },
+          "bind": "s1289",
+          "expect": {
+            "$query": {
+              "method": "greaterThanEqual",
+              "attribute": "rating",
+              "values": [
+                6
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "between",
+            "args": {
+              "attribute": "price",
+              "start": 1.5,
+              "end": 6.5
+            },
+            "as": "o777"
+          },
+          "bind": "s1290",
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "price",
+              "values": [
+                1.5,
+                6.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "SEO"
+            },
+            "as": "o778"
+          },
+          "bind": "s1291",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "SEO"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "startsWith",
+            "args": {
+              "attribute": "title",
+              "value": "Good"
+            },
+            "as": "o779"
+          },
+          "bind": "s1292",
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "title",
+              "values": [
+                "Good"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "endsWith",
+            "args": {
+              "attribute": "title",
+              "value": "Night"
+            },
+            "as": "o780"
+          },
+          "bind": "s1293",
+          "expect": {
+            "$query": {
+              "method": "endsWith",
+              "attribute": "title",
+              "values": [
+                "Night"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isNull",
+            "args": {
+              "attribute": "title"
+            },
+            "as": "o781"
+          },
+          "bind": "s1294",
+          "expect": {
+            "$query": {
+              "method": "isNull",
+              "attribute": "title",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isNotNull",
+            "args": {
+              "attribute": "title"
+            },
+            "as": "o782"
+          },
+          "bind": "s1295",
+          "expect": {
+            "$query": {
+              "method": "isNotNull",
+              "attribute": "title",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a"
+              }
+            },
+            "as": "o783"
+          },
+          "bind": "s1296",
+          "expect": {
+            "$document": {
+              "$id": "a"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o783"
+              }
+            },
+            "as": "o784"
+          },
+          "bind": "s1297",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "a"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b"
+              }
+            },
+            "as": "o785"
+          },
+          "bind": "s1298",
+          "expect": {
+            "$document": {
+              "$id": "b"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorBefore",
+            "args": {
+              "value": {
+                "$obj": "o785"
+              }
+            },
+            "as": "o786"
+          },
+          "bind": "s1299",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "b"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "title"
+            },
+            "as": "o787"
+          },
+          "bind": "s1300",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "title",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 10
+            },
+            "as": "o788"
+          },
+          "bind": "s1301",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                10
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 10
+            },
+            "as": "o789"
+          },
+          "bind": "s1302",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                10
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {},
+            "as": "o790"
+          },
+          "bind": "s1303",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o767"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o768"
+                },
+                {
+                  "$obj": "o769"
+                },
+                {
+                  "$obj": "o770"
+                },
+                {
+                  "$obj": "o771"
+                },
+                {
+                  "$obj": "o772"
+                },
+                {
+                  "$obj": "o773"
+                },
+                {
+                  "$obj": "o774"
+                },
+                {
+                  "$obj": "o775"
+                },
+                {
+                  "$obj": "o776"
+                },
+                {
+                  "$obj": "o777"
+                },
+                {
+                  "$obj": "o778"
+                },
+                {
+                  "$obj": "o779"
+                },
+                {
+                  "$obj": "o780"
+                },
+                {
+                  "$obj": "o781"
+                },
+                {
+                  "$obj": "o782"
+                },
+                {
+                  "$obj": "o784"
+                },
+                {
+                  "$obj": "o786"
+                },
+                {
+                  "$obj": "o787"
+                },
+                {
+                  "$obj": "o788"
+                },
+                {
+                  "$obj": "o789"
+                },
+                {
+                  "$obj": "o790"
+                }
+              ]
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "DocumentsQueriesTest::test_invalid_queries",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o791"
+          },
+          "bind": "s1305",
+          "expect": {
+            "$document": {
+              "$id": "title",
+              "key": "title",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "description",
+                "key": "description",
+                "type": "string",
+                "size": 1000000,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o792"
+          },
+          "bind": "s1306",
+          "expect": {
+            "$document": {
+              "$id": "description",
+              "key": "description",
+              "type": "string",
+              "size": 1000000,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "integer",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o793"
+          },
+          "bind": "s1307",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "integer",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o794"
+          },
+          "bind": "s1308",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "is_bool",
+                "key": "is_bool",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o795"
+          },
+          "bind": "s1309",
+          "expect": {
+            "$document": {
+              "$id": "is_bool",
+              "key": "is_bool",
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "id",
+                "key": "id",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o796"
+          },
+          "bind": "s1310",
+          "expect": {
+            "$document": {
+              "$id": "id",
+              "key": "id",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex2"
+            }
+          },
+          "expect": "testindex2"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "description",
+                  "price"
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o797"
+          },
+          "bind": "s1312",
+          "expect": {
+            "$document": {
+              "$id": "testindex2",
+              "type": "key",
+              "attributes": [
+                "title",
+                "description",
+                "price"
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex3"
+            }
+          },
+          "expect": "testindex3"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex3",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "orders": []
+              }
+            },
+            "as": "o798"
+          },
+          "bind": "s1314",
+          "expect": {
+            "$document": {
+              "$id": "testindex3",
+              "type": "fulltext",
+              "attributes": [
+                "title"
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o799"
+          },
+          "bind": "s1315",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o799"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o800"
+          },
+          "bind": "s1316",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o791"
+                },
+                {
+                  "$obj": "o792"
+                },
+                {
+                  "$obj": "o793"
+                },
+                {
+                  "$obj": "o794"
+                },
+                {
+                  "$obj": "o795"
+                },
+                {
+                  "$obj": "o796"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o797"
+                },
+                {
+                  "$obj": "o798"
+                }
+              ],
+              "profile": {
+                "$obj": "o800"
+              }
+            },
+            "as": "o801"
+          },
+          "bind": "s1317",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"notEqual\",\"attribute\":\"title\",\"values\":[\"Iron Man\",\"Ant Man\"]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: NotEqual queries require exactly one value."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "description",
+              "value": "iron"
+            },
+            "as": "o802"
+          },
+          "bind": "s1320",
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "description",
+              "values": [
+                "iron"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o802"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Searching by attribute \"description\" requires a fulltext index."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "not_found",
+              "values": [
+                4
+              ]
+            },
+            "as": "o803"
+          },
+          "bind": "s1323",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "not_found",
+              "values": [
+                4
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o803"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Attribute not found in schema: not_found"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": -1
+            },
+            "as": "o804"
+          },
+          "bind": "s1326",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o804"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "title",
+              "values": []
+            },
+            "as": "o805"
+          },
+          "bind": "s1329",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "title",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o805"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o801"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Equal queries require at least one value."
+        }
+      ]
+    },
+    {
+      "name": "DocumentsQueriesTest::test_filter_with_join_alias_is_valid",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o806"
+          },
+          "bind": "s1332",
+          "expect": {
+            "$document": {
+              "$id": "title",
+              "key": "title",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "description",
+                "key": "description",
+                "type": "string",
+                "size": 1000000,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o807"
+          },
+          "bind": "s1333",
+          "expect": {
+            "$document": {
+              "$id": "description",
+              "key": "description",
+              "type": "string",
+              "size": 1000000,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "integer",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o808"
+          },
+          "bind": "s1334",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "integer",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o809"
+          },
+          "bind": "s1335",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "is_bool",
+                "key": "is_bool",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o810"
+          },
+          "bind": "s1336",
+          "expect": {
+            "$document": {
+              "$id": "is_bool",
+              "key": "is_bool",
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "id",
+                "key": "id",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o811"
+          },
+          "bind": "s1337",
+          "expect": {
+            "$document": {
+              "$id": "id",
+              "key": "id",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex2"
+            }
+          },
+          "expect": "testindex2"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "description",
+                  "price"
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o812"
+          },
+          "bind": "s1339",
+          "expect": {
+            "$document": {
+              "$id": "testindex2",
+              "type": "key",
+              "attributes": [
+                "title",
+                "description",
+                "price"
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex3"
+            }
+          },
+          "expect": "testindex3"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex3",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "orders": []
+              }
+            },
+            "as": "o813"
+          },
+          "bind": "s1341",
+          "expect": {
+            "$document": {
+              "$id": "testindex3",
+              "type": "fulltext",
+              "attributes": [
+                "title"
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o814"
+          },
+          "bind": "s1342",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o814"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o815"
+          },
+          "bind": "s1343",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o806"
+                },
+                {
+                  "$obj": "o807"
+                },
+                {
+                  "$obj": "o808"
+                },
+                {
+                  "$obj": "o809"
+                },
+                {
+                  "$obj": "o810"
+                },
+                {
+                  "$obj": "o811"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o812"
+                },
+                {
+                  "$obj": "o813"
+                }
+              ],
+              "profile": {
+                "$obj": "o815"
+              }
+            },
+            "as": "o816"
+          },
+          "bind": "s1344",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "sec.amount",
+              "values": [
+                777
+              ]
+            },
+            "as": "o817"
+          },
+          "bind": "s1345",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "sec.amount",
+              "values": [
+                777
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o818"
+          },
+          "bind": "s1346",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "sec",
+              "on": [
+                {
+                  "$obj": "o818"
+                }
+              ]
+            },
+            "as": "o819"
+          },
+          "bind": "s1347",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "sec"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o816"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o817"
+                },
+                {
+                  "$obj": "o819"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o816"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        }
+      ]
+    },
+    {
+      "name": "DocumentsQueriesTest::test_order_with_join_alias_is_valid",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o820"
+          },
+          "bind": "s1350",
+          "expect": {
+            "$document": {
+              "$id": "title",
+              "key": "title",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "description",
+                "key": "description",
+                "type": "string",
+                "size": 1000000,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o821"
+          },
+          "bind": "s1351",
+          "expect": {
+            "$document": {
+              "$id": "description",
+              "key": "description",
+              "type": "string",
+              "size": 1000000,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "integer",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o822"
+          },
+          "bind": "s1352",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "integer",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o823"
+          },
+          "bind": "s1353",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "is_bool",
+                "key": "is_bool",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o824"
+          },
+          "bind": "s1354",
+          "expect": {
+            "$document": {
+              "$id": "is_bool",
+              "key": "is_bool",
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "id",
+                "key": "id",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o825"
+          },
+          "bind": "s1355",
+          "expect": {
+            "$document": {
+              "$id": "id",
+              "key": "id",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex2"
+            }
+          },
+          "expect": "testindex2"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "description",
+                  "price"
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o826"
+          },
+          "bind": "s1357",
+          "expect": {
+            "$document": {
+              "$id": "testindex2",
+              "type": "key",
+              "attributes": [
+                "title",
+                "description",
+                "price"
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex3"
+            }
+          },
+          "expect": "testindex3"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex3",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "orders": []
+              }
+            },
+            "as": "o827"
+          },
+          "bind": "s1359",
+          "expect": {
+            "$document": {
+              "$id": "testindex3",
+              "type": "fulltext",
+              "attributes": [
+                "title"
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o828"
+          },
+          "bind": "s1360",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o828"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o829"
+          },
+          "bind": "s1361",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o820"
+                },
+                {
+                  "$obj": "o821"
+                },
+                {
+                  "$obj": "o822"
+                },
+                {
+                  "$obj": "o823"
+                },
+                {
+                  "$obj": "o824"
+                },
+                {
+                  "$obj": "o825"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o826"
+                },
+                {
+                  "$obj": "o827"
+                }
+              ],
+              "profile": {
+                "$obj": "o829"
+              }
+            },
+            "as": "o830"
+          },
+          "bind": "s1362",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "sec.amount"
+            },
+            "as": "o831"
+          },
+          "bind": "s1363",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "sec.amount",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o832"
+          },
+          "bind": "s1364",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "sec",
+              "on": [
+                {
+                  "$obj": "o832"
+                }
+              ]
+            },
+            "as": "o833"
+          },
+          "bind": "s1365",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "sec"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o830"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o831"
+                },
+                {
+                  "$obj": "o833"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o830"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        }
+      ]
+    },
+    {
+      "name": "DocumentsQueriesTest::test_unknown_join_alias_filter_is_invalid",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o834"
+          },
+          "bind": "s1368",
+          "expect": {
+            "$document": {
+              "$id": "title",
+              "key": "title",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "description",
+                "key": "description",
+                "type": "string",
+                "size": 1000000,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o835"
+          },
+          "bind": "s1369",
+          "expect": {
+            "$document": {
+              "$id": "description",
+              "key": "description",
+              "type": "string",
+              "size": 1000000,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "integer",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o836"
+          },
+          "bind": "s1370",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "integer",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o837"
+          },
+          "bind": "s1371",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "is_bool",
+                "key": "is_bool",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o838"
+          },
+          "bind": "s1372",
+          "expect": {
+            "$document": {
+              "$id": "is_bool",
+              "key": "is_bool",
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "id",
+                "key": "id",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o839"
+          },
+          "bind": "s1373",
+          "expect": {
+            "$document": {
+              "$id": "id",
+              "key": "id",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex2"
+            }
+          },
+          "expect": "testindex2"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "description",
+                  "price"
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o840"
+          },
+          "bind": "s1375",
+          "expect": {
+            "$document": {
+              "$id": "testindex2",
+              "type": "key",
+              "attributes": [
+                "title",
+                "description",
+                "price"
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex3"
+            }
+          },
+          "expect": "testindex3"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex3",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "orders": []
+              }
+            },
+            "as": "o841"
+          },
+          "bind": "s1377",
+          "expect": {
+            "$document": {
+              "$id": "testindex3",
+              "type": "fulltext",
+              "attributes": [
+                "title"
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o842"
+          },
+          "bind": "s1378",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o842"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o843"
+          },
+          "bind": "s1379",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o834"
+                },
+                {
+                  "$obj": "o835"
+                },
+                {
+                  "$obj": "o836"
+                },
+                {
+                  "$obj": "o837"
+                },
+                {
+                  "$obj": "o838"
+                },
+                {
+                  "$obj": "o839"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o840"
+                },
+                {
+                  "$obj": "o841"
+                }
+              ],
+              "profile": {
+                "$obj": "o843"
+              }
+            },
+            "as": "o844"
+          },
+          "bind": "s1380",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "other.amount",
+              "values": [
+                777
+              ]
+            },
+            "as": "o845"
+          },
+          "bind": "s1381",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "other.amount",
+              "values": [
+                777
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o846"
+          },
+          "bind": "s1382",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "sec",
+              "on": [
+                {
+                  "$obj": "o846"
+                }
+              ]
+            },
+            "as": "o847"
+          },
+          "bind": "s1383",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "sec"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o844"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o845"
+                },
+                {
+                  "$obj": "o847"
+                }
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o844"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Attribute not found in schema: other"
+        }
+      ]
+    },
+    {
+      "name": "DocumentsQueriesTest::test_nested_and_or_join_alias_is_valid",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o848"
+          },
+          "bind": "s1386",
+          "expect": {
+            "$document": {
+              "$id": "title",
+              "key": "title",
+              "type": "string",
+              "size": 256,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "description",
+                "key": "description",
+                "type": "string",
+                "size": 1000000,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o849"
+          },
+          "bind": "s1387",
+          "expect": {
+            "$document": {
+              "$id": "description",
+              "key": "description",
+              "type": "string",
+              "size": 1000000,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "rating",
+                "key": "rating",
+                "type": "integer",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o850"
+          },
+          "bind": "s1388",
+          "expect": {
+            "$document": {
+              "$id": "rating",
+              "key": "rating",
+              "type": "integer",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 5,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o851"
+          },
+          "bind": "s1389",
+          "expect": {
+            "$document": {
+              "$id": "price",
+              "key": "price",
+              "type": "double",
+              "size": 5,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "is_bool",
+                "key": "is_bool",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o852"
+          },
+          "bind": "s1390",
+          "expect": {
+            "$document": {
+              "$id": "is_bool",
+              "key": "is_bool",
+              "type": "boolean",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "id",
+                "key": "id",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o853"
+          },
+          "bind": "s1391",
+          "expect": {
+            "$document": {
+              "$id": "id",
+              "key": "id",
+              "type": "id",
+              "size": 0,
+              "required": false,
+              "signed": false,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex2"
+            }
+          },
+          "expect": "testindex2"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "description",
+                  "price"
+                ],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            },
+            "as": "o854"
+          },
+          "bind": "s1393",
+          "expect": {
+            "$document": {
+              "$id": "testindex2",
+              "type": "key",
+              "attributes": [
+                "title",
+                "description",
+                "price"
+              ],
+              "orders": [
+                "ASC",
+                "DESC"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "testindex3"
+            }
+          },
+          "expect": "testindex3"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "testindex3",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "orders": []
+              }
+            },
+            "as": "o855"
+          },
+          "bind": "s1395",
+          "expect": {
+            "$document": {
+              "$id": "testindex3",
+              "type": "fulltext",
+              "attributes": [
+                "title"
+              ],
+              "orders": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o856"
+          },
+          "bind": "s1396",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o856"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o857"
+          },
+          "bind": "s1397",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o848"
+                },
+                {
+                  "$obj": "o849"
+                },
+                {
+                  "$obj": "o850"
+                },
+                {
+                  "$obj": "o851"
+                },
+                {
+                  "$obj": "o852"
+                },
+                {
+                  "$obj": "o853"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "o854"
+                },
+                {
+                  "$obj": "o855"
+                }
+              ],
+              "profile": {
+                "$obj": "o857"
+              }
+            },
+            "as": "o858"
+          },
+          "bind": "s1398",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "mainId"
+            },
+            "as": "o859"
+          },
+          "bind": "s1399",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "mainId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "meta",
+              "alias": "meta",
+              "on": [
+                {
+                  "$obj": "o859"
+                }
+              ]
+            },
+            "as": "o860"
+          },
+          "bind": "s1400",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "meta",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "mainId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "meta"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "Main"
+              ]
+            },
+            "as": "o861"
+          },
+          "bind": "s1401",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "title",
+              "values": [
+                "Main"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "meta.score",
+              "values": [
+                10
+              ]
+            },
+            "as": "o862"
+          },
+          "bind": "s1402",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "meta.score",
+              "values": [
+                10
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "rating",
+              "values": [
+                2
+              ]
+            },
+            "as": "o863"
+          },
+          "bind": "s1403",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "rating",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "or",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o862"
+                },
+                {
+                  "$obj": "o863"
+                }
+              ]
+            },
+            "as": "o864"
+          },
+          "bind": "s1404",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "meta.score",
+                    "values": [
+                      10
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "rating",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "and",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o861"
+                },
+                {
+                  "$obj": "o864"
+                }
+              ]
+            },
+            "as": "o865"
+          },
+          "bind": "s1405",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "title",
+                    "values": [
+                      "Main"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "or",
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "meta.score",
+                          "values": [
+                            10
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "rating",
+                          "values": [
+                            2
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o858"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                {
+                  "$obj": "o860"
+                },
+                {
+                  "$obj": "o865"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o858"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid queries"
+        }
+      ]
+    }
+  ]
+}

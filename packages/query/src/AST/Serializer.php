@@ -138,11 +138,15 @@ class Serializer
     {
         $prec = $this->operatorPrecedence($expression->operator);
 
-        // Non-commutative left-associative operators require a stricter precedence
-        // on the right child so equal-precedence right subtrees keep their grouping.
-        $rightPrec = in_array(strtoupper($expression->operator), ['-', '/', '%'], true)
-            ? $prec + 1
-            : $prec;
+        // Operators are left-associative, so an equal-precedence right subtree
+        // keeps its grouping: `a * (b / c)` is not `a * b / c` under integer
+        // division, nor `a - (b - c)` `a - b - c`. Only the same associative
+        // operator may drop it: `a + (b + c)` is `a + b + c`.
+        $right = $expression->right;
+        $associative = $right instanceof Binary
+            && strtoupper($right->operator) === strtoupper($expression->operator)
+            && in_array(strtoupper($expression->operator), ['+', '*', '||', 'AND', 'OR'], true);
+        $rightPrec = $associative ? $prec : $prec + 1;
 
         $left = $this->serializeBinaryChild($expression->left, $prec);
         $right = $this->serializeBinaryChild($expression->right, $rightPrec);
