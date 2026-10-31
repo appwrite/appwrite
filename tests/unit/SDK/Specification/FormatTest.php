@@ -1558,6 +1558,31 @@ final class FormatTest extends TestCase
         }
     }
 
+    public function testRestrictedQueriesPublishAllowedAttributesAndMethods(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/queries'))
+            ->desc('List tests')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'listTests',
+                description: 'List tests.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('queries', [], new VcsRepositories(), 'Queries.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+
+        $this->assertSame([
+            'attributes' => ['namespace'],
+            'methods' => ['limit', 'offset', 'equal'],
+        ], $openApi['paths']['/tests/queries']['get']['parameters'][0]['schema']['x-appwrite']['queries']);
+    }
+
     public function testZeroIsKeptAsADeclaredExample(): void
     {
         Method::$processed = [];

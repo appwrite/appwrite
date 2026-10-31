@@ -7,8 +7,10 @@ use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 
-class VcsRepositories extends Base
+class VcsRepositories extends Base implements Restricted
 {
+    use Restrictions;
+
     public function __construct()
     {
         parent::__construct([
