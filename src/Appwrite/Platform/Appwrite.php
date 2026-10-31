@@ -13,6 +13,7 @@ use Appwrite\Platform\Modules\Health;
 use Appwrite\Platform\Modules\Locale;
 use Appwrite\Platform\Modules\Messaging;
 use Appwrite\Platform\Modules\Migrations;
+use Appwrite\Platform\Modules\Mock;
 use Appwrite\Platform\Modules\Notifications;
 use Appwrite\Platform\Modules\Organization;
 use Appwrite\Platform\Modules\Presences;
@@ -44,6 +45,7 @@ class Appwrite extends Platform
         $this->addModule(new Health\Module());
         $this->addModule(new Locale\Module());
         $this->addModule(new Messaging\Module());
+        $this->addModule(new Mock\Module());
         $this->addModule(new Notifications\Module());
         $this->addModule(new Sites\Module());
         $this->addModule(new Console\Module());

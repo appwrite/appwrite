@@ -286,7 +286,7 @@ return [
         'name' => 'Mock',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'mock.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
