@@ -164,15 +164,15 @@ class Pool implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \Utop
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
     {
         /** @var bool $result */
-        $result = $this->pool->use(function (Adapter $adapter) use ($key, $data, $hash, $generation): bool {
+        $result = $this->pool->use(function (Adapter $adapter) use ($key, $data, $hash, $generation, $ttl): bool {
             if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
                 throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
             }
 
-            return $adapter->saveWithGeneration($key, $data, $hash, $generation);
+            return $adapter->saveWithGeneration($key, $data, $hash, $generation, $ttl);
         });
 
         return $result;

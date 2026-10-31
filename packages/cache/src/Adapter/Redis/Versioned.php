@@ -79,7 +79,7 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned, \Utopia\Cac
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
     {
         if ($this->isReserved($hash) || $hash === '__utopia_gen__') {
             return false;
@@ -97,8 +97,9 @@ abstract class Versioned implements \Utopia\Cache\Feature\Versioned, \Utopia\Cac
                 redis.call('HDEL', KEYS[1], '__utopia_tomb__')
             end
             redis.call('HSET', KEYS[1], ARGV[2], ARGV[3])
+            if tonumber(ARGV[5]) > 0 then redis.call('EXPIRE', KEYS[1], ARGV[5]) end
             return 1
-            LUA, $key, [$generation, $hash === '' ? $key : $hash, $this->envelope->encode($data, \time()), (string) $this->leaseGraceWindow]);
+            LUA, $key, [$generation, $hash === '' ? $key : $hash, $this->envelope->encode($data, \time()), (string) $this->leaseGraceWindow, (string) $ttl]);
     }
 
     public function purgeLegacy(string $key, string $hash = ''): bool

@@ -184,17 +184,17 @@ class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Telemetry, \
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
     {
         /** @var bool $result */
         $result = $this->breaker->call(
             open: fn (): never => throw new Unavailable('Legacy cache unavailable'),
-            close: function () use ($key, $data, $hash, $generation): bool {
+            close: function () use ($key, $data, $hash, $generation, $ttl): bool {
                 if (! $this->adapter instanceof \Utopia\Cache\Feature\Legacy) {
                     throw new Unavailable('Legacy migration requires Redis');
                 }
 
-                return $this->adapter->saveWithGeneration($key, $data, $hash, $generation);
+                return $this->adapter->saveWithGeneration($key, $data, $hash, $generation, $ttl);
             },
         );
 

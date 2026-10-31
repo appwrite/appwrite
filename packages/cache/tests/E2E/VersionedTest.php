@@ -70,6 +70,16 @@ final class VersionedTest extends TestCase
             $legacy = $cache->legacy();
             $key = 'legacy:'.\bin2hex(\random_bytes(8));
             try {
+                $this->assertSame('version', $legacy->save($key, 'version', ttl: 60));
+                $this->assertGreaterThan(0, $redis->ttl($key));
+                $this->assertSame('version', $legacy->load($key, 60));
+                $redis->del($key);
+                $fields = ['documents' => ['row'], 'total' => '0', 'operations' => []];
+                $this->assertSame($fields, $legacy->saveMany($key, $fields, 60));
+                $this->assertSame($fields, $legacy->loadMany($key, 60));
+                $this->assertGreaterThan(0, $redis->ttl($key));
+                $this->assertFalse($redis->hExists($key, '__utopia_version__'));
+                $redis->del($key);
                 $this->assertSame('zero', $legacy->save($key, 'zero', '0'));
                 $this->assertSame('zero', $legacy->load($key, 60, '0'));
                 $this->assertTrue($legacy->purge($key, '0'));

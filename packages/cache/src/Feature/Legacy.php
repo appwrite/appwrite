@@ -10,7 +10,7 @@ interface Legacy
     public function getGeneration(string $key): string;
 
     /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool;
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool;
 
     public function purgeLegacy(string $key, string $hash = ''): bool;
 }

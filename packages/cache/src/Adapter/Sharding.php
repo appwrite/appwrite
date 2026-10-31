@@ -161,9 +161,9 @@ class Sharding implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
     {
-        return $this->legacyAdapter($key)->saveWithGeneration($key, $data, $hash, $generation);
+        return $this->legacyAdapter($key)->saveWithGeneration($key, $data, $hash, $generation, $ttl);
     }
 
     public function purgeLegacy(string $key, string $hash = ''): bool

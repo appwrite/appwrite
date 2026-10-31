@@ -309,7 +309,7 @@ final class CoordinationMemory extends Memory implements Feature\Legacy
     }
 
     /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation): bool
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
     {
         $this->check();
         return true;
