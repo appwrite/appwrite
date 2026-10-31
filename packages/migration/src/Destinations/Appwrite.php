@@ -231,6 +231,7 @@ class Appwrite extends Destination
      * @param OnDuplicate $onDuplicate Behavior when a row with an existing $id is encountered.
      * @param (callable(Database $resource): string)|null $getDatabaseDSN Resolver for the destination's `_databases.database` value. Pass when the destination project's DSN differs from the source's, so the destination row carries its own DSN instead of inheriting the source's.
      * @param array<string, CollectionStructure> $collectionStructures Per-database-type metadata collection structures (e.g. `['vectorsdb' => ...]`), used instead of $collectionStructure when the imported database's type has an entry. Types with an entry also get type-specific metadata written (e.g. vectorsdb collection `dimension`).
+     * @param array<string>|null $scopes Scopes the migration was granted; imported API keys may hold no others. Null grants every scope.
      */
     public function __construct(
         string $project,
@@ -244,6 +245,7 @@ class Appwrite extends Destination
         protected OnDuplicate $onDuplicate = OnDuplicate::Fail,
         ?callable $getDatabaseDSN = null,
         protected array $collectionStructures = [],
+        protected ?array $scopes = null,
     ) {
         $this->projectId = $project;
         $this->endpoint = $endpoint;
@@ -4050,6 +4052,17 @@ class Appwrite extends Destination
 
     protected function createApiKey(ApiKey $resource): bool
     {
+        // An imported key holds no scope the migration was not granted
+        if ($this->scopes !== null && !empty(\array_diff($resource->getScopes(), $this->scopes))) {
+            throw new Exception(
+                resourceName: $resource->getName(),
+                resourceGroup: $resource->getGroup(),
+                resourceId: $resource->getId(),
+                message: 'API key has scopes this migration was not granted',
+                code: Exception::CODE_UNAUTHORIZED,
+            );
+        }
+
         $existing = $this->dbForPlatform->findOne('keys', [
             Query::equal('resourceType', ['projects']),
             Query::equal('resourceInternalId', [$this->projectInternalId]),
