@@ -121,8 +121,13 @@ trait MonitorsBase
         $cooldown = $this->createMonitor(['cooldown' => 0]);
         $this->assertSame(400, $cooldown['headers']['status-code']);
 
+        // `notify` is a plain string array, so the server is what keeps it to organization roles.
         $role = $this->createMonitor(['notify' => ['guests']]);
         $this->assertSame(400, $role['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $role['body']['type']);
+
+        $casing = $this->createMonitor(['notify' => ['Owner']]);
+        $this->assertSame(400, $casing['headers']['status-code']);
 
         $this->assertSame($before, $this->listMonitors()['body']['total']);
 
@@ -187,8 +192,10 @@ trait MonitorsBase
         $cooldown = $this->updateMonitor($monitorId, ['cooldown' => 299]);
         $this->assertSame(400, $cooldown['headers']['status-code']);
 
-        $role = $this->updateMonitor($monitorId, ['notify' => ['users']]);
+        $role = $this->updateMonitor($monitorId, ['notify' => ['owner', 'users']]);
         $this->assertSame(400, $role['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $role['body']['type']);
+        $this->assertSame(['owner', 'developer'], $this->getMonitor($monitorId)['body']['notify']);
 
         $silenced = $this->updateMonitor($monitorId, ['notify' => []]);
         $this->assertSame([], $silenced['body']['notify']);

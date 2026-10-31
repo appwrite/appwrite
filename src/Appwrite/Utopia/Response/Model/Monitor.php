@@ -94,13 +94,11 @@ class Monitor extends Model
                 'example' => true,
             ])
             ->addRule('notify', [
-                'type' => self::TYPE_ENUM,
+                'type' => self::TYPE_STRING,
                 'description' => 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Empty when the alert events are the only delivery.',
                 'default' => ['owner'],
                 'example' => ['owner'],
                 'array' => true,
-                'enum' => Config::getParam('alerts', [])['roles'] ?? [],
-                'enumSDKName' => 'MonitorNotifyRole',
             ])
             ->addRule('status', [
                 'type' => self::TYPE_ENUM,
