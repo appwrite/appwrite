@@ -245,14 +245,18 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $claimed = false;
     $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed) {
         $claimed = false; // A retried attempt starts over
+        /** @var User $locked */
         $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        // Proving an unverified email or phone claims the account, so whoever registered it keeps no other way in
-        if ($verification !== null && !$locked->getAttribute($verification, false)) {
+        // Proving an unverified email or phone claims the account, so whoever registered it keeps no other way in.
+        // MFA in force is left alone: the address alone must not discard a second factor, so the session stays short of
+        // factors and the address stays unverified until the account is signed into with that factor
+        $guarded = $locked->getMinimumFactors() > 1;
+        if ($verification !== null && !$locked->getAttribute($verification, false) && !$guarded) {
             $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
             $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
             $claimed = true;
@@ -265,16 +269,13 @@ $createSession = function (string $userId, string $secret, Request $request, Res
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        if ($verification !== null) {
+        if ($verification !== null && !$guarded) {
             $dbForProject->updateDocument('users', $user->getId(), new Document([$verification => true]));
+            $user->setAttribute($verification, true);
         }
 
         return $session;
     });
-
-    if ($verification !== null) {
-        $user->setAttribute($verification, true);
-    }
 
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
@@ -4719,23 +4720,28 @@ Http::put('/v1/account/recovery')
                 return;
             }
 
-            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in.
+            // MFA in force is left alone, so the new password still needs the second factor to sign in
+            /** @var User $locked */
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
-            if (!$locked->getAttribute('emailVerification', false)) {
+            $guarded = $locked->getMinimumFactors() > 1;
+            if (!$locked->getAttribute('emailVerification', false) && !$guarded) {
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
                 $claimed = true;
             }
 
-            $dbForProject->updateDocument('users', $profile->getId(), new Document(
-                [
-                    'password' => $newPassword,
-                    'passwordHistory' => $history,
-                    'passwordPwned' => $passwordPwned,
-                    'passwordUpdate' => DateTime::now(),
-                    'hash' => $proofForPassword->getHash()->getName(),
-                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                    'emailVerification' => true]
-            ));
+            $updates = [
+                'password' => $newPassword,
+                'passwordHistory' => $history,
+                'passwordPwned' => $passwordPwned,
+                'passwordUpdate' => DateTime::now(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
+            ];
+            if (!$guarded) {
+                $updates['emailVerification'] = true;
+            }
+            $dbForProject->updateDocument('users', $profile->getId(), new Document($updates));
 
             return $document;
         });
@@ -5161,23 +5167,28 @@ Http::put('/v1/account/recovery/otp')
                 return;
             }
 
-            // Recovery proves an unverified email, so whoever registered it keeps no other way in
+            // Recovery proves an unverified email, so whoever registered it keeps no other way in.
+            // MFA in force is left alone, so the new password still needs the second factor to sign in
+            /** @var User $locked */
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
-            if (!$locked->getAttribute('emailVerification', false)) {
+            $guarded = $locked->getMinimumFactors() > 1;
+            if (!$locked->getAttribute('emailVerification', false) && !$guarded) {
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
                 $claimed = true;
             }
 
-            $dbForProject->updateDocument('users', $profile->getId(), new Document(
-                [
-                    'password' => $newPassword,
-                    'passwordHistory' => $history,
-                    'passwordPwned' => $passwordPwned,
-                    'passwordUpdate' => DateTime::now(),
-                    'hash' => $proofForPassword->getHash()->getName(),
-                    'hashOptions' => $proofForPassword->getHash()->getOptions(),
-                    'emailVerification' => true]
-            ));
+            $updates = [
+                'password' => $newPassword,
+                'passwordHistory' => $history,
+                'passwordPwned' => $passwordPwned,
+                'passwordUpdate' => DateTime::now(),
+                'hash' => $proofForPassword->getHash()->getName(),
+                'hashOptions' => $proofForPassword->getHash()->getOptions(),
+            ];
+            if (!$guarded) {
+                $updates['emailVerification'] = true;
+            }
+            $dbForProject->updateDocument('users', $profile->getId(), new Document($updates));
 
             return $document;
         });
