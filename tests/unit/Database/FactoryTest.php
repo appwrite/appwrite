@@ -43,13 +43,30 @@ final class FactoryTest extends TestCase
         );
     }
 
-    private function factory(): Factory
+    public function testDirectFactoryConstructionHonorsTheMigrationNamespace(): void
+    {
+        $previous = \getenv('_APP_CACHE_MIGRATION');
+        \putenv('_APP_CACHE_MIGRATION=v2');
+        try {
+            $cache = new Cache(new MemoryCache());
+            $cache->save('migration-setting', 'legacy');
+            $database = $this->factory($cache)->project($this->project());
+            $this->assertFalse($database->getCache()->load('migration-setting', 60));
+            $database->getCache()->save('migration-setting', 'versioned');
+            $this->assertSame('versioned', $database->getCache()->load('migration-setting', 60));
+            $this->assertSame('legacy', $cache->load('migration-setting', 60));
+        } finally {
+            \putenv($previous === false ? '_APP_CACHE_MIGRATION' : '_APP_CACHE_MIGRATION='.$previous);
+        }
+    }
+
+    private function factory(?Cache $cache = null): Factory
     {
         $adapter = (new ConnectedMemory())->setHostname('mariadb');
         $pools = new Group();
         $pools->add(new Pool(new Stack(), 'database_db_main', 1, static fn (): ConnectedMemory => $adapter, 1.0));
 
-        return new Factory($pools, new Cache(new MemoryCache()), new Authorization());
+        return new Factory($pools, $cache ?? new Cache(new MemoryCache()), new Authorization());
     }
 
     private function project(): Document

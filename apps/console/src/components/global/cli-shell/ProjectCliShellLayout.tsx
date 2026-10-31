@@ -1,11 +1,13 @@
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { ProjectConnectDialogProvider } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
+import { EnvironmentCopyBox } from '@/components/global/environment-copy'
 import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import { NativeOAuthPromoBanner } from '@/components/global/shared/NativeOAuthPromoBanner'
 import { canShowProjectTerminal } from '@/lib/console-access-checks'
+import { useProgressPanelToastOffset } from '@/lib/layout/progress-panel-offset'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useOrganizationScopes, useProject } from '@/lib/react-query/hooks'
 import { CliShellProvider } from './CliShellProvider'
@@ -36,6 +38,9 @@ export function ProjectCliShellLayout({
   const { project } = useProject(projectId)
   const { access } = useOrganizationScopes(project?.teamId)
   const showTerminal = canShowProjectTerminal(access, features)
+  // Toasts share this corner and are lifted above whatever the panel shows
+  const progressPanelRef = useRef<HTMLDivElement>(null)
+  useProgressPanelToastOffset(progressPanelRef)
 
   // Connect provider wraps KeyboardShortcuts so Command Center can open Connect → MCP.
   const layout = (
@@ -52,8 +57,12 @@ export function ProjectCliShellLayout({
           {children}
         </ConsoleLayout>
         <NativeOAuthPromoBanner />
-        <div className="fixed bottom-4 end-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+        <div
+          ref={progressPanelRef}
+          className="fixed bottom-4 end-4 z-50 flex flex-col gap-2 max-w-sm w-full"
+        >
           <GlobalUploadProgress embedded />
+          <EnvironmentCopyBox projectId={projectId} />
           <CsvImportBox projectId={projectId} />
           <CsvExportBox projectId={projectId} />
         </div>

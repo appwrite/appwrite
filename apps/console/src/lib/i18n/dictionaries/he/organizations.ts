@@ -663,7 +663,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Loading payment methods...': 'טוען אמצעי תשלום...',
   'Loading plan details...': 'טוען פרטי תוכנית...',
   'Loading plans...': 'טוען תוכניות...',
-  'Loading platforms': 'טוען פלטפורמות',
   'Loading price for': 'טוען מחיר עבור',
   'Loading projects...': 'טוען פרויקטים...',
   'Loading request usage': 'טוען נתוני שימוש בבקשות',
@@ -719,6 +718,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
+  'Need SSO or custom organization roles?':
+    'זקוקים ל-SSO או לתפקידי ארגון מותאמים?',
+  'Need a custom SLA or a private Slack channel?':
+    'זקוקים ל-SLA מותאם או לערוץ Slack פרטי?',
+  'Running Appwrite at scale?': 'מריצים את Appwrite בקנה מידה גדול?',
+  'Get a custom SLA, a private Slack channel, and SOC 2 and HIPAA without add-ons.':
+    'קבלו SLA מותאם, ערוץ Slack פרטי, ו-SOC 2 ו-HIPAA ללא תוספות.',
+  'Talk to sales': 'שיחה עם מכירות',
   'Need compliance, custom SLAs, or volume pricing?':
     'זקוקים לציות, הסכמי SLA מותאמים או תמחור לפי היקף?',
   Network: 'רשת',
@@ -1354,7 +1361,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'member slots': 'מקומות לחברים',
   members: 'חברים',
   month: 'חודש',
-  'more platforms': 'פלטפורמות נוספות',
   "now. Then you'll be charged": 'כעת. לאחר מכן תחויבו בסך',
   of: 'מתוך',
   'of budget': 'מהתקציב',

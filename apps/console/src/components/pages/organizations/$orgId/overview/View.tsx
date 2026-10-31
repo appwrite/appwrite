@@ -72,7 +72,6 @@ import {
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
   mapProjectToListItem,
-  useProjectListPlatforms,
   useProjectListRequestsUsage,
   formatProjectNameForDisplay} from '@/lib/react-query/hooks'
 import {
@@ -178,11 +177,13 @@ import {
   getPlanDisplayName,
 } from '@/lib/utils/plan-badge'
 import {
+  isSelfServiceProPlan,
   resolveOrganizationCanonicalPlan,
   resolveOrganizationPlanDisplayLabel,
   type CanonicalPlanId} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
 import { ComplianceTab } from '../settings/ComplianceTab'
+import { EnterpriseCard } from '../settings/EnterpriseCard'
 import { View as DomainsView } from '../domains/View'
 import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
@@ -233,6 +234,8 @@ import {
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
@@ -250,6 +253,9 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/oauth-apps'
   | '/organizations/$orgId/settings/partners'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
+
+/** Pro orgs with at least this many members see the Enterprise access line. */
+const ENTERPRISE_NOTE_MIN_MEMBERS = 5
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
   const { currentCount, limit, plan, planName } =
@@ -1904,7 +1910,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const showProjectUsageCharts =
     features.usageStats ||
     (isSelfHosted && !isUsageStatsCapabilityResolved())
-  // Budget-locked projects cannot load platform/usage APIs (402). Skip those
+  // Budget-locked projects cannot load usage APIs (402). Skip those
   // fetches and show N/A on the cards instead.
   const skipProjectCardExtras = showProjectsLockedAlert
 
@@ -1929,23 +1935,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     visibleProjectIds,
     features.usageStats && !skipProjectCardExtras,
     organizationPlan,
-  )
-
-  const projectListPlatformIds = useMemo(() => {
-    if (skipProjectCardExtras) return []
-    return [
-      ...new Set([
-        ...pinnedProjects.map((project) => project.$id),
-        ...displayedProjectsByTeam.flatMap(({ projects }) =>
-          projects.map((project) => project.$id),
-        ),
-      ]),
-    ]
-  }, [skipProjectCardExtras, pinnedProjects, displayedProjectsByTeam])
-
-  const fetchedProjectPlatformsById = useProjectListPlatforms(
-    projectListPlatformIds,
-    projectListPlatformIds.length > 0,
   )
 
   const lockedProjectCardIds = useMemo(() => {
@@ -1975,24 +1964,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [
     skipProjectCardExtras,
     fetchedProjectRequestsUsageById,
-    lockedProjectCardIds,
-  ])
-
-  const projectPlatformsById = useMemo(() => {
-    if (!skipProjectCardExtras) return fetchedProjectPlatformsById
-    const map = new Map(fetchedProjectPlatformsById)
-    for (const projectId of lockedProjectCardIds) {
-      map.set(projectId, {
-        isLoading: false,
-        isError: false,
-        platforms: [],
-        unavailable: true,
-      })
-    }
-    return map
-  }, [
-    skipProjectCardExtras,
-    fetchedProjectPlatformsById,
     lockedProjectCardIds,
   ])
 
@@ -2942,9 +2913,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       projectRequestsUsageById={
                                         projectRequestsUsageById
                                       }
-                                      projectPlatformsById={
-                                        projectPlatformsById
-                                      }
                                       canPinProjects={canPinProjectsResult}
                                       pinnedIds={pinnedIds}
                                       onPinProject={handlePinProject}
@@ -3069,9 +3037,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               project={project}
                                               showSettingsTab={
                                                 showProjectSettingsTab
-                                              }
-                                              platformsByProjectId={
-                                                projectPlatformsById
                                               }
                                             />
                                             {(canReorderPinned ||
@@ -3209,9 +3174,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                         projectRequestsUsageById={
                                           projectRequestsUsageById
                                         }
-                                        projectPlatformsById={
-                                          projectPlatformsById
-                                        }
                                         canPinProjects={canPinProjectsResult}
                                         pinnedIds={pinnedIds}
                                         onPinProject={handlePinProject}
@@ -3299,9 +3261,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                 project={project}
                                                 showSettingsTab={
                                                   showProjectSettingsTab
-                                                }
-                                                platformsByProjectId={
-                                                  projectPlatformsById
                                                 }
                                               />
                                               {canPin && canPinProjectsResult && (
@@ -3450,6 +3409,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         : item,
                     )}
                     activeSectionId={settingsSubTab}
+                    navFooter={
+                      isSelfServiceProPlan(organizationPlan) ? (
+                        <EnterpriseCard orgId={orgId} />
+                      ) : undefined
+                    }
                     cardIndex={orgSettingsCardIndex}
                     searchQuery={settingsNavSearch}
                     onSearchQueryChange={setSettingsNavSearch}
@@ -3983,6 +3947,25 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     itemLabel={t('members')}
                                   />
                                 )}
+                                {isSelfServiceProPlan(organizationPlan) &&
+                                  (selectedOrg?.members ?? 0) >=
+                                    ENTERPRISE_NOTE_MIN_MEMBERS && (
+                                    <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                                      <p className="text-[12px] text-muted-foreground">
+                                        <EnterpriseBadge />
+                                        {t(
+                                          'Need SSO or custom organization roles?',
+                                        )}{' '}
+                                        <ContactSalesLink
+                                          source="members"
+                                          orgId={orgId}
+                                          className="font-medium text-foreground underline hover:no-underline"
+                                        >
+                                          {t('Contact sales')}
+                                        </ContactSalesLink>
+                                      </p>
+                                    </div>
+                                  )}
                               </>
                             ) : (
                               <EmptyState

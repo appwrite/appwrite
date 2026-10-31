@@ -6,13 +6,15 @@ import {
   type ConsoleProfileFeatures,
 } from '@/lib/console-profiles'
 
-/** Console account label that can open the experiments menu. */
+/** Console account label that can open the previews menu. */
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
   flag: keyof ConsoleProfileFeatures
   name: string
   description: string
+  /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
+  introducedAt: string
 }
 
 /**
@@ -23,8 +25,20 @@ export const EXPERIMENTS: readonly Experiment[] = [
   {
     flag: 'analytics',
     name: 'Appwrite Analytics',
-    description:
-      'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.',
+    description: 'Visitor, page, and campaign tracking.',
+    introducedAt: '2026-10-23',
+  },
+  {
+    flag: 'projectEnvironments',
+    name: 'Project environments',
+    description: 'Switch or clone staging and production.',
+    introducedAt: '2026-10-29',
+  },
+  {
+    flag: 'projectTransfers',
+    name: 'Project transfers',
+    description: 'Move a project to another organization.',
+    introducedAt: '2026-10-29',
   },
 ]
 
@@ -32,6 +46,27 @@ export function hasQualityLabel(
   labels: readonly string[] | null | undefined,
 ): boolean {
   return labels?.includes(QUALITY_ACCOUNT_LABEL) === true
+}
+
+/** Local midnight of the introduction day, so the date reads the same in every timezone. */
+export function getExperimentIntroducedDate(experiment: Experiment): Date {
+  const [year, month, day] = experiment.introducedAt.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/** An experiment is new when it was introduced after the user last opened the popover. */
+function isExperimentUnseen(
+  experiment: Experiment,
+  seenAt: Date | null,
+): boolean {
+  if (!seenAt) return true
+  return getExperimentIntroducedDate(experiment) > seenAt
+}
+
+export function countUnseenExperiments(seenAt: Date | null): number {
+  return EXPERIMENTS.filter((experiment) =>
+    isExperimentUnseen(experiment, seenAt),
+  ).length
 }
 
 /** Persist one experiment on this browser, or drop the override when it matches the profile default. */

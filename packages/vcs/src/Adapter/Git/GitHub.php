@@ -348,11 +348,10 @@ class GitHub extends Git
     {
         $currentPage = 1;
         $perPage = 100;
-        $totalRepositories = 0;
-        $maxRepositories = 1000;
         $url = '/installation/repositories';
 
-        while ($totalRepositories < $maxRepositories) {
+        // No page cap: a selected repository past any cap would be reported as not selected
+        while (true) {
             $response = $this->call(self::METHOD_GET, $url, ['Authorization' => "Bearer $this->accessToken"], [
                 'page' => $currentPage,
                 'per_page' => $perPage,
@@ -375,7 +374,6 @@ class GitHub extends Git
             }
 
             $currentPage++;
-            $totalRepositories += $perPage;
         }
 
         throw new RepositoryNotFound('Repository not found.');

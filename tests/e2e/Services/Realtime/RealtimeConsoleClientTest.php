@@ -1583,6 +1583,51 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertSame('error', \end($frames)['type'] ?? null);
     }
 
+    public function testAdminModeEndsWithRoleChange(): void
+    {
+        $rootHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($rootHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Admin Role Change',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+        $projectId = $this->createOrganizationProject($rootHeaders, $teamId);
+
+        $member = $this->createConsoleAccount();
+        $this->addOrganizationMember($rootHeaders, $teamId, $member, ['owner']);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId . '/memberships', $rootHeaders);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $membership = \array_find($memberships['body']['memberships'], fn (array $membership): bool => $membership['userEmail'] === $member['email']);
+        $this->assertNotNull($membership);
+
+        /**
+         * Test for SUCCESS
+         */
+        $client = $this->getAdminWebsocket($projectId, $member['session']);
+        $response = \json_decode($client->receive(), true);
+        $this->assertSame('connected', $response['type']);
+
+        /**
+         * Test for FAILURE
+         */
+        // The connection's roles came from the membership, so changing them ends it.
+        $update = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['$id'], $rootHeaders, [
+            'roles' => ['developer'],
+        ]);
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        $frames = $this->receiveUntilClosed($client);
+        $this->assertSame('error', \end($frames)['type'] ?? null);
+    }
+
     public function testAdminModeReauthenticationDropsAdminRoles(): void
     {
         $user = $this->getUser();

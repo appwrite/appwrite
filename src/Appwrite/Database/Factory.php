@@ -28,6 +28,7 @@ class Factory implements Provisioner
         protected string $database = APP_DATABASE,
         protected string $platformNamespace = '_console',
     ) {
+        $this->cache = \Utopia\Database\Cache\Bridge::wrap($cache, System::getEnv('_APP_CACHE_MIGRATION', ''));
     }
 
     public function platform(

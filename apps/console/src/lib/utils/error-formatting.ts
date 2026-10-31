@@ -388,13 +388,15 @@ export function formatError(
       }
     }
 
-    // Check for 404 / not found errors
+    // Check for 404 / not found errors. Match the message only without a status:
+    // a 400 such as "Attribute not found in schema" must keep its own message.
     if (
       error.name === 'NotFoundError' ||
       code === 404 ||
-      lowerMessage.includes('not found') ||
-      lowerMessage.includes('404') ||
-      lowerMessage.includes('does not exist')
+      (code === undefined &&
+        (lowerMessage.includes('not found') ||
+          lowerMessage.includes('404') ||
+          lowerMessage.includes('does not exist')))
     ) {
       return {
         title: translate('Not Found'),

@@ -111,6 +111,8 @@ import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { HalloweenCobwebs } from '@/components/global/shared/HalloweenCobwebs'
+import { useHalloween } from '@/hooks/use-halloween'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { resolveInitHref } from '@/lib/init/links'
@@ -673,9 +675,10 @@ export function ConsoleHeader({
     isMac,
   )
   const logoColumnWidth = showMarketingNav ? 158 : 60
+  const halloween = useHalloween()
 
   return (
-    <div className="@container w-full overflow-visible">
+    <div className="@container relative w-full overflow-visible">
       <header
         className={cn(
           'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',
@@ -2084,6 +2087,7 @@ export function ConsoleHeader({
           )}
         </div>
       </header>
+      {halloween && !showMarketingNav && <HalloweenCobwebs />}
     </div>
   )
 }

@@ -38,9 +38,12 @@ import {
 import { DEFAULT_BILLING_PROJECTS_LIMIT } from '@/lib/react-query/hooks/constants'
 import {
   getPlanNameFromTier,
+  isSelfServiceProPlan,
   resolveOrganizationPlanDisplayLabel,
 } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import type { Models } from '@appwrite.io/console'
@@ -88,6 +91,9 @@ interface PlanSummaryProps {
   onChangePlan?: () => void
   orgId?: string
 }
+
+/** Pro orgs see the Enterprise line once projected charges reach this, in USD, before credits. */
+const ENTERPRISE_NOTE_MIN_AMOUNT = 50
 
 export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const t = useT()
@@ -228,6 +234,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   const totalAmount = useMemo(() => {
     return Math.max(baseAmount - creditsApplied, 0)
   }, [baseAmount, creditsApplied])
+
+  const showEnterpriseNote =
+    isSelfServiceProPlan(plan) && baseAmount >= ENTERPRISE_NOTE_MIN_AMOUNT
 
   // Get billing cycle dates from organization
   const billingCycle = useMemo(() => {
@@ -944,7 +953,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       {/* Footer */}
       {plan?.selfService !== false && (
         <div className="border-t border-border px-6 py-4 bg-muted/30">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {(basePlanPrice ?? 0) === 0 ? (
               <Button
                 size="sm"
@@ -966,6 +975,19 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 <ArrowLeftRight className="h-4 w-4" />
                 {t('Change plan')}
               </Button>
+            )}
+            {showEnterpriseNote && (
+              <p className="ms-auto text-[12px] text-muted-foreground">
+                <EnterpriseBadge />
+                {t('Need a custom SLA or a private Slack channel?')}{' '}
+                <ContactSalesLink
+                  source="billing"
+                  orgId={orgId}
+                  className="font-medium text-foreground underline hover:no-underline"
+                >
+                  {t('Talk to sales')}
+                </ContactSalesLink>
+              </p>
             )}
           </div>
         </div>
