@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Redis;
 use Utopia\Cache\Cache;
 use Utopia\Cache\Exception\Unavailable;
+use Utopia\Database\Cache\Bridge;
 use Utopia\System\System;
 
 final class ListCacheTest extends TestCase
@@ -58,6 +59,44 @@ final class ListCacheTest extends TestCase
 
         $this->assertSame('stored', $result);
         $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD));
+    }
+
+    public function testRollingBridgeKeepsListReadsWarmAndPermissionWritesAvailable(): void
+    {
+        foreach (['legacy', 'dual', 'v2'] as $mode) {
+            $cache = new Bridge(new Cache(new Redis($this->redis)), $mode);
+            $key = $this->key.':'.$mode;
+            $listCache = new ListCache($cache, $key);
+            $this->assertSame('stored', ListCache::purged([$listCache], fn (): string => 'stored'));
+            $version = $listCache->getVersion();
+            $listCache->save([self::FIELD => ['row']], $version);
+            $this->assertSame(['row'], $cache->load($key, self::TTL, self::FIELD));
+            $this->assertSame('updated', ListCache::purged([$listCache], fn (): string => 'updated'));
+            $this->assertFalse($cache->load($key, self::TTL, self::FIELD));
+            $this->assertNotSame($version, $listCache->getVersion());
+        }
+    }
+
+    public function testPermissionWriteRejectsListReadsFromTheOtherRollingPhase(): void
+    {
+        foreach ([['legacy', 'dual'], ['dual', 'legacy']] as [$readerMode, $writerMode]) {
+            $cache = new Cache(new Redis($this->redis));
+            $readerCache = new Bridge($cache, $readerMode);
+            $writerCache = new Bridge($cache, $writerMode);
+            $key = $this->key.':'.$readerMode;
+            $reader = new ListCache($readerCache, $key);
+            $writer = new ListCache($writerCache, $key);
+            ListCache::purged([$reader], fn (): string => 'initial');
+            $version = $reader->getVersion();
+
+            ListCache::purged([$writer], fn (): string => 'permission revoked');
+            $reader->save([self::FIELD => ['stale row']], $version);
+
+            $this->assertFalse($readerCache->load($key, self::TTL, self::FIELD));
+            $this->assertNotSame($version, $reader->getVersion());
+            $this->assertGreaterThan(0, $this->redis->ttl($key.':version'));
+            $this->assertGreaterThan(0, $this->redis->ttl('v2:'.$key.':version'));
+        }
     }
 
     public function testVersionMarkerExpires(): void
