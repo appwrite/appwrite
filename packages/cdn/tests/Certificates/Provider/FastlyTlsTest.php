@@ -144,6 +144,54 @@ final class FastlyTlsTest extends TestCase
         $this->assertSame(Status::RENEWING, new FastlyTls('token', '', 'certainly', $client)->getCertificateStatus('example.com', null));
     }
 
+    public function testCertificateExpiryIsTheNewestCertificates(): void
+    {
+        // During a renewal the subscription references both certificates
+        $client = new TestClient([$this->json([
+            'data' => [[
+                'id' => 'sub_123',
+                'attributes' => ['state' => 'renewing'],
+                'relationships' => ['tls_certificates' => ['data' => [['type' => 'tls_certificate', 'id' => 'cert_new'], ['type' => 'tls_certificate', 'id' => 'cert_old']]]],
+            ]],
+            'included' => [
+                ['type' => 'tls_certificate', 'id' => 'cert_new', 'attributes' => ['not_after' => '2027-06-01T00:00:00Z']],
+                ['type' => 'tls_certificate', 'id' => 'cert_old', 'attributes' => ['not_after' => '2026-01-01T00:00:00Z']],
+            ],
+        ])]);
+
+        $this->assertSame('2027-06-01 00:00:00.000', new FastlyTls('token', 'tls-config-id', 'certainly', $client)->getCertificateExpiry('example.com', null));
+        // Read from the subscription lookup alone, without touching activations
+        $this->assertCount(1, $client->calls);
+    }
+
+    public function testCertificateExpiryOfAStuckRenewalIsInThePast(): void
+    {
+        $client = new TestClient([$this->json($this->subscription(
+            state: 'pending',
+            authorizationState: 'passing',
+            certificates: [['type' => 'tls_certificate', 'id' => 'cert_1']],
+            expiries: ['cert_1' => -3],
+        ))]);
+
+        $expiry = new FastlyTls('token', '', 'certainly', $client)->getCertificateExpiry('example.com', null);
+
+        $this->assertNotNull($expiry);
+        $this->assertLessThan(time(), strtotime($expiry . ' UTC'));
+    }
+
+    public function testCertificateExpiryIsUnknownWithoutACertificate(): void
+    {
+        $client = new TestClient([
+            $this->json(['data' => []]),
+            $this->json($this->subscription()),
+        ]);
+        $provider = new FastlyTls('token', 'tls-config-id', 'certainly', $client);
+
+        // No subscription, then a subscription still waiting on its first certificate
+        $this->assertNull($provider->getCertificateExpiry('example.com', null));
+        $this->assertNull($provider->getCertificateExpiry('example.com', null));
+    }
+
     public function testRenewIsRequiredWithoutASubscription(): void
     {
         $client = new TestClient([$this->json(['data' => []])]);

@@ -159,6 +159,11 @@ class Fastly implements Provider
         return $this->tls->getCertificateStatus(Domain::validate($domain), $domainType);
     }
 
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        return $this->tls->getCertificateExpiry(Domain::validate($domain), $domainType);
+    }
+
     public function isRenewRequired(string $domain, ?string $domainType): bool
     {
         $domain = Domain::validate($domain);

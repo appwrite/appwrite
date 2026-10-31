@@ -88,6 +88,11 @@ class Update extends Action
 
         // If rule is already verified or in certificate generation state, don't queue for verification again
         if ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING) {
+            $certificate = $authorization->skip(fn () => $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', '')));
+            $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+            $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
+            $rule->setAttribute('certificateStatus', $certificate->getAttribute('status', ''));
+
             $response->dynamic($rule, Response::MODEL_PROXY_RULE);
             return;
         }
@@ -102,11 +107,12 @@ class Update extends Action
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             $certificateId = $rule->getAttribute('certificateId', '');
-            // Reset logs and attempts for the associated certificate.
+            // Reset logs, attempts and the last reported state for the associated certificate.
             if (!empty($certificateId)) {
                 $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
                     'logs' => '',
                     'attempts' => 0,
+                    'status' => '',
                 ])));
             }
         } catch (Exception $err) {
@@ -130,6 +136,8 @@ class Update extends Action
 
         if (!empty($certificate)) {
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+            $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
+            $rule->setAttribute('certificateStatus', $certificate->getAttribute('status', ''));
         }
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);

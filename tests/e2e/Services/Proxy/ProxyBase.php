@@ -640,6 +640,11 @@ trait ProxyBase
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
+        // No certificate was requested for an unverified domain
+        $this->assertArrayHasKey('expireAt', $rule['body']);
+        $this->assertSame('', $rule['body']['expireAt']);
+        $this->assertArrayHasKey('certificateStatus', $rule['body']);
+        $this->assertSame('', $rule['body']['certificateStatus']);
 
         $this->cleanupRule($ruleId);
     }
@@ -680,6 +685,10 @@ trait ProxyBase
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('logs', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('renewAt', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('expireAt', $rules['body']['rules'][0]);
+        $this->assertSame('', $rules['body']['rules'][0]['expireAt']);
+        $this->assertArrayHasKey('certificateStatus', $rules['body']['rules'][0]);
+        $this->assertSame('', $rules['body']['rules'][0]['certificateStatus']);
 
         $rule2Domain = \uniqid() . '-list1.custom.localhost';
         $rule2Id = $this->setupAPIRule($rule2Domain);
