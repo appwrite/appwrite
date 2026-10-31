@@ -17,6 +17,7 @@ use Appwrite\Platform\Modules\Console\Http\Scopes\Organization\XList as ListOrga
 use Appwrite\Platform\Modules\Console\Http\Scopes\Project\XList as ListKeyScopes;
 use Appwrite\Platform\Modules\Console\Http\Templates\Email\Get as GetEmailTemplate;
 use Appwrite\Platform\Modules\Console\Http\Variables\Get as GetVariables;
+use Appwrite\Platform\Modules\Console\Http\Versions\Get as GetVersions;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -35,6 +36,7 @@ class Http extends Service
         $this->addAction(ListKeyScopes::getName(), new ListKeyScopes());
         $this->addAction(ListOrganizationScopes::getName(), new ListOrganizationScopes());
         $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
+        $this->addAction(GetVersions::getName(), new GetVersions());
 
         // web redirects to the console
         $this->addAction(RedirectRoot::getName(), new RedirectRoot());

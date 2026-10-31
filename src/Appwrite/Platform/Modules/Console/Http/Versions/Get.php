@@ -1,15 +1,35 @@
 <?php
 
+namespace Appwrite\Platform\Modules\Console\Http\Versions;
+
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
-use Utopia\Http\Http;
+use Utopia\Platform\Action;
+use Utopia\Platform\Scope\HTTP;
 
-Http::get('/versions')
-    ->desc('Get Version')
-    ->groups(['home', 'web'])
-    ->label('scope', 'public')
-    ->inject('response')
-    ->action(function (Response $response) {
+class Get extends Action
+{
+    use HTTP;
+
+    public static function getName(): string
+    {
+        return 'getVersions';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
+            ->setHttpPath('/versions')
+            ->desc('Get Version')
+            ->groups(['home', 'web'])
+            ->label('scope', 'public')
+            ->inject('response')
+            ->callback($this->action(...));
+    }
+
+    public function action(Response $response): void
+    {
         $platforms = Config::getParam('sdks');
 
         $versions = [
@@ -36,4 +56,5 @@ Http::get('/versions')
         }
 
         $response->json($versions);
-    });
+    }
+}
