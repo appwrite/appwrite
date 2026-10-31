@@ -1,6 +1,5 @@
 import { afterAll, describe, expect, mock, test } from 'bun:test'
 import { QueryClient } from '@tanstack/react-query'
-import { MonitorNotifyRole } from '@appwrite.io/console'
 import * as actualSdk from '@/lib/appwrite/sdk'
 import {
   METRIC_CATEGORIES,
@@ -119,7 +118,7 @@ describe('alert rule form', () => {
       'rules',
       'window',
     ])
-    expect(input.notify).toEqual([MonitorNotifyRole.Owner])
+    expect(input.notify).toEqual(['owner'])
   })
 
   test('names an unnamed rule after its condition', () => {

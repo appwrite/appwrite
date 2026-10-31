@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronDown } from 'lucide-react'
-import { MonitorNotifyRole } from '@appwrite.io/console'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -60,7 +59,7 @@ export type RuleForm = {
   byteUnit: ByteUnit
   window: number
   cooldown: number
-  notify: MonitorNotifyRole[]
+  notify: string[]
 }
 
 const RESOURCE_PICKER_LIMIT = 100
@@ -76,7 +75,7 @@ export function emptyRuleForm(): RuleForm {
     byteUnit: 'GB',
     window: 3600,
     cooldown: 3600,
-    notify: [MonitorNotifyRole.Owner],
+    notify: ['owner'],
   }
 }
 
@@ -97,9 +96,12 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     byteUnit: split ? split.unit : 'GB',
     window: rule.window,
     cooldown: rule.cooldown,
-    notify: rule.notify as MonitorNotifyRole[],
+    notify: rule.notify,
   }
 }
+
+/** Organization roles the form offers to notify; the server validates `notify` against its own list. */
+export const NOTIFY_ROLES = ['owner', 'developer']
 
 /** How the form and the list name a role a monitor notifies. */
 export function roleLabel(role: string): string {
@@ -594,7 +596,7 @@ export function RuleFields({
           )}
         />
         <div className="flex flex-wrap gap-2">
-          {Object.values(MonitorNotifyRole).map((role) => {
+          {NOTIFY_ROLES.map((role) => {
             const selected = form.notify.includes(role)
             return (
               <button
