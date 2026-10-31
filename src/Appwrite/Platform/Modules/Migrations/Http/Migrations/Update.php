@@ -79,12 +79,19 @@ class Update extends Action
             throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
         }
 
-        // A migration from before grants were recorded runs with the authority of whoever retries it
+        // A retry runs with no more than the retrying caller holds; a session keeps the recorded grant.
+        // Only a key-created grant was checked against the resources, so others are checked here.
         $options = $migration->getAttribute('options', []);
-        if (!\array_key_exists('scopes', $options)) {
-            $options['scopes'] = $this->authorize($request, $migration->getAttribute('resources', []));
-            $migration->setAttribute('options', $options);
+        $recorded = $options['scopes'] ?? null;
+        $grant = $this->authorize($request, \is_array($recorded) ? [] : $migration->getAttribute('resources', []));
+
+        if ($grant !== null) {
+            $options['scopes'] = \is_array($recorded) ? \array_values(\array_intersect($recorded, $grant)) : $grant;
+        } elseif (!\array_key_exists('scopes', $options)) {
+            $options['scopes'] = null;
         }
+
+        $migration->setAttribute('options', $options);
 
         $migration
             ->setAttribute('status', 'pending')
