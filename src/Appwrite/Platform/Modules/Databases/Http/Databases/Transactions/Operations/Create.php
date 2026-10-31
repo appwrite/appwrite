@@ -252,9 +252,9 @@ class Create extends Action
                 // still need aggregates expanded so the committed rows match what the direct
                 // bulk endpoints persist (the commit handler writes the staged data verbatim).
                 if (\in_array($operation['action'], ['bulkCreate', 'bulkUpsert']) && \is_array($operation['data'] ?? null)) {
-                    foreach ($operation['data'] as $index => $document) {
-                        if (\is_array($document) && isset($document['$permissions'])) {
-                            $operation['data'][$index]['$permissions'] = $this->normalizePermissions($document['$permissions']);
+                    foreach ($operation['data'] as $index => $item) {
+                        if (\is_array($item) && isset($item['$permissions'])) {
+                            $operation['data'][$index]['$permissions'] = $this->normalizePermissions($item['$permissions']);
                         }
                     }
                 } elseif ($operation['action'] === 'bulkUpdate' && isset($operation['data']['data']['$permissions'])) {
@@ -268,6 +268,7 @@ class Create extends Action
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
                 'documentId' => $operation[$this->getResourceId()] ?? null,
+                'documentUpdatedAt' => $document?->getUpdatedAt(),
                 'action' => $operation['action'],
                 'data' => $operation['data'] ?? [],
             ]);
