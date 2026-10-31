@@ -940,6 +940,18 @@ trait MigrationsBase
         $this->assertSame(401, $migration['headers']['status-code']);
         $this->assertSame('general_unauthorized_scope', $migration['body']['type']);
 
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'collections.write', 'documents.write']),
+        ], [
+            ...$body,
+            'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT],
+        ]);
+
+        $this->assertSame(401, $migration['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $migration['body']['type']);
+
         /**
          * Test for SUCCESS
          */

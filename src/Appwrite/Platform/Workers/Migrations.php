@@ -499,7 +499,7 @@ class Migrations extends Action
                 $this->project->getSequence(),
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
                 $this->resolveDestinationDatabaseDsn(...),
-                scopes: $options['scopes'] ?? null,
+                scopes: $this->getGrant($migration),
             ),
             DestinationCSV::getName() => DestinationCSV::fromResourceIds(
                 deviceForFiles: $this->deviceForFiles,
@@ -572,14 +572,26 @@ class Migrations extends Action
     }
 
     /**
+     * Scopes the migration may act with: those of the key that created it, or null for a console
+     * session. A migration with no recorded grant predates grants and gets none until retried.
+     *
+     * @return array<string>|null
+     */
+    protected function getGrant(Document $migration): ?array
+    {
+        $options = $migration->getAttribute('options', []);
+
+        return \array_key_exists('scopes', $options) ? $options['scopes'] : [];
+    }
+
+    /**
      * @throws Exception
      */
     protected function generateAPIKey(Document $project, Document $migration): string
     {
         $scopes = $this->getAPIKeyScopes();
-        // A key-created migration acts with no more than the scopes of the key that created it
-        $grant = $migration->getAttribute('options', [])['scopes'] ?? null;
-        if (\is_array($grant)) {
+        $grant = $this->getGrant($migration);
+        if ($grant !== null) {
             $scopes = \array_values(\array_intersect($scopes, $grant));
         }
 

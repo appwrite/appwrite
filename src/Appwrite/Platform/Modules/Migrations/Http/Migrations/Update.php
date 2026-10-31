@@ -8,17 +8,14 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'retryMigration';
@@ -49,6 +46,7 @@ class Update extends Action
                 ]
             ))
             ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Migration unique ID.', false, ['dbForProject'])
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -59,6 +57,7 @@ class Update extends Action
 
     public function action(
         string $migrationId,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -78,6 +77,13 @@ class Update extends Action
 
         if ($status !== 'failed' && !$stalled) {
             throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
+        }
+
+        // A migration from before grants were recorded runs with the authority of whoever retries it
+        $options = $migration->getAttribute('options', []);
+        if (!\array_key_exists('scopes', $options)) {
+            $options['scopes'] = $this->authorize($request, $migration->getAttribute('resources', []));
+            $migration->setAttribute('options', $options);
         }
 
         $migration

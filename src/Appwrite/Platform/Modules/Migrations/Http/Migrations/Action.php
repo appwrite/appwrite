@@ -45,24 +45,46 @@ abstract class Action extends PlatformAction
         Resource::TYPE_TOPIC => ['topics.write'],
         Resource::TYPE_SUBSCRIBER => ['subscribers.write'],
         Resource::TYPE_MESSAGE => ['messages.write'],
-        Resource::TYPE_DATABASE => ['databases.write'],
-        Resource::TYPE_DATABASE_LEGACY => ['databases.write'],
-        Resource::TYPE_DATABASE_TABLESDB => ['databases.write'],
-        Resource::TYPE_DATABASE_DOCUMENTSDB => ['documentsdb.write'],
-        Resource::TYPE_DATABASE_VECTORSDB => ['vectorsdb.write'],
-        Resource::TYPE_TABLE => ['tables.write', 'collections.write'],
-        Resource::TYPE_COLUMN => ['tables.write', 'collections.write', 'columns.write', 'attributes.write'],
-        Resource::TYPE_INDEX => ['tables.write', 'collections.write', 'indexes.write', 'documentsdb.indexes.write', 'vectorsdb.indexes.write'],
-        Resource::TYPE_ROW => ['rows.write', 'documents.write'],
-        Resource::TYPE_COLLECTION => ['collections.write', 'documentsdb.collections.write', 'vectorsdb.collections.write'],
-        Resource::TYPE_ATTRIBUTE => ['tables.write', 'collections.write', 'columns.write', 'attributes.write'],
-        Resource::TYPE_DOCUMENT => ['documents.write', 'documentsdb.documents.write', 'vectorsdb.documents.write'],
+    ];
+
+    /**
+     * Write scopes for database resources, per database family. Collection, attribute,
+     * index and document are shared names, so they need the scope of every family imported.
+     */
+    protected const array DATABASE_SCOPES = [
+        Resource::TYPE_DATABASE => [
+            Resource::TYPE_DATABASE => ['databases.write'],
+            Resource::TYPE_DATABASE_LEGACY => ['databases.write'],
+            Resource::TYPE_DATABASE_TABLESDB => ['databases.write'],
+            Resource::TYPE_TABLE => ['tables.write', 'collections.write'],
+            Resource::TYPE_COLLECTION => ['tables.write', 'collections.write'],
+            Resource::TYPE_COLUMN => ['tables.write', 'collections.write', 'columns.write', 'attributes.write'],
+            Resource::TYPE_ATTRIBUTE => ['tables.write', 'collections.write', 'columns.write', 'attributes.write'],
+            Resource::TYPE_INDEX => ['tables.write', 'collections.write', 'indexes.write'],
+            Resource::TYPE_ROW => ['rows.write', 'documents.write'],
+            Resource::TYPE_DOCUMENT => ['rows.write', 'documents.write'],
+        ],
+        Resource::TYPE_DATABASE_DOCUMENTSDB => [
+            Resource::TYPE_DATABASE_DOCUMENTSDB => ['documentsdb.write'],
+            Resource::TYPE_COLLECTION => ['documentsdb.collections.write'],
+            Resource::TYPE_ATTRIBUTE => ['documentsdb.collections.write'],
+            Resource::TYPE_INDEX => ['documentsdb.indexes.write'],
+            Resource::TYPE_DOCUMENT => ['documentsdb.documents.write'],
+        ],
+        Resource::TYPE_DATABASE_VECTORSDB => [
+            Resource::TYPE_DATABASE_VECTORSDB => ['vectorsdb.write'],
+            Resource::TYPE_COLLECTION => ['vectorsdb.collections.write'],
+            Resource::TYPE_ATTRIBUTE => ['vectorsdb.collections.write'],
+            Resource::TYPE_INDEX => ['vectorsdb.indexes.write'],
+            Resource::TYPE_DOCUMENT => ['vectorsdb.documents.write'],
+        ],
     ];
 
     /**
      * Rejects a key that cannot write every resource the migration imports, and returns
      * the key's scopes for the worker to cap its own key with. Console sessions are not
-     * attenuated by key scopes, so they get null.
+     * attenuated by key scopes, so they get null. Record the result even when null: the
+     * worker grants nothing to a migration with no recorded grant.
      *
      * @param array<string> $resources
      * @param array<array<string>> $required further scopes, each satisfied by any one of its members
@@ -74,8 +96,18 @@ abstract class Action extends PlatformAction
             return null;
         }
 
+        // Without a database in the import, a shared name may belong to any family
+        $families = \array_intersect_key(self::DATABASE_SCOPES, \array_flip($resources)) ?: self::DATABASE_SCOPES;
+
         foreach ($resources as $resource) {
-            $required[] = self::SCOPES[$resource] ?? ['project.write'];
+            if (isset(self::SCOPES[$resource])) {
+                $required[] = self::SCOPES[$resource];
+                continue;
+            }
+
+            $database = \array_column($families, $resource) ?: \array_column(self::DATABASE_SCOPES, $resource);
+
+            \array_push($required, ...($database ?: [['project.write']]));
         }
 
         $scopes = $request->getScopes();
