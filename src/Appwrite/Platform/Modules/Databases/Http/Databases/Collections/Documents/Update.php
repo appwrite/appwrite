@@ -132,6 +132,8 @@ class Update extends Action
 
         if ($transactionId === null) {
             $data = $this->parseOperators($data, $collection);
+        } else {
+            $this->parseOperators($data, $collection);
         }
 
         $dbForDatabases = $getDatabasesDB($database, $collection);

@@ -120,6 +120,8 @@ class Upsert extends Action
             $document = $this->normalizeData($document);
             if ($transactionId === null) {
                 $document = $this->parseOperators($document, $collection);
+            } else {
+                $this->parseOperators($document, $collection);
             }
             $document = $this->removeReadonlyAttributes($document, privileged: true);
             $documents[$key] = new Document($document);
