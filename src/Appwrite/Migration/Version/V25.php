@@ -417,8 +417,8 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.4.0 for custom user photos
-                    foreach (['photoId', 'photoSize'] as $attribute) {
+                    // Added in 2.4.0 for custom user photos, and in 2.7.0 for alert email opt-outs
+                    foreach (['photoId', 'photoSize', 'alertsUnsubscribed'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {
@@ -520,6 +520,12 @@ class V25 extends Migration
                 case 'videosCaptions':
                 case 'videosCaptionsSegments':
                     // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
+                    $this->createCollection($id);
+                    break;
+
+                case 'monitors':
+                case 'monitorAlerts':
+                    // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
                     break;
 

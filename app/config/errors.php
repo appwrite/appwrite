@@ -1327,6 +1327,36 @@ return [
         'code' => 502,
         'publish' => false,
     ],
+    Exception::MONITOR_NOT_FOUND => [
+        'name' => Exception::MONITOR_NOT_FOUND,
+        'description' => 'Monitor with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MONITOR_ALREADY_EXISTS => [
+        'name' => Exception::MONITOR_ALREADY_EXISTS,
+        'description' => 'Monitor with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::MONITOR_RULES_INVALID => [
+        'name' => Exception::MONITOR_RULES_INVALID,
+        'description' => 'The monitor\'s rules are invalid. A usage monitor takes one rule comparing a metric with a threshold, optionally scoped with equal(\'resourceType\') and equal(\'resourceId\') rules.',
+        'code' => 400,
+    ],
+    Exception::MONITOR_TYPE_MISMATCH => [
+        'name' => Exception::MONITOR_TYPE_MISMATCH,
+        'description' => 'The monitor is of a different type. Update it with the route for its type.',
+        'code' => 400,
+    ],
+    Exception::MONITOR_RESOURCE_NOT_FOUND => [
+        'name' => Exception::MONITOR_RESOURCE_NOT_FOUND,
+        'description' => 'The resource the monitor watches could not be found in this project.',
+        'code' => 400,
+    ],
+    Exception::ALERT_NOT_FOUND => [
+        'name' => Exception::ALERT_NOT_FOUND,
+        'description' => 'Alert with the requested ID could not be found.',
+        'code' => 404,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',

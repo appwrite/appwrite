@@ -407,6 +407,17 @@ export function formatError(
       }
     }
 
+    // A plan's resource cap is a 403 too, but upgrading lifts it: say so instead of a permission error.
+    if (isPlanLimitError(error)) {
+      return {
+        title: translate('Plan limit reached'),
+        message: translate(
+          message || "You've reached the limit for this resource on your plan",
+        ),
+        isUserFriendly: true,
+      }
+    }
+
     // Check for permission/authorization errors (401)
     // For auth failures (e.g. login with wrong credentials), the API often returns a specific message
     // like "Invalid credentials" - use it when present and user-friendly; otherwise use generic message.
@@ -581,6 +592,22 @@ export function formatError(
     message: translate(fallbackMessage),
     isUserFriendly: true,
   }
+}
+
+/** Error types the API answers with when the organization's plan caps a resource. */
+const PLAN_LIMIT_ERROR_TYPES = new Set([
+  'additional_resource_not_allowed',
+  'billing_additional_resource_not_allowed',
+])
+
+/** Whether the API refused a create because the plan's limit for the resource is reached. */
+export function isPlanLimitError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    PLAN_LIMIT_ERROR_TYPES.has(String((error as { type?: unknown }).type))
+  )
 }
 
 /**

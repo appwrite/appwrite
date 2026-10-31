@@ -91,6 +91,7 @@ services:
       - _APP_ENV
       - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
+      - _APP_ALERTS_USAGE_LAG
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
@@ -229,6 +230,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
+      - _APP_MAINTENANCE_RETENTION_ALERTS
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_GRAPHQL_INTROSPECTION
@@ -483,6 +485,7 @@ services:
       - _APP_ENV
       - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
+      - _APP_ALERTS_USAGE_LAG
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
@@ -495,7 +498,7 @@ services:
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
       # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
-      - _APP_WORKER_MAX_COROUTINES=75
+      - _APP_WORKER_MAX_COROUTINES=83
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
@@ -682,6 +685,7 @@ services:
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_INACTIVE_INTERVAL
+      - _APP_ALERTS_INTERVAL
 
   appwrite-worker-stats-usage:
     profiles:
@@ -698,6 +702,22 @@ services:
       service: appwrite-worker
     entrypoint: worker-stats-resources
     container_name: appwrite-worker-stats-resources
+
+  appwrite-worker-alerts:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-worker
+    entrypoint: worker-alerts
+    container_name: appwrite-worker-alerts
+
+  appwrite-task-scheduler-alerts:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-task-scheduler
+    entrypoint: schedule-alerts
+    container_name: appwrite-task-scheduler-alerts
 
   appwrite-task-stats-resources:
     profiles:
@@ -1625,6 +1645,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
+      - _APP_MAINTENANCE_RETENTION_ALERTS
       - _APP_MAINTENANCE_START_TIME
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-interval:
