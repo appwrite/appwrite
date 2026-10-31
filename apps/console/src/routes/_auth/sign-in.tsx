@@ -33,7 +33,6 @@ import {
   signInWithPasskey,
 } from '@/lib/passkeys'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { useStartZero } from '@/lib/react-query/hooks/zero'
 import { useT } from '@/lib/i18n/translate'
 import { pageTitle } from '@/lib/utils/page-title'
 import {
@@ -111,7 +110,6 @@ function SignInPage() {
     null,
   )
   const [isOpeningMfa, setIsOpeningMfa] = useState(false)
-  const startZero = useStartZero()
 
   const handleOAuthLogin = async (provider: OAuthLoginMethod) => {
     setOauthLoading(provider)
@@ -366,12 +364,6 @@ function SignInPage() {
         isLoading={signInMutation.isPending || passkeyBusy || isOpeningMfa}
         oauthLoading={oauthLoading}
         redirect={search.redirect}
-        onStartWithoutAccount={
-          features.zero && !search.redirect
-            ? () => startZero.mutate()
-            : undefined
-        }
-        isStartingWithoutAccount={startZero.isPending}
       />
     </AuthFlowShell>
   )

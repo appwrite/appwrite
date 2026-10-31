@@ -1427,13 +1427,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Claim your project': 'プロジェクトを引き継ぐ',
   'Could not sign out. Try again.':
     'サインアウトできませんでした。もう一度お試しください。',
-  'Could not start a project without an account':
-    'アカウントなしでプロジェクトを開始できませんでした',
-  'Just exploring?': 'まずは試してみたいですか？',
-  'No projects are available without an account right now. Try again shortly or sign up.':
-    '現在、アカウントなしで利用できるプロジェクトはありません。しばらくしてから再度お試しいただくか、サインアップしてください。',
   'Project deleted': 'プロジェクトは削除されました',
-  'Start without an account': 'アカウントなしで始める',
   'This is a temporary project. Open the claim link you were given to keep it.':
     'これは一時的なプロジェクトです。保持するには、受け取った引き継ぎリンクを開いてください。',
   'This project was not claimed in time and has been deleted.':

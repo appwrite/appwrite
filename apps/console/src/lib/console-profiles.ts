@@ -105,8 +105,6 @@ export type ConsoleProfileFeatures = {
   analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
-  /** "Start without an account" on sign-in and sign-up, which hands out a claimable project. */
-  zero: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -150,7 +148,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
-  zero: 'Start without an account',
 }
 
 export type ConsoleProfile = {
@@ -207,8 +204,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: false,
-      // Off until the API hands out Zero projects; enable from Debug → Feature flags.
-      zero: false,
     },
   },
   'self-hosted': {
@@ -252,7 +247,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: false,
-      zero: false,
     },
   },
 }

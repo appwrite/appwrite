@@ -1773,14 +1773,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
-                'Start without an account',
-                'Show "Start without an account" on sign-in and sign-up, which creates a claimable project without signup.',
-                'zero',
-                profileId,
-                features.zero,
-                { category: 'Products' },
-              ),
-              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -2118,7 +2110,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.analytics,
     features.analyticsTrafficFilter,
     features.appwritePush,
-    features.zero,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.databaseSpecifications,

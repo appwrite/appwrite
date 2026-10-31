@@ -1427,13 +1427,7 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הפרויקט מושהה והנתונים שלו נשמרים עד המועד האחרון לתביעת בעלות. תבעו בעלות כדי להמשיך לבנות.',
   'Claim your project': 'תביעת בעלות על הפרויקט',
   'Could not sign out. Try again.': 'לא ניתן היה להתנתק. נסו שוב.',
-  'Could not start a project without an account':
-    'לא ניתן היה להתחיל פרויקט בלי חשבון',
-  'Just exploring?': 'רק בודקים?',
-  'No projects are available without an account right now. Try again shortly or sign up.':
-    'אין כרגע פרויקטים זמינים בלי חשבון. נסו שוב בקרוב או הירשמו.',
   'Project deleted': 'הפרויקט נמחק',
-  'Start without an account': 'התחלה בלי חשבון',
   'This is a temporary project. Open the claim link you were given to keep it.':
     'זהו פרויקט זמני. פתחו את קישור תביעת הבעלות שקיבלתם כדי לשמור עליו.',
   'This project was not claimed in time and has been deleted.':
