@@ -94,12 +94,18 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 $jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
 // Keep commands available for heartbeats and recovery while receive blocks.
+// Consume from the same Redis the publisher pool uses (see app/init/registers.php).
 $createConsumer = static function (): Redis {
-    $connection = [
+    $connection = empty(System::getEnv('_APP_REDIS_QUEUE_HOST', '')) ? [
         System::getEnv('_APP_REDIS_HOST', 'redis'),
         (int) System::getEnv('_APP_REDIS_PORT', '6379'),
         System::getEnv('_APP_REDIS_USER', ''),
         System::getEnv('_APP_REDIS_PASS', ''),
+    ] : [
+        System::getEnv('_APP_REDIS_QUEUE_HOST', ''),
+        (int) System::getEnv('_APP_REDIS_QUEUE_PORT', '6379'),
+        System::getEnv('_APP_REDIS_QUEUE_USER', ''),
+        System::getEnv('_APP_REDIS_QUEUE_PASS', ''),
     ];
 
     return new Redis(
