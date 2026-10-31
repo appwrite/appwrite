@@ -19,6 +19,10 @@ use Utopia\Validator\WhiteList;
 
 class Maintenance extends Action
 {
+    private const int CERTIFICATES_PAGE = 100;
+
+    private const int CERTIFICATES_LIMIT = 200; // Let's Encrypt allows 300 orders per 3 hours, so this keeps some for new domains
+
     public static function getName(): string
     {
         return 'maintenance';
@@ -123,58 +127,94 @@ class Maintenance extends Action
         $publisherForDeletes->enqueue(new DeleteMessage(type: DELETE_TYPE_CSV_EXPORTS));
     }
 
+    /**
+     * Enqueues the certificates due for renewal, oldest due first, until the per-run limit. A row the worker cannot
+     * act on stays due and keeps its place at the front, so it is skipped without counting toward the limit.
+     */
     private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate, Certificates $certificateIssuer): void
     {
         $time = DatabaseDateTime::now();
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $region = System::getEnv('_APP_REGION', 'default');
 
-        $documents = $dbForPlatform->find('certificates', [
-            Query::lessThan('attempts', 5), // Maximum 5 attempts
+        $queries = [
             Query::isNotNull('renewDate'),
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
-            Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
-        ]);
+            // Maximum 5 attempts. A row the worker created while waiting on its provider has no attempts yet.
+            Query::or([Query::isNull('attempts'), Query::lessThan('attempts', 5)]),
+        ];
 
-        if (\count($documents) === 0) {
-            Console::info("[{$time}] No certificates for renewal.");
-            return;
+        $due = $dbForPlatform->count('certificates', $queries);
+        $enqueued = 0;
+        $skipped = ['failed' => 0, 'orphaned' => 0, 'superseded' => 0, 'region' => 0, 'disabled' => 0];
+        $cursor = null;
+
+        while ($enqueued < self::CERTIFICATES_LIMIT) {
+            $certificates = $dbForPlatform->find('certificates', [
+                ...$queries,
+                Query::orderAsc('renewDate'),
+                Query::select(['$id', '$sequence', 'domain', 'renewDate']),
+                Query::limit(self::CERTIFICATES_PAGE),
+                ...($cursor === null ? [] : [Query::cursorAfter($cursor)]),
+            ]);
+
+            if ($certificates === []) {
+                break;
+            }
+
+            $domains = \array_map(fn (Document $certificate): string => $certificate->getAttribute('domain', ''), $certificates);
+
+            // One read for the page's rules, so walking past skipped rows costs two reads per page, not one per row
+            $rules = [];
+            foreach ($dbForPlatform->find('rules', [
+                $isMd5 ? Query::equal('$id', \array_map(md5(...), $domains)) : Query::equal('domain', $domains),
+                Query::limit(\count($domains)),
+            ]) as $rule) {
+                $rules[$isMd5 ? $rule->getId() : $rule->getAttribute('domain')] ??= $rule;
+            }
+
+            foreach ($certificates as $certificate) {
+                if ($enqueued >= self::CERTIFICATES_LIMIT) {
+                    break;
+                }
+
+                $domain = $certificate->getAttribute('domain', '');
+                $rule = $rules[$isMd5 ? \md5($domain) : $domain] ?? new Document();
+
+                $reason = $certificateIssuer->getRenewalSkipReason($certificate, $rule, $region);
+                if ($reason !== null) {
+                    $skipped[$reason]++;
+                    continue;
+                }
+
+                $publisherForCertificate->enqueue(new \Appwrite\Event\Message\Certificate(
+                    project: new Document([
+                        '$id' => $rule->getAttribute('projectId', ''),
+                        '$sequence' => $rule->getAttribute('projectInternalId', 0),
+                    ]),
+                    domain: new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]),
+                    action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                ));
+                $enqueued++;
+            }
+
+            if (\count($certificates) < self::CERTIFICATES_PAGE) {
+                break;
+            }
+
+            $cursor = \end($certificates);
         }
 
-        Console::info("[{$time}] Found " . \count($documents) . " certificates for renewal, scheduling jobs.");
+        // Rows renewed or deleted during the walk leave the count, so only a walk the limit stopped leaves rows unchecked
+        $unchecked = $enqueued >= self::CERTIFICATES_LIMIT ? \max(0, $due - $enqueued - \array_sum($skipped)) : 0;
 
-        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-        $appRegion = System::getEnv('_APP_REGION', 'default');
+        Console::info("[{$time}] Certificates for renewal: {$due} due, {$enqueued} enqueued, {$unchecked} not checked; skipped {$skipped['failed']} that failed verification (waiting for a manual retry), {$skipped['orphaned']} without a rule, {$skipped['superseded']} superseded, {$skipped['region']} in another region, {$skipped['disabled']} with auto-issue off.");
 
-        foreach ($documents as $certificate) {
-            $domain = $certificate->getAttribute('domain');
-            $rule = $isMd5 ?
-                $dbForPlatform->getDocument('rules', md5($domain)) :
-                    $dbForPlatform->findOne('rules', [
-                        Query::equal('domain', [$domain]),
-                        Query::limit(1)
-                    ]);
-
-            if ($rule->isEmpty() || $rule->getAttribute('region') !== $appRegion) {
-                continue;
-            }
-
-            // Respect the operator opt-out. If Appwrite would not auto-issue this
-            // subdomain today, it must not auto-renew it either. Keep the owner
-            // gate so custom-domain renewals are never skipped.
-            if ($rule->getAttribute('owner') === 'Appwrite' && !$certificateIssuer->isAutoIssueEnabled($rule)) {
-                continue;
-            }
-
-            $publisherForCertificate->enqueue(new \Appwrite\Event\Message\Certificate(
-                project: new Document([
-                    '$id' => $rule->getAttribute('projectId', ''),
-                    '$sequence' => $rule->getAttribute('projectInternalId', 0),
-                ]),
-                domain: new Document([
-                    'domain' => $rule->getAttribute('domain'),
-                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]),
-                action: \Appwrite\Event\Certificate::ACTION_GENERATION,
-            ));
+        if ($unchecked > 0) {
+            Console::warning("[{$time}] Certificate renewal limit of " . self::CERTIFICATES_LIMIT . " reached; {$unchecked} due certificates were not checked this run.");
         }
     }
 

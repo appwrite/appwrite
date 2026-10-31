@@ -123,7 +123,9 @@
         "src/Appwrite/Platform/Tasks/QueueRetry.php",
         "packages/vcs/",
         "src/Appwrite/Certificates/",
-        "packages/detector/"
+        "packages/detector/",
+        "src/Appwrite/Platform/Tasks/Maintenance.php",
+        "src/Appwrite/Platform/Workers/Certificates.php"
       ]
     },
     {
@@ -209,7 +211,8 @@
         "src/Appwrite/Event/Publisher/Maintenance.php",
         "app/config/workers.php",
         "app/init/resources.php",
-        "packages/schedule/"
+        "packages/schedule/",
+        "src/Appwrite/Platform/Tasks/Maintenance.php"
       ]
     },
     {
@@ -247,7 +250,8 @@
         "src/Appwrite/Platform/Modules/VCS/",
         "src/Appwrite/Platform/Tasks/Screenshot.php",
         "packages/vcs/",
-        "packages/detector/"
+        "packages/detector/",
+        "src/Appwrite/Platform/Tasks/Maintenance.php"
       ]
     },
     {
@@ -389,7 +393,8 @@
         "src/Appwrite/Platform/Modules/VCS/",
         "src/Appwrite/Platform/Modules/Functions/Workers/Builds.php",
         "packages/vcs/",
-        "packages/detector/"
+        "packages/detector/",
+        "src/Appwrite/Platform/Tasks/Maintenance.php"
       ]
     },
     {
@@ -466,7 +471,8 @@
         "src/Appwrite/Presences/",
         "app/realtime.php",
         "src/Appwrite/Realtime/",
-        "src/Appwrite/Messaging/Adapter/Realtime.php"
+        "src/Appwrite/Messaging/Adapter/Realtime.php",
+        "src/Appwrite/Platform/Tasks/Maintenance.php"
       ]
     },
     {
