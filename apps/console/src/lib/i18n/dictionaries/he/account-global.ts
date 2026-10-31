@@ -1297,6 +1297,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Signing you in': 'מחברים אתכם',
   'Please wait while we confirm your magic URL.':
     'המתינו בזמן שאנחנו מאמתים את ה-Magic URL שלכם.',
+  'Continue and sign in to this project instead?':
+    'להמשיך ולהתחבר לפרויקט הזה במקום זאת?',
   'Unable to sign you in': 'לא ניתן לחבר אתכם',
   'Go to sign in': 'מעבר להתחברות',
   'Access granted': 'הגישה אושרה',
