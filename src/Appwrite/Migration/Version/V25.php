@@ -26,8 +26,8 @@ class V25 extends Migration
         Console::info('Migrating collections');
         $this->migrateCollections();
 
-        Console::info('Migrating buckets');
-        $this->migrateBuckets();
+        Console::info('Syncing collections');
+        $this->syncCollections();
 
         Console::info('Migrating documents');
         $this->forEachDocument($this->migrateDocument(...));
@@ -586,39 +586,6 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
             }
-        }
-    }
-
-    /**
-     * Added in 2.0.0: the virtual folder a file lives in. A bucket created
-     * before then has no column, so every upload into it drops "folder".
-     */
-    private function migrateBuckets(): void
-    {
-        if ($this->dbForProject->findCollection('buckets') === null) {
-            return;
-        }
-
-        foreach ($this->dbForProject->cursor('buckets', batchSize: 25) as $bucket) {
-            $id = "bucket_{$bucket->getSequence()}";
-            Console::log("Migrating bucket \"{$bucket->getId()}\" ({$bucket->getAttribute('name')})");
-
-            $this->dbForProject->purgeCachedCollection($id);
-
-            try {
-                $this->createAttributesFromCollection($this->dbForProject, $id, ['folder'], 'files');
-            } catch (Throwable $th) {
-                Console::warning("Failed to create attribute \"folder\" in collection {$id}: {$th->getMessage()}");
-            }
-
-            try {
-                $this->createIndexFromCollection($this->dbForProject, $id, '_key_folder', 'files');
-            } catch (Throwable $th) {
-                Console::warning("Failed to create index \"_key_folder\" from {$id}: {$th->getMessage()}");
-            }
-
-            $this->dbForProject->purgeCachedCollection($id);
-            $this->dbForProject->purgeCachedDocument(Database::METADATA, $id);
         }
     }
 

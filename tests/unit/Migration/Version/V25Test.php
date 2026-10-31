@@ -16,11 +16,27 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Index;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Migration\Resource;
 
 final class V25Test extends TestCase
 {
+    private const SESSION_GEO = [
+        'continentCode',
+        'latitude',
+        'longitude',
+        'timeZone',
+        'weatherCode',
+        'postalCode',
+        'autonomousSystemNumber',
+        'autonomousSystemOrganization',
+        'connectionType',
+        'connectionUsageType',
+        'connectionOrganization',
+        'isp',
+    ];
+
     public function testPreservesLegacyResourceWhenInternalIdsCannotBeResolved(): void
     {
         $migration = new class () extends V25 {
@@ -556,5 +572,189 @@ final class V25Test extends TestCase
             fn (Attribute $attribute): string => $attribute->key,
             $database->getCollection('projects')->attributes()
         ));
+    }
+
+    public function testSyncsProjectFromOlderReleaseWithConfig(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        $collections = Config::getParam('collections', []);
+        $missing = [
+            'sessions' => self::SESSION_GEO,
+            'deployments' => ['_key_resourceId_resourceType', '_key_resource_internal_id'],
+            'variables' => ['_key_resource_internal_id_resource_type'],
+            'targets' => ['_key_expired', '_key_session_internal_id'],
+        ];
+        foreach ($collections['projects'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection($this->legacy($id, $collection, $missing[$id] ?? []));
+        }
+        $database->createCollection(Collection::create(id: 'audit'));
+        $bucket = $this->createLegacyBucket($database, $authorization, 'photos');
+        $files = 'bucket_' . $bucket->getSequence();
+        $uploaded = $authorization->skip(fn () => $database->withPreserveDates(true, fn () => $database->createDocument($files, new Document([
+            '$id' => 'uploaded',
+            '$createdAt' => '2025-06-01T00:00:00.000+00:00',
+            '$updatedAt' => '2025-06-01T00:00:00.000+00:00',
+            'bucketId' => 'photos',
+            'bucketInternalId' => $bucket->getSequence(),
+            'name' => 'hello.txt',
+        ]))));
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        foreach ($collections['projects'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) === Database::METADATA) {
+                $this->assertMatchesConfig($database, $id, $collection);
+            }
+        }
+        $this->assertMatchesConfig($database, $files, $collections['buckets']['files']);
+
+        $root = $authorization->skip(fn () => $database->find($files, [
+            Query::equal('folder', ['']),
+            Query::equal('name', ['hello.txt']),
+        ]));
+        $this->assertSame(['uploaded'], \array_map(fn (Document $file): string => $file->getId(), $root));
+        $this->assertSame($uploaded->getUpdatedAt(), $root[0]->getUpdatedAt());
+
+        $database->setDropUnknownAttributes(true);
+        $session = $authorization->skip(fn () => $database->createDocument('sessions', new Document([
+            'userInternalId' => '1',
+            'userId' => 'jane',
+            'expire' => DateTime::now(),
+            'continentCode' => 'EU',
+            'latitude' => 52.52,
+            'isp' => 'Example ISP',
+        ])));
+        $session = $authorization->skip(fn () => $database->getDocument('sessions', $session->getId()));
+        $this->assertSame('EU', $session->getAttribute('continentCode'));
+        $this->assertEqualsWithDelta(52.52, $session->getAttribute('latitude'), PHP_FLOAT_EPSILON);
+        $this->assertSame('Example ISP', $session->getAttribute('isp'));
+
+        $authorization->skip(fn () => $database->createDocument($files, new Document([
+            '$id' => 'report',
+            'bucketId' => 'photos',
+            'bucketInternalId' => $bucket->getSequence(),
+            'name' => 'report.pdf',
+            'folder' => 'reports/2026',
+        ])));
+        $reports = $authorization->skip(fn () => $database->find($files, [Query::equal('folder', ['reports/2026'])]));
+        $this->assertSame(['report'], \array_map(fn (Document $file): string => $file->getId(), $reports));
+    }
+
+    public function testSyncsConsoleFromOlderReleaseWithConfig(): void
+    {
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationTests')
+            ->setNamespace('v25_' . \uniqid());
+        $database->create();
+
+        $collections = Config::getParam('collections', []);
+        $missing = [
+            'projects' => ['_key_pingCount', '_key_pingedAt', '_key_database', '_key_region_accessed_at'],
+            'schedules' => ['_key_project_id_region', '_key_region_rt_active'],
+            'repositories' => ['_key_piid_riid_rt'],
+            'vcsComments' => ['_key_piid_prid_rt'],
+            'users' => ['keys'],
+            'teams' => ['keys'],
+            'sessions' => self::SESSION_GEO,
+        ];
+        foreach ($collections['console'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) !== Database::METADATA) {
+                continue;
+            }
+            $database->createCollection($this->legacy($id, $collection, $missing[$id] ?? []));
+        }
+        $bucket = $this->createLegacyBucket($database, $authorization, 'default');
+
+        $migration = new V25();
+        $migration->setProject(new Document(['$id' => 'console', '$sequence' => 'console']), $database, $database, $authorization);
+        $migration->execute();
+        $migration->execute();
+
+        foreach ($collections['console'] as $id => $collection) {
+            if (($collection['$collection'] ?? null) === Database::METADATA) {
+                $this->assertMatchesConfig($database, $id, $collection);
+            }
+        }
+        $this->assertMatchesConfig($database, 'bucket_' . $bucket->getSequence(), $collections['buckets']['files']);
+
+        $user = $authorization->skip(fn () => $database->createDocument('users', new Document([
+            '$id' => 'admin',
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+        ])));
+        $authorization->skip(fn () => $database->createDocument('keys', new Document([
+            'resourceType' => 'users',
+            'resourceId' => 'admin',
+            'resourceInternalId' => $user->getSequence(),
+            'name' => 'CLI',
+            'scopes' => ['projects.read'],
+            'secret' => 'secret',
+            'sdks' => [],
+        ])));
+        $user = $authorization->skip(fn () => $database->getDocument('users', 'admin'));
+        $this->assertSame(['CLI'], \array_map(fn (Document $key): string => $key->getAttribute('name'), $user->getAttribute('keys', [])));
+    }
+
+    private function legacy(string $id, array $collection, array $missing): Collection
+    {
+        return Collection::create(
+            id: $id,
+            attributes: \array_values(\array_filter($collection['attributes'], static fn (Attribute $attribute): bool => !\in_array($attribute->key, $missing, true))),
+            indexes: \array_values(\array_filter($collection['indexes'], static fn (Index $index): bool => !\in_array($index->key, $missing, true))),
+        );
+    }
+
+    private function createLegacyBucket(Database $database, Authorization $authorization, string $bucketId): Document
+    {
+        $bucket = $authorization->skip(fn () => $database->createDocument('buckets', new Document([
+            '$id' => $bucketId,
+            'enabled' => true,
+            'name' => $bucketId,
+            'maximumFileSize' => 30000000,
+            'allowedFileExtensions' => [],
+            'compression' => 'none',
+            'encryption' => false,
+            'antivirus' => false,
+        ])));
+
+        $database->createCollection($this->legacy(
+            'bucket_' . $bucket->getSequence(),
+            Config::getParam('collections', [])['buckets']['files'],
+            ['folder', '_key_folder', 'transformedAt', '_key_transformedAt'],
+        ));
+
+        return $bucket;
+    }
+
+    private function assertMatchesConfig(Database $database, string $id, array $collection): void
+    {
+        $stored = $database->getCollection($id);
+
+        $this->assertEqualsCanonicalizing(
+            \array_map(fn (Attribute $attribute): string => $attribute->key, $collection['attributes']),
+            \array_map(fn (Attribute $attribute): string => $attribute->key, $stored->attributes()),
+            "Attributes of {$id} do not match the config",
+        );
+        $this->assertEqualsCanonicalizing(
+            \array_map(fn (Index $index): string => $index->key, $collection['indexes']),
+            \array_map(fn (Index $index): string => $index->key, $stored->indexes()),
+            "Indexes of {$id} do not match the config",
+        );
     }
 }
