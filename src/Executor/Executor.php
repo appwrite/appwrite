@@ -140,7 +140,7 @@ class Executor
         // Never forward a header that could split into extra lines on the runtime request
         $headers = \array_filter(
             $headers,
-            fn (mixed $value, mixed $key) => \preg_match('/[\r\n\x00]/', $key . (\is_scalar($value) ? (string) $value : '')) !== 1,
+            fn (mixed $value, mixed $key) => \strpbrk($key . (\is_scalar($value) ? (string) $value : ''), "\r\n\x00") === false,
             ARRAY_FILTER_USE_BOTH
         );
 
