@@ -23,7 +23,7 @@ final class CircuitBreakerTest extends TestCase
     /** @return iterable<string, array{string}> */
     public static function coordinationOperations(): iterable
     {
-        foreach (['getVersion', 'loadVersioned', 'compareAndSwap', 'getGeneration', 'saveWithGeneration', 'purgeLegacy'] as $operation) {
+        foreach (['getVersion', 'loadVersioned', 'compareAndSwap'] as $operation) {
             yield $operation => [$operation];
         }
     }
@@ -40,7 +40,6 @@ final class CircuitBreakerTest extends TestCase
         try {
             match ($operation) {
                 'compareAndSwap' => $cache->compareAndSwap('key', 'value', '', $version),
-                'saveWithGeneration' => $cache->saveWithGeneration('key', 'value', '', '0'),
                 default => $cache->{$operation}('key'),
             };
             $this->fail('An unavailable coordination record must not read as a miss');
@@ -61,7 +60,6 @@ final class CircuitBreakerTest extends TestCase
         try {
             match ($operation) {
                 'compareAndSwap' => $cache->compareAndSwap('key', 'value', '', $version),
-                'saveWithGeneration' => $cache->saveWithGeneration('key', 'value', '', '0'),
                 default => $cache->{$operation}('key'),
             };
             $this->fail('A transport failure must not read as eviction or a CAS conflict');
@@ -297,29 +295,10 @@ class CountingFailingAdapter extends FailingAdapter
 }
 
 /** Real in-process cache with a controllable transport failure. */
-final class CoordinationMemory extends Memory implements Feature\Legacy
+final class CoordinationMemory extends Memory
 {
     public int $calls = 0;
     public bool $failing = false;
-
-    public function getGeneration(string $key): string
-    {
-        $this->check();
-        return '0';
-    }
-
-    /** @param array<int|string, mixed>|string $data */
-    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
-    {
-        $this->check();
-        return true;
-    }
-
-    public function purgeLegacy(string $key, string $hash = ''): bool
-    {
-        $this->check();
-        return true;
-    }
 
     private function check(): void
     {
