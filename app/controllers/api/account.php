@@ -245,6 +245,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $claimed = false;
     $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed) {
         $claimed = false; // A retried attempt starts over
+        /** @var User $locked */
         $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
 
         if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
@@ -4721,6 +4722,7 @@ Http::put('/v1/account/recovery')
 
             // Recovery proves an unverified email, so whoever registered it keeps no other way in.
             // MFA in force is left alone, so the new password still needs the second factor to sign in
+            /** @var User $locked */
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             $guarded = $locked->getMinimumFactors() > 1;
             if (!$locked->getAttribute('emailVerification', false) && !$guarded) {
@@ -5167,6 +5169,7 @@ Http::put('/v1/account/recovery/otp')
 
             // Recovery proves an unverified email, so whoever registered it keeps no other way in.
             // MFA in force is left alone, so the new password still needs the second factor to sign in
+            /** @var User $locked */
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             $guarded = $locked->getMinimumFactors() > 1;
             if (!$locked->getAttribute('emailVerification', false) && !$guarded) {

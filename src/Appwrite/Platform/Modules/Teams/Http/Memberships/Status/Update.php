@@ -167,6 +167,7 @@ class Update extends Action
         $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
             $claimed = null; // A retried attempt starts over
             // Lock the user first, as an address change does, so a voided invite cannot slip through
+            /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
             // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
