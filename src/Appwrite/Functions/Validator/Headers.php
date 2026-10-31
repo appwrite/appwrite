@@ -24,7 +24,7 @@ class Headers extends Validator
      */
     public function getDescription(): string
     {
-        return 'Headers must contain at most ' . $this->maxKeys . ' keys and ' . $this->maxSize . ' bytes in total. Valid key chars are a-z, A-Z, 0-9, and hyphen. Keys can\'t start or end with a hyphen, or start with "x-appwrite". Values can\'t be arrays or objects.';
+        return 'Headers must contain at most ' . $this->maxKeys . ' keys and ' . $this->maxSize . ' bytes in total. Valid key chars are a-z, A-Z, 0-9, and hyphen. Keys can\'t start or end with a hyphen, or start with "x-appwrite". Values can\'t be arrays or objects, or contain control characters other than tab.';
     }
 
     /**
@@ -57,6 +57,11 @@ class Headers extends Validator
 
             // Reject array and object values
             if (!\is_scalar($val) && !\is_null($val)) {
+                return false;
+            }
+
+            // A line break in a value would let the caller append headers reserved for the platform
+            if (\preg_match('/[\x00-\x08\x0A-\x1F\x7F]/', (string) $val) === 1) {
                 return false;
             }
 
