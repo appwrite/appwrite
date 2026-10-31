@@ -69,7 +69,7 @@ export type ConsoleProfileFeatures = {
   videos: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
-  /** Project transfers through the Organization API (transfer card with a claim link), in place of the direct organization move. */
+  /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
   projectTransfers: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean

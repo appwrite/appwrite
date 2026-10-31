@@ -9,7 +9,7 @@ use Utopia\Cache\Feature;
 use Utopia\CircuitBreaker\CircuitBreaker as UtopiaCircuitBreaker;
 use Utopia\Telemetry\Adapter as Telemetry;
 
-class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Feature\Telemetry
+class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Telemetry, \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
 {
     public function __construct(
         private readonly Adapter $adapter,
@@ -75,30 +75,6 @@ class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Fe
 
         /** @var array<string, mixed>|false $result */
         $result = $this->delegate('saveMany', [$key, $data, $ttl], false);
-
-        return $result;
-    }
-
-    public function getGeneration(string $key): string
-    {
-        if (! $this->adapter instanceof Feature\Leasable) {
-            return '0';
-        }
-
-        /** @var string $result */
-        $result = $this->delegate(__FUNCTION__, \func_get_args(), '0');
-
-        return $result;
-    }
-
-    public function saveWithLease(string $key, array|string $data, string $hash, string $generation): bool|string|array
-    {
-        if (! $this->adapter instanceof Feature\Leasable) {
-            return $this->save($key, $data, $hash);
-        }
-
-        /** @var bool|string|array<int|string, mixed> $result */
-        $result = $this->delegate(__FUNCTION__, \func_get_args(), false);
 
         return $result;
     }
@@ -188,5 +164,108 @@ class CircuitBreaker implements Adapter, Feature\Batchable, Feature\Leasable, Fe
         if ($this->adapter instanceof Feature\Telemetry) {
             $this->adapter->setTelemetry($telemetry);
         }
+    }
+
+    public function getGeneration(string $key): string
+    {
+        /** @var string $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Legacy cache unavailable'),
+            close: function () use ($key): string {
+                if (! $this->adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                    throw new Unavailable('Legacy migration requires Redis');
+                }
+
+                return $this->adapter->getGeneration($key);
+            },
+        );
+
+        return $result;
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
+    {
+        /** @var bool $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Legacy cache unavailable'),
+            close: function () use ($key, $data, $hash, $generation, $ttl): bool {
+                if (! $this->adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                    throw new Unavailable('Legacy migration requires Redis');
+                }
+
+                return $this->adapter->saveWithGeneration($key, $data, $hash, $generation, $ttl);
+            },
+        );
+
+        return $result;
+    }
+
+    public function purgeLegacy(string $key, string $hash = ''): bool
+    {
+        /** @var bool $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Legacy cache unavailable'),
+            close: function () use ($key, $hash): bool {
+                if (! $this->adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                    throw new Unavailable('Legacy migration requires Redis');
+                }
+
+                return $this->adapter->purgeLegacy($key, $hash);
+            },
+        );
+
+        return $result;
+    }
+
+    public function supportsVersioning(): bool
+    {
+        return $this->adapter instanceof \Utopia\Cache\Feature\Versioned && $this->adapter->supportsVersioning();
+    }
+
+    // OPEN and transport failures must throw, never masquerade as an evicted record.
+    public function getVersion(string $key): string
+    {
+        /** @var string $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Versioned cache unavailable'),
+            close: fn (): string => $this->versionedAdapter()->getVersion($key),
+        );
+
+        return $result;
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        /** @var array{version: string, value: mixed} $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Versioned cache unavailable'),
+            close: fn (): array => $this->versionedAdapter()->loadVersioned($key),
+        );
+
+        return $result;
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
+    {
+        /** @var string|false $result */
+        $result = $this->breaker->call(
+            open: fn (): never => throw new Unavailable('Versioned cache unavailable'),
+            close: fn (): string|false => $this->versionedAdapter()->compareAndSwap($key, $data, $hash, $version),
+        );
+
+        return $result;
+    }
+
+    private function versionedAdapter(): \Utopia\Cache\Feature\Versioned
+    {
+        $adapter = $this->adapter;
+        if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+            throw new \Utopia\Cache\Exception\Unavailable('Versioned cache required');
+        }
+
+        return $adapter;
     }
 }

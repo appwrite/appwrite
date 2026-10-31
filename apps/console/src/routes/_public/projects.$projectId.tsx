@@ -66,6 +66,7 @@ import {
   INITIAL_LOADER_SHELL_GATE,
   setInitialLoaderShellGate,
 } from '@/lib/initial-loader/shell-gates'
+import { ProjectEnvironmentBanner } from '@/components/pages/projects/$projectId/shared/ProjectEnvironmentBanner'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
 const DATABASE_TABLE_VIEW_TABS = new Set([
   'rows',
@@ -193,7 +194,12 @@ function ProjectRouteErrorComponent({
   error: unknown
   reset: () => void
 }) {
-  return <ProjectAccessErrorView error={error instanceof Error ? error : new Error(String(error))} reset={reset} />
+  return (
+    <ProjectAccessErrorView
+      error={error instanceof Error ? error : new Error(String(error))}
+      reset={reset}
+    />
+  )
 }
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
@@ -744,9 +750,8 @@ function ProjectLayout() {
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
     activeSection === 'activity' ||
-    activeSection === 'realtime' ||
     activeSection === 'storage' ||
-    activeSection === 'explorer' ||
+    activeSection === 'playground' ||
     activeSection === 'agents' ||
     isFunctionsEditorView ||
     isFunctionExecutionsTab ||
@@ -878,6 +883,7 @@ function ProjectLayout() {
             }}
             headerBanner={
               <>
+                <ProjectEnvironmentBanner projectId={projectId} />
                 <PostgresPromoBanner />
                 <OrganizationFailedInvoiceHeaderBanner
                   organizationId={teamIdForBilling}

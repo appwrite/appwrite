@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "Explorer and Realtime are now one Playground in the Console"
+date: 2026-10-30
+tags: console, api, realtime
+---
+
+Each project in the Console now has a single **Playground** page, which replaces the separate Explorer and Realtime pages. A toggle at the top of the page switches between two modes. **REST** lets you browse and call the Appwrite REST API, and **Realtime** connects to the Realtime API and shows the messages on the channels you subscribe to.
+
+This change is part of our regular work to improve the Console's UI, UX, and developer experience, and to find a better balance in how we present the platform to new and existing users. Both tools test the same project APIs, so they now share one entry in the project menu. The menu is shorter for people new to Appwrite, and the two tools are one click apart for people who use them every day.
+
+The Console remembers the mode you last used and opens Playground in that mode in every project. A link to a specific REST method always opens in REST mode. Organization members whose role doesn't include the REST explorer see Playground in Realtime mode only.
+
+In the project menu, **Playground** sits in the **Connect** section where Explorer used to be. The `G X` shortcut and the [Command Center](/docs/tooling/command-center) open it too. Existing Explorer and Realtime links redirect to Playground. The tools work as they did before, including requests, subscriptions, and saved channel configurations.
+
+{% arrow_link href="/blog/post/announcing-appwrite-explorer" %}
+Read the Explorer announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/apis/realtime" %}
+Read the Realtime API docs
+{% /arrow_link %}

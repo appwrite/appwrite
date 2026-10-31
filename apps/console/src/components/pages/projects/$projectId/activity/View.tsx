@@ -74,7 +74,12 @@ import {
   getDefaultActivityDateRangePreset,
   hasFiniteActivityLogRetention,
 } from '@/lib/activity/activity-log-retention'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import {
+  getPlanNameFromTier,
+  isSelfServiceProPlan,
+} from '@/lib/utils/plan-filter'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { ActivityLogDrawer } from '@/components/pages/projects/$projectId/activity/ActivityLogDrawer'
 import { ActivityLogVolumeChart } from '@/components/pages/projects/$projectId/activity/_components/ActivityLogVolumeChart'
 import { ActivityActiveFilterChips } from '@/components/pages/projects/$projectId/activity/_components/ActivityActiveFilterChips'
@@ -1231,6 +1236,26 @@ export function View({ projectId, initialData }: ViewProps) {
                     ? activityLogRetentionHours
                     : null
                 }
+                retentionNote={
+                  isSelfServiceProPlan(organizationPlan) ? (
+                    <>
+                      <EnterpriseBadge />
+                      {t('Your plan includes')}{' '}
+                      <span className="font-medium text-foreground">
+                        {t(activityLogRetentionLabel)}
+                      </span>{' '}
+                      {t('of activity history.')}{' '}
+                      {t('Longer retention is available on Enterprise.')}{' '}
+                      <ContactSalesLink
+                        source="activity"
+                        orgId={project?.teamId}
+                        className="font-medium text-foreground underline hover:no-underline"
+                      >
+                        {t('Contact sales')}
+                      </ContactSalesLink>
+                    </>
+                  ) : undefined
+                }
               />
             </div>
           }
@@ -1275,7 +1300,7 @@ export function View({ projectId, initialData }: ViewProps) {
                   {isFreePlan && (
                     <>
                       {' '}
-                      {t('Upgrade or contact sales for longer retention.')}
+                      {t('Upgrade for longer retention.')}
                     </>
                   )}
                 </p>

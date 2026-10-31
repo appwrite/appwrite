@@ -118,6 +118,16 @@ export function isPayingBillingPlan(
   return (plan?.price ?? 0) > 0
 }
 
+/**
+ * True for a self-serve Pro plan. Excludes Start, Core, custom contracts, and
+ * self-hosted, whose plan record has `selfService: false`.
+ */
+export function isSelfServiceProPlan(
+  plan: { $id?: string; selfService?: boolean } | null | undefined,
+): boolean {
+  return getPlanNameFromTier(plan?.$id) === 'pro' && plan?.selfService !== false
+}
+
 export type BillingPlanRecord = {
   $id?: string
   name?: string

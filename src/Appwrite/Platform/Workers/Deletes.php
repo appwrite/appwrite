@@ -58,6 +58,8 @@ class Deletes extends Action
 
     private const UPLOAD_ABORT_ATTEMPTS = 3; // Daily runs before a failing abort falls back to deleting the path
 
+    private const DEPLOYMENT_BATCH_SIZE = 50; // Deployments carry build logs, a default batch of full rows exceeds the worker memory limit
+
     public static function getName(): string
     {
         return 'deletes';
@@ -837,7 +839,8 @@ class Deletes extends Action
                     type: DELETE_TYPE_DOCUMENT,
                     document: $deployment,
                 ));
-            }
+            },
+            self::DEPLOYMENT_BATCH_SIZE
         );
     }
 
@@ -2016,6 +2019,7 @@ class Deletes extends Action
      * @param array $queries
      * @param Database $database
      * @param ?callable $callback
+     * @param int $batchSize
      * @return void
      * @throws DatabaseException
      */
@@ -2023,7 +2027,8 @@ class Deletes extends Action
         string $collection,
         array $queries,
         Database $database,
-        ?callable $callback = null
+        ?callable $callback = null,
+        int $batchSize = Database::BATCH_SIZE
     ): void {
         $start = \microtime(true);
 
@@ -2039,6 +2044,7 @@ class Deletes extends Action
             $count = $database->deleteDocuments(
                 $collection,
                 $queries,
+                $batchSize,
                 onNext: $callback
             );
         } catch (Throwable $th) {

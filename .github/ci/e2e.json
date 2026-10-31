@@ -148,12 +148,12 @@
       "paths": [
         "app/controllers/api/graphql.php",
         "app/controllers/api/account.php",
-        "app/controllers/api/locale.php",
         "src/Appwrite/Platform/Modules/Account/",
         "src/Appwrite/Platform/Modules/Avatars/",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/Locale/",
         "src/Appwrite/Platform/Modules/Messaging/",
         "src/Appwrite/Platform/Modules/Presences/",
         "src/Appwrite/Platform/Modules/Storage/",
@@ -200,7 +200,7 @@
       "runner": "e2e",
       "functional": true,
       "processes": null,
-      "paths": ["app/controllers/api/locale.php", "app/config/locale/"]
+      "paths": ["src/Appwrite/Platform/Modules/Locale/", "app/config/locale/"]
     },
     {
       "name": "Projects",
@@ -457,7 +457,6 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Project/",
-        "app/controllers/api/project.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "packages/smtp/"

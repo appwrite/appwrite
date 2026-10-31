@@ -90,7 +90,7 @@ return [
         'name' => 'Locale',
         'subtitle' => 'The Locale service allows you to customize your app based on your users\' location.',
         'description' => '/docs/services/locale.md',
-        'controller' => 'api/locale.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/locale',
@@ -132,7 +132,7 @@ return [
         'name' => 'Project',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
         'description' => '',
-        'controller' => 'api/project.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',
