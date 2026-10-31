@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: keyof ConsoleProfileFeatures
+  flag: 'analytics' | 'projectEnvironments' | 'projectTransfers'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -21,7 +21,7 @@ export type Experiment = {
  * Feature flags the quality team can turn on from the header.
  * Add a row here to expose another flag. Everything else stays in the debug menu.
  */
-export const EXPERIMENTS = [
+export const EXPERIMENTS: readonly Experiment[] = [
   {
     flag: 'analytics',
     name: 'Appwrite Analytics',
@@ -40,10 +40,7 @@ export const EXPERIMENTS = [
     description: 'Move a project to another organization.',
     introducedAt: '2026-10-29',
   },
-] as const satisfies readonly Experiment[]
-
-/** Flags exposed in the previews menu. */
-export type ExperimentFlag = (typeof EXPERIMENTS)[number]['flag']
+]
 
 export function hasQualityLabel(
   labels: readonly string[] | null | undefined,
