@@ -27,7 +27,7 @@ import {
   isStartPlanEligibleCountry,
   START_PLAN_ID,
 } from '@/lib/pricing/start-plan'
-import { confirmPayment } from '@/lib/utils/stripe'
+import { confirmPayment, confirmSetup } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
@@ -1344,6 +1344,28 @@ export async function setPaymentMethodProvider(params: {
     name: params.name,
     state: params.state,
   })
+}
+
+/**
+ * Mutation function to set up a mandate on a saved Indian card
+ *
+ * Starts a mandate setup for the card, runs the bank's OTP, then saves the
+ * card again so the backend records the new mandate.
+ */
+export async function setupPaymentMethodMandate(params: {
+  paymentMethodId: string
+  providerMethodId: string
+  name: string
+  state?: string
+}) {
+  const method = await sdk.forConsole.account.updatePaymentMethodMandateOptions(
+    { paymentMethodId: params.paymentMethodId },
+  )
+  await confirmSetup({
+    clientSecret: method.clientSecret,
+    paymentMethod: params.providerMethodId,
+  })
+  return await setPaymentMethodProvider(params)
 }
 
 /**
@@ -2704,6 +2726,27 @@ export function useSetPaymentMethodProvider() {
         queryKey: ['payment-methods', 'account'],
       })
       // Invalidate individual payment method queries
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to set up a mandate on a saved Indian card
+ *
+ * @returns Mutation object with mutate function
+ */
+export function useSetupPaymentMethodMandate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: setupPaymentMethodMandate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
       queryClient.invalidateQueries({
         queryKey: ['payment-method'],
       })

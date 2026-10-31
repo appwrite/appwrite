@@ -1406,4 +1406,7 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'ブラウザーから、このデバイスまたはパスワードマネージャーにパスキーを作成するよう求められます。',
   'You will no longer be able to sign in with this passkey. This action cannot be undone.':
     'このパスキーではサインインできなくなります。この操作は元に戻せません。',
+  'Set up auto-pay': '自動支払いを設定',
+  'Auto-pay is set up': '自動支払いを設定しました',
+  'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
 }
