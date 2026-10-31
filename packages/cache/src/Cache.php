@@ -3,7 +3,6 @@
 namespace Utopia\Cache;
 
 use Utopia\Cache\Feature\Batchable;
-use Utopia\Cache\Feature\Leasable;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Counter;
@@ -66,7 +65,7 @@ class Cache
     /**
      * Initialize with a no-op telemetry adapter by default.
      */
-    public function __construct(private readonly Adapter $adapter)
+    public function __construct(protected readonly Adapter $adapter)
     {
         $this->telemetry = new NoTelemetry();
     }
@@ -197,49 +196,66 @@ class Cache
         }
     }
 
-    /**
-     * Current generation token for $key (advances on each purge). Returns '0'
-     * when the underlying adapter does not support leasing.
-     */
-    public function getGeneration(string $key): string
+    public function legacy(): Legacy
     {
-        if (! $this->adapter instanceof Leasable) {
-            return '0';
+        $legacy = new Legacy($this->adapter);
+        $legacy->setCaseSensitivity($this->caseSensitive);
+        $legacy->setTelemetry($this->telemetry);
+
+        return $legacy;
+    }
+
+    public function supportsVersioning(): bool
+    {
+        return $this->adapter instanceof Feature\Versioned && $this->adapter->supportsVersioning();
+    }
+
+    /** Opaque identity captured before fetching a value. Empty means unsupported. */
+    public function getLease(string $key): string
+    {
+        if (! $this->supportsVersioning()) {
+            return '';
         }
 
-        $key = $this->caseSensitive ? $key : strtolower($key);
+        return $this->versionedAdapter()->getVersion($this->caseSensitive ? $key : \strtolower($key));
+    }
 
-        return $this->adapter->getGeneration($key);
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return $this->versionedAdapter()->loadVersioned($this->caseSensitive ? $key : \strtolower($key));
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $version): string|false
+    {
+        $key = $this->caseSensitive ? $key : \strtolower($key);
+
+        return $this->versionedAdapter()->compareAndSwap($key, $data, '', $version);
+    }
+
+    private function versionedAdapter(): Feature\Versioned
+    {
+        if (! $this->adapter instanceof Feature\Versioned) {
+            throw new \Utopia\Cache\Exception\Unavailable('Versioned cache required');
+        }
+
+        return $this->adapter;
     }
 
     /**
-     * Save $data only if the key's generation still equals $generation (i.e. no
-     * purge happened since the caller captured it via getGeneration). Closes the
-     * cache-aside read-after-write race. Falls back to an unconditional save when
-     * the adapter does not support leasing.
-     *
-     * @param  string|array<int|string, mixed>  $data
+     * @param array<int|string, mixed>|string $data
      * @return bool|string|array<int|string, mixed>
      */
-    public function saveWithLease(string $key, mixed $data, string $hash, string $generation): bool|string|array
+    public function saveWithLease(string $key, array|string $data, string $hash, string $version): bool|string|array
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
-        $hash = $this->caseSensitive ? $hash : strtolower($hash);
-        $start = microtime(true);
-
-        try {
-            if (! $this->adapter instanceof Leasable) {
-                return $this->adapter->save($key, $data, $hash);
-            }
-
-            return $this->adapter->saveWithLease($key, $data, $hash, $generation);
-        } finally {
-            $duration = microtime(true) - $start;
-            $this->getOperationDuration()->record($duration, [
-                'operation' => 'saveWithLease',
-                'adapter' => $this->adapter->getName($key),
-            ]);
+        if ($key === '' || $key === '0' || empty($data) || ! $this->supportsVersioning() || $version === '') {
+            return false;
         }
+        $key = $this->caseSensitive ? $key : \strtolower($key);
+        $hash = $this->caseSensitive ? $hash : \strtolower($hash);
+
+        return $this->versionedAdapter()->compareAndSwap($key, $data, $hash, $version) !== false ? $data : false;
     }
 
     /**
@@ -293,9 +309,7 @@ class Cache
         $key = $this->caseSensitive ? $key : strtolower($key);
         $hash = $this->caseSensitive ? $hash : strtolower($hash);
 
-        foreach (\array_keys($this->recordedPurges) as $recording) {
-            $this->recordedPurges[$recording][$key][$hash] = true;
-        }
+        $this->recordPurge($key, $hash);
 
         $start = microtime(true);
         $result = $this->adapter->purge($key, $hash);
@@ -308,10 +322,16 @@ class Cache
         return $result;
     }
 
+    protected function recordPurge(string $key, string $hash): void
+    {
+        $key = $this->caseSensitive ? $key : \strtolower($key);
+        $hash = $this->caseSensitive ? $hash : \strtolower($hash);
+        foreach (\array_keys($this->recordedPurges) as $recording) {
+            $this->recordedPurges[$recording][$key][$hash] = true;
+        }
+    }
+
     /**
-     * Run $callback and return every key it purged, as [key => [hash => true]].
-     * Calls that overlap, for example from concurrent coroutines, each record all purges made while they run.
-     *
      * @return array<string, array<string, true>>
      */
     public function recordPurges(callable $callback): array

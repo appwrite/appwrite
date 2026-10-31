@@ -4,11 +4,12 @@ namespace Utopia\Cache\Adapter;
 
 use Utopia\Cache\Adapter;
 use Utopia\Cache\Feature\Batchable;
-use Utopia\Cache\Feature\Leasable;
 use Utopia\Pools\Pool as UtopiaPool;
 
-class Pool implements Adapter, Batchable, Leasable
+class Pool implements Adapter, Batchable, \Utopia\Cache\Feature\Versioned, \Utopia\Cache\Feature\Legacy
 {
+    private readonly bool $versioned;
+
     /**
      * @param  UtopiaPool<covariant Adapter>  $pool The pool to use for connections. Must contain instances of Adapter.
      *
@@ -16,10 +17,12 @@ class Pool implements Adapter, Batchable, Leasable
      */
     public function __construct(protected UtopiaPool $pool)
     {
-        $this->pool->use(function (mixed $resource): void {
+        $this->versioned = $this->pool->use(function (mixed $resource): bool {
             if (! ($resource instanceof Adapter)) {
                 throw new \Exception('Pool must contain instances of ' . Adapter::class);
             }
+
+            return $resource instanceof \Utopia\Cache\Feature\Versioned && $resource->supportsVersioning();
         });
     }
 
@@ -72,23 +75,6 @@ class Pool implements Adapter, Batchable, Leasable
     {
         /** @var array<string, mixed>|false $result */
         $result = $this->pool->use(fn (Adapter $adapter): array|false => $adapter instanceof Batchable ? $adapter->saveMany($key, $data, $ttl) : false);
-
-        return $result;
-    }
-
-    public function getGeneration(string $key): string
-    {
-        return $this->pool->use(fn (Adapter $adapter): string => $adapter instanceof Leasable ? $adapter->getGeneration($key) : '0');
-    }
-
-    public function saveWithLease(string $key, array|string $data, string $hash, string $generation): bool|string|array
-    {
-        /**
-         * @var bool|string|array<mixed> $result
-         */
-        $result = $this->pool->use(fn (Adapter $adapter): bool|string|array => $adapter instanceof Leasable
-            ? $adapter->saveWithLease($key, $data, $hash, $generation)
-            : $adapter->save($key, $data, $hash));
 
         return $result;
     }
@@ -161,5 +147,88 @@ class Pool implements Adapter, Batchable, Leasable
         $result = $this->delegate(__FUNCTION__, \func_get_args());
 
         return $result;
+    }
+
+    public function getGeneration(string $key): string
+    {
+        /** @var string $result */
+        $result = $this->pool->use(function (Adapter $adapter) use ($key): string {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->getGeneration($key);
+        });
+
+        return $result;
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function saveWithGeneration(string $key, array|string $data, string $hash, string $generation, int $ttl = 0): bool
+    {
+        /** @var bool $result */
+        $result = $this->pool->use(function (Adapter $adapter) use ($key, $data, $hash, $generation, $ttl): bool {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->saveWithGeneration($key, $data, $hash, $generation, $ttl);
+        });
+
+        return $result;
+    }
+
+    public function purgeLegacy(string $key, string $hash = ''): bool
+    {
+        /** @var bool $result */
+        $result = $this->pool->use(function (Adapter $adapter) use ($key, $hash): bool {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Legacy) {
+                throw new \Utopia\Cache\Exception\Unavailable('Legacy migration requires Redis');
+            }
+
+            return $adapter->purgeLegacy($key, $hash);
+        });
+
+        return $result;
+    }
+
+    public function supportsVersioning(): bool
+    {
+        return $this->versioned;
+    }
+
+    public function getVersion(string $key): string
+    {
+        return $this->pool->use(function (Adapter $adapter) use ($key): string {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+                throw new \Utopia\Cache\Exception\Unavailable("Versioned cache required");
+            }
+
+            return $adapter->getVersion($key);
+        });
+    }
+
+    /** @return array{version: string, value: mixed} */
+    public function loadVersioned(string $key): array
+    {
+        return $this->pool->use(function (Adapter $adapter) use ($key): array {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+                throw new \Utopia\Cache\Exception\Unavailable("Versioned cache required");
+            }
+
+            return $adapter->loadVersioned($key);
+        });
+    }
+
+    /** @param array<int|string, mixed>|string $data */
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
+    {
+        return $this->pool->use(function (Adapter $adapter) use ($key, $data, $hash, $version): string|false {
+            if (! $adapter instanceof \Utopia\Cache\Feature\Versioned) {
+                throw new \Utopia\Cache\Exception\Unavailable("Versioned cache required");
+            }
+
+            return $adapter->compareAndSwap($key, $data, $hash, $version);
+        });
     }
 }
