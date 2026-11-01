@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Sites;
 
+use Appwrite\Permission;
+use Appwrite\Role;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -149,6 +151,64 @@ final class SitesConsoleClientTest extends Scope
         $screenshotId = $deployment['body']['screenshotDark'];
         $file = $this->client->call(Client::METHOD_GET, "/storage/buckets/screenshots/files/$screenshotId/preview?project=console");
         $this->assertEquals(404, $file['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    #[Group('screenshots')]
+    public function testSiteScreenshotsMoveWithProjectTeam(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Moving site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+
+        $files = [];
+        $this->assertEventually(function () use ($siteId, $deploymentId, &$files) {
+            $deployment = $this->getDeployment($siteId, $deploymentId);
+            $this->assertEquals(200, $deployment['headers']['status-code']);
+            $this->assertNotEmpty($deployment['body']['screenshotLight']);
+            $this->assertNotEmpty($deployment['body']['screenshotDark']);
+            $files = [$deployment['body']['screenshotLight'], $deployment['body']['screenshotDark']];
+        });
+
+        $console = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($console, [
+            'teamId' => Id::unique(),
+            'name' => 'Screenshots Target Team',
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/team', $console, [
+            'teamId' => $teamId,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($teamId, $response['body']['teamId']);
+
+        foreach ($files as $fileId) {
+            $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/screenshots/files/' . $fileId, $console);
+            $this->assertSame(200, $file['headers']['status-code']);
+            $this->assertSame([Permission::read(Role::team($teamId))], $file['body']['$permissions']);
+        }
 
         $this->cleanupSite($siteId);
     }
