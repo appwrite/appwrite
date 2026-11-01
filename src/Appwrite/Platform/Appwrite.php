@@ -9,6 +9,7 @@ use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
+use Appwrite\Platform\Modules\GraphQL;
 use Appwrite\Platform\Modules\Health;
 use Appwrite\Platform\Modules\Locale;
 use Appwrite\Platform\Modules\Messaging;
@@ -41,6 +42,7 @@ class Appwrite extends Platform
         $this->addModule(new Projects\Module());
         $this->addModule(new Presences\Module());
         $this->addModule(new Functions\Module());
+        $this->addModule(new GraphQL\Module());
         $this->addModule(new Health\Module());
         $this->addModule(new Locale\Module());
         $this->addModule(new Messaging\Module());

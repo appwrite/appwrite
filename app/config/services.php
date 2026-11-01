@@ -300,7 +300,7 @@ return [
         'name' => 'GraphQL',
         'subtitle' => 'The GraphQL API allows you to query and mutate your Appwrite server using GraphQL.',
         'description' => '/docs/services/graphql.md',
-        'controller' => 'api/graphql.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/graphql',

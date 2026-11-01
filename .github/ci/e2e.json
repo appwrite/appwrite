@@ -146,7 +146,7 @@
       "functional": false,
       "processes": null,
       "paths": [
-        "app/controllers/api/graphql.php",
+        "src/Appwrite/Platform/Modules/GraphQL/",
         "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Account/",
         "src/Appwrite/Platform/Modules/Avatars/",
