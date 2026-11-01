@@ -73,35 +73,6 @@ final readonly class Access
         return $count;
     }
 
-    /**
-     * The same for one deployment's screenshots, once its capture has stored them: the capture was queued with the
-     * project as it was then, and a move since may already have passed the deployment.
-     *
-     * @return int The number of files that were granted to another team
-     */
-    public function grantDeployment(Database $dbForProject, Document $project, string $deploymentId): int
-    {
-        $bucket = $this->bucket();
-        $deployment = $dbForProject->getAuthorization()->skip(fn (): Document => $dbForProject->getDocument('deployments', $deploymentId, [Query::select(self::ATTRIBUTES)]));
-        $ids = $this->files($deployment);
-
-        if ($bucket->isEmpty() || $ids === []) {
-            return 0;
-        }
-
-        $count = 0;
-        do {
-            $teamId = $this->team($project);
-            if ($teamId === '') {
-                return $count;
-            }
-
-            $count += $this->update($bucket, $teamId, $ids, true);
-        } while ($this->team($project) !== $teamId);
-
-        return $count;
-    }
-
     private function bucket(): Document
     {
         return $this->dbForPlatform->getAuthorization()->skip(fn (): Document => $this->dbForPlatform->getDocument('buckets', self::BUCKET));

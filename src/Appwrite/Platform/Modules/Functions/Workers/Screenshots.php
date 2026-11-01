@@ -8,7 +8,6 @@ use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
-use Appwrite\Screenshots\Access;
 use Appwrite\Screenshots\Client;
 use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
@@ -113,13 +112,6 @@ class Screenshots extends Action
             ->setParam('siteId', $site->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        // An earlier attempt stored the screenshots and failed after: finish its last steps instead of capturing again
-        if ($deployment->getAttribute('screenshotLight', '') !== '' && $deployment->getAttribute('screenshotDark', '') !== '') {
-            $this->resume($message, $dbForPlatform, $dbForProject, $queueForRealtime, $project, $site, $deployment);
-
-            return;
-        }
-
         $bucket = new Document();
         $files = [];
 
@@ -175,6 +167,8 @@ class Screenshots extends Action
             $mimeType = "image/png";
             $updates = new Document([]);
 
+            // The project may have moved to another team since the build queued this capture
+            $teamId = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('teamId', '');
 
             foreach ($captures as $key => $screenshot) {
                 $fileId = Id::unique();
@@ -188,7 +182,6 @@ class Screenshots extends Action
                     throw new \Exception("Screenshot failed to save");
                 }
 
-                $teamId = $project->getAttribute('teamId', '');
                 $file = new Document([
                     '$id' => $fileId,
                     '$permissions' => [
@@ -249,10 +242,6 @@ class Screenshots extends Action
                 $files = $captured;
                 throw new PermanentFailure('Site deleted during capture');
             }
-
-            // Filed under the team on the queued message, which a move since the build may have left. A failure
-            // retries the job, which finds the screenshots stored and only grants them.
-            (new Access($dbForPlatform))->grantDeployment($dbForProject, $project, $deployment->getId());
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
             $reason = $th->getMessage() === '' ? \get_class($th) : $th->getMessage();
@@ -275,36 +264,6 @@ class Screenshots extends Action
         }
 
         $this->recordTelemetry($counter, 'success');
-    }
-
-    /**
-     * Announce the stored screenshots, point the site at them and grant them to the project's team, as a capture ends.
-     */
-    protected function resume(Message $message, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime, Document $project, Document $site, Document $deployment): void
-    {
-        Span::add('screenshot.resumed', true);
-
-        try {
-            // The earlier attempt may have failed before announcing the screenshots
-            $queueForRealtime
-                ->setPayload($deployment->getArrayCopy())
-                ->trigger();
-
-            $dbForProject->updateDocument('sites', $site->getId(), new Document([
-                'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
-                'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
-            ]));
-
-            (new Access($dbForPlatform))->grantDeployment($dbForProject, $project, $deployment->getId());
-        } catch (\Throwable $th) {
-            if ($message->isLastAttempt()) {
-                $this->abandon($project, $deployment->getId(), $th->getMessage());
-
-                return;
-            }
-
-            throw $th;
-        }
     }
 
     /**
