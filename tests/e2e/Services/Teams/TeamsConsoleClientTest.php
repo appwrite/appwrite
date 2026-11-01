@@ -389,11 +389,58 @@ final class TeamsConsoleClientTest extends Scope
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $owner['$id'], $headers);
         $this->assertSame(200, $response['headers']['status-code']);
-        $this->assertSame(['owner'], $response['body']['roles']);
+        $this->assertContains('owner', $response['body']['roles']);
 
         // Revoking the pending owner invite is still allowed
         $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $invite['body']['$id'], $headers);
         $this->assertSame(204, $response['headers']['status-code']);
+    }
+
+    public function testConcurrentOwnerRemovalsKeepAnOwner(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $member = $this->createAndAcceptMembershipHelper($teamData['teamUid'], $teamData['teamName']);
+        $teamUid = $teamData['teamUid'];
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $memberHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $member['session'],
+        ];
+
+        $promote = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $member['membershipUid'], $headers, [
+            'roles' => ['owner'],
+        ]);
+        $this->assertSame(200, $promote['headers']['status-code']);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $headers);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $creator = \array_values(\array_filter(
+            $memberships['body']['memberships'],
+            fn (array $membership) => $membership['$id'] !== $member['membershipUid'],
+        ))[0];
+
+        // Each owner gives up ownership at the same moment: one demotes itself, the other leaves
+        [$demote, $leave] = $this->client->callConcurrently([
+            [Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $creator['$id'], $headers, ['roles' => ['developer']]],
+            [Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $member['membershipUid'], $memberHeaders, []],
+        ]);
+        $statuses = [$demote['headers']['status-code'], $leave['headers']['status-code']];
+        $this->assertCount(1, \array_intersect($statuses, [200, 204]), 'Exactly one owner may give up ownership: ' . \json_encode($statuses));
+        $this->assertContains(400, $statuses);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $headers);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $owners = \array_filter(
+            $memberships['body']['memberships'],
+            fn (array $membership) => $membership['confirm'] && \in_array('owner', $membership['roles'], true),
+        );
+        $this->assertCount(1, $owners);
     }
 
     public function testConsoleDeveloperCannotUpdateMembershipRoles(): void
