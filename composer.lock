@@ -4431,12 +4431,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "aea0d9a06b77fca1f329b45fc9b667db5c9df177"
+                "reference": "91a3363e2f6120f3d8aa26eaee31fc5d4898e7d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/aea0d9a06b77fca1f329b45fc9b667db5c9df177",
-                "reference": "aea0d9a06b77fca1f329b45fc9b667db5c9df177",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/91a3363e2f6120f3d8aa26eaee31fc5d4898e7d6",
+                "reference": "91a3363e2f6120f3d8aa26eaee31fc5d4898e7d6",
                 "shasum": ""
             },
             "require": {
@@ -4496,7 +4496,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat/estimate-count"
             },
-            "time": "2026-11-01T18:16:20+00:00"
+            "time": "2026-11-01T18:48:39+00:00"
         },
         {
             "name": "utopia-php/mongo",
