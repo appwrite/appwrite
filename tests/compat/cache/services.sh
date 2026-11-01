@@ -18,7 +18,18 @@ network="${COMPAT_NETWORK:-appwrite}"
 
 case "${1:-up}" in
 up)
-    docker build -q -t compat-cache-php --build-arg "BASE=${COMPAT_BASE_IMAGE:-appwrite-dev}" -f php.Dockerfile . >/dev/null
+    # The build fetches from the Alpine mirrors and PECL, which a CI runner
+    # sometimes cannot reach: retry, and show the log when it still fails.
+    for attempt in 1 2 3; do
+        if log="$(docker build -t compat-cache-php --build-arg "BASE=${COMPAT_BASE_IMAGE:-appwrite-dev}" -f php.Dockerfile . 2>&1)"; then
+            break
+        fi
+        if [ "$attempt" = 3 ]; then
+            echo "$log" >&2
+            exit 1
+        fi
+        sleep 10
+    done
     docker run -d --rm --network "$network" --name compat-cache-memcached -p 16392:11211 memcached:1.6.17-alpine >/dev/null
     docker run -d --rm --network "$network" --name compat-cache-hazelcast -e HZ_NETWORK_MEMCACHEPROTOCOL_ENABLED=true \
         -p 16393:5701 hazelcast/hazelcast:5.3.7 >/dev/null
