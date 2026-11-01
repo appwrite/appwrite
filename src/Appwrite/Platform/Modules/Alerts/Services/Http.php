@@ -18,15 +18,15 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(Init::getName(), new Init());
+        $this->addAction(Init::getName(), Init::class);
 
-        $this->addAction(CreateUsageMonitor::getName(), new CreateUsageMonitor());
-        $this->addAction(UpdateUsageMonitor::getName(), new UpdateUsageMonitor());
-        $this->addAction(ListMonitors::getName(), new ListMonitors());
-        $this->addAction(GetMonitor::getName(), new GetMonitor());
-        $this->addAction(DeleteMonitor::getName(), new DeleteMonitor());
+        $this->addAction(CreateUsageMonitor::getName(), CreateUsageMonitor::class);
+        $this->addAction(UpdateUsageMonitor::getName(), UpdateUsageMonitor::class);
+        $this->addAction(ListMonitors::getName(), ListMonitors::class);
+        $this->addAction(GetMonitor::getName(), GetMonitor::class);
+        $this->addAction(DeleteMonitor::getName(), DeleteMonitor::class);
 
-        $this->addAction(ListAlerts::getName(), new ListAlerts());
-        $this->addAction(GetAlert::getName(), new GetAlert());
+        $this->addAction(ListAlerts::getName(), ListAlerts::class);
+        $this->addAction(GetAlert::getName(), GetAlert::class);
     }
 }

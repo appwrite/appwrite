@@ -10,6 +10,6 @@ class Workers extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_WORKER;
-        $this->addAction(Alerts::getName(), new Alerts());
+        $this->addAction(Alerts::getName(), Alerts::class);
     }
 }
