@@ -287,6 +287,18 @@ final class ResponseTest extends TestCase
         $this->assertFalse($isShowingSensitive->getValue($this->response));
     }
 
+    public function testChunkCountsBodyBytes(): void
+    {
+        // The first chunk also accounts for the headers, so the delta of a later one
+        // isolates the body.
+        $this->response->chunk('12345');
+        $afterFirstChunk = $this->response->getSize();
+
+        $this->response->chunk('678', true);
+
+        $this->assertSame(3, $this->response->getSize() - $afterFirstChunk);
+    }
+
     /**
      * @param array<int, Document> $attributes
      */
