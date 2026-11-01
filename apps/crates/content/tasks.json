@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-30T23:41:00Z",
+  "updated": "2026-11-01T11:15:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -696,6 +696,22 @@
       "status": "done",
       "updated": "2026-10-30T22:10:00Z",
       "note": "p256 0.14, ecdsa 0.17, elliptic-curve 0.14, signature 3.0; RUSTSEC-2026-0387 is gone and its osv-scanner ignore removed. Passkey verification and signatures unchanged: auth 607 cases and 68,650 fuzz inputs, 0 differences."
+    },
+    {
+      "id": "sync-nov1",
+      "title": "Sync with main: cache CAS versions, database 10.0.0, migration and MFA fixes",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-11-01T11:15:00Z",
+      "note": "Nov 1. Main merged (90 commits). cache: Luke's opaque compare-and-swap versions and cache namespaces replace generation leases; the legacy protocol is gone (273 cases, 2,420 fuzz inputs, 0 differences). database 8.3.14 → 10.0.0: one #state record per collection whose CAS version is the epoch, query cache leases, the escalated string byte cap; 994 lib tests pass and all six shards show 0 differences. migration: imported API keys are capped to the scopes the migration was granted. Account and Teams: claiming an unverified address no longer removes MFA."
+    },
+    {
+      "id": "purges-db10",
+      "title": "Match PHP's cache purges after database 10.0.0",
+      "area": "Services",
+      "status": "todo",
+      "updated": "2026-11-01T11:15:00Z",
+      "note": "Before the database 10.0.0 port the parity diff showed Rust purging more cache keys than PHP on account.recovery.update (2 vs 8), account.delete (2 vs 8), teams.delete (2 vs 5) and teams.memberships.status (4 vs 10). Re-check on the Users and Storage lane after the port."
     }
   ]
 }
