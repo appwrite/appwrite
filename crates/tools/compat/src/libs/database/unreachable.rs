@@ -79,6 +79,11 @@ impl Adapter for Unreachable {
         gone()
     }
 
+    /// The version script, run through `evalSha` as a lease script is.
+    async fn load_versioned(&self, _key: &str) -> Result<utopia_cache::Snapshot> {
+        lease_gone()
+    }
+
     async fn compare_and_swap(&self, _key: &str, _data: &Value, _hash: &str, _version: &str) -> Result<Option<String>> {
         lease_gone()
     }

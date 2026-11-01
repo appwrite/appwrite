@@ -4,31 +4,17 @@
   ],
   "cases": [
     {
-      "name": "QueryPurgeTest::testPurgeCachedQueriesDropsTheResultsFindCached",
+      "name": "QueryPurgeTest::testColdLocalQueryPurgeInvalidatesAWarmRemoteRegion",
       "state": [],
       "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
         {
           "op": "object.new",
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o2900"
+            "as": "o632"
           },
-          "bind": "s6835",
+          "bind": "s1348",
           "expect": {
             "$adapter": "Memory"
           }
@@ -38,9 +24,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o2901"
+            "as": "o633"
           },
-          "bind": "s6836",
+          "bind": "s1349",
           "expect": {
             "$authorization": true
           }
@@ -51,9 +37,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2902"
+            "as": "o634"
           },
-          "bind": "s6837",
+          "bind": "s1350",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -63,7 +49,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2902"
+              "$obj": "o634"
             },
             "method": "toString",
             "args": {}
@@ -74,7 +60,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2901"
+              "$obj": "o633"
             },
             "method": "addRole",
             "args": {
@@ -91,13 +77,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2900"
+                "$obj": "o632"
               },
               "cache": "memory"
             },
-            "as": "o2903"
+            "as": "o635"
           },
-          "bind": "s6840",
+          "bind": "s1353",
           "expect": {
             "$database": true
           }
@@ -106,12 +92,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o635"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2901"
+                "$obj": "o633"
               }
             }
           },
@@ -123,7 +109,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o635"
             },
             "method": "setDatabase",
             "args": {
@@ -138,11 +124,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o635"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000119"
+              "namespace": "posts_u000000000032"
             }
           },
           "expect": {
@@ -155,13 +141,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2900"
+                "$obj": "o632"
               },
               "cache": "memory"
             },
-            "as": "o2904"
+            "as": "o636"
           },
-          "bind": "s6844",
+          "bind": "s1357",
           "expect": {
             "$database": true
           }
@@ -170,12 +156,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2904"
+              "$obj": "o636"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2901"
+                "$obj": "o633"
               }
             }
           },
@@ -187,7 +173,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2904"
+              "$obj": "o636"
             },
             "method": "setDatabase",
             "args": {
@@ -202,11 +188,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2904"
+              "$obj": "o636"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000119"
+              "namespace": "posts_u000000000032"
             }
           },
           "expect": {
@@ -217,7 +203,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o635"
             },
             "method": "create",
             "args": {}
@@ -231,9 +217,9 @@
             "args": {
               "cache": "memory"
             },
-            "as": "o2905"
+            "as": "o637"
           },
-          "bind": "s6849",
+          "bind": "s1362",
           "expect": {
             "$queryCache": true
           }
@@ -242,12 +228,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o635"
             },
             "method": "setQueryCache",
             "args": {
               "queryCache": {
-                "$obj": "o2905"
+                "$obj": "o637"
               }
             }
           },
@@ -261,9 +247,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2906"
+            "as": "o638"
           },
-          "bind": "s6851",
+          "bind": "s1364",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -276,7 +262,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o2906"
+                "$obj": "o638"
               }
             }
           },
@@ -288,9 +274,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2907"
+            "as": "o639"
           },
-          "bind": "s6853",
+          "bind": "s1366",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -303,7 +289,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o2907"
+                "$obj": "o639"
               }
             }
           },
@@ -322,9 +308,9 @@
               ],
               "documentSecurity": false
             },
-            "as": "o2908"
+            "as": "o640"
           },
-          "bind": "s6855",
+          "bind": "s1368",
           "expect": {
             "$document": {
               "$id": "posts",
@@ -344,15 +330,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o635"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o2908"
+                "$obj": "o640"
               }
             },
-            "as": "o2909"
+            "as": "o641"
           },
           "expect": {
             "$document": {
@@ -382,9 +368,9 @@
                 "$id": "first"
               }
             },
-            "as": "o2910"
+            "as": "o642"
           },
-          "bind": "s6857",
+          "bind": "s1370",
           "expect": {
             "$document": {
               "$id": "first"
@@ -395,13 +381,558 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o635"
             },
             "method": "createDocument",
             "args": {
               "collection": "posts",
               "document": {
-                "$obj": "o2910"
+                "$obj": "o642"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$collection": "posts",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o643"
+          },
+          "bind": "s1372",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o643"
+              },
+              "cache": "memory"
+            },
+            "as": "o644"
+          },
+          "bind": "s1373",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "getQueryCacheKey",
+            "args": {
+              "collectionId": "posts"
+            }
+          },
+          "expect": "default-cache-:purge:posts_u000000000032::collection:posts:query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o644"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:purge:posts_u000000000032::collection:posts:query",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": 1
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "getCache",
+            "args": {}
+          },
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "getCache",
+            "args": {}
+          },
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o635"
+            },
+            "method": "purgeCachedQueries",
+            "args": {
+              "collection": "posts"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o644"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "default-cache-:purge:posts_u000000000032::collection:posts:query",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": 2
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": 1,
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueryPurgeTest::testPurgeCachedQueriesDropsTheResultsFindCached",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o645"
+          },
+          "bind": "s1380",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o646"
+          },
+          "bind": "s1381",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o647"
+          },
+          "bind": "s1382",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o647"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o646"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o645"
+              },
+              "cache": "memory"
+            },
+            "as": "o648"
+          },
+          "bind": "s1385",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o646"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000033"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o645"
+              },
+              "cache": "memory"
+            },
+            "as": "o649"
+          },
+          "bind": "s1389",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o646"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "purge"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "posts_u000000000033"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Cache\\Query",
+            "args": {
+              "cache": "memory"
+            },
+            "as": "o650"
+          },
+          "bind": "s1394",
+          "expect": {
+            "$queryCache": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "setQueryCache",
+            "args": {
+              "queryCache": {
+                "$obj": "o650"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o651"
+          },
+          "bind": "s1396",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o651"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o652"
+          },
+          "bind": "s1398",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o652"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "posts",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o653"
+          },
+          "bind": "s1400",
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o653"
+              }
+            },
+            "as": "o654"
+          },
+          "expect": {
+            "$document": {
+              "$id": "posts",
+              "name": "posts",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first"
+              }
+            },
+            "as": "o655"
+          },
+          "bind": "s1402",
+          "expect": {
+            "$document": {
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "posts",
+              "document": {
+                "$obj": "o655"
               }
             }
           },
@@ -424,9 +955,9 @@
             "args": {
               "attribute": "$id"
             },
-            "as": "o2911"
+            "as": "o656"
           },
-          "bind": "s6859",
+          "bind": "s1404",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -439,18 +970,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o648"
             },
             "method": "find",
             "args": {
               "collection": "posts",
               "queries": [
                 {
-                  "$obj": "o2911"
+                  "$obj": "o656"
                 }
               ]
             }
           },
+          "bind": "s1405",
           "expect": [
             {
               "$document": {
@@ -471,12 +1003,20 @@
               "$document": {
                 "$id": "first",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1405",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1405",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -497,9 +1037,9 @@
                 "$id": "second"
               }
             },
-            "as": "o2912"
+            "as": "o657"
           },
-          "bind": "s6862",
+          "bind": "s1407",
           "expect": {
             "$document": {
               "$id": "second"
@@ -510,13 +1050,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2904"
+              "$obj": "o649"
             },
             "method": "createDocument",
             "args": {
               "collection": "posts",
               "document": {
-                "$obj": "o2912"
+                "$obj": "o657"
               }
             }
           },
@@ -539,9 +1079,9 @@
             "args": {
               "attribute": "$id"
             },
-            "as": "o2913"
+            "as": "o658"
           },
-          "bind": "s6864",
+          "bind": "s1409",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -554,18 +1094,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o648"
             },
             "method": "find",
             "args": {
               "collection": "posts",
               "queries": [
                 {
-                  "$obj": "o2913"
+                  "$obj": "o658"
                 }
               ]
             }
           },
+          "bind": "s1410",
           "expect": [
             {
               "$document": {
@@ -574,16 +1115,6 @@
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$sequence": "1",
-                "$collection": "posts"
-              }
-            },
-            {
-              "$document": {
-                "$id": "second",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "2",
                 "$collection": "posts"
               }
             }
@@ -596,12 +1127,20 @@
               "$document": {
                 "$id": "first",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1410",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1410",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -617,7 +1156,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o648"
             },
             "method": "purgeCachedQueries",
             "args": {
@@ -634,9 +1173,9 @@
             "args": {
               "attribute": "$id"
             },
-            "as": "o2914"
+            "as": "o659"
           },
-          "bind": "s6868",
+          "bind": "s1413",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -649,18 +1188,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2903"
+              "$obj": "o648"
             },
             "method": "find",
             "args": {
               "collection": "posts",
               "queries": [
                 {
-                  "$obj": "o2914"
+                  "$obj": "o659"
                 }
               ]
             }
           },
+          "bind": "s1414",
           "expect": [
             {
               "$document": {
@@ -691,12 +1231,20 @@
               "$document": {
                 "$id": "first",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1414",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1414",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -715,12 +1263,20 @@
               "$document": {
                 "$id": "second",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1414",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1414",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "2",
@@ -739,29 +1295,15 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Cache\\Query",
             "args": {
               "cache": "memory"
             },
-            "as": "o2915"
+            "as": "o660"
           },
-          "bind": "s6872",
+          "bind": "s1417",
           "expect": {
             "$queryCache": true
           }
@@ -771,9 +1313,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o2916"
+            "as": "o661"
           },
-          "bind": "s6873",
+          "bind": "s1418",
           "expect": {
             "$adapter": "Memory"
           }
@@ -783,9 +1325,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o2917"
+            "as": "o662"
           },
-          "bind": "s6874",
+          "bind": "s1419",
           "expect": {
             "$authorization": true
           }
@@ -796,9 +1338,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2918"
+            "as": "o663"
           },
-          "bind": "s6875",
+          "bind": "s1420",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -808,7 +1350,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2918"
+              "$obj": "o663"
             },
             "method": "toString",
             "args": {}
@@ -819,7 +1361,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2917"
+              "$obj": "o662"
             },
             "method": "addRole",
             "args": {
@@ -836,13 +1378,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2916"
+                "$obj": "o661"
               },
               "cache": "memory"
             },
-            "as": "o2919"
+            "as": "o664"
           },
-          "bind": "s6878",
+          "bind": "s1423",
           "expect": {
             "$database": true
           }
@@ -851,12 +1393,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2917"
+                "$obj": "o662"
               }
             }
           },
@@ -868,7 +1410,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "setDatabase",
             "args": {
@@ -883,11 +1425,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000120"
+              "namespace": "posts_u000000000034"
             }
           },
           "expect": {
@@ -900,13 +1442,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2916"
+                "$obj": "o661"
               },
               "cache": "memory"
             },
-            "as": "o2920"
+            "as": "o665"
           },
-          "bind": "s6882",
+          "bind": "s1427",
           "expect": {
             "$database": true
           }
@@ -915,12 +1457,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2920"
+              "$obj": "o665"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2917"
+                "$obj": "o662"
               }
             }
           },
@@ -932,7 +1474,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2920"
+              "$obj": "o665"
             },
             "method": "setDatabase",
             "args": {
@@ -947,11 +1489,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2920"
+              "$obj": "o665"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000120"
+              "namespace": "posts_u000000000034"
             }
           },
           "expect": {
@@ -962,7 +1504,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "create",
             "args": {}
@@ -973,12 +1515,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "setQueryCache",
             "args": {
               "queryCache": {
-                "$obj": "o2915"
+                "$obj": "o660"
               }
             }
           },
@@ -992,9 +1534,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2921"
+            "as": "o666"
           },
-          "bind": "s6888",
+          "bind": "s1433",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1007,7 +1549,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o2921"
+                "$obj": "o666"
               }
             }
           },
@@ -1019,9 +1561,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2922"
+            "as": "o667"
           },
-          "bind": "s6890",
+          "bind": "s1435",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1034,7 +1576,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o2922"
+                "$obj": "o667"
               }
             }
           },
@@ -1053,9 +1595,9 @@
               ],
               "documentSecurity": false
             },
-            "as": "o2923"
+            "as": "o668"
           },
-          "bind": "s6892",
+          "bind": "s1437",
           "expect": {
             "$document": {
               "$id": "posts",
@@ -1075,15 +1617,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o2923"
+                "$obj": "o668"
               }
             },
-            "as": "o2924"
+            "as": "o669"
           },
           "expect": {
             "$document": {
@@ -1113,9 +1655,9 @@
                 "$id": "first"
               }
             },
-            "as": "o2925"
+            "as": "o670"
           },
-          "bind": "s6894",
+          "bind": "s1439",
           "expect": {
             "$document": {
               "$id": "first"
@@ -1126,13 +1668,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "createDocument",
             "args": {
               "collection": "posts",
               "document": {
-                "$obj": "o2925"
+                "$obj": "o670"
               }
             }
           },
@@ -1152,9 +1694,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o2926"
+            "as": "o671"
           },
-          "bind": "s6896",
+          "bind": "s1441",
           "expect": {
             "$adapter": "Memory"
           }
@@ -1165,13 +1707,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2926"
+                "$obj": "o671"
               },
               "cache": "memory"
             },
-            "as": "o2927"
+            "as": "o672"
           },
-          "bind": "s6897",
+          "bind": "s1442",
           "expect": {
             "$database": true
           }
@@ -1180,7 +1722,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2927"
+              "$obj": "o672"
             },
             "method": "setDatabase",
             "args": {
@@ -1195,11 +1737,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2927"
+              "$obj": "o672"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "caller_u000000000121"
+              "namespace": "caller_u000000000035"
             }
           },
           "expect": {
@@ -1210,12 +1752,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2927"
+              "$obj": "o672"
             },
             "method": "setQueryCache",
             "args": {
               "queryCache": {
-                "$obj": "o2915"
+                "$obj": "o660"
               }
             }
           },
@@ -1227,7 +1769,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2927"
+              "$obj": "o672"
             },
             "method": "create",
             "args": {}
@@ -1242,9 +1784,9 @@
             "args": {
               "attribute": "$id"
             },
-            "as": "o2928"
+            "as": "o673"
           },
-          "bind": "s6902",
+          "bind": "s1447",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -1257,18 +1799,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "find",
             "args": {
               "collection": "posts",
               "queries": [
                 {
-                  "$obj": "o2928"
+                  "$obj": "o673"
                 }
               ]
             }
           },
+          "bind": "s1448",
           "expect": [
             {
               "$document": {
@@ -1289,12 +1832,20 @@
               "$document": {
                 "$id": "first",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1448",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1448",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -1315,9 +1866,9 @@
                 "$id": "second"
               }
             },
-            "as": "o2929"
+            "as": "o674"
           },
-          "bind": "s6905",
+          "bind": "s1450",
           "expect": {
             "$document": {
               "$id": "second"
@@ -1328,13 +1879,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2920"
+              "$obj": "o665"
             },
             "method": "createDocument",
             "args": {
               "collection": "posts",
               "document": {
-                "$obj": "o2929"
+                "$obj": "o674"
               }
             }
           },
@@ -1353,12 +1904,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2927"
+              "$obj": "o672"
             },
             "method": "purgeCachedQueries",
             "args": {
               "collection": "posts",
-              "namespace": "posts_u000000000120"
+              "namespace": "posts_u000000000034"
             }
           },
           "expect": true
@@ -1371,9 +1922,9 @@
             "args": {
               "attribute": "$id"
             },
-            "as": "o2930"
+            "as": "o675"
           },
-          "bind": "s6908",
+          "bind": "s1453",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -1386,18 +1937,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2919"
+              "$obj": "o664"
             },
             "method": "find",
             "args": {
               "collection": "posts",
               "queries": [
                 {
-                  "$obj": "o2930"
+                  "$obj": "o675"
                 }
               ]
             }
           },
+          "bind": "s1454",
           "expect": [
             {
               "$document": {
@@ -1428,12 +1980,20 @@
               "$document": {
                 "$id": "first",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1454",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1454",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -1452,12 +2012,20 @@
               "$document": {
                 "$id": "second",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1454",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1454",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "2",
@@ -1476,29 +2044,15 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Cache\\Query",
             "args": {
               "cache": "memory"
             },
-            "as": "o2931"
+            "as": "o676"
           },
-          "bind": "s6912",
+          "bind": "s1457",
           "expect": {
             "$queryCache": true
           }
@@ -1508,9 +2062,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o2932"
+            "as": "o677"
           },
-          "bind": "s6913",
+          "bind": "s1458",
           "expect": {
             "$adapter": "Memory"
           }
@@ -1520,9 +2074,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o2933"
+            "as": "o678"
           },
-          "bind": "s6914",
+          "bind": "s1459",
           "expect": {
             "$authorization": true
           }
@@ -1533,9 +2087,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2934"
+            "as": "o679"
           },
-          "bind": "s6915",
+          "bind": "s1460",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1545,7 +2099,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2934"
+              "$obj": "o679"
             },
             "method": "toString",
             "args": {}
@@ -1556,7 +2110,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2933"
+              "$obj": "o678"
             },
             "method": "addRole",
             "args": {
@@ -1573,13 +2127,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2932"
+                "$obj": "o677"
               },
               "cache": "memory"
             },
-            "as": "o2935"
+            "as": "o680"
           },
-          "bind": "s6918",
+          "bind": "s1463",
           "expect": {
             "$database": true
           }
@@ -1588,12 +2142,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2933"
+                "$obj": "o678"
               }
             }
           },
@@ -1605,7 +2159,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "setDatabase",
             "args": {
@@ -1620,11 +2174,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000122"
+              "namespace": "posts_u000000000036"
             }
           },
           "expect": {
@@ -1637,13 +2191,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2932"
+                "$obj": "o677"
               },
               "cache": "memory"
             },
-            "as": "o2936"
+            "as": "o681"
           },
-          "bind": "s6922",
+          "bind": "s1467",
           "expect": {
             "$database": true
           }
@@ -1652,12 +2206,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2936"
+              "$obj": "o681"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2933"
+                "$obj": "o678"
               }
             }
           },
@@ -1669,7 +2223,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2936"
+              "$obj": "o681"
             },
             "method": "setDatabase",
             "args": {
@@ -1684,11 +2238,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2936"
+              "$obj": "o681"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000122"
+              "namespace": "posts_u000000000036"
             }
           },
           "expect": {
@@ -1699,7 +2253,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "create",
             "args": {}
@@ -1710,12 +2264,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "setQueryCache",
             "args": {
               "queryCache": {
-                "$obj": "o2931"
+                "$obj": "o676"
               }
             }
           },
@@ -1729,9 +2283,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2937"
+            "as": "o682"
           },
-          "bind": "s6928",
+          "bind": "s1473",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1744,7 +2298,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o2937"
+                "$obj": "o682"
               }
             }
           },
@@ -1756,9 +2310,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2938"
+            "as": "o683"
           },
-          "bind": "s6930",
+          "bind": "s1475",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1771,7 +2325,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o2938"
+                "$obj": "o683"
               }
             }
           },
@@ -1790,9 +2344,9 @@
               ],
               "documentSecurity": false
             },
-            "as": "o2939"
+            "as": "o684"
           },
-          "bind": "s6932",
+          "bind": "s1477",
           "expect": {
             "$document": {
               "$id": "posts",
@@ -1812,15 +2366,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o2939"
+                "$obj": "o684"
               }
             },
-            "as": "o2940"
+            "as": "o685"
           },
           "expect": {
             "$document": {
@@ -1850,9 +2404,9 @@
                 "$id": "first"
               }
             },
-            "as": "o2941"
+            "as": "o686"
           },
-          "bind": "s6934",
+          "bind": "s1479",
           "expect": {
             "$document": {
               "$id": "first"
@@ -1863,13 +2417,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "createDocument",
             "args": {
               "collection": "posts",
               "document": {
-                "$obj": "o2941"
+                "$obj": "o686"
               }
             }
           },
@@ -1888,7 +2442,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2935"
+              "$obj": "o680"
             },
             "method": "purgeCachedQueries",
             "args": {
@@ -1904,27 +2458,13 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o2942"
+            "as": "o687"
           },
-          "bind": "s6937",
+          "bind": "s1482",
           "expect": {
             "$adapter": "Memory"
           }
@@ -1934,9 +2474,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o2943"
+            "as": "o688"
           },
-          "bind": "s6938",
+          "bind": "s1483",
           "expect": {
             "$authorization": true
           }
@@ -1947,9 +2487,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2944"
+            "as": "o689"
           },
-          "bind": "s6939",
+          "bind": "s1484",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1959,7 +2499,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2944"
+              "$obj": "o689"
             },
             "method": "toString",
             "args": {}
@@ -1970,7 +2510,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2943"
+              "$obj": "o688"
             },
             "method": "addRole",
             "args": {
@@ -1987,13 +2527,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2942"
+                "$obj": "o687"
               },
               "cache": "memory"
             },
-            "as": "o2945"
+            "as": "o690"
           },
-          "bind": "s6942",
+          "bind": "s1487",
           "expect": {
             "$database": true
           }
@@ -2002,12 +2542,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2943"
+                "$obj": "o688"
               }
             }
           },
@@ -2019,7 +2559,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "setDatabase",
             "args": {
@@ -2034,11 +2574,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000123"
+              "namespace": "posts_u000000000037"
             }
           },
           "expect": {
@@ -2051,13 +2591,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2942"
+                "$obj": "o687"
               },
               "cache": "memory"
             },
-            "as": "o2946"
+            "as": "o691"
           },
-          "bind": "s6946",
+          "bind": "s1491",
           "expect": {
             "$database": true
           }
@@ -2066,12 +2606,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2946"
+              "$obj": "o691"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o2943"
+                "$obj": "o688"
               }
             }
           },
@@ -2083,7 +2623,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2946"
+              "$obj": "o691"
             },
             "method": "setDatabase",
             "args": {
@@ -2098,11 +2638,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2946"
+              "$obj": "o691"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000123"
+              "namespace": "posts_u000000000037"
             }
           },
           "expect": {
@@ -2113,7 +2653,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "create",
             "args": {}
@@ -2127,9 +2667,9 @@
             "args": {
               "cache": "memory"
             },
-            "as": "o2947"
+            "as": "o692"
           },
-          "bind": "s6951",
+          "bind": "s1496",
           "expect": {
             "$queryCache": true
           }
@@ -2138,12 +2678,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "setQueryCache",
             "args": {
               "queryCache": {
-                "$obj": "o2947"
+                "$obj": "o692"
               }
             }
           },
@@ -2157,9 +2697,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2948"
+            "as": "o693"
           },
-          "bind": "s6953",
+          "bind": "s1498",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2172,7 +2712,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o2948"
+                "$obj": "o693"
               }
             }
           },
@@ -2184,9 +2724,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2949"
+            "as": "o694"
           },
-          "bind": "s6955",
+          "bind": "s1500",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2199,7 +2739,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o2949"
+                "$obj": "o694"
               }
             }
           },
@@ -2218,9 +2758,9 @@
               ],
               "documentSecurity": false
             },
-            "as": "o2950"
+            "as": "o695"
           },
-          "bind": "s6957",
+          "bind": "s1502",
           "expect": {
             "$document": {
               "$id": "posts",
@@ -2240,15 +2780,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o2950"
+                "$obj": "o695"
               }
             },
-            "as": "o2951"
+            "as": "o696"
           },
           "expect": {
             "$document": {
@@ -2278,9 +2818,9 @@
                 "$id": "first"
               }
             },
-            "as": "o2952"
+            "as": "o697"
           },
-          "bind": "s6959",
+          "bind": "s1504",
           "expect": {
             "$document": {
               "$id": "first"
@@ -2291,13 +2831,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "createDocument",
             "args": {
               "collection": "posts",
               "document": {
-                "$obj": "o2952"
+                "$obj": "o697"
               }
             }
           },
@@ -2320,9 +2860,9 @@
             "args": {
               "attribute": "$id"
             },
-            "as": "o2953"
+            "as": "o698"
           },
-          "bind": "s6961",
+          "bind": "s1506",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -2335,18 +2875,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "find",
             "args": {
               "collection": "posts",
               "queries": [
                 {
-                  "$obj": "o2953"
+                  "$obj": "o698"
                 }
               ]
             }
           },
+          "bind": "s1507",
           "expect": [
             {
               "$document": {
@@ -2367,12 +2908,20 @@
               "$document": {
                 "$id": "first",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1507",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1507",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -2393,9 +2942,9 @@
                 "$id": "second"
               }
             },
-            "as": "o2954"
+            "as": "o699"
           },
-          "bind": "s6964",
+          "bind": "s1509",
           "expect": {
             "$document": {
               "$id": "second"
@@ -2406,13 +2955,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2946"
+              "$obj": "o691"
             },
             "method": "createDocument",
             "args": {
               "collection": "posts",
               "document": {
-                "$obj": "o2954"
+                "$obj": "o699"
               }
             }
           },
@@ -2431,7 +2980,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "purgeCachedCollection",
             "args": {
@@ -2448,9 +2997,9 @@
             "args": {
               "attribute": "$id"
             },
-            "as": "o2955"
+            "as": "o700"
           },
-          "bind": "s6967",
+          "bind": "s1512",
           "expect": {
             "$query": {
               "method": "orderAsc",
@@ -2463,18 +3012,19 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2945"
+              "$obj": "o690"
             },
             "method": "find",
             "args": {
               "collection": "posts",
               "queries": [
                 {
-                  "$obj": "o2955"
+                  "$obj": "o700"
                 }
               ]
             }
           },
+          "bind": "s1513",
           "expect": [
             {
               "$document": {
@@ -2505,12 +3055,20 @@
               "$document": {
                 "$id": "first",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1513",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1513",
+                  "path": "/0/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "1",
@@ -2529,12 +3087,20 @@
               "$document": {
                 "$id": "second",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1513",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "s1513",
+                  "path": "/1/$document/$updatedAt",
+                  "default": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  }
                 },
                 "$permissions": [],
                 "$sequence": "2",
@@ -2553,27 +3119,13 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "updateAttributeIntegerOnly"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o2956"
+            "as": "o701"
           },
-          "bind": "s6971",
+          "bind": "s1516",
           "expect": {
             "$adapter": "Memory"
           }
@@ -2584,13 +3136,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o2956"
+                "$obj": "o701"
               },
               "cache": "memory"
             },
-            "as": "o2957"
+            "as": "o702"
           },
-          "bind": "s6972",
+          "bind": "s1517",
           "expect": {
             "$database": true
           }
@@ -2599,7 +3151,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2957"
+              "$obj": "o702"
             },
             "method": "setDatabase",
             "args": {
@@ -2614,11 +3166,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2957"
+              "$obj": "o702"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "posts_u000000000124"
+              "namespace": "posts_u000000000038"
             }
           },
           "expect": {
@@ -2629,7 +3181,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2957"
+              "$obj": "o702"
             },
             "method": "create",
             "args": {}
@@ -2640,13 +3192,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2957"
+              "$obj": "o702"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o2958"
+            "as": "o703"
           },
-          "bind": "s6976",
+          "bind": "s1521",
           "expect": {
             "$authorization": true
           }
@@ -2657,9 +3209,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2959"
+            "as": "o704"
           },
-          "bind": "s6977",
+          "bind": "s1522",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2669,7 +3221,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2959"
+              "$obj": "o704"
             },
             "method": "toString",
             "args": {}
@@ -2680,7 +3232,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2958"
+              "$obj": "o703"
             },
             "method": "addRole",
             "args": {
@@ -2697,9 +3249,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o2960"
+            "as": "o705"
           },
-          "bind": "s6980",
+          "bind": "s1525",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -2712,7 +3264,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o2960"
+                "$obj": "o705"
               }
             }
           },
@@ -2730,9 +3282,9 @@
               ],
               "documentSecurity": false
             },
-            "as": "o2961"
+            "as": "o706"
           },
-          "bind": "s6982",
+          "bind": "s1527",
           "expect": {
             "$document": {
               "$id": "posts",
@@ -2751,15 +3303,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2957"
+              "$obj": "o702"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o2961"
+                "$obj": "o706"
               }
             },
-            "as": "o2962"
+            "as": "o707"
           },
           "expect": {
             "$document": {
@@ -2783,7 +3335,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o2957"
+              "$obj": "o702"
             },
             "method": "purgeCachedQueries",
             "args": {

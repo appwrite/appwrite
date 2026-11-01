@@ -8,27 +8,13 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "storedRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "storedEnum"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Adapter\\SQLite",
             "args": {
               "pdo": {
                 "$pdo": {
-                  "dsn": "sqlite:/tmp/transaction-cache-agbf0dv8f4bvfPACnhG",
+                  "dsn": "sqlite:/tmp/transaction-cache-6um5ktdbahtueMpLMog",
                   "options": {
                     "12": false,
                     "19": 2,
@@ -39,9 +25,9 @@
                 }
               }
             },
-            "as": "o3677"
+            "as": "o3632"
           },
-          "bind": "s6428",
+          "bind": "s7443",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -52,13 +38,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o3677"
+                "$obj": "o3632"
               },
               "cache": "memory"
             },
-            "as": "o3678"
+            "as": "o3633"
           },
-          "bind": "s6429",
+          "bind": "s7444",
           "expect": {
             "$database": true
           }
@@ -70,7 +56,7 @@
             "args": {
               "pdo": {
                 "$pdo": {
-                  "dsn": "sqlite:/tmp/transaction-cache-agbf0dv8f4bvfPACnhG",
+                  "dsn": "sqlite:/tmp/transaction-cache-6um5ktdbahtueMpLMog",
                   "options": {
                     "12": false,
                     "19": 2,
@@ -81,9 +67,9 @@
                 }
               }
             },
-            "as": "o3679"
+            "as": "o3634"
           },
-          "bind": "s6430",
+          "bind": "s7445",
           "expect": {
             "$adapter": "SQLite"
           }
@@ -94,13 +80,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o3679"
+                "$obj": "o3634"
               },
               "cache": "memory"
             },
-            "as": "o3680"
+            "as": "o3635"
           },
-          "bind": "s6431",
+          "bind": "s7446",
           "expect": {
             "$database": true
           }
@@ -109,7 +95,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "setDatabase",
             "args": {
@@ -124,11 +110,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "transaction_cache_u000000000129"
+              "namespace": "transaction_cache_u000000000113"
             }
           },
           "expect": {
@@ -139,13 +125,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o3681"
+            "as": "o3636"
           },
-          "bind": "s6434",
+          "bind": "s7449",
           "expect": {
             "$authorization": true
           }
@@ -156,9 +142,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o3682"
+            "as": "o3637"
           },
-          "bind": "s6435",
+          "bind": "s7450",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -168,7 +154,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3682"
+              "$obj": "o3637"
             },
             "method": "toString",
             "args": {}
@@ -179,7 +165,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3681"
+              "$obj": "o3636"
             },
             "method": "addRole",
             "args": {
@@ -194,7 +180,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3680"
+              "$obj": "o3635"
             },
             "method": "setDatabase",
             "args": {
@@ -209,11 +195,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3680"
+              "$obj": "o3635"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "transaction_cache_u000000000129"
+              "namespace": "transaction_cache_u000000000113"
             }
           },
           "expect": {
@@ -224,13 +210,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3680"
+              "$obj": "o3635"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o3683"
+            "as": "o3638"
           },
-          "bind": "s6440",
+          "bind": "s7455",
           "expect": {
             "$authorization": true
           }
@@ -241,9 +227,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o3684"
+            "as": "o3639"
           },
-          "bind": "s6441",
+          "bind": "s7456",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -253,7 +239,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3684"
+              "$obj": "o3639"
             },
             "method": "toString",
             "args": {}
@@ -264,7 +250,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3683"
+              "$obj": "o3638"
             },
             "method": "addRole",
             "args": {
@@ -279,7 +265,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "create",
             "args": {}
@@ -295,9 +281,9 @@
               "key": "name",
               "required": true
             },
-            "as": "o3685"
+            "as": "o3640"
           },
-          "bind": "s6445",
+          "bind": "s7460",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -323,9 +309,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o3686"
+            "as": "o3641"
           },
-          "bind": "s6446",
+          "bind": "s7461",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -338,7 +324,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o3686"
+                "$obj": "o3641"
               }
             }
           },
@@ -350,9 +336,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o3687"
+            "as": "o3642"
           },
-          "bind": "s6448",
+          "bind": "s7463",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -365,7 +351,7 @@
             "method": "create",
             "args": {
               "role": {
-                "$obj": "o3687"
+                "$obj": "o3642"
               }
             }
           },
@@ -377,9 +363,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o3688"
+            "as": "o3643"
           },
-          "bind": "s6450",
+          "bind": "s7465",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -392,7 +378,7 @@
             "method": "update",
             "args": {
               "role": {
-                "$obj": "o3688"
+                "$obj": "o3643"
               }
             }
           },
@@ -407,7 +393,7 @@
               "id": "users",
               "attributes": [
                 {
-                  "$obj": "o3685"
+                  "$obj": "o3640"
                 }
               ],
               "permissions": [
@@ -416,9 +402,9 @@
                 "update(\"any\")"
               ]
             },
-            "as": "o3689"
+            "as": "o3644"
           },
-          "bind": "s6452",
+          "bind": "s7467",
           "expect": {
             "$document": {
               "$id": "users",
@@ -455,15 +441,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o3689"
+                "$obj": "o3644"
               }
             },
-            "as": "o3690"
+            "as": "o3645"
           },
           "expect": {
             "$document": {
@@ -511,9 +497,9 @@
                 "name": "original"
               }
             },
-            "as": "o3691"
+            "as": "o3646"
           },
-          "bind": "s6454",
+          "bind": "s7469",
           "expect": {
             "$document": {
               "$id": "user",
@@ -525,13 +511,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "createDocument",
             "args": {
               "collection": "users",
               "document": {
-                "$obj": "o3691"
+                "$obj": "o3646"
               }
             }
           },
@@ -551,16 +537,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "getDocument",
             "args": {
               "collection": "users",
               "id": "user"
             },
-            "as": "o3692"
+            "as": "o3647"
           },
-          "bind": "s6456",
+          "bind": "s7471",
           "expect": {
             "$document": {
               "name": "original",
@@ -577,7 +563,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3692"
+              "$obj": "o3647"
             },
             "method": "getAttribute",
             "args": {
@@ -590,7 +576,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3678"
+              "$obj": "o3633"
             },
             "method": "withTransaction",
             "args": {
@@ -605,45 +591,45 @@
                           "name": "renamed"
                         }
                       },
-                      "as": "o3693"
+                      "as": "o3648"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o3678"
+                        "$obj": "o3633"
                       },
                       "method": "updateDocument",
                       "args": {
                         "collection": "users",
                         "id": "user",
                         "document": {
-                          "$obj": "o3693"
+                          "$obj": "o3648"
                         }
                       },
-                      "as": "o3694"
+                      "as": "o3649"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o3680"
+                        "$obj": "o3635"
                       },
                       "method": "getDocument",
                       "args": {
                         "collection": "users",
                         "id": "user"
                       },
-                      "as": "o3695"
+                      "as": "o3650"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o3695"
+                        "$obj": "o3650"
                       },
                       "method": "getAttribute",
                       "args": {
@@ -655,21 +641,21 @@
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o3678"
+                        "$obj": "o3633"
                       },
                       "method": "getDocument",
                       "args": {
                         "collection": "users",
                         "id": "user"
                       },
-                      "as": "o3696"
+                      "as": "o3651"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o3696"
+                        "$obj": "o3651"
                       },
                       "method": "getAttribute",
                       "args": {
@@ -690,7 +676,7 @@
               }
             }
           },
-          "bind": "s6458",
+          "bind": "s7473",
           "expect": {
             "result": [
               "original",
@@ -752,16 +738,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3680"
+              "$obj": "o3635"
             },
             "method": "getDocument",
             "args": {
               "collection": "users",
               "id": "user"
             },
-            "as": "o3697"
+            "as": "o3652"
           },
-          "bind": "s6459",
+          "bind": "s7474",
           "expect": {
             "$document": {
               "name": "original",
@@ -778,7 +764,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o3697"
+              "$obj": "o3652"
             },
             "method": "getAttribute",
             "args": {

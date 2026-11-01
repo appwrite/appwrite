@@ -1,6 +1,7 @@
-//! Tests of the query cache, its invalidation and its owners.
+//! Tests of the query cache, its invalidation and its mutation record.
 //!
-//! PHP: `Cache\QueryTest` and `Cache\OwnersTest`; the adapters PHP builds
+//! PHP: `Cache\QueryTest` and the cache cases of
+//! `Documents\EvictionProtocolTest` (an evicted `#state` record); the adapters PHP builds
 //! these on (`RedisLeasableCache`, `OwnershipCache`, stubbed `Cache`s) are
 //! played by [`Leasable`].
 
@@ -1063,5 +1064,48 @@ fn registration_failure_preserves_previously_cached_results() {
         assert_eq!(error.kind(), Kind::CacheUnavailable);
         let after = entry(&q, &Scope::default(), "users", &no_queries(), "").await.expect("not blocked");
         assert_eq!(ids(q.get(&after).await.unwrap()), ["cached"]);
+    });
+}
+
+// ---- `Documents\EvictionProtocolTest`: an evicted mutation record ------
+
+#[test]
+fn finishing_an_evicted_writer_cannot_unblock_a_newer_writer() {
+    block_on(async {
+        let (adapter, cache) = leasable();
+        let key = "eviction_users";
+        let mutation = super::Mutation::new(cache);
+        mutation.begin(key, "first", 3600).await.unwrap();
+        adapter.evict(&format!("{key}#state"));
+        let cold = mutation.read(key, 3600).await.unwrap().value;
+        assert!(cold.is_some());
+        mutation.begin(key, "second", 3600).await.unwrap();
+        mutation.finish(key, "first", 3600).await.unwrap();
+        assert!(mutation.read(key, 3600).await.unwrap().value.is_none(), "a newer live writer still owns its barrier");
+        mutation.finish(key, "second", 3600).await.unwrap();
+        let active = mutation.read(key, 3600).await.unwrap().value;
+        assert!(active.is_some());
+        assert_ne!(cold, active, "finishing lost writers retires cold fills");
+    });
+}
+
+#[test]
+fn query_results_refilled_after_eviction_are_retired_when_the_writer_finishes() {
+    block_on(async {
+        let (adapter, cache) = leasable();
+        let q = query_cache(cache);
+        let key = q.collection_key(&scope_ns(), "users");
+        let token = q.create_token();
+        q.block_collection(&key, &token).await.unwrap();
+        adapter.evict(&format!("{key}#state"));
+        let e = entry(&q, &scope_ns(), "users", &no_queries(), "").await.expect("a cold record is usable");
+        assert!(fill(&q, &e, "pre-commit").await);
+        q.activate_collection(&key, &token, 3600).await.unwrap();
+        let fresh = entry(&q, &scope_ns(), "users", &no_queries(), "").await.expect("usable");
+        assert_eq!(
+            q.get(&fresh).await.unwrap(),
+            None,
+            "a completed writer retires results filled after its registration disappeared"
+        );
     });
 }

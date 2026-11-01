@@ -8,55 +8,13 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "email"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o4972"
+            "as": "o4013"
           },
-          "bind": "s8029",
+          "bind": "s8024",
           "expect": {
             "$adapter": "Memory"
           }
@@ -67,13 +25,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o4972"
+                "$obj": "o4013"
               },
               "cache": "memory"
             },
-            "as": "o4973"
+            "as": "o4014"
           },
-          "bind": "s8030",
+          "bind": "s8025",
           "expect": {
             "$database": true
           }
@@ -82,7 +40,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "setDatabase",
             "args": {
@@ -97,11 +55,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000040"
+              "namespace": "with_cache_u000000000134"
             }
           },
           "expect": {
@@ -112,7 +70,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "create",
             "args": {}
@@ -127,9 +85,9 @@
             "args": {
               "id": "projects"
             },
-            "as": "o4974"
+            "as": "o4015"
           },
-          "bind": "s8034",
+          "bind": "s8029",
           "expect": {
             "$document": {
               "$id": "projects",
@@ -145,15 +103,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o4974"
+                "$obj": "o4015"
               }
             },
-            "as": "o4975"
+            "as": "o4016"
           },
           "expect": {
             "$document": {
@@ -181,9 +139,9 @@
             "args": {
               "key": "name"
             },
-            "as": "o4976"
+            "as": "o4017"
           },
-          "bind": "s8036",
+          "bind": "s8031",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -207,16 +165,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "createAttribute",
             "args": {
               "collection": "projects",
               "attribute": {
-                "$obj": "o4976"
+                "$obj": "o4017"
               }
             },
-            "as": "o4977"
+            "as": "o4018"
           },
           "expect": {
             "$value": "Attribute",
@@ -243,9 +201,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o4978"
+            "as": "o4019"
           },
-          "bind": "s8038",
+          "bind": "s8033",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -258,7 +216,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o4978"
+                "$obj": "o4019"
               }
             }
           },
@@ -277,9 +235,9 @@
                 "name": "fresh"
               }
             },
-            "as": "o4979"
+            "as": "o4020"
           },
-          "bind": "s8040",
+          "bind": "s8035",
           "expect": {
             "$document": {
               "$id": "project",
@@ -294,13 +252,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "createDocument",
             "args": {
               "collection": "projects",
               "document": {
-                "$obj": "o4979"
+                "$obj": "o4020"
               }
             }
           },
@@ -322,29 +280,29 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getQueryCacheKey",
             "args": {
               "collectionId": "projects"
             }
           },
-          "expect": "default-cache-:utopiaTests:with_cache_u000000000040::collection:projects:query"
+          "expect": "default-cache-:utopiaTests:with_cache_u000000000134::collection:projects:query"
         },
         {
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getDocument",
             "args": {
               "collection": "projects",
               "id": "project"
             },
-            "as": "o4980"
+            "as": "o4021"
           },
-          "bind": "s8043",
+          "bind": "s8038",
           "expect": {
             "$document": {
               "name": "fresh",
@@ -363,7 +321,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4980"
+              "$obj": "o4021"
             },
             "method": "getAttribute",
             "args": {
@@ -382,9 +340,9 @@
                 "name"
               ]
             },
-            "as": "o4981"
+            "as": "o4022"
           },
-          "bind": "s8045",
+          "bind": "s8040",
           "expect": {
             "$query": {
               "method": "select",
@@ -399,7 +357,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getDocument",
             "args": {
@@ -407,13 +365,13 @@
               "id": "project",
               "queries": [
                 {
-                  "$obj": "o4981"
+                  "$obj": "o4022"
                 }
               ]
             },
-            "as": "o4982"
+            "as": "o4023"
           },
-          "bind": "s8046",
+          "bind": "s8041",
           "expect": {
             "$document": {
               "name": "fresh",
@@ -432,7 +390,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4982"
+              "$obj": "o4023"
             },
             "method": "getAttribute",
             "args": {
@@ -445,15 +403,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getCollection",
             "args": {
               "collection": "projects"
             },
-            "as": "o4983"
+            "as": "o4024"
           },
-          "bind": "s8048",
+          "bind": "s8043",
           "expect": {
             "$document": {
               "name": "projects",
@@ -492,18 +450,18 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4972"
+              "$obj": "o4013"
             },
             "method": "getDocument",
             "args": {
               "collection": {
-                "$obj": "o4983"
+                "$obj": "o4024"
               },
               "id": "project"
             },
-            "as": "o4984"
+            "as": "o4025"
           },
-          "bind": "s8049",
+          "bind": "s8044",
           "expect": {
             "$document": {
               "name": "fresh",
@@ -521,7 +479,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4984"
+              "$obj": "o4025"
             },
             "method": "setAttribute",
             "args": {
@@ -546,16 +504,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4972"
+              "$obj": "o4013"
             },
             "method": "updateDocument",
             "args": {
               "collection": {
-                "$obj": "o4983"
+                "$obj": "o4024"
               },
               "id": "project",
               "document": {
-                "$obj": "o4984"
+                "$obj": "o4025"
               },
               "skipPermissions": true
             }
@@ -577,16 +535,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getDocument",
             "args": {
               "collection": "projects",
               "id": "project"
             },
-            "as": "o4985"
+            "as": "o4026"
           },
-          "bind": "s8052",
+          "bind": "s8047",
           "expect": {
             "$document": {
               "name": "changed",
@@ -605,7 +563,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4985"
+              "$obj": "o4026"
             },
             "method": "getAttribute",
             "args": {
@@ -624,9 +582,9 @@
                 "name"
               ]
             },
-            "as": "o4986"
+            "as": "o4027"
           },
-          "bind": "s8054",
+          "bind": "s8049",
           "expect": {
             "$query": {
               "method": "select",
@@ -641,7 +599,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getDocument",
             "args": {
@@ -649,13 +607,13 @@
               "id": "project",
               "queries": [
                 {
-                  "$obj": "o4986"
+                  "$obj": "o4027"
                 }
               ]
             },
-            "as": "o4987"
+            "as": "o4028"
           },
-          "bind": "s8055",
+          "bind": "s8050",
           "expect": {
             "$document": {
               "name": "changed",
@@ -674,7 +632,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4987"
+              "$obj": "o4028"
             },
             "method": "getAttribute",
             "args": {
@@ -687,7 +645,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "purgeCachedDocument",
             "args": {
@@ -701,16 +659,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getDocument",
             "args": {
               "collection": "projects",
               "id": "project"
             },
-            "as": "o4988"
+            "as": "o4029"
           },
-          "bind": "s8058",
+          "bind": "s8053",
           "expect": {
             "$document": {
               "name": "changed",
@@ -729,7 +687,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4988"
+              "$obj": "o4029"
             },
             "method": "getAttribute",
             "args": {
@@ -748,9 +706,9 @@
                 "name"
               ]
             },
-            "as": "o4989"
+            "as": "o4030"
           },
-          "bind": "s8060",
+          "bind": "s8055",
           "expect": {
             "$query": {
               "method": "select",
@@ -765,7 +723,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4973"
+              "$obj": "o4014"
             },
             "method": "getDocument",
             "args": {
@@ -773,13 +731,13 @@
               "id": "project",
               "queries": [
                 {
-                  "$obj": "o4989"
+                  "$obj": "o4030"
                 }
               ]
             },
-            "as": "o4990"
+            "as": "o4031"
           },
-          "bind": "s8061",
+          "bind": "s8056",
           "expect": {
             "$document": {
               "name": "changed",
@@ -798,7 +756,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o4990"
+              "$obj": "o4031"
             },
             "method": "getAttribute",
             "args": {
@@ -814,55 +772,13 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "email"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o5008"
+            "as": "o4049"
           },
-          "bind": "s8093",
+          "bind": "s8088",
           "expect": {
             "$adapter": "Memory"
           }
@@ -873,13 +789,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o5008"
+                "$obj": "o4049"
               },
               "cache": "memory"
             },
-            "as": "o5009"
+            "as": "o4050"
           },
-          "bind": "s8094",
+          "bind": "s8089",
           "expect": {
             "$database": true
           }
@@ -888,7 +804,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "setDatabase",
             "args": {
@@ -903,11 +819,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000043"
+              "namespace": "with_cache_u000000000137"
             }
           },
           "expect": {
@@ -918,7 +834,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "create",
             "args": {}
@@ -933,9 +849,9 @@
             "args": {
               "id": "projects"
             },
-            "as": "o5010"
+            "as": "o4051"
           },
-          "bind": "s8098",
+          "bind": "s8093",
           "expect": {
             "$document": {
               "$id": "projects",
@@ -951,15 +867,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o5010"
+                "$obj": "o4051"
               }
             },
-            "as": "o5011"
+            "as": "o4052"
           },
           "expect": {
             "$document": {
@@ -987,9 +903,9 @@
             "args": {
               "key": "name"
             },
-            "as": "o5012"
+            "as": "o4053"
           },
-          "bind": "s8100",
+          "bind": "s8095",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1013,16 +929,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "createAttribute",
             "args": {
               "collection": "projects",
               "attribute": {
-                "$obj": "o5012"
+                "$obj": "o4053"
               }
             },
-            "as": "o5013"
+            "as": "o4054"
           },
           "expect": {
             "$value": "Attribute",
@@ -1049,9 +965,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o5014"
+            "as": "o4055"
           },
-          "bind": "s8102",
+          "bind": "s8097",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1064,7 +980,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o5014"
+                "$obj": "o4055"
               }
             }
           },
@@ -1083,9 +999,9 @@
                 "name": "fresh"
               }
             },
-            "as": "o5015"
+            "as": "o4056"
           },
-          "bind": "s8104",
+          "bind": "s8099",
           "expect": {
             "$document": {
               "$id": "project",
@@ -1100,13 +1016,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "createDocument",
             "args": {
               "collection": "projects",
               "document": {
-                "$obj": "o5015"
+                "$obj": "o4056"
               }
             }
           },
@@ -1128,29 +1044,29 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "getQueryCacheKey",
             "args": {
               "collectionId": "projects"
             }
           },
-          "expect": "default-cache-:utopiaTests:with_cache_u000000000043::collection:projects:query"
+          "expect": "default-cache-:utopiaTests:with_cache_u000000000137::collection:projects:query"
         },
         {
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "getDocument",
             "args": {
               "collection": "projects",
               "id": "project"
             },
-            "as": "o5016"
+            "as": "o4057"
           },
-          "bind": "s8107",
+          "bind": "s8102",
           "expect": {
             "$document": {
               "name": "fresh",
@@ -1169,18 +1085,18 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "withCache",
             "args": {
-              "key": "default-cache-:utopiaTests:with_cache_u000000000043::collection:projects:query",
+              "key": "default-cache-:utopiaTests:with_cache_u000000000137::collection:projects:query",
               "callback": {
                 "steps": [
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o5009"
+                        "$obj": "o4050"
                       },
                       "method": "purgeCachedQueries",
                       "args": {
@@ -1193,7 +1109,7 @@
                     "args": {
                       "value": [
                         {
-                          "$obj": "o5016"
+                          "$obj": "o4057"
                         }
                       ]
                     }
@@ -1206,7 +1122,7 @@
           "expect": {
             "result": [
               {
-                "$obj": "o5016"
+                "$obj": "o4057"
               }
             ],
             "calls": {
@@ -1226,11 +1142,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5009"
+              "$obj": "o4050"
             },
             "method": "withCache",
             "args": {
-              "key": "default-cache-:utopiaTests:with_cache_u000000000043::collection:projects:query",
+              "key": "default-cache-:utopiaTests:with_cache_u000000000137::collection:projects:query",
               "callback": {
                 "steps": [
                   {
@@ -1265,55 +1181,13 @@
       "state": [],
       "steps": [
         {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "email"
-          },
-          "expect": true
-        },
-        {
           "op": "object.new",
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o5017"
+            "as": "o4058"
           },
-          "bind": "s8110",
+          "bind": "s8105",
           "expect": {
             "$adapter": "Memory"
           }
@@ -1324,13 +1198,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o5017"
+                "$obj": "o4058"
               },
               "cache": "memory"
             },
-            "as": "o5018"
+            "as": "o4059"
           },
-          "bind": "s8111",
+          "bind": "s8106",
           "expect": {
             "$database": true
           }
@@ -1339,7 +1213,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "setDatabase",
             "args": {
@@ -1354,11 +1228,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000044"
+              "namespace": "with_cache_u000000000138"
             }
           },
           "expect": {
@@ -1369,7 +1243,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "create",
             "args": {}
@@ -1384,9 +1258,9 @@
             "args": {
               "id": "projects"
             },
-            "as": "o5019"
+            "as": "o4060"
           },
-          "bind": "s8115",
+          "bind": "s8110",
           "expect": {
             "$document": {
               "$id": "projects",
@@ -1402,15 +1276,15 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "createCollection",
             "args": {
               "collection": {
-                "$obj": "o5019"
+                "$obj": "o4060"
               }
             },
-            "as": "o5020"
+            "as": "o4061"
           },
           "expect": {
             "$document": {
@@ -1438,9 +1312,9 @@
             "args": {
               "key": "name"
             },
-            "as": "o5021"
+            "as": "o4062"
           },
-          "bind": "s8117",
+          "bind": "s8112",
           "expect": {
             "$value": "Attribute",
             "fields": {
@@ -1464,16 +1338,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "createAttribute",
             "args": {
               "collection": "projects",
               "attribute": {
-                "$obj": "o5021"
+                "$obj": "o4062"
               }
             },
-            "as": "o5022"
+            "as": "o4063"
           },
           "expect": {
             "$value": "Attribute",
@@ -1500,9 +1374,9 @@
             "class": "Role",
             "method": "any",
             "args": {},
-            "as": "o5023"
+            "as": "o4064"
           },
-          "bind": "s8119",
+          "bind": "s8114",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1515,7 +1389,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o5023"
+                "$obj": "o4064"
               }
             }
           },
@@ -1534,9 +1408,9 @@
                 "name": "fresh"
               }
             },
-            "as": "o5024"
+            "as": "o4065"
           },
-          "bind": "s8121",
+          "bind": "s8116",
           "expect": {
             "$document": {
               "$id": "project",
@@ -1551,13 +1425,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "createDocument",
             "args": {
               "collection": "projects",
               "document": {
-                "$obj": "o5024"
+                "$obj": "o4065"
               }
             }
           },
@@ -1579,29 +1453,29 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "getQueryCacheKey",
             "args": {
               "collectionId": "projects"
             }
           },
-          "expect": "default-cache-:utopiaTests:with_cache_u000000000044::collection:projects:query"
+          "expect": "default-cache-:utopiaTests:with_cache_u000000000138::collection:projects:query"
         },
         {
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "getDocument",
             "args": {
               "collection": "projects",
               "id": "project"
             },
-            "as": "o5025"
+            "as": "o4066"
           },
-          "bind": "s8124",
+          "bind": "s8119",
           "expect": {
             "$document": {
               "name": "fresh",
@@ -1620,11 +1494,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "withCache",
             "args": {
-              "key": "default-cache-:utopiaTests:with_cache_u000000000044::collection:projects:query",
+              "key": "default-cache-:utopiaTests:with_cache_u000000000138::collection:projects:query",
               "callback": {
                 "steps": [
                   {
@@ -1632,7 +1506,7 @@
                     "args": {
                       "value": [
                         {
-                          "$obj": "o5025"
+                          "$obj": "o4066"
                         }
                       ]
                     }
@@ -1645,7 +1519,7 @@
           "expect": {
             "result": [
               {
-                "$obj": "o5025"
+                "$obj": "o4066"
               }
             ],
             "calls": {
@@ -1664,11 +1538,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o5018"
+              "$obj": "o4059"
             },
             "method": "withCache",
             "args": {
-              "key": "default-cache-:utopiaTests:with_cache_u000000000044::collection:projects:query",
+              "key": "default-cache-:utopiaTests:with_cache_u000000000138::collection:projects:query",
               "callback": true,
               "hash": "list-hash"
             }
@@ -1676,7 +1550,7 @@
           "expect": {
             "result": [
               {
-                "$obj": "o5025"
+                "$obj": "o4066"
               }
             ],
             "calls": {

@@ -12,9 +12,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o80"
+            "as": "o3894"
           },
-          "bind": "s129",
+          "bind": "s7893",
           "expect": {
             "$authorization": true
           }
@@ -27,9 +27,9 @@
             "args": {
               "identifier": "reader"
             },
-            "as": "o81"
+            "as": "o3895"
           },
-          "bind": "s130",
+          "bind": "s7894",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -39,7 +39,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o81"
+              "$obj": "o3895"
             },
             "method": "toString",
             "args": {}
@@ -50,7 +50,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o80"
+              "$obj": "o3894"
             },
             "method": "addRole",
             "args": {
@@ -66,9 +66,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o82"
+            "as": "o3896"
           },
-          "bind": "s133",
+          "bind": "s7897",
           "expect": {
             "$adapter": "Memory"
           }
@@ -81,9 +81,9 @@
             "args": {
               "identifier": "reader"
             },
-            "as": "o83"
+            "as": "o3897"
           },
-          "bind": "s134",
+          "bind": "s7898",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -96,7 +96,7 @@
             "method": "read",
             "args": {
               "role": {
-                "$obj": "o83"
+                "$obj": "o3897"
               }
             }
           },
@@ -108,13 +108,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o82"
+                "$obj": "o3896"
               },
               "cache": "memory"
             },
-            "as": "o84"
+            "as": "o3898"
           },
-          "bind": "s136",
+          "bind": "s7900",
           "expect": {
             "$database": true
           }
@@ -123,12 +123,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o80"
+                "$obj": "o3894"
               }
             }
           },
@@ -140,7 +140,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "setDatabase",
             "args": {
@@ -155,11 +155,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000005"
+              "namespace": "with_cache_u000000000123"
             }
           },
           "expect": {
@@ -170,7 +170,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "create",
             "args": {}
@@ -181,7 +181,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "getAuthorization",
             "args": {}
@@ -194,7 +194,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o80"
+              "$obj": "o3894"
             },
             "method": "skip",
             "args": {
@@ -209,7 +209,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o85"
+                      "as": "o3899"
                     }
                   },
                   {
@@ -220,7 +220,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o86"
+                      "as": "o3900"
                     }
                   },
                   {
@@ -232,10 +232,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o85"
+                            "$obj": "o3899"
                           },
                           {
-                            "$obj": "o86"
+                            "$obj": "o3900"
                           }
                         ],
                         "permissions": [
@@ -243,22 +243,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o87"
+                      "as": "o3901"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o84"
+                        "$obj": "o3898"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o87"
+                          "$obj": "o3901"
                         }
                       },
-                      "as": "o88"
+                      "as": "o3902"
                     },
                     "return": true
                   }
@@ -266,7 +266,7 @@
               }
             }
           },
-          "bind": "s142",
+          "bind": "s7906",
           "expect": {
             "result": {
               "$document": {
@@ -467,7 +467,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "getAuthorization",
             "args": {}
@@ -480,7 +480,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o80"
+              "$obj": "o3894"
             },
             "method": "skip",
             "args": {
@@ -496,20 +496,20 @@
                           "title": "Q3"
                         }
                       },
-                      "as": "o89"
+                      "as": "o3903"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o84"
+                        "$obj": "o3898"
                       },
                       "method": "createDocument",
                       "args": {
                         "collection": "reports",
                         "document": {
-                          "$obj": "o89"
+                          "$obj": "o3903"
                         }
                       }
                     },
@@ -519,7 +519,7 @@
               }
             }
           },
-          "bind": "s144",
+          "bind": "s7908",
           "expect": {
             "result": {
               "$document": {
@@ -566,7 +566,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "withCache",
             "args": {
@@ -577,14 +577,14 @@
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o84"
+                        "$obj": "o3898"
                       },
                       "method": "getDocument",
                       "args": {
                         "collection": "reports",
                         "id": "q3"
                       },
-                      "as": "o90"
+                      "as": "o3904"
                     },
                     "return": true
                   }
@@ -592,7 +592,7 @@
               }
             }
           },
-          "bind": "s145",
+          "bind": "s7909",
           "expect": {
             "result": {
               "$document": {
@@ -633,7 +633,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o90"
+              "$obj": "o3904"
             },
             "method": "getAttribute",
             "args": {
@@ -646,16 +646,16 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "withCache",
             "args": {
               "key": "reports:summary",
               "callback": true
             },
-            "as": "o91"
+            "as": "o3905"
           },
-          "bind": "s147",
+          "bind": "s7911",
           "expect": {
             "result": {
               "$document": {
@@ -678,7 +678,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o91"
+              "$obj": "o3905"
             },
             "method": "getAttribute",
             "args": {
@@ -695,9 +695,9 @@
             "args": {
               "identifier": "reader"
             },
-            "as": "o92"
+            "as": "o3906"
           },
-          "bind": "s149",
+          "bind": "s7913",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -707,7 +707,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o92"
+              "$obj": "o3906"
             },
             "method": "toString",
             "args": {}
@@ -718,7 +718,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o80"
+              "$obj": "o3894"
             },
             "method": "removeRole",
             "args": {
@@ -733,7 +733,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o84"
+              "$obj": "o3898"
             },
             "method": "withCache",
             "args": {
@@ -759,9 +759,9 @@
           "args": {
             "class": "Validator\\Authorization",
             "args": {},
-            "as": "o93"
+            "as": "o3907"
           },
-          "bind": "s153",
+          "bind": "s7917",
           "expect": {
             "$authorization": true
           }
@@ -774,9 +774,9 @@
             "args": {
               "identifier": "owner"
             },
-            "as": "o94"
+            "as": "o3908"
           },
-          "bind": "s154",
+          "bind": "s7918",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -786,7 +786,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o94"
+              "$obj": "o3908"
             },
             "method": "toString",
             "args": {}
@@ -797,7 +797,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o93"
+              "$obj": "o3907"
             },
             "method": "addRole",
             "args": {
@@ -813,9 +813,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o95"
+            "as": "o3909"
           },
-          "bind": "s157",
+          "bind": "s7921",
           "expect": {
             "$adapter": "Memory"
           }
@@ -826,13 +826,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o95"
+                "$obj": "o3909"
               },
               "cache": "memory"
             },
-            "as": "o96"
+            "as": "o3910"
           },
-          "bind": "s158",
+          "bind": "s7922",
           "expect": {
             "$database": true
           }
@@ -841,12 +841,12 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "setAuthorization",
             "args": {
               "authorization": {
-                "$obj": "o93"
+                "$obj": "o3907"
               }
             }
           },
@@ -858,7 +858,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "setDatabase",
             "args": {
@@ -873,11 +873,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000006"
+              "namespace": "with_cache_u000000000124"
             }
           },
           "expect": {
@@ -888,7 +888,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "create",
             "args": {}
@@ -899,7 +899,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "getAuthorization",
             "args": {}
@@ -912,7 +912,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o93"
+              "$obj": "o3907"
             },
             "method": "skip",
             "args": {
@@ -927,7 +927,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o97"
+                      "as": "o3911"
                     }
                   },
                   {
@@ -938,7 +938,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o98"
+                      "as": "o3912"
                     }
                   },
                   {
@@ -950,31 +950,31 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o97"
+                            "$obj": "o3911"
                           },
                           {
-                            "$obj": "o98"
+                            "$obj": "o3912"
                           }
                         ],
                         "permissions": [],
                         "documentSecurity": true
                       },
-                      "as": "o99"
+                      "as": "o3913"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o96"
+                        "$obj": "o3910"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o99"
+                          "$obj": "o3913"
                         }
                       },
-                      "as": "o100"
+                      "as": "o3914"
                     },
                     "return": true
                   }
@@ -982,7 +982,7 @@
               }
             }
           },
-          "bind": "s164",
+          "bind": "s7928",
           "expect": {
             "result": {
               "$document": {
@@ -1177,7 +1177,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "getAuthorization",
             "args": {}
@@ -1190,7 +1190,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o93"
+              "$obj": "o3907"
             },
             "method": "skip",
             "args": {
@@ -1204,7 +1204,7 @@
                       "args": {
                         "identifier": "owner"
                       },
-                      "as": "o101"
+                      "as": "o3915"
                     }
                   },
                   {
@@ -1214,7 +1214,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o101"
+                          "$obj": "o3915"
                         }
                       }
                     }
@@ -1232,20 +1232,20 @@
                           "title": "Q3"
                         }
                       },
-                      "as": "o102"
+                      "as": "o3916"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o96"
+                        "$obj": "o3910"
                       },
                       "method": "createDocument",
                       "args": {
                         "collection": "reports",
                         "document": {
-                          "$obj": "o102"
+                          "$obj": "o3916"
                         }
                       }
                     },
@@ -1255,7 +1255,7 @@
               }
             }
           },
-          "bind": "s166",
+          "bind": "s7930",
           "expect": {
             "result": {
               "$document": {
@@ -1314,7 +1314,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "withCache",
             "args": {
@@ -1325,14 +1325,14 @@
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o96"
+                        "$obj": "o3910"
                       },
                       "method": "getDocument",
                       "args": {
                         "collection": "reports",
                         "id": "q3"
                       },
-                      "as": "o103"
+                      "as": "o3917"
                     },
                     "return": true
                   }
@@ -1340,7 +1340,7 @@
               }
             }
           },
-          "bind": "s167",
+          "bind": "s7931",
           "expect": {
             "result": {
               "$document": {
@@ -1385,7 +1385,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o103"
+              "$obj": "o3917"
             },
             "method": "getAttribute",
             "args": {
@@ -1402,9 +1402,9 @@
             "args": {
               "identifier": "owner"
             },
-            "as": "o104"
+            "as": "o3918"
           },
-          "bind": "s169",
+          "bind": "s7933",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1414,7 +1414,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o104"
+              "$obj": "o3918"
             },
             "method": "toString",
             "args": {}
@@ -1425,7 +1425,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o93"
+              "$obj": "o3907"
             },
             "method": "removeRole",
             "args": {
@@ -1444,9 +1444,9 @@
             "args": {
               "identifier": "stranger"
             },
-            "as": "o105"
+            "as": "o3919"
           },
-          "bind": "s172",
+          "bind": "s7936",
           "expect": {
             "$value": "Role",
             "fields": {}
@@ -1456,7 +1456,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o105"
+              "$obj": "o3919"
             },
             "method": "toString",
             "args": {}
@@ -1467,7 +1467,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o93"
+              "$obj": "o3907"
             },
             "method": "addRole",
             "args": {
@@ -1482,7 +1482,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o96"
+              "$obj": "o3910"
             },
             "method": "withCache",
             "args": {
@@ -1493,14 +1493,14 @@
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o96"
+                        "$obj": "o3910"
                       },
                       "method": "getDocument",
                       "args": {
                         "collection": "reports",
                         "id": "q3"
                       },
-                      "as": "o106"
+                      "as": "o3920"
                     },
                     "return": true
                   }
@@ -1508,7 +1508,7 @@
               }
             }
           },
-          "bind": "s175",
+          "bind": "s7939",
           "expect": {
             "result": {
               "$document": {}
@@ -1531,7 +1531,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o106"
+              "$obj": "o3920"
             },
             "method": "isEmpty",
             "args": {}
@@ -1549,9 +1549,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o107"
+            "as": "o3921"
           },
-          "bind": "s177",
+          "bind": "s7941",
           "expect": {
             "$adapter": "Memory"
           }
@@ -1562,13 +1562,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o107"
+                "$obj": "o3921"
               },
               "cache": "memory"
             },
-            "as": "o108"
+            "as": "o3922"
           },
-          "bind": "s178",
+          "bind": "s7942",
           "expect": {
             "$database": true
           }
@@ -1577,7 +1577,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "setDatabase",
             "args": {
@@ -1592,11 +1592,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000007"
+              "namespace": "with_cache_u000000000125"
             }
           },
           "expect": {
@@ -1607,7 +1607,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "create",
             "args": {}
@@ -1618,13 +1618,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o109"
+            "as": "o3923"
           },
-          "bind": "s182",
+          "bind": "s7946",
           "expect": {
             "$authorization": true
           }
@@ -1633,7 +1633,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o109"
+              "$obj": "o3923"
             },
             "method": "skip",
             "args": {
@@ -1648,7 +1648,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o110"
+                      "as": "o3924"
                     }
                   },
                   {
@@ -1659,7 +1659,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o111"
+                      "as": "o3925"
                     }
                   },
                   {
@@ -1668,7 +1668,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o112"
+                      "as": "o3926"
                     }
                   },
                   {
@@ -1678,7 +1678,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o112"
+                          "$obj": "o3926"
                         }
                       }
                     }
@@ -1689,7 +1689,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o113"
+                      "as": "o3927"
                     }
                   },
                   {
@@ -1699,7 +1699,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o113"
+                          "$obj": "o3927"
                         }
                       }
                     }
@@ -1710,7 +1710,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o114"
+                      "as": "o3928"
                     }
                   },
                   {
@@ -1720,7 +1720,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o114"
+                          "$obj": "o3928"
                         }
                       }
                     }
@@ -1734,10 +1734,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o110"
+                            "$obj": "o3924"
                           },
                           {
-                            "$obj": "o111"
+                            "$obj": "o3925"
                           }
                         ],
                         "permissions": [
@@ -1747,22 +1747,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o115"
+                      "as": "o3929"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o108"
+                        "$obj": "o3922"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o115"
+                          "$obj": "o3929"
                         }
                       },
-                      "as": "o116"
+                      "as": "o3930"
                     },
                     "return": true
                   }
@@ -1770,7 +1770,7 @@
               }
             }
           },
-          "bind": "s183",
+          "bind": "s7947",
           "expect": {
             "result": {
               "$document": {
@@ -1998,9 +1998,9 @@
                 "title": "Q3"
               }
             },
-            "as": "o117"
+            "as": "o3931"
           },
-          "bind": "s184",
+          "bind": "s7948",
           "expect": {
             "$document": {
               "$id": "q3",
@@ -2012,13 +2012,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "createDocument",
             "args": {
               "collection": "reports",
               "document": {
-                "$obj": "o117"
+                "$obj": "o3931"
               }
             }
           },
@@ -2039,7 +2039,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "withCache",
             "args": {
@@ -2050,7 +2050,7 @@
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o108"
+                        "$obj": "o3922"
                       },
                       "method": "find",
                       "args": {
@@ -2107,7 +2107,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "deleteCollection",
             "args": {
@@ -2120,7 +2120,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o108"
+              "$obj": "o3922"
             },
             "method": "withCache",
             "args": {
@@ -2130,7 +2130,7 @@
                   {
                     "op": "$return",
                     "args": {
-                      "value": "recomputed6ad072d519f852.33204694"
+                      "value": "recomputed6ae70f741713d0.02122155"
                     }
                   }
                 ]
@@ -2138,7 +2138,7 @@
             }
           },
           "expect": {
-            "result": "recomputed6ad072d519f852.33204694",
+            "result": "recomputed6ae70f741713d0.02122155",
             "calls": {
               "callback": [
                 {
@@ -2162,9 +2162,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o129"
+            "as": "o3943"
           },
-          "bind": "s203",
+          "bind": "s7967",
           "expect": {
             "$adapter": "Memory"
           }
@@ -2175,13 +2175,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o129"
+                "$obj": "o3943"
               },
               "cache": "memory"
             },
-            "as": "o130"
+            "as": "o3944"
           },
-          "bind": "s204",
+          "bind": "s7968",
           "expect": {
             "$database": true
           }
@@ -2190,7 +2190,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o130"
+              "$obj": "o3944"
             },
             "method": "setDatabase",
             "args": {
@@ -2205,11 +2205,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o130"
+              "$obj": "o3944"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000009"
+              "namespace": "with_cache_u000000000127"
             }
           },
           "expect": {
@@ -2220,7 +2220,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o130"
+              "$obj": "o3944"
             },
             "method": "create",
             "args": {}
@@ -2231,13 +2231,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o130"
+              "$obj": "o3944"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o131"
+            "as": "o3945"
           },
-          "bind": "s208",
+          "bind": "s7972",
           "expect": {
             "$authorization": true
           }
@@ -2246,7 +2246,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o131"
+              "$obj": "o3945"
             },
             "method": "skip",
             "args": {
@@ -2261,7 +2261,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o132"
+                      "as": "o3946"
                     }
                   },
                   {
@@ -2272,7 +2272,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o133"
+                      "as": "o3947"
                     }
                   },
                   {
@@ -2281,7 +2281,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o134"
+                      "as": "o3948"
                     }
                   },
                   {
@@ -2291,7 +2291,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o134"
+                          "$obj": "o3948"
                         }
                       }
                     }
@@ -2302,7 +2302,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o135"
+                      "as": "o3949"
                     }
                   },
                   {
@@ -2312,7 +2312,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o135"
+                          "$obj": "o3949"
                         }
                       }
                     }
@@ -2323,7 +2323,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o136"
+                      "as": "o3950"
                     }
                   },
                   {
@@ -2333,7 +2333,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o136"
+                          "$obj": "o3950"
                         }
                       }
                     }
@@ -2347,10 +2347,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o132"
+                            "$obj": "o3946"
                           },
                           {
-                            "$obj": "o133"
+                            "$obj": "o3947"
                           }
                         ],
                         "permissions": [
@@ -2360,22 +2360,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o137"
+                      "as": "o3951"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o130"
+                        "$obj": "o3944"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o137"
+                          "$obj": "o3951"
                         }
                       },
-                      "as": "o138"
+                      "as": "o3952"
                     },
                     "return": true
                   }
@@ -2383,7 +2383,7 @@
               }
             }
           },
-          "bind": "s209",
+          "bind": "s7973",
           "expect": {
             "result": {
               "$document": {
@@ -2605,7 +2605,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o130"
+              "$obj": "o3944"
             },
             "method": "withCache",
             "args": {
@@ -2647,9 +2647,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o139"
+            "as": "o3953"
           },
-          "bind": "s211",
+          "bind": "s7975",
           "expect": {
             "$adapter": "Memory"
           }
@@ -2660,13 +2660,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o139"
+                "$obj": "o3953"
               },
               "cache": "memory"
             },
-            "as": "o140"
+            "as": "o3954"
           },
-          "bind": "s212",
+          "bind": "s7976",
           "expect": {
             "$database": true
           }
@@ -2675,7 +2675,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o140"
+              "$obj": "o3954"
             },
             "method": "setDatabase",
             "args": {
@@ -2690,11 +2690,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o140"
+              "$obj": "o3954"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000010"
+              "namespace": "with_cache_u000000000128"
             }
           },
           "expect": {
@@ -2705,7 +2705,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o140"
+              "$obj": "o3954"
             },
             "method": "create",
             "args": {}
@@ -2716,13 +2716,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o140"
+              "$obj": "o3954"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o141"
+            "as": "o3955"
           },
-          "bind": "s216",
+          "bind": "s7980",
           "expect": {
             "$authorization": true
           }
@@ -2731,7 +2731,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o141"
+              "$obj": "o3955"
             },
             "method": "skip",
             "args": {
@@ -2746,7 +2746,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o142"
+                      "as": "o3956"
                     }
                   },
                   {
@@ -2757,7 +2757,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o143"
+                      "as": "o3957"
                     }
                   },
                   {
@@ -2766,7 +2766,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o144"
+                      "as": "o3958"
                     }
                   },
                   {
@@ -2776,7 +2776,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o144"
+                          "$obj": "o3958"
                         }
                       }
                     }
@@ -2787,7 +2787,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o145"
+                      "as": "o3959"
                     }
                   },
                   {
@@ -2797,7 +2797,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o145"
+                          "$obj": "o3959"
                         }
                       }
                     }
@@ -2808,7 +2808,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o146"
+                      "as": "o3960"
                     }
                   },
                   {
@@ -2818,7 +2818,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o146"
+                          "$obj": "o3960"
                         }
                       }
                     }
@@ -2832,10 +2832,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o142"
+                            "$obj": "o3956"
                           },
                           {
-                            "$obj": "o143"
+                            "$obj": "o3957"
                           }
                         ],
                         "permissions": [
@@ -2845,22 +2845,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o147"
+                      "as": "o3961"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o140"
+                        "$obj": "o3954"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o147"
+                          "$obj": "o3961"
                         }
                       },
-                      "as": "o148"
+                      "as": "o3962"
                     },
                     "return": true
                   }
@@ -2868,7 +2868,7 @@
               }
             }
           },
-          "bind": "s217",
+          "bind": "s7981",
           "expect": {
             "result": {
               "$document": {
@@ -3090,7 +3090,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o140"
+              "$obj": "o3954"
             },
             "method": "withCache",
             "args": {
@@ -3132,9 +3132,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o149"
+            "as": "o3963"
           },
-          "bind": "s219",
+          "bind": "s7983",
           "expect": {
             "$adapter": "Memory"
           }
@@ -3145,13 +3145,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o149"
+                "$obj": "o3963"
               },
               "cache": "memory"
             },
-            "as": "o150"
+            "as": "o3964"
           },
-          "bind": "s220",
+          "bind": "s7984",
           "expect": {
             "$database": true
           }
@@ -3160,7 +3160,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o150"
+              "$obj": "o3964"
             },
             "method": "setDatabase",
             "args": {
@@ -3175,11 +3175,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o150"
+              "$obj": "o3964"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000011"
+              "namespace": "with_cache_u000000000129"
             }
           },
           "expect": {
@@ -3190,7 +3190,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o150"
+              "$obj": "o3964"
             },
             "method": "create",
             "args": {}
@@ -3201,13 +3201,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o150"
+              "$obj": "o3964"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o151"
+            "as": "o3965"
           },
-          "bind": "s224",
+          "bind": "s7988",
           "expect": {
             "$authorization": true
           }
@@ -3216,7 +3216,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o151"
+              "$obj": "o3965"
             },
             "method": "skip",
             "args": {
@@ -3231,7 +3231,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o152"
+                      "as": "o3966"
                     }
                   },
                   {
@@ -3242,7 +3242,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o153"
+                      "as": "o3967"
                     }
                   },
                   {
@@ -3251,7 +3251,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o154"
+                      "as": "o3968"
                     }
                   },
                   {
@@ -3261,7 +3261,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o154"
+                          "$obj": "o3968"
                         }
                       }
                     }
@@ -3272,7 +3272,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o155"
+                      "as": "o3969"
                     }
                   },
                   {
@@ -3282,7 +3282,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o155"
+                          "$obj": "o3969"
                         }
                       }
                     }
@@ -3293,7 +3293,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o156"
+                      "as": "o3970"
                     }
                   },
                   {
@@ -3303,7 +3303,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o156"
+                          "$obj": "o3970"
                         }
                       }
                     }
@@ -3317,10 +3317,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o152"
+                            "$obj": "o3966"
                           },
                           {
-                            "$obj": "o153"
+                            "$obj": "o3967"
                           }
                         ],
                         "permissions": [
@@ -3330,22 +3330,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o157"
+                      "as": "o3971"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o150"
+                        "$obj": "o3964"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o157"
+                          "$obj": "o3971"
                         }
                       },
-                      "as": "o158"
+                      "as": "o3972"
                     },
                     "return": true
                   }
@@ -3353,7 +3353,7 @@
               }
             }
           },
-          "bind": "s225",
+          "bind": "s7989",
           "expect": {
             "result": {
               "$document": {
@@ -3575,7 +3575,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o150"
+              "$obj": "o3964"
             },
             "method": "withCache",
             "args": {
@@ -3617,9 +3617,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o159"
+            "as": "o3973"
           },
-          "bind": "s227",
+          "bind": "s7991",
           "expect": {
             "$adapter": "Memory"
           }
@@ -3630,13 +3630,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o159"
+                "$obj": "o3973"
               },
               "cache": "memory"
             },
-            "as": "o160"
+            "as": "o3974"
           },
-          "bind": "s228",
+          "bind": "s7992",
           "expect": {
             "$database": true
           }
@@ -3645,7 +3645,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o160"
+              "$obj": "o3974"
             },
             "method": "setDatabase",
             "args": {
@@ -3660,11 +3660,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o160"
+              "$obj": "o3974"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000012"
+              "namespace": "with_cache_u000000000130"
             }
           },
           "expect": {
@@ -3675,7 +3675,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o160"
+              "$obj": "o3974"
             },
             "method": "create",
             "args": {}
@@ -3686,13 +3686,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o160"
+              "$obj": "o3974"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o161"
+            "as": "o3975"
           },
-          "bind": "s232",
+          "bind": "s7996",
           "expect": {
             "$authorization": true
           }
@@ -3701,7 +3701,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o161"
+              "$obj": "o3975"
             },
             "method": "skip",
             "args": {
@@ -3716,7 +3716,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o162"
+                      "as": "o3976"
                     }
                   },
                   {
@@ -3727,7 +3727,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o163"
+                      "as": "o3977"
                     }
                   },
                   {
@@ -3736,7 +3736,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o164"
+                      "as": "o3978"
                     }
                   },
                   {
@@ -3746,7 +3746,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o164"
+                          "$obj": "o3978"
                         }
                       }
                     }
@@ -3757,7 +3757,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o165"
+                      "as": "o3979"
                     }
                   },
                   {
@@ -3767,7 +3767,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o165"
+                          "$obj": "o3979"
                         }
                       }
                     }
@@ -3778,7 +3778,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o166"
+                      "as": "o3980"
                     }
                   },
                   {
@@ -3788,7 +3788,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o166"
+                          "$obj": "o3980"
                         }
                       }
                     }
@@ -3802,10 +3802,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o162"
+                            "$obj": "o3976"
                           },
                           {
-                            "$obj": "o163"
+                            "$obj": "o3977"
                           }
                         ],
                         "permissions": [
@@ -3815,22 +3815,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o167"
+                      "as": "o3981"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o160"
+                        "$obj": "o3974"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o167"
+                          "$obj": "o3981"
                         }
                       },
-                      "as": "o168"
+                      "as": "o3982"
                     },
                     "return": true
                   }
@@ -3838,7 +3838,7 @@
               }
             }
           },
-          "bind": "s233",
+          "bind": "s7997",
           "expect": {
             "result": {
               "$document": {
@@ -4060,7 +4060,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o160"
+              "$obj": "o3974"
             },
             "method": "withCache",
             "args": {
@@ -4102,9 +4102,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o169"
+            "as": "o3983"
           },
-          "bind": "s235",
+          "bind": "s7999",
           "expect": {
             "$adapter": "Memory"
           }
@@ -4115,13 +4115,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o169"
+                "$obj": "o3983"
               },
               "cache": "memory"
             },
-            "as": "o170"
+            "as": "o3984"
           },
-          "bind": "s236",
+          "bind": "s8000",
           "expect": {
             "$database": true
           }
@@ -4130,7 +4130,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o170"
+              "$obj": "o3984"
             },
             "method": "setDatabase",
             "args": {
@@ -4145,11 +4145,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o170"
+              "$obj": "o3984"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000013"
+              "namespace": "with_cache_u000000000131"
             }
           },
           "expect": {
@@ -4160,7 +4160,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o170"
+              "$obj": "o3984"
             },
             "method": "create",
             "args": {}
@@ -4171,13 +4171,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o170"
+              "$obj": "o3984"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o171"
+            "as": "o3985"
           },
-          "bind": "s240",
+          "bind": "s8004",
           "expect": {
             "$authorization": true
           }
@@ -4186,7 +4186,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o171"
+              "$obj": "o3985"
             },
             "method": "skip",
             "args": {
@@ -4201,7 +4201,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o172"
+                      "as": "o3986"
                     }
                   },
                   {
@@ -4212,7 +4212,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o173"
+                      "as": "o3987"
                     }
                   },
                   {
@@ -4221,7 +4221,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o174"
+                      "as": "o3988"
                     }
                   },
                   {
@@ -4231,7 +4231,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o174"
+                          "$obj": "o3988"
                         }
                       }
                     }
@@ -4242,7 +4242,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o175"
+                      "as": "o3989"
                     }
                   },
                   {
@@ -4252,7 +4252,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o175"
+                          "$obj": "o3989"
                         }
                       }
                     }
@@ -4263,7 +4263,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o176"
+                      "as": "o3990"
                     }
                   },
                   {
@@ -4273,7 +4273,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o176"
+                          "$obj": "o3990"
                         }
                       }
                     }
@@ -4287,10 +4287,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o172"
+                            "$obj": "o3986"
                           },
                           {
-                            "$obj": "o173"
+                            "$obj": "o3987"
                           }
                         ],
                         "permissions": [
@@ -4300,22 +4300,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o177"
+                      "as": "o3991"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o170"
+                        "$obj": "o3984"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o177"
+                          "$obj": "o3991"
                         }
                       },
-                      "as": "o178"
+                      "as": "o3992"
                     },
                     "return": true
                   }
@@ -4323,7 +4323,7 @@
               }
             }
           },
-          "bind": "s241",
+          "bind": "s8005",
           "expect": {
             "result": {
               "$document": {
@@ -4545,7 +4545,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o170"
+              "$obj": "o3984"
             },
             "method": "withCache",
             "args": {
@@ -4587,9 +4587,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o179"
+            "as": "o3993"
           },
-          "bind": "s243",
+          "bind": "s8007",
           "expect": {
             "$adapter": "Memory"
           }
@@ -4600,13 +4600,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o179"
+                "$obj": "o3993"
               },
               "cache": "memory"
             },
-            "as": "o180"
+            "as": "o3994"
           },
-          "bind": "s244",
+          "bind": "s8008",
           "expect": {
             "$database": true
           }
@@ -4615,7 +4615,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o180"
+              "$obj": "o3994"
             },
             "method": "setDatabase",
             "args": {
@@ -4630,11 +4630,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o180"
+              "$obj": "o3994"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000014"
+              "namespace": "with_cache_u000000000132"
             }
           },
           "expect": {
@@ -4645,7 +4645,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o180"
+              "$obj": "o3994"
             },
             "method": "create",
             "args": {}
@@ -4656,13 +4656,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o180"
+              "$obj": "o3994"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o181"
+            "as": "o3995"
           },
-          "bind": "s248",
+          "bind": "s8012",
           "expect": {
             "$authorization": true
           }
@@ -4671,7 +4671,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o181"
+              "$obj": "o3995"
             },
             "method": "skip",
             "args": {
@@ -4686,7 +4686,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o182"
+                      "as": "o3996"
                     }
                   },
                   {
@@ -4697,7 +4697,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o183"
+                      "as": "o3997"
                     }
                   },
                   {
@@ -4706,7 +4706,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o184"
+                      "as": "o3998"
                     }
                   },
                   {
@@ -4716,7 +4716,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o184"
+                          "$obj": "o3998"
                         }
                       }
                     }
@@ -4727,7 +4727,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o185"
+                      "as": "o3999"
                     }
                   },
                   {
@@ -4737,7 +4737,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o185"
+                          "$obj": "o3999"
                         }
                       }
                     }
@@ -4748,7 +4748,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o186"
+                      "as": "o4000"
                     }
                   },
                   {
@@ -4758,7 +4758,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o186"
+                          "$obj": "o4000"
                         }
                       }
                     }
@@ -4772,10 +4772,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o182"
+                            "$obj": "o3996"
                           },
                           {
-                            "$obj": "o183"
+                            "$obj": "o3997"
                           }
                         ],
                         "permissions": [
@@ -4785,22 +4785,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o187"
+                      "as": "o4001"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o180"
+                        "$obj": "o3994"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o187"
+                          "$obj": "o4001"
                         }
                       },
-                      "as": "o188"
+                      "as": "o4002"
                     },
                     "return": true
                   }
@@ -4808,7 +4808,7 @@
               }
             }
           },
-          "bind": "s249",
+          "bind": "s8013",
           "expect": {
             "result": {
               "$document": {
@@ -5030,7 +5030,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o180"
+              "$obj": "o3994"
             },
             "method": "withCache",
             "args": {
@@ -5060,6 +5060,34 @@
               ]
             }
           }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o3994"
+            },
+            "method": "withCache",
+            "args": {
+              "key": "reports:summary",
+              "callback": {
+                "steps": [
+                  {
+                    "op": "$return",
+                    "args": {
+                      "value": "newer"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": "computed",
+            "calls": {
+              "callback": []
+            }
+          }
         }
       ]
     },
@@ -5072,9 +5100,9 @@
           "args": {
             "class": "Adapter\\Memory",
             "args": {},
-            "as": "o189"
+            "as": "o4003"
           },
-          "bind": "s251",
+          "bind": "s8016",
           "expect": {
             "$adapter": "Memory"
           }
@@ -5085,13 +5113,13 @@
             "class": "Database",
             "args": {
               "adapter": {
-                "$obj": "o189"
+                "$obj": "o4003"
               },
               "cache": "memory"
             },
-            "as": "o190"
+            "as": "o4004"
           },
-          "bind": "s252",
+          "bind": "s8017",
           "expect": {
             "$database": true
           }
@@ -5100,7 +5128,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o190"
+              "$obj": "o4004"
             },
             "method": "setDatabase",
             "args": {
@@ -5115,11 +5143,11 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o190"
+              "$obj": "o4004"
             },
             "method": "setNamespace",
             "args": {
-              "namespace": "with_cache_u000000000015"
+              "namespace": "with_cache_u000000000133"
             }
           },
           "expect": {
@@ -5130,7 +5158,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o190"
+              "$obj": "o4004"
             },
             "method": "create",
             "args": {}
@@ -5141,13 +5169,13 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o190"
+              "$obj": "o4004"
             },
             "method": "getAuthorization",
             "args": {},
-            "as": "o191"
+            "as": "o4005"
           },
-          "bind": "s256",
+          "bind": "s8021",
           "expect": {
             "$authorization": true
           }
@@ -5156,7 +5184,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o191"
+              "$obj": "o4005"
             },
             "method": "skip",
             "args": {
@@ -5171,7 +5199,7 @@
                         "key": "title",
                         "size": 32
                       },
-                      "as": "o192"
+                      "as": "o4006"
                     }
                   },
                   {
@@ -5182,7 +5210,7 @@
                       "args": {
                         "key": "publishedAt"
                       },
-                      "as": "o193"
+                      "as": "o4007"
                     }
                   },
                   {
@@ -5191,7 +5219,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o194"
+                      "as": "o4008"
                     }
                   },
                   {
@@ -5201,7 +5229,7 @@
                       "method": "create",
                       "args": {
                         "role": {
-                          "$obj": "o194"
+                          "$obj": "o4008"
                         }
                       }
                     }
@@ -5212,7 +5240,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o195"
+                      "as": "o4009"
                     }
                   },
                   {
@@ -5222,7 +5250,7 @@
                       "method": "read",
                       "args": {
                         "role": {
-                          "$obj": "o195"
+                          "$obj": "o4009"
                         }
                       }
                     }
@@ -5233,7 +5261,7 @@
                       "class": "Role",
                       "method": "any",
                       "args": {},
-                      "as": "o196"
+                      "as": "o4010"
                     }
                   },
                   {
@@ -5243,7 +5271,7 @@
                       "method": "delete",
                       "args": {
                         "role": {
-                          "$obj": "o196"
+                          "$obj": "o4010"
                         }
                       }
                     }
@@ -5257,10 +5285,10 @@
                         "id": "reports",
                         "attributes": [
                           {
-                            "$obj": "o192"
+                            "$obj": "o4006"
                           },
                           {
-                            "$obj": "o193"
+                            "$obj": "o4007"
                           }
                         ],
                         "permissions": [
@@ -5270,22 +5298,22 @@
                         ],
                         "documentSecurity": false
                       },
-                      "as": "o197"
+                      "as": "o4011"
                     }
                   },
                   {
                     "op": "object.call",
                     "args": {
                       "this": {
-                        "$obj": "o190"
+                        "$obj": "o4004"
                       },
                       "method": "createCollection",
                       "args": {
                         "collection": {
-                          "$obj": "o197"
+                          "$obj": "o4011"
                         }
                       },
-                      "as": "o198"
+                      "as": "o4012"
                     },
                     "return": true
                   }
@@ -5293,7 +5321,7 @@
               }
             }
           },
-          "bind": "s257",
+          "bind": "s8022",
           "expect": {
             "result": {
               "$document": {
@@ -5515,7 +5543,7 @@
           "op": "object.call",
           "args": {
             "this": {
-              "$obj": "o190"
+              "$obj": "o4004"
             },
             "method": "withCache",
             "args": {

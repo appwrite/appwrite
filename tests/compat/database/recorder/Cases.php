@@ -531,6 +531,8 @@ final class Cases
 
     private const JOINED_TIME = 'rows a read orders or groups by a joined $createdAt or $updatedAt, which the recording masks: their order and grouping depend on the millisecond each row was written in';
 
+    private const CAS_VERSION = 'a cache identifies a key\'s state by a random CAS version (utopia-php/database 10.0.0), its own in each runtime';
+
     /**
      * Whether encoded arguments order or group by a joined `$createdAt` or
      * `$updatedAt` (`<alias>.$createdAt`), nested queries included.
@@ -609,6 +611,20 @@ final class Cases
         // A profiler's logs read by unit tests (object.call), directly or in a callback.
         if (str_contains($args, '"method":"getLogs"') || str_contains($args, '"method":"getSlowQueries"')) {
             return ['paths' => ['/*/fields/durationMs', '/*/fields/backtrace', '/calls/*/*/steps/*/*/fields/durationMs', '/calls/*/*/steps/*/*/fields/backtrace'], 'reason' => 'a profiled statement\'s duration and the PHP stack it ran from are the runtime\'s own'];
+        }
+        // 10.0.0's caches identify a key's state by an opaque, random CAS version: a query cache epoch
+        // (`active:<version>`), a lease, a mutation record's epoch.
+        if ($step->op === 'object.call' && ($step->args['method'] ?? '') === 'getEntry') {
+            return ['paths' => ['/fields/epoch'], 'reason' => self::CAS_VERSION];
+        }
+        if ($step->op === 'object.call' && ($step->args['method'] ?? '') === 'getLease') {
+            return ['paths' => [''], 'reason' => self::CAS_VERSION];
+        }
+        if ($step->op === 'db.cache' && ($step->args['method'] ?? '') === 'get_lease') {
+            return ['paths' => [''], 'reason' => self::CAS_VERSION];
+        }
+        if ($step->op === 'object.call' && ($step->args['method'] ?? '') === 'read' && str_contains($args, '"key"') && str_contains($args, '"timeout"')) {
+            return ['paths' => ['/fields/value'], 'reason' => self::CAS_VERSION];
         }
         if ($step->op === 'db.profiler' && ($step->args['method'] ?? '') === 'getTotalTime') {
             return ['paths' => [''], 'reason' => 'the time the profiled statements took'];

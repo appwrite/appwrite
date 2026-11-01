@@ -2972,7 +2972,7 @@
           "expect": {
             "$error": {
               "class": "RedisException",
-              "message": "Redis server redis:6379 went away"
+              "message": "Redis server went away"
             }
           }
         },
@@ -2985,7 +2985,7 @@
           "expect": {
             "$error": {
               "class": "RedisException",
-              "message": "Redis server redis:6379 went away"
+              "message": "Redis server went away"
             }
           }
         },
