@@ -71,6 +71,8 @@ export type ConsoleProfileFeatures = {
   projectEnvironments: boolean
   /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
   projectTransfers: boolean
+  /** Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
+  alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -139,6 +141,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   videos: 'Videos',
   projectEnvironments: 'Project environments',
   projectTransfers: 'Project transfers',
+  alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -194,6 +197,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       projectEnvironments: false,
       projectTransfers: false,
+      alerts: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -238,6 +242,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       videos: false,
       projectEnvironments: false,
       projectTransfers: false,
+      alerts: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

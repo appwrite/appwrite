@@ -1604,6 +1604,7 @@ final class MessagingTest extends TestCase
         yield 'attributes' => ['databases.database1.collections.collection1.attributes.attribute1.create'];
         yield 'columns' => ['tablesdb.database1.tables.table1.columns.column1.update'];
         yield 'indexes' => ['documentsdb.database1.collections.collection1.indexes.index1.delete'];
+        yield 'alerts' => ['monitors.monitor1.alerts.alert1.firing'];
     }
 
     #[DataProvider('consoleProjectEvents')]

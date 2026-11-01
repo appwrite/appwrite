@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -308,7 +309,7 @@ class Deletes extends Action
                         $this->deleteTeam($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
+                        $this->deleteBucket($dbForPlatform, $getProjectDB, $deviceForFiles, $document, $project);
                         break;
                     case DELETE_TYPE_VIDEOS:
                         $this->deleteVideo($getProjectDB, $deviceForVideos, $document, $project);
@@ -375,6 +376,9 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForPlatform, $getProjectDB, $datetime);
                 break;
+            case DELETE_TYPE_ALERTS:
+                $this->deleteAlerts($dbForPlatform, $datetime);
+                break;
             case DELETE_TYPE_TOPIC:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
@@ -427,6 +431,7 @@ class Deletes extends Action
             DELETE_TYPE_TEAM_PROJECTS,
             DELETE_TYPE_REALTIME,
             DELETE_TYPE_SCHEDULES,
+            DELETE_TYPE_ALERTS,
             DELETE_TYPE_CSV_EXPORTS,
             DELETE_TYPE_REPORT,
         ], true);
@@ -513,6 +518,19 @@ class Deletes extends Action
      * @throws Structure
      * @throws DatabaseException|Exception
      */
+    /**
+     * Removes this region's alerts that resolved before the retention cutoff;
+     * a firing alert is kept however old it is.
+     */
+    private function deleteAlerts(Database $dbForPlatform, string $datetime): void
+    {
+        $this->deleteByGroup('monitorAlerts', [
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+            Query::equal('status', ['resolved']),
+            Query::lessThan('resolvedAt', $datetime),
+        ], $dbForPlatform);
+    }
+
     private function deleteSchedules(Database $dbForPlatform, callable $getProjectDB, string $datetime): void
     {
         $this->listByGroup(
@@ -526,6 +544,19 @@ class Deletes extends Action
             ],
             $dbForPlatform,
             function (Document $document) use ($dbForPlatform, $getProjectDB) {
+                $resourceType = $document->getAttribute('resourceType');
+                $resourceId = $document->getAttribute('resourceId');
+
+                // Monitors live in the platform database, and a monitor need not
+                // belong to a project, so their rows go once the monitor is gone.
+                if ($resourceType === SCHEDULE_RESOURCE_TYPE_MONITOR) {
+                    if ($dbForPlatform->getDocument('monitors', $resourceId)->isEmpty()) {
+                        $dbForPlatform->deleteDocument('schedules', $document->getId());
+                        Console::success('Deleting schedule for monitor ' . $resourceId);
+                    }
+                    return;
+                }
+
                 $project = $dbForPlatform->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
@@ -533,9 +564,6 @@ class Deletes extends Action
                     Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
-
-                $resourceType = $document->getAttribute('resourceType');
-                $resourceId = $document->getAttribute('resourceId');
 
                 // One-shot execution schedules are claimed then deleted by the
                 // functions worker; this sweeper does not reap them.
@@ -1222,6 +1250,18 @@ class Deletes extends Action
             Console::error('Failed to delete webhooks: ' . $th->getMessage());
         }
 
+        // Delete monitors and the alerts they raised
+        foreach (['monitors', 'monitorAlerts'] as $collection) {
+            try {
+                $this->deleteByGroup($collection, [
+                    Query::equal('projectInternalId', [$projectInternalId]),
+                    Query::orderAsc()
+                ], $dbForPlatform);
+            } catch (Throwable $th) {
+                Console::error("Failed to delete {$collection}: " . $th->getMessage());
+            }
+        }
+
         // Delete VCS Installations
         try {
             $this->deleteByGroup('installations', [
@@ -1824,6 +1864,9 @@ class Deletes extends Action
         $siteId = $document->getId();
         $siteInternalId = $document->getSequence();
 
+        // Monitors scoped to the site go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'site', $document);
+
         /**
          * Delete rules for site
          */
@@ -1904,6 +1947,9 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $functionId = $document->getId();
         $functionInternalId = $document->getSequence();
+
+        // Monitors scoped to the function go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'function', $document);
 
         /**
          * Delete rules
@@ -2289,8 +2335,11 @@ class Deletes extends Action
      * @param Document $project
      * @return void
      */
-    private function deleteBucket(callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
+    private function deleteBucket(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
     {
+        // Monitors scoped to the bucket go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'bucket', $document);
+
         $dbForProject = $getProjectDB($project);
 
         $dbForProject->deleteCollection('bucket_' . $document->getSequence());

@@ -4,6 +4,7 @@ namespace Appwrite\Platform;
 
 use Appwrite\Platform\Modules\Account;
 use Appwrite\Platform\Modules\Advisor;
+use Appwrite\Platform\Modules\Alerts;
 use Appwrite\Platform\Modules\Avatars;
 use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
@@ -62,5 +63,6 @@ class Appwrite extends Platform
         $this->addModule(new Project\Module());
         $this->addModule(new Advisor\Module());
         $this->addModule(new Videos\Module());
+        $this->addModule(new Alerts\Module());
     }
 }

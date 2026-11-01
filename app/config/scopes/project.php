@@ -417,6 +417,18 @@ return [
             "Access to create, update, and delete webhooks",
         'category' => 'Other',
     ],
+    'monitors.read' => [
+        'description' => 'Access to read monitors',
+        'category' => 'Other',
+    ],
+    'monitors.write' => [
+        'description' => 'Access to create, update, and delete monitors',
+        'category' => 'Other',
+    ],
+    'alerts.read' => [
+        'description' => 'Access to read the alerts monitors raise',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',
