@@ -27,17 +27,24 @@ export function educationPlanDismissStorageKey(organizationId: string): string {
 
 /**
  * When the Education plan ends for an organization created at `createdAt`:
- * 6 months after creation, but never before November 1, 2026.
+ * 6 months after creation, but never before November 1, 2026, or before
+ * `extendedUntil` when support extended it. An invalid extension is ignored.
  */
 export function getEducationPlanEndsAt(
   createdAt: string | null | undefined,
+  extendedUntil?: string | null,
 ): number | null {
   if (!createdAt) return null
   const created = new Date(createdAt)
   if (Number.isNaN(created.getTime())) return null
   const endsAt = new Date(created)
   endsAt.setUTCMonth(endsAt.getUTCMonth() + EDUCATION_PLAN_DURATION_MONTHS)
-  return Math.max(endsAt.getTime(), EDUCATION_PLAN_EARLIEST_END_AT)
+  const extended = extendedUntil ? new Date(extendedUntil).getTime() : NaN
+  return Math.max(
+    endsAt.getTime(),
+    EDUCATION_PLAN_EARLIEST_END_AT,
+    Number.isNaN(extended) ? 0 : extended,
+  )
 }
 
 export function isEducationPlanEnded(

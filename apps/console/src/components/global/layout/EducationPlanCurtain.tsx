@@ -78,7 +78,12 @@ export function EducationPlanCurtain({ orgId }: EducationPlanCurtainProps) {
   const { organization } = useOrganizationById(
     features.billing ? orgId : undefined,
   )
-  const endsAt = getEducationPlanEndsAt(organization?.$createdAt)
+  // Not in the Console SDK's Organization model until Cloud releases the field.
+  const endsAt = getEducationPlanEndsAt(
+    organization?.$createdAt,
+    (organization as { educationExtendedUntil?: string | null } | null)
+      ?.educationExtendedUntil,
+  )
   if (
     !features.billing ||
     !orgId ||
