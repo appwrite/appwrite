@@ -19,6 +19,7 @@ use Appwrite\Platform\Modules\Presences;
 use Appwrite\Platform\Modules\Project;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
+use Appwrite\Platform\Modules\Reviews;
 use Appwrite\Platform\Modules\S3;
 use Appwrite\Platform\Modules\Sites;
 use Appwrite\Platform\Modules\Storage;
@@ -60,5 +61,6 @@ class Appwrite extends Platform
         $this->addModule(new Organization\Module());
         $this->addModule(new Project\Module());
         $this->addModule(new Advisor\Module());
+        $this->addModule(new Reviews\Module());
     }
 }

@@ -64,6 +64,8 @@
         "providers.write",
         "reports.read",
         "reports.write",
+        "reviews.read",
+        "reviews.write",
         "rows.read",
         "rows.write",
         "rules.read",

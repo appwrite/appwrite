@@ -450,6 +450,12 @@ class Exception extends \Exception
     public const string REPORT_NOT_FOUND = 'report_not_found';
     public const string REPORT_ALREADY_EXISTS = 'report_already_exists';
 
+    /** Reviews */
+    public const string REVIEW_NOT_FOUND = 'review_not_found';
+    public const string REVIEW_CHAT_NOT_FOUND = 'review_chat_not_found';
+    public const string REVIEW_STATUS_INVALID = 'review_status_invalid';
+    public const string REVIEW_REPOSITORY_ALREADY_EXISTS = 'review_repository_already_exists';
+
     protected string $type = '';
     protected array $errors = [];
     protected bool $publish;

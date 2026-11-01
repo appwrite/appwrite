@@ -474,6 +474,15 @@ return [
         'description' => 'Access to delete reports under Advisor service.',
         'category' => 'Advisor',
     ],
+    // Reviews
+    'reviews.read' => [
+        'description' => 'Access to read code review repositories and reviews.',
+        'category' => 'Reviews',
+    ],
+    'reviews.write' => [
+        'description' => 'Access to turn code review on and off for repositories.',
+        'category' => 'Reviews',
+    ],
     'presences.read' => [
         'description' => 'Access to read your project\'s presences',
         'category' => 'Presences',
