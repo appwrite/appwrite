@@ -124,6 +124,9 @@ $container->set('getProjectDB', fn () => function (Document $project) use ($regi
     ]);
 }, []);
 
+// The plan a project's MQTT limits come from; none here, so each limit is its APP_LIMIT_MQTT_* default.
+$container->set('getPlan', fn () => fn (string $projectId): array => [], []);
+
 $container->set('getPlanForUser', fn () => fn (Document $project, string $userId): int => (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5'), []);
 
 $container->set('getRedis', fn () => function (): \Redis {
@@ -188,7 +191,7 @@ $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub
 // The broker owns framing, decoding, dispatch, per-version encoding, packet ids, the QoS
 // handshake, keep-alive reaping and subscription matching. Appwrite policy lives in the Handler.
 $handler = new Handler($container, $mqtt, $container->get('getCache'), $container->get('getPlanForUser'), fn (): \DateTimeImmutable => new \DateTimeImmutable());
-$server = new Server($adapter, $handler);
+$server = new Server($adapter, $handler, maxKeepAlive: APP_LIMIT_MQTT_KEEP_ALIVE);
 $server->setTelemetry($telemetry); // broker owns connection/packet/subscription metrics
 
 $server->onStart(fn () => print("MQTT broker started\n"));

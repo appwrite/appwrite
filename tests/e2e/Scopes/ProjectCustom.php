@@ -95,6 +95,11 @@ trait ProjectCustom
                 'scopes' => [
                     'users.read',
                     'users.write',
+                    'keys.write',
+                    'platforms.write',
+                    'policies.write',
+                    'project.oauth2.write',
+                    'templates.write',
                     'teams.read',
                     'teams.write',
                     'databases.read',

@@ -1294,6 +1294,8 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Signing you in': 'サインインしています',
   'Please wait while we confirm your magic URL.':
     'Magic URL を確認しています。しばらくお待ちください。',
+  'Continue and sign in to this project instead?':
+    '続行して、代わりにこのプロジェクトにサインインしますか？',
   'Unable to sign you in': 'サインインできませんでした',
   'Go to sign in': 'サインインへ',
   'Access granted': 'アクセスが許可されました',
@@ -1409,4 +1411,54 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Set up auto-pay': '自動支払いを設定',
   'Auto-pay is set up': '自動支払いを設定しました',
   'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
+
+  // Zero projects
+  'Build window ended': 'ビルド期間が終了しました',
+  'Build window ended.': 'ビルド期間が終了しました。',
+  'Claim it to keep it': '引き継いで保持しましょう',
+  'Claim project': 'プロジェクトを引き継ぐ',
+  'Claim this project to create more projects':
+    'プロジェクトを追加で作成するには、このプロジェクトを引き継いでください',
+  'Claim this project to create organizations':
+    '組織を作成するには、このプロジェクトを引き継いでください',
+  'Claim this project to set a password':
+    'パスワードを設定するには、このプロジェクトを引き継いでください',
+  'Claim this project to set an email':
+    'メールアドレスを設定するには、このプロジェクトを引き継いでください',
+  'Claim within {time} or the project is deleted.':
+    '{time}以内に引き継がないと、プロジェクトは削除されます。',
+  'This project is paused and its data is kept until the claim deadline. Claim it to keep building.':
+    'このプロジェクトは一時停止中で、データは申請期限まで保持されます。引き続き開発するにはプロジェクトを申請してください。',
+  'Claim your project': 'プロジェクトを引き継ぐ',
+  'Could not sign out. Try again.':
+    'サインアウトできませんでした。もう一度お試しください。',
+  'Project deleted': 'プロジェクトは削除されました',
+  'This is a temporary project. Open the claim link you were given to keep it.':
+    'これは一時的なプロジェクトです。保持するには、受け取った引き継ぎリンクを開いてください。',
+  'This project was not claimed in time and has been deleted.':
+    '期限内に引き継がれなかったため、このプロジェクトは削除されました。',
+  'This project was not claimed in time, so it and its data were deleted.':
+    '期限内に引き継がれなかったため、このプロジェクトとそのデータは削除されました。',
+  'Zero project': 'Zero プロジェクト',
+  '{time} left to build': 'ビルド期間の残り {time}',
+  'A project moves into one of your organizations. Create one to receive it.':
+    'プロジェクトはあなたの組織のいずれかに移動します。受け取るには組織を作成してください。',
+  'Could not create the organization': '組織を作成できませんでした',
+  'Create a free organization': '無料の組織を作成',
+  'Create an account to keep this project, with everything already built in it.':
+    'アカウントを作成すると、作成済みの内容をすべて含めてこのプロジェクトを保持できます。',
+  'Sign in or create an account to claim this project.':
+    'このプロジェクトを引き継ぐには、サインインするかアカウントを作成してください。',
+  'The build window ended and the project is paused. Create an account to claim it and bring it back with all its data.':
+    'ビルド期間が終了し、プロジェクトは一時停止しています。アカウントを作成して引き継ぐと、すべてのデータとともに再開できます。',
+  'Project already claimed': 'このプロジェクトはすでに引き継がれています',
+  'This project now belongs to an account. Sign in to that account to open it.':
+    'このプロジェクトはすでにアカウントに属しています。開くにはそのアカウントでサインインしてください。',
+  'Owner role required': 'オーナー権限が必要です',
+  'Only an owner of the organization can claim a project into it.':
+    'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。',
+  'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.':
+    'プロジェクトを組織に引き継げるのは、その組織のオーナーだけです。受け取るには、あなたがオーナーとなる組織を作成してください。',
+  'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
+    'プロジェクトが引き継がれるまでは、オーナーリンクを開いたデバイスでのみサイトが開きます。先にそのデバイスで「Visit」を使用してください。',
 }

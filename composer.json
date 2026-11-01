@@ -156,7 +156,7 @@
         "ext-sockets": "*",
         "appwrite/php-runtimes": "0.20.*",
         "appwrite/php-clamav": "2.0.*",
-        "utopia-php/database": "^8.3.14",
+        "utopia-php/database": "^10.0",
         "mustangostang/spyc": "0.6.*",
         "dragonmantank/cron-expression": "3.4.*",
         "chillerlan/php-qrcode": "4.3.*",
@@ -174,7 +174,7 @@
         "psr/http-client": "^1.0",
         "psr/http-message": "^2.0",
         "psr/container": "^2.0",
-        "appwrite/appwrite": "^32.0.0",
+        "appwrite/appwrite": "^32.1.0",
         "halaxa/json-machine": "^1.2",
         "web-auth/webauthn-lib": "^5.3"
     },

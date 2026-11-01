@@ -28,11 +28,16 @@ import {
   openInNewTab,
   openInNewWindow,
 } from '@/lib/utils/context-menu'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 interface ProxyRuleContextMenuProps {
   projectId: string
@@ -56,6 +61,7 @@ export function ProxyRuleContextMenu({
   children,
 }: ProxyRuleContextMenuProps) {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const navigate = useNavigate()
   const ruleUrl = domainUrl(rule.domain)
   const apex = getApexDomain(rule.domain)
@@ -63,7 +69,6 @@ export function ProxyRuleContextMenu({
     ? apexToOrgDomainId.get(apex.toLowerCase())
     : undefined
   const canOpenDnsRecords = !!projectTeamId && !!orgDomainId
-  const canRetry = rule.status === 'created' || rule.status === 'unverified'
 
   const handleOpenDnsRecords = () => {
     if (!projectTeamId || !orgDomainId) return
@@ -77,7 +82,7 @@ export function ProxyRuleContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-56">
-        {rule.status !== 'verified' && (
+        {canViewRuleLogs(rule) && (
           <ContextMenuItem
             onSelect={() =>
               openDialogAfterOverlayCloses(() => onViewLogs(rule))
@@ -87,7 +92,7 @@ export function ProxyRuleContextMenu({
             {t('View logs')}
           </ContextMenuItem>
         )}
-        {canRetry && (
+        {canRetryRule(rule.status) && (
           <ContextMenuItem
             onSelect={() => openDialogAfterOverlayCloses(() => onRetry(rule))}
           >
@@ -136,11 +141,13 @@ export function ProxyRuleContextMenu({
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
-        <ContextMenuItem onSelect={() => openInNewTab(ruleUrl)}>
+        <ContextMenuItem onSelect={() => openInNewTab(visitUrl(rule.domain))}>
           <ContextMenuIcon icon={ExternalLink} />
           {t('Open in new tab')}
         </ContextMenuItem>
-        <ContextMenuItem onSelect={() => openInNewWindow(ruleUrl)}>
+        <ContextMenuItem
+          onSelect={() => openInNewWindow(visitUrl(rule.domain))}
+        >
           <ContextMenuIcon icon={Square} />
           {t('Open in new window')}
         </ContextMenuItem>

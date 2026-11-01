@@ -583,6 +583,15 @@ final class KeyTest extends TestCase
         $this->assertFalse($caller->mayCreate(API_KEY_STANDARD, [], '2030-01-01T12:00:01.000+00:00'));
     }
 
+    public function testMayGrantOnlyScopesItHolds(): void
+    {
+        $caller = new Key('test', '', '', API_KEY_STANDARD, User::ROLE_KEYS, ['functions.write', 'users.read'], 'Caller');
+
+        $this->assertTrue($caller->mayGrant([]));
+        $this->assertTrue($caller->mayGrant(['users.read']));
+        $this->assertFalse($caller->mayGrant(['users.read', 'users.write']));
+    }
+
     private static function generateKey(
         string $projectId,
         bool $usage,

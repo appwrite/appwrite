@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 24
+    "readingTimeMinutes": 25
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -378,7 +378,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 9
   },
   {
     "slug": "advanced/self-hosting/mcp",
@@ -497,7 +497,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 6
   },
   {
     "slug": "apis",
@@ -3031,6 +3031,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 2
   },
   {
+    "slug": "products/functions/email",
+    "title": "Email triggers",
+    "description": "Execute an Appwrite Function when an email arrives at its address. Use the built-in address of the function or connect a custom domain.",
+    "layout": "article",
+    "readingTimeMinutes": 10
+  },
+  {
     "slug": "products/functions/environment-variables",
     "title": "Environment variables",
     "description": "Set environment variables for your Appwrite Functions to pass constants and secrets at build and runtime.",
@@ -5044,7 +5051,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
   },
   {
     "slug": "tutorials/subscriptions-with-stripe/step-2",
-    "title": "Setup Stripe",
+    "title": "Set up Stripe",
     "description": "Add paid app subscription plans to your app with Stripe and Appwrite Functions.",
     "layout": "tutorial",
     "readingTimeMinutes": 2,

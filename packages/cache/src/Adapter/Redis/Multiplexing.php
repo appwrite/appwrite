@@ -36,7 +36,7 @@ use Utopia\Telemetry\UpDownCounter;
  * again by the very next command, and at typical concurrency that is a
  * coroutine per command: creating one costs more CPU than the command itself.
  */
-class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeature
+class Multiplexing extends Versioned implements Adapter, Batchable, TelemetryFeature
 {
     private ?ConnectionContext $connection = null;
 
@@ -247,7 +247,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
 
         try {
             $value = $this->envelope->encode($data, time());
-            $this->command(['HSET', $key, $hash, $value]);
+            $this->command(['HSET', $key, $hash, $value, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]);
 
             if ($ttl > 0) {
                 $this->command(['EXPIRE', $key, (string) $ttl]);
@@ -284,6 +284,9 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
+        $args[] = self::VERSION_FIELD;
+        $args[] = \bin2hex(\random_bytes(16));
+
         try {
             $this->command($args);
 
@@ -319,7 +322,7 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
             return false;
         }
 
-        return $this->command(['HSET', $key, $hash, $payload]) !== false;
+        return $this->command(['HSET', $key, $hash, $payload, self::VERSION_FIELD, \bin2hex(\random_bytes(16))]) !== false;
     }
 
     /**
@@ -355,11 +358,6 @@ class Multiplexing extends Leasable implements Adapter, Batchable, TelemetryFeat
     protected function leaseEval(string $script, string $key, array $args): mixed
     {
         return $this->command(['EVAL', $script, '1', $key, ...$args]);
-    }
-
-    protected function leaseHget(string $key, string $field): mixed
-    {
-        return $this->command(['HGET', $key, $field]);
     }
 
     public function flush(): bool

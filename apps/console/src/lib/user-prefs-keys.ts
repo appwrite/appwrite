@@ -131,6 +131,31 @@ export function clearDismissedBannerPrefs(
 }
 
 /**
+ * When the user last opened the previews popover. Previews introduced
+ * after it count as unseen. Value: ISO 8601 timestamp string.
+ */
+export const USER_PREFS_KEY_EXPERIMENTS_SEEN_AT = 'console.previews.seenAt'
+
+export function parseExperimentsSeenAt(
+  prefs: UserPrefs | null | undefined,
+): Date | null {
+  const raw = prefs?.[USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]
+  if (typeof raw !== 'string' || !raw) return null
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function mergeExperimentsSeenAtPrefs(
+  prefs: UserPrefs | null | undefined,
+  seenAt: Date,
+): UserPrefs {
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_EXPERIMENTS_SEEN_AT]: seenAt.toISOString(),
+  }
+}
+
+/**
  * Project IDs where the user dismissed the Agents landing so project root
  * goes to Overview. Value: JSON string of project ID strings.
  */
@@ -4022,6 +4047,35 @@ export function mergeServiceListViewModeIntoPrefs(
   return {
     ...prefs,
     [getServiceListViewModeKey(scope)]: mode,
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Playground mode (account prefs, shared across all projects)
+// ---------------------------------------------------------------------------
+
+export type PlaygroundMode = 'rest' | 'realtime'
+
+export const PLAYGROUND_MODE_DEFAULT: PlaygroundMode = 'rest'
+
+/** Full key: `console.playground.mode` - `"rest"` or `"realtime"`. */
+export const USER_PREFS_KEY_PLAYGROUND_MODE = 'console.playground.mode'
+
+export function parsePlaygroundMode(
+  prefs: UserPrefs | null | undefined,
+): PlaygroundMode {
+  const raw = prefs?.[USER_PREFS_KEY_PLAYGROUND_MODE]
+  if (raw === 'rest' || raw === 'realtime') return raw
+  return PLAYGROUND_MODE_DEFAULT
+}
+
+export function mergePlaygroundModeIntoPrefs(
+  prefs: UserPrefs,
+  mode: PlaygroundMode,
+): UserPrefs {
+  return {
+    ...prefs,
+    [USER_PREFS_KEY_PLAYGROUND_MODE]: mode,
   }
 }
 

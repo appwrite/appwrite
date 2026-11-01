@@ -49,6 +49,8 @@ import { toast } from 'sonner'
 import { useWizard } from './WizardContext'
 import { useT } from '@/lib/i18n/translate'
 import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
 
 interface FinishViewProps {
   siteId?: string
@@ -57,6 +59,8 @@ interface FinishViewProps {
 
 export function FinishView({ siteId, deploymentId }: FinishViewProps) {
   const t = useT()
+  const visitUrl = useVisitUrl()
+  const isZero = useIsZeroAccount()
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -140,13 +144,17 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     return null
   }, [domains])
 
-  const siteUrl = primaryDomain ? domainUrl(primaryDomain) : null
+  const siteUrl = primaryDomain ? visitUrl(primaryDomain) : null
 
   // QR code image URL from console avatars API (for "View on mobile" dialog)
   const qrImageUrl = useMemo(() => {
-    if (!siteUrl) return null
-    return sdk.forConsole.avatars.getQR({ text: siteUrl, size: 256 })
-  }, [siteUrl])
+    if (!primaryDomain) return null
+    // The plain domain: a QR code is easy to share, so it never carries the owner link
+    return sdk.forConsole.avatars.getQR({
+      text: domainUrl(primaryDomain),
+      size: 256,
+    })
+  }, [primaryDomain])
 
   const handleGoToDashboard = async () => {
     if (isNavigatingToDashboard) return
@@ -204,219 +212,230 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
 
   return (
     <>
-    <WizardLayout
-      title={t('Create site')}
-      fallbackPath={`/projects/${projectId}/sites`}
-      fullscreen
-      maxWidth="max-w-[1400px]"
-      footerAlign="right"
-      sidebar={sidebarContent}
-      footer={
-        <Button
-          onClick={handleGoToDashboard}
-          disabled={isNavigatingToDashboard}
-        >
-          {t('Go to dashboard')}
-        </Button>
-      }
-    >
-      {/* Site preview card */}
-      {site && (
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          {/* Screenshot */}
-          {screenshotUrl ? (
-            <div className="aspect-video w-full overflow-hidden bg-muted">
-              <img
-                src={screenshotUrl}
-                alt={`${site.name} ${t('preview')}`}
-                className="h-full w-full object-cover object-top"
-              />
-            </div>
-          ) : (
-            <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
-              <FrameworkIcon framework={site.framework} size="lg" />
-            </div>
-          )}
-
-          {/* Content */}
-          <div className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <FrameworkIcon framework={site.framework} size="md" />
-                </div>
-                <div>
-                  <h3 className="text-[16px] font-semibold text-foreground">
-                    {site.name}
-                  </h3>
-                  <CopyableId id={site.$id} size="xs" />
-                  {siteUrl && (
-                    <a
-                      href={siteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 flex items-center gap-1.5 link-neutral text-[12px]"
-                    >
-                      <Globe className="h-3.5 w-3.5 shrink-0" />
-                      <span className="min-w-0 truncate">{primaryDomain}</span>
-                      <ExternalLink
-                        className="h-3.5 w-3.5 shrink-0 opacity-80"
-                        aria-hidden
-                      />
-                    </a>
-                  )}
-                </div>
+      <WizardLayout
+        title={t('Create site')}
+        fallbackPath={`/projects/${projectId}/sites`}
+        fullscreen
+        maxWidth="max-w-[1400px]"
+        footerAlign="right"
+        sidebar={sidebarContent}
+        footer={
+          <Button
+            onClick={handleGoToDashboard}
+            disabled={isNavigatingToDashboard}
+          >
+            {t('Go to dashboard')}
+          </Button>
+        }
+      >
+        {/* Site preview card */}
+        {site && (
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            {/* Screenshot */}
+            {screenshotUrl ? (
+              <div className="aspect-video w-full overflow-hidden bg-muted">
+                <img
+                  src={screenshotUrl}
+                  alt={`${site.name} ${t('preview')}`}
+                  className="h-full w-full object-cover object-top"
+                />
               </div>
-              {siteUrl && (
-                <Button asChild>
-                  <a href={siteUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="me-1.5 h-4 w-4" />
-                    {t('Visit site')}
-                  </a>
-                </Button>
-              )}
+            ) : (
+              <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                <FrameworkIcon framework={site.framework} size="lg" />
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <FrameworkIcon framework={site.framework} size="md" />
+                  </div>
+                  <div>
+                    <h3 className="text-[16px] font-semibold text-foreground">
+                      {site.name}
+                    </h3>
+                    <CopyableId id={site.$id} size="xs" />
+                    {siteUrl && (
+                      <a
+                        href={siteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 flex items-center gap-1.5 link-neutral text-[12px]"
+                      >
+                        <Globe className="h-3.5 w-3.5 shrink-0" />
+                        <span className="min-w-0 truncate">
+                          {primaryDomain}
+                        </span>
+                        <ExternalLink
+                          className="h-3.5 w-3.5 shrink-0 opacity-80"
+                          aria-hidden
+                        />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {siteUrl && (
+                  <Button asChild>
+                    <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="me-1.5 h-4 w-4" />
+                      {t('Visit site')}
+                    </a>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Next steps */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Next steps')}
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="divide-y divide-border">
-          {/* Add repository (if not connected) */}
-          {site && !site.installationId && (
+        {/* Next steps */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Next steps')}
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+          <div className="divide-y divide-border">
+            {/* Add repository (if not connected) */}
+            {site && !site.installationId && (
+              <Link
+                to="/projects/$projectId/sites/$siteId/settings"
+                params={{ projectId: projectId!, siteId: actualSiteId! }}
+                className="flex items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <GitBranch className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[13px] font-medium text-foreground">
+                    {t('Add repository')}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t('Connect a Git repository for automatic deployments')}
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
+            )}
+
+            {/* Add custom domain */}
             <Link
-              to="/projects/$projectId/sites/$siteId/settings"
+              to="/projects/$projectId/sites/$siteId/domains"
               params={{ projectId: projectId!, siteId: actualSiteId! }}
               className="flex items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                <GitBranch className="h-5 w-5" />
+                <Globe className="h-5 w-5" />
               </div>
               <div className="flex-1">
                 <p className="text-[13px] font-medium text-foreground">
-                  {t('Add repository')}
+                  {t('Add custom domain')}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {t('Connect a Git repository for automatic deployments')}
+                  {t('Configure your own domain name')}
                 </p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </Link>
-          )}
 
-          {/* Add custom domain */}
-          <Link
-            to="/projects/$projectId/sites/$siteId/domains"
-            params={{ projectId: projectId!, siteId: actualSiteId! }}
-            className="flex items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <Globe className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[13px] font-medium text-foreground">
-                {t('Add custom domain')}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {t('Configure your own domain name')}
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </Link>
+            {/* Copy site URL */}
+            <button
+              onClick={() => {
+                if (primaryDomain) {
+                  navigator.clipboard.writeText(domainUrl(primaryDomain))
+                }
+              }}
+              className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-start"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <Share2 className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[13px] font-medium text-foreground">
+                  {t('Copy site URL')}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {t('Copy the site URL to clipboard')}
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </button>
 
-          {/* Copy site URL */}
-          <button
-            onClick={() => {
-              if (siteUrl) {
-                navigator.clipboard.writeText(siteUrl)
-              }
-            }}
-            className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-start"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <Share2 className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[13px] font-medium text-foreground">
-                {t('Copy site URL')}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {t('Copy the site URL to clipboard')}
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </button>
-
-          {/* Open on mobile */}
-          <button
-            type="button"
-            onClick={() => {
-              if (!siteUrl) {
-                toast.error(t('Site URL is not available yet'))
-                return
-              }
-              setQrDialogOpen(true)
-            }}
-            className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-start"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <Smartphone className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[13px] font-medium text-foreground">
-                {t('Open on mobile')}
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                {t('Scan QR code to view on your phone')}
-              </p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground" />
-          </button>
+            {/* Open on mobile */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!siteUrl) {
+                  toast.error(t('Site URL is not available yet'))
+                  return
+                }
+                setQrDialogOpen(true)
+              }}
+              className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-start"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <Smartphone className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[13px] font-medium text-foreground">
+                  {t('Open on mobile')}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {t('Scan QR code to view on your phone')}
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
         </div>
-      </div>
-    </WizardLayout>
+      </WizardLayout>
 
-    <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-      <DialogContent
-        className="z-[10000] sm:max-w-md p-0"
-        overlayClassName="z-[9999]"
-      >
-        <DialogHeader className="px-6 pt-6 text-start">
-          <DialogTitle>{t('View on mobile')}</DialogTitle>
-          <DialogDescription className="text-[13px] mt-2">
-            {t('Scan this QR code to open your site on a mobile device')}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="border-t border-border" />
-        <div className="px-6 py-6 flex items-center justify-center">
-          {qrImageUrl ? (
-            <div className="p-4 bg-white rounded-lg">
-              <img
-                src={qrImageUrl}
-                alt={t('QR code to open site on mobile')}
-                className="h-48 w-48 rounded"
-              />
-            </div>
-          ) : (
-            <p className="text-[13px] text-muted-foreground text-center px-4">
-              {t('QR code could not be generated. Try again in a moment.')}
-            </p>
-          )}
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-          <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
-            {t('Close')}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent
+          className="z-[10000] sm:max-w-md p-0"
+          overlayClassName="z-[9999]"
+        >
+          <DialogHeader className="px-6 pt-6 text-start">
+            <DialogTitle>{t('View on mobile')}</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              {t('Scan this QR code to open your site on a mobile device')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 py-6 flex items-center justify-center">
+            {qrImageUrl ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="p-4 bg-white rounded-lg">
+                  <img
+                    src={qrImageUrl}
+                    alt={t('QR code to open site on mobile')}
+                    className="h-48 w-48 rounded"
+                  />
+                </div>
+                {isZero && (
+                  <p className="max-w-64 text-center text-[12px] text-muted-foreground">
+                    {t(
+                      'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.',
+                    )}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-[13px] text-muted-foreground text-center px-4">
+                {t('QR code could not be generated. Try again in a moment.')}
+              </p>
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+            <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
+              {t('Close')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

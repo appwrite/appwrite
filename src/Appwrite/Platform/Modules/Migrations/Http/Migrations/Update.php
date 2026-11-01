@@ -8,17 +8,14 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'retryMigration';
@@ -49,6 +46,7 @@ class Update extends Action
                 ]
             ))
             ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Migration unique ID.', false, ['dbForProject'])
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -59,6 +57,7 @@ class Update extends Action
 
     public function action(
         string $migrationId,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -71,9 +70,28 @@ class Update extends Action
             throw new Exception(Exception::MIGRATION_NOT_FOUND);
         }
 
-        if ($migration->getAttribute('status') !== 'failed') {
+        // A worker killed mid-run (restart, OOM) leaves its migration processing for good.
+        $status = $migration->getAttribute('status');
+        $stalled = $status === 'processing'
+            && \strtotime($migration->getUpdatedAt()) < \time() - MIGRATION_STALL_TIMEOUT;
+
+        if ($status !== 'failed' && !$stalled) {
             throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
         }
+
+        // A retry runs with no more than the retrying caller holds; a session keeps the recorded grant.
+        // Only a key-created grant was checked against the resources, so others are checked here.
+        $options = $migration->getAttribute('options', []);
+        $recorded = $options['scopes'] ?? null;
+        $grant = $this->authorize($request, \is_array($recorded) ? [] : $migration->getAttribute('resources', []));
+
+        if ($grant !== null) {
+            $options['scopes'] = \is_array($recorded) ? \array_values(\array_intersect($recorded, $grant)) : $grant;
+        } elseif (!\array_key_exists('scopes', $options)) {
+            $options['scopes'] = null;
+        }
+
+        $migration->setAttribute('options', $options);
 
         $migration
             ->setAttribute('status', 'pending')

@@ -3,9 +3,17 @@
 namespace Tests\E2E\Services\Realtime;
 
 use Appwrite\Tests\Async\Exceptions\Critical;
+use Swoole\Coroutine;
+use Tests\E2E\Client;
+use Utopia\Database\Document;
+use Utopia\Database\Id;
+use Utopia\Database\Validator\Authorization;
+use Utopia\System\System;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
+
+use function Swoole\Coroutine\run;
 
 trait RealtimeBase
 {
@@ -217,6 +225,44 @@ trait RealtimeBase
         $client->close();
     }
 
+    public function testConnectionFailureWrongRegion(): void
+    {
+        $projectId = $this->createIsolatedProjectForRegionTest();
+        $currentRegion = System::getEnv('_APP_REGION', 'default');
+        $wrongRegion = $currentRegion === 'default' ? 'fra' : 'default';
+
+        $this->withDatabaseFactory(function ($factory) use ($projectId, $wrongRegion): void {
+            $factory->platform()->updateDocument('projects', $projectId, new Document([
+                'region' => $wrongRegion,
+            ]));
+            $factory->platform()->purgeCachedDocument('projects', $projectId);
+        });
+
+        try {
+            $client = $this->getWebsocket(['documents'], projectId: $projectId);
+            $payload = json_decode($client->receive(), true);
+
+            $this->assertArrayHasKey('type', $payload);
+            $this->assertArrayHasKey('data', $payload);
+            $this->assertEquals('error', $payload['type']);
+            $this->assertEquals(401, $payload['data']['code']);
+            $this->assertEquals(
+                'Project is not accessible in this region. Please make sure you are using the correct endpoint',
+                $payload['data']['message']
+            );
+            \usleep(250000);
+            $this->expectException(ConnectionException::class);
+            $client->close();
+        } finally {
+            $this->withDatabaseFactory(function ($factory) use ($projectId, $currentRegion): void {
+                $factory->platform()->updateDocument('projects', $projectId, new Document([
+                    'region' => $currentRegion,
+                ]));
+                $factory->platform()->purgeCachedDocument('projects', $projectId);
+            });
+        }
+    }
+
     public function testConnectionRegionCheck(): void
     {
         /**
@@ -234,5 +280,54 @@ trait RealtimeBase
         $this->assertContains('documents', $response['data']['channels']);
 
         $client->close();
+    }
+
+    /**
+     * Create a dedicated project for region tests without relying on ProjectCustom helpers.
+     */
+    private function createIsolatedProjectForRegionTest(): string
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ];
+
+        $team = $this->createTeamFixture($headers, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Region Test ' . Id::unique(),
+        ]);
+        $this->assertSame(200, $team['headers']['status-code']);
+
+        $project = $this->client->call(Client::METHOD_POST, '/projects', $headers, [
+            'projectId' => Id::unique(),
+            'region' => System::getEnv('_APP_REGION', 'default'),
+            'name' => 'Realtime Region Test',
+            'teamId' => $team['body']['$id'],
+        ]);
+        $this->assertSame(201, $project['headers']['status-code']);
+
+        return $project['body']['$id'];
+    }
+
+    /**
+     * @param callable(mixed): void $callback receives the server's database factory, untyped as an edition may register its own
+     */
+    private function withDatabaseFactory(callable $callback): void
+    {
+        $read = function () use ($callback): void {
+            global $register;
+            $authorization = new Authorization();
+            $factory = $register->get('databaseFactory')($register->get('pools'), $register->get('cache'), $authorization);
+
+            $authorization->skip(fn () => $callback($factory));
+        };
+
+        if (Coroutine::getCid() >= 0) {
+            $read();
+        } else {
+            run($read);
+        }
     }
 }

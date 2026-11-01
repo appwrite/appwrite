@@ -61,7 +61,7 @@ import {
 import { mergeActiveDeploymentForCard } from '@/lib/sites/deployment-screenshots'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -72,6 +72,7 @@ function formatDuration(seconds: number): string {
 
 export function View() {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { data: site, isLoading: siteLoading } = useProjectSite(
@@ -382,7 +383,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={visitUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 font-mono text-[11px] link-neutral"
@@ -582,7 +583,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={visitUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

@@ -18,6 +18,8 @@ import {
 import { useMemo } from 'react'
 import { ID, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { createProjectEnvironment } from '@/lib/appwrite/project-environments'
+import { fetchEnvironmentCopyMigrations } from './migrations'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** One page covers the per-plan environment cap many times over. */
@@ -103,7 +105,7 @@ export function useProjectEnvironments(
 }
 
 /**
- * Hook to create an environment for a project
+ * Hook to create an environment for a project, empty or as a copy of the project
  *
  * @param projectId - The project ID
  * @param region - The project region
@@ -118,18 +120,32 @@ export function useCreateProjectEnvironment(
     mutationFn: async ({
       environmentId,
       name,
+      resources = [],
     }: {
       environmentId?: string
       name: string
+      /** Resource types to copy from the project; none for an empty environment */
+      resources?: string[]
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forProject(projectId, region).project.createEnvironment({
+      const projectSdk = sdk.forProject(projectId, region)
+      const params = {
         environmentId: environmentId?.trim() || ID.unique(),
         name: name.trim(),
-      })
+      }
+
+      // The pinned SDK's createEnvironment drops `resources`; see createProjectEnvironment
+      if (resources.length > 0) {
+        return await createProjectEnvironment(projectSdk.client, {
+          ...params,
+          resources,
+        })
+      }
+
+      return await projectSdk.project.createEnvironment(params)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -213,4 +229,46 @@ export function useDeleteProjectEnvironment(
       })
     },
   })
+}
+
+/**
+ * Hook finding the copy of a freshly created environment from its project, so
+ * the creation wizard can hand it to the environment's progress card: the
+ * newest Appwrite to Appwrite migration of the environment, polled until the
+ * environment lists it. Realtime cannot carry it, as the wizard is on the
+ * parent project and the migration announces itself on the environment.
+ *
+ * @param environmentId - The environment, once created
+ * @param region - The environment's region, which the SDK cannot look up yet for a project it has not loaded
+ * @param enabled - False until there is a copy to find
+ * @returns The migration, or null until the environment lists it
+ */
+export function useEnvironmentCopyMigration(
+  environmentId: string | null | undefined,
+  region: string | undefined,
+  enabled = true,
+) {
+  const { data } = useQuery({
+    queryKey: [
+      'migrations',
+      'project',
+      environmentId,
+      'environment-copy',
+      'created',
+      region,
+    ],
+    queryFn: async () => {
+      const result = await fetchEnvironmentCopyMigrations(
+        environmentId!,
+        region,
+      )
+      return { migration: result.migrations[0] ?? null }
+    },
+    enabled: !!environmentId && enabled,
+    refetchInterval: (query) => (query.state.data?.migration ? false : 2000),
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+
+  return data?.migration ?? null
 }

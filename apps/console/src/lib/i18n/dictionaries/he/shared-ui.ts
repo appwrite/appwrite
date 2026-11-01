@@ -54,7 +54,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   then: 'ואז',
   'already exists': 'כבר קיים',
   'is longer than 8192 allowed characters': 'ארוך מ-8192 התווים המותרים',
-  'contact sales': 'צרו קשר עם מכירות',
   'to include more repos.': 'כדי לכלול repos נוספים.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
 
@@ -396,6 +395,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'My filters': 'הסינונים שלי',
   'Name, email, phone, or user ID…': 'שם, אימייל, טלפון או מזהה משתמש…',
   'Need more resources?': 'צריכים משאבים נוספים?',
+  'Higher CPU and memory are available on Enterprise.':
+    'משאבי CPU וזיכרון גבוהים יותר זמינים בתוכנית Enterprise.',
   'Next image': 'התמונה הבאה',
 
   // Empty states
@@ -1011,9 +1012,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'חיבור פלטפורמות (ווב, iOS, Android, Flutter, שרת)',
   'Server API keys and tokens': 'מפתחות API וטוקנים לשרת',
-  // pragma: allowlist secret
-  'Browse and test Appwrite REST API endpoints':
-    'עיון ובדיקה של נקודות הקצה של Appwrite REST API', // pragma: allowlist secret
+  'Test REST API endpoints and Realtime subscriptions':
+    'בדיקת נקודות קצה של REST API ומינויי Realtime',
   'Users, teams, sessions and authentication providers':
     'משתמשים, צוותים, סשנים וספקי אימות',
   'Manage databases, tables and collections':
@@ -1026,7 +1026,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
-  'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
   'Website analytics and traffic insights': 'אנליטיקת אתרים ותובנות תעבורה',
   'Project settings, custom domains, variables, webhooks':
@@ -1391,13 +1390,22 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
-  Experiments: 'ניסויים',
-  'Features the quality team can try before they launch. Choices stay in this browser.':
-    "פיצ'רים שצוות האיכות יכול לנסות לפני ההשקה. הבחירות נשמרות בדפדפן הזה.",
+  Previews: 'תצוגות מקדימות',
+  'Early access. Saved in this browser.':
+    'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',
-  'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.':
-    'הציגו את אנליטיקה בקונסולה ועקבו אחרי מבקרים, עמודים, מקורות, קמפיינים ואירועים מותאמים בפרויקט.',
+  'Visitor, page, and campaign tracking.':
+    'מעקב אחרי מבקרים, עמודים וקמפיינים.',
+  'Project environments': 'סביבות פרויקט',
+  'Switch or clone staging and production.':
+    'מעבר או שכפול בין staging לפרודקשן.',
+  'Project transfers': 'העברות פרויקטים',
+  'Move a project to another organization.':
+    'העברת פרויקט לארגון אחר.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
+  // Halloween caution tape
+  Caution: 'זהירות',
+  'Spooky zone': 'אזור מפחיד',
 }
