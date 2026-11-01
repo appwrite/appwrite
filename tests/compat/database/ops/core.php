@@ -552,7 +552,7 @@ final class Core
             'load' => $cache->load((string) ($a['key'] ?? ''), (int) ($a['ttl'] ?? Database::TTL), (string) ($a['hash'] ?? '')),
             'save' => $cache->save((string) ($a['key'] ?? ''), $data(), (string) ($a['hash'] ?? ''), (int) ($a['ttl'] ?? 0)) !== false,
             'save_with_lease' => $cache->saveWithLease((string) ($a['key'] ?? ''), $data(), (string) ($a['hash'] ?? ''), (string) ($a['generation'] ?? '')) !== false,
-            'get_generation' => $cache->getGeneration((string) ($a['key'] ?? '')),
+            'get_generation' => $cache->getLease((string) ($a['key'] ?? '')),
             'touch' => $cache->touch((string) ($a['key'] ?? ''), (string) ($a['hash'] ?? '')),
             'list' => $cache->list((string) ($a['key'] ?? '')),
             'purge' => $cache->purge((string) ($a['key'] ?? ''), (string) ($a['hash'] ?? '')),
