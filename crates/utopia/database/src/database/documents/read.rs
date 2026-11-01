@@ -309,10 +309,9 @@ impl Database {
             return none();
         }
 
-        let mut described = String::new();
         let mut state = crate::cache::Epoch::default();
         if cacheable && definition {
-            described = self.cache_base_keys(id, None).await?.0;
+            let described = self.cache_base_keys(id, None).await?.0;
             state = self.load_document_cache_state(&described).await;
         }
 
@@ -357,14 +356,8 @@ impl Database {
                     blocked_at: state.blocked_at,
                     checked_at: Some(php_std::datetime::time()),
                 };
-                self.save_cached_definition(
-                    &document_key,
-                    &field,
-                    document.array_copy(),
-                    Some(validity),
-                    &version,
-                )
-                .await
+                self.save_cached_definition(&document_key, &field, document.array_copy(), Some(validity), &version)
+                    .await
             }
             _ => Ok(()),
         };

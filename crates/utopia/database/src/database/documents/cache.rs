@@ -15,7 +15,7 @@ use super::super::{Database, METADATA, TTL, warning};
 use super::cached::{create_document_cache_token, random_hex, text};
 use crate::cache::{Mutation, Target, Tokens};
 use crate::document::Document;
-use crate::error::{Error, Kind, Result};
+use crate::error::{Error, Result};
 use crate::event::{Domain, Event};
 use crate::permission::PermissionType;
 use crate::validator::authorization::Input;
@@ -289,7 +289,8 @@ impl Database {
             return Ok(false);
         }
         let timeout = self.cache_writer_timeout();
-        self.with_retries(|| Mutation::new(cache.clone()).begin(collection_key, token, timeout), 3, 100).await?;
+        let mutation = Mutation::new(cache.clone());
+        self.with_retries(|| mutation.begin(collection_key, token, timeout), 3, 100).await?;
         self.with_retries(
             || async {
                 self.purge_cached_definition(definition_key).await?;
@@ -341,8 +342,8 @@ impl Database {
     ) -> Result<()> {
         let cache = self.cache();
         let timeout = self.cache_writer_timeout();
-        let finished =
-            self.with_retries(|| Mutation::new(cache.clone()).finish(collection_key, token, timeout), 3, 100).await;
+        let mutation = Mutation::new(cache.clone());
+        let finished = self.with_retries(|| mutation.finish(collection_key, token, timeout), 3, 100).await;
         let purged = self
             .with_retries(
                 || async {

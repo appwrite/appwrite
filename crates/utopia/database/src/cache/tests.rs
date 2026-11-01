@@ -9,7 +9,7 @@ use std::sync::Arc;
 use utopia_cache::Cache;
 
 use super::testing::{Leasable, leasable, memory, over};
-use super::{Entry, Invalidator, Owners, Query, Region, Scope, Target};
+use super::{Entry, Invalidator, Query, Region, Scope, Target};
 use crate::attribute::Attribute;
 use crate::document::Document;
 use crate::error::Kind;
@@ -60,7 +60,7 @@ async fn entry(q: &Query, scope: &Scope, collection: &str, queries: &Value, cont
 }
 
 async fn fill(q: &Query, entry: &Entry, id: &str) -> bool {
-    let generation = q.generation(entry).await.unwrap();
+    let generation = q.lease(entry).await.unwrap();
     q.set(entry, &[doc(id)], &generation).await.unwrap()
 }
 
@@ -122,7 +122,9 @@ fn keys_and_stored_entries_match_php() {
         let e = entry(&q, &Scope::default(), "users", &Value::Array(queries), "ctx").await.unwrap();
         assert_eq!(e.field, "b72f30def98ba5c4894033c34d09a999");
         assert_eq!(e.slot, "222");
-        assert_eq!(e.epoch, "active:initial");
+        // 10.0.0: the epoch is the CAS version of the collection's mutation
+        // record, `active:<version>`.
+        assert!(e.epoch.starts_with("active:") && e.epoch.len() == "active:".len() + 32, "{}", e.epoch);
 
         let mut document = Document::from_pairs([
             ("$id", Value::Str(Str::from("d1"))),
@@ -131,11 +133,15 @@ fn keys_and_stored_entries_match_php() {
         ])
         .unwrap();
         document.put("rel", Value::Ext(crate::value::Ext::Document(Box::new(doc("r")))));
-        assert!(q.set(&e, &[document], "0").await.unwrap());
+        let lease = q.lease(&e).await.unwrap();
+        assert!(q.set(&e, &[document], &lease).await.unwrap());
         let stored = adapter.raw(&e.key, &e.slot).expect("stored");
         assert_eq!(
             String::from_utf8(php_std::serialize::serialize(&stored)).unwrap(),
-            r#"a:4:{s:7:"version";i:2;s:5:"epoch";s:14:"active:initial";s:5:"field";s:32:"b72f30def98ba5c4894033c34d09a999";s:9:"documents";a:1:{i:0;a:4:{s:3:"$id";s:2:"d1";s:4:"name";s:1:"A";s:1:"n";a:2:{i:0;i:1;i:1;i:2;}s:3:"rel";a:1:{s:3:"$id";s:1:"r";}}}}"#
+            format!(
+                r#"a:4:{{s:7:"version";i:2;s:5:"epoch";s:39:"{}";s:5:"field";s:32:"b72f30def98ba5c4894033c34d09a999";s:9:"documents";a:1:{{i:0;a:4:{{s:3:"$id";s:2:"d1";s:4:"name";s:1:"A";s:1:"n";a:2:{{i:0;i:1;i:1;i:2;}}s:3:"rel";a:1:{{s:3:"$id";s:1:"r";}}}}}}}}"#,
+                e.epoch
+            )
         );
     });
 }
@@ -265,7 +271,7 @@ fn filled_results_are_served_by_another_query_cache_on_the_same_cache() {
         let writer = query_cache(cache);
         let reader = query_cache(over(&adapter));
         let e = entry(&writer, &scope_ns(), "users", &limit(2), "").await.unwrap();
-        let generation = writer.generation(&e).await.unwrap();
+        let generation = writer.lease(&e).await.unwrap();
         let alice = Document::from_pairs([("$id", Value::from("doc1")), ("name", Value::from("Alice"))]).unwrap();
         let bob = Document::from_pairs([("$id", Value::from("doc2")), ("name", Value::from("Bob"))]).unwrap();
         assert!(writer.set(&e, &[alice, bob], &generation).await.unwrap());
@@ -282,7 +288,7 @@ fn a_fill_that_started_before_an_invalidation_is_rejected() {
         let (_, cache) = leasable();
         let q = query_cache(cache);
         let e = entry(&q, &scope_ns(), "users", &no_queries(), "").await.unwrap();
-        let generation = q.generation(&e).await.unwrap();
+        let generation = q.lease(&e).await.unwrap();
         q.invalidate_collection(&scope_ns(), "users").await.unwrap();
         assert!(!q.set(&e, &[doc("stale")], &generation).await.unwrap());
         let fresh = entry(&q, &scope_ns(), "users", &no_queries(), "").await.unwrap();
@@ -364,12 +370,14 @@ fn an_invalid_epoch_is_a_miss() {
     block_on(async {
         let cache = memory();
         let q = query_cache(cache.clone());
-        let epoch_key = format!("{}#epoch", q.collection_key(&scope_ns(), "users"));
+        let state_key = format!("{}#state", q.collection_key(&scope_ns(), "users"));
         let value = php_std::Value::Array(
-            [(ArrayKey::Str(Str::from("not")), php_std::Value::from("an epoch"))].into_iter().collect(),
+            [(ArrayKey::Str(Str::from("not")), php_std::Value::from("a state"))].into_iter().collect(),
         );
-        cache.save(&epoch_key, &value, "", 0).await.unwrap();
-        assert!(entry(&q, &scope_ns(), "users", &no_queries(), "").await.is_none());
+        cache.save(&state_key, &value, "", 0).await.unwrap();
+        // 10.0.0: a mutation record the query cache did not write fails the read.
+        let error = q.entry(&scope_ns(), "users", &no_queries(), "").await.unwrap_err();
+        assert_eq!(error.kind(), crate::Kind::CacheUnavailable);
     });
 }
 
@@ -578,14 +586,17 @@ fn memory_adapter_keeps_physical_variants_isolated() {
 }
 
 #[test]
-fn memory_adapter_stays_blocked_after_invalidation() {
+fn memory_adapter_resumes_after_invalidation() {
     block_on(async {
         let q = query_cache(memory());
         let e = entry(&q, &scope_ns(), "users", &no_queries(), "").await.unwrap();
         assert!(fill(&q, &e, "old").await);
         assert_eq!(ids(q.get(&e).await.unwrap()), ["old"]);
         q.invalidate_collection(&scope_ns(), "users").await.unwrap();
-        assert!(entry(&q, &scope_ns(), "users", &no_queries(), "").await.is_none());
+        assert!(
+            entry(&q, &scope_ns(), "users", &no_queries(), "").await.is_some(),
+            "the last completion makes the versioned cache usable"
+        );
     });
 }
 
@@ -659,7 +670,9 @@ fn a_writer_whose_token_has_no_creation_time_counts_as_live() {
         let reader = query_cache(over(&adapter));
         live.block_collection(&live.collection_key(&scope_ns(), "users"), "token-without-a-time").await.unwrap();
         writer.invalidate_collection(&scope_timeout(0), "users").await.unwrap();
-        assert!(entry(&reader, &scope_ns(), "users", &no_queries(), "").await.is_none());
+        // 10.0.0: the registration time is stored in the record rather than
+        // encoded in the token.
+        assert!(entry(&reader, &scope_ns(), "users", &no_queries(), "").await.is_some());
     });
 }
 
@@ -815,7 +828,10 @@ fn overlapping_invalidations_succeed_on_a_cache_without_fields() {
         q.activate_collection(&key, "first", Scope::WRITER_TIMEOUT).await.unwrap();
         assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_none());
         q.activate_collection(&key, "second", Scope::WRITER_TIMEOUT).await.unwrap();
-        assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_none());
+        assert!(
+            entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_some(),
+            "the last completion makes the cache usable"
+        );
     });
 }
 
@@ -828,9 +844,9 @@ fn activation_rejects_a_corrupted_owner_registration() {
         adapter.corrupt_field_writes(true);
         q.block_collection(&key, "owner").await.unwrap();
         let error = q.activate_collection(&key, "owner", Scope::WRITER_TIMEOUT).await.unwrap_err();
-        assert_eq!(error.kind(), Kind::Runtime);
-        assert!(error.message().contains("Invalid query cache owner"));
-        assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_none());
+        assert_eq!(error.kind(), Kind::CacheUnavailable);
+        let error = q.entry(&Scope::default(), "users", &no_queries(), "").await.unwrap_err();
+        assert_eq!(error.kind(), Kind::CacheUnavailable);
     });
 }
 
@@ -841,70 +857,10 @@ fn activation_propagates_an_owner_release_failure() {
         let q = query_cache(cache);
         let key = q.collection_key(&Scope::default(), "users");
         q.block_collection(&key, "owner").await.unwrap();
-        adapter.fail_field_purges();
+        adapter.fail_completions();
         let error = q.activate_collection(&key, "owner", Scope::WRITER_TIMEOUT).await.unwrap_err();
-        assert!(error.message().contains("Failed to release query cache owner"));
-    });
-}
-
-const OWNERS_KEY: &str = "default:qcache:users:scope";
-const OWNERS_TTL: i64 = 3600;
-
-#[test]
-fn registering_and_finding_owners_lists_the_hash_once() {
-    block_on(async {
-        let (adapter, cache) = leasable();
-        let tokens = ["first", "second", "third"];
-        for token in tokens {
-            assert!(Owners::new(cache.clone()).register(OWNERS_KEY, token).await.unwrap());
-        }
-        for token in tokens {
-            let registration = Owners::new(cache.clone()).find(OWNERS_KEY, token).await.unwrap();
-            assert_eq!(
-                (registration.key.as_str(), registration.field.as_str()),
-                (&*format!("{OWNERS_KEY}#owners"), token)
-            );
-            assert_eq!(
-                cache.load(&registration.key, OWNERS_TTL, &registration.field).await.unwrap(),
-                Some(php_std::Value::from(token))
-            );
-        }
-        assert_eq!(adapter.lists(), 1, "only the first registration lists the owners hash");
-        // Another cache object over the same adapter is asked on its own.
-        assert!(!super::owners::kept(&over(&adapter)));
-    });
-}
-
-#[test]
-fn owners_resolve_on_a_cache_without_fields() {
-    block_on(async {
-        let cache = memory();
-        for token in ["first", "second"] {
-            assert!(Owners::new(cache.clone()).register(OWNERS_KEY, token).await.unwrap());
-            let registration = Owners::new(cache.clone()).find(OWNERS_KEY, token).await.unwrap();
-            assert_eq!(registration.key, format!("{OWNERS_KEY}#owner:{token}"));
-            assert_eq!(registration.field, "");
-            assert_eq!(
-                cache.load(&registration.key, OWNERS_TTL, &registration.field).await.unwrap(),
-                Some(php_std::Value::from(token))
-            );
-        }
-        assert!(!super::owners::kept(&cache));
-    });
-}
-
-#[test]
-fn a_flush_before_the_first_list_does_not_pin_per_token_keys() {
-    block_on(async {
-        let (adapter, cache) = leasable();
-        adapter.flush_on_next_list();
-        assert!(Owners::new(cache.clone()).register(OWNERS_KEY, "flushed").await.unwrap());
-        let flushed = Owners::new(cache.clone()).find(OWNERS_KEY, "flushed").await.unwrap();
-        assert_eq!((flushed.key, flushed.field), (format!("{OWNERS_KEY}#owner:flushed"), String::new()));
-        assert!(Owners::new(cache.clone()).register(OWNERS_KEY, "kept").await.unwrap());
-        let kept = Owners::new(cache.clone()).find(OWNERS_KEY, "kept").await.unwrap();
-        assert_eq!((kept.key, kept.field), (format!("{OWNERS_KEY}#owners"), "kept".to_owned()));
-        let _: &Arc<Leasable> = &adapter;
+        assert_eq!(error.kind(), Kind::CacheUnavailable);
+        assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_none());
     });
 }
 
@@ -1015,11 +971,11 @@ fn a_cache_flush_during_or_before_activation_does_not_fail_the_invalidation() {
             if during {
                 let weak = Arc::downgrade(&adapter);
                 let armed = std::sync::atomic::AtomicBool::new(true);
-                adapter.on_purge(move |key, _| {
-                    (key.ends_with("#finished") && armed.swap(false, std::sync::atomic::Ordering::SeqCst)).then(|| {
+                adapter.on_swap(move |_, _, completion| {
+                    if completion && armed.swap(false, std::sync::atomic::Ordering::SeqCst) {
                         weak.upgrade().unwrap().flush_now();
-                        Ok(true)
-                    })
+                    }
+                    None
                 });
             } else {
                 adapter.flush_now();
@@ -1037,10 +993,9 @@ fn an_activation_purge_failure_still_propagates() {
         let q = query_cache(cache);
         let key = q.collection_key(&Scope::default(), "users");
         q.block_collection(&key, "owner").await.unwrap();
-        adapter.on_purge(|key, _| key.ends_with("#finished").then_some(Ok(false)));
+        adapter.fail_completions();
         let error = q.activate_collection(&key, "owner", Scope::WRITER_TIMEOUT).await.unwrap_err();
-        assert_eq!(error.kind(), Kind::Runtime);
-        assert!(error.message().contains("finish query cache invalidation"), "{}", error.message());
+        assert_eq!(error.kind(), Kind::CacheUnavailable);
         assert!(entry(&q, &Scope::default(), "users", &no_queries(), "").await.is_none());
     });
 }
@@ -1050,10 +1005,11 @@ fn an_invalidation_propagates_a_cache_write_failure() {
     block_on(async {
         let (adapter, cache) = leasable();
         let q = query_cache(cache);
-        adapter.on_save(|_, hash, _| hash.is_empty().then_some(Ok(false)));
+        adapter.on_swap(|_, _, _| {
+            Some(Err(utopia_cache::Error::Unavailable { message: "CAS unavailable".to_owned(), previous: None }))
+        });
         let error = q.invalidate_collection(&Scope::default(), "users").await.unwrap_err();
-        assert_eq!(error.kind(), Kind::Runtime);
-        assert!(error.message().contains("Failed to block query cache epoch"), "{}", error.message());
+        assert_eq!(error.kind(), Kind::CacheUnavailable);
     });
 }
 
@@ -1082,8 +1038,8 @@ fn an_owner_released_by_a_concurrent_flush_is_not_reported() {
         q.block_collection(&key, "owner").await.unwrap();
         let weak = Arc::downgrade(&adapter);
         let armed = std::sync::atomic::AtomicBool::new(true);
-        adapter.on_purge(move |_, hash| {
-            if !hash.is_empty() && armed.swap(false, std::sync::atomic::Ordering::SeqCst) {
+        adapter.on_swap(move |key, _, _| {
+            if key.ends_with("#state") && armed.swap(false, std::sync::atomic::Ordering::SeqCst) {
                 weak.upgrade().unwrap().flush_now();
             }
             None
@@ -1096,17 +1052,15 @@ fn an_owner_released_by_a_concurrent_flush_is_not_reported() {
 }
 
 #[test]
-fn an_invalidation_propagates_an_owner_registration_failure() {
+fn registration_failure_preserves_previously_cached_results() {
     block_on(async {
         let (adapter, cache) = leasable();
         let q = query_cache(cache);
-        adapter.on_save(|_, hash, _| (!hash.is_empty()).then_some(Ok(false)));
         let before = entry(&q, &Scope::default(), "users", &no_queries(), "").await.unwrap();
-        // The fill saves under a field too: let it through.
-        adapter.on_save(|key, hash, _| (!hash.is_empty() && key.ends_with("#owners")).then_some(Ok(false)));
         assert!(fill(&q, &before, "cached").await);
+        adapter.fail_registrations(1);
         let error = q.invalidate_collection(&Scope::default(), "users").await.unwrap_err();
-        assert!(error.message().contains("Failed to register query cache owner"), "{}", error.message());
+        assert_eq!(error.kind(), Kind::CacheUnavailable);
         let after = entry(&q, &Scope::default(), "users", &no_queries(), "").await.expect("not blocked");
         assert_eq!(ids(q.get(&after).await.unwrap()), ["cached"]);
     });

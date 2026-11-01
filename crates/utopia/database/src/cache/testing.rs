@@ -16,13 +16,11 @@ use utopia_cache::{Adapter, Cache, Result};
 #[derive(Default)]
 struct State {
     fields: IndexMap<String, IndexMap<String, (i64, Value)>>,
-    generations: HashMap<String, i64>,
+    versions: HashMap<String, String>,
     failing_field_purges: bool,
     corrupting_field_writes: bool,
     lease_grace_window: i64,
     tombstones: HashMap<String, f64>,
-    lists: usize,
-    flush_on_next_list: bool,
     operations: usize,
     loads: HashMap<String, usize>,
 }
@@ -40,11 +38,12 @@ struct Intercepts {
     save: Option<Intercept<bool>>,
     purge: Option<Intercept<bool>>,
     generation: Option<Intercept<String>>,
+    swap: Option<Intercept<Option<String>>>,
 }
 
 /// Mirrors how utopia-php/cache's Redis adapters store keys: every key is a
-/// hash whose generation is a reserved field, and purging a key or one of
-/// its fields advances that generation instead of deleting the key.
+/// hash with an opaque version, which every save replaces and every purge
+/// drops (a key without one gets a fresh one when it is read).
 ///
 /// [`Leasable::plain`] plays utopia-cache's `Memory` instead (one value per
 /// key whatever the hash, no fields listed, no generations),
@@ -62,6 +61,7 @@ pub(crate) struct Leasable {
     json: bool,
     intercepts: RwLock<Intercepts>,
     before_save: Mutex<Option<(SaveMatcher, BoxFuture<'static, ()>)>>,
+    before_completion: Mutex<Option<BoxFuture<'static, ()>>>,
 }
 
 fn now() -> i64 {
@@ -118,28 +118,69 @@ impl Leasable {
         Arc::new(Leasable { plain: true, leased: true, ..Self::default() })
     }
 
-    /// Runs `future` before the next save of a key containing `fragment`
-    /// lands (PHP's `beforeNextSave()`).
+    /// Runs `future` before the next compare-and-swap of a key containing
+    /// `fragment` (PHP's `InterleavingMemory::beforeNextSave()`).
     pub(crate) fn before_next_save(&self, fragment: &str, future: impl Future<Output = ()> + Send + 'static) {
         let fragment = fragment.to_owned();
         *self.before_save.lock().unwrap() =
             Some((Box::new(move |key: &str, _: &Value| key.contains(&fragment)), Box::pin(future)));
     }
 
-    /// Runs `future` before the next active epoch is saved (PHP's
+    /// Runs `future` before the next completion (a swap of a `#state`
+    /// record that drops a writer) compares (PHP's
     /// `OwnershipCache::pauseNextActivation()`).
     pub(crate) fn before_next_activation(&self, future: impl Future<Output = ()> + Send + 'static) {
-        *self.before_save.lock().unwrap() = Some((
-            Box::new(|key: &str, data: &Value| {
-                key.ends_with("#epoch") && matches!(data, Value::Str(s) if s.as_bytes().starts_with(b"active:"))
-            }),
-            Box::pin(future),
-        ));
+        *self.before_completion.lock().unwrap() = Some(Box::pin(future));
     }
 
-    /// Whether purges advance generations.
-    fn generations(&self) -> bool {
-        self.leased || (!self.plain && !self.unleased)
+    /// Answers `compareAndSwap()` calls with `intercept` (key, data, whether
+    /// it is a completion) when it returns `Some`.
+    pub(crate) fn on_swap(
+        &self,
+        intercept: impl Fn(&str, &Value, bool) -> Option<Result<Option<String>>> + Send + Sync + 'static,
+    ) {
+        self.intercepts.write().unwrap().swap = Some(Box::new(move |k, h, d| intercept(k, d, h == "completion")));
+    }
+
+    /// `failCompletions()` / `failDuringActivation()`: a completion fails
+    /// with `Completion unavailable`.
+    pub(crate) fn fail_completions(&self) {
+        self.on_swap(|_, _, completion| {
+            completion.then(|| {
+                Err(utopia_cache::Error::Unavailable { message: "Completion unavailable".to_owned(), previous: None })
+            })
+        });
+    }
+
+    /// `FailingRegistrationCache::failRegistrations()`: the next `count`
+    /// registrations (writes of a `#state` record with owners) are refused.
+    pub(crate) fn fail_registrations(&self, count: usize) {
+        let left = std::sync::atomic::AtomicUsize::new(count);
+        self.on_swap(move |key, data, _| {
+            let registers = key.ends_with("#state")
+                && matches!(data, Value::Array(a) if matches!(a.get_str("owners"), Some(Value::Array(o)) if !o.is_empty()));
+            (registers
+                && left.fetch_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |n| n.checked_sub(1)).is_ok())
+            .then(|| Err(utopia_cache::Error::Unavailable { message: "Cache write failed".to_owned(), previous: None }))
+        });
+    }
+
+    /// Whether a swap of `key` to `data` drops a writer of its `#state`
+    /// record (OwnershipCache's `$finishing`).
+    fn is_completion(&self, key: &str, data: &Value) -> bool {
+        if !key.ends_with("#state") {
+            return false;
+        }
+        let field = self.field(key, "");
+        let before = self.state().fields.get(key).and_then(|f| f.get(&field)).map(|(_, v)| v.clone());
+        let owners = |v: &Value| match v {
+            Value::Array(a) => match a.get_str("owners") {
+                Some(Value::Array(o)) => Some(o.len()),
+                _ => None,
+            },
+            _ => None,
+        };
+        matches!((before.as_ref().and_then(owners), owners(data)), (Some(b), Some(d)) if d < b)
     }
 
     /// A purge, without the intercepts or the count.
@@ -149,9 +190,7 @@ impl Leasable {
         if !hash.is_empty() && state.failing_field_purges {
             return false;
         }
-        if self.generations() {
-            *state.generations.entry(key.to_owned()).or_insert(0) += 1;
-        }
+        state.versions.remove(key);
         if state.lease_grace_window > 0 {
             let until = microtime() + state.lease_grace_window as f64 / 1000.0;
             state.tombstones.insert(key.to_owned(), until);
@@ -172,13 +211,14 @@ impl Leasable {
     pub(crate) fn flush_now(&self) {
         let mut state = self.state();
         state.fields.clear();
-        state.generations.clear();
+        state.versions.clear();
         state.tombstones.clear();
     }
 
-    /// A key's generation, without the intercepts or the count.
-    pub(crate) fn generation_now(&self, key: &str) -> String {
-        self.state().generations.get(key).copied().unwrap_or(0).to_string()
+    /// A key's version, created when it has none, without the intercepts
+    /// or the count.
+    pub(crate) fn version_now(&self, key: &str) -> String {
+        self.state().versions.entry(key.to_owned()).or_insert_with(fresh_version).clone()
     }
 
     fn state(&self) -> std::sync::MutexGuard<'_, State> {
@@ -195,7 +235,7 @@ impl Leasable {
         }
         let field = self.field(key, hash);
         let mut state = self.state();
-        let data = if !hash.is_empty() && state.corrupting_field_writes {
+        let data = if (!hash.is_empty() || key.ends_with("#state")) && state.corrupting_field_writes {
             Value::from("corrupted")
         } else if self.json {
             Value::Str(php_std::Str::from(
@@ -204,6 +244,7 @@ impl Leasable {
         } else {
             data.clone()
         };
+        state.versions.insert(key.to_owned(), fresh_version());
         state.fields.entry(key.to_owned()).or_default().insert(field, (now(), data));
         true
     }
@@ -240,11 +281,13 @@ impl Leasable {
         self.intercepts.write().unwrap().generation = Some(Box::new(move |k, _, _| intercept(k)));
     }
 
-    /// `failBlocks()`: a tombstone is not saved.
+    /// `failBlocks()`: a registration (a `#state` record with owners) is not
+    /// saved.
     pub(crate) fn fail_blocks(&self) {
         self.on_save(|key, _, data| {
-            (key.ends_with("#epoch") && matches!(data, Value::Str(s) if s.as_bytes().starts_with(b"blocked:")))
-                .then_some(Ok(false))
+            (key.ends_with("#state")
+                && matches!(data, Value::Array(a) if matches!(a.get_str("owners"), Some(Value::Array(o)) if !o.is_empty())))
+            .then_some(Ok(false))
         });
     }
 
@@ -268,17 +311,6 @@ impl Leasable {
         self.state().corrupting_field_writes = corrupting;
     }
 
-    /// How many times the fields of a key were listed.
-    pub(crate) fn lists(&self) -> usize {
-        self.state().lists
-    }
-
-    /// Flushes everything on the next list (PHP's test cache that flushes
-    /// before its first list).
-    pub(crate) fn flush_on_next_list(&self) {
-        self.state().flush_on_next_list = true;
-    }
-
     /// How many operations ran (`CountingCache::getOperations()`).
     pub(crate) fn operations(&self) -> usize {
         self.state().operations
@@ -298,7 +330,7 @@ impl Leasable {
     pub(crate) fn evict(&self, key: &str) {
         let mut state = self.state();
         state.fields.shift_remove(key);
-        state.generations.remove(key);
+        state.versions.remove(key);
         state.tombstones.remove(key);
     }
 
@@ -306,7 +338,7 @@ impl Leasable {
     pub(crate) fn keys(&self) -> Vec<String> {
         let state = self.state();
         let mut keys: BTreeMap<String, ()> = state.fields.keys().map(|k| (k.clone(), ())).collect();
-        keys.extend(state.generations.keys().map(|k| (k.clone(), ())));
+        keys.extend(state.versions.keys().map(|k| (k.clone(), ())));
         keys.into_keys().collect()
     }
     /// `countValues()`: every value the cache holds, leaving out generations.
@@ -354,22 +386,10 @@ impl Adapter for Leasable {
 
     fn save(&self, key: &str, data: &Value, hash: &str, _ttl: i64) -> impl Future<Output = Result<bool>> + Send {
         self.count();
-        let before = {
-            let mut hook = self.before_save.lock().unwrap();
-            match hook.as_ref() {
-                Some((matches, _)) if matches(key, data) => hook.take().map(|(_, f)| f),
-                _ => None,
-            }
-        };
-        async move {
-            if let Some(before) = before {
-                before.await;
-            }
-            match self.intercept_save(key, hash, data) {
-                Some(answer) => answer,
-                None => Ok(self.save_now(key, data, hash)),
-            }
-        }
+        std::future::ready(match self.intercept_save(key, hash, data) {
+            Some(answer) => answer,
+            None => Ok(self.save_now(key, data, hash)),
+        })
     }
 
     fn touch(&self, key: &str, hash: &str) -> impl Future<Output = Result<bool>> + Send {
@@ -388,14 +408,7 @@ impl Adapter for Leasable {
 
     fn list(&self, key: &str) -> impl Future<Output = Result<Vec<String>>> + Send {
         let mut state = self.state();
-        state.lists += 1;
         state.operations += 1;
-        if state.flush_on_next_list {
-            state.flush_on_next_list = false;
-            state.fields.clear();
-            state.generations.clear();
-            state.tombstones.clear();
-        }
         let fields = if self.plain {
             Vec::new()
         } else {
@@ -431,7 +444,7 @@ impl Adapter for Leasable {
     }
 
     fn supports_versioning(&self) -> bool {
-        self.leased || (!self.plain && !self.unleased)
+        true
     }
 
     fn version(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
@@ -440,35 +453,82 @@ impl Adapter for Leasable {
         {
             return std::future::ready(answer);
         }
-        let generation = self.state().generations.get(key).copied().unwrap_or(0).to_string();
-        std::future::ready(Ok(generation))
+        std::future::ready(Ok(self.version_now(key)))
     }
 
-    /// A conditional save: the key's version is its generation, which only
-    /// purges advance, so a committed save keeps it.
-    fn compare_and_swap(
-        &self,
-        key: &str,
-        data: &Value,
-        hash: &str,
-        generation: &str,
-    ) -> impl Future<Output = Result<Option<String>>> + Send {
+    fn load_versioned(&self, key: &str) -> impl Future<Output = Result<utopia_cache::Snapshot>> + Send {
         self.count();
-        if let Some(answer) = self.intercept_save(key, hash, data) {
-            return std::future::ready(answer.map(|saved| saved.then(|| generation.to_owned())));
-        }
-        let allowed = {
-            let mut state = self.state();
-            let current = state.generations.get(key).copied().unwrap_or(0).to_string();
-            if current != generation || state.tombstones.get(key).copied().unwrap_or(0.0) > microtime() {
-                false
-            } else {
-                state.tombstones.remove(key);
-                true
+        let version = self.version_now(key);
+        let field = self.field(key, "");
+        let value = self.state().fields.get(key).and_then(|f| f.get(&field)).map(|(_, v)| v.clone());
+        let value = match value {
+            Some(Value::Str(json)) if self.json => {
+                php_std::json::decode(json.as_bytes(), Some(true), 512, php_std::json::Flags::NONE).ok()
+            }
+            other => other,
+        };
+        std::future::ready(Ok(utopia_cache::Snapshot { version, value }))
+    }
+
+    /// A conditional save: refused while the key's version moved on or a
+    /// purge tombstone is in force; a committed save gets a fresh version.
+    async fn compare_and_swap(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<Option<String>> {
+        self.count();
+        let before = {
+            let mut hook = self.before_save.lock().unwrap();
+            match hook.as_ref() {
+                Some((matches, _)) if matches(key, data) => hook.take().map(|(_, f)| f),
+                _ => None,
             }
         };
-        std::future::ready(Ok((allowed && self.save_now(key, data, hash)).then(|| generation.to_owned())))
+        if let Some(before) = before {
+            before.await;
+        }
+        let completion = self.is_completion(key, data);
+        if completion {
+            let paused = self.before_completion.lock().unwrap().take();
+            if let Some(paused) = paused {
+                paused.await;
+            }
+        }
+        let swapped = self
+            .intercepts
+            .read()
+            .unwrap()
+            .swap
+            .as_ref()
+            .and_then(|i| i(key, if completion { "completion" } else { "" }, data));
+        if let Some(answer) = swapped {
+            return answer;
+        }
+        let allowed = {
+            let current = self.version_now(key);
+            let state = self.state();
+            current == version && state.tombstones.get(key).copied().unwrap_or(0.0) <= microtime()
+        };
+        if !allowed {
+            return Ok(None);
+        }
+        // A refused save fails the swap, as PHP's `Memory` (`Unable to save
+        // cache snapshot`) and `RedisLeasableCache` (`Cache write failed`)
+        // fail it.
+        let saved = match self.intercept_save(key, hash, data) {
+            Some(answer) => answer?,
+            None => self.save_now(key, data, hash),
+        };
+        if !saved {
+            let message = if self.plain { "Unable to save cache snapshot" } else { "Cache write failed" };
+            return Err(utopia_cache::Error::Unavailable { message: message.to_owned(), previous: None });
+        }
+        Ok(Some(self.version_now(key)))
     }
+}
+
+/// `bin2hex(random_bytes(16))`: a fresh opaque version.
+fn fresh_version() -> String {
+    let mut bytes = [0u8; 16];
+    getrandom::fill(&mut bytes).expect("random bytes");
+    hex::encode(bytes)
 }
 
 /// A cache over a [`Leasable`] adapter, and the adapter.

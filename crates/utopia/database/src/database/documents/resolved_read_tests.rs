@@ -364,7 +364,7 @@ fn a_cache_that_cannot_be_read_or_written_falls_back_to_the_database() {
         counting.intercept(move |operation, key| {
             if !key.contains('#')
                 && key.contains(":sessions:")
-                && matches!(operation, "load" | "getGeneration" | "saveWithLease")
+                && matches!(operation, "load" | "getVersion" | "compareAndSwap")
             {
                 seen.lock().unwrap().push(operation.to_owned());
                 return Err(format!("the cache refused {operation}"));
@@ -379,9 +379,11 @@ fn a_cache_that_cannot_be_read_or_written_falls_back_to_the_database() {
         // PHP checks the warnings it prints; each one stands for an
         // operation the cache refused.
         let refused = refused.lock().unwrap().clone();
-        for operation in ["load", "getGeneration", "saveWithLease"] {
+        for operation in ["load", "getVersion"] {
             assert!(refused.iter().any(|o| o == operation), "{operation} was attempted: {refused:?}");
         }
+        // 10.0.0: a read without a lease must not populate the cache.
+        assert!(!refused.iter().any(|o| o == "compareAndSwap"), "no fill was attempted: {refused:?}");
     });
 }
 

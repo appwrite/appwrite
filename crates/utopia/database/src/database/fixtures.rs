@@ -252,8 +252,13 @@ impl utopia_cache::Adapter for ObservedCache {
     }
 
     async fn version(&self, key: &str) -> utopia_cache::Result<String> {
-        self.count("getGeneration", key)?;
+        self.count("getVersion", key)?;
         self.inner.version(key).await
+    }
+
+    async fn load_versioned(&self, key: &str) -> utopia_cache::Result<utopia_cache::Snapshot> {
+        self.count("loadVersioned", key)?;
+        self.inner.load_versioned(key).await
     }
 
     async fn compare_and_swap(
@@ -263,7 +268,7 @@ impl utopia_cache::Adapter for ObservedCache {
         hash: &str,
         version: &str,
     ) -> utopia_cache::Result<Option<String>> {
-        self.count("saveWithLease", key)?;
+        self.count("compareAndSwap", key)?;
         self.inner.compare_and_swap(key, data, hash, version).await
     }
 }

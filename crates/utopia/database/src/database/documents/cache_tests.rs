@@ -169,7 +169,7 @@ fn with_cache_does_not_cache_false_values() {
         let (db, _, cache) = database();
         let calls = Mutex::new(0);
         assert_eq!(cached(&db, "key", Value::Bool(false), Some(""), &calls).await, Value::Bool(false));
-        assert_eq!(cache.keys(), ["key#epoch"]);
+        assert_eq!(cache.count_values(), 1, "only the epoch is stored");
         assert_eq!(cached(&db, "key", Value::from("fresh"), Some(""), &calls).await, Value::from("fresh"));
         assert_eq!(*calls.lock().unwrap(), 2);
     });
@@ -204,7 +204,7 @@ fn with_cache_does_not_cache_collectionless_documents_or_mixed_arrays() {
         assert_eq!(cached(&db, "mixed", mixed.clone(), Some(""), &calls).await, mixed);
         assert_eq!(cached(&db, "mixed", mixed.clone(), Some(""), &calls).await, mixed);
         assert_eq!(*calls.lock().unwrap(), 2);
-        assert_eq!(cache.keys(), ["key#epoch", "mixed#epoch"]);
+        assert_eq!(cache.count_values(), 2, "only the epochs are stored");
     });
 }
 

@@ -68,7 +68,7 @@ async fn assert_mutation_retires_queries<F: Future>(database: &Database, mutatio
     let scope = scope(database).await;
     let empty = Value::Array(Default::default());
     let before = query_cache.entry(&scope, "users", &empty, "").await.unwrap().expect("an entry");
-    let generation = query_cache.generation(&before).await.unwrap();
+    let generation = query_cache.lease(&before).await.unwrap();
     assert!(query_cache.set(&before, &[with_id("stale")], &generation).await.unwrap());
     assert_eq!(ids(&query_cache.get(&before).await.unwrap().unwrap()), ["stale"]);
 
@@ -76,7 +76,7 @@ async fn assert_mutation_retires_queries<F: Future>(database: &Database, mutatio
 
     let after = query_cache.entry(&scope, "users", &empty, "").await.unwrap().expect("the mutation leaves it usable");
     assert_eq!(query_cache.get(&after).await.unwrap(), None, "the mutation must retire what was cached before it");
-    let generation = query_cache.generation(&after).await.unwrap();
+    let generation = query_cache.lease(&after).await.unwrap();
     assert!(query_cache.set(&after, &[with_id("fresh")], &generation).await.unwrap());
     assert_eq!(ids(&query_cache.get(&after).await.unwrap().unwrap()), ["fresh"]);
 }
@@ -149,7 +149,7 @@ fn set_query_cache_invalidates_while_installed_and_stops_once_removed() {
         let scope = scope(&database).await;
         let empty = Value::Array(Default::default());
         let before = query.entry(&scope, "users", &empty, "").await.unwrap().unwrap();
-        let generation = query.generation(&before).await.unwrap();
+        let generation = query.lease(&before).await.unwrap();
         assert!(query.set(&before, &[with_id("detached")], &generation).await.unwrap());
         database.create_document("users", with_id("b")).await.unwrap();
         let after = query.entry(&scope, "users", &empty, "").await.unwrap().unwrap();
@@ -479,7 +479,7 @@ fn a_mandatory_invalidation_failure_escapes_a_silent_scope() {
         find(&database, "users", vec![]).await;
         cache.fail_blocks();
         let error = database.silent(database.create_document("users", with_id("user"))).await.unwrap_err();
-        assert_eq!(error.kind(), Kind::Runtime);
+        assert_eq!(error.kind(), Kind::CacheUnavailable);
     });
 }
 
@@ -523,7 +523,7 @@ async fn assert_rolls_back_on_invalidation_failure(mutation: usize) {
         _ => database.delete_document("users", "existing").await.map(|_| ()),
     };
     let error = result.expect_err("the invalidation failure is propagated");
-    assert!(error.message().contains("query cache epoch"), "{}", error.message());
+    assert_eq!(error.kind(), Kind::CacheUnavailable, "{}", error.message());
     assert_eq!(names(&database).await, original, "the cached result still matches the rolled-back collection");
 
     database.set_query_cache(None);

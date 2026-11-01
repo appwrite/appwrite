@@ -77,11 +77,18 @@ fn document_reads(adapter: &Observed) -> usize {
     adapter.count(|op| matches!(op, Op::GetDocument { collection, .. } if collection != METADATA))
 }
 
-/// `FailDocumentEpochMemory`: a Memory cache whose tombstones or epoch
-/// activations can be refused.
+/// `FailDocumentEpochMemory`: a Memory cache whose registrations (a
+/// `#state` record with owners) or completions (one without) can be refused;
+/// `failActivations()` refuses the next three completions.
 struct FailEpochs {
     blocks: AtomicBool,
-    activations: Mutex<Option<String>>,
+    activations: Mutex<Option<(String, usize)>>,
+}
+
+impl FailEpochs {
+    fn fail_activations(&self, fragment: &str) {
+        *self.activations.lock().unwrap() = Some((fragment.to_owned(), 3));
+    }
 }
 
 fn fail_epochs() -> (Arc<Leasable>, Arc<FailEpochs>) {
@@ -89,16 +96,20 @@ fn fail_epochs() -> (Arc<Leasable>, Arc<FailEpochs>) {
     let fails = Arc::new(FailEpochs { blocks: AtomicBool::new(false), activations: Mutex::new(None) });
     let state = fails.clone();
     cache.on_save(move |key, _, data| {
-        let php_std::Value::Str(data) = data else { return None };
-        if !key.ends_with("#epoch") {
+        let php_std::Value::Array(data) = data else { return None };
+        if !key.ends_with("#state") {
             return None;
         }
-        let blocked = data.as_bytes().starts_with(b"blocked:");
-        if blocked && state.blocks.load(Ordering::SeqCst) {
+        let owners = matches!(data.get_str("owners"), Some(php_std::Value::Array(o)) if !o.is_empty());
+        if owners && state.blocks.load(Ordering::SeqCst) {
             return Some(Ok(false));
         }
-        match state.activations.lock().unwrap().as_deref() {
-            Some(fragment) if !blocked && key.contains(fragment) => Some(Ok(false)),
+        let mut activations = state.activations.lock().unwrap();
+        match activations.as_mut() {
+            Some((fragment, left)) if !owners && *left > 0 && key.contains(fragment.as_str()) => {
+                *left -= 1;
+                Some(Ok(false))
+            }
             _ => None,
         }
     });
@@ -125,7 +136,7 @@ fn a_block_failure_rolls_back_the_mutation() {
         create_hook(&database).await;
         fails.blocks.store(true, Ordering::SeqCst);
         let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
-        assert!(error.message().contains("block document cache epoch"), "{}", error.message());
+        assert!(error.message().contains("Unable to save cache snapshot"), "{}", error.message());
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("original"));
     });
 }
@@ -136,7 +147,7 @@ fn an_activation_failure_after_commit_leaves_the_epoch_blocked() {
         let (cache, fails) = fail_epochs();
         let database = with_cache(&cache, None, None).await;
         create_hook(&database).await;
-        *fails.activations.lock().unwrap() = Some("#epoch".into());
+        fails.fail_activations("#state");
         rename(&database, "webhooks", "hook", "updated").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
@@ -160,7 +171,7 @@ fn an_activation_failure_does_not_strand_other_collection_epochs() {
             .await
             .unwrap();
         assert_eq!(name(&database, "logs", "log").await, Value::from("original"));
-        *fails.activations.lock().unwrap() = Some("collection:webhooks#epoch".into());
+        fails.fail_activations("collection:webhooks#state");
         database
             .with_transaction(|| async {
                 rename(&database, "webhooks", "hook", "updated").await?;
@@ -216,7 +227,7 @@ fn a_cache_flush_after_activation_reads_generations_does_not_fail_the_committed_
         cache.on_generation(move |key| {
             (key.ends_with("collection:webhooks#finished") && armed.swap(false, Ordering::SeqCst)).then(|| {
                 let cache = weak.upgrade().unwrap();
-                let generation = cache.generation_now(key);
+                let generation = cache.version_now(key);
                 cache.flush_now();
                 Ok(generation)
             })
@@ -316,7 +327,7 @@ fn overlapping_writes_succeed_on_a_cache_without_fields() {
                 fails.blocks.store(true, Ordering::SeqCst);
                 let error = rename(&other, "webhooks", "hook", "updated").await.unwrap_err();
                 fails.blocks.store(false, Ordering::SeqCst);
-                assert!(error.message().contains("block document cache epoch"), "{}", error.message());
+                assert!(error.message().contains("Unable to save cache snapshot"), "{}", error.message());
                 Ok(())
             })
             .await
@@ -352,7 +363,7 @@ fn an_owner_release_failure_does_not_fail_the_committed_write() {
             .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
             .await
             .unwrap();
-        cache.fail_field_purges();
+        cache.fail_completions();
         rename(&database, "webhooks", "hook", "updated").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
@@ -365,7 +376,7 @@ fn a_lost_activation_does_not_keep_the_collection_uncached() {
     run(|| async {
         let (cache, fails) = fail_epochs();
         let (database, adapter) = counted(&cache).await;
-        *fails.activations.lock().unwrap() = Some("#epoch".into());
+        fails.fail_activations("#state");
         rename(&database, "webhooks", "hook", "updated").await.unwrap();
         assert_eq!(name(&database, "webhooks", "hook").await, Value::from("updated"));
         change(&database, "webhooks", "hook").await;
@@ -380,22 +391,48 @@ fn a_lost_activation_does_not_keep_the_collection_uncached() {
     });
 }
 
-/// `AbandoningCache`: refuses the next release of an owner registration,
-/// and every later release of that registration, as the release is retried.
+/// `AbandoningCache`: refuses the completion that releases the next write
+/// to finish, and every later completion releasing only that write, as the
+/// completion is retried.
 fn abandoning() -> (Arc<Leasable>, Arc<AtomicBool>) {
     let cache = Leasable::new();
     let abandoning = Arc::new(AtomicBool::new(false));
     let flag = abandoning.clone();
     let abandoned = Arc::new(Mutex::new(String::new()));
-    cache.on_purge(move |key, hash| {
-        if hash.is_empty() || !key.ends_with("#owners") {
+    let weak: Weak<Leasable> = Arc::downgrade(&cache);
+    let owners = |value: Option<&php_std::Value>| -> Option<Vec<String>> {
+        match value {
+            Some(php_std::Value::Array(state)) => match state.get_str("owners") {
+                Some(php_std::Value::Array(owners)) => Some(
+                    owners
+                        .iter()
+                        .map(|(k, _)| match k {
+                            php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                            php_std::types::KeyRef::Int(i) => i.to_string(),
+                        })
+                        .collect(),
+                ),
+                _ => None,
+            },
+            _ => None,
+        }
+    };
+    cache.on_swap(move |key, data, _| {
+        if !key.ends_with("#state") {
             return None;
         }
+        let before = weak.upgrade().unwrap().raw(key, "");
+        let removed: Vec<String> = match (owners(before.as_ref()), owners(Some(data))) {
+            (Some(before), Some(after)) => before.into_iter().filter(|o| !after.contains(o)).collect(),
+            _ => Vec::new(),
+        };
         let mut abandoned = abandoned.lock().unwrap();
-        if flag.swap(false, Ordering::SeqCst) {
-            *abandoned = hash.to_owned();
+        if !removed.is_empty() && flag.swap(false, Ordering::SeqCst) {
+            *abandoned = removed[0].clone();
         }
-        (*abandoned == hash).then_some(Ok(false))
+        (!abandoned.is_empty() && removed.len() == 1 && removed[0] == *abandoned).then(|| {
+            Err(utopia_cache::Error::Unavailable { message: "Completion unavailable".to_owned(), previous: None })
+        })
     });
     (cache, abandoning)
 }

@@ -91,7 +91,7 @@ impl Mutation {
                 let (php_std::types::KeyRef::Str(owner), php_std::Value::Int(created)) = (owner, created) else {
                     return Err(unavailable(format!("Invalid cache writer in '{key}'")));
                 };
-                let owner = String::from_utf8_lossy(owner.as_bytes()).into_owned();
+                let owner = String::from_utf8_lossy(owner).into_owned();
                 if begin || created.wrapping_add(timeout) > now {
                     owners.push((owner, *created));
                 } else if token.is_some() {
