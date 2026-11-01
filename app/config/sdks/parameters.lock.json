@@ -2848,12 +2848,20 @@
             "expire",
             "description"
         ],
+        "organization.createProjectTransfer": [
+            "projectId",
+            "recipientId",
+            "expire"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
         "organization.deleteProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.deleteProjectTransfer": [
+            "transferId"
         ],
         "organization.getProject": [
             "projectId"
@@ -2862,7 +2870,16 @@
             "projectId",
             "keyId"
         ],
+        "organization.getProjectTransfer": [
+            "transferId",
+            "secret"
+        ],
         "organization.listProjectKeys": [
+            "projectId",
+            "queries",
+            "total"
+        ],
+        "organization.listProjectTransfers": [
             "projectId",
             "queries",
             "total"
@@ -2883,6 +2900,10 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "organization.updateProjectTransferStatus": [
+            "transferId",
+            "secret"
         ],
         "ping.get": [],
         "presences.delete": [
@@ -2996,6 +3017,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -3404,6 +3426,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -7062,6 +7087,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -7470,6 +7496,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",

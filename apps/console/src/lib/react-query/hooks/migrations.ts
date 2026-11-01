@@ -358,6 +358,100 @@ export function useCsvImportMigrations(
 }
 
 // ============================================================================
+// ENVIRONMENT COPY (an environment's Appwrite to Appwrite migration from its project)
+// ============================================================================
+
+/**
+ * The latest Appwrite to Appwrite migrations of a project. In an environment the
+ * newest one is its copy from the project it belongs to.
+ */
+export async function fetchEnvironmentCopyMigrations(
+  projectId: string,
+  region?: string,
+) {
+  if (!projectId) {
+    return { migrations: [] as Models.Migration[] }
+  }
+  // A project the Console has not loaded yet is not in the region cache, so a
+  // caller that knows the region (a freshly created environment) passes it
+  const projectSdk = sdk.forProject(projectId, region)
+  const response = await projectSdk.migrations.list({
+    queries: [
+      Query.equal('source', 'Appwrite'),
+      Query.equal('destination', 'Appwrite'),
+      Query.orderDesc('$createdAt'),
+      Query.limit(5),
+    ],
+  })
+  return {
+    migrations: (response.migrations || []) as Models.Migration[],
+  }
+}
+
+/**
+ * Hook to fetch the environment copies tracked in this session.
+ * Only runs when sessionCopyIds has length > 0. Progress updates come from
+ * realtime (migrations.*.update); no polling or refetch on window focus.
+ */
+export function useEnvironmentCopyMigrations(
+  projectId: string | null | undefined,
+  sessionCopyIds: string[],
+) {
+  const hasSessionIds = sessionCopyIds.length > 0
+  const { data, refetch } = useQuery({
+    queryKey: [
+      'migrations',
+      'project',
+      projectId,
+      'environment-copy',
+      sessionCopyIds,
+    ],
+    queryFn: async () => {
+      const result = await fetchEnvironmentCopyMigrations(projectId!)
+      const set = new Set(sessionCopyIds)
+      return {
+        migrations: (result.migrations || []).filter((m) => set.has(m.$id)),
+      }
+    },
+    enabled: !!projectId && hasSessionIds,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+  })
+  return {
+    migrations: data?.migrations ?? [],
+    refetch,
+  }
+}
+
+/**
+ * Hook to find a copy still under way when an environment is opened, so a
+ * reload mid-copy shows its progress again. Runs once per project.
+ */
+export function useLatestEnvironmentCopyMigration(
+  projectId: string | null | undefined,
+  enabled: boolean,
+) {
+  const { data } = useQuery({
+    queryKey: [
+      'migrations',
+      'project',
+      projectId,
+      'environment-copy',
+      'latest',
+    ],
+    queryFn: async () => {
+      const result = await fetchEnvironmentCopyMigrations(projectId!)
+      return { migration: result.migrations[0] ?? null }
+    },
+    enabled: !!projectId && enabled,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    retry: false,
+  })
+  return data?.migration ?? null
+}
+
+// ============================================================================
 // CSV EXPORT / IMPORT LIST (for database Export / Import tab) – single API call
 // ============================================================================
 

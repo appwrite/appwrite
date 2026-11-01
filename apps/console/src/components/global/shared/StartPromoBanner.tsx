@@ -30,8 +30,6 @@ import {
   type UserPrefs,
 } from '@/lib/user-prefs-keys'
 
-const START_PROMO_BANNER = getConsoleBannerById(START_PROMO_BANNER_ID)!
-
 const START_PROMO_IMAGE_MASK_STYLE = {
   WebkitMaskImage:
     'linear-gradient(to right, #000 30%, transparent 72%), linear-gradient(to bottom, #000 62%, transparent 86%)',
@@ -60,9 +58,13 @@ export function StartPromoBanner() {
   const audience = useStartPromoBannerAudience()
   const countryCode = useVisitorCountryCode()
   const promoContent = resolveStartPromoBannerContent(countryCode)
+  // Launch and expansion countries run on separate schedules and dismissals.
+  const bannerId = promoContent?.bannerId ?? START_PROMO_BANNER_ID
+  const banner = getConsoleBannerById(bannerId)!
   const [optimisticDismissed, setOptimisticDismissed] = useState(false)
-  const [guestDismissed, setGuestDismissed] = useState(() =>
-    isGuestConsoleBannerDismissed(START_PROMO_BANNER_ID),
+  const guestDismissed = useMemo(
+    () => isGuestConsoleBannerDismissed(bannerId),
+    [bannerId],
   )
   const [mountExpanded, setMountExpanded] = useState(
     () => startPromoBannerSkipEntrance,
@@ -72,15 +74,15 @@ export function StartPromoBanner() {
   )
   const showBannerRef = useRef(false)
 
-  const preview = isPreviewEnabled(START_PROMO_BANNER_ID)
+  const preview = isPreviewEnabled(bannerId)
 
   const dismissedFromPrefs = useMemo(
     () =>
       isConsoleBannerDismissed(
         account?.prefs as UserPrefs | undefined,
-        START_PROMO_BANNER_ID,
+        bannerId,
       ),
-    [account?.prefs],
+    [account?.prefs, bannerId],
   )
 
   const dismissed =
@@ -88,7 +90,7 @@ export function StartPromoBanner() {
     dismissedFromPrefs ||
     (!isAuthenticated && guestDismissed)
 
-  const scheduledVisible = isConsoleBannerVisible(START_PROMO_BANNER, {
+  const scheduledVisible = isConsoleBannerVisible(banner, {
     preview,
     dismissed,
   })
@@ -162,11 +164,10 @@ export function StartPromoBanner() {
     event.stopPropagation()
     setOptimisticDismissed(true)
     if (isAuthenticated) {
-      dismissBanner.mutate(START_PROMO_BANNER_ID)
+      dismissBanner.mutate(bannerId)
       return
     }
-    persistGuestConsoleBannerDismiss(START_PROMO_BANNER_ID)
-    setGuestDismissed(true)
+    persistGuestConsoleBannerDismiss(bannerId)
   }
 
   const headline = t(promoContent.headline)
@@ -194,7 +195,7 @@ export function StartPromoBanner() {
         >
           <Link
             to={BLOG_POST_PATH}
-            {...analyticsAttrs(START_PROMO_BANNER.event)}
+            {...analyticsAttrs(banner.event)}
             aria-label={`${headline}. ${subline} ${ctaLabel}`}
             className="group relative z-0 flex min-h-28 w-full cursor-pointer items-center justify-center px-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-7 sm:px-9 sm:pe-12"
           >

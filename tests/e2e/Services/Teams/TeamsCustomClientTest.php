@@ -183,6 +183,222 @@ final class TeamsCustomClientTest extends Scope
         $this->assertFalse($account['body']['phoneVerification']);
     }
 
+    public function testUpdateMembershipStatusRevokesUnverifiedAccountCredentials(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Claimed Invites');
+        $email = \uniqid() . 'claimed-invite@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+
+        /**
+         * Test for FAILURE
+         * The registrant's session and password no longer reach the claimed account.
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(401, $login['headers']['status-code']);
+    }
+
+    public function testUpdateMembershipStatusKeepsMFAInForce(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('MFA Invites');
+        $email = \uniqid() . 'mfa-invite@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $serverHeaders = \array_merge($headers, ['x-appwrite-key' => $this->getProject()['apiKey']]);
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => 'unique()',
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+        $userId = $account['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+        $ownerHeaders = \array_merge($headers, ['cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId]]);
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $ownerHeaders);
+        $this->assertSame(200, $authenticator['headers']['status-code']);
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 5) {
+            \sleep($totp->expiresIn() + 1);
+        }
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $ownerHeaders, [
+            'otp' => $totp->now(),
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $ownerHeaders, ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $params = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($email)['html']);
+
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertSame(200, $confirmation['headers']['status-code']);
+
+        // The invite proves the inbox only, the session must still pass the TOTP challenge
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $userId, $serverHeaders);
+        $this->assertTrue($user['body']['mfa']);
+        $this->assertFalse($user['body']['emailVerification']);
+        $factors = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/factors', $serverHeaders);
+        $this->assertTrue($factors['body']['totp']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $ownerHeaders);
+        $this->assertSame(200, $account['headers']['status-code']);
+    }
+
+    public function testUpdateMembershipStatusByPhoneRevokesUnverifiedAccountCredentials(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $team = $this->createTeamHelper('Claimed Phone Invites');
+        $phone = '+1202' . \random_int(1000000, 9999999);
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        // A phone-only account registered by someone who does not own the phone
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', $headers);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId];
+
+        $account = $this->client->call(Client::METHOD_PATCH, '/account/phone', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]), [
+            'phone' => $phone,
+            'password' => 'registrant-password',
+        ]);
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertFalse($account['body']['phoneVerification']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'phone' => $phone,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#invitation',
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+
+        $sms = $this->getLastRequestForProject($projectId, Scope::REQUEST_TYPE_SMS, [
+            'header_X-Username' => 'username',
+            'header_X-Key' => 'password',
+            'method' => 'POST',
+        ], probe: function (array $request) use ($phone) {
+            $this->assertEquals($phone, $request['data']['to'] ?? null);
+        });
+        $this->assertNotEmpty($sms);
+        \parse_str((string) \parse_url((string) $sms['data']['message'], PHP_URL_QUERY), $params);
+
+        /**
+         * Test for SUCCESS
+         */
+        $confirmation = $this->client->call(Client::METHOD_PATCH, '/teams/' . $params['teamId'] . '/memberships/' . $params['membershipId'] . '/status', $headers, [
+            'userId' => $params['userId'],
+            'secret' => $params['secret'],
+        ]);
+        $this->assertEquals(200, $confirmation['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $confirmation['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($phone, $account['body']['phone']);
+        $this->assertTrue($account['body']['phoneVerification']);
+
+        /**
+         * Test for FAILURE
+         * The registrant's session no longer reaches the claimed account.
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => $cookie,
+        ]));
+        $this->assertEquals(401, $account['headers']['status-code']);
+    }
+
     public function testUpdateMembershipStatusAfterEmailChange(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -527,6 +743,27 @@ final class TeamsCustomClientTest extends Scope
 
         $this->assertEquals(200, $team['headers']['status-code']);
         $this->assertEquals(2, $team['body']['total']);
+    }
+
+    public function testCreateMembershipKeepsRedirectPlaceholders(): void
+    {
+        $team = $this->createTeamHelper('evil.test/x?');
+        $email = \uniqid() . 'invitee@localhost.test';
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $team['teamUid'] . '/memberships', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/{{team}}/join-us',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $this->assertStringContainsString('href="http://localhost:5000/{{team}}/join-us?', (string) $lastEmail['html']);
+        $this->assertStringNotContainsString('http://localhost:5000/evil.test/x?', (string) $lastEmail['html']);
     }
 
     public function testMembershipWritesFollowPrivacy(): void

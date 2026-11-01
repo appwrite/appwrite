@@ -19,6 +19,7 @@ type CreateDatabaseDedicatedOptionsProps = {
   onReplicaCountChange: (count: number) => void
   pitrEnabled: boolean
   onPitrEnabledChange: (enabled: boolean) => void
+  orgId?: string
 }
 
 function getReplicaOption(count: number) {
@@ -35,6 +36,7 @@ export function CreateDatabaseDedicatedOptions({
   onReplicaCountChange,
   pitrEnabled,
   onPitrEnabledChange,
+  orgId,
 }: CreateDatabaseDedicatedOptionsProps) {
   const t = useT()
   const replicaOption = getReplicaOption(replicaCount)
@@ -154,7 +156,9 @@ export function CreateDatabaseDedicatedOptions({
                   className="h-8 shrink-0 text-[13px]"
                   asChild
                 >
-                  <ContactSalesLink>{t('Contact sales')}</ContactSalesLink>
+                  <ContactSalesLink source="replicas" orgId={orgId}>
+                    {t('Contact sales')}
+                  </ContactSalesLink>
                 </Button>
               </div>
             )}

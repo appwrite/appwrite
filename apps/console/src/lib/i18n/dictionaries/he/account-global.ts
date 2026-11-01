@@ -1297,6 +1297,8 @@ export const heAccountGlobalDictionary: Record<string, string> = {
   'Signing you in': 'מחברים אתכם',
   'Please wait while we confirm your magic URL.':
     'המתינו בזמן שאנחנו מאמתים את ה-Magic URL שלכם.',
+  'Continue and sign in to this project instead?':
+    'להמשיך ולהתחבר לפרויקט הזה במקום זאת?',
   'Unable to sign you in': 'לא ניתן לחבר אתכם',
   'Go to sign in': 'מעבר להתחברות',
   'Access granted': 'הגישה אושרה',
@@ -1407,4 +1409,53 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הדפדפן יבקש מכם ליצור מפתח גישה במכשיר הזה או במנהל הסיסמאות שלכם.',
   'You will no longer be able to sign in with this passkey. This action cannot be undone.':
     'לא תוכלו עוד להתחבר עם מפתח הגישה הזה. לא ניתן לבטל פעולה זו.',
+
+  // Zero projects
+  'Build window ended': 'חלון הבנייה הסתיים',
+  'Build window ended.': 'חלון הבנייה הסתיים.',
+  'Claim it to keep it': 'תבעו בעלות כדי לשמור עליו',
+  'Claim project': 'תביעת בעלות על הפרויקט',
+  'Claim this project to create more projects':
+    'תבעו בעלות על הפרויקט כדי ליצור פרויקטים נוספים',
+  'Claim this project to create organizations':
+    'תבעו בעלות על הפרויקט כדי ליצור ארגונים',
+  'Claim this project to set a password':
+    'תבעו בעלות על הפרויקט כדי להגדיר סיסמה',
+  'Claim this project to set an email':
+    'תבעו בעלות על הפרויקט כדי להגדיר אימייל',
+  'Claim within {time} or the project is deleted.':
+    'תבעו בעלות בתוך {time}, אחרת הפרויקט יימחק.',
+  'This project is paused and its data is kept until the claim deadline. Claim it to keep building.':
+    'הפרויקט מושהה והנתונים שלו נשמרים עד המועד האחרון לתביעת בעלות. תבעו בעלות כדי להמשיך לבנות.',
+  'Claim your project': 'תביעת בעלות על הפרויקט',
+  'Could not sign out. Try again.': 'לא ניתן היה להתנתק. נסו שוב.',
+  'Project deleted': 'הפרויקט נמחק',
+  'This is a temporary project. Open the claim link you were given to keep it.':
+    'זהו פרויקט זמני. פתחו את קישור תביעת הבעלות שקיבלתם כדי לשמור עליו.',
+  'This project was not claimed in time and has been deleted.':
+    'לא נתבעה בעלות על הפרויקט בזמן והוא נמחק.',
+  'This project was not claimed in time, so it and its data were deleted.':
+    'לא נתבעה בעלות על הפרויקט בזמן, ולכן הוא והנתונים שלו נמחקו.',
+  'Zero project': 'פרויקט Zero',
+  '{time} left to build': 'נותרו {time} לבנייה',
+  'A project moves into one of your organizations. Create one to receive it.':
+    'פרויקט עובר לאחד מהארגונים שלכם. צרו ארגון כדי לקבל אותו.',
+  'Could not create the organization': 'לא ניתן היה ליצור את הארגון',
+  'Create a free organization': 'יצירת ארגון חינמי',
+  'Create an account to keep this project, with everything already built in it.':
+    'צרו חשבון כדי לשמור את הפרויקט, עם כל מה שכבר בניתם בו.',
+  'Sign in or create an account to claim this project.':
+    'התחברו או צרו חשבון כדי לתבוע בעלות על הפרויקט.',
+  'The build window ended and the project is paused. Create an account to claim it and bring it back with all its data.':
+    'חלון הבנייה הסתיים והפרויקט מושהה. צרו חשבון כדי לתבוע בעלות עליו ולהחזיר אותו עם כל הנתונים שלו.',
+  'Project already claimed': 'כבר נתבעה בעלות על הפרויקט',
+  'This project now belongs to an account. Sign in to that account to open it.':
+    'הפרויקט שייך עכשיו לחשבון. התחברו לחשבון הזה כדי לפתוח אותו.',
+  'Owner role required': 'נדרש תפקיד בעלים',
+  'Only an owner of the organization can claim a project into it.':
+    'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו.',
+  'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.':
+    'רק בעלים של הארגון יכולים לתבוע בעלות על פרויקט לתוכו. צרו ארגון בבעלותכם כדי לקבל אותו.',
+  'Until the project is claimed, the site only opens on a device that has opened its owner link. Use Visit on that device first.':
+    'עד שתיתבע בעלות על הפרויקט, האתר נפתח רק במכשיר שפתח את קישור הבעלים שלו. השתמשו קודם ב-Visit באותו מכשיר.',
 }

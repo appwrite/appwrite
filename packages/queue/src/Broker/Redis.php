@@ -398,10 +398,14 @@ class Redis implements Synchronous, Consumer
                 break;
             }
 
-            // The payload expired; nothing left to requeue.
+            // An expired payload leaves nothing to requeue. One the codec cannot
+            // read is parked, so it stays inspectable and something references it.
             $job = $this->getJob($queue, $pid);
             if ($job === false) {
-                $this->script($this->commands, 'retry', [$failed], [$pid]);
+                $keys = \is_string($this->commands->get("{$queue->namespace}.jobs.{$queue->name}.{$pid}"))
+                    ? [$failed, "{$queue->namespace}.dead.{$queue->name}"]
+                    : [$failed];
+                $this->script($this->commands, 'retry', $keys, [$pid, $pid]);
                 continue;
             }
 
@@ -530,14 +534,16 @@ class Redis implements Synchronous, Consumer
     /**
      * Requeue with a fresh pid and timestamp, carrying the attempt count
      * forward so retry() and reap() can park messages that never succeed.
-     * The failed entry goes in the same step, so a sweep that stops part way
-     * leaves the job failed rather than nowhere.
+     * The failed entry and the payload under the old pid go in the same step,
+     * so a sweep that stops part way leaves the job failed rather than nowhere,
+     * and no payload is left behind that nothing references and may never expire.
      */
     private function requeue(Queue $queue, string $pid, Message $job): bool
     {
         return $this->script($this->commands, 'retry', [
             "{$queue->namespace}.failed.{$queue->name}",
             "{$queue->namespace}.queue.{$queue->name}",
+            "{$queue->namespace}.jobs.{$queue->name}.{$pid}",
         ], [$pid, $this->retryPayload($queue, $job)]) === 1;
     }
 

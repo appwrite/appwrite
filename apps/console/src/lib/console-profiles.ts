@@ -69,6 +69,8 @@ export type ConsoleProfileFeatures = {
   videos: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
+  /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
+  projectTransfers: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -136,6 +138,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
   projectEnvironments: 'Project environments',
+  projectTransfers: 'Project transfers',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -190,6 +193,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       projectEnvironments: false,
+      projectTransfers: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -233,6 +237,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       projectEnvironments: false,
+      projectTransfers: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

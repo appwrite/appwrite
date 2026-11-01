@@ -44,7 +44,7 @@ function EducationPlanPreviewPage() {
       otherOrganizations={
         view === 'ended-single-org' ? [] : MOCK_OTHER_ORGANIZATIONS
       }
-      onDismiss={view === 'reminder' ? () => {} : undefined}
+      onDismiss={ended ? undefined : () => {}}
       onContinue={() => {}}
     />
   )
