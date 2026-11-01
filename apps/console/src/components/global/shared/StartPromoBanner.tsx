@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MouseEvent,
-} from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
@@ -25,10 +19,7 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 import { useVisitorCountryCode } from '@/hooks/use-visitor-country'
 import { useDismissConsoleBanner } from '@/lib/react-query/hooks'
-import {
-  isConsoleBannerDismissed,
-  type UserPrefs,
-} from '@/lib/user-prefs-keys'
+import { isConsoleBannerDismissed, type UserPrefs } from '@/lib/user-prefs-keys'
 
 const START_PROMO_IMAGE_MASK_STYLE = {
   WebkitMaskImage:
@@ -93,6 +84,7 @@ export function StartPromoBanner() {
   const scheduledVisible = isConsoleBannerVisible(banner, {
     preview,
     dismissed,
+    country: countryCode,
   })
 
   const showBanner =
@@ -234,7 +226,9 @@ export function StartPromoBanner() {
                 <span className="text-[24px] font-medium tracking-[-0.02em]">
                   $10
                 </span>
-                <span className="text-[14px] text-[#a8a8b3]">{t('/month')}</span>
+                <span className="text-[14px] text-[#a8a8b3]">
+                  {t('/month')}
+                </span>
               </div>
             </div>
 

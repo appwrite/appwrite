@@ -45,7 +45,22 @@ import {
   HalloweenCautionTape,
   HalloweenCornerTape,
 } from '@/components/global/shared/HalloweenCautionTape'
+import {
+  ChristmasTape,
+  ChristmasCornerTape,
+} from '@/components/global/shared/ChristmasTape'
+import {
+  HanukkahTape,
+  HanukkahCornerTape,
+} from '@/components/global/shared/HanukkahTape'
+import {
+  FourthOfJulyTape,
+  FourthOfJulyCornerTape,
+} from '@/components/global/shared/FourthOfJulyTape'
 import { useHalloween } from '@/hooks/use-halloween'
+import { useChristmas } from '@/hooks/use-christmas'
+import { useHanukkah } from '@/hooks/use-hanukkah'
+import { useFourthOfJuly } from '@/hooks/use-fourth-of-july'
 import { CliSessionSidebar } from './CliSessionSidebar'
 import { CliTerminalResizableLayout } from './CliTerminalResizableLayout'
 import { CliTerminalSearch } from './CliTerminalSearch'
@@ -148,7 +163,9 @@ export function ProjectCliShell() {
           ? undefined
           : {
               height: containerHeight,
-              transitionDuration: isResizing ? '0ms' : `${CLI_SHELL_COLLAPSE_MS}ms`,
+              transitionDuration: isResizing
+                ? '0ms'
+                : `${CLI_SHELL_COLLAPSE_MS}ms`,
             })
       }
     >
@@ -186,7 +203,9 @@ export function ProjectCliShell() {
 }
 
 function CliShellHeaderDivider() {
-  return <div className="mx-0.5 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+  return (
+    <div className="mx-0.5 h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+  )
 }
 
 function CliShellHeaderIconButton({
@@ -386,6 +405,9 @@ function ProjectCliShellPanel({
 
   const isBootstrapping = status === 'bootstrapping'
   const halloween = useHalloween()
+  const christmas = useChristmas()
+  const hanukkah = useHanukkah()
+  const fourthOfJuly = useFourthOfJuly()
 
   const [headerActionsVisible, setHeaderActionsVisible] = useState(open)
 
@@ -414,13 +436,16 @@ function ProjectCliShellPanel({
       )}
 
       {halloween && <HalloweenCautionTape />}
+      {christmas && <ChristmasTape />}
+      {hanukkah && <HanukkahTape />}
+      {fourthOfJuly && <FourthOfJulyTape />}
 
-      <div
-        className="flex h-11 shrink-0 items-center justify-between gap-4 border-b border-border bg-muted/20 px-4 sm:px-6"
-      >
+      <div className="flex h-11 shrink-0 items-center justify-between gap-4 border-b border-border bg-muted/20 px-4 sm:px-6">
         <CliShellHeaderTitle
           showBootstrapSpinner={isBootstrapping}
-          showRetry={status === 'error' || status === 'bootstrapping' || !!bootstrapError}
+          showRetry={
+            status === 'error' || status === 'bootstrapping' || !!bootstrapError
+          }
           onRetry={retryBootstrap}
         />
 
@@ -517,7 +542,10 @@ function ProjectCliShellPanel({
               <Maximize2 className="h-3.5 w-3.5" />
             )}
           </CliShellHeaderIconButton>
-          <CliShellHeaderIconButton title={t('Minimize shell')} onClick={toggle}>
+          <CliShellHeaderIconButton
+            title={t('Minimize shell')}
+            onClick={toggle}
+          >
             <ChevronDown className="h-3.5 w-3.5" />
           </CliShellHeaderIconButton>
         </div>
@@ -572,6 +600,9 @@ function ProjectCliShellPanel({
       />
 
       {halloween && <HalloweenCornerTape />}
+      {christmas && <ChristmasCornerTape />}
+      {hanukkah && <HanukkahCornerTape />}
+      {fourthOfJuly && <FourthOfJulyCornerTape />}
     </div>
   )
 }

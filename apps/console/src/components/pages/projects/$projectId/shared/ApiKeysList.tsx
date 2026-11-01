@@ -223,6 +223,7 @@ export function ApiKeysList({
                         {t('Created')}{' '}
                         <DateTooltip
                           date={apiKey.createdAt}
+                          minUnit="day"
                           className="text-[12px] text-muted-foreground"
                         />
                       </span>
@@ -231,6 +232,7 @@ export function ApiKeysList({
                         {apiKey.lastUsed ? (
                           <DateTooltip
                             date={apiKey.lastUsed}
+                            minUnit="day"
                             className="text-[12px] text-muted-foreground"
                           />
                         ) : (
@@ -247,6 +249,7 @@ export function ApiKeysList({
                               : t('Expires')}{' '}
                             <DateTooltip
                               date={apiKey.expire}
+                              minUnit="day"
                               className="text-[12px] text-muted-foreground"
                             />
                           </>
@@ -365,6 +368,7 @@ export function ApiKeysList({
                   {t('Created')}{' '}
                   <DateTooltip
                     date={viewingKey.createdAt}
+                    minUnit="day"
                     className="text-[12px] text-muted-foreground"
                   />
                 </span>
@@ -373,6 +377,7 @@ export function ApiKeysList({
                   {viewingKey.lastUsed ? (
                     <DateTooltip
                       date={viewingKey.lastUsed}
+                      minUnit="day"
                       className="text-[12px] text-muted-foreground"
                     />
                   ) : (
@@ -389,6 +394,7 @@ export function ApiKeysList({
                         : t('Expires')}{' '}
                       <DateTooltip
                         date={viewingKey.expire}
+                        minUnit="day"
                         className="text-[12px] text-muted-foreground"
                       />
                     </>

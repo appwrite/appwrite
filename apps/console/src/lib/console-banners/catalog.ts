@@ -3,6 +3,7 @@ import type {
   ConsoleBannerCardAspectRatio,
   ConsoleBannerCardSize,
 } from '@/lib/console-banners/floating-card-layout'
+import { START_PLAN_ELIGIBLE_COUNTRIES } from '@/lib/pricing/start-plan'
 
 export type ConsoleBannerScope = 'project' | 'console'
 export type ConsoleBannerPlacement =
@@ -26,8 +27,13 @@ export type ConsoleBannerDefinition = {
   endMs: number
   /** When true, only shown on cloud profile. */
   cloudOnly?: boolean
+  /**
+   * ISO 3166-1 alpha-2 countries that can see this banner.
+   * Omit or leave empty for every country.
+   */
+  countries?: readonly string[]
   /** CTA analytics action id (`data-analytics` / Plausible event). */
-  event: AnalyticsActionId
+  event?: AnalyticsActionId
 }
 
 /** Stable id stored in `console.dismissedBanners` user prefs. */
@@ -39,18 +45,50 @@ export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 export const FIREWALL_SPIDER_PROMO_BANNER_ID = 'firewall-spider-promo-2026-10'
+export const HALLOWEEN_BANNER_ID = 'halloween-2026-10'
+export const HANUKKAH_BANNER_ID = 'hanukkah-2026-12'
+export const CHRISTMAS_BANNER_ID = 'christmas-2026-12'
+export const FOURTH_OF_JULY_BANNER_ID = 'fourth-of-july-2027-07'
+
+/** Countries where Halloween is widely celebrated. */
+export const HALLOWEEN_BANNER_COUNTRIES = [
+  'US',
+  'CA',
+  'MX',
+  'PR',
+  'IE',
+  'GB',
+  'IM',
+  'JE',
+  'GG',
+  'AU',
+  'NZ',
+  'DE',
+  'NL',
+  'BE',
+  'JP',
+  'KR',
+  'PH',
+] as const
+
+/** Hanukkah decorations are Israel-only. */
+export const HANUKKAH_BANNER_COUNTRIES = ['IL'] as const
+
+/** US and territories for Independence Day. */
+export const FOURTH_OF_JULY_BANNER_COUNTRIES = [
+  'US',
+  'PR',
+  'GU',
+  'VI',
+  'AS',
+  'MP',
+] as const
+
+export const START_PROMO_BANNER_COUNTRIES = START_PLAN_ELIGIBLE_COUNTRIES
 
 /** Appwrite Start regional promo for the launch countries (IN, NP, NG, PK), inclusive UTC. */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
-export const START_PROMO_BANNER_END_MS = Date.UTC(
-  2026,
-  10,
-  29,
-  23,
-  59,
-  59,
-  999,
-)
+export const START_PROMO_BANNER_END_MS = Date.UTC(2026, 10, 29, 23, 59, 59, 999)
 
 /**
  * Appwrite Start in 15 more countries: fourteen days from 31 Oct 2026
@@ -107,7 +145,15 @@ export const INIT_RECAP_PROMO_BANNER_END_MS = Date.UTC(
 /**
  * Native OAuth project promo: seven days from launch (inclusive, UTC).
  */
-export const NATIVE_OAUTH_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 24, 0, 0, 0, 0)
+export const NATIVE_OAUTH_PROMO_BANNER_START_MS = Date.UTC(
+  2026,
+  8,
+  24,
+  0,
+  0,
+  0,
+  0,
+)
 export const NATIVE_OAUTH_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   8,
@@ -157,6 +203,43 @@ export const FIREWALL_SPIDER_PROMO_BANNER_END_MS = Date.UTC(
   999,
 )
 
+/**
+ * Halloween console decorations (header cobwebs, sidebar scene, terminal tape).
+ * Seven days ending on Halloween (inclusive, UTC).
+ */
+export const HALLOWEEN_BANNER_START_MS = Date.UTC(2026, 9, 25, 0, 0, 0, 0)
+export const HALLOWEEN_BANNER_END_MS = Date.UTC(2026, 9, 31, 23, 59, 59, 999)
+
+/**
+ * Hanukkah 2026: first candle at sundown 4 Dec through the last day
+ * (inclusive, UTC). Header sevivonim, sidebar hanukkiah, and terminal tape.
+ * The hanukkiah lights one more branch each night after local sundown.
+ */
+export const HANUKKAH_BANNER_START_MS = Date.UTC(2026, 11, 4, 0, 0, 0, 0)
+export const HANUKKAH_BANNER_END_MS = Date.UTC(2026, 11, 12, 23, 59, 59, 999)
+
+/**
+ * Christmas console decorations (header lights, sidebar scene, terminal tape).
+ * Seven days ending on Christmas (inclusive, UTC).
+ */
+export const CHRISTMAS_BANNER_START_MS = Date.UTC(2026, 11, 19, 0, 0, 0, 0)
+export const CHRISTMAS_BANNER_END_MS = Date.UTC(2026, 11, 25, 23, 59, 59, 999)
+
+/**
+ * Fourth of July console decorations (header bunting, sidebar fireworks,
+ * terminal tape). Seven days ending on Independence Day 2027 (inclusive, UTC).
+ */
+export const FOURTH_OF_JULY_BANNER_START_MS = Date.UTC(2027, 5, 28, 0, 0, 0, 0)
+export const FOURTH_OF_JULY_BANNER_END_MS = Date.UTC(
+  2027,
+  6,
+  4,
+  23,
+  59,
+  59,
+  999,
+)
+
 /** Registered console promo banners (header strips, floating cards, takeovers). */
 export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
   {
@@ -197,6 +280,7 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     startMs: START_PROMO_BANNER_START_MS,
     endMs: START_PROMO_BANNER_END_MS,
     cloudOnly: true,
+    countries: START_PROMO_BANNER_COUNTRIES,
     event: 'start-promo-banner-learn-more',
   },
   {
@@ -239,6 +323,45 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     cloudOnly: true,
     event: 'firewall-spider-promo-block',
   },
+  {
+    id: HALLOWEEN_BANNER_ID,
+    title: 'Halloween',
+    scope: 'console',
+    placement: 'overlay',
+    startMs: HALLOWEEN_BANNER_START_MS,
+    endMs: HALLOWEEN_BANNER_END_MS,
+    cloudOnly: true,
+    countries: HALLOWEEN_BANNER_COUNTRIES,
+  },
+  {
+    id: HANUKKAH_BANNER_ID,
+    title: 'Hanukkah',
+    scope: 'console',
+    placement: 'overlay',
+    startMs: HANUKKAH_BANNER_START_MS,
+    endMs: HANUKKAH_BANNER_END_MS,
+    cloudOnly: true,
+    countries: HANUKKAH_BANNER_COUNTRIES,
+  },
+  {
+    id: CHRISTMAS_BANNER_ID,
+    title: 'Christmas',
+    scope: 'console',
+    placement: 'overlay',
+    startMs: CHRISTMAS_BANNER_START_MS,
+    endMs: CHRISTMAS_BANNER_END_MS,
+    cloudOnly: true,
+  },
+  {
+    id: FOURTH_OF_JULY_BANNER_ID,
+    title: 'Fourth of July',
+    scope: 'console',
+    placement: 'overlay',
+    startMs: FOURTH_OF_JULY_BANNER_START_MS,
+    endMs: FOURTH_OF_JULY_BANNER_END_MS,
+    cloudOnly: true,
+    countries: FOURTH_OF_JULY_BANNER_COUNTRIES,
+  },
 ] as const
 
 export function getConsoleBannerById(
@@ -266,7 +389,9 @@ export function isConsoleBannerScheduled(
   return getConsoleBannerScheduleStatus(banner, now) === 'active'
 }
 
-export function formatConsoleBannerUtcRange(banner: ConsoleBannerDefinition): string {
+export function formatConsoleBannerUtcRange(
+  banner: ConsoleBannerDefinition,
+): string {
   const fmt = new Intl.DateTimeFormat('en-US', {
     timeZone: 'UTC',
     month: 'short',

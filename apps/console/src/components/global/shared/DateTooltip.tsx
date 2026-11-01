@@ -35,6 +35,11 @@ interface DateTooltipProps {
   liveUpdateMs?: number
   /** If true, shows the time label without the detail popover */
   disableTooltip?: boolean
+  /**
+   * Finest unit for the trigger label. Day shows "today" instead of
+   * hours, minutes, or "just now". The popover still shows a precise breakdown.
+   */
+  minUnit?: 'day'
 }
 
 type DateTooltipContentProps = Omit<DateTooltipProps, 'date'> & {
@@ -52,6 +57,7 @@ export function DateTooltip({
   live = false,
   liveUpdateMs = 30_000,
   disableTooltip = false,
+  minUnit,
 }: DateTooltipProps) {
   const t = useT()
   const dateObj = parseTooltipDate(date)
@@ -72,6 +78,7 @@ export function DateTooltip({
       live={live}
       liveUpdateMs={liveUpdateMs}
       disableTooltip={disableTooltip}
+      minUnit={minUnit}
     />
   )
 }
@@ -83,6 +90,7 @@ function DateTooltipContent({
   live = false,
   liveUpdateMs = 30_000,
   disableTooltip = false,
+  minUnit,
 }: DateTooltipContentProps) {
   const t = useT()
   const { formatDateTime: formatLocalizedDateTimeForLanguage } =
@@ -114,6 +122,7 @@ function DateTooltipContent({
 
   // Simple relative time for display
   const getSimpleRelativeTime = (): string => {
+    if (minUnit === 'day' && diffDays < 1) return t('today')
     if (diffSeconds < 60) return t('Just now')
 
     const { count, unit } = pickPrimaryRelativeUnit({

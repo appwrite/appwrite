@@ -226,6 +226,7 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Spread the word': '広める',
   'Thank you for building with us.': '一緒に作ってくれてありがとう。',
   'Just now': 'たった今',
+  today: '今日',
   'Ago relative time': '前',
   'In relative time': '後',
   'Keep building': '開発を続ける',
@@ -1370,4 +1371,13 @@ export const jaSharedUiDictionary: Record<string, string> = {
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',
+  // Christmas tape
+  'Merry Christmas': 'メリークリスマス',
+  'Ho ho ho': 'ホーホーホー',
+  // Hanukkah tape
+  'Happy Hanukkah': 'ハッピーハヌカ',
+  'Eight nights': '八つの夜',
+  // Fourth of July tape
+  'Happy 4th': '4th おめでとう',
+  'Independence Day': '独立記念日',
 }

@@ -1307,6 +1307,266 @@ html:not([lang='en']):not([lang='he']) {
   }
 }
 
+/* Christmas: header lights, sidebar trees, and terminal tape */
+@keyframes christmas-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes christmas-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes christmas-fall {
+  from {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(14px);
+    opacity: 0.15;
+  }
+}
+
+@keyframes christmas-scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes christmas-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.christmas-twinkle {
+  animation: christmas-twinkle 2.4s ease-in-out infinite;
+}
+
+.christmas-glow {
+  animation: christmas-glow 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.christmas-fall {
+  animation: christmas-fall 4.8s ease-in-out infinite alternate;
+}
+
+.christmas-scene-in {
+  animation: christmas-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.christmas-marquee {
+  animation: christmas-marquee 40s linear infinite;
+}
+
+/* Hanukkah: header lights, sidebar scene, terminal tape, and menorah */
+@keyframes hanukkah-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes hanukkah-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+@keyframes hanukkah-scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hanukkah-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.hanukkah-twinkle {
+  animation: hanukkah-twinkle 2.4s ease-in-out infinite;
+}
+
+.hanukkah-glow {
+  animation: hanukkah-glow 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.hanukkah-scene-in {
+  animation: hanukkah-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.hanukkah-marquee {
+  animation: hanukkah-marquee 40s linear infinite;
+}
+
+@keyframes hanukkah-spin {
+  from {
+    transform: rotate(-18deg);
+  }
+  to {
+    transform: rotate(18deg);
+  }
+}
+
+.hanukkah-spin {
+  animation: hanukkah-spin 2.6s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+
+@keyframes hanukkah-flicker {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  18% {
+    opacity: 0.75;
+    transform: scaleY(0.86);
+  }
+  42% {
+    opacity: 1;
+    transform: scaleY(1.04);
+  }
+  70% {
+    opacity: 0.82;
+    transform: scaleY(0.92);
+  }
+}
+
+.hanukkah-flicker {
+  animation: hanukkah-flicker 1.8s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+}
+
+/* Fourth of July: header bunting, sidebar fireworks, and terminal tape */
+@keyframes july-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes july-burst {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.55);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.25;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes july-sway {
+  from {
+    transform: rotate(-6deg);
+  }
+  to {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes july-scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes july-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.july-twinkle {
+  animation: july-twinkle 2.4s ease-in-out infinite;
+}
+
+.july-burst {
+  animation: july-burst 2.6s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.july-sway {
+  animation: july-sway 2.8s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: top center;
+}
+
+.july-scene-in {
+  animation: july-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.july-marquee {
+  animation: july-marquee 40s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class*='christmas-'],
+  [class*='hanukkah-'],
+  [class*='july-'] {
+    animation: none !important;
+  }
+}
+
 .upgrade-button-wrapper {
   position: relative;
   padding: 1px;

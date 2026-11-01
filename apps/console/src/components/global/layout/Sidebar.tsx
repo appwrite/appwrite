@@ -75,8 +75,14 @@ import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { HalloweenScene } from '@/components/global/shared/HalloweenScene'
+import { ChristmasScene } from '@/components/global/shared/ChristmasScene'
+import { HanukkahScene } from '@/components/global/shared/HanukkahScene'
+import { FourthOfJulyScene } from '@/components/global/shared/FourthOfJulyScene'
 import { Cobweb } from '@/components/global/shared/HalloweenCobwebs'
 import { useHalloween } from '@/hooks/use-halloween'
+import { useChristmas } from '@/hooks/use-christmas'
+import { useHanukkahNight } from '@/hooks/use-hanukkah'
+import { useFourthOfJuly } from '@/hooks/use-fourth-of-july'
 import { McpNavIconWithStatus } from '@/components/global/shared/McpNavIconWithStatus'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
@@ -388,6 +394,15 @@ export function ConsoleSidebar({
     (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
   const showHalloweenScene = useHalloween()
+  const showChristmasScene = useChristmas()
+  const hanukkahNight = useHanukkahNight()
+  const showHanukkahScene = hanukkahNight !== null
+  const showFourthOfJulyScene = useFourthOfJuly()
+  const showHolidayScene =
+    showHalloweenScene ||
+    showChristmasScene ||
+    showHanukkahScene ||
+    showFourthOfJulyScene
   const showAgentNav = canShowAgentMcpConnectCta(access, features)
   const { data: consents } = useAccountConsents({
     enabled: showAgentNav && !!account,
@@ -484,7 +499,10 @@ export function ConsoleSidebar({
         <span
           key={item.id}
           className={cn(
-            secondarySidebarNavLinkClassName(false, 'cursor-not-allowed text-muted-foreground/50'),
+            secondarySidebarNavLinkClassName(
+              false,
+              'cursor-not-allowed text-muted-foreground/50',
+            ),
             collapsed && !isMobile
               ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
               : SECONDARY_SIDEBAR_NAV_LINK_GRID_TRAILING_CLASS,
@@ -532,7 +550,10 @@ export function ConsoleSidebar({
         {...(navAnalytics ? analyticsAttrs(navAnalytics) : {})}
         onClick={() => handleNavClick(item, isMobile)}
         className={cn(
-          secondarySidebarNavLinkClassName(isActive, 'transition-colors duration-150'),
+          secondarySidebarNavLinkClassName(
+            isActive,
+            'transition-colors duration-150',
+          ),
           collapsed && !isMobile
             ? SECONDARY_SIDEBAR_NAV_LINK_COLLAPSED_CLASS
             : SECONDARY_SIDEBAR_NAV_LINK_GRID_CLASS,
@@ -582,7 +603,10 @@ export function ConsoleSidebar({
     <div key={category.label} className="space-y-0.5">
       {(!collapsed || isMobile) && (
         <p
-          className={cn(SECONDARY_SIDEBAR_GROUP_HEADING_CLASS, isMobile && 'px-3')}
+          className={cn(
+            SECONDARY_SIDEBAR_GROUP_HEADING_CLASS,
+            isMobile && 'px-3',
+          )}
         >
           {category.label}
         </p>
@@ -624,7 +648,7 @@ export function ConsoleSidebar({
             ref={navRef}
             className={cn(
               'overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4',
-              showHalloweenScene && 'relative z-10 flex flex-col [&>*]:shrink-0',
+              showHolidayScene && 'relative z-10 flex flex-col [&>*]:shrink-0',
             )}
             onKeyDown={handleKeyDown}
             role="navigation"
@@ -636,7 +660,10 @@ export function ConsoleSidebar({
             )}
 
             {features.projectEnvironments && (
-              <EnvironmentSwitcher projectId={projectId} collapsed={collapsed} />
+              <EnvironmentSwitcher
+                projectId={projectId}
+                collapsed={collapsed}
+              />
             )}
 
             {/* Overview */}
@@ -647,6 +674,11 @@ export function ConsoleSidebar({
             {visibleCategories.map((category) => renderCategory(category))}
 
             {showHalloweenScene && <HalloweenScene compact={collapsed} />}
+            {showChristmasScene && <ChristmasScene compact={collapsed} />}
+            {hanukkahNight !== null && (
+              <HanukkahScene compact={collapsed} night={hanukkahNight} />
+            )}
+            {showFourthOfJulyScene && <FourthOfJulyScene compact={collapsed} />}
           </nav>
 
           {/* Settings */}

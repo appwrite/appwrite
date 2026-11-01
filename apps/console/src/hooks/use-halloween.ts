@@ -1,18 +1,7 @@
-import { useEffect, useState } from 'react'
-import { useVisitorCountryCode } from '@/hooks/use-visitor-country'
-import { isHalloween } from '@/lib/halloween'
+import { HALLOWEEN_BANNER_ID } from '@/lib/console-banners'
+import { useHolidayBanner } from '@/hooks/use-holiday-banner'
 
-/**
- * True during Halloween week for visitors in a celebrating country.
- * Always false on SSR and the hydrating paint, since the date is the visitor's local one.
- */
+/** True while the Halloween banner is scheduled (UTC, cloud) or force-previewed. */
 export function useHalloween(): boolean {
-  const countryCode = useVisitorCountryCode()
-  const [now, setNow] = useState<Date | null>(null)
-
-  useEffect(() => {
-    setNow(new Date())
-  }, [])
-
-  return now !== null && isHalloween(now, countryCode)
+  return useHolidayBanner(HALLOWEEN_BANNER_ID)
 }

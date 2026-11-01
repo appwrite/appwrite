@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { useConsoleImpersonationRevision } from '@/hooks/use-console-impersonation-revision'
+import { useVisitorCountryCode } from '@/hooks/use-visitor-country'
 import { ANALYTICS_ACTIONS } from '@/lib/analytics-actions'
 import {
   CONSOLE_BANNERS,
@@ -52,8 +53,10 @@ function scheduleStatusLabel(status: ConsoleBannerScheduleStatus): string {
 
 export function DebugMenuConsoleBannersPanel() {
   const consoleImpersonationRevision = useConsoleImpersonationRevision()
-  const { isPreviewEnabled, setPreviewEnabled } = useDebugConsoleBannerPreviews()
+  const { isPreviewEnabled, setPreviewEnabled } =
+    useDebugConsoleBannerPreviews()
   const clearDismissal = useClearConsoleBannerDismissal()
+  const visitorCountry = useVisitorCountryCode()
 
   const { data: account, refetch: refetchAccount } = useQuery({
     queryKey: ['account', 'console', consoleImpersonationRevision],
@@ -92,14 +95,22 @@ export function DebugMenuConsoleBannersPanel() {
   return (
     <div className="space-y-4 px-1 py-1" aria-label="Console banners">
       <div className="space-y-2 rounded-lg px-3 py-2.5">
-        <p className="text-[13px] font-medium text-foreground">Console banners</p>
+        <p className="text-[13px] font-medium text-foreground">
+          Console banners
+        </p>
         <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
           Scheduled promo banners (header strips and bottom-left cards). Preview
-          ignores schedule and dismiss prefs. Dismiss reset clears{' '}
+          ignores schedule, country, and dismiss prefs. Dismiss reset clears{' '}
           <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
             {USER_PREFS_KEY_DISMISSED_BANNERS}
           </code>{' '}
           for the selected banner.
+        </p>
+        <p className="text-[11px] leading-relaxed text-[var(--network-globe-edge)]/80">
+          Visitor country:{' '}
+          <span className="font-mono text-foreground">
+            {visitorCountry ?? 'Unknown'}
+          </span>
         </p>
       </div>
 
@@ -108,6 +119,7 @@ export function DebugMenuConsoleBannersPanel() {
           const scheduleStatus = getConsoleBannerScheduleStatus(banner)
           const dismissed = dismissedIds.includes(banner.id)
           const previewOn = isPreviewEnabled(banner.id)
+          const countries = banner.countries ?? []
 
           return (
             <div
@@ -165,17 +177,42 @@ export function DebugMenuConsoleBannersPanel() {
                 {formatConsoleBannerUtcRange(banner)}
               </p>
 
-              <div className="space-y-0.5">
+              <div className="space-y-1.5">
                 <p className="text-[10px] uppercase tracking-wide text-[var(--network-globe-edge)]/60">
-                  Event
+                  Targeting
                 </p>
-                <p className="font-mono text-[10px] text-[var(--network-globe-edge)]/80">
-                  {banner.event}
-                </p>
-                <p className="text-[11px] text-foreground">
-                  {ANALYTICS_ACTIONS[banner.event]}
-                </p>
+                {countries.length === 0 ? (
+                  <p className="text-[11px] text-[var(--network-globe-edge)]/80">
+                    All countries
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {countries.map((code) => (
+                      <Badge
+                        key={code}
+                        variant={visitorCountry === code ? 'success' : 'info'}
+                        className="text-[10px] shrink-0 font-mono"
+                      >
+                        {code}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
+
+              {banner.event ? (
+                <div className="space-y-0.5">
+                  <p className="text-[10px] uppercase tracking-wide text-[var(--network-globe-edge)]/60">
+                    Event
+                  </p>
+                  <p className="font-mono text-[10px] text-[var(--network-globe-edge)]/80">
+                    {banner.event}
+                  </p>
+                  <p className="text-[11px] text-foreground">
+                    {ANALYTICS_ACTIONS[banner.event]}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="flex items-center justify-between gap-3 rounded-md border border-[color-mix(in_srgb,var(--network-globe-edge)_15%,var(--border))] bg-background/60 px-3 py-2">
                 <div className="min-w-0">
@@ -183,7 +220,7 @@ export function DebugMenuConsoleBannersPanel() {
                     Preview
                   </p>
                   <p className="text-[10px] text-[var(--network-globe-edge)]/70">
-                    Force-show regardless of schedule
+                    Force-show regardless of schedule and country
                   </p>
                 </div>
                 <Switch

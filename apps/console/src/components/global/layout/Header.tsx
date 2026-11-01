@@ -112,7 +112,13 @@ import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { HalloweenCobwebs } from '@/components/global/shared/HalloweenCobwebs'
+import { ChristmasLights } from '@/components/global/shared/ChristmasLights'
+import { HanukkahDreidels } from '@/components/global/shared/HanukkahDreidels'
+import { FourthOfJulyBunting } from '@/components/global/shared/FourthOfJulyBunting'
 import { useHalloween } from '@/hooks/use-halloween'
+import { useChristmas } from '@/hooks/use-christmas'
+import { useHanukkah } from '@/hooks/use-hanukkah'
+import { useFourthOfJuly } from '@/hooks/use-fourth-of-july'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { resolveInitHref } from '@/lib/init/links'
@@ -682,6 +688,9 @@ export function ConsoleHeader({
   )
   const logoColumnWidth = showMarketingNav ? 158 : 60
   const halloween = useHalloween()
+  const christmas = useChristmas()
+  const hanukkah = useHanukkah()
+  const fourthOfJuly = useFourthOfJuly()
 
   return (
     <div className="@container relative w-full overflow-visible">
@@ -2115,7 +2124,10 @@ export function ConsoleHeader({
           )}
         </div>
       </header>
-      {halloween && !showMarketingNav && <HalloweenCobwebs />}
+      {halloween && <HalloweenCobwebs />}
+      {christmas && <ChristmasLights />}
+      {hanukkah && <HanukkahDreidels />}
+      {fourthOfJuly && <FourthOfJulyBunting />}
     </div>
   )
 }

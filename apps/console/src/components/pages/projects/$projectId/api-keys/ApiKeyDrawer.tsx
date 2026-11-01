@@ -289,7 +289,7 @@ export function ApiKeyDrawer({
                       </p>
                       <p className="text-[13px] text-foreground">
                         {apiKey.accessedAt?.trim() ? (
-                          <DateTooltip date={apiKey.accessedAt} />
+                          <DateTooltip date={apiKey.accessedAt} minUnit="day" />
                         ) : (
                           t('Never')
                         )}

@@ -341,6 +341,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Spread the word': 'הפיצו את הבשורה',
   'Thank you for building with us.': 'תודה שאתם בונים איתנו.',
   'Just now': 'הרגע',
+  today: 'היום',
   'Ago relative time': 'לפני',
   'In relative time': 'בעוד',
   minute: 'דקה',
@@ -1391,8 +1392,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
   Previews: 'תצוגות מקדימות',
-  'Early access. Saved in this browser.':
-    'גישה מוקדמת. נשמר בדפדפן הזה.',
+  'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',
   'Visitor, page, and campaign tracking.':
     'מעקב אחרי מבקרים, עמודים וקמפיינים.',
@@ -1400,12 +1400,20 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Switch or clone staging and production.':
     'מעבר או שכפול בין staging לפרודקשן.',
   'Project transfers': 'העברות פרויקטים',
-  'Move a project to another organization.':
-    'העברת פרויקט לארגון אחר.',
+  'Move a project to another organization.': 'העברת פרויקט לארגון אחר.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
   // Halloween caution tape
   Caution: 'זהירות',
   'Spooky zone': 'אזור מפחיד',
+  // Christmas tape
+  'Merry Christmas': 'חג מולד שמח',
+  'Ho ho ho': 'הו הו הו',
+  // Hanukkah tape
+  'Happy Hanukkah': 'חג חנוכה שמח',
+  'Eight nights': 'שמונה לילות',
+  // Fourth of July tape
+  'Happy 4th': '4 ביולי שמח',
+  'Independence Day': 'ה-4 ביולי',
 }
