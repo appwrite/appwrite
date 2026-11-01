@@ -7791,6 +7791,84 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($data['id'], $account['body']['$id']);
     }
 
+    public function testMFATOTPCodeIsSingleUse(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ];
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $headers);
+        $this->assertSame(200, $authenticator['headers']['status-code']);
+
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 10) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+        $enrollmentOtp = $totp->now();
+
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
+            'otp' => $enrollmentOtp,
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $headers, ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+
+        $victim = $this->createSessionCookie($data['email'], $data['password'])['headers'];
+        $attacker = $this->createSessionCookie($data['email'], $data['password'])['headers'];
+
+        // The code spent on enrolment cannot also complete a sign-in
+        $victimChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $victim, ['factor' => 'totp']);
+        $this->assertSame(201, $victimChallenge['headers']['status-code']);
+
+        $replay = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $victim, [
+            'challengeId' => $victimChallenge['body']['$id'],
+            'otp' => $enrollmentOtp,
+        ]);
+        $this->assertSame(401, $replay['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $replay['body']['type']);
+
+        $otp = $this->getNextTOTP($totp, $enrollmentOtp);
+
+        $first = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $victim, [
+            'challengeId' => $victimChallenge['body']['$id'],
+            'otp' => $otp,
+        ]);
+        $this->assertSame(200, $first['headers']['status-code']);
+        $this->assertContains('totp', $first['body']['factors']);
+
+        // The same code, still inside its step, replayed on another session's fresh challenge
+        $attackerChallenge = $this->client->call(Client::METHOD_POST, '/account/mfa/challenges', $attacker, ['factor' => 'totp']);
+        $this->assertSame(201, $attackerChallenge['headers']['status-code']);
+
+        $replay = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $attacker, [
+            'challengeId' => $attackerChallenge['body']['$id'],
+            'otp' => $otp,
+        ]);
+        $this->assertSame(401, $replay['headers']['status-code']);
+        $this->assertSame('user_invalid_token', $replay['body']['type']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $attacker);
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        // Only the code was refused: the challenge is still open and a fresh code completes it
+        $fresh = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $attacker, [
+            'challengeId' => $attackerChallenge['body']['$id'],
+            'otp' => $this->getNextTOTP($totp, $otp),
+        ]);
+        $this->assertSame(200, $fresh['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $attacker);
+        $this->assertSame(200, $account['headers']['status-code']);
+    }
+
     protected function createJWTHeaders(string $session): array
     {
         $projectId = $this->getProject()['$id'];
@@ -8004,8 +8082,9 @@ final class AccountCustomClientTest extends Scope
         if ($totp->expiresIn() <= 5) {
             $this->getNextTOTP($totp, $totp->now());
         }
+        $enrollmentOtp = $totp->now();
         $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $current, [
-            'otp' => $totp->now(),
+            'otp' => $enrollmentOtp,
         ]);
         $this->assertEquals(200, $verification['headers']['status-code']);
 
@@ -8023,6 +8102,7 @@ final class AccountCustomClientTest extends Scope
 
         return [
             'totp' => $totp,
+            'enrollmentOtp' => $enrollmentOtp,
             'current' => $current,
             'other' => $other['headers'],
             'otherId' => $other['id'],
@@ -8077,7 +8157,7 @@ final class AccountCustomClientTest extends Scope
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
             'challengeId' => $mfa['challengeId'],
-            'otp' => $mfa['totp']->now(),
+            'otp' => $this->getNextTOTP($mfa['totp'], $mfa['enrollmentOtp']), // The enrolment code is spent, so only a fresh one shows the challenge itself is gone
         ]);
         $this->assertEquals(401, $pending['headers']['status-code']);
         $this->assertEquals('user_invalid_token', $pending['body']['type']);
@@ -8128,7 +8208,7 @@ final class AccountCustomClientTest extends Scope
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
             'challengeId' => $mfa['challengeId'],
-            'otp' => $mfa['totp']->now(),
+            'otp' => $this->getNextTOTP($mfa['totp'], $mfa['enrollmentOtp']), // The enrolment code is spent, so only a fresh one shows the challenge itself is gone
         ]);
         $this->assertEquals(401, $pending['headers']['status-code']);
         $this->assertEquals('user_invalid_token', $pending['body']['type']);
@@ -8165,7 +8245,7 @@ final class AccountCustomClientTest extends Scope
         $fresh = $this->createSessionCookie($data['email'], $newPassword)['headers'];
         $pending = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $fresh, [
             'challengeId' => $mfa['challengeId'],
-            'otp' => $mfa['totp']->now(),
+            'otp' => $this->getNextTOTP($mfa['totp'], $mfa['enrollmentOtp']), // The enrolment code is spent, so only a fresh one shows the challenge itself is gone
         ]);
         $this->assertEquals(401, $pending['headers']['status-code']);
         $this->assertEquals('user_invalid_token', $pending['body']['type']);
