@@ -1,0 +1,11 @@
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0436"
+reason = "paste is unmaintained, not vulnerable. It is a proc-macro, so it runs only at compile time and nothing of it ships; it is reached only through rav1e (AVIF encoding in utopia-image), whose latest release still depends on it."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0449"
+reason = "unsafe-libyaml is unmaintained (archived), not reported vulnerable. php-std's yaml_parse must reproduce PHP's ext-yaml, which is libyaml, quirks included; the suggested safe-Rust parsers (saphyr, noyalib) parse differently. The fuzz profiles keep away from the one input shape where ext-yaml itself corrupts its heap. Replacing it with the vendored C libyaml (as php-std vendors PCRE2) removes this entry."
+
+[[IgnoredVulns]]
+id = "GHSA-qwgh-2vcv-g2f7"
+reason = "block-buffer 0.10 has no fixed release. It is reached only through digest 0.10, which the RustCrypto 0.10 hash crates (sha1, sha2, sha3, md-5, hmac, blake2 under argon2, and others; sha2 0.10 also through mysql_common) still depend on; it goes away when those move to digest 0.11. The curve crates (p256, ecdsa, elliptic-curve) are already on digest 0.11."

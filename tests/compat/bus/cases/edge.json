@@ -1,0 +1,369 @@
+{
+  "cases": [
+    {
+      "name": "a failing listener does not stop the next, and its failure is on the span",
+      "op": "bus.dispatch",
+      "args": {
+        "listeners": [
+          {
+            "class": "mailer",
+            "injections": [
+              "mailer",
+              "db"
+            ],
+            "behaviour": {
+              "throw": {
+                "message": "SMTP is down",
+                "code": 503
+              }
+            }
+          },
+          {
+            "class": "audit",
+            "injections": [],
+            "behaviour": {
+              "record": true
+            }
+          }
+        ],
+        "events": [
+          "deployed",
+          "cancelled"
+        ]
+      },
+      "expect": {
+        "calls": [
+          [
+            "mailer",
+            "Tests\\Compat\\Bus\\Deployed",
+            [
+              "mailer:resolved",
+              "db:resolved"
+            ]
+          ],
+          [
+            "audit",
+            "Tests\\Compat\\Bus\\Deployed",
+            []
+          ],
+          [
+            "audit",
+            "Tests\\Compat\\Bus\\Cancelled",
+            []
+          ]
+        ],
+        "error": null,
+        "span": {
+          "mailer": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": false,
+            "error.code": 503,
+            "error.message": "SMTP is down",
+            "error.line": "<masked>",
+            "error.file": "<masked>",
+            "error.trace": "<masked>"
+          },
+          "audit": {
+            "event": "Tests\\Compat\\Bus\\Cancelled",
+            "success": true
+          }
+        }
+      }
+    },
+    {
+      "name": "a listener without a callback is recorded as failed",
+      "op": "bus.dispatch",
+      "args": {
+        "listeners": [
+          {
+            "class": "clock",
+            "injections": [],
+            "behaviour": null
+          },
+          {
+            "class": "mailer",
+            "injections": [],
+            "behaviour": {
+              "record": true
+            }
+          }
+        ],
+        "events": [
+          "deployed"
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/span/clock/error.message"
+        ],
+        "reason": "PHP's message names the listener's class, Rust's its name (see deviations)"
+      },
+      "expect": {
+        "calls": [
+          [
+            "mailer",
+            "Tests\\Compat\\Bus\\Deployed",
+            []
+          ]
+        ],
+        "error": null,
+        "span": {
+          "clock": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": false,
+            "error.code": 0,
+            "error.message": "<masked>",
+            "error.line": "<masked>",
+            "error.file": "<masked>",
+            "error.trace": "<masked>"
+          },
+          "mailer": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": true
+          }
+        }
+      }
+    },
+    {
+      "name": "a resolver failure stops the dispatch",
+      "op": "bus.dispatch",
+      "args": {
+        "resolver": {
+          "fail": [
+            "db"
+          ]
+        },
+        "listeners": [
+          {
+            "class": "clock",
+            "injections": [
+              "clock"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          },
+          {
+            "class": "mailer",
+            "injections": [
+              "db"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          },
+          {
+            "class": "audit",
+            "injections": [],
+            "behaviour": {
+              "record": true
+            }
+          }
+        ],
+        "events": [
+          "deployed",
+          "created"
+        ]
+      },
+      "expect": {
+        "calls": [
+          [
+            "clock",
+            "Tests\\Compat\\Bus\\Deployed",
+            [
+              "clock"
+            ]
+          ]
+        ],
+        "error": {
+          "class": "Exception",
+          "message": "cannot resolve db"
+        },
+        "span": {
+          "clock": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": true
+          }
+        }
+      }
+    },
+    {
+      "name": "an event listed twice calls the listener twice",
+      "op": "bus.dispatch",
+      "args": {
+        "listeners": [
+          {
+            "class": "twice",
+            "injections": [
+              "a",
+              "b"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          }
+        ],
+        "events": [
+          "created"
+        ]
+      },
+      "expect": {
+        "calls": [
+          [
+            "twice",
+            "Tests\\Compat\\Bus\\Created",
+            [
+              "a:resolved",
+              "b:resolved"
+            ]
+          ],
+          [
+            "twice",
+            "Tests\\Compat\\Bus\\Created",
+            [
+              "a:resolved",
+              "b:resolved"
+            ]
+          ]
+        ],
+        "error": null,
+        "span": {
+          "twice": {
+            "event": "Tests\\Compat\\Bus\\Created",
+            "success": true
+          }
+        }
+      }
+    },
+    {
+      "name": "no listener for the event",
+      "op": "bus.dispatch",
+      "args": {
+        "listeners": [
+          {
+            "class": "refunds",
+            "injections": [],
+            "behaviour": {
+              "throw": {
+                "message": "never",
+                "code": 1
+              }
+            }
+          }
+        ],
+        "events": [
+          "deployed",
+          "created"
+        ]
+      },
+      "expect": {
+        "calls": [],
+        "error": null,
+        "span": []
+      }
+    },
+    {
+      "name": "the same listener subscribed twice",
+      "op": "bus.dispatch",
+      "args": {
+        "listeners": [
+          {
+            "class": "clock",
+            "injections": [
+              "x"
+            ],
+            "behaviour": {
+              "throw": {
+                "message": "first",
+                "code": 7
+              }
+            }
+          },
+          {
+            "class": "clock",
+            "injections": [
+              "y"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          }
+        ],
+        "events": [
+          "deployed"
+        ]
+      },
+      "expect": {
+        "calls": [
+          [
+            "clock",
+            "Tests\\Compat\\Bus\\Deployed",
+            [
+              "x:resolved"
+            ]
+          ],
+          [
+            "clock",
+            "Tests\\Compat\\Bus\\Deployed",
+            [
+              "y:resolved"
+            ]
+          ]
+        ],
+        "error": null,
+        "span": {
+          "clock": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": true,
+            "error.code": 7,
+            "error.message": "first",
+            "error.line": "<masked>",
+            "error.file": "<masked>",
+            "error.trace": "<masked>"
+          }
+        }
+      }
+    },
+    {
+      "name": "injections of a listener",
+      "op": "listener.inspect",
+      "args": {
+        "class": "audit",
+        "injections": [
+          "db",
+          "cache",
+          "db"
+        ],
+        "behaviour": {
+          "record": true
+        }
+      },
+      "expect": {
+        "injections": [
+          "db",
+          "cache",
+          "db"
+        ],
+        "callback": true
+      }
+    },
+    {
+      "name": "a listener without a callback",
+      "op": "listener.inspect",
+      "args": {
+        "class": "clock",
+        "injections": [],
+        "behaviour": null
+      },
+      "expect": {
+        "injections": [],
+        "callback": {
+          "$error": {
+            "class": "LogicException",
+            "message": "<masked>"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "lib": "psr7",
+  "description": "utopia-php/psr7: PSR-7 messages (requests, responses, server requests) with case-insensitive headers, URIs, streams over memory or files, uploaded files, multipart request bodies and responses, and the PSR-17 factories, including the typed request builders (JSON, form, text, XML, raw, query string, multipart).",
+  "php": {
+    "src": [
+      "packages/psr7/src"
+    ],
+    "tests": [
+      "packages/psr7/tests"
+    ]
+  },
+  "rust": null,
+  "not_converted": {
+    "reason": "PHP's PSR-7/PSR-17/PSR-18 HTTP message interfaces; Rust uses the http crate (multipart encoding lives in utopia-client)"
+  }
+}

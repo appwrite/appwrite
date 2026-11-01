@@ -1,0 +1,2387 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "rdata encoding by type",
+      "steps": [
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.2.3.4"
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0004\u0001\u0002\u0003\u0004"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.2.3.4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.2.3"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: 1.2.3"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.2.3"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: 1.2.3"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "01.2.3.4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: 01.2.3.4"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "01.2.3.4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: 01.2.3.4"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "::1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: ::1"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "::1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: ::1"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: "
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv4 address: "
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.2.3.4\u0000"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "inet_pton(): Argument #1 ($ip) must not contain any null bytes"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.2.3.4\u0000"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "inet_pton(): Argument #1 ($ip) must not contain any null bytes"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "2001:db8::1"
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAHAABAAAAAQAQIAENuAAAAAAAAAAAAAAAAQ=="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "2001:db8::1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "::ffff:1.2.3.4"
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAHAABAAAAAQAQAAAAAAAAAAAAAP//AQIDBA=="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "::ffff:1.2.3.4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "1.2.3.4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv6 address: 1.2.3.4"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "1.2.3.4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv6 address: 1.2.3.4"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "b:b::b:b:b"
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\u001c\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0010\u0000\u000b\u0000\u000b\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u000b\u0000\u000b\u0000\u000b"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "b:b::b:b:b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "g::1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv6 address: g::1"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 28,
+              "ttl": 1,
+              "rdata": "g::1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid IPv6 address: g::1"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 5,
+              "ttl": 1,
+              "rdata": "x..y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 5,
+              "ttl": 1,
+              "rdata": "x..y"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 12,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\f\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0001\u0000"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 12,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 2,
+              "ttl": 1,
+              "rdata": "."
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\u0002\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0001\u0000"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 2,
+              "ttl": 1,
+              "rdata": "."
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test"
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\u000f\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u000b\u0000\u0000\u0002mx\u0004test\u0000"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test",
+              "priority": 65535
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAADwABAAAAAQAL//8CbXgEdGVzdAA="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test",
+              "priority": 65535
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test",
+              "priority": 65536
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "MX priority must be between 0 and 65535, got 65536"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test",
+              "priority": 65536
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "MX priority must be between 0 and 65535, got 65536"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test",
+              "priority": -1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "MX priority must be between 0 and 65535, got -1"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 1,
+              "rdata": "mx.test",
+              "priority": -1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "MX priority must be between 0 and 65535, got -1"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test",
+              "priority": 1,
+              "weight": 65536,
+              "port": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SRV weight must be between 0 and 65535, got 65536"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test",
+              "priority": 1,
+              "weight": 65536,
+              "port": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SRV weight must be between 0 and 65535, got 65536"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test",
+              "priority": 1,
+              "weight": 1,
+              "port": -5
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SRV port must be between 0 and 65535, got -5"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test",
+              "priority": 1,
+              "weight": 1,
+              "port": -5
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SRV port must be between 0 and 65535, got -5"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test",
+              "priority": 70000
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SRV priority must be between 0 and 65535, got 70000"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test",
+              "priority": 70000
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SRV priority must be between 0 and 65535, got 70000"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test"
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000!\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u000e\u0000\u0000\u0000\u0000\u0000\u0000\u0001t\u0004test\u0000"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 33,
+              "ttl": 1,
+              "rdata": "t.test"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 16,
+              "ttl": 1,
+              "rdata": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAEAABAAAAAQEA/3h4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eA=="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 16,
+              "ttl": 1,
+              "rdata": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 16,
+              "ttl": 1,
+              "rdata": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAEAABAAAAAQIA/3h4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eP94eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 16,
+              "ttl": 1,
+              "rdata": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 16,
+              "ttl": 1,
+              "rdata": {
+                "$bytes": "AP8="
+              }
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAEAABAAAAAQADAgD/"
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 16,
+              "ttl": 1,
+              "rdata": {
+                "$bytes": "AP8="
+              }
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"letsencrypt.org\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0016\u0000\u0005issueletsencrypt.org"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"letsencrypt.org\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "issue \"x\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\b\u0000\u0005issuex"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "issue \"x\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "5 \"x\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0004\u0000\u00015x"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "5 \"x\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "256 issue \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA flags must be between 0 and 255, got 256"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "256 issue \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA flags must be between 0 and 255, got 256"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "128 issuewild \"a;b=c\""
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAABAQABAAAAAQAQgAlpc3N1ZXdpbGRhO2I9Yw=="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "128 issuewild \"a;b=c\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\\\"b\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\n\u0000\u0005issuea\"b"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\\\"b\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\"b\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid CAA RDATA format: 0 issue \"a\"b\""
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\"b\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid CAA RDATA format: 0 issue \"a\"b\""
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\\\\\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\t\u0000\u0005issuea\\"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\\\\\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\\\\\"b\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u000b\u0000\u0005issuea\\\"b"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"a\\\\\"b\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "  0\tissue\n\"x\"  "
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\b\u0000\u0005issuex"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "  0\tissue\n\"x\"  "
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA RDATA cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA RDATA cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid CAA RDATA format: 0 issue x"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid CAA RDATA format: 0 issue x"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 is_sue \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid CAA RDATA format: 0 is_sue \"x\""
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 is_sue \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid CAA RDATA format: 0 is_sue \"x\""
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA tag exceeds 255 bytes"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA tag exceeds 255 bytes"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "99999999999999999999 issue \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA flags must be between 0 and 255, got 9223372036854775807"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "99999999999999999999 issue \"x\""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "CAA flags must be between 0 and 255, got 9223372036854775807"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"\\x41\\101\\n\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\n\u0000\u0005issueAA\n"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"\\x41\\101\\n\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"\""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0001\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0007\u0000\u0005issue"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 257,
+              "ttl": 1,
+              "rdata": "0 issue \"\""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 5"
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\u0006\u0000\u0001\u0000\u0000\u0000\u0001\u0000%\u0003ns1\u0000\nhostmaster\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0002\u0000\u0000\u0000\u0003\u0000\u0000\u0000\u0004\u0000\u0000\u0000\u0005"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 5"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "( ns1 hostmaster 1 2 3 4 5 )"
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\u0006\u0000\u0001\u0000\u0000\u0000\u0001\u0000%\u0003ns1\u0000\nhostmaster\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000\u0002\u0000\u0000\u0000\u0003\u0000\u0000\u0000\u0004\u0000\u0000\u0000\u0005"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "( ns1 hostmaster 1 2 3 4 5 )"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RDATA must contain MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE and MINIMUM fields"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RDATA must contain MNAME, RNAME, SERIAL, REFRESH, RETRY, EXPIRE and MINIMUM fields"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RDATA cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RDATA cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 4294967296"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA timing field out of range: 4294967296"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 4294967296"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA timing field out of range: 4294967296"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 -5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA timing fields must be unsigned integers"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 -5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA timing fields must be unsigned integers"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 99999999999999999999"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA timing field out of range: 99999999999999999999"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 hostmaster 1 2 3 4 99999999999999999999"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA timing field out of range: 99999999999999999999"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 a@b@c 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RNAME email must contain exactly one @ separator"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 a@b@c 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RNAME email must contain exactly one @ separator"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 @b 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RNAME email must have non-empty local part and domain"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 @b 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "SOA RNAME email must have non-empty local part and domain"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@b 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Label too long: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@b 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Label too long: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Encoded domain exceeds maximum length of 255 bytes"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Encoded domain exceeds maximum length of 255 bytes"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Encoded domain exceeds maximum length of 255 bytes"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "ns1 a@bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Encoded domain exceeds maximum length of 255 bytes"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "n..s hostmaster 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 6,
+              "ttl": 1,
+              "rdata": "n..s hostmaster 1 2 3 4 5"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": "0aff"
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAYwABAAAAAQACCv8="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": "0aff"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": "0af"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid hexadecimal payload for record type 99"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": "0af"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid hexadecimal payload for record type 99"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": "zz"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid hexadecimal payload for record type 99"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": "zz"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid hexadecimal payload for record type 99"
+            }
+          }
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000c\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0000"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 99,
+              "ttl": 1,
+              "rdata": ""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": "\u0000\u0000\u0001\u0000\u0001\u0000\u0000\u0000\u0001\u0000\u0004\u0001\u0001\u0001\u0001"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a..b",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain labels must not be empty"
+            }
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a..b",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": -1,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAAQAB/////wAEAQEBAQ=="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": -1,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 4294967301,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": "\u0001a\u0004test\u0000\u0000\u0001\u0000\u0001\u0000\u0000\u0000\u0005\u0000\u0004\u0001\u0001\u0001\u0001"
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 4294967301,
+              "rdata": "1.1.1.1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "record.encode",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.1.1.1",
+              "class": 255
+            }
+          },
+          "expect": {
+            "$bytes": "AWEEdGVzdAAAAQD/AAAAAQAEAQEBAQ=="
+          }
+        },
+        {
+          "op": "record.validate",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 1,
+              "ttl": 1,
+              "rdata": "1.1.1.1",
+              "class": 255
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "rdata decoding errors",
+      "steps": [
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAAEAAf////8AAwECAw=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid IPv4 address length"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAABwAAf////8ADwAAAAAAAAAAAAAAAAAAAA=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid IPv6 address length"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAA8AAf////8AAgAB"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid MX RDATA length: 2"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAACEAAf////8ABgAAAAAAAA=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid SRV RDATA length: 6"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAABAAAf////8AAA=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid TXT RDATA length: 0"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAABAAAf////8ABAVhYmM="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "TXT chunk length exceeds RDATA size"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAQEAAf////8AAQA="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid CAA record length"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAQEAAf////8ABAAFYWI="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid CAA tag length"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAQEAAf////8ADIAFaXNzdWV2YWx1ZQ=="
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "a",
+              "type": 257,
+              "class": 1,
+              "ttl": 4294967295,
+              "rdata": "128 issue \"value\"",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 25
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAAYAAf////8AGQFhAAFiAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Invalid SOA record length"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAGMAAf////8AAA=="
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "a",
+              "type": 99,
+              "class": 1,
+              "ttl": 4294967295,
+              "rdata": "",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 13
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAAUAAf////8AAwVhYg=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Label length exceeds remaining data while decoding domain name"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": {
+              "$bytes": "AWEAAAEAAf////8ABAAAAAA="
+            }
+          },
+          "expect": {
+            "record": {
+              "name": "a",
+              "type": 1,
+              "class": 1,
+              "ttl": 4294967295,
+              "rdata": "0.0.0.0",
+              "priority": null,
+              "weight": null,
+              "port": null
+            },
+            "offset": 17
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0001a\u0000\u0000\u0001\u0000\u0001\u0000\u0000"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "Truncated RR header"
+            }
+          }
+        },
+        {
+          "op": "record.decode",
+          "args": {
+            "data": "\u0001a\u0000\u0000\u0001\u0000\u0001\u0000\u0000\u0000\u0000\u0000\t\u0001"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+              "message": "RDATA exceeds packet bounds"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "type names",
+      "steps": [
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "A"
+          },
+          "expect": 1
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "aaaa"
+          },
+          "expect": 28
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "Caa"
+          },
+          "expect": 257
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "SOA"
+          },
+          "expect": 6
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "bogus"
+          },
+          "expect": null
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "TYPE1"
+          },
+          "expect": null
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "null"
+          },
+          "expect": 10
+        },
+        {
+          "op": "record.type_name_to_code",
+          "args": {
+            "name": "wks"
+          },
+          "expect": 11
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 1
+          },
+          "expect": "A"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 2
+          },
+          "expect": "NS"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 3
+          },
+          "expect": "MD"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 13
+          },
+          "expect": "HINFO"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 14
+          },
+          "expect": "MINFO"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 16
+          },
+          "expect": "TXT"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 28
+          },
+          "expect": "AAAA"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 33
+          },
+          "expect": "SRV"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 257
+          },
+          "expect": "CAA"
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 99
+          },
+          "expect": null
+        },
+        {
+          "op": "record.type_code_to_name",
+          "args": {
+            "code": 65535
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "record defaults and normalisation",
+      "steps": [
+        {
+          "op": "record.new",
+          "args": {
+            "record": {
+              "name": "MiXeD.Example.COM.",
+              "type": 16
+            }
+          },
+          "expect": {
+            "name": "mixed.example.com.",
+            "type": 16,
+            "class": 1,
+            "ttl": 0,
+            "rdata": "",
+            "priority": null,
+            "weight": null,
+            "port": null
+          }
+        },
+        {
+          "op": "record.new",
+          "args": {
+            "record": {
+              "name": "\u0000 x \u000b",
+              "type": 255,
+              "ttl": 7,
+              "rdata": {
+                "$bytes": "/w=="
+              },
+              "class": 4,
+              "priority": 1,
+              "weight": 2,
+              "port": 3
+            }
+          },
+          "expect": {
+            "name": "x",
+            "type": 255,
+            "class": 4,
+            "ttl": 7,
+            "rdata": {
+              "$bytes": "/w=="
+            },
+            "priority": 1,
+            "weight": 2,
+            "port": 3
+          }
+        },
+        {
+          "op": "record.with_name",
+          "args": {
+            "record": {
+              "name": "a.test",
+              "type": 15,
+              "ttl": 5,
+              "rdata": "mx",
+              "priority": 3
+            },
+            "name": "B.TEST"
+          },
+          "expect": {
+            "name": "b.test",
+            "type": 15,
+            "class": 1,
+            "ttl": 5,
+            "rdata": "mx",
+            "priority": 3,
+            "weight": null,
+            "port": null
+          }
+        }
+      ]
+    }
+  ]
+}

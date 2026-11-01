@@ -1,0 +1,328 @@
+{
+  "service": "proxy",
+  "file": "tests/benchmarks/results/proxy.json",
+  "workload": {
+    "script": "tests/benchmarks/api/proxy.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "proxy-20261012-011132"
+  },
+  "environment": {
+    "date": "2026-10-12T00:13:52Z",
+    "commit": "208eb48c73",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3000,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 21.092,
+        "p50": 5.518,
+        "p90": 63.328,
+        "p95": 79.989,
+        "p99": 103.037,
+        "max": 188.587
+      },
+      "cpu_ms_per_request": 3.091,
+      "db_cpu_ms_per_request": 8.899,
+      "memory_mib": {
+        "baseline": 3017.7,
+        "avg": 3040.0,
+        "peak": 3056.6
+      },
+      "endpoints": {
+        "proxy.rules.get": {
+          "route": "GET /v1/proxy/rules/:ruleId",
+          "count": 1013,
+          "rps": 16.88,
+          "avg": 15.825,
+          "p50": 3.756,
+          "p90": 47.797,
+          "p95": 55.37,
+          "p99": 78.208,
+          "max": 96.494
+        },
+        "proxy.rules.list": {
+          "route": "GET /v1/proxy/rules",
+          "count": 652,
+          "rps": 10.87,
+          "avg": 21.972,
+          "p50": 5.596,
+          "p90": 66.682,
+          "p95": 80.689,
+          "p99": 100.098,
+          "max": 130.44
+        },
+        "proxy.rules.search": {
+          "route": "GET /v1/proxy/rules",
+          "note": "full-text search",
+          "count": 217,
+          "rps": 3.62,
+          "avg": 24.315,
+          "p50": 7.142,
+          "p90": 71.275,
+          "p95": 82.05,
+          "p99": 92.634,
+          "max": 98.149
+        },
+        "proxy.rules.delete": {
+          "route": "DELETE /v1/proxy/rules/:ruleId",
+          "count": 113,
+          "rps": 1.88,
+          "avg": 32.13,
+          "p50": 4.972,
+          "p90": 92.325,
+          "p95": 113.168,
+          "p99": 148.673,
+          "max": 152.357
+        },
+        "proxy.rules.status.update": {
+          "route": "PATCH /v1/proxy/rules/:ruleId/status",
+          "note": "on a verified rule (under the functions domain): verifying a custom domain looks up its DNS records",
+          "count": 116,
+          "rps": 1.93,
+          "avg": 15.788,
+          "p50": 3.583,
+          "p90": 45.538,
+          "p95": 55.302,
+          "p99": 65.833,
+          "max": 87.975
+        },
+        "proxy.rules.status.update.unverified": {
+          "route": "PATCH /v1/proxy/rules/:ruleId/status",
+          "note": "on an unverified custom.localhost rule: verification fails before any DNS lookup (a test domain)",
+          "count": 122,
+          "rps": 2.03,
+          "avg": 26.759,
+          "p50": 6.421,
+          "p90": 80.763,
+          "p95": 85.257,
+          "p99": 118.841,
+          "max": 127.763
+        },
+        "proxy.rules.api.create": {
+          "route": "POST /v1/proxy/rules/api",
+          "count": 242,
+          "rps": 4.03,
+          "avg": 22.745,
+          "p50": 5.409,
+          "p90": 70.03,
+          "p95": 80.654,
+          "p99": 102.209,
+          "max": 117.197
+        },
+        "proxy.rules.function.create": {
+          "route": "POST /v1/proxy/rules/function",
+          "count": 200,
+          "rps": 3.33,
+          "avg": 27.451,
+          "p50": 5.697,
+          "p90": 73.627,
+          "p95": 92.419,
+          "p99": 125.761,
+          "max": 188.587
+        },
+        "proxy.rules.site.create": {
+          "route": "POST /v1/proxy/rules/site",
+          "count": 219,
+          "rps": 3.65,
+          "avg": 22.772,
+          "p50": 5.65,
+          "p90": 69.136,
+          "p95": 80.601,
+          "p99": 94.537,
+          "max": 111.471
+        },
+        "proxy.rules.redirect.create": {
+          "route": "POST /v1/proxy/rules/redirect",
+          "count": 106,
+          "rps": 1.77,
+          "avg": 27.69,
+          "p50": 5.912,
+          "p90": 81.815,
+          "p95": 108.241,
+          "p99": 137.404,
+          "max": 185.045
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 1694.8,
+      "requests": 101685,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 20.791,
+        "p50": 17.017,
+        "p90": 36.386,
+        "p95": 46.938,
+        "p99": 80.228,
+        "max": 277.882
+      },
+      "cpu_ms_per_request": 3.524,
+      "db_cpu_ms_per_request": 1.321,
+      "memory_mib": {
+        "baseline": 3055.6,
+        "avg": 3155.2,
+        "peak": 3179.5
+      },
+      "endpoints": {
+        "proxy.rules.get": {
+          "route": "GET /v1/proxy/rules/:ruleId",
+          "count": 36419,
+          "rps": 606.98,
+          "avg": 15.513,
+          "p50": 12.605,
+          "p90": 26.002,
+          "p95": 36.143,
+          "p99": 64.58,
+          "max": 213.538
+        },
+        "proxy.rules.list": {
+          "route": "GET /v1/proxy/rules",
+          "count": 21989,
+          "rps": 366.48,
+          "avg": 22.708,
+          "p50": 18.99,
+          "p90": 39.167,
+          "p95": 48.569,
+          "p99": 78.245,
+          "max": 167.317
+        },
+        "proxy.rules.search": {
+          "route": "GET /v1/proxy/rules",
+          "note": "full-text search",
+          "count": 7233,
+          "rps": 120.55,
+          "avg": 26.355,
+          "p50": 22.554,
+          "p90": 44.017,
+          "p95": 53.64,
+          "p99": 81.725,
+          "max": 203.134
+        },
+        "proxy.rules.delete": {
+          "route": "DELETE /v1/proxy/rules/:ruleId",
+          "count": 3553,
+          "rps": 59.22,
+          "avg": 30.725,
+          "p50": 25.866,
+          "p90": 49.827,
+          "p95": 63.026,
+          "p99": 109.046,
+          "max": 207.334
+        },
+        "proxy.rules.status.update": {
+          "route": "PATCH /v1/proxy/rules/:ruleId/status",
+          "note": "on a verified rule (under the functions domain): verifying a custom domain looks up its DNS records",
+          "count": 3557,
+          "rps": 59.28,
+          "avg": 14.972,
+          "p50": 12.133,
+          "p90": 24.807,
+          "p95": 33.305,
+          "p99": 59.15,
+          "max": 145.337
+        },
+        "proxy.rules.status.update.unverified": {
+          "route": "PATCH /v1/proxy/rules/:ruleId/status",
+          "note": "on an unverified custom.localhost rule: verification fails before any DNS lookup (a test domain)",
+          "count": 3502,
+          "rps": 58.37,
+          "avg": 27.052,
+          "p50": 22.837,
+          "p90": 43.437,
+          "p95": 53.626,
+          "p99": 98.521,
+          "max": 182.769
+        },
+        "proxy.rules.api.create": {
+          "route": "POST /v1/proxy/rules/api",
+          "count": 7194,
+          "rps": 119.9,
+          "avg": 21.991,
+          "p50": 17.971,
+          "p90": 36.46,
+          "p95": 48.387,
+          "p99": 84.913,
+          "max": 205.798
+        },
+        "proxy.rules.function.create": {
+          "route": "POST /v1/proxy/rules/function",
+          "count": 7240,
+          "rps": 120.67,
+          "avg": 24.134,
+          "p50": 19.809,
+          "p90": 39.742,
+          "p95": 52.459,
+          "p99": 92.809,
+          "max": 204.391
+        },
+        "proxy.rules.site.create": {
+          "route": "POST /v1/proxy/rules/site",
+          "count": 7386,
+          "rps": 123.1,
+          "avg": 24.188,
+          "p50": 20.066,
+          "p90": 39.761,
+          "p95": 52.101,
+          "p99": 90.073,
+          "max": 277.882
+        },
+        "proxy.rules.redirect.create": {
+          "route": "POST /v1/proxy/rules/redirect",
+          "count": 3612,
+          "rps": 60.2,
+          "avg": 25.036,
+          "p50": 20.212,
+          "p90": 43.033,
+          "p95": 53.713,
+          "p99": 90.734,
+          "max": 181.889
+        }
+      }
+    }
+  ]
+}

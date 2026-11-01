@@ -31,6 +31,9 @@ const config: PlaywrightTestConfig = {
     timeout: 15_000,
   },
   reportSlowTests: null,
+  // On CI Playwright reads `git diff <PR base> HEAD` whole before trimming it,
+  // which overflows a string on a large PR; the report keeps the commit only.
+  captureGitInfo: { commit: true, diff: false },
   reporter: isCI
     ? [
         ['list'],

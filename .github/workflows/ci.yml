@@ -14,6 +14,9 @@ env:
 
 on:
   pull_request:
+    # ready_for_review: a draft's CI focus (.github/ci/focus.json) ends, so
+    # every lane runs at once.
+    types: [opened, synchronize, reopened, ready_for_review]
   merge_group:
   push:
     branches:
@@ -55,6 +58,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           REF: ${{ github.ref }}
           BASE_REF: ${{ github.base_ref }}
+          DRAFT: ${{ github.event.pull_request.draft }}
           BEFORE: ${{ github.event.before }}
           MERGE_BASE: ${{ github.event.merge_group.base_sha }}
         run: node .github/scripts/changes.mjs
@@ -973,6 +977,364 @@ jobs:
             echo "=== MinIO Logs ==="
             docker compose logs --timestamps minio || true
           fi
+
+  # ---------------------------------------------------------------------------
+  # Rust API (crates/, see rfc/rust.md)
+  # ---------------------------------------------------------------------------
+
+  rust:
+    name: Checks / Rust
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    # The Redis the cache crate's integration tests run against
+    # (crates/utopia/cache/tests/native.rs), the dev stack's image.
+    services:
+      redis:
+        image: redis:7.4.7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
+    env:
+      CARGO_TERM_COLOR: always
+      RUST_VERSION: '1.97'
+      UTOPIA_CACHE_REDIS: redis://localhost:6379/6
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install toolchain
+        run: |
+          rustup toolchain install "${RUST_VERSION}" --profile minimal --component rustfmt,clippy
+          rustup default "${RUST_VERSION}"
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      - name: Unit tests
+        run: cargo test --workspace --locked
+
+  build_rust:
+    name: Build / Rust
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: gcrunner=${{ github.run_id }}/runner=build
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Expose the runner registry to workflow expressions
+        run: echo "GCRUNNER_REGISTRY=${GCRUNNER_REGISTRY}" >> "${GITHUB_ENV}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Build and push Appwrite Rust
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
+        with:
+          context: .
+          file: Dockerfile.rust
+          push: true
+          tags: ${{ env.GCRUNNER_REGISTRY }}/appwrite:rust-${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:rust-buildcache
+          cache-to: type=registry,ref=${{ env.GCRUNNER_REGISTRY }}/appwrite:rust-buildcache,mode=max
+
+  # PHP suites sent through Traefik so migrated paths are served by the Rust
+  # API while every other route stays on PHP.
+  e2e_rust:
+    name: Tests / E2E / PostgreSQL (${{ matrix.mode }}) / Users and Storage (Rust)
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    timeout-minutes: 100
+    needs: [build, build_rust]
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [dedicated, shared]
+    env:
+      COMPOSE_PROFILES: postgresql,rust
+      RUST_VERSION: '1.97'
+      _APP_DB_ADAPTER: postgresql
+      _APP_DB_HOST: postgresql
+      _APP_DB_PORT: '5432'
+      _APP_OPTIONS_ROUTER_PROTECTION: enabled
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Login to Docker Hub
+        if: ${{ env.DOCKERHUB_AUTH_AVAILABLE == 'true' }}
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Shared tables need MongoDB for every pool
+        if: matrix.mode == 'shared'
+        run: echo "COMPOSE_PROFILES=postgresql,rust,mongodb" >> $GITHUB_ENV
+
+      - parallel:
+          - name: Pull Docker Images
+            run: |
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
+              docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:rust-${GITHUB_SHA}"
+              docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:rust-${GITHUB_SHA}" appwrite-rust-dev
+
+          - name: Pull Docker Compose images
+            timeout-minutes: 5
+            run: |
+              for attempt in 1 2 3; do
+                if docker compose pull --quiet --ignore-buildable; then
+                  break
+                elif [ "$attempt" -eq 3 ]; then
+                  echo "::error::docker compose pull failed after 3 attempts; aborting"
+                  exit 1
+                fi
+                sleep 15
+              done
+
+      - name: Load and Start Appwrite
+        id: start
+        timeout-minutes: 5
+        env:
+          _APP_BROWSER_HOST: http://invalid-browser/v1
+          _APP_DATABASE_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'database_db_main' || '' }}
+          _APP_DATABASE_DOCUMENTSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'documentsdb_db_main' || '' }}
+          _APP_DATABASE_VECTORSDB_SHARED_TABLES: ${{ matrix.mode != 'dedicated' && 'vectorsdb_db_main' || '' }}
+        run: docker compose up -d --quiet-pull --no-build --wait
+
+      # Traefik marks what its Rust router served (X-Appwrite-Backend: rust,
+      # docker-compose.override.yml): the migrated paths must carry it and a
+      # PHP path must not. Traefik picks up the Rust router a few seconds
+      # after the container starts, so each path gets up to 30s to switch.
+      - name: Verify /v1/users, /v1/teams and /v1/storage are served by Rust
+        run: |
+          docker compose exec -T appwrite-rust /usr/local/bin/appwrite-rust health
+          backend() {
+            docker compose exec -T appwrite curl -s -o /dev/null -D - -H 'Host: appwrite.test' "http://appwrite.test$1" \
+              | tr -d '\r' | awk -F': ' 'tolower($1) == "x-appwrite-backend" { print $2 }'
+          }
+          for path in /v1/users /v1/teams /v1/storage/buckets /v1/storage/buckets/unknown/files; do
+            for attempt in $(seq 1 15); do
+              served="$(backend "$path")"
+              [ "$served" = "rust" ] && break
+              sleep 2
+            done
+            echo "$path: ${served:-php}"
+            if [ "$served" != "rust" ]; then
+              echo "::error::$path did not reach the Rust container"
+              exit 1
+            fi
+          done
+          served="$(backend /v1/health/version)"
+          echo "/v1/health/version: ${served:-php}"
+          if [ -n "$served" ]; then
+            echo "::error::/v1/health/version should be served by PHP"
+            exit 1
+          fi
+
+      - name: Install toolchain
+        run: |
+          if ! command -v rustup >/dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+          fi
+          rustup toolchain install "${RUST_VERSION}" --profile minimal
+          rustup default "${RUST_VERSION}"
+
+      - name: Install OpenSSL headers
+        run: |
+          if ! pkg-config --exists openssl 2>/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends pkg-config libssl-dev
+          fi
+
+      # The same requests to PHP and to Rust on twin projects, compared on the
+      # response, the table changes and the Redis side effects: the hook
+      # matrices of rfc/rust-lifecycle.md for the routes Rust serves. Before
+      # the E2E suite, on a fresh stack, so it creates the instance's one
+      # organization (the suite seeds its own when one exists).
+      - name: Compare PHP and Rust request lifecycles
+        timeout-minutes: 40
+        # Every identity, origin and variant on the Users routes (the generic
+        # hooks); the other services' routes under fewer.
+        env:
+          COMPAT_DIFF_QUICK: '1'
+        run: bin/compat appwrite diff
+
+      - name: Run tests
+        # Each suite reports even when the lifecycle diff or another suite failed.
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        timeout-minutes: 15
+        env:
+          RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
+        run: |
+          docker compose exec -T \
+            -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
+            appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Users \
+            --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
+
+      - name: Run Storage tests
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        timeout-minutes: 25
+        env:
+          RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
+        run: |
+          docker compose exec -T \
+            -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
+            appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Storage \
+            --exclude-group abuseEnabled --exclude-group screenshots --exclude-group antivirus --exclude-group queueRetry --exclude-group usageOutage \
+            --log-junit tests/e2e/Services/Storage/junit-rust.xml
+
+      - name: Failure Logs
+        if: failure()
+        run: |
+          echo "=== Rust API Logs ==="
+          docker compose logs --timestamps appwrite-rust
+          echo "=== Traefik Logs ==="
+          docker compose logs --timestamps traefik | tail -n 500
+
+  # PHP <-> Rust compatibility of the Utopia libraries (tests/compat): every
+  # case on both runtimes, fuzzing with a new seed each run, and the full
+  # conversion gate for libraries marked complete. See crates/CONVERSION.md.
+  # The database library's ~27000 cases (every adapter) run as six shards
+  # of its own (`bin/compat ci database@<shard>`, tests/compat/database/
+  # spec.json `shards`), MariaDB and MySQL apart (~8 and ~12 minutes of
+  # cases). The other libraries run as three: `usage` (its
+  # ClickHouse cases, ~10 minutes) with php-std (fuzzing, ~7), the libraries
+  # on fixture servers of their own with the documentation examples
+  # (`integrations`), and the rest with the replay (`libraries`), so none
+  # nears the timeout. `libs` is a space-separated list of `bin/compat ci`
+  # arguments; `!lib` leaves one out.
+  compat:
+    name: Tests / Compat / PHP and Rust Utopia libraries (${{ matrix.shard }})
+    needs: [build]
+    runs-on: gcrunner=${{ github.run_id }}/runner=e2e
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: database-postgres
+            libs: database@postgres
+          - shard: database-mariadb
+            libs: database@mariadb
+          - shard: database-mysql
+            libs: database@mysql
+          - shard: database-sqlite
+            libs: database@sqlite
+          - shard: database-mongo
+            libs: database@mongo
+          - shard: database-redis
+            libs: database@redis
+          - shard: usage
+            libs: usage php-std
+          - shard: integrations
+            libs: agents audit messaging vcs
+          - shard: libraries
+            libs: '!database !usage !php-std !agents !audit !messaging !vcs'
+    env:
+      RUST_VERSION: '1.97'
+      COMPOSE_PROFILES: postgresql
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Pull the Appwrite image
+        run: |
+          docker pull "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+          docker tag "${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}" "${IMAGE}"
+
+      - name: Start Redis and PostgreSQL
+        timeout-minutes: 5
+        run: docker compose up -d --quiet-pull --no-build --wait redis postgresql
+
+      - name: Install toolchain
+        run: |
+          if ! command -v rustup >/dev/null; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+          fi
+          rustup toolchain install "${RUST_VERSION}" --profile minimal
+          rustup default "${RUST_VERSION}"
+
+      - name: Install OpenSSL headers
+        run: |
+          if ! pkg-config --exists openssl 2>/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq --no-install-recommends pkg-config libssl-dev
+          fi
+
+      # Services a library needs beyond Redis and PostgreSQL (Memcached,
+      # Hazelcast, Redis Cluster, fixture servers): each library's
+      # tests/compat/<lib>/services.sh. Cache's also builds compat-cache-php,
+      # the Appwrite image plus the Memcached extension, which every step
+      # below runs the PHP driver in.
+      - name: Start library services
+        timeout-minutes: 10
+        env:
+          COMPAT_BASE_IMAGE: ${{ env.IMAGE }}
+        run: |
+          for script in tests/compat/*/services.sh; do
+            echo "::group::${script}"
+            "${script}" up
+            echo "::endgroup::"
+          done
+
+      - name: Run compat
+        env:
+          COMPAT_SEED: ${{ github.run_number }}
+          COMPAT_IMAGE: compat-cache-php
+          COMPAT_LIBS: ${{ matrix.libs }}
+        run: |
+          read -ra libs <<< "${COMPAT_LIBS}"
+          bin/compat ci "${libs[@]}"
+
+      - name: Replay recorded results with services
+        if: matrix.shard == 'libraries'
+        env:
+          COMPAT_SERVICES: '1'
+          # The database shards run its cases already; replaying all of them
+          # again here, in a debug build, outlasts the job.
+          COMPAT_LIB: '!database'
+        run: cargo test -p compat --test replay --locked
+
+      - name: Run documentation examples
+        if: matrix.shard == 'integrations'
+        env:
+          COMPAT_IMAGE: compat-cache-php
+        run: bin/compat examples
+
+      - name: Stop library services
+        if: always()
+        run: |
+          for script in tests/compat/*/services.sh; do
+            "${script}" down || true
+          done
 
   benchmark:
     name: Benchmark

@@ -1,0 +1,20 @@
+[package]
+name = "utopia-locale"
+description = "Translations: languages, default and fallback locales, and placeholders."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/locale"
+publish.workspace = true
+
+[dependencies]
+indexmap.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+utopia-async.workspace = true
+
+
+[package.metadata.utopia]
+category = "utilities"
+php-sync = "8262340175d02fc1f4a905dd5b81498c4eb5006c"

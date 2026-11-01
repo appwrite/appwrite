@@ -1,0 +1,346 @@
+{
+  "source": "packages/emails/tests/Canonicals/Providers/GmailTest.php",
+  "cases": [
+    {
+      "name": "supports",
+      "steps": [
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "gmail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "googlemail.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "outlook.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "yahoo.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "provider.supports",
+          "args": {
+            "provider": "gmail",
+            "domain": "example.com"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "get canonical",
+      "steps": [
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+tag",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+spam",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+newsletter",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+work",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+personal",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+test123",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+anything",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+verylongtag",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+tag.with.dots",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+tag-with-hyphens",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+tag_with_underscores",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+tag123",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "u.s.e.r.n.a.m.e",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "u.s.e.r.n.a.m.e+tag",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user+",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "user",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "user",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": ".user",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "user",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user..name",
+            "domain": "gmail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+tag",
+            "domain": "googlemail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name+spam",
+            "domain": "googlemail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        },
+        {
+          "op": "provider.canonical",
+          "args": {
+            "provider": "gmail",
+            "local": "user.name",
+            "domain": "googlemail.com"
+          },
+          "expect": {
+            "local": "username",
+            "domain": "gmail.com"
+          }
+        }
+      ]
+    },
+    {
+      "name": "get canonical domain",
+      "steps": [
+        {
+          "op": "provider.canonical_domain",
+          "args": {
+            "provider": "gmail"
+          },
+          "expect": "gmail.com"
+        }
+      ]
+    },
+    {
+      "name": "get supported domains",
+      "steps": [
+        {
+          "op": "provider.supported_domains",
+          "args": {
+            "provider": "gmail"
+          },
+          "expect": [
+            "gmail.com",
+            "googlemail.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

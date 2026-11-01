@@ -1,0 +1,2678 @@
+{
+  "source": "packages/query/tests/E2E/Schema/FluentBuilderIntegrationTest.php",
+  "cases": [
+    {
+      "name": "testMysqlColumnPrimaryArrayDispatchCreatesCompositeKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_pk_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "order_id"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "product_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "order_id",
+                "product_id"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_pk_6acc000000001` (`order_id` INT NOT NULL, `product_id` INT NOT NULL, PRIMARY KEY (`order_id`, `product_id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_pk_6acc000000001` (`order_id` INT NOT NULL, `product_id` INT NOT NULL, PRIMARY KEY (`order_id`, `product_id`))"
+      ]
+    },
+    {
+      "name": "testPostgresColumnPrimaryArrayDispatchCreatesCompositeKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_pk_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "tenant_id"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "event_id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "tenant_id",
+                "event_id"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"fluent_pk_6acc000000001\" (\"tenant_id\" INTEGER NOT NULL, \"event_id\" INTEGER NOT NULL, PRIMARY KEY (\"tenant_id\", \"event_id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"fluent_pk_6acc000000001\" (\"tenant_id\" INTEGER NOT NULL, \"event_id\" INTEGER NOT NULL, PRIMARY KEY (\"tenant_id\", \"event_id\"))"
+      ]
+    },
+    {
+      "name": "testSqliteColumnPrimaryArrayDispatchCreatesCompositeKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_pk_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_pk_6acc000000001` (`a` INTEGER NOT NULL, `b` INTEGER NOT NULL, PRIMARY KEY (`a`, `b`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_pk_6acc000000001` (`a` INTEGER NOT NULL, `b` INTEGER NOT NULL, PRIMARY KEY (`a`, `b`))"
+      ]
+    },
+    {
+      "name": "testClickhouseColumnPrimaryArrayDispatchPopulatesOrderBy",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_pk_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "unsigned",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "unsigned",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_pk_6acc000000001` (`a` UInt32, `b` UInt32) ENGINE = MergeTree() ORDER BY (`a`, `b`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_pk_6acc000000001` (`a` UInt32, `b` UInt32) ENGINE = MergeTree() ORDER BY (`a`, `b`)"
+      ]
+    },
+    {
+      "name": "testMysqlColumnCheckTwoArgDispatchCreatesTableLevelCheck",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_check_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "age_range",
+              "`age` >= 0 AND `age` < 150"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_check_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_check_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))"
+      ]
+    },
+    {
+      "name": "testPostgresColumnCheckTwoArgDispatchCreatesTableLevelCheck",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_check_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "age_min",
+              "\"age\" >= 18"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"fluent_check_6acc000000001\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"age\" INTEGER NOT NULL, PRIMARY KEY (\"id\"), CONSTRAINT \"age_min\" CHECK (\"age\" >= 18))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"fluent_check_6acc000000001\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"age\" INTEGER NOT NULL, PRIMARY KEY (\"id\"), CONSTRAINT \"age_min\" CHECK (\"age\" >= 18))"
+      ]
+    },
+    {
+      "name": "testSqliteColumnCheckTwoArgDispatchCreatesTableLevelCheck",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_check_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "score"
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "score_range",
+              "\"score\" BETWEEN 0 AND 100"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_check_6acc000000001` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `score` INTEGER NOT NULL, CONSTRAINT `score_range` CHECK (\"score\" BETWEEN 0 AND 100))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_check_6acc000000001` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `score` INTEGER NOT NULL, CONSTRAINT `score_range` CHECK (\"score\" BETWEEN 0 AND 100))"
+      ]
+    },
+    {
+      "name": "testMysqlColumnEnumTwoArgDispatchAddsSiblingEnumColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_enum_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "label",
+              50
+            ]
+          },
+          {
+            "call": "enum",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "status",
+              [
+                "draft",
+                "live"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `fluent_enum_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, `status` ENUM('draft','live') NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_enum_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, `status` ENUM('draft','live') NOT NULL, PRIMARY KEY (`id`))"
+      ]
+    },
+    {
+      "name": "testMysqlForeignKeyForwarderMidChainContinuesColumnsAfterFK",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_fk_parent_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              50
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_fk_child_6acc000000002"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "bigInteger",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "parent_id"
+            ]
+          },
+          {
+            "call": "unsigned",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "parent_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "fluent_fk_parent_6acc000000001"
+            ]
+          },
+          {
+            "call": "onDelete",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::Cascade"
+              }
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "extra_col",
+              50
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "flag"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 11
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_fk_parent_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_fk_parent_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 11
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "CREATE TABLE `fluent_fk_child_6acc000000002` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, `extra_col` VARCHAR(50) NOT NULL, `flag` TINYINT(1) NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `fluent_fk_parent_6acc000000001` (`id`) ON DELETE CASCADE)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_fk_child_6acc000000002` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, `extra_col` VARCHAR(50) NOT NULL, `flag` TINYINT(1) NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `fluent_fk_parent_6acc000000001` (`id`) ON DELETE CASCADE)"
+      ]
+    },
+    {
+      "name": "testPostgresForeignKeyForwarderMidChainContinuesColumnsAfterFK",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_fk_parent_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              50
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_fk_child_6acc000000002"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "parent_id"
+            ]
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "parent_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "fluent_fk_parent_6acc000000001"
+            ]
+          },
+          {
+            "call": "onDelete",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::Cascade"
+              }
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 9
+            },
+            "args": [
+              "extra_col",
+              50
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 10
+            },
+            "args": [
+              "flag"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 11
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE \"fluent_fk_parent_6acc000000001\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"name\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"fluent_fk_parent_6acc000000001\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"name\" VARCHAR(50) NOT NULL, PRIMARY KEY (\"id\"))",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\ForeignKey\\PostgreSQL",
+          "id": 9
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 10
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 11
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 12,
+          "props": {
+            "query": "CREATE TABLE \"fluent_fk_child_6acc000000002\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"parent_id\" INTEGER NOT NULL, \"extra_col\" VARCHAR(50) NOT NULL, \"flag\" BOOLEAN NOT NULL, PRIMARY KEY (\"id\"), FOREIGN KEY (\"parent_id\") REFERENCES \"fluent_fk_parent_6acc000000001\" (\"id\") ON DELETE CASCADE)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"fluent_fk_child_6acc000000002\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"parent_id\" INTEGER NOT NULL, \"extra_col\" VARCHAR(50) NOT NULL, \"flag\" BOOLEAN NOT NULL, PRIMARY KEY (\"id\"), FOREIGN KEY (\"parent_id\") REFERENCES \"fluent_fk_parent_6acc000000001\" (\"id\") ON DELETE CASCADE)"
+      ]
+    },
+    {
+      "name": "testMysqlCreateIfNotExistsIsIdempotent",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_ine_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE IF NOT EXISTS `fluent_ine_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE IF NOT EXISTS `fluent_ine_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE IF NOT EXISTS `fluent_ine_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))"
+      ]
+    },
+    {
+      "name": "testMysqlDropIfExistsTolerantOfMissingTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_missing_6acc000000001"
+            ]
+          },
+          {
+            "call": "dropIfExists",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "DROP TABLE IF EXISTS `fluent_missing_6acc000000001`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE IF EXISTS `fluent_missing_6acc000000001`"
+      ]
+    },
+    {
+      "name": "testMysqlRenameRoundTrip",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_rn_a_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_rn_a_6acc000000001"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "fluent_rn_b_6acc000000002"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `fluent_rn_a_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_rn_a_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "RENAME TABLE `fluent_rn_a_6acc000000001` TO `fluent_rn_b_6acc000000002`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "RENAME TABLE `fluent_rn_a_6acc000000001` TO `fluent_rn_b_6acc000000002`"
+      ]
+    },
+    {
+      "name": "testPostgresRenameRoundTrip",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_rn_a_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_rn_a_6acc000000001"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "fluent_rn_b_6acc000000002"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE \"fluent_rn_a_6acc000000001\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\"))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE \"fluent_rn_a_6acc000000001\" (\"id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, PRIMARY KEY (\"id\"))",
+        {
+          "$object": "Schema\\Table\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "ALTER TABLE \"fluent_rn_a_6acc000000001\" RENAME TO \"fluent_rn_b_6acc000000002\"",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE \"fluent_rn_a_6acc000000001\" RENAME TO \"fluent_rn_b_6acc000000002\""
+      ]
+    },
+    {
+      "name": "testSqliteRenameRoundTrip",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_rn_a_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_rn_a_6acc000000001"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "fluent_rn_b_6acc000000002"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `fluent_rn_a_6acc000000001` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_rn_a_6acc000000001` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "ALTER TABLE `fluent_rn_a_6acc000000001` RENAME TO `fluent_rn_b_6acc000000002`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `fluent_rn_a_6acc000000001` RENAME TO `fluent_rn_b_6acc000000002`"
+      ]
+    },
+    {
+      "name": "testMysqlTruncateRemovesRowsKeepsTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_tr_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_tr_6acc000000001"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_tr_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_tr_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "TRUNCATE TABLE `fluent_tr_6acc000000001`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "TRUNCATE TABLE `fluent_tr_6acc000000001`"
+      ]
+    },
+    {
+      "name": "testSqliteTruncateRemovesRowsKeepsTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\SQLite",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_tr_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_tr_6acc000000001"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_tr_6acc000000001` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_tr_6acc000000001` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` VARCHAR(255) NOT NULL)",
+        {
+          "$object": "Schema\\Table\\SQLite",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "DELETE FROM `fluent_tr_6acc000000001`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DELETE FROM `fluent_tr_6acc000000001`"
+      ]
+    },
+    {
+      "name": "testClickhouseOrderByExplicitlyControlsSortingKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_orderby_6acc000000001"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "tenantId"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "eventId"
+            ]
+          },
+          {
+            "call": "datetime",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "createdAt"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                "tenantId",
+                "eventId"
+              ]
+            ]
+          },
+          {
+            "call": "engine",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ClickHouse\\Engine::MergeTree"
+              }
+            ]
+          },
+          {
+            "call": "orderBy",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "tenantId",
+                "createdAt"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `fluent_orderby_6acc000000001` (`tenantId` String, `eventId` String, `createdAt` DateTime) ENGINE = MergeTree() ORDER BY (`tenantId`, `createdAt`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_orderby_6acc000000001` (`tenantId` String, `eventId` String, `createdAt` DateTime) ENGINE = MergeTree() ORDER BY (`tenantId`, `createdAt`)"
+      ]
+    },
+    {
+      "name": "testClickhouseOrderByFallsBackToPrimaryWhenUnset",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_orderby_pk_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "unsigned",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "value"
+            ]
+          },
+          {
+            "call": "engine",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ClickHouse\\Engine::MergeTree"
+              }
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `fluent_orderby_pk_6acc000000001` (`id` UInt32, `value` String) ENGINE = MergeTree() ORDER BY (`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `fluent_orderby_pk_6acc000000001` (`id` UInt32, `value` String) ENGINE = MergeTree() ORDER BY (`id`)"
+      ]
+    },
+    {
+      "name": "testClickhouseEndToEndExampleFromReadme",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events_readme_6acc000000001"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "tenantId"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "eventId"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "payload"
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "datetime",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "createdAt"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              [
+                "tenantId",
+                "eventId"
+              ]
+            ]
+          },
+          {
+            "call": "engine",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ClickHouse\\Engine::MergeTree"
+              }
+            ]
+          },
+          {
+            "call": "orderBy",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "tenantId",
+                "createdAt"
+              ]
+            ]
+          },
+          {
+            "call": "ttl",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "createdAt + INTERVAL 90 DAY"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\ClickHouse",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Table\\ClickHouse",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "CREATE TABLE `events_readme_6acc000000001` (`tenantId` String, `eventId` String, `payload` Nullable(String), `createdAt` DateTime) ENGINE = MergeTree() ORDER BY (`tenantId`, `createdAt`) TTL createdAt + INTERVAL 90 DAY",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `events_readme_6acc000000001` (`tenantId` String, `eventId` String, `payload` Nullable(String), `createdAt` DateTime) ENGINE = MergeTree() ORDER BY (`tenantId`, `createdAt`) TTL createdAt + INTERVAL 90 DAY"
+      ]
+    },
+    {
+      "name": "testMongoFluentTerminalsAndForwardersRoundTrip",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_mongo_6acc000000001"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "active"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              true
+            ]
+          },
+          {
+            "call": "createIfNotExists",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_mongo_6acc000000001"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "phone",
+              20
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "call": "comment",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "contact phone"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_mongo_6acc000000001"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_mongo_6acc000000001"
+            ]
+          },
+          {
+            "call": "rename",
+            "on": {
+              "$o": 12
+            },
+            "args": [
+              "fluent_mongo_6acc000000001_renamed"
+            ]
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "fluent_mongo_6acc000000001_renamed"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 14
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 15
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "{\"command\":\"createCollection\",\"collection\":\"fluent_mongo_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"name\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"},\"active\":{\"bsonType\":\"bool\"}},\"required\":[\"name\"]}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"createCollection\",\"collection\":\"fluent_mongo_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"name\":{\"bsonType\":\"string\"},\"age\":{\"bsonType\":\"int\"},\"active\":{\"bsonType\":\"bool\"}},\"required\":[\"name\"]}}}",
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\Column\\MongoDB",
+          "id": 8
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "{\"command\":\"collMod\",\"collection\":\"fluent_mongo_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\",\"description\":\"contact phone\"}}}}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"collMod\",\"collection\":\"fluent_mongo_6acc000000001\",\"validator\":{\"$jsonSchema\":{\"bsonType\":\"object\",\"properties\":{\"phone\":{\"bsonType\":\"string\",\"description\":\"contact phone\"}}}}}",
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 10
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 11,
+          "props": {
+            "query": "{\"command\":\"deleteMany\",\"collection\":\"fluent_mongo_6acc000000001\",\"filter\":{}}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"deleteMany\",\"collection\":\"fluent_mongo_6acc000000001\",\"filter\":{}}",
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 12
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 13,
+          "props": {
+            "query": "{\"command\":\"renameCollection\",\"from\":\"fluent_mongo_6acc000000001\",\"to\":\"fluent_mongo_6acc000000001_renamed\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"renameCollection\",\"from\":\"fluent_mongo_6acc000000001\",\"to\":\"fluent_mongo_6acc000000001_renamed\"}",
+        {
+          "$object": "Schema\\Table\\MongoDB",
+          "id": 14
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 15,
+          "props": {
+            "query": "{\"command\":\"drop\",\"collection\":\"fluent_mongo_6acc000000001_renamed\"}",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "{\"command\":\"drop\",\"collection\":\"fluent_mongo_6acc000000001_renamed\"}"
+      ]
+    }
+  ]
+}

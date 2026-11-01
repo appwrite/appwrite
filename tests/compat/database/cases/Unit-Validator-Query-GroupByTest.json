@@ -1,0 +1,729 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/GroupByTest.php"
+  ],
+  "cases": [
+    {
+      "name": "GroupByTest::testValueSuccess",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1632"
+          },
+          "bind": "s2575",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "status",
+                "key": "status",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1633"
+          },
+          "bind": "s2576",
+          "expect": {
+            "$document": {
+              "$id": "status",
+              "key": "status",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1632"
+                },
+                {
+                  "$obj": "o1633"
+                }
+              ]
+            },
+            "as": "o1634"
+          },
+          "bind": "s2577",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "name"
+              ]
+            },
+            "as": "o1635"
+          },
+          "bind": "s2578",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1634"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1635"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "name",
+                "status"
+              ]
+            },
+            "as": "o1636"
+          },
+          "bind": "s2580",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "name",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1634"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1636"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "$id"
+              ]
+            },
+            "as": "o1637"
+          },
+          "bind": "s2582",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "$id"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1634"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1637"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "GroupByTest::testValueFailure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1638"
+          },
+          "bind": "s2584",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "status",
+                "key": "status",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1639"
+          },
+          "bind": "s2585",
+          "expect": {
+            "$document": {
+              "$id": "status",
+              "key": "status",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1638"
+                },
+                {
+                  "$obj": "o1639"
+                }
+              ]
+            },
+            "as": "o1640"
+          },
+          "bind": "s2586",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": []
+            },
+            "as": "o1641"
+          },
+          "bind": "s2587",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1640"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1641"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1640"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "GroupBy requires at least one attribute"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::GroupBy"
+              },
+              "attribute": "",
+              "values": [
+                123
+              ]
+            },
+            "as": "o1642"
+          },
+          "bind": "s2590",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                123
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1640"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1642"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1640"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "GroupBy attributes must be non-empty strings"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::GroupBy"
+              },
+              "attribute": "",
+              "values": [
+                ""
+              ]
+            },
+            "as": "o1643"
+          },
+          "bind": "s2593",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1640"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1643"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1640"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "GroupBy attributes must be non-empty strings"
+        }
+      ]
+    },
+    {
+      "name": "GroupByTest::testUnknownAttributeRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1644"
+          },
+          "bind": "s2596",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "status",
+                "key": "status",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1645"
+          },
+          "bind": "s2597",
+          "expect": {
+            "$document": {
+              "$id": "status",
+              "key": "status",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1644"
+                },
+                {
+                  "$obj": "o1645"
+                }
+              ]
+            },
+            "as": "o1646"
+          },
+          "bind": "s2598",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "nonexistent"
+              ]
+            },
+            "as": "o1647"
+          },
+          "bind": "s2599",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "nonexistent"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1646"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1647"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1646"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute not found in schema: nonexistent"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "name",
+                "nonexistent"
+              ]
+            },
+            "as": "o1648"
+          },
+          "bind": "s2602",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "name",
+                "nonexistent"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1646"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1648"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1646"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Attribute not found in schema: nonexistent"
+        }
+      ]
+    },
+    {
+      "name": "GroupByTest::testUnknownAttributeAllowedWithoutAttributeSupport",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1649"
+          },
+          "bind": "s2605",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "status",
+                "key": "status",
+                "type": "string",
+                "array": false
+              }
+            },
+            "as": "o1650"
+          },
+          "bind": "s2606",
+          "expect": {
+            "$document": {
+              "$id": "status",
+              "key": "status",
+              "type": "string",
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o1649"
+                },
+                {
+                  "$obj": "o1650"
+                }
+              ]
+            },
+            "as": "o1651"
+          },
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\GroupBy",
+            "args": {
+              "attributes": [],
+              "supportForAttributes": false
+            },
+            "as": "o1652"
+          },
+          "bind": "s2608",
+          "expect": {
+            "$value": "Validator\\Query\\GroupBy",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "groupBy",
+            "args": {
+              "attributes": [
+                "anything"
+              ]
+            },
+            "as": "o1653"
+          },
+          "bind": "s2609",
+          "expect": {
+            "$query": {
+              "method": "groupBy",
+              "attribute": "",
+              "values": [
+                "anything"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1652"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1653"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

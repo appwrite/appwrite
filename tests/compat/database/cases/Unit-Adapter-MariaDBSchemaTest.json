@@ -1,0 +1,1025 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/MariaDBSchemaTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MariaDB ttl",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o247"
+          },
+          "bind": "s430",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Ttl"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o248"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o247"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MariaDB object",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o249"
+          },
+          "bind": "s434",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Object"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o250"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Object"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o249"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MariaDB trigram",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o251"
+          },
+          "bind": "s438",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Trigram"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o252"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Trigram"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o251"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MariaDB hnsw_cosine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o253"
+          },
+          "bind": "s442",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::HnswCosine"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o254"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswCosine"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o253"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MySQL ttl",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o255"
+          },
+          "bind": "s446",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Ttl"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o256"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Ttl"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": 3600
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o255"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MySQL object",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o257"
+          },
+          "bind": "s450",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Object"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o258"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Object"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o257"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MySQL trigram",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o259"
+          },
+          "bind": "s454",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::Trigram"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o260"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Trigram"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o259"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexRefusesATypeTheEngineDoesNotCreate#MySQL hnsw_cosine",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o261"
+          },
+          "bind": "s458",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "happened_index",
+                "type": {
+                  "$enum": "Query\\Schema\\IndexType::HnswCosine"
+                },
+                "attributes": [
+                  "happened"
+                ],
+                "ttl": 3600
+              }
+            },
+            "as": "o262"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswCosine"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o261"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexCreatesAKeyIndex#MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o263"
+          },
+          "bind": "s462",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "happened_index",
+              "attributes": [
+                "happened"
+              ]
+            },
+            "as": "o264"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o263"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexCreatesAKeyIndex#MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o265"
+          },
+          "bind": "s466",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "happened_index",
+              "attributes": [
+                "happened"
+              ]
+            },
+            "as": "o266"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o265"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexOnACollectionWithoutADefinitionIsNotFound#MariaDB",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o267"
+          },
+          "bind": "s470",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "happened_index",
+              "attributes": [
+                "happened"
+              ]
+            },
+            "as": "o268"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o267"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {},
+            "as": "o269"
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "MariaDBSchemaTest::testCreateIndexOnACollectionWithoutADefinitionIsNotFound#MySQL",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "events",
+                "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+              }
+            },
+            "as": "o270"
+          },
+          "bind": "s475",
+          "expect": {
+            "$document": {
+              "$id": "events",
+              "attributes": "[{\"$id\":\"happened\",\"type\":\"datetime\",\"array\":false}]"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "key",
+            "args": {
+              "key": "happened_index",
+              "attributes": [
+                "happened"
+              ]
+            },
+            "as": "o271"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "happened_index",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "happened"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "$id": "_metadata"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "_metadata"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o270"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "events"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {},
+            "as": "o272"
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,346 @@
+{
+  "cases": [
+    {
+      "name": "a WRONGTYPE id set reads as false, as phpredis gives it",
+      "state": [
+        "redis-json@database-redis-adapter"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "redis": true,
+            "cache": "none",
+            "namespace": "${ns}"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "things",
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "c64"
+          },
+          "expect": {
+            "$document": {
+              "$id": "things",
+              "name": "things",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c64"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "things",
+              "name": "things",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 32,
+                "required": false
+              }
+            },
+            "as": "a65"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "things",
+            "attribute": {
+              "$obj": "a65"
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "things",
+            "document": {
+              "$id": "first",
+              "name": "First"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "name": "First",
+              "$collection": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.redis",
+          "args": {
+            "command": [
+              "SET",
+              "utopia:${ns}:${ns}:idx:things",
+              "not a set"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "things",
+            "document": {
+              "$id": "second",
+              "name": "Second"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "name": "Second",
+              "$collection": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "things",
+            "id": "second"
+          },
+          "expect": {
+            "$document": {
+              "$sequence": "2",
+              "$id": "second",
+              "name": "Second",
+              "$collection": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": []
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "things"
+          },
+          "expect": []
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "things"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "things",
+            "document": {
+              "$id": "third",
+              "name": "Third"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "name": "Third",
+              "$collection": "things",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "rollbackTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "things",
+            "id": "third"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "things",
+            "id": "first"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "things",
+            "id": "first"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "db.redis",
+          "args": {
+            "command": [
+              "DEL",
+              "utopia:${ns}:${ns}:idx:things"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "db.redis",
+          "args": {
+            "command": [
+              "SADD",
+              "utopia:${ns}:${ns}:idx:things",
+              "second"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "things"
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "second",
+                "name": "Second",
+                "$collection": "things",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "2"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

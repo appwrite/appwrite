@@ -1,0 +1,250 @@
+{
+  "source": "packages/domains/tests/Validator/PublicDomainTest.php",
+  "cases": [
+    {
+      "name": "description",
+      "op": "validator.describe",
+      "args": {
+        "validator": "public"
+      },
+      "expect": {
+        "description": "Value must be a public domain",
+        "type": "string",
+        "array": false
+      }
+    },
+    {
+      "name": "example.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "example.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "google.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "google.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "bbc.co.uk",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "bbc.co.uk"
+      },
+      "expect": true
+    },
+    {
+      "name": "appwrite.io",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "appwrite.io"
+      },
+      "expect": true
+    },
+    {
+      "name": "usa.gov",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "usa.gov"
+      },
+      "expect": true
+    },
+    {
+      "name": "stanford.edu",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "stanford.edu"
+      },
+      "expect": true
+    },
+    {
+      "name": "http://google.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "http://google.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "http://www.google.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "http://www.google.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "https://example.com",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "https://example.com"
+      },
+      "expect": true
+    },
+    {
+      "name": "localhost",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "localhost"
+      },
+      "expect": false
+    },
+    {
+      "name": "http://localhost",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "http://localhost"
+      },
+      "expect": false
+    },
+    {
+      "name": "sub.demo.localhost",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "sub.demo.localhost"
+      },
+      "expect": false
+    },
+    {
+      "name": "test.app.internal",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "test.app.internal"
+      },
+      "expect": false
+    },
+    {
+      "name": "home.local",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "home.local"
+      },
+      "expect": false
+    },
+    {
+      "name": "qa.testing.internal",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "qa.testing.internal"
+      },
+      "expect": false
+    },
+    {
+      "name": "wiki.team.local",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "wiki.team.local"
+      },
+      "expect": false
+    },
+    {
+      "name": "example.test",
+      "op": "validator.is_valid",
+      "args": {
+        "validator": "public",
+        "value": "example.test"
+      },
+      "expect": false
+    },
+    {
+      "name": "allow domains",
+      "steps": [
+        {
+          "op": "validator.allow",
+          "args": {
+            "domains": [
+              "localhost"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "public",
+            "value": "localhost"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "public",
+            "value": "http://localhost"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "public",
+            "value": "test.app.internal"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.allow",
+          "args": {
+            "domains": [
+              "test.app.internal",
+              "home.local"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "public",
+            "value": "test.app.internal"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "public",
+            "value": "home.local"
+          },
+          "expect": true
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "apex",
+            "value": "home.local"
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": "apex",
+            "value": "x.home.local"
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

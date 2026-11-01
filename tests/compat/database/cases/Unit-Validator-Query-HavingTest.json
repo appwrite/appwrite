@@ -1,0 +1,214 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/HavingTest.php"
+  ],
+  "cases": [
+    {
+      "name": "HavingTest::testValueSuccess",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o1654"
+          },
+          "bind": "s2611",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "count",
+              "values": [
+                1
+              ]
+            },
+            "as": "o1655"
+          },
+          "bind": "s2612",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "count",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "having",
+            "args": {
+              "queries": [
+                {
+                  "$obj": "o1655"
+                }
+              ]
+            },
+            "as": "o1656"
+          },
+          "bind": "s2613",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "count",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1654"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1656"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "HavingTest::testValueFailure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Having",
+            "args": {},
+            "as": "o1657"
+          },
+          "bind": "s2615",
+          "expect": {
+            "$value": "Validator\\Query\\Having",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "having",
+            "args": {
+              "queries": []
+            },
+            "as": "o1658"
+          },
+          "bind": "s2616",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1657"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1658"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1657"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Having requires at least one condition"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Having"
+              },
+              "attribute": "",
+              "values": [
+                "count > 1"
+              ]
+            },
+            "as": "o1659"
+          },
+          "bind": "s2619",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": [
+                "count > 1"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1657"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1659"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1657"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Having conditions must be Query instances"
+        }
+      ]
+    }
+  ]
+}

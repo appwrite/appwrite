@@ -1,0 +1,147 @@
+{
+  "source": "packages/config/tests/Parser/NoneTest.php",
+  "cases": [
+    {
+      "name": "testNoneBasicTypes",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "none",
+            "contents": {
+              "string": "hello world",
+              "unicode_string": "ä你こحب🌍",
+              "integer": 42,
+              "float": 3.14159,
+              "negative": -50,
+              "boolean_true": true,
+              "boolean_false": false,
+              "null": null
+            }
+          },
+          "expect": {
+            "$array": [
+              [
+                "string",
+                "hello world"
+              ],
+              [
+                "unicode_string",
+                "ä你こحب🌍"
+              ],
+              [
+                "integer",
+                42
+              ],
+              [
+                "float",
+                3.14159
+              ],
+              [
+                "negative",
+                -50
+              ],
+              [
+                "boolean_true",
+                true
+              ],
+              [
+                "boolean_false",
+                false
+              ],
+              [
+                "null",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNoneParseExceptionNull",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "none",
+            "contents": null
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be an array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNoneParseExceptionString",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "none",
+            "contents": "hello"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be an array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNoneParseExceptionBoolean",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "none",
+            "contents": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be an array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNoneParseExceptionNumber",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "none",
+            "contents": 12
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be an array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNoneEdgeCases",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "none",
+            "contents": []
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

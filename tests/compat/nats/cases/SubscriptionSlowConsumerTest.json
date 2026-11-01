@@ -1,0 +1,748 @@
+{
+  "source": "packages/nats/tests/SubscriptionSlowConsumerTest.php",
+  "cases": [
+    {
+      "name": "exceeding the message limit signals and drops",
+      "steps": [
+        {
+          "op": "subscription.new",
+          "args": {
+            "sid": "1",
+            "subject": "foo",
+            "msgs_limit": 3,
+            "bytes_limit": 1000000,
+            "slow": true
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 3,
+            "pending_count": 3,
+            "pending_bytes": 3,
+            "has_callback": false,
+            "sid": "1",
+            "subject": "foo",
+            "queue": null,
+            "log": [
+              [
+                "slow",
+                "1"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "exceeding the byte limit signals",
+      "steps": [
+        {
+          "op": "subscription.new",
+          "args": {
+            "sid": "2",
+            "subject": "foo",
+            "msgs_limit": 1000000,
+            "bytes_limit": 10,
+            "slow": true
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "aaaaaa"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 1,
+            "pending_count": 1,
+            "pending_bytes": 6,
+            "has_callback": false,
+            "sid": "2",
+            "subject": "foo",
+            "queue": null,
+            "log": []
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "aaaaaa"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 1,
+            "pending_count": 1,
+            "pending_bytes": 6,
+            "has_callback": false,
+            "sid": "2",
+            "subject": "foo",
+            "queue": null,
+            "log": [
+              [
+                "slow",
+                "2"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "draining resets the signal and the bytes",
+      "steps": [
+        {
+          "op": "subscription.new",
+          "args": {
+            "sid": "3",
+            "subject": "foo",
+            "msgs_limit": 2,
+            "bytes_limit": 1000000,
+            "slow": true
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "aa"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "bb"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "cc"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 2,
+            "pending_count": 2,
+            "pending_bytes": 4,
+            "has_callback": false,
+            "sid": "3",
+            "subject": "foo",
+            "queue": null,
+            "log": [
+              [
+                "slow",
+                "3"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "subscription.next",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "subject": "foo",
+            "data": "aa",
+            "reply": null,
+            "headers": null,
+            "sid": null
+          }
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 2,
+            "pending_count": 1,
+            "pending_bytes": 2,
+            "has_callback": false,
+            "sid": "3",
+            "subject": "foo",
+            "queue": null,
+            "log": [
+              [
+                "slow",
+                "3"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "dd"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "ee"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 3,
+            "pending_count": 2,
+            "pending_bytes": 4,
+            "has_callback": false,
+            "sid": "3",
+            "subject": "foo",
+            "queue": null,
+            "log": [
+              [
+                "slow",
+                "3"
+              ],
+              [
+                "slow",
+                "3"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "callback subscriptions never queue",
+      "steps": [
+        {
+          "op": "subscription.new",
+          "args": {
+            "sid": "4",
+            "subject": "foo",
+            "mode": "callback",
+            "msgs_limit": 1,
+            "bytes_limit": 1
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "payload"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "payload"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "payload"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "payload"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "payload"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 5,
+            "pending_count": 0,
+            "pending_bytes": 0,
+            "has_callback": true,
+            "sid": "4",
+            "subject": "foo",
+            "queue": null,
+            "log": [
+              [
+                "message",
+                "payload"
+              ],
+              [
+                "message",
+                "payload"
+              ],
+              [
+                "message",
+                "payload"
+              ],
+              [
+                "message",
+                "payload"
+              ],
+              [
+                "message",
+                "payload"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "max messages deactivates, and already-received counts",
+      "steps": [
+        {
+          "op": "subscription.new",
+          "args": {
+            "sid": "5",
+            "subject": "foo",
+            "queue": "q"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.set_max",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "max": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 1,
+            "pending_count": 1,
+            "pending_bytes": 1,
+            "has_callback": false,
+            "sid": "5",
+            "subject": "foo",
+            "queue": "q",
+            "log": []
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "b"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": false,
+            "received": 2,
+            "pending_count": 2,
+            "pending_bytes": 2,
+            "has_callback": false,
+            "sid": "5",
+            "subject": "foo",
+            "queue": "q",
+            "log": []
+          }
+        },
+        {
+          "op": "subscription.set_max",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "max": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": false,
+            "received": 2,
+            "pending_count": 2,
+            "pending_bytes": 2,
+            "has_callback": false,
+            "sid": "5",
+            "subject": "foo",
+            "queue": "q",
+            "log": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "set inactive, then the queue drains",
+      "steps": [
+        {
+          "op": "subscription.new",
+          "args": {
+            "sid": "6",
+            "subject": "foo"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.set_inactive",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.next",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "subject": "foo",
+            "data": "a",
+            "reply": null,
+            "headers": null,
+            "sid": null
+          }
+        },
+        {
+          "op": "subscription.next",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": false,
+            "received": 1,
+            "pending_count": 0,
+            "pending_bytes": 0,
+            "has_callback": false,
+            "sid": "6",
+            "subject": "foo",
+            "queue": null,
+            "log": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "no slow-consumer hook: overflow only drops",
+      "steps": [
+        {
+          "op": "subscription.new",
+          "args": {
+            "sid": "7",
+            "subject": "foo",
+            "msgs_limit": 1,
+            "bytes_limit": 1000
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.deliver",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            },
+            "data": "b"
+          },
+          "expect": null
+        },
+        {
+          "op": "subscription.state",
+          "args": {
+            "sub": {
+              "$ref": "sub"
+            }
+          },
+          "expect": {
+            "active": true,
+            "received": 1,
+            "pending_count": 1,
+            "pending_bytes": 1,
+            "has_callback": false,
+            "sid": "7",
+            "subject": "foo",
+            "queue": null,
+            "log": []
+          }
+        }
+      ]
+    }
+  ]
+}

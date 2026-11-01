@@ -1,0 +1,222 @@
+{
+  "service": "advisor",
+  "file": "tests/benchmarks/results/advisor.json",
+  "workload": {
+    "script": "tests/benchmarks/api/advisor.js",
+    "duration": "60s",
+    "hashing": false,
+    "seed": 200,
+    "run": "advisor-20261012-003157"
+  },
+  "environment": {
+    "date": "2026-10-11T23:34:15Z",
+    "commit": "ef1e9c030e",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 50.0,
+      "requests": 3001,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 7.147,
+        "p50": 4.687,
+        "p90": 13.682,
+        "p95": 17.852,
+        "p99": 34.86,
+        "max": 82.718
+      },
+      "cpu_ms_per_request": 4.151,
+      "db_cpu_ms_per_request": 1.981,
+      "memory_mib": {
+        "baseline": 3146.8,
+        "avg": 3148.6,
+        "peak": 3150.8
+      },
+      "endpoints": {
+        "advisor.reports.list": {
+          "route": "GET /v1/reports",
+          "note": "a project without reports",
+          "count": 1115,
+          "rps": 18.58,
+          "avg": 7.157,
+          "p50": 4.793,
+          "p90": 13.141,
+          "p95": 16.927,
+          "p99": 34.584,
+          "max": 82.718
+        },
+        "advisor.reports.get": {
+          "route": "GET /v1/reports/:reportId",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 624,
+          "rps": 10.4,
+          "avg": 6.917,
+          "p50": 4.589,
+          "p90": 13.004,
+          "p95": 17.162,
+          "p99": 30.256,
+          "max": 60.403
+        },
+        "advisor.reports.delete": {
+          "route": "DELETE /v1/reports/:reportId",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 215,
+          "rps": 3.58,
+          "avg": 7.339,
+          "p50": 4.669,
+          "p90": 14.098,
+          "p95": 17.929,
+          "p99": 29.91,
+          "max": 66.977
+        },
+        "advisor.insights.list": {
+          "route": "GET /v1/reports/:reportId/insights",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 629,
+          "rps": 10.48,
+          "avg": 6.85,
+          "p50": 4.613,
+          "p90": 13.363,
+          "p95": 17.227,
+          "p99": 27.246,
+          "max": 38.782
+        },
+        "advisor.insights.get": {
+          "route": "GET /v1/reports/:reportId/insights/:insightId",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 418,
+          "rps": 6.97,
+          "avg": 7.807,
+          "p50": 4.731,
+          "p90": 15.084,
+          "p95": 19.478,
+          "p99": 50.194,
+          "max": 79.337
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 1642.6,
+      "requests": 98555,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 30.309,
+        "p50": 24.912,
+        "p90": 53.051,
+        "p95": 67.713,
+        "p99": 107.515,
+        "max": 322.191
+      },
+      "cpu_ms_per_request": 4.872,
+      "db_cpu_ms_per_request": 1.259,
+      "memory_mib": {
+        "baseline": 3149.8,
+        "avg": 3212.8,
+        "peak": 3238.9
+      },
+      "endpoints": {
+        "advisor.reports.list": {
+          "route": "GET /v1/reports",
+          "note": "a project without reports",
+          "count": 35382,
+          "rps": 589.7,
+          "avg": 29.141,
+          "p50": 23.836,
+          "p90": 51.135,
+          "p95": 65.556,
+          "p99": 104.609,
+          "max": 288.914
+        },
+        "advisor.reports.get": {
+          "route": "GET /v1/reports/:reportId",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 20789,
+          "rps": 346.48,
+          "avg": 30.452,
+          "p50": 25.206,
+          "p90": 52.494,
+          "p95": 67.816,
+          "p99": 108.378,
+          "max": 322.191
+        },
+        "advisor.reports.delete": {
+          "route": "DELETE /v1/reports/:reportId",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 6942,
+          "rps": 115.7,
+          "avg": 32.272,
+          "p50": 26.642,
+          "p90": 55.972,
+          "p95": 70.63,
+          "p99": 110.009,
+          "max": 294.388
+        },
+        "advisor.insights.list": {
+          "route": "GET /v1/reports/:reportId/insights",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 21185,
+          "rps": 353.08,
+          "avg": 30.846,
+          "p50": 25.341,
+          "p90": 54.125,
+          "p95": 68.765,
+          "p99": 109.668,
+          "max": 263.125
+        },
+        "advisor.insights.get": {
+          "route": "GET /v1/reports/:reportId/insights/:insightId",
+          "note": "measured on its not-found path: reports are written by the platform analyzers, no API creates one",
+          "count": 14257,
+          "rps": 237.62,
+          "avg": 31.243,
+          "p50": 25.746,
+          "p90": 54.79,
+          "p95": 69.963,
+          "p99": 107.659,
+          "max": 252.406
+        }
+      }
+    }
+  ]
+}

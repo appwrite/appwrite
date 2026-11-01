@@ -1,0 +1,495 @@
+{
+  "source": "packages/servers/tests/HookTest.php",
+  "cases": [
+    {
+      "name": "testDescriptionCanBeSet",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "get": "desc"
+          },
+          {
+            "desc": "new hook"
+          },
+          {
+            "get": "desc"
+          }
+        ]
+      },
+      "expect": [
+        "",
+        true,
+        "new hook"
+      ]
+    },
+    {
+      "name": "testGroupsCanBeSet",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "get": "groups"
+          },
+          {
+            "groups": [
+              "api",
+              "homepage"
+            ]
+          },
+          {
+            "get": "groups"
+          }
+        ]
+      },
+      "expect": [
+        [],
+        true,
+        [
+          "api",
+          "homepage"
+        ]
+      ]
+    },
+    {
+      "name": "testActionCanBeSet",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "get": "action"
+          },
+          {
+            "action": "hello world"
+          },
+          {
+            "get": "action"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true
+      ]
+    },
+    {
+      "name": "testParamCanBeSet",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "get": "params"
+          },
+          {
+            "param": {
+              "key": "x",
+              "default": "",
+              "validator": {
+                "text": [
+                  10
+                ]
+              }
+            }
+          },
+          {
+            "param": {
+              "key": "y",
+              "default": "",
+              "validator": {
+                "text": [
+                  10
+                ]
+              }
+            }
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        [],
+        true,
+        true,
+        {
+          "x": {
+            "default": "",
+            "validator": "Value must be a valid string and at least 1 chars and no longer than 10 chars",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": null,
+            "value": null,
+            "order": 0
+          },
+          "y": {
+            "default": "",
+            "validator": "Value must be a valid string and at least 1 chars and no longer than 10 chars",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": null,
+            "value": null,
+            "order": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParamAliasesDefaultEmpty",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "param": {
+              "key": "x",
+              "default": "",
+              "validator": {
+                "text": [
+                  10
+                ]
+              }
+            }
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "x": {
+            "default": "",
+            "validator": "Value must be a valid string and at least 1 chars and no longer than 10 chars",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": null,
+            "value": null,
+            "order": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParamAliasesCanBeSet",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "param": {
+              "key": "projectId",
+              "default": "",
+              "validator": {
+                "text": [
+                  64
+                ]
+              },
+              "description": "",
+              "aliases": [
+                "project",
+                "project_id"
+              ]
+            }
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "projectId": {
+            "default": "",
+            "validator": "Value must be a valid string and at least 1 chars and no longer than 64 chars",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [
+              "project",
+              "project_id"
+            ],
+            "enum": null,
+            "value": null,
+            "order": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParamEnumCanBeSet",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "param": {
+              "key": "status",
+              "default": "draft",
+              "validator": {
+                "text": [
+                  32
+                ]
+              },
+              "description": "Status.",
+              "optional": true,
+              "enum": {
+                "name": "ArticleStatus",
+                "map": {
+                  "draft": "Draft",
+                  "published": "Published"
+                }
+              }
+            }
+          },
+          {
+            "get": "params"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "status": {
+            "default": "draft",
+            "validator": "Value must be a valid string and at least 1 chars and no longer than 32 chars",
+            "description": "Status.",
+            "optional": true,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": {
+              "name": "ArticleStatus",
+              "map": {
+                "draft": "Draft",
+                "published": "Published"
+              }
+            },
+            "value": null,
+            "order": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testResourcesCanBeInjected",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "get": "injections"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "inject": "time"
+          },
+          {
+            "action": null
+          },
+          {
+            "get": "injections"
+          }
+        ]
+      },
+      "expect": [
+        [],
+        true,
+        true,
+        true,
+        {
+          "user": {
+            "name": "user",
+            "order": 0
+          },
+          "time": {
+            "name": "time",
+            "order": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDependenciesAreReturnedInInjectionOrder",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "get": "dependencies"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "param": {
+              "key": "x",
+              "default": "",
+              "validator": {
+                "text": [
+                  10
+                ]
+              }
+            }
+          },
+          {
+            "inject": "time"
+          },
+          {
+            "inject": "locale"
+          },
+          {
+            "get": "dependencies"
+          },
+          {
+            "get": "injections"
+          }
+        ]
+      },
+      "expect": [
+        [],
+        true,
+        true,
+        true,
+        true,
+        [
+          "user",
+          "time",
+          "locale"
+        ],
+        {
+          "user": {
+            "name": "user",
+            "order": 0
+          },
+          "time": {
+            "name": "time",
+            "order": 2
+          },
+          "locale": {
+            "name": "locale",
+            "order": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParamValuesCanBeSet",
+      "op": "hook.run",
+      "args": {
+        "steps": [
+          {
+            "get": "params"
+          },
+          {
+            "param": {
+              "key": "x",
+              "default": "",
+              "validator": {
+                "integer": false
+              }
+            }
+          },
+          {
+            "param": {
+              "key": "y",
+              "default": "",
+              "validator": {
+                "integer": false
+              }
+            }
+          },
+          {
+            "set_param_value": {
+              "key": "x",
+              "value": "hello"
+            }
+          },
+          {
+            "set_param_value": {
+              "key": "y",
+              "value": "world"
+            }
+          },
+          {
+            "get": "params"
+          },
+          {
+            "get": "params_values"
+          },
+          {
+            "param_value": "x"
+          }
+        ]
+      },
+      "expect": [
+        [],
+        true,
+        true,
+        true,
+        true,
+        {
+          "x": {
+            "default": "",
+            "validator": "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": null,
+            "value": "hello",
+            "order": 0
+          },
+          "y": {
+            "default": "",
+            "validator": "Value must be a valid signed 32-bit integer between -2,147,483,648 and 2,147,483,647",
+            "description": "",
+            "optional": false,
+            "injections": [],
+            "skipValidation": false,
+            "deprecated": false,
+            "example": "",
+            "model": null,
+            "aliases": [],
+            "enum": null,
+            "value": "world",
+            "order": 1
+          }
+        },
+        {
+          "x": "hello",
+          "y": "world"
+        },
+        "hello"
+      ]
+    }
+  ]
+}

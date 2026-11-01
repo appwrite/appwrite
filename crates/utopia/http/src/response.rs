@@ -1,0 +1,897 @@
+//! The outgoing response: status, headers and cookies set by the
+//! application, sent once through [`Response::send`] (or streamed with
+//! [`Response::chunk`]); what reaches the connection is recorded as a
+//! [`Wire`].
+//!
+//! PHP: `Utopia\Http\Response`; the [`Wire`] stands for the server
+//! adapter's output.
+
+mod aborted;
+/// Common content types.
+///
+/// PHP: `Response::CONTENT_TYPE_*`.
+pub mod content_type;
+mod cookie;
+mod head;
+mod reason;
+/// The `SameSite` values of a cookie.
+///
+/// PHP: `Response::COOKIE_SAMESITE_*`.
+pub mod same_site;
+mod stream;
+mod wire;
+
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
+
+use bytes::Bytes;
+use http::{HeaderName, HeaderValue, StatusCode};
+use serde_json::Value;
+
+use crate::compression::{self, Compression};
+use crate::encode;
+use crate::error::{Error, Result};
+use crate::headers::Headers;
+
+pub use aborted::Aborted;
+pub use cookie::Cookie;
+pub(crate) use head::Head;
+pub use reason::reason;
+pub(crate) use stream::Stream;
+pub use wire::Wire;
+
+/// Bodies larger than this many bytes are written in chunks.
+///
+/// PHP: `Response::CHUNK_SIZE`.
+pub const CHUNK_SIZE: usize = 2_000_000;
+
+/// The UTF-8 charset name, for [`Response::set_content_type`].
+///
+/// PHP: `Response::CHARSET_UTF8`.
+pub const CHARSET_UTF8: &str = "UTF-8";
+
+/// A hyper response body: a buffer, or the frames a streamed response
+/// sends (which end in [`Aborted`] when the response is aborted).
+pub type Body = http_body_util::combinators::BoxBody<Bytes, Aborted>;
+
+/// An outgoing response.
+///
+/// The application sets the status, headers and cookies, then sends the
+/// body once (or in chunks); later sends are ignored.
+#[derive(Debug)]
+pub struct Response {
+    status: u16,
+    content_type: String,
+    disable_payload: bool,
+    sent: bool,
+    headers_sent: bool,
+    headers: Headers,
+    cookies: Vec<(usize, Cookie)>,
+    next_cookie: usize,
+    start: Instant,
+    size: usize,
+    accept_encoding: String,
+    compression_min_size: usize,
+    compression_supported: Vec<String>,
+    wire: Wire,
+    /// A body staged by [`Response::with_body`], sent by the server when the
+    /// application did not send one itself.
+    staged: Option<Bytes>,
+    /// A body staged by [`Response::stage_stream`]: produced as the client reads
+    /// it, with its length.
+    staged_body: Option<(Body, usize)>,
+    stream: Option<Stream>,
+}
+
+impl Clone for Response {
+    /// A copy of the response state; a copy does not stream.
+    fn clone(&self) -> Self {
+        Self {
+            status: self.status,
+            content_type: self.content_type.clone(),
+            disable_payload: self.disable_payload,
+            sent: self.sent,
+            headers_sent: self.headers_sent,
+            headers: self.headers.clone(),
+            cookies: self.cookies.clone(),
+            next_cookie: self.next_cookie,
+            start: self.start,
+            size: self.size,
+            accept_encoding: self.accept_encoding.clone(),
+            compression_min_size: self.compression_min_size,
+            compression_supported: self.compression_supported.clone(),
+            wire: self.wire.clone(),
+            staged: self.staged.clone(),
+            staged_body: None,
+            stream: None,
+        }
+    }
+}
+
+impl Default for Response {
+    /// A `200` response started now.
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Response {
+    /// A `200` response started now.
+    ///
+    /// PHP: `new Response()`.
+    pub fn new() -> Self {
+        Self::started_at(Instant::now())
+    }
+
+    /// A `200` response started at `start`, the time the `X-Debug-Speed`
+    /// header measures from.
+    ///
+    /// PHP: `new Response($time)`.
+    pub fn started_at(start: Instant) -> Self {
+        Self {
+            status: 200,
+            content_type: String::new(),
+            disable_payload: false,
+            sent: false,
+            headers_sent: false,
+            headers: Headers::new(),
+            cookies: Vec::new(),
+            next_cookie: 0,
+            start,
+            size: 0,
+            accept_encoding: String::new(),
+            compression_min_size: crate::COMPRESSION_MIN_SIZE_DEFAULT,
+            compression_supported: Vec::new(),
+            wire: Wire::default(),
+            staged: None,
+            staged_body: None,
+            stream: None,
+        }
+    }
+
+    // -- builders used by applications that return a response value -------
+
+    /// A response with `status` and `body` staged to be sent with `content_type`.
+    pub fn with_body(status: StatusCode, content_type: &str, body: impl Into<Bytes>) -> Self {
+        let mut r = Self::new();
+        r.status = status.as_u16();
+        r.content_type = content_type.to_owned();
+        r.staged = Some(body.into());
+        r
+    }
+
+    /// A JSON response from already encoded bytes (`application/json; charset=UTF-8`).
+    pub fn json_bytes(status: StatusCode, body: impl Into<Bytes>) -> Self {
+        Self::with_body(status, "application/json; charset=UTF-8", body)
+    }
+
+    /// A plain text response (`text/plain; charset=UTF-8`).
+    pub fn text_bytes(status: StatusCode, body: impl Into<Bytes>) -> Self {
+        Self::with_body(status, "text/plain; charset=UTF-8", body)
+    }
+
+    /// An empty `204 No Content` response.
+    pub fn no_content_response() -> Self {
+        Self::with_body(StatusCode::NO_CONTENT, "", Bytes::new())
+    }
+
+    /// Moves the start `X-Debug-Speed` measures from.
+    pub fn set_started(&mut self, start: Instant) -> &mut Self {
+        self.start = start;
+        self
+    }
+
+    /// The staged body, if any.
+    pub fn staged(&self) -> Option<&Bytes> {
+        self.staged.as_ref()
+    }
+
+    /// Replaces the staged body.
+    pub fn stage(&mut self, body: impl Into<Bytes>) {
+        self.staged = Some(body.into());
+    }
+
+    /// Stages the body `chunks` yields, `length` bytes produced as the client
+    /// reads them rather than held in memory (a large file), to be sent by
+    /// [`Response::flush`] uncompressed, as PHP sends a body written with
+    /// `chunk()`. The length counts toward the response size; the body goes
+    /// out chunked, and an [`Aborted`] item cuts it short (the client sees
+    /// it incomplete).
+    ///
+    /// Rust only: a PHP action loops over `chunk()` instead. Only a response
+    /// turned into a hyper response with [`Response::into_http`] sends it.
+    pub fn stage_stream(
+        &mut self,
+        chunks: impl futures_util::Stream<Item = std::result::Result<Bytes, Aborted>> + Send + 'static,
+        length: usize,
+    ) {
+        use futures_util::TryStreamExt;
+        use http_body_util::BodyExt;
+        let chunks = Exclusive(std::sync::Mutex::new(Box::pin(chunks)));
+        let body = http_body_util::StreamBody::new(chunks.map_ok(hyper::body::Frame::data)).boxed();
+        self.staged = None;
+        self.staged_body = Some((body, length));
+    }
+
+    /// Sends the staged body, if any, unless the response was sent.
+    pub fn flush(&mut self) {
+        if self.sent || self.headers_sent {
+            return;
+        }
+        if let Some((body, length)) = self.staged_body.take() {
+            self.append_cookies();
+            self.debug_speed();
+            self.append_headers();
+            self.headers_sent = true;
+            self.sent = true;
+            self.wire.ended = true;
+            if !self.disable_payload {
+                self.size += self.headers_size() + length;
+                self.staged_body = Some((body, length));
+            }
+            self.disable_payload = true;
+        } else if let Some(body) = self.staged.take() {
+            self.send(&body);
+        }
+    }
+
+    // -- compression -------------------------------------------------------
+
+    /// Sets the client's `Accept-Encoding` header, which picks the
+    /// compression algorithm; empty disables compression.
+    ///
+    /// PHP: `setAcceptEncoding($acceptEncoding)`.
+    pub fn set_accept_encoding(&mut self, accept: impl Into<String>) -> &mut Self {
+        self.accept_encoding = accept.into();
+        self
+    }
+
+    /// Sets the size a body must exceed, in bytes, to be compressed.
+    ///
+    /// PHP: `setCompressionMinSize($size)`.
+    pub fn set_compression_min_size(&mut self, size: usize) -> &mut Self {
+        self.compression_min_size = size;
+        self
+    }
+
+    /// Sets the algorithm names the response may use; empty means every
+    /// supported one.
+    ///
+    /// PHP: `setCompressionSupported($supported)`.
+    pub fn set_compression_supported(&mut self, supported: Vec<String>) -> &mut Self {
+        self.compression_supported = supported;
+        self
+    }
+
+    /// Applies an application's compression settings with the client's
+    /// `Accept-Encoding` header; does nothing when they are disabled.
+    /// [`Http::run`](crate::Http::run) calls it.
+    pub fn set_compression(&mut self, accept: &str, settings: &Compression) -> &mut Self {
+        if settings.enabled {
+            self.accept_encoding = accept.to_owned();
+            self.compression_min_size = settings.min_size;
+            self.compression_supported = settings.supported.clone();
+        }
+        self
+    }
+
+    // -- status and content type -------------------------------------------
+
+    /// Sets the content type, with `; charset=<charset>` appended unless
+    /// `charset` is empty.
+    ///
+    /// PHP: `setContentType($type, $charset)`; a charset of `0` counts as
+    /// empty.
+    pub fn set_content_type(&mut self, kind: &str, charset: &str) -> &mut Self {
+        self.content_type =
+            if charset.is_empty() || charset == "0" { kind.to_owned() } else { format!("{kind}; charset={charset}") };
+        self
+    }
+
+    /// The content type, with its charset (empty until set).
+    ///
+    /// PHP: `getContentType()`.
+    pub fn content_type(&self) -> &str {
+        &self.content_type
+    }
+
+    /// Whether the response has been sent.
+    ///
+    /// PHP: `isSent()`.
+    pub fn is_sent(&self) -> bool {
+        self.sent
+    }
+
+    /// Sets the status code; fails with an [`Error::Http`] for a code
+    /// without a reason phrase (see [`reason`]).
+    ///
+    /// PHP: `setStatusCode($code)`.
+    pub fn set_status_code(&mut self, code: i64) -> Result<&mut Self> {
+        match u16::try_from(code).ok().filter(|c| reason(*c).is_some()) {
+            Some(c) => {
+                self.status = c;
+                Ok(self)
+            }
+            None => Err(Error::http("Unknown HTTP status code", 0)),
+        }
+    }
+
+    /// Sets a known status.
+    pub fn set_status(&mut self, status: StatusCode) -> &mut Self {
+        self.status = status.as_u16();
+        self
+    }
+
+    /// The status code.
+    ///
+    /// PHP: `getStatusCode()`.
+    pub fn status_code(&self) -> u16 {
+        self.status
+    }
+
+    /// The status as an [`http::StatusCode`].
+    pub fn status(&self) -> StatusCode {
+        StatusCode::from_u16(self.status).unwrap_or(StatusCode::OK)
+    }
+
+    /// The bytes sent: header lines and body.
+    ///
+    /// PHP: `getSize()`.
+    pub fn size(&self) -> usize {
+        self.size
+    }
+
+    /// Suppresses the body: the response sends its status and headers only
+    /// (as for `HEAD`).
+    ///
+    /// PHP: `disablePayload()`.
+    pub fn disable_payload(&mut self) -> &mut Self {
+        self.disable_payload = true;
+        self
+    }
+
+    /// Lets the response send a body again.
+    ///
+    /// PHP: `enablePayload()`.
+    pub fn enable_payload(&mut self) -> &mut Self {
+        self.disable_payload = false;
+        self
+    }
+
+    /// Whether the body is suppressed (HEAD).
+    pub fn payload_disabled(&self) -> bool {
+        self.disable_payload
+    }
+
+    // -- headers -----------------------------------------------------------
+
+    /// Sets a header to one value, replacing the others.
+    ///
+    /// PHP: `setHeader($key, $value)`.
+    pub fn set_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
+        self.headers.set(name, value);
+        self
+    }
+
+    /// Appends a value to a header.
+    ///
+    /// PHP: `addHeader($key, $value)`.
+    pub fn add_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
+        self.headers.add(name, value);
+        self
+    }
+
+    /// Alias of [`Response::add_header`].
+    pub fn add(&mut self, name: &str, value: &str) -> &mut Self {
+        self.headers.add(name, value);
+        self
+    }
+
+    /// Alias of [`Response::set_header`].
+    pub fn set(&mut self, name: &str, value: &str) -> &mut Self {
+        self.headers.set(name, value);
+        self
+    }
+
+    /// Removes a header.
+    ///
+    /// PHP: `removeHeader($key)`.
+    pub fn remove_header(&mut self, name: &str) -> &mut Self {
+        self.headers.remove(name);
+        self
+    }
+
+    /// Whether a header is set.
+    ///
+    /// PHP: `hasHeader($key)`.
+    pub fn has_header(&self, name: &str) -> bool {
+        self.headers.has(name)
+    }
+
+    /// Every value of a header (empty when it is not set).
+    ///
+    /// PHP: `getHeader($key)`.
+    pub fn header(&self, name: &str) -> &[String] {
+        self.headers.get(name).unwrap_or(&[])
+    }
+
+    /// The values of a header joined with `", "`, or `None` when it is not
+    /// set.
+    ///
+    /// PHP: `getHeaderLine($key, $default)`.
+    pub fn header_line(&self, name: &str) -> Option<String> {
+        self.headers.line(name)
+    }
+
+    /// Every header set.
+    ///
+    /// PHP: `getHeaders()`.
+    pub fn headers(&self) -> &Headers {
+        &self.headers
+    }
+
+    // -- cookies -----------------------------------------------------------
+
+    /// Adds a cookie to send; its name is lowercased.
+    ///
+    /// PHP: `addCookie($name, ...)`.
+    pub fn add_cookie(&mut self, mut cookie: Cookie) -> &mut Self {
+        cookie.name.make_ascii_lowercase();
+        self.cookies.push((self.next_cookie, cookie));
+        self.next_cookie += 1;
+        self
+    }
+
+    /// Removes the cookies named exactly `name`.
+    ///
+    /// PHP: `removeCookie($name)`.
+    pub fn remove_cookie(&mut self, name: &str) -> &mut Self {
+        self.cookies.retain(|(_, c)| c.name != name);
+        self
+    }
+
+    /// The cookies to send, each with the position it was added at
+    /// (positions of removed cookies are not reused).
+    ///
+    /// PHP: `getCookies()`; the position is the cookie's key in the PHP
+    /// array.
+    pub fn cookies(&self) -> &[(usize, Cookie)] {
+        &self.cookies
+    }
+
+    // -- output --------------------------------------------------------------
+
+    /// Sends what is written to `stream` as it is written (the server does this).
+    pub(crate) fn attach(&mut self, stream: Stream) {
+        self.stream = Some(stream);
+    }
+
+    /// Sends the head to the stream, once.
+    fn stream_head(&mut self, body: Option<Bytes>) {
+        let Some(stream) = self.stream.as_mut() else { return };
+        if let Some(tx) = stream.head.take() {
+            let head = Head {
+                status: self.wire.status.unwrap_or(200),
+                headers: self.wire.headers.clone(),
+                cookies: self.wire.cookies.clone(),
+                body,
+            };
+            let _ = tx.send(head);
+        }
+    }
+
+    /// `write($content)` of the adapter: `false` once the response ended.
+    fn out_write(&mut self, content: &[u8]) -> bool {
+        if self.stream.is_none() {
+            return self.wire.write(content);
+        }
+        if self.wire.ended {
+            return false;
+        }
+        self.wire.writes += 1;
+        self.stream_head(None);
+        match self.stream.as_ref().and_then(|s| s.body.as_ref()) {
+            Some(body) => body.send(Ok(Bytes::copy_from_slice(content))).is_ok(),
+            None => false,
+        }
+    }
+
+    /// `end($content)` of the adapter.
+    fn out_end(&mut self, content: Option<&[u8]>) {
+        if self.stream.is_none() {
+            self.wire.end(content);
+            return;
+        }
+        if self.wire.ended {
+            return;
+        }
+        self.wire.ended = true;
+        let whole = self.stream.as_ref().is_some_and(|s| s.head.is_some());
+        if whole {
+            // Nothing was written yet: the body is known in full (Content-Length).
+            self.stream_head(Some(Bytes::copy_from_slice(content.unwrap_or_default())));
+        }
+        if let Some(stream) = self.stream.as_mut()
+            && let Some(body) = stream.body.take()
+            && !whole
+            && let Some(c) = content.filter(|c| !c.is_empty())
+        {
+            let _ = body.send(Ok(Bytes::copy_from_slice(c)));
+        }
+    }
+
+    /// Puts the status on the wire without sending anything (a server-made
+    /// answer: 500 after a failure, 503 past the concurrency cap).
+    pub(crate) fn force_status(&mut self) {
+        self.wire.status = Some(self.status);
+    }
+
+    /// Ends a streamed response the application left open (Swoole ends it
+    /// with what was set on the connection: a 200 without a body).
+    pub(crate) fn finish(&mut self) {
+        self.flush();
+        self.out_end(None);
+    }
+
+    /// What has been sent so far.
+    pub fn wire(&self) -> &Wire {
+        &self.wire
+    }
+
+    /// Takes what has been sent.
+    pub fn take_wire(&mut self) -> Wire {
+        std::mem::take(&mut self.wire)
+    }
+
+    fn debug_speed(&mut self) {
+        let speed = self.start.elapsed().as_secs_f64();
+        self.headers.add("X-Debug-Speed", php_std::number::to_string(speed));
+    }
+
+    fn append_cookies(&mut self) {
+        for (_, cookie) in &self.cookies {
+            let mut sent = cookie.clone();
+            sent.value = Some(cookie.value.clone().unwrap_or_default());
+            self.wire.cookies.push(sent);
+        }
+    }
+
+    fn append_headers(&mut self) {
+        self.wire.status = Some(self.status);
+        if !self.content_type.is_empty() && self.content_type != "0" {
+            self.headers.set("Content-Type", self.content_type.as_str());
+        }
+        // The response keeps its headers (PHP's getters read them after a
+        // send): the wire gets one copy.
+        for (name, values) in self.headers.iter() {
+            self.wire.header(name, values);
+        }
+    }
+
+    /// Sends the status, headers, cookies and body, compressing the body when
+    /// the client accepts it, its type is compressible and it is large
+    /// enough. Only the first send counts; later ones are ignored.
+    ///
+    /// Adds an `X-Debug-Speed` header with the seconds since the response
+    /// started.
+    ///
+    /// PHP: `send($body)`.
+    pub fn send(&mut self, body: &[u8]) {
+        if self.sent {
+            return;
+        }
+        self.append_cookies();
+
+        let mut compressed: Option<Vec<u8>> = None;
+        if !self.has_header("Content-Encoding")
+            && !self.accept_encoding.is_empty()
+            && self.accept_encoding != "0"
+            && compression::compressible(&self.content_type)
+            && body.len() > self.compression_min_size
+            && let Some(algorithm) =
+                compression::from_accept_encoding(&self.accept_encoding, &self.compression_supported)
+        {
+            let out = algorithm.compress(body);
+            self.remove_header("Content-Length");
+            self.add_header("Content-Length", out.len().to_string());
+            self.add_header("Content-Encoding", algorithm.content_encoding());
+            self.add_header("X-Utopia-Compression", "true");
+            self.add_header("Vary", "Accept-Encoding");
+            compressed = Some(out);
+        }
+        let body = compressed.as_deref().unwrap_or(body);
+
+        self.debug_speed();
+        self.append_headers();
+
+        if self.disable_payload {
+            self.out_end(None);
+            self.sent = true;
+            return;
+        }
+
+        self.size += self.headers_size() + body.len();
+
+        if body.len() <= CHUNK_SIZE {
+            self.out_end(Some(body));
+        } else {
+            for chunk in body.chunks(CHUNK_SIZE) {
+                self.out_write(chunk);
+            }
+            self.out_end(None);
+        }
+        self.sent = true;
+        self.disable_payload = true;
+    }
+
+    /// The bytes the headers take, as the response size counts them.
+    fn headers_size(&self) -> usize {
+        let mut size = 0usize;
+        for (name, values) in self.headers.iter() {
+            for v in values {
+                size += name.len() + 2 + v.len();
+            }
+            size += (values.len().max(1) - 1) * 2;
+        }
+        size + (self.headers.len().max(1) - 1) * 2
+    }
+
+    /// Streams a part of the body, uncompressed; the status, headers and
+    /// cookies go with the first chunk, and `end` closes the response. The
+    /// headers and every chunk written count toward the response size.
+    ///
+    /// Fails when the transport rejects a chunk (the client went away): the
+    /// response is left open, so the caller stops instead of streaming the
+    /// rest into nothing.
+    ///
+    /// PHP: `chunk($body, $end)`.
+    pub fn chunk(&mut self, body: &[u8], end: bool) -> Result<()> {
+        if self.sent {
+            return Ok(());
+        }
+        self.debug_speed();
+        if !self.headers_sent {
+            self.append_cookies();
+            self.append_headers();
+            self.size += self.headers_size();
+            self.headers_sent = true;
+        }
+        if !self.disable_payload {
+            if !body.is_empty() && !self.out_write(body) {
+                return Err(Error::custom("RuntimeException", "Failed to write response chunk.", 0));
+            }
+            self.size += body.len();
+            if end {
+                self.sent = true;
+                self.disable_payload = true;
+                self.out_end(None);
+            }
+        } else {
+            self.sent = true;
+            self.out_end(None);
+        }
+        Ok(())
+    }
+
+    /// Aborts a partial response without sending its terminal chunk: the
+    /// connection is closed, so the client sees the body as incomplete
+    /// rather than whole. Later sends and chunks are ignored; nothing
+    /// happens once the response was sent.
+    ///
+    /// PHP: `Adapter\Swoole\Response::abort()`.
+    pub fn abort(&mut self) {
+        if self.sent {
+            return;
+        }
+        self.sent = true;
+        self.disable_payload = true;
+        self.wire.aborted = true;
+        if self.stream.is_some() && !self.wire.ended {
+            // The head goes out first: hyper can only cut a response it began.
+            self.stream_head(None);
+            if let Some(body) = self.stream.as_mut().and_then(|s| s.body.take()) {
+                let _ = body.send(Err(Aborted));
+            }
+        }
+    }
+
+    /// Sends an empty redirect to `url` with `status` (such as 301 or 302);
+    /// fails, without sending, for an unknown status.
+    ///
+    /// PHP: `redirect($url, $statusCode)`.
+    pub fn redirect(&mut self, url: &str, status: i64) -> Result<()> {
+        self.add_header("Location", url);
+        self.set_status_code(status)?;
+        self.send(b"");
+        Ok(())
+    }
+
+    /// Sends `data` as `text/html; charset=UTF-8`.
+    ///
+    /// PHP: `html($data)`.
+    pub fn html(&mut self, data: &str) {
+        self.set_content_type(content_type::HTML, CHARSET_UTF8);
+        self.send(data.as_bytes());
+    }
+
+    /// Sends `data` as `text/plain; charset=UTF-8`.
+    ///
+    /// PHP: `text($data)`.
+    pub fn text(&mut self, data: &str) {
+        self.set_content_type(content_type::TEXT, CHARSET_UTF8);
+        self.send(data.as_bytes());
+    }
+
+    /// Sends `data` encoded as JSON (`application/json; charset=UTF-8`),
+    /// with Unicode left unescaped. Fails, without sending, unless `data` is
+    /// an array or an object.
+    ///
+    /// PHP: `json($data)`; the body is `json_encode($data,
+    /// JSON_UNESCAPED_UNICODE)`.
+    pub fn json(&mut self, data: &Value) -> Result<()> {
+        if !matches!(data, Value::Array(_) | Value::Object(_)) {
+            return Err(Error::Generic("Invalid JSON input var".to_owned()));
+        }
+        let body = encode::json(data, true).unwrap_or_default();
+        self.set_content_type(content_type::JSON, CHARSET_UTF8);
+        self.send(body.as_bytes());
+        Ok(())
+    }
+
+    /// Sends `data` as a JSONP script, `parent.<callback>(<json>);`, as
+    /// `text/javascript`.
+    ///
+    /// PHP: `jsonp($callback, $data)`.
+    pub fn jsonp(&mut self, callback: &str, data: &Value) {
+        let json = encode::json(data, false).unwrap_or_default();
+        self.set_content_type(content_type::JAVASCRIPT, CHARSET_UTF8);
+        self.send(format!("parent.{callback}({json});").as_bytes());
+    }
+
+    /// Sends an HTML page whose script calls `window.parent.<callback>` with
+    /// `data` as JSON.
+    ///
+    /// PHP: `iframe($callback, $data)`.
+    pub fn iframe(&mut self, callback: &str, data: &Value) {
+        let json = encode::json(data, false).unwrap_or_default();
+        self.set_content_type(content_type::HTML, CHARSET_UTF8);
+        self.send(format!("<script type=\"text/javascript\">window.parent.{callback}({json});</script>").as_bytes());
+    }
+
+    /// Sends an empty `204 No Content` response.
+    ///
+    /// PHP: `noContent()`.
+    pub fn no_content(&mut self) {
+        self.status = 204;
+        self.send(b"");
+    }
+
+    // -- conversion for the server -------------------------------------------
+
+    /// Unix seconds now (for cookie `Max-Age`).
+    pub(crate) fn now() -> i64 {
+        SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)
+    }
+
+    /// The hyper response for what was sent (sends the staged body first).
+    pub fn into_http(mut self) -> http::Response<Body> {
+        use http_body_util::BodyExt;
+        self.flush();
+        let streamed = self.staged_body.take();
+        let wire = self.wire;
+        let body = match streamed {
+            Some((body, _)) => body,
+            None => http_body_util::Full::new(Bytes::from(wire.body)).map_err(|never| match never {}).boxed(),
+        };
+        head_response(wire.status.unwrap_or(200), &wire.headers, &wire.cookies, body)
+    }
+}
+
+type Chunks = std::pin::Pin<Box<dyn futures_util::Stream<Item = std::result::Result<Bytes, Aborted>> + Send>>;
+
+/// A stream that is `Sync` because only its owner, through `&mut`, polls it
+/// ([`Body`] must be `Sync`; a file being read need not be).
+struct Exclusive(std::sync::Mutex<Chunks>);
+
+impl futures_util::Stream for Exclusive {
+    type Item = std::result::Result<Bytes, Aborted>;
+
+    fn poll_next(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Option<Self::Item>> {
+        let chunks = self.get_mut().0.get_mut().unwrap_or_else(|e| e.into_inner());
+        chunks.as_mut().poll_next(cx)
+    }
+}
+
+/// A hyper response from a head and a body.
+pub(crate) fn head_response(
+    status: u16,
+    headers: &[(String, Vec<String>)],
+    cookies: &[Cookie],
+    body: Body,
+) -> http::Response<Body> {
+    {
+        let status = StatusCode::from_u16(status).unwrap_or(StatusCode::OK);
+        let mut builder = http::Response::builder().status(status);
+        if let Some(map) = builder.headers_mut() {
+            let headers_out = map;
+            for (name, values) in headers {
+                let Ok(name) = HeaderName::from_bytes(name.as_bytes()) else { continue };
+                for v in values {
+                    if let Ok(v) = HeaderValue::from_str(v) {
+                        headers_out.append(name.clone(), v);
+                    }
+                }
+            }
+            let now = Response::now();
+            for cookie in cookies {
+                if let Some(line) = cookie.header(now)
+                    && let Ok(v) = HeaderValue::from_str(&line)
+                {
+                    headers_out.append(http::header::SET_COOKIE, v);
+                }
+            }
+        }
+        builder.body(body).unwrap_or_else(|_| {
+            use http_body_util::BodyExt;
+            let mut r = http::Response::new(http_body_util::Empty::new().map_err(|never| match never {}).boxed());
+            *r.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
+            r
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn staged_stream() {
+        use http_body_util::BodyExt;
+        let chunks = futures_util::stream::iter([Ok(Bytes::from_static(b"ab")), Ok(Bytes::from_static(b"cd"))]);
+        let mut r = Response::with_body(StatusCode::OK, "text/plain", "ignored");
+        r.stage_stream(chunks, 4);
+        r.add_header("x-late", "1");
+        r.flush();
+        assert!(r.is_sent());
+        assert!(r.size() >= 4);
+        let http = r.into_http();
+        assert_eq!(http.headers()["x-late"], "1");
+        assert!(!http.headers().contains_key("content-length"));
+        let body = utopia_async::run(http.into_body().collect()).unwrap().to_bytes();
+        assert_eq!(&body[..], b"abcd");
+
+        let chunks = futures_util::stream::iter([Ok(Bytes::from_static(b"ab")), Err(Aborted)]);
+        let mut r = Response::new();
+        r.stage_stream(chunks, 4);
+        assert!(utopia_async::run(r.into_http().into_body().collect()).is_err());
+    }
+
+    #[test]
+    fn send_once() {
+        let mut r = Response::new();
+        r.add_header("key", "value").add_cookie(Cookie {
+            name: "Name".into(),
+            value: Some("value".into()),
+            ..Default::default()
+        });
+        r.send(b"body");
+        r.send(b"again");
+        assert_eq!(r.wire().body, b"body");
+        assert_eq!(r.wire().cookies[0].name, "name");
+        assert!(r.set_status_code(0).is_err());
+    }
+
+    /// `getSize()`: every `name: value` line, two bytes between lines, and the body.
+    #[test]
+    fn size_counts_header_lines_and_body() {
+        let mut r = Response::new();
+        r.add_header("A", "1").add_header("a", "22").set_content_type("text/plain", "");
+        r.send(b"hello");
+        let speed = r.header("x-debug-speed")[0].len();
+        let lines = ["a: 1".len(), "a: 22".len(), "x-debug-speed: ".len() + speed, "content-type: text/plain".len()];
+        let expected = lines.iter().sum::<usize>() + 2 /* second a */ + 2 * 2 /* three names */ + 5;
+        assert_eq!(r.size(), expected);
+    }
+}

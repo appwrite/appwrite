@@ -1,0 +1,1123 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/RolesTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RolesTest::test_valid_role",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4320"
+          },
+          "bind": "s6760",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o4321"
+          },
+          "bind": "s6761",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4321"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o4322"
+          },
+          "bind": "s6764",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4322"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users/verified"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users/verified"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "unverified"
+            },
+            "as": "o4323"
+          },
+          "bind": "s6767",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4323"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users/unverified"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users/unverified"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "696f34ea003d48edab8e"
+            }
+          },
+          "expect": "696f34ea003d48edab8e"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "696f34ea003d48edab8e"
+            },
+            "as": "o4324"
+          },
+          "bind": "s6771",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4324"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:696f34ea003d48edab8e"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "team:696f34ea003d48edab8e"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "696f34ea003d48edab8e"
+            }
+          },
+          "expect": "696f34ea003d48edab8e"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "696f34ea003d48edab8e",
+              "dimension": "project-696f34ea003d48edab8e-owner"
+            },
+            "as": "o4325"
+          },
+          "bind": "s6775",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4325"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e-owner"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e-owner"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "696f34ea003d48edab8e"
+            }
+          },
+          "expect": "696f34ea003d48edab8e"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "696f34ea003d48edab8e",
+              "dimension": "project-696f34ea003d48edab8e"
+            },
+            "as": "o4326"
+          },
+          "bind": "s6779",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4326"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "label",
+            "args": {
+              "identifier": "vip"
+            },
+            "as": "o4327"
+          },
+          "bind": "s6782",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4327"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "label:vip"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4320"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "label:vip"
+              ]
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_not_an_array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4328"
+          },
+          "bind": "s6785",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4328"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "not an array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4328"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Roles must be an array of strings."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_exceed_length",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {
+              "length": 2
+            },
+            "as": "o4329"
+          },
+          "bind": "s6788",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o4330"
+          },
+          "bind": "s6789",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4330"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o4331"
+          },
+          "bind": "s6791",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4331"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o4332"
+          },
+          "bind": "s6793",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4332"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4329"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users",
+                "users",
+                "users"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4329"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "You can only provide up to 2 roles."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_not_all_strings",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4333"
+          },
+          "bind": "s6797",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o4334"
+          },
+          "bind": "s6798",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4334"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "users"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4333"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users",
+                123
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4333"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Every role must be of type string."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_obsolete_wildcard_role",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4335"
+          },
+          "bind": "s6802",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4335"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "*"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4335"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Wildcard role \"*\" has been replaced. Use \"any\" instead."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_obsolete_role_prefix",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4336"
+          },
+          "bind": "s6805",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4336"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"role:123\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4336"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Roles using the \"role:\" prefix have been removed. Use \"users\", \"guests\", or \"any\" instead."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_disallowed_roles",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {
+              "allowed": [
+                "users"
+              ]
+            },
+            "as": "o4337"
+          },
+          "bind": "s6808",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o4338"
+          },
+          "bind": "s6809",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4338"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4337"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "any"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4337"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"any\" is not allowed. Must be one of: users."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_labels",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4339"
+          },
+          "bind": "s6813",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4339"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "label:123"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4339"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "label:not-alphanumeric"
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_unparseable_role#an empty dimension",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4340"
+          },
+          "bind": "s6816",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4340"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users/"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4340"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Dimension must not be empty"
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_unparseable_role#two dimensions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4341"
+          },
+          "bind": "s6819",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4341"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users/verified/extra"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4341"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Only one dimension can be provided"
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_misplaced_id_or_dimension#an ID on any",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4342"
+          },
+          "bind": "s6822",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4342"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "any:abc"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4342"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"any\" can not have an ID value."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_misplaced_id_or_dimension#a dimension on any",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4343"
+          },
+          "bind": "s6825",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4343"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "any/verified"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4343"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"any\" can not have a dimension value."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_misplaced_id_or_dimension#a dimension on guests",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4344"
+          },
+          "bind": "s6828",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4344"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "guests/verified"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4344"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"guests\" can not have a dimension value."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_misplaced_id_or_dimension#a dimension outside the options of users",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4345"
+          },
+          "bind": "s6831",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4345"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users/foo"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4345"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"users\" dimension value is invalid. Must be one of: verified, unverified."
+        }
+      ]
+    },
+    {
+      "name": "RolesTest::test_dimension_among_the_options",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Roles",
+            "args": {},
+            "as": "o4346"
+          },
+          "bind": "s6834",
+          "expect": {
+            "$value": "Validator\\Roles",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4346"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "users/verified"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4346"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "user:abc/unverified"
+              ]
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

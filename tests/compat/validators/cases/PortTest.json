@@ -1,0 +1,622 @@
+{
+  "source": "packages/validators/tests/PortTest.php",
+  "cases": [
+    {
+      "name": "testType",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.type",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "validator.is_array",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Value must be a port between 1 and 65535, optionally prefixed by a host IP address (e.g. 127.0.0.1:80)"
+        }
+      ]
+    },
+    {
+      "name": "testValid port",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "80"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testValid integer",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": 8080
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testValid highest port",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "65535"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testValid ipv4 binding",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "127.0.0.1:80"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testValid all interfaces",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "0.0.0.0:443"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testValid ipv6 binding",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "[::1]:8080"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testInvalid empty",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid zero",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "0"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid too high",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "65536"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid leading zero",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "080"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid negative",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "-80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid letters",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "http"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid trailing colon",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "127.0.0.1:"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid missing host",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": ":80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid hostname",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "localhost:80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid invalid ipv4",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "999.0.0.1:80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid unbracketed ipv6",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "::1:80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid invalid ipv6",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "[zz::1]:80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid container port",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "127.0.0.1:80:80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid whitespace",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": " 80"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid null",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": null
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testInvalid array",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "class": "Port",
+            "args": {}
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "80"
+            ]
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,661 @@
+{
+  "source": "packages/cache/tests/E2E/MultiplexingLeasableTest.php",
+  "cases": [
+    {
+      "name": "testFreshKeyHasAnOpaqueVersion .. testFreshSaveAfterPurgeSucceeds",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 0
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "stale": true
+                  },
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 0
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 2
+                  },
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 4
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:2"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:2",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "field-a",
+                  "version": {
+                    "$result": 9
+                  }
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:2",
+                  "hash": "field-a"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:2"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:2",
+                  "data": {
+                    "stale": true
+                  },
+                  "hash": "field-a",
+                  "version": {
+                    "$result": 9
+                  }
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:absent"
+                }
+              },
+              {
+                "op": "list",
+                "args": {
+                  "key": "${ns}:doc:2"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/0",
+              "/4",
+              "/9",
+              "/12"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": [
+            "<masked>",
+            true,
+            {
+              "$array": [
+                [
+                  "v",
+                  1
+                ]
+              ]
+            },
+            true,
+            "<masked>",
+            false,
+            false,
+            true,
+            {
+              "$array": [
+                [
+                  "v",
+                  2
+                ]
+              ]
+            },
+            "<masked>",
+            true,
+            true,
+            "<masked>",
+            false,
+            false,
+            []
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    },
+    {
+      "name": "testLeaseSurvivesScriptCacheFlush",
+      "steps": [
+        {
+          "op": "raw.script_flush",
+          "args": {
+            "service": "cache-redis-mux"
+          },
+          "expect": true
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 0
+                  }
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/0",
+              "/3"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": [
+            "<masked>",
+            true,
+            true,
+            "<masked>"
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    },
+    {
+      "name": "testPurgeDropsValueButKeepsGenerationField, testReservedGenerationFieldIsProtected, testListHidesGenerationField",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {},
+            "steps": [
+              {
+                "op": "flush",
+                "args": {}
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 1
+                  }
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "size",
+                "args": {}
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "attacker",
+                  "hash": "__utopia_version__"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "attacker",
+                  "hash": "__utopia_version__",
+                  "version": {
+                    "$result": 5
+                  }
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "hash": "__utopia_version__"
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "__utopia_version__"
+                }
+              },
+              {
+                "op": "touch",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "hash": "__utopia_version__"
+                }
+              },
+              {
+                "op": "list",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "stale",
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 1
+                  }
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/1",
+              "/5"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": [
+            true,
+            "<masked>",
+            true,
+            true,
+            false,
+            "<masked>",
+            1,
+            false,
+            false,
+            false,
+            false,
+            false,
+            [],
+            false
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    },
+    {
+      "name": "testLeaseGraceWindowDefaultsToZero .. testTombstoneIgnoresImplausibleFutureDeadline",
+      "steps": [
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "stale": true
+                  },
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 1
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": "attacker",
+                  "hash": "__utopia_tomb__"
+                }
+              },
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "hash": "__utopia_tomb__"
+                }
+              },
+              {
+                "op": "list",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/1"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": [
+            false,
+            "<masked>",
+            false,
+            false,
+            false,
+            false,
+            []
+          ]
+        },
+        {
+          "op": "raw.tomb",
+          "args": {
+            "service": "cache-redis-mux",
+            "key": "${ns}:doc:1",
+            "seconds": -60
+          },
+          "expect": 0
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "data": {
+                    "fresh": true
+                  },
+                  "hash": "${ns}:doc:1",
+                  "version": {
+                    "$result": 0
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:1",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:1"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/0"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": [
+            "<masked>",
+            true,
+            {
+              "$array": [
+                [
+                  "fresh",
+                  true
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "op": "raw.hexists",
+          "args": {
+            "service": "cache-redis-mux",
+            "key": "${ns}:doc:1",
+            "field": "__utopia_tomb__"
+          },
+          "expect": false
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "purge",
+                "args": {
+                  "key": "${ns}:doc:9"
+                }
+              }
+            ]
+          },
+          "expect": [
+            false
+          ]
+        },
+        {
+          "op": "raw.tomb",
+          "args": {
+            "service": "cache-redis-mux",
+            "key": "${ns}:doc:9",
+            "seconds": 3600
+          },
+          "expect": 0
+        },
+        {
+          "op": "multiplexing.run",
+          "args": {
+            "service": "cache-redis-mux",
+            "options": {
+              "grace": 500
+            },
+            "steps": [
+              {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:9"
+                }
+              },
+              {
+                "op": "save_with_lease",
+                "args": {
+                  "key": "${ns}:doc:9",
+                  "data": {
+                    "v": 1
+                  },
+                  "hash": "${ns}:doc:9",
+                  "version": {
+                    "$result": 0
+                  }
+                }
+              },
+              {
+                "op": "load",
+                "args": {
+                  "key": "${ns}:doc:9",
+                  "ttl": 60,
+                  "hash": "${ns}:doc:9"
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/0"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": [
+            "<masked>",
+            true,
+            {
+              "$array": [
+                [
+                  "v",
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "state": [
+        "redis@cache-redis-mux/10,15"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,280 @@
+{
+  "source": "packages/smtp/tests/ReplyTest.php",
+  "cases": [
+    {
+      "name": "reads the enhanced status code",
+      "op": "reply.new",
+      "args": {
+        "code": 250,
+        "lines": [
+          "2.1.5 Recipient ok"
+        ]
+      },
+      "expect": {
+        "code": 250,
+        "lines": [
+          "2.1.5 Recipient ok"
+        ],
+        "status": "2.1.5",
+        "outcome": "Success",
+        "text": "2.1.5 Recipient ok",
+        "string": "250 2.1.5 Recipient ok"
+      }
+    },
+    {
+      "name": "leaves the status null when there is none",
+      "op": "reply.new",
+      "args": {
+        "code": 250,
+        "lines": [
+          "Recipient ok"
+        ]
+      },
+      "expect": {
+        "code": 250,
+        "lines": [
+          "Recipient ok"
+        ],
+        "status": null,
+        "outcome": "Success",
+        "text": "Recipient ok",
+        "string": "250 Recipient ok"
+      }
+    },
+    {
+      "name": "does not mistake a version for a status",
+      "op": "reply.new",
+      "args": {
+        "code": 220,
+        "lines": [
+          "mail.example.test ESMTP Postfix 3.7.1"
+        ]
+      },
+      "expect": {
+        "code": 220,
+        "lines": [
+          "mail.example.test ESMTP Postfix 3.7.1"
+        ],
+        "status": null,
+        "outcome": "Success",
+        "text": "mail.example.test ESMTP Postfix 3.7.1",
+        "string": "220 mail.example.test ESMTP Postfix 3.7.1"
+      }
+    },
+    {
+      "name": "status alone",
+      "op": "reply.new",
+      "args": {
+        "code": 550,
+        "lines": [
+          "5.1.1"
+        ]
+      },
+      "expect": {
+        "code": 550,
+        "lines": [
+          "5.1.1"
+        ],
+        "status": "5.1.1",
+        "outcome": "Permanent",
+        "text": "5.1.1",
+        "string": "550 5.1.1"
+      }
+    },
+    {
+      "name": "status before a line feed",
+      "op": "reply.new",
+      "args": {
+        "code": 550,
+        "lines": [
+          "5.1.1\n"
+        ]
+      },
+      "expect": {
+        "code": 550,
+        "lines": [
+          "5.1.1\n"
+        ],
+        "status": "5.1.1",
+        "outcome": "Permanent",
+        "text": "5.1.1\n",
+        "string": "550 5.1.1\n"
+      }
+    },
+    {
+      "name": "status with too many digits",
+      "op": "reply.new",
+      "args": {
+        "code": 550,
+        "lines": [
+          "5.1234.1 x"
+        ]
+      },
+      "expect": {
+        "code": 550,
+        "lines": [
+          "5.1234.1 x"
+        ],
+        "status": null,
+        "outcome": "Permanent",
+        "text": "5.1234.1 x",
+        "string": "550 5.1234.1 x"
+      }
+    },
+    {
+      "name": "status of class 3 is not one",
+      "op": "reply.new",
+      "args": {
+        "code": 354,
+        "lines": [
+          "3.0.0 go"
+        ]
+      },
+      "expect": {
+        "code": 354,
+        "lines": [
+          "3.0.0 go"
+        ],
+        "status": null,
+        "outcome": "Intermediate",
+        "text": "3.0.0 go",
+        "string": "354 3.0.0 go"
+      }
+    },
+    {
+      "name": "no lines",
+      "op": "reply.new",
+      "args": {
+        "code": 250,
+        "lines": []
+      },
+      "expect": {
+        "code": 250,
+        "lines": [],
+        "status": null,
+        "outcome": "Success",
+        "text": "",
+        "string": "250 "
+      }
+    },
+    {
+      "name": "classifies success",
+      "op": "outcome.from_code",
+      "args": {
+        "code": 250
+      },
+      "expect": "Success"
+    },
+    {
+      "name": "classifies transient",
+      "op": "reply.new",
+      "args": {
+        "code": 451,
+        "lines": [
+          "Try later"
+        ]
+      },
+      "expect": {
+        "code": 451,
+        "lines": [
+          "Try later"
+        ],
+        "status": null,
+        "outcome": "Transient",
+        "text": "Try later",
+        "string": "451 Try later"
+      }
+    },
+    {
+      "name": "classifies permanent",
+      "op": "reply.new",
+      "args": {
+        "code": 550,
+        "lines": [
+          "No such user"
+        ]
+      },
+      "expect": {
+        "code": 550,
+        "lines": [
+          "No such user"
+        ],
+        "status": null,
+        "outcome": "Permanent",
+        "text": "No such user",
+        "string": "550 No such user"
+      }
+    },
+    {
+      "name": "names the intermediate reply",
+      "op": "reply.new",
+      "args": {
+        "code": 354,
+        "lines": [
+          "Go ahead"
+        ]
+      },
+      "expect": {
+        "code": 354,
+        "lines": [
+          "Go ahead"
+        ],
+        "status": null,
+        "outcome": "Intermediate",
+        "text": "Go ahead",
+        "string": "354 Go ahead"
+      }
+    },
+    {
+      "name": "rejects a code that is not a reply",
+      "op": "reply.new",
+      "args": {
+        "code": 600,
+        "lines": [
+          "Not a class RFC 5321 defines"
+        ]
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+          "message": "Not an SMTP reply code: 600"
+        }
+      }
+    },
+    {
+      "name": "rejects a code below the classes",
+      "op": "outcome.from_code",
+      "args": {
+        "code": 99
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+          "message": "Not an SMTP reply code: 99"
+        }
+      }
+    },
+    {
+      "name": "joins continuation lines",
+      "op": "reply.new",
+      "args": {
+        "code": 250,
+        "lines": [
+          "one",
+          "two"
+        ]
+      },
+      "expect": {
+        "code": 250,
+        "lines": [
+          "one",
+          "two"
+        ],
+        "status": null,
+        "outcome": "Success",
+        "text": "one two",
+        "string": "250 one two"
+      }
+    }
+  ]
+}

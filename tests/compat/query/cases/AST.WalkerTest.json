@@ -1,0 +1,2740 @@
+{
+  "source": "packages/query/tests/AST/WalkerTest.php",
+  "cases": [
+    {
+      "name": "testFilterInjectorAppliedToExistsSubquery",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Literal",
+            "args": [
+              1
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Table",
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "user_id",
+              "orders"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "id",
+              "users"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Binary",
+            "args": [
+              {
+                "$o": 3
+              },
+              "=",
+              {
+                "$o": 4
+              }
+            ]
+          },
+          {
+            "new": "AST\\Statement\\Select",
+            "args": {
+              "columns": [
+                {
+                  "$o": 1
+                }
+              ],
+              "from": {
+                "$o": 2
+              },
+              "where": {
+                "$o": 5
+              }
+            }
+          },
+          {
+            "new": "AST\\Star",
+            "args": []
+          },
+          {
+            "new": "AST\\Reference\\Table",
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Exists",
+            "args": [
+              {
+                "$o": 8
+              }
+            ]
+          },
+          {
+            "new": "AST\\Statement\\Select",
+            "args": {
+              "columns": [
+                {
+                  "$o": 14
+                }
+              ],
+              "from": {
+                "$o": 15
+              },
+              "where": {
+                "$o": 16
+              }
+            }
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "tenant_id"
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              42
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Binary",
+            "args": [
+              {
+                "$o": 33
+              },
+              "=",
+              {
+                "$o": 34
+              }
+            ]
+          },
+          {
+            "new": "AST\\Walker",
+            "args": []
+          },
+          {
+            "new": "AST\\Visitor\\FilterInjector",
+            "args": [
+              {
+                "$o": 35
+              }
+            ]
+          },
+          {
+            "call": "walk",
+            "on": {
+              "$o": 38
+            },
+            "args": [
+              {
+                "$o": 23
+              },
+              {
+                "$o": 39
+              }
+            ]
+          },
+          {
+            "new": "AST\\Serializer",
+            "args": []
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 58
+            },
+            "args": [
+              {
+                "$o": 40
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Literal",
+          "id": 1,
+          "props": {
+            "value": 1
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Table",
+          "id": 2,
+          "props": {
+            "name": "orders",
+            "alias": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 3,
+          "props": {
+            "name": "user_id",
+            "table": "orders",
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 4,
+          "props": {
+            "name": "id",
+            "table": "users",
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 5,
+          "props": {
+            "left": {
+              "$value": "AST\\Reference\\Column",
+              "id": 6,
+              "props": {
+                "name": "user_id",
+                "table": "orders",
+                "schema": null
+              }
+            },
+            "operator": "=",
+            "right": {
+              "$value": "AST\\Reference\\Column",
+              "id": 7,
+              "props": {
+                "name": "id",
+                "table": "users",
+                "schema": null
+              }
+            }
+          }
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 8,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Literal",
+                "id": 9,
+                "props": {
+                  "value": 1
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 10,
+              "props": {
+                "name": "orders",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 11,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 12,
+                  "props": {
+                    "name": "user_id",
+                    "table": "orders",
+                    "schema": null
+                  }
+                },
+                "operator": "=",
+                "right": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 13,
+                  "props": {
+                    "name": "id",
+                    "table": "users",
+                    "schema": null
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Star",
+          "id": 14,
+          "props": {
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Table",
+          "id": 15,
+          "props": {
+            "name": "users",
+            "alias": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Exists",
+          "id": 16,
+          "props": {
+            "subquery": {
+              "$value": "AST\\Statement\\Select",
+              "id": 17,
+              "props": {
+                "columns": [
+                  {
+                    "$value": "AST\\Literal",
+                    "id": 18,
+                    "props": {
+                      "value": 1
+                    }
+                  }
+                ],
+                "from": {
+                  "$value": "AST\\Reference\\Table",
+                  "id": 19,
+                  "props": {
+                    "name": "orders",
+                    "alias": null,
+                    "schema": null
+                  }
+                },
+                "joins": [],
+                "where": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 20,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 21,
+                      "props": {
+                        "name": "user_id",
+                        "table": "orders",
+                        "schema": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 22,
+                      "props": {
+                        "name": "id",
+                        "table": "users",
+                        "schema": null
+                      }
+                    }
+                  }
+                },
+                "groupBy": [],
+                "having": null,
+                "orderBy": [],
+                "limit": null,
+                "offset": null,
+                "distinct": false,
+                "ctes": [],
+                "windows": []
+              }
+            },
+            "negated": false
+          }
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 23,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Star",
+                "id": 24,
+                "props": {
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 25,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Exists",
+              "id": 26,
+              "props": {
+                "subquery": {
+                  "$value": "AST\\Statement\\Select",
+                  "id": 27,
+                  "props": {
+                    "columns": [
+                      {
+                        "$value": "AST\\Literal",
+                        "id": 28,
+                        "props": {
+                          "value": 1
+                        }
+                      }
+                    ],
+                    "from": {
+                      "$value": "AST\\Reference\\Table",
+                      "id": 29,
+                      "props": {
+                        "name": "orders",
+                        "alias": null,
+                        "schema": null
+                      }
+                    },
+                    "joins": [],
+                    "where": {
+                      "$value": "AST\\Expression\\Binary",
+                      "id": 30,
+                      "props": {
+                        "left": {
+                          "$value": "AST\\Reference\\Column",
+                          "id": 31,
+                          "props": {
+                            "name": "user_id",
+                            "table": "orders",
+                            "schema": null
+                          }
+                        },
+                        "operator": "=",
+                        "right": {
+                          "$value": "AST\\Reference\\Column",
+                          "id": 32,
+                          "props": {
+                            "name": "id",
+                            "table": "users",
+                            "schema": null
+                          }
+                        }
+                      }
+                    },
+                    "groupBy": [],
+                    "having": null,
+                    "orderBy": [],
+                    "limit": null,
+                    "offset": null,
+                    "distinct": false,
+                    "ctes": [],
+                    "windows": []
+                  }
+                },
+                "negated": false
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 33,
+          "props": {
+            "name": "tenant_id",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 34,
+          "props": {
+            "value": 42
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 35,
+          "props": {
+            "left": {
+              "$value": "AST\\Reference\\Column",
+              "id": 36,
+              "props": {
+                "name": "tenant_id",
+                "table": null,
+                "schema": null
+              }
+            },
+            "operator": "=",
+            "right": {
+              "$value": "AST\\Literal",
+              "id": 37,
+              "props": {
+                "value": 42
+              }
+            }
+          }
+        },
+        {
+          "$object": "AST\\Walker",
+          "id": 38
+        },
+        {
+          "$object": "AST\\Visitor\\FilterInjector",
+          "id": 39
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 40,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Star",
+                "id": 41,
+                "props": {
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 42,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 43,
+              "props": {
+                "left": {
+                  "$value": "AST\\Expression\\Exists",
+                  "id": 44,
+                  "props": {
+                    "subquery": {
+                      "$value": "AST\\Statement\\Select",
+                      "id": 45,
+                      "props": {
+                        "columns": [
+                          {
+                            "$value": "AST\\Literal",
+                            "id": 46,
+                            "props": {
+                              "value": 1
+                            }
+                          }
+                        ],
+                        "from": {
+                          "$value": "AST\\Reference\\Table",
+                          "id": 47,
+                          "props": {
+                            "name": "orders",
+                            "alias": null,
+                            "schema": null
+                          }
+                        },
+                        "joins": [],
+                        "where": {
+                          "$value": "AST\\Expression\\Binary",
+                          "id": 48,
+                          "props": {
+                            "left": {
+                              "$value": "AST\\Expression\\Binary",
+                              "id": 49,
+                              "props": {
+                                "left": {
+                                  "$value": "AST\\Reference\\Column",
+                                  "id": 50,
+                                  "props": {
+                                    "name": "user_id",
+                                    "table": "orders",
+                                    "schema": null
+                                  }
+                                },
+                                "operator": "=",
+                                "right": {
+                                  "$value": "AST\\Reference\\Column",
+                                  "id": 51,
+                                  "props": {
+                                    "name": "id",
+                                    "table": "users",
+                                    "schema": null
+                                  }
+                                }
+                              }
+                            },
+                            "operator": "AND",
+                            "right": {
+                              "$value": "AST\\Expression\\Binary",
+                              "id": 52,
+                              "props": {
+                                "left": {
+                                  "$value": "AST\\Reference\\Column",
+                                  "id": 53,
+                                  "props": {
+                                    "name": "tenant_id",
+                                    "table": null,
+                                    "schema": null
+                                  }
+                                },
+                                "operator": "=",
+                                "right": {
+                                  "$value": "AST\\Literal",
+                                  "id": 54,
+                                  "props": {
+                                    "value": 42
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "groupBy": [],
+                        "having": null,
+                        "orderBy": [],
+                        "limit": null,
+                        "offset": null,
+                        "distinct": false,
+                        "ctes": [],
+                        "windows": []
+                      }
+                    },
+                    "negated": false
+                  }
+                },
+                "operator": "AND",
+                "right": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 55,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 56,
+                      "props": {
+                        "name": "tenant_id",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 57,
+                      "props": {
+                        "value": 42
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Serializer",
+          "id": 58
+        },
+        "SELECT * FROM `users` WHERE EXISTS (SELECT 1 FROM `orders` WHERE `orders`.`user_id` = `users`.`id` AND `tenant_id` = 42) AND `tenant_id` = 42"
+      ]
+    },
+    {
+      "name": "testFilterInjectorAppliedToScalarSubquery",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "max_value"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Table",
+            "args": [
+              "limits"
+            ]
+          },
+          {
+            "new": "AST\\Statement\\Select",
+            "args": {
+              "columns": [
+                {
+                  "$o": 1
+                }
+              ],
+              "from": {
+                "$o": 2
+              }
+            }
+          },
+          {
+            "new": "AST\\Expression\\Subquery",
+            "args": [
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "new": "AST\\Star",
+            "args": []
+          },
+          {
+            "new": "AST\\Reference\\Table",
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "score"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Binary",
+            "args": [
+              {
+                "$o": 12
+              },
+              "<",
+              {
+                "$o": 6
+              }
+            ]
+          },
+          {
+            "new": "AST\\Statement\\Select",
+            "args": {
+              "columns": [
+                {
+                  "$o": 10
+                }
+              ],
+              "from": {
+                "$o": 11
+              },
+              "where": {
+                "$o": 13
+              }
+            }
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "tenant_id"
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              42
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Binary",
+            "args": [
+              {
+                "$o": 28
+              },
+              "=",
+              {
+                "$o": 29
+              }
+            ]
+          },
+          {
+            "new": "AST\\Walker",
+            "args": []
+          },
+          {
+            "new": "AST\\Visitor\\FilterInjector",
+            "args": [
+              {
+                "$o": 30
+              }
+            ]
+          },
+          {
+            "call": "walk",
+            "on": {
+              "$o": 33
+            },
+            "args": [
+              {
+                "$o": 19
+              },
+              {
+                "$o": 34
+              }
+            ]
+          },
+          {
+            "new": "AST\\Serializer",
+            "args": []
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 51
+            },
+            "args": [
+              {
+                "$o": 35
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "max_value",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Table",
+          "id": 2,
+          "props": {
+            "name": "limits",
+            "alias": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 3,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 4,
+                "props": {
+                  "name": "max_value",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 5,
+              "props": {
+                "name": "limits",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": null,
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Subquery",
+          "id": 6,
+          "props": {
+            "query": {
+              "$value": "AST\\Statement\\Select",
+              "id": 7,
+              "props": {
+                "columns": [
+                  {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 8,
+                    "props": {
+                      "name": "max_value",
+                      "table": null,
+                      "schema": null
+                    }
+                  }
+                ],
+                "from": {
+                  "$value": "AST\\Reference\\Table",
+                  "id": 9,
+                  "props": {
+                    "name": "limits",
+                    "alias": null,
+                    "schema": null
+                  }
+                },
+                "joins": [],
+                "where": null,
+                "groupBy": [],
+                "having": null,
+                "orderBy": [],
+                "limit": null,
+                "offset": null,
+                "distinct": false,
+                "ctes": [],
+                "windows": []
+              }
+            }
+          }
+        },
+        {
+          "$value": "AST\\Star",
+          "id": 10,
+          "props": {
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Table",
+          "id": 11,
+          "props": {
+            "name": "users",
+            "alias": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 12,
+          "props": {
+            "name": "score",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 13,
+          "props": {
+            "left": {
+              "$value": "AST\\Reference\\Column",
+              "id": 14,
+              "props": {
+                "name": "score",
+                "table": null,
+                "schema": null
+              }
+            },
+            "operator": "<",
+            "right": {
+              "$value": "AST\\Expression\\Subquery",
+              "id": 15,
+              "props": {
+                "query": {
+                  "$value": "AST\\Statement\\Select",
+                  "id": 16,
+                  "props": {
+                    "columns": [
+                      {
+                        "$value": "AST\\Reference\\Column",
+                        "id": 17,
+                        "props": {
+                          "name": "max_value",
+                          "table": null,
+                          "schema": null
+                        }
+                      }
+                    ],
+                    "from": {
+                      "$value": "AST\\Reference\\Table",
+                      "id": 18,
+                      "props": {
+                        "name": "limits",
+                        "alias": null,
+                        "schema": null
+                      }
+                    },
+                    "joins": [],
+                    "where": null,
+                    "groupBy": [],
+                    "having": null,
+                    "orderBy": [],
+                    "limit": null,
+                    "offset": null,
+                    "distinct": false,
+                    "ctes": [],
+                    "windows": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 19,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Star",
+                "id": 20,
+                "props": {
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 21,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 22,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 23,
+                  "props": {
+                    "name": "score",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "operator": "<",
+                "right": {
+                  "$value": "AST\\Expression\\Subquery",
+                  "id": 24,
+                  "props": {
+                    "query": {
+                      "$value": "AST\\Statement\\Select",
+                      "id": 25,
+                      "props": {
+                        "columns": [
+                          {
+                            "$value": "AST\\Reference\\Column",
+                            "id": 26,
+                            "props": {
+                              "name": "max_value",
+                              "table": null,
+                              "schema": null
+                            }
+                          }
+                        ],
+                        "from": {
+                          "$value": "AST\\Reference\\Table",
+                          "id": 27,
+                          "props": {
+                            "name": "limits",
+                            "alias": null,
+                            "schema": null
+                          }
+                        },
+                        "joins": [],
+                        "where": null,
+                        "groupBy": [],
+                        "having": null,
+                        "orderBy": [],
+                        "limit": null,
+                        "offset": null,
+                        "distinct": false,
+                        "ctes": [],
+                        "windows": []
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 28,
+          "props": {
+            "name": "tenant_id",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 29,
+          "props": {
+            "value": 42
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 30,
+          "props": {
+            "left": {
+              "$value": "AST\\Reference\\Column",
+              "id": 31,
+              "props": {
+                "name": "tenant_id",
+                "table": null,
+                "schema": null
+              }
+            },
+            "operator": "=",
+            "right": {
+              "$value": "AST\\Literal",
+              "id": 32,
+              "props": {
+                "value": 42
+              }
+            }
+          }
+        },
+        {
+          "$object": "AST\\Walker",
+          "id": 33
+        },
+        {
+          "$object": "AST\\Visitor\\FilterInjector",
+          "id": 34
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 35,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Star",
+                "id": 36,
+                "props": {
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 37,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 38,
+              "props": {
+                "left": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 39,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 40,
+                      "props": {
+                        "name": "score",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": "<",
+                    "right": {
+                      "$value": "AST\\Expression\\Subquery",
+                      "id": 41,
+                      "props": {
+                        "query": {
+                          "$value": "AST\\Statement\\Select",
+                          "id": 42,
+                          "props": {
+                            "columns": [
+                              {
+                                "$value": "AST\\Reference\\Column",
+                                "id": 43,
+                                "props": {
+                                  "name": "max_value",
+                                  "table": null,
+                                  "schema": null
+                                }
+                              }
+                            ],
+                            "from": {
+                              "$value": "AST\\Reference\\Table",
+                              "id": 44,
+                              "props": {
+                                "name": "limits",
+                                "alias": null,
+                                "schema": null
+                              }
+                            },
+                            "joins": [],
+                            "where": {
+                              "$value": "AST\\Expression\\Binary",
+                              "id": 45,
+                              "props": {
+                                "left": {
+                                  "$value": "AST\\Reference\\Column",
+                                  "id": 46,
+                                  "props": {
+                                    "name": "tenant_id",
+                                    "table": null,
+                                    "schema": null
+                                  }
+                                },
+                                "operator": "=",
+                                "right": {
+                                  "$value": "AST\\Literal",
+                                  "id": 47,
+                                  "props": {
+                                    "value": 42
+                                  }
+                                }
+                              }
+                            },
+                            "groupBy": [],
+                            "having": null,
+                            "orderBy": [],
+                            "limit": null,
+                            "offset": null,
+                            "distinct": false,
+                            "ctes": [],
+                            "windows": []
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "operator": "AND",
+                "right": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 48,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 49,
+                      "props": {
+                        "name": "tenant_id",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 50,
+                      "props": {
+                        "value": 42
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Serializer",
+          "id": 51
+        },
+        "SELECT * FROM `users` WHERE `score` < (SELECT `max_value` FROM `limits` WHERE `tenant_id` = 42) AND `tenant_id` = 42"
+      ]
+    },
+    {
+      "name": "testFilterInjectorAppliedToInSubquery",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Table",
+            "args": [
+              "orders"
+            ]
+          },
+          {
+            "new": "AST\\Statement\\Select",
+            "args": {
+              "columns": [
+                {
+                  "$o": 1
+                }
+              ],
+              "from": {
+                "$o": 2
+              }
+            }
+          },
+          {
+            "new": "AST\\Star",
+            "args": []
+          },
+          {
+            "new": "AST\\Reference\\Table",
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "new": "AST\\Expression\\In",
+            "args": [
+              {
+                "$o": 8
+              },
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "new": "AST\\Statement\\Select",
+            "args": {
+              "columns": [
+                {
+                  "$o": 6
+                }
+              ],
+              "from": {
+                "$o": 7
+              },
+              "where": {
+                "$o": 9
+              }
+            }
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "tenant_id"
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              42
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Binary",
+            "args": [
+              {
+                "$o": 22
+              },
+              "=",
+              {
+                "$o": 23
+              }
+            ]
+          },
+          {
+            "new": "AST\\Walker",
+            "args": []
+          },
+          {
+            "new": "AST\\Visitor\\FilterInjector",
+            "args": [
+              {
+                "$o": 24
+              }
+            ]
+          },
+          {
+            "call": "walk",
+            "on": {
+              "$o": 27
+            },
+            "args": [
+              {
+                "$o": 14
+              },
+              {
+                "$o": 28
+              }
+            ]
+          },
+          {
+            "new": "AST\\Serializer",
+            "args": []
+          },
+          {
+            "call": "serialize",
+            "on": {
+              "$o": 44
+            },
+            "args": [
+              {
+                "$o": 29
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "id",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Table",
+          "id": 2,
+          "props": {
+            "name": "orders",
+            "alias": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 3,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 4,
+                "props": {
+                  "name": "id",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 5,
+              "props": {
+                "name": "orders",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": null,
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Star",
+          "id": 6,
+          "props": {
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Table",
+          "id": 7,
+          "props": {
+            "name": "users",
+            "alias": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 8,
+          "props": {
+            "name": "id",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Expression\\In",
+          "id": 9,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 10,
+              "props": {
+                "name": "id",
+                "table": null,
+                "schema": null
+              }
+            },
+            "list": {
+              "$value": "AST\\Statement\\Select",
+              "id": 11,
+              "props": {
+                "columns": [
+                  {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 12,
+                    "props": {
+                      "name": "id",
+                      "table": null,
+                      "schema": null
+                    }
+                  }
+                ],
+                "from": {
+                  "$value": "AST\\Reference\\Table",
+                  "id": 13,
+                  "props": {
+                    "name": "orders",
+                    "alias": null,
+                    "schema": null
+                  }
+                },
+                "joins": [],
+                "where": null,
+                "groupBy": [],
+                "having": null,
+                "orderBy": [],
+                "limit": null,
+                "offset": null,
+                "distinct": false,
+                "ctes": [],
+                "windows": []
+              }
+            },
+            "negated": false
+          }
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 14,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Star",
+                "id": 15,
+                "props": {
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 16,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\In",
+              "id": 17,
+              "props": {
+                "expression": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 18,
+                  "props": {
+                    "name": "id",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "list": {
+                  "$value": "AST\\Statement\\Select",
+                  "id": 19,
+                  "props": {
+                    "columns": [
+                      {
+                        "$value": "AST\\Reference\\Column",
+                        "id": 20,
+                        "props": {
+                          "name": "id",
+                          "table": null,
+                          "schema": null
+                        }
+                      }
+                    ],
+                    "from": {
+                      "$value": "AST\\Reference\\Table",
+                      "id": 21,
+                      "props": {
+                        "name": "orders",
+                        "alias": null,
+                        "schema": null
+                      }
+                    },
+                    "joins": [],
+                    "where": null,
+                    "groupBy": [],
+                    "having": null,
+                    "orderBy": [],
+                    "limit": null,
+                    "offset": null,
+                    "distinct": false,
+                    "ctes": [],
+                    "windows": []
+                  }
+                },
+                "negated": false
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 22,
+          "props": {
+            "name": "tenant_id",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 23,
+          "props": {
+            "value": 42
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 24,
+          "props": {
+            "left": {
+              "$value": "AST\\Reference\\Column",
+              "id": 25,
+              "props": {
+                "name": "tenant_id",
+                "table": null,
+                "schema": null
+              }
+            },
+            "operator": "=",
+            "right": {
+              "$value": "AST\\Literal",
+              "id": 26,
+              "props": {
+                "value": 42
+              }
+            }
+          }
+        },
+        {
+          "$object": "AST\\Walker",
+          "id": 27
+        },
+        {
+          "$object": "AST\\Visitor\\FilterInjector",
+          "id": 28
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 29,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Star",
+                "id": 30,
+                "props": {
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 31,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 32,
+              "props": {
+                "left": {
+                  "$value": "AST\\Expression\\In",
+                  "id": 33,
+                  "props": {
+                    "expression": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 34,
+                      "props": {
+                        "name": "id",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "list": {
+                      "$value": "AST\\Statement\\Select",
+                      "id": 35,
+                      "props": {
+                        "columns": [
+                          {
+                            "$value": "AST\\Reference\\Column",
+                            "id": 36,
+                            "props": {
+                              "name": "id",
+                              "table": null,
+                              "schema": null
+                            }
+                          }
+                        ],
+                        "from": {
+                          "$value": "AST\\Reference\\Table",
+                          "id": 37,
+                          "props": {
+                            "name": "orders",
+                            "alias": null,
+                            "schema": null
+                          }
+                        },
+                        "joins": [],
+                        "where": {
+                          "$value": "AST\\Expression\\Binary",
+                          "id": 38,
+                          "props": {
+                            "left": {
+                              "$value": "AST\\Reference\\Column",
+                              "id": 39,
+                              "props": {
+                                "name": "tenant_id",
+                                "table": null,
+                                "schema": null
+                              }
+                            },
+                            "operator": "=",
+                            "right": {
+                              "$value": "AST\\Literal",
+                              "id": 40,
+                              "props": {
+                                "value": 42
+                              }
+                            }
+                          }
+                        },
+                        "groupBy": [],
+                        "having": null,
+                        "orderBy": [],
+                        "limit": null,
+                        "offset": null,
+                        "distinct": false,
+                        "ctes": [],
+                        "windows": []
+                      }
+                    },
+                    "negated": false
+                  }
+                },
+                "operator": "AND",
+                "right": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 41,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 42,
+                      "props": {
+                        "name": "tenant_id",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": "=",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 43,
+                      "props": {
+                        "value": 42
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "groupBy": [],
+            "having": null,
+            "orderBy": [],
+            "limit": null,
+            "offset": null,
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Serializer",
+          "id": 44
+        },
+        "SELECT * FROM `users` WHERE `id` IN (SELECT `id` FROM `orders` WHERE `tenant_id` = 42) AND `tenant_id` = 42"
+      ]
+    },
+    {
+      "name": "testWalkReturnsSameInstanceWhenVisitorIsNoOp",
+      "op": "ast",
+      "args": {
+        "program": [
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              1
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Table",
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              18
+            ]
+          },
+          {
+            "new": "AST\\Expression\\Binary",
+            "args": [
+              {
+                "$o": 5
+              },
+              ">",
+              {
+                "$o": 6
+              }
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "country"
+            ]
+          },
+          {
+            "new": "AST\\Reference\\Column",
+            "args": [
+              "created_at"
+            ]
+          },
+          {
+            "new": "AST\\OrderByItem",
+            "args": [
+              {
+                "$o": 11
+              },
+              {
+                "$enum": "OrderDirection::Desc"
+              }
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              10
+            ]
+          },
+          {
+            "new": "AST\\Literal",
+            "args": [
+              5
+            ]
+          },
+          {
+            "new": "AST\\Statement\\Select",
+            "args": {
+              "columns": [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                }
+              ],
+              "from": {
+                "$o": 4
+              },
+              "where": {
+                "$o": 7
+              },
+              "groupBy": [
+                {
+                  "$o": 10
+                }
+              ],
+              "orderBy": [
+                {
+                  "$o": 12
+                }
+              ],
+              "limit": {
+                "$o": 14
+              },
+              "offset": {
+                "$o": 15
+              }
+            }
+          },
+          {
+            "new": "AST\\Walker",
+            "args": []
+          },
+          {
+            "call": "walk",
+            "on": {
+              "$o": 29
+            },
+            "args": [
+              {
+                "$o": 16
+              },
+              {
+                "$impl": 1
+              }
+            ],
+            "cb": [
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 30
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 31
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 32
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitTableReference",
+                "ret": {
+                  "$o": 33
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 34
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 35
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 36
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 39
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 40
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 41
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitExpression",
+                "ret": {
+                  "$o": 42
+                }
+              },
+              {
+                "impl": 1,
+                "m": "visitSelect",
+                "ret": {
+                  "$o": 43
+                }
+              }
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 56
+              },
+              {
+                "$o": 56
+              }
+            ]
+          }
+        ],
+        "impls": {
+          "1": [
+            "AST\\Visitor"
+          ]
+        }
+      },
+      "expect": [
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 1,
+          "props": {
+            "name": "id",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 2,
+          "props": {
+            "name": "name",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 3,
+          "props": {
+            "value": 1
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Table",
+          "id": 4,
+          "props": {
+            "name": "users",
+            "alias": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 5,
+          "props": {
+            "name": "age",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 6,
+          "props": {
+            "value": 18
+          }
+        },
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 7,
+          "props": {
+            "left": {
+              "$value": "AST\\Reference\\Column",
+              "id": 8,
+              "props": {
+                "name": "age",
+                "table": null,
+                "schema": null
+              }
+            },
+            "operator": ">",
+            "right": {
+              "$value": "AST\\Literal",
+              "id": 9,
+              "props": {
+                "value": 18
+              }
+            }
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 10,
+          "props": {
+            "name": "country",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\Reference\\Column",
+          "id": 11,
+          "props": {
+            "name": "created_at",
+            "table": null,
+            "schema": null
+          }
+        },
+        {
+          "$value": "AST\\OrderByItem",
+          "id": 12,
+          "props": {
+            "expression": {
+              "$value": "AST\\Reference\\Column",
+              "id": 13,
+              "props": {
+                "name": "created_at",
+                "table": null,
+                "schema": null
+              }
+            },
+            "direction": {
+              "$enum": "OrderDirection::Desc"
+            },
+            "nulls": null
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 14,
+          "props": {
+            "value": 10
+          }
+        },
+        {
+          "$value": "AST\\Literal",
+          "id": 15,
+          "props": {
+            "value": 5
+          }
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 16,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 17,
+                "props": {
+                  "name": "id",
+                  "table": null,
+                  "schema": null
+                }
+              },
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 18,
+                "props": {
+                  "name": "name",
+                  "table": null,
+                  "schema": null
+                }
+              },
+              {
+                "$value": "AST\\Literal",
+                "id": 19,
+                "props": {
+                  "value": 1
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 20,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 21,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 22,
+                  "props": {
+                    "name": "age",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "operator": ">",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 23,
+                  "props": {
+                    "value": 18
+                  }
+                }
+              }
+            },
+            "groupBy": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 24,
+                "props": {
+                  "name": "country",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "having": null,
+            "orderBy": [
+              {
+                "$value": "AST\\OrderByItem",
+                "id": 25,
+                "props": {
+                  "expression": {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 26,
+                    "props": {
+                      "name": "created_at",
+                      "table": null,
+                      "schema": null
+                    }
+                  },
+                  "direction": {
+                    "$enum": "OrderDirection::Desc"
+                  },
+                  "nulls": null
+                }
+              }
+            ],
+            "limit": {
+              "$value": "AST\\Literal",
+              "id": 27,
+              "props": {
+                "value": 10
+              }
+            },
+            "offset": {
+              "$value": "AST\\Literal",
+              "id": 28,
+              "props": {
+                "value": 5
+              }
+            },
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        {
+          "$object": "AST\\Walker",
+          "id": 29
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Reference\\Column",
+              "id": 30,
+              "props": {
+                "name": "id",
+                "table": null,
+                "schema": null
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Reference\\Column",
+              "id": 31,
+              "props": {
+                "name": "name",
+                "table": null,
+                "schema": null
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Literal",
+              "id": 32,
+              "props": {
+                "value": 1
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitTableReference",
+          "args": [
+            {
+              "$value": "AST\\Reference\\Table",
+              "id": 33,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Reference\\Column",
+              "id": 34,
+              "props": {
+                "name": "age",
+                "table": null,
+                "schema": null
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Literal",
+              "id": 35,
+              "props": {
+                "value": 18
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Expression\\Binary",
+              "id": 36,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 37,
+                  "props": {
+                    "name": "age",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "operator": ">",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 38,
+                  "props": {
+                    "value": 18
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Reference\\Column",
+              "id": 39,
+              "props": {
+                "name": "country",
+                "table": null,
+                "schema": null
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Reference\\Column",
+              "id": 40,
+              "props": {
+                "name": "created_at",
+                "table": null,
+                "schema": null
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Literal",
+              "id": 41,
+              "props": {
+                "value": 10
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitExpression",
+          "args": [
+            {
+              "$value": "AST\\Literal",
+              "id": 42,
+              "props": {
+                "value": 5
+              }
+            }
+          ]
+        },
+        {
+          "$cb": "impl:1:visitSelect",
+          "args": [
+            {
+              "$value": "AST\\Statement\\Select",
+              "id": 43,
+              "props": {
+                "columns": [
+                  {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 44,
+                    "props": {
+                      "name": "id",
+                      "table": null,
+                      "schema": null
+                    }
+                  },
+                  {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 45,
+                    "props": {
+                      "name": "name",
+                      "table": null,
+                      "schema": null
+                    }
+                  },
+                  {
+                    "$value": "AST\\Literal",
+                    "id": 46,
+                    "props": {
+                      "value": 1
+                    }
+                  }
+                ],
+                "from": {
+                  "$value": "AST\\Reference\\Table",
+                  "id": 47,
+                  "props": {
+                    "name": "users",
+                    "alias": null,
+                    "schema": null
+                  }
+                },
+                "joins": [],
+                "where": {
+                  "$value": "AST\\Expression\\Binary",
+                  "id": 48,
+                  "props": {
+                    "left": {
+                      "$value": "AST\\Reference\\Column",
+                      "id": 49,
+                      "props": {
+                        "name": "age",
+                        "table": null,
+                        "schema": null
+                      }
+                    },
+                    "operator": ">",
+                    "right": {
+                      "$value": "AST\\Literal",
+                      "id": 50,
+                      "props": {
+                        "value": 18
+                      }
+                    }
+                  }
+                },
+                "groupBy": [
+                  {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 51,
+                    "props": {
+                      "name": "country",
+                      "table": null,
+                      "schema": null
+                    }
+                  }
+                ],
+                "having": null,
+                "orderBy": [
+                  {
+                    "$value": "AST\\OrderByItem",
+                    "id": 52,
+                    "props": {
+                      "expression": {
+                        "$value": "AST\\Reference\\Column",
+                        "id": 53,
+                        "props": {
+                          "name": "created_at",
+                          "table": null,
+                          "schema": null
+                        }
+                      },
+                      "direction": {
+                        "$enum": "OrderDirection::Desc"
+                      },
+                      "nulls": null
+                    }
+                  }
+                ],
+                "limit": {
+                  "$value": "AST\\Literal",
+                  "id": 54,
+                  "props": {
+                    "value": 10
+                  }
+                },
+                "offset": {
+                  "$value": "AST\\Literal",
+                  "id": 55,
+                  "props": {
+                    "value": 5
+                  }
+                },
+                "distinct": false,
+                "ctes": [],
+                "windows": []
+              }
+            }
+          ]
+        },
+        {
+          "$value": "AST\\Statement\\Select",
+          "id": 56,
+          "props": {
+            "columns": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 57,
+                "props": {
+                  "name": "id",
+                  "table": null,
+                  "schema": null
+                }
+              },
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 58,
+                "props": {
+                  "name": "name",
+                  "table": null,
+                  "schema": null
+                }
+              },
+              {
+                "$value": "AST\\Literal",
+                "id": 59,
+                "props": {
+                  "value": 1
+                }
+              }
+            ],
+            "from": {
+              "$value": "AST\\Reference\\Table",
+              "id": 60,
+              "props": {
+                "name": "users",
+                "alias": null,
+                "schema": null
+              }
+            },
+            "joins": [],
+            "where": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 61,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 62,
+                  "props": {
+                    "name": "age",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "operator": ">",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 63,
+                  "props": {
+                    "value": 18
+                  }
+                }
+              }
+            },
+            "groupBy": [
+              {
+                "$value": "AST\\Reference\\Column",
+                "id": 64,
+                "props": {
+                  "name": "country",
+                  "table": null,
+                  "schema": null
+                }
+              }
+            ],
+            "having": null,
+            "orderBy": [
+              {
+                "$value": "AST\\OrderByItem",
+                "id": 65,
+                "props": {
+                  "expression": {
+                    "$value": "AST\\Reference\\Column",
+                    "id": 66,
+                    "props": {
+                      "name": "created_at",
+                      "table": null,
+                      "schema": null
+                    }
+                  },
+                  "direction": {
+                    "$enum": "OrderDirection::Desc"
+                  },
+                  "nulls": null
+                }
+              }
+            ],
+            "limit": {
+              "$value": "AST\\Literal",
+              "id": 67,
+              "props": {
+                "value": 10
+              }
+            },
+            "offset": {
+              "$value": "AST\\Literal",
+              "id": 68,
+              "props": {
+                "value": 5
+              }
+            },
+            "distinct": false,
+            "ctes": [],
+            "windows": []
+          }
+        },
+        true
+      ]
+    }
+  ]
+}

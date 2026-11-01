@@ -1,0 +1,881 @@
+{
+  "source": "packages/auth/tests/StoreTest.php",
+  "cases": [
+    {
+      "name": "get and set property",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "name",
+            "value": "John Doe"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "name"
+          },
+          "expect": "John Doe"
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "age",
+            "value": 30
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "active",
+            "value": true
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "scores",
+            "value": [
+              95,
+              87,
+              92
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "details",
+            "value": {
+              "city": "New York",
+              "country": "USA"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "age"
+          },
+          "expect": 30
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "active"
+          },
+          "expect": true
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "scores"
+          },
+          "expect": [
+            95,
+            87,
+            92
+          ]
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "details"
+          },
+          "expect": {
+            "city": "New York",
+            "country": "USA"
+          }
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "nonexistent"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "nonexistent",
+            "default": "default"
+          },
+          "expect": "default"
+        }
+      ]
+    },
+    {
+      "name": "get and set key",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.get_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "test-key"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": "test-key"
+        },
+        {
+          "op": "store.set_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": null
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "new-key"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "test",
+            "value": "value"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": "new-key"
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "test"
+          },
+          "expect": "value"
+        }
+      ]
+    },
+    {
+      "name": "encode and decode",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "name",
+            "value": "John Doe"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "age",
+            "value": 30
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "active",
+            "value": true
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "scores",
+            "value": [
+              95,
+              87,
+              92
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "details",
+            "value": {
+              "city": "New York",
+              "country": "USA"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_key",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "test-key"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "bind": "e",
+          "expect": "eyJuYW1lIjoiSm9obiBEb2UiLCJhZ2UiOjMwLCJhY3RpdmUiOnRydWUsInNjb3JlcyI6Wzk1LDg3LDkyXSwiZGV0YWlscyI6eyJjaXR5IjoiTmV3IFlvcmsiLCJjb3VudHJ5IjoiVVNBIn19"
+        },
+        {
+          "op": "store.new",
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "data": {
+              "$ref": "e"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "key": "name"
+          },
+          "expect": "John Doe"
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "key": "age"
+          },
+          "expect": 30
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "key": "active"
+          },
+          "expect": true
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "key": "scores"
+          },
+          "expect": [
+            95,
+            87,
+            92
+          ]
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "key": "details"
+          },
+          "expect": {
+            "city": "New York",
+            "country": "USA"
+          }
+        },
+        {
+          "op": "store.get_key",
+          "args": {
+            "store": {
+              "$ref": "n"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "decode invalid data",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "data": "invalid-base64"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "data": "aW52YWxpZC1qc29u"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "data": "InN0cmluZyI="
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "data": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": "W10="
+        }
+      ]
+    },
+    {
+      "name": "encode invalid UTF-8 fails",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "invalid",
+            "value": {
+              "$bytes": "/w=="
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "session store fixture",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "id",
+            "value": "user1"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "secret",
+            "value": "abc/def"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": "eyJpZCI6InVzZXIxIiwic2VjcmV0IjoiYWJjXC9kZWYifQ=="
+        }
+      ]
+    },
+    {
+      "name": "a list of properties encodes as a JSON array",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "0",
+            "value": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "1",
+            "value": 1.5
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "bind": "e",
+          "expect": "WyJhIiwxLjVd"
+        },
+        {
+          "op": "store.new",
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "data": {
+              "$ref": "e"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "n"
+            },
+            "key": "1"
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "x",
+            "value": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": "eyIwIjoiYSIsIjEiOjEuNSwieCI6e319"
+        }
+      ]
+    },
+    {
+      "name": "decode merges into existing properties",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "a",
+            "value": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "store.set_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "b",
+            "value": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "data": "eyJiIjozLCJjIjpudWxsLCJkIjp7fX0="
+          },
+          "expect": null
+        },
+        {
+          "op": "store.encode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            }
+          },
+          "expect": "eyJhIjoxLCJiIjozLCJjIjpudWxsLCJkIjpbXX0="
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "c",
+            "default": "fallback"
+          },
+          "expect": "fallback"
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "d"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "one-shot decoding",
+      "steps": [
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "eyJpZCI6InUiLCJzZWNyZXQiOiJzIn0="
+          },
+          "expect": "eyJpZCI6InUiLCJzZWNyZXQiOiJzIn0="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "WzEsMl0="
+          },
+          "expect": "WzEsMl0="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "eyIwIjoxLCIxIjoyfQ=="
+          },
+          "expect": "WzEsMl0="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "e30="
+          },
+          "expect": "W10="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "bnVsbA=="
+          },
+          "expect": "W10="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": "!!"
+          },
+          "expect": "W10="
+        },
+        {
+          "op": "store.decode_once",
+          "args": {
+            "data": ""
+          },
+          "expect": "W10="
+        }
+      ]
+    },
+    {
+      "name": "decode is strict base64",
+      "steps": [
+        {
+          "op": "store.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "data": "eyJhIjoxfQ"
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "a"
+          },
+          "expect": 1
+        },
+        {
+          "op": "store.decode",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "data": " eyJiIjoxfQ== "
+          },
+          "expect": null
+        },
+        {
+          "op": "store.get_property",
+          "args": {
+            "store": {
+              "$ref": "s"
+            },
+            "key": "b"
+          },
+          "expect": 1
+        }
+      ]
+    }
+  ]
+}

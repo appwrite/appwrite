@@ -1,0 +1,20 @@
+[package]
+name = "utopia-validators"
+description = "Request parameter validators with their user-facing messages."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/validators"
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+php-sync = "771d14ca4f46b8530fe3f3635cb6460775501568"
+# The Utopia site's category, here rather than in packages/validators/composer.json:
+# a change there re-checks its dependents linked, and migration cannot resolve.
+category = "utilities"

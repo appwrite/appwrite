@@ -1,0 +1,1817 @@
+{
+  "source": "packages/websocket/src/Server.php",
+  "cases": [
+    {
+      "name": "lifecycle: start, connections, messages, requests, close, shutdown",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "start"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "worker_start"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "worker_stop"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "open"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "message"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "close"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "request"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.config",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "workers": 2
+          },
+          "expect": {
+            "package_max_length": null,
+            "websocket_compression": null,
+            "worker_num": 2
+          }
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "request": {
+              "uri": "/v1/realtime?project=p",
+              "headers": [
+                [
+                  "Host",
+                  "localhost"
+                ],
+                [
+                  "Upgrade",
+                  "websocket"
+                ]
+              ]
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "data": "ping"
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 2,
+            "data": "pong"
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 3,
+            "data": "broadcast"
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 2,
+            "data": "disconnect"
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 2,
+            "data": "ping"
+          },
+          "expect": false
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "data": "echo:hello"
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.disconnect",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 3
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.disconnect",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 3
+          },
+          "expect": false
+        },
+        {
+          "op": "memory.request",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "request": {
+              "method": "POST",
+              "uri": "/info?x=1",
+              "body": "{\"a\":1}"
+            }
+          },
+          "expect": {
+            "status": 200,
+            "body": "POST /info"
+          }
+        },
+        {
+          "op": "memory.request",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "request": {
+              "uri": "/missing"
+            }
+          },
+          "expect": {
+            "status": 404,
+            "body": "GET /missing"
+          }
+        },
+        {
+          "op": "server.shutdown",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.shutdown",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.log",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            [
+              "start"
+            ],
+            [
+              "workerStart",
+              0
+            ],
+            [
+              "workerStart",
+              1
+            ],
+            [
+              "open",
+              1,
+              "GET",
+              "/v1/realtime"
+            ],
+            [
+              "open",
+              2,
+              "GET",
+              "/"
+            ],
+            [
+              "open",
+              3,
+              "GET",
+              "/"
+            ],
+            [
+              "message",
+              1,
+              "ping"
+            ],
+            [
+              "message",
+              2,
+              "pong"
+            ],
+            [
+              "message",
+              3,
+              "broadcast"
+            ],
+            [
+              "message",
+              2,
+              "disconnect"
+            ],
+            [
+              "close",
+              2
+            ],
+            [
+              "message",
+              1,
+              "echo:hello"
+            ],
+            [
+              "close",
+              3
+            ],
+            [
+              "request",
+              "POST",
+              "/info",
+              "{\"a\":1}"
+            ],
+            [
+              "request",
+              "GET",
+              "/missing",
+              ""
+            ],
+            [
+              "workerStop",
+              0
+            ],
+            [
+              "workerStop",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "started": false,
+            "connections": [
+              1
+            ],
+            "frames": [
+              [
+                1,
+                "pong"
+              ],
+              [
+                2,
+                "ping"
+              ],
+              [
+                1,
+                "broadcast"
+              ],
+              [
+                2,
+                "broadcast"
+              ],
+              [
+                3,
+                "broadcast"
+              ],
+              [
+                2,
+                "disconnect"
+              ],
+              [
+                1,
+                "hello"
+              ]
+            ],
+            "closed": [
+              [
+                2,
+                1000
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "send skips connections that are not open, keeps order and duplicates",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "server.send",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connections": [
+              4,
+              9,
+              5,
+              4
+            ],
+            "message": "hi"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.send",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connections": [],
+            "message": "none"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.send",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connections": [
+              5
+            ],
+            "message": {
+              "$bytes": "AP8="
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.close",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 4,
+            "code": 4001
+          },
+          "expect": null
+        },
+        {
+          "op": "server.close",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 4,
+            "code": 1000
+          },
+          "expect": null
+        },
+        {
+          "op": "server.close",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 77,
+            "code": 1000
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "started": false,
+            "connections": [
+              5
+            ],
+            "frames": [
+              [
+                4,
+                "hi"
+              ],
+              [
+                5,
+                "hi"
+              ],
+              [
+                4,
+                "hi"
+              ],
+              [
+                5,
+                {
+                  "$bytes": "AP8="
+                }
+              ]
+            ],
+            "closed": [
+              [
+                4,
+                4001
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "messages from connections that are not open are not delivered",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "message"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "data": "ping"
+          },
+          "expect": false
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "data": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "data": {
+              "$bytes": "gICA"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.log",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            [
+              "message",
+              1,
+              ""
+            ],
+            [
+              "message",
+              1,
+              {
+                "$bytes": "gICA"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "started": false,
+            "connections": [
+              1
+            ],
+            "frames": [],
+            "closed": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "every stage's failure reaches each error callback in order",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "start",
+            "message": "cannot listen"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "shutdown",
+            "message": "not running"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "send",
+            "message": "buffer full"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "close",
+            "message": "no such connection"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "onStart",
+            "message": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "onWorkerStart",
+            "message": "b"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "onWorkerStop",
+            "message": "c"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "onOpen",
+            "message": "d"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "onMessage",
+            "message": "e"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "onClose",
+            "message": "f"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "onRequest",
+            "message": "g"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.shutdown",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.send",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connections": [
+              1
+            ],
+            "message": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.close",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "code": 1000
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "start"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "worker_start"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "worker_stop"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "open"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "message"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "close"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "request"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.log",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            [
+              "error",
+              0,
+              "Exception",
+              "cannot listen",
+              "start"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "cannot listen",
+              "start"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "not running",
+              "shutdown"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "not running",
+              "shutdown"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "buffer full",
+              "send"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "buffer full",
+              "send"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "no such connection",
+              "close"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "no such connection",
+              "close"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "a",
+              "onStart"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "a",
+              "onStart"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "b",
+              "onWorkerStart"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "b",
+              "onWorkerStart"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "c",
+              "onWorkerStop"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "c",
+              "onWorkerStop"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "d",
+              "onOpen"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "d",
+              "onOpen"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "e",
+              "onMessage"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "e",
+              "onMessage"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "f",
+              "onClose"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "f",
+              "onClose"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "g",
+              "onRequest"
+            ],
+            [
+              "error",
+              1,
+              "Exception",
+              "g",
+              "onRequest"
+            ]
+          ]
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "started": false,
+            "connections": [],
+            "frames": [],
+            "closed": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "failures without error callbacks are dropped",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "send",
+            "message": "buffer full"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "server.send",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connections": [
+              1
+            ],
+            "message": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.close",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "code": 1000
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "started": false,
+            "connections": [],
+            "frames": [],
+            "closed": [
+              [
+                1,
+                1000
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a failing send inside a hook reaches the error callbacks",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "message"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "close"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "stage": "send",
+            "message": "buffer full"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "data": "disconnect"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.log",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            [
+              "message",
+              1,
+              "disconnect"
+            ],
+            [
+              "error",
+              0,
+              "Exception",
+              "buffer full",
+              "send"
+            ],
+            [
+              "close",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "started": false,
+            "connections": [],
+            "frames": [],
+            "closed": [
+              [
+                1,
+                1000
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "settings: setters record their values",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "memory.config",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "package_max_length": null,
+            "websocket_compression": null,
+            "worker_num": null
+          }
+        },
+        {
+          "op": "memory.config",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "package_max_length": 64000000,
+            "compression": true,
+            "workers": 0
+          },
+          "expect": {
+            "package_max_length": 64000000,
+            "websocket_compression": true,
+            "worker_num": 0
+          }
+        },
+        {
+          "op": "memory.config",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "compression": false,
+            "workers": 3
+          },
+          "expect": {
+            "package_max_length": 64000000,
+            "websocket_compression": false,
+            "worker_num": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "start without a worker start hook, zero workers",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "start"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "worker_stop"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.config",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "workers": 0
+          },
+          "expect": {
+            "package_max_length": null,
+            "websocket_compression": null,
+            "worker_num": 0
+          }
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.shutdown",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.log",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            [
+              "start"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "hooks are replaced, not added",
+      "steps": [
+        {
+          "op": "server.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "message"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "hook": "message"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.message",
+          "args": {
+            "server": {
+              "$ref": "s"
+            },
+            "connection": 1,
+            "data": "ping"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.log",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": [
+            [
+              "message",
+              1,
+              "ping"
+            ]
+          ]
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "server": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "started": false,
+            "connections": [
+              1
+            ],
+            "frames": [
+              [
+                1,
+                "pong"
+              ]
+            ],
+            "closed": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "dispatch the fixture commands",
+      "op": "server.dispatch",
+      "args": {
+        "messages": [
+          "ping",
+          "pong",
+          "broadcast",
+          "echo:",
+          "echo:echo:x",
+          "disconnect",
+          "ping"
+        ]
+      },
+      "expect": {
+        "log": [
+          [
+            "open",
+            1,
+            "GET",
+            "/"
+          ],
+          [
+            "open",
+            2,
+            "GET",
+            "/"
+          ],
+          [
+            "message",
+            1,
+            "ping"
+          ],
+          [
+            "message",
+            1,
+            "pong"
+          ],
+          [
+            "message",
+            1,
+            "broadcast"
+          ],
+          [
+            "message",
+            1,
+            "echo:"
+          ],
+          [
+            "message",
+            1,
+            "echo:echo:x"
+          ],
+          [
+            "message",
+            1,
+            "disconnect"
+          ],
+          [
+            "close",
+            1
+          ]
+        ],
+        "state": {
+          "started": false,
+          "connections": [
+            2
+          ],
+          "frames": [
+            [
+              1,
+              "pong"
+            ],
+            [
+              1,
+              "ping"
+            ],
+            [
+              1,
+              "broadcast"
+            ],
+            [
+              2,
+              "broadcast"
+            ],
+            [
+              1,
+              ""
+            ],
+            [
+              1,
+              "echo:x"
+            ],
+            [
+              1,
+              "disconnect"
+            ]
+          ],
+          "closed": [
+            [
+              1,
+              1000
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "dispatch binary and unknown messages",
+      "op": "server.dispatch",
+      "args": {
+        "messages": [
+          {
+            "$bytes": "/w=="
+          },
+          "PING",
+          "ping ",
+          "Ping"
+        ]
+      },
+      "expect": {
+        "log": [
+          [
+            "open",
+            1,
+            "GET",
+            "/"
+          ],
+          [
+            "open",
+            2,
+            "GET",
+            "/"
+          ],
+          [
+            "message",
+            1,
+            {
+              "$bytes": "/w=="
+            }
+          ],
+          [
+            "message",
+            1,
+            "PING"
+          ],
+          [
+            "message",
+            1,
+            "ping "
+          ],
+          [
+            "message",
+            1,
+            "Ping"
+          ]
+        ],
+        "state": {
+          "started": false,
+          "connections": [
+            1,
+            2
+          ],
+          "frames": [],
+          "closed": []
+        }
+      }
+    },
+    {
+      "name": "swoole settings by default",
+      "op": "swoole.config",
+      "args": {},
+      "expect": {
+        "max_connection": 1000000,
+        "send_timeout": 5.0,
+        "package_max_length": null,
+        "websocket_compression": null,
+        "worker_num": null
+      }
+    },
+    {
+      "name": "swoole settings with setters",
+      "op": "swoole.config",
+      "args": {
+        "send_timeout": 1.5,
+        "package_max_length": 1048576,
+        "compression": true,
+        "workers": 4
+      },
+      "expect": {
+        "max_connection": 1000000,
+        "send_timeout": 1.5,
+        "package_max_length": 1048576,
+        "websocket_compression": true,
+        "worker_num": 4
+      }
+    },
+    {
+      "name": "swoole send timeout of zero",
+      "op": "swoole.config",
+      "args": {
+        "send_timeout": 0.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Send timeout must be a finite positive number of seconds"
+        }
+      }
+    },
+    {
+      "name": "swoole negative send timeout",
+      "op": "swoole.config",
+      "args": {
+        "send_timeout": -1.0
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Send timeout must be a finite positive number of seconds"
+        }
+      }
+    },
+    {
+      "name": "swoole infinite send timeout",
+      "op": "swoole.config",
+      "args": {
+        "send_timeout": {
+          "$float": "INF"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Send timeout must be a finite positive number of seconds"
+        }
+      }
+    },
+    {
+      "name": "swoole NaN send timeout",
+      "op": "swoole.config",
+      "args": {
+        "send_timeout": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Send timeout must be a finite positive number of seconds"
+        }
+      }
+    },
+    {
+      "name": "swoole tiny send timeout",
+      "op": "swoole.config",
+      "args": {
+        "send_timeout": 1e-9
+      },
+      "expect": {
+        "max_connection": 1000000,
+        "send_timeout": 1e-9,
+        "package_max_length": null,
+        "websocket_compression": null,
+        "worker_num": null
+      }
+    }
+  ]
+}

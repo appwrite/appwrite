@@ -1,0 +1,352 @@
+//! JWT verification: the signature checks and the verifier of registered claims.
+
+use hmac::{Hmac, Mac};
+use php_std::json::{self, Flags};
+use php_std::value::{Number, compare_numbers, numeric_str};
+use php_std::{Array, ArrayKey, Str, Value};
+use sha2::{Digest, Sha256};
+
+use super::key::{self, Public, Rsa};
+use super::{Claim, Header, base64url_decode};
+use crate::Error;
+use crate::hash::hash_equals;
+use crate::options::to_long;
+
+/// An `aud` value: one recipient, or an array of them.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Audience {
+    /// One recipient.
+    One(Vec<u8>),
+    /// Several recipients, as a list.
+    Many(Array),
+}
+
+impl Audience {
+    pub(crate) fn to_value(&self) -> Value {
+        match self {
+            Audience::One(s) => Value::Str(Str::from(s.clone())),
+            Audience::Many(a) => Value::Array(a.clone()),
+        }
+    }
+}
+
+/// How a [`Verifier`] checks signatures: the JWS `alg` it expects and the
+/// check itself. Implement it to verify another algorithm.
+pub trait SignatureCheck {
+    /// The JWS `alg` this check verifies, such as `HS256`.
+    ///
+    /// PHP: `getAlgorithm()`.
+    fn algorithm(&self) -> &str;
+
+    /// Whether `signature` is valid for the signing input `input`.
+    ///
+    /// PHP: `verifySignature($signingInput, $signature)`.
+    fn verify_signature(&self, input: &[u8], signature: &[u8]) -> Result<bool, Error>;
+}
+
+/// Checks HS256 signatures with a shared secret.
+///
+/// PHP: `Utopia\Auth\Verifiers\Symmetric`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Hs256 {
+    secret: Vec<u8>,
+}
+
+impl Hs256 {
+    /// A check with `secret`.
+    ///
+    /// Fails with [`Error::Exception`] when the secret is empty or `"0"`.
+    ///
+    /// PHP: `new Verifiers\Symmetric($secret)`.
+    pub fn new(secret: &[u8]) -> Result<Self, Error> {
+        if secret.is_empty() || secret == b"0" {
+            return Err(Error::Exception("A signing secret is required".into()));
+        }
+        Ok(Self { secret: secret.to_vec() })
+    }
+}
+
+impl SignatureCheck for Hs256 {
+    /// Always `HS256`.
+    fn algorithm(&self) -> &str {
+        "HS256"
+    }
+
+    /// Whether `signature` is the HMAC-SHA256 of `input`, compared in constant time.
+    fn verify_signature(&self, input: &[u8], signature: &[u8]) -> Result<bool, Error> {
+        let mut mac = Hmac::<Sha256>::new_from_slice(&self.secret).expect("HMAC takes any key length");
+        mac.update(input);
+        Ok(hash_equals(&mac.finalize().into_bytes(), signature))
+    }
+}
+
+/// Checks RS256 signatures with a PEM RSA public key.
+///
+/// PHP: `Utopia\Auth\Verifiers\Asymmetric`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Rs256 {
+    public_key: Vec<u8>,
+}
+
+impl Rs256 {
+    /// A check with `public_key`: PEM (a public key or a certificate), or a
+    /// `file://` path to one, read when verifying.
+    ///
+    /// Fails with [`Error::Exception`] when the key is empty or `"0"`.
+    ///
+    /// PHP: `new Verifiers\Asymmetric($publicKey)`.
+    pub fn new(public_key: &[u8]) -> Result<Self, Error> {
+        if public_key.is_empty() || public_key == b"0" {
+            return Err(Error::Exception("A public key is required".into()));
+        }
+        Ok(Self { public_key: public_key.to_vec() })
+    }
+
+    /// The key's id: the SHA-256 of the RSA modulus as hex, as
+    /// [`Asymmetric::key_id`](super::Asymmetric::key_id) derives it.
+    ///
+    /// Fails with [`Error::Verification`] when the key cannot be read or is
+    /// not RSA.
+    ///
+    /// PHP: `getKeyId()`.
+    pub fn key_id(&self) -> Result<String, Error> {
+        match key::public_key(&self.public_key)? {
+            None => Err(Error::Verification("Unable to parse the public key".into())),
+            Some(Public::Other) => Err(Error::Verification("Public key is not an RSA key".into())),
+            Some(Public::Rsa(k)) => Ok(hex::encode(Sha256::digest(Rsa::modulus(&k)))),
+        }
+    }
+}
+
+impl SignatureCheck for Rs256 {
+    /// Always `RS256`.
+    fn algorithm(&self) -> &str {
+        "RS256"
+    }
+
+    /// Whether `signature` is a valid RSA SHA-256 signature of `input`.
+    ///
+    /// Fails with [`Error::Verification`] when the key cannot be read or is
+    /// not RSA.
+    fn verify_signature(&self, input: &[u8], signature: &[u8]) -> Result<bool, Error> {
+        match key::public_key(&self.public_key)? {
+            None => Err(Error::Verification("Unable to parse the public key".into())),
+            Some(Public::Other) => Err(Error::Verification("Public key is not an RSA key".into())),
+            Some(Public::Rsa(k)) => Ok(key::verify(k, input, signature)),
+        }
+    }
+}
+
+/// Verifies a JWT: its signature, header and registered claims.
+///
+/// PHP: `Utopia\Auth\Verifier`.
+///
+/// The expectations are fixed at construction: `iss`, acceptable `aud`
+/// values and `typ` are checked when given; `exp` is required unless
+/// `allow_expired`; `nbf`/`iat` are always checked; `leeway` tolerates skew.
+///
+/// ```
+/// use php_std::{Array, Value};
+/// use utopia_auth::jwt::{Audience, Hs256, Jwt, Symmetric, Verifier};
+///
+/// let token = Jwt(Symmetric::new(b"secret", b"iss", None)?).issue(&Audience::One(b"app".to_vec()), 60, &Array::new(), 1_000)?;
+///
+/// let verifier = Verifier::new(Hs256::new(b"secret")?, Some(b"iss"), None, None, false, 0)?;
+/// let claims = verifier.verify(token.as_bytes(), 1_030)?;
+/// assert_eq!(claims.get_str("aud"), Some(&Value::from("app")));
+///
+/// let error = verifier.verify(token.as_bytes(), 2_000).unwrap_err();
+/// assert_eq!(error.to_string(), "Token has expired");
+/// # Ok::<(), utopia_auth::Error>(())
+/// ```
+///
+/// ```php
+/// use Utopia\Auth\Issuers\Symmetric\Jwt;
+/// use Utopia\Auth\Verifiers\Symmetric;
+/// use Utopia\Auth\Verifiers\VerificationException;
+///
+/// $token = (new Jwt('secret', 'iss'))->issue('app', 60);
+/// $claims = (new Symmetric('secret', 'iss'))->verify($token);
+/// echo $claims['aud'], "\n"; // app
+///
+/// try {
+///     (new Symmetric('secret', 'iss'))->verify('a.b.c');
+/// } catch (VerificationException $e) {
+///     echo get_class($e), "\n"; // Utopia\Auth\Verifiers\VerificationException
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq)]
+pub struct Verifier<S: SignatureCheck> {
+    check: S,
+    issuer: Option<Vec<u8>>,
+    audience: Option<Vec<Value>>,
+    kind: Option<Vec<u8>>,
+    allow_expired: bool,
+    leeway: i64,
+}
+
+fn verification(message: &str) -> Error {
+    Error::Verification(message.to_owned())
+}
+
+/// `$a + $b` with PHP's overflow into float.
+fn sum(a: i64, b: i64) -> Number {
+    match a.checked_add(b) {
+        Some(v) => Number::Int(v),
+        None => Number::Float(a as f64 + b as f64),
+    }
+}
+
+fn is_numeric(v: &Value) -> bool {
+    match v {
+        Value::Int(_) | Value::Float(_) => true,
+        Value::Str(s) => std::str::from_utf8(s).ok().and_then(numeric_str).is_some(),
+        _ => false,
+    }
+}
+
+impl<S: SignatureCheck> Verifier<S> {
+    /// A verifier checking signatures with `check`, and when given, the
+    /// issuer, one of the audiences and the `typ` header.
+    ///
+    /// With `allow_expired`, `exp` is neither required nor checked. `leeway`
+    /// is the clock skew tolerated, in seconds; it fails with
+    /// [`Error::InvalidArgument`] when negative.
+    ///
+    /// PHP: `new Verifier($issuer, $audience, $type, $allowExpired, $leeway)`.
+    pub fn new(
+        check: S,
+        issuer: Option<&[u8]>,
+        audience: Option<&Audience>,
+        kind: Option<&[u8]>,
+        allow_expired: bool,
+        leeway: i64,
+    ) -> Result<Self, Error> {
+        if leeway < 0 {
+            return Err(Error::InvalidArgument("Leeway cannot be negative".into()));
+        }
+        let audience = audience.map(|a| match a {
+            Audience::One(s) => vec![Value::Str(Str::from(s.clone()))],
+            Audience::Many(list) => list.iter().map(|(_, v)| v.clone()).collect(),
+        });
+        Ok(Self {
+            check,
+            issuer: issuer.map(<[u8]>::to_vec),
+            audience,
+            kind: kind.map(<[u8]>::to_vec),
+            allow_expired,
+            leeway,
+        })
+    }
+
+    /// The signature check, for example to read [`Rs256::key_id`].
+    pub fn check(&self) -> &S {
+        &self.check
+    }
+
+    /// The claims of `token` when it is valid at `now`.
+    ///
+    /// Fails with [`Error::Verification`] when the token is malformed, its
+    /// `alg` or `typ` is unexpected, its signature is wrong or a claim fails.
+    ///
+    /// PHP: `verify($token)`.
+    pub fn verify(&self, token: &[u8], now: i64) -> Result<Array, Error> {
+        let segments: Vec<&[u8]> = token.split(|b| *b == b'.').collect();
+        let [encoded_header, encoded_claims, encoded_signature] = segments[..] else {
+            return Err(verification("Token must have three segments"));
+        };
+        let header = decode_segment(encoded_header, "Header")?;
+        let claims = decode_segment(encoded_claims, "Claims")?;
+        let signature =
+            base64url_decode(encoded_signature).ok_or_else(|| verification("Signature is not valid base64url"))?;
+        let get = |a: &Array, k: &str| a.get(&ArrayKey::Str(Str::copy_from(k.as_bytes()))).cloned();
+        if get(&header, Header::Algorithm.as_str())
+            != Some(Value::Str(Str::copy_from(self.check.algorithm().as_bytes())))
+        {
+            return Err(verification("Unexpected token algorithm"));
+        }
+        if let Some(kind) = &self.kind
+            && get(&header, Header::Type.as_str()) != Some(Value::Str(Str::from(kind.clone())))
+        {
+            return Err(verification("Unexpected token type"));
+        }
+        let mut input = encoded_header.to_vec();
+        input.push(b'.');
+        input.extend_from_slice(encoded_claims);
+        if !self.check.verify_signature(&input, &signature)? {
+            return Err(verification("Signature verification failed"));
+        }
+        self.validate(&claims, now)?;
+        Ok(claims)
+    }
+
+    /// `validateClaims()`.
+    fn validate(&self, claims: &Array, now: i64) -> Result<(), Error> {
+        let get =
+            |c: Claim| claims.get(&ArrayKey::Str(Str::copy_from(c.as_str().as_bytes()))).filter(|v| **v != Value::Null);
+        let skewed = sum(now, self.leeway);
+        if let Some(nbf) = get(Claim::NotBefore) {
+            if !is_numeric(nbf) {
+                return Err(verification("Invalid \"nbf\" claim"));
+            }
+            if compare_numbers(skewed, Number::Int(to_long(nbf))).is_lt() {
+                return Err(verification("Token is not yet valid"));
+            }
+        }
+        if let Some(iat) = get(Claim::IssuedAt) {
+            if !is_numeric(iat) {
+                return Err(verification("Invalid \"iat\" claim"));
+            }
+            if compare_numbers(skewed, Number::Int(to_long(iat))).is_lt() {
+                return Err(verification("Token was issued in the future"));
+            }
+        }
+        if !self.allow_expired {
+            let Some(exp) = get(Claim::Expiration) else {
+                return Err(verification("Token is missing the \"exp\" claim"));
+            };
+            if !is_numeric(exp) {
+                return Err(verification("Invalid \"exp\" claim"));
+            }
+            if compare_numbers(Number::Int(now), sum(to_long(exp), self.leeway)).is_ge() {
+                return Err(verification("Token has expired"));
+            }
+        }
+        if let Some(issuer) = &self.issuer
+            && get(Claim::Issuer) != Some(&Value::Str(Str::from(issuer.clone())))
+        {
+            return Err(verification("Unexpected token issuer"));
+        }
+        if let Some(expected) = &self.audience {
+            let aud = get(Claim::Audience).cloned().unwrap_or(Value::Null);
+            let audiences: Vec<Value> = match aud {
+                Value::Array(a) => a.iter().map(|(_, v)| v.clone()).collect(),
+                other => vec![other],
+            };
+            if !expected.iter().any(|e| audiences.iter().any(|a| identical(a, e))) {
+                return Err(verification("Unexpected token audience"));
+            }
+        }
+        Ok(())
+    }
+}
+
+/// `===`.
+fn identical(a: &Value, b: &Value) -> bool {
+    match (a, b) {
+        (Value::Float(x), Value::Float(y)) => x == y,
+        _ => a == b,
+    }
+}
+
+/// `decodeSegment()`: base64url JSON of an object (or `[]`).
+fn decode_segment(segment: &[u8], label: &str) -> Result<Array, Error> {
+    let decoded =
+        base64url_decode(segment).ok_or_else(|| Error::Verification(format!("{label} is not valid base64url")))?;
+    let data = json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
+        .map_err(|_| Error::Verification(format!("{label} is not valid JSON")))?;
+    match data {
+        Value::Array(a) if a.is_empty() || !a.is_list() => Ok(a),
+        _ => Err(Error::Verification(format!("{label} must be a JSON object"))),
+    }
+}

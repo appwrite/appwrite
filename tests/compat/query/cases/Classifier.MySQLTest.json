@@ -1,0 +1,665 @@
+{
+  "source": "packages/query/tests/Classifier/MySQLTest.php",
+  "cases": [
+    {
+      "name": "testSelectQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "!\u0000\u0000\u0000\u0003SELECT * FROM users WHERE id = 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testSelectLowercase",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0015\u0000\u0000\u0000\u0003select id from users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testShowQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u000f\u0000\u0000\u0000\u0003SHOW DATABASES"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testDescribeQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u000f\u0000\u0000\u0000\u0003DESCRIBE users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testDescQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u000b\u0000\u0000\u0000\u0003DESC users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testExplainQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u001c\u0000\u0000\u0000\u0003EXPLAIN SELECT * FROM users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testInsertQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              ")\u0000\u0000\u0000\u0003INSERT INTO users (name) VALUES ('test')"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testUpdateQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              ",\u0000\u0000\u0000\u0003UPDATE users SET name = 'test' WHERE id = 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDeleteQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u001f\u0000\u0000\u0000\u0003DELETE FROM users WHERE id = 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testCreateTable",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "'\u0000\u0000\u0000\u0003CREATE TABLE test (id INT PRIMARY KEY)"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDropTable",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0010\u0000\u0000\u0000\u0003DROP TABLE test"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testAlterTable",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "0\u0000\u0000\u0000\u0003ALTER TABLE users ADD COLUMN email VARCHAR(255)"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testTruncate",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0015\u0000\u0000\u0000\u0003TRUNCATE TABLE users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testBeginTransaction",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0006\u0000\u0000\u0000\u0003BEGIN"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        }
+      ]
+    },
+    {
+      "name": "testStartTransaction",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0012\u0000\u0000\u0000\u0003START TRANSACTION"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        }
+      ]
+    },
+    {
+      "name": "testCommit",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0007\u0000\u0000\u0000\u0003COMMIT"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionEnd"
+        }
+      ]
+    },
+    {
+      "name": "testRollback",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\t\u0000\u0000\u0000\u0003ROLLBACK"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionEnd"
+        }
+      ]
+    },
+    {
+      "name": "testSetCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0013\u0000\u0000\u0000\u0003SET autocommit = 0"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Transaction"
+        }
+      ]
+    },
+    {
+      "name": "testStmtPrepareRoutesToWrite",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "!\u0000\u0000\u0000\u0016SELECT * FROM users WHERE id = ?"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testStmtExecuteRoutesToWrite",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\n\u0000\u0000\u0000\u0017\u0001\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testTooShortPacket",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0000\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testUnknownCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "\u0001\u0000\u0000\u0000\u0001"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    }
+  ]
+}

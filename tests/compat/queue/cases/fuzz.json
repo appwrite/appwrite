@@ -1,0 +1,120 @@
+{
+  "source": "fuzz",
+  "cases": [
+    {
+      "name": "an envelope survives the broker byte for byte (json)",
+      "op": "broker.round_trip",
+      "args": {
+        "codec": "json",
+        "payload": {
+          "url": "https://a.io/?q=<1>&r=2",
+          "uni": "日本語 é ✓",
+          "n": [
+            1,
+            2.5,
+            null,
+            true,
+            {
+              "k": "v"
+            }
+          ],
+          "e": {}
+        }
+      },
+      "expect": {
+        "bytes": "{\"pid\":\"fz0001\",\"queue\":\"fuzz\",\"timestamp\":1700000000,\"payload\":{\"url\":\"https:\\/\\/a.io\\/?q=<1>&r=2\",\"uni\":\"\\u65e5\\u672c\\u8a9e \\u00e9 \\u2713\",\"n\":[1,2.5,null,true,{\"k\":\"v\"}],\"e\":{}}}",
+        "payload": {
+          "$array": [
+            [
+              "url",
+              "https://a.io/?q=<1>&r=2"
+            ],
+            [
+              "uni",
+              "日本語 é ✓"
+            ],
+            [
+              "n",
+              [
+                1,
+                2.5,
+                null,
+                true,
+                {
+                  "$array": [
+                    [
+                      "k",
+                      "v"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            [
+              "e",
+              []
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "an envelope survives the broker byte for byte (igbinary)",
+      "op": "broker.round_trip",
+      "args": {
+        "codec": "igbinary",
+        "payload": {
+          "bin": {
+            "$bytes": "AAEC/w=="
+          },
+          "big": 9007199254740993,
+          "neg": -1.5e-7,
+          "list": [
+            "x",
+            [
+              "y",
+              [
+                "z"
+              ]
+            ]
+          ]
+        }
+      },
+      "expect": {
+        "bytes": {
+          "$bytes": "AAAAAhQEEQNwaWQRBmZ6MDAwMREFcXVldWURBGZ1enoRCXRpbWVzdGFtcAplU/EAEQdwYXlsb2FkFAQRA2JpbhEEAAEC/xEDYmlnIAAgAAAAAAABEQNuZWcMvoQh9fQNg3YRBGxpc3QUAgYAEQF4BgEUAgYAEQF5BgEUAQYAEQF6"
+        },
+        "payload": {
+          "$array": [
+            [
+              "bin",
+              {
+                "$bytes": "AAEC/w=="
+              }
+            ],
+            [
+              "big",
+              9007199254740993
+            ],
+            [
+              "neg",
+              -1.5e-7
+            ],
+            [
+              "list",
+              [
+                "x",
+                [
+                  "y",
+                  [
+                    "z"
+                  ]
+                ]
+              ]
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}

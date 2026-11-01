@@ -1,0 +1,373 @@
+{
+  "source": "packages/nats/tests/WriteFailureSemanticsTest.php",
+  "cases": [
+    {
+      "name": "key-value create propagates a transport failure",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false,
+              "requestTimeout": 0.02
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "BUCKET"
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.create",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "key",
+            "value": "value"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "Request timed out after 0.02s"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "key-value update propagates a transport failure",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false,
+              "requestTimeout": 0.02
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "BUCKET"
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "key",
+            "value": "value",
+            "revision": 7
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "Request timed out after 0.02s"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "object store put propagates a transport failure",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "allowReconnect": false,
+              "requestTimeout": 0.02
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "BUCKET"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "obj.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "obj": {
+              "$ref": "o"
+            },
+            "name": "object",
+            "data": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\TimeoutException",
+              "message": "Request timed out after 0.02s"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a refused CAS publish is a key-value verdict",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "HPUB $KV.B.k"
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "$KV.B.k",
+                      "payload": "{\"error\":{\"code\":400,\"err_code\":10071,\"description\":\"wrong last sequence: 3\"}}"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "B"
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.create",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Key already exists: k"
+            }
+          }
+        },
+        {
+          "op": "kv.update",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v",
+            "revision": 2
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\KeyValueException",
+              "message": "Wrong last revision for key: k"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "another API error keeps its identity",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "rules": [
+              {
+                "when": {
+                  "prefix": "HPUB $KV.B.k"
+                },
+                "do": [
+                  {
+                    "reply": {
+                      "subject": "$KV.B.k",
+                      "payload": "{\"error\":{\"code\":503,\"err_code\":10077,\"description\":\"stream offline\"}}"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "B"
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.create",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "stream offline"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

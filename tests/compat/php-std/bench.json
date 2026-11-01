@@ -1,0 +1,341 @@
+{
+  "lib": "php-std",
+  "environment": {
+    "date": "2026-10-18T14:22:00Z",
+    "commit": "398712d31e",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.97",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "json_encode",
+      "description": "json_encode() a 40-attribute user document",
+      "php": {
+        "ns": 3461.9082208169543,
+        "min": 3109.3971970603316,
+        "max": 5199.5313621603145,
+        "samples": 15,
+        "calls": 5851,
+        "cpu": 3717.4044322907766,
+        "peak": 4472.0,
+        "retained": 0.004284167948498832,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 2466.6832939420324,
+        "min": 2447.0911804950865,
+        "max": 2624.3935812912055,
+        "samples": 15,
+        "calls": 8039,
+        "cpu": 2486.825326533151,
+        "rss": 22695936.0,
+        "allocations": 3.0000912219596136,
+        "bytes": 3584.023294771323,
+        "peak": 2048.0,
+        "retained": 0.013716465563710246
+      },
+      "speedup": 1.403466845265102,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "json_decode",
+      "description": "json_decode() a 40-attribute user document into an array",
+      "php": {
+        "ns": 7531.684981684982,
+        "min": 6784.142124542124,
+        "max": 8558.485714285714,
+        "samples": 15,
+        "calls": 2730,
+        "cpu": 7660.0976800976805,
+        "peak": 8752.0,
+        "retained": 0.009181929181929182,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 3600.71833030853,
+        "min": 3453.1607985480946,
+        "max": 3680.2631578947367,
+        "samples": 15,
+        "calls": 5510,
+        "cpu": 3562.3840290381127,
+        "rss": 22700032.0,
+        "allocations": 44.00013309134906,
+        "bytes": 14139.033986690865,
+        "peak": 12660.0,
+        "retained": 0.02001209921355112
+      },
+      "speedup": 2.0917173438111236,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "unserialize",
+      "description": "unserialize() a 40-attribute user document",
+      "php": {
+        "ns": 1683.5312776891724,
+        "min": 1609.1174906964382,
+        "max": 1762.2460570618466,
+        "samples": 15,
+        "calls": 11286,
+        "cpu": 1674.7651958178274,
+        "peak": 20064.0,
+        "retained": 0.0022210408175320456,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 3607.252365356623,
+        "min": 3598.207787481805,
+        "max": 3649.4950873362445,
+        "samples": 15,
+        "calls": 5496,
+        "cpu": 3611.1424429888402,
+        "rss": 22700032.0,
+        "allocations": 39.0001334303736,
+        "bytes": 9822.034073265406,
+        "peak": 8382.0,
+        "retained": 0.020063076176613296
+      },
+      "speedup": 0.46670737369458587,
+      "bound": null,
+      "compat": "PHP's serialize() format, read only where PHP wrote the value (PHP-shared cache entries, Memcached's serialized values); no Rust hot path decodes it, as Rust's own caches use the native codec"
+    },
+    {
+      "name": "igbinary_unserialize",
+      "description": "igbinary_unserialize() a 40-attribute user document",
+      "php": {
+        "ns": 1627.6860587002097,
+        "min": 1591.453354297694,
+        "max": 1668.9122990915444,
+        "samples": 15,
+        "calls": 11448,
+        "cpu": 1630.008152806895,
+        "peak": 57752.0,
+        "retained": 0.002189610994642441,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 3672.7313153961136,
+        "min": 3600.172832585949,
+        "max": 3865.5175635276532,
+        "samples": 15,
+        "calls": 5352,
+        "cpu": 3690.8819008470355,
+        "rss": 22700032.0,
+        "allocations": 31.0001370204285,
+        "bytes": 17408.034990034877,
+        "peak": 14928.0,
+        "retained": 0.020602889885401095
+      },
+      "speedup": 0.44318135984435864,
+      "bound": null,
+      "compat": "PHP's igbinary format, kept for entries shared with PHP; Rust's own caches use the native codec"
+    },
+    {
+      "name": "preg_match",
+      "description": "preg_match() an email address against a case-insensitive pattern with two groups",
+      "php": {
+        "ns": 91.59005162164483,
+        "min": 90.75175809391132,
+        "max": 130.38321676319882,
+        "samples": 15,
+        "calls": 209602,
+        "cpu": 99.21374796042022,
+        "peak": 128024.0,
+        "retained": 0.00011959173417556449,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 89.70396491004558,
+        "min": 88.30425702299593,
+        "max": 95.81449007634977,
+        "samples": 15,
+        "calls": 219778,
+        "cpu": 90.02566680923478,
+        "rss": 22700032.0,
+        "allocations": 4.000003336700368,
+        "bytes": 301.0008520719393,
+        "peak": 1650.0,
+        "retained": 0.0005017184006891803
+      },
+      "speedup": 1.0210256783352953,
+      "bound": "One pcre2_jit_match() call on the same PCRE2 10.44 JIT code in both runtimes; what surrounds it (the compiled-pattern cache lookup, the shared match data, the three captured strings and the $matches array) is the work PHP does too",
+      "compat": null
+    },
+    {
+      "name": "sprintf",
+      "description": "sprintf() a path with two strings, a padded integer and a float",
+      "php": {
+        "ns": 144.48011743119267,
+        "min": 142.10519633027522,
+        "max": 153.8801247706422,
+        "samples": 15,
+        "calls": 136250,
+        "cpu": 144.4075840978593,
+        "peak": 3008.0,
+        "retained": 0.00018397553516819571,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 97.56693476673307,
+        "min": 95.85239427103774,
+        "max": 106.41949794578053,
+        "samples": 15,
+        "calls": 201293,
+        "cpu": 98.49673196120415,
+        "rss": 22700032.0,
+        "allocations": 2.000003643113935,
+        "bytes": 109.00093031882214,
+        "peak": 1650.0,
+        "retained": 0.0005477918589651238
+      },
+      "speedup": 1.4808307525148916,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "mb_strtolower",
+      "description": "mb_strtolower() a 60-character multilingual name",
+      "php": {
+        "ns": 222.1607648644652,
+        "min": 213.5767992628909,
+        "max": 235.43793154440286,
+        "samples": 15,
+        "calls": 87911,
+        "cpu": 223.09001907231936,
+        "peak": 3008.0,
+        "retained": 0.0002851368619019994,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 145.0122057916553,
+        "min": 143.57223791970856,
+        "max": 151.9738744424205,
+        "samples": 15,
+        "calls": 139442,
+        "cpu": 145.41591533875493,
+        "rss": 22700032.0,
+        "allocations": 1.000005259056334,
+        "bytes": 113.00134297174931,
+        "peak": 1650.0,
+        "retained": 0.0007907708342297634
+      },
+      "speedup": 1.5320142442605986,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "sort",
+      "description": "sort() a copy of 300 mixed ints, floats, numeric and other strings",
+      "php": {
+        "ns": 35842.3842010772,
+        "min": 34981.29802513465,
+        "max": 36845.97486535009,
+        "samples": 15,
+        "calls": 557,
+        "cpu": 35756.672651107125,
+        "peak": 33232.0,
+        "retained": 0.04500299222022741,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 26624.282119205298,
+        "min": 26213.520529801324,
+        "max": 28903.698013245034,
+        "samples": 15,
+        "calls": 755,
+        "cpu": 26951.24344370861,
+        "rss": 22700032.0,
+        "allocations": 73.00097130242825,
+        "bytes": 95089.2480353201,
+        "peak": 61280.0,
+        "retained": 0.14604856512141282
+      },
+      "speedup": 1.3462291317602313,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "filter_email",
+      "description": "filter_var() an email address with FILTER_VALIDATE_EMAIL",
+      "php": {
+        "ns": 1020.5233907663991,
+        "min": 998.0955059052098,
+        "max": 1065.8115445574927,
+        "samples": 15,
+        "calls": 19559,
+        "cpu": 1019.9771631133152,
+        "peak": 3008.0,
+        "retained": 0.0012815924467849413,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 119.75069375470278,
+        "min": 114.56408728367194,
+        "max": 127.8394762979684,
+        "samples": 15,
+        "calls": 166125,
+        "cpu": 120.34386716829697,
+        "rss": 22700032.0,
+        "allocations": 1.0000044143466265,
+        "bytes": 39.00112726360672,
+        "peak": 1650.0,
+        "retained": 0.0006637572109355405
+      },
+      "speedup": 8.522066626660537,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "filter_url",
+      "description": "filter_var() an API URL with a query and a fragment with FILTER_VALIDATE_URL",
+      "php": {
+        "ns": 380.9136286201022,
+        "min": 363.6270490251751,
+        "max": 394.3040507287526,
+        "samples": 15,
+        "calls": 52830,
+        "cpu": 380.0807621931983,
+        "peak": 3008.0,
+        "retained": 0.0004744778850400656,
+        "rss": 107876352.0
+      },
+      "rust": {
+        "ns": 254.32191290040072,
+        "min": 247.86310076696478,
+        "max": 269.1652689684456,
+        "samples": 15,
+        "calls": 75362,
+        "cpu": 255.43591022885096,
+        "rss": 22700032.0,
+        "allocations": 1.0000097308103997,
+        "bytes": 100.0024848951284,
+        "peak": 1650.0,
+        "retained": 0.001463160036446308
+      },
+      "speedup": 1.4977617314842948,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

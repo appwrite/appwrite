@@ -1,0 +1,509 @@
+{
+  "source": "packages/abuse/tests/AdapterTest.php",
+  "cases": [
+    {
+      "name": "withParams returns a new instance",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "ip:{ip}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "params": {
+              "{ip}": "127.0.0.1"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": "ip:{ip}"
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "c"
+            }
+          },
+          "expect": "ip:127.0.0.1"
+        }
+      ]
+    },
+    {
+      "name": "withParam merges into existing params",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "{ip}:{url}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{ip}": "127.0.0.1"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "p"
+            },
+            "name": "{url}",
+            "value": "/v1/account"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": "127.0.0.1:/v1/account"
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            },
+            "name": "{url}",
+            "value": "/v1/health"
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "h"
+            }
+          },
+          "expect": "127.0.0.1:/v1/health"
+        }
+      ]
+    },
+    {
+      "name": "longest placeholder wins",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "{param-id}|{param-idx}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{param-id}": "a",
+              "{param-idx}": "b"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": "a|b"
+        }
+      ]
+    },
+    {
+      "name": "values are not substituted again",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "{a}|{b}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{a}": "{b}",
+              "{b}": "x"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": "{b}|x"
+        }
+      ]
+    },
+    {
+      "name": "placeholder without param stays literal",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "{ip}:{url}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_param",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "name": "{ip}",
+            "value": "127.0.0.1"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "a"
+            }
+          },
+          "expect": "127.0.0.1:{url}"
+        }
+      ]
+    },
+    {
+      "name": "a param set again keeps its place",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "{a}{b}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{a}": "1",
+              "{b}": "2"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "p"
+            },
+            "params": {
+              "{a}": "3"
+            }
+          },
+          "bind": "q",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "q"
+            }
+          },
+          "expect": "32"
+        }
+      ]
+    },
+    {
+      "name": "integer placeholders are renumbered from 0 (quirk)",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "7|0|1|{x}",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "7": "seven"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "p"
+            }
+          },
+          "expect": "7|seven|1|{x}"
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "p"
+            },
+            "params": {
+              "7": "again",
+              "{x}": "x"
+            }
+          },
+          "bind": "q",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "q"
+            }
+          },
+          "expect": "7|seven|again|x"
+        }
+      ]
+    },
+    {
+      "name": "empty placeholder is ignored",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "a{}b",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "": "x",
+              "{}": "y"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "p"
+            }
+          },
+          "expect": "ayb"
+        }
+      ]
+    },
+    {
+      "name": "multibyte keys and values",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "ключ:{ip}:🔑",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.with_params",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            },
+            "params": {
+              "{ip}": "ünïcode/🌍"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "p"
+            }
+          },
+          "expect": "ключ:ünïcode/🌍:🔑"
+        }
+      ]
+    },
+    {
+      "name": "key without params",
+      "steps": [
+        {
+          "op": "limit.new",
+          "args": {
+            "algo": "time_limit",
+            "store": "none",
+            "key": "",
+            "limit": 1,
+            "seconds": 60
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "limit.key",
+          "args": {
+            "handle": {
+              "$ref": "b"
+            }
+          },
+          "expect": ""
+        }
+      ]
+    }
+  ]
+}

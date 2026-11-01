@@ -1,0 +1,837 @@
+{
+  "source": "packages/query/tests/Builder/Feature/HintsTest.php",
+  "cases": [
+    {
+      "name": "testSingleHintEmitsOptimizerComment",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "NO_INDEX_MERGE(users)"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`",
+        [],
+        [],
+        "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`",
+        "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`"
+      ]
+    },
+    {
+      "name": "testMultipleHintsAreSpaceSeparatedInsideSingleComment",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "NO_INDEX_MERGE(users)"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "BKA(users)"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT /*+ NO_INDEX_MERGE(users) BKA(users) */ * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT /*+ NO_INDEX_MERGE(users) BKA(users) */ * FROM `users`",
+        [],
+        [],
+        "SELECT /*+ NO_INDEX_MERGE(users) BKA(users) */ * FROM `users`",
+        "SELECT /*+ NO_INDEX_MERGE(users) BKA(users) */ * FROM `users`"
+      ]
+    },
+    {
+      "name": "testHintAcceptsBacktickedIdentifier",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "INDEX(`users` `idx_users_age`)"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`",
+        [],
+        [],
+        "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`",
+        "SELECT /*+ INDEX(`users` `idx_users_age`) */ * FROM `users`"
+      ]
+    },
+    {
+      "name": "testHintAcceptsSetVarStyle",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SET_VAR(sort_buffer_size=16M)"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT /*+ SET_VAR(sort_buffer_size=16M) */ * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT /*+ SET_VAR(sort_buffer_size=16M) */ * FROM `users`",
+        [],
+        [],
+        "SELECT /*+ SET_VAR(sort_buffer_size=16M) */ * FROM `users`",
+        "SELECT /*+ SET_VAR(sort_buffer_size=16M) */ * FROM `users`"
+      ]
+    },
+    {
+      "name": "testHintRejectsSemicolonInjection",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "DROP TABLE users; --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid hint: DROP TABLE users; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testHintRejectsBlockCommentCloser",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "foo */ UNION SELECT"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid hint: foo */ UNION SELECT"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testHintRejectsEmptyStringOnMySQL",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              ""
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid hint: "
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testHintIsInheritedByMariaDB",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "NO_INDEX_MERGE(users)"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`",
+        [],
+        [],
+        "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`",
+        "SELECT /*+ NO_INDEX_MERGE(users) */ * FROM `users`"
+      ]
+    },
+    {
+      "name": "testClickHouseHintEmitsSettingsClause",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "max_threads=2"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `events` SETTINGS max_threads=2",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `events` SETTINGS max_threads=2",
+        [],
+        [],
+        "SELECT * FROM `events` SETTINGS max_threads=2",
+        "SELECT * FROM `events` SETTINGS max_threads=2"
+      ]
+    },
+    {
+      "name": "testClickHouseHintRejectsBacktickSyntax",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "INDEX(`users` `idx_users_age`)"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid hint: INDEX(`users` `idx_users_age`)"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testChainableReturnsSameInstance",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "hint",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "BKA(t)"
+            ]
+          },
+          {
+            "same": [
+              {
+                "$o": 1
+              },
+              {
+                "$o": 1
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        true
+      ]
+    }
+  ]
+}

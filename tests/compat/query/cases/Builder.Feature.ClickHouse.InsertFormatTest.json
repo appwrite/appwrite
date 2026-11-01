@@ -1,0 +1,1122 @@
+{
+  "source": "packages/query/tests/Builder/Feature/ClickHouse/InsertFormatTest.php",
+  "cases": [
+    {
+      "name": "testInsertFormatWithExplicitColumns",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id",
+                "event",
+                "time"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`, `time`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event",
+              "time"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`, `event`, `time`) FORMAT JSONEachRow",
+        [],
+        [
+          "id",
+          "event",
+          "time"
+        ],
+        "JSONEachRow"
+      ]
+    },
+    {
+      "name": "testInsertFormatDerivesColumnsFromSet",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "id": null,
+                "event": null,
+                "time": null
+              }
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow"
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`, `time`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event",
+              "time"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`, `event`, `time`) FORMAT JSONEachRow",
+        [],
+        [
+          "id",
+          "event",
+          "time"
+        ],
+        "JSONEachRow"
+      ]
+    },
+    {
+      "name": "testInsertFormatExplicitColumnsTakePrecedenceOverSet",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "a": 1,
+                "b": 2
+              }
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "x",
+                "y"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`x`, `y`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "x",
+              "y"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` (`x`, `y`) FORMAT JSONEachRow",
+        [
+          "x",
+          "y"
+        ]
+      ]
+    },
+    {
+      "name": "testInsertFormatSupportsOtherClickHouseFormats",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "TSV",
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `name`) FORMAT TSV",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "name"
+            ],
+            "format": "TSV",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`, `name`) FORMAT TSV",
+        "TSV"
+      ]
+    },
+    {
+      "name": "testInsertFormatAcceptsUnderscoreInFormatName",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "My_Format",
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`) FORMAT My_Format",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id"
+            ],
+            "format": "My_Format",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`) FORMAT My_Format",
+        "My_Format"
+      ]
+    },
+    {
+      "name": "testInsertFormatRejectsInvalidFormatName",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Bad Format!",
+              [
+                "id"
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid ClickHouse INSERT format: Bad Format!"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testInsertFormatRejectsEmptyColumnName",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id",
+                ""
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Column names for FORMAT INSERT must be non-empty strings."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testInsertFormatWithoutColumnsEmitsBareEnvelope",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow"
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "body",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` FORMAT JSONEachRow",
+        [],
+        null
+      ]
+    },
+    {
+      "name": "testInsertWithoutFormatStillEmitsValues",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "id": 1,
+                "event": "login"
+              }
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) VALUES (?, ?)",
+            "bindings": [
+              1,
+              "login"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        false,
+        "INSERT INTO `events` (`id`, `event`) VALUES (?, ?)",
+        [
+          1,
+          "login"
+        ]
+      ]
+    },
+    {
+      "name": "testFormattedInsertStatementWithExecutorPreservesFormatMetadata",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id",
+                "event"
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "call": "withExecutor",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              {
+                "$fn": 1
+              }
+            ]
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "columns",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "format",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        {
+          "$value": "Builder\\ClickHouse\\FormattedInsertStatement",
+          "id": 3,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null,
+            "columns": [
+              "id",
+              "event"
+            ],
+            "format": "JSONEachRow",
+            "body": null
+          }
+        },
+        true,
+        "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+        "INSERT INTO `events` (`id`, `event`) FORMAT JSONEachRow",
+        [],
+        [],
+        [
+          "id",
+          "event"
+        ],
+        [
+          "id",
+          "event"
+        ],
+        "JSONEachRow",
+        "JSONEachRow"
+      ]
+    },
+    {
+      "name": "testResetClearsInsertFormatState",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "insertFormat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "JSONEachRow",
+              [
+                "id"
+              ]
+            ]
+          },
+          {
+            "call": "reset",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "id": 1
+              }
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "is": "Builder\\ClickHouse\\FormattedInsertStatement",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`) VALUES (?)",
+            "bindings": [
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        false,
+        "INSERT INTO `events` (`id`) VALUES (?)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,688 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "clients query the other runtime's server",
+      "interop": true,
+      "requires": [
+        "driver-process"
+      ],
+      "steps": [
+        {
+          "op": "peer.serve",
+          "args": {},
+          "bind": "peer",
+          "mask": {
+            "paths": [
+              "/runtime"
+            ],
+            "reason": "names the runtime serving, which the two directions swap"
+          },
+          "side": "a",
+          "expect": {
+            "runtime": "<masked>"
+          }
+        },
+        {
+          "op": "peer.run",
+          "args": {
+            "peer": {
+              "$ref": "peer"
+            },
+            "steps": [
+              {
+                "kind": "query",
+                "transport": "udp",
+                "name": "dev.appwrite.io",
+                "type": 1,
+                "id": 31
+              },
+              {
+                "kind": "query",
+                "transport": "udp",
+                "name": "dev.appwrite.io",
+                "type": 16,
+                "id": 32
+              },
+              {
+                "kind": "query",
+                "transport": "tcp",
+                "name": "dev.appwrite.io",
+                "type": 257,
+                "id": 33
+              },
+              {
+                "kind": "query",
+                "transport": "udp",
+                "name": "dev.appwrite.io",
+                "type": 15,
+                "id": 34
+              },
+              {
+                "kind": "query",
+                "transport": "tcp",
+                "name": "dev.appwrite.io",
+                "type": 28,
+                "id": 35
+              },
+              {
+                "kind": "query",
+                "transport": "udp",
+                "name": "alias.appwrite.io",
+                "type": 1,
+                "id": 36
+              },
+              {
+                "kind": "query",
+                "transport": "udp",
+                "name": "delegated.appwrite.io",
+                "type": 2,
+                "id": 37
+              },
+              {
+                "kind": "query",
+                "transport": "tcp",
+                "name": "appwrite.io",
+                "type": 6,
+                "id": 38
+              },
+              {
+                "kind": "query",
+                "transport": "udp",
+                "name": "missing.appwrite.io",
+                "type": 1,
+                "id": 39
+              },
+              {
+                "kind": "query",
+                "transport": "tcp",
+                "name": "other.org",
+                "type": 16,
+                "id": 40
+              },
+              {
+                "kind": "query",
+                "transport": "udp",
+                "name": "localhost",
+                "type": 28,
+                "id": 41
+              },
+              {
+                "kind": "query",
+                "transport": "tcp",
+                "name": "LOCALHOST",
+                "type": 1,
+                "id": 42
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u0000+\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u0000,!\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000!\u0000-\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001\u0000!\u0000.\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0010\u0000\u0001",
+                "frames": 2
+              },
+              {
+                "kind": "raw",
+                "transport": "proxy",
+                "data": "PROXY TCP4 203.0.113.9 10.0.0.1 42424 53\r\n\u0000!\u0000/\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 1
+              },
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "\u00000\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "contentType": "application/dns-message"
+              },
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns=ADEBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAEAAB"
+              },
+              {
+                "kind": "proxy",
+                "name": "dev.appwrite.io",
+                "type": 257,
+                "id": 50
+              }
+            ]
+          },
+          "side": "b",
+          "expect": [
+            {
+              "header": {
+                "id": 31,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 10,
+                  "rdata": "180.12.3.24",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 32,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "awesome-secret-key",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 33,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 257,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 257,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "0 issue \"letsencrypt.org\"",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 34,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 15,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 15,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "10 mail.appwrite.io",
+                  "priority": 0,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 35,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 28,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 28,
+                  "class": 1,
+                  "ttl": 20,
+                  "rdata": "2001:db8::ff00:42:8329",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 36,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "alias.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "alias.appwrite.io",
+                  "type": 5,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "cloud.appwrite.io",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 37,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 2,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "delegated.appwrite.io",
+                  "type": 2,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "delegated.appwrite.io",
+                  "type": 2,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.test.io",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "delegated.appwrite.io",
+                  "type": 2,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns2.test.io",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 38,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 39,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "missing.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 40,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "other.org",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 41,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "localhost",
+                  "type": 28,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "localhost",
+                  "type": 28,
+                  "class": 1,
+                  "ttl": 86400,
+                  "rdata": "::1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 42,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "localhost",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "localhost",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 86400,
+                  "rdata": "127.0.0.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "$bytes": "ACuBAQAAAAAAAAAA"
+            },
+            {
+              "$bytes": "ACyhBAAAAAAAAAAA"
+            },
+            {
+              "data": {
+                "$bytes": "AEAALYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMYAE8ALoUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAAQAAEDZGV2CGFwcHdyaXRlAmlvAAAQAAEAAAAeABMSYXdlc29tZS1zZWNyZXQta2V5"
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "AEAAL4UAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            },
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "ADCFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAAQABA2RldghhcHB3cml0ZQJpbwAAAQABAAAACgAEtAwDGA=="
+              }
+            },
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "ADGFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAEAABA2RldghhcHB3cml0ZQJpbwAAEAABAAAAHgATEmF3ZXNvbWUtc2VjcmV0LWtleQ=="
+              }
+            },
+            {
+              "header": {
+                "id": 50,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 257,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 257,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "0 issue \"letsencrypt.org\"",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

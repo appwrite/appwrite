@@ -1,0 +1,1142 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/DocumentTrimTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DocumentTrimTest::testGetArrayCopyConvertsNestedDocumentsRecursively",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "name": "Child",
+                "secret": "nested"
+              }
+            },
+            "as": "o1034"
+          },
+          "bind": "s2294",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "secret": "first"
+              }
+            },
+            "as": "o1035"
+          },
+          "bind": "s2295",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "secret": "first"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "name": "Parent",
+                "secret": "hidden",
+                "child": {
+                  "$obj": "o1034"
+                },
+                "children": [
+                  {
+                    "$obj": "o1035"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o1036"
+          },
+          "bind": "s2296",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "name": "Parent",
+              "secret": "hidden",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "name": "Child",
+                  "secret": "nested"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "secret": "first"
+                  }
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1036"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "parent",
+            "name": "Parent",
+            "secret": "hidden",
+            "child": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            },
+            "children": [
+              {
+                "$id": "first",
+                "secret": "first"
+              },
+              "plain"
+            ],
+            "tags": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentTrimTest::testGetArrayCopyConvertsDocumentsNestedInNestedDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "grandchild"
+              }
+            },
+            "as": "o1037"
+          },
+          "bind": "s2298",
+          "expect": {
+            "$document": {
+              "$id": "grandchild"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "grandchildren": [
+                  {
+                    "$obj": "o1037"
+                  }
+                ]
+              }
+            },
+            "as": "o1038"
+          },
+          "bind": "s2299",
+          "expect": {
+            "$document": {
+              "grandchildren": [
+                {
+                  "$document": {
+                    "$id": "grandchild"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "child": {
+                  "$obj": "o1038"
+                }
+              }
+            },
+            "as": "o1039"
+          },
+          "bind": "s2300",
+          "expect": {
+            "$document": {
+              "child": {
+                "$document": {
+                  "grandchildren": [
+                    {
+                      "$document": {
+                        "$id": "grandchild"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1039"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "child": {
+              "grandchildren": [
+                {
+                  "$id": "grandchild"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentTrimTest::testOnlyKeepsTheGivenTopLevelKeysInDocumentOrder",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "name": "Child",
+                "secret": "nested"
+              }
+            },
+            "as": "o1040"
+          },
+          "bind": "s2302",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "secret": "first"
+              }
+            },
+            "as": "o1041"
+          },
+          "bind": "s2303",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "secret": "first"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "name": "Parent",
+                "secret": "hidden",
+                "child": {
+                  "$obj": "o1040"
+                },
+                "children": [
+                  {
+                    "$obj": "o1041"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o1042"
+          },
+          "bind": "s2304",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "name": "Parent",
+              "secret": "hidden",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "name": "Child",
+                  "secret": "nested"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "secret": "first"
+                  }
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1042"
+            },
+            "method": "only",
+            "args": {
+              "keys": [
+                "child",
+                "name"
+              ]
+            }
+          },
+          "expect": {
+            "name": "Parent",
+            "child": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentTrimTest::testOnlyIgnoresKeysTheDocumentLacks",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "name": "Child",
+                "secret": "nested"
+              }
+            },
+            "as": "o1043"
+          },
+          "bind": "s2306",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "secret": "first"
+              }
+            },
+            "as": "o1044"
+          },
+          "bind": "s2307",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "secret": "first"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "name": "Parent",
+                "secret": "hidden",
+                "child": {
+                  "$obj": "o1043"
+                },
+                "children": [
+                  {
+                    "$obj": "o1044"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o1045"
+          },
+          "bind": "s2308",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "name": "Parent",
+              "secret": "hidden",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "name": "Child",
+                  "secret": "nested"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "secret": "first"
+                  }
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1045"
+            },
+            "method": "only",
+            "args": {
+              "keys": [
+                "name",
+                "missing"
+              ]
+            }
+          },
+          "expect": {
+            "name": "Parent"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentTrimTest::testOnlyWithNoKeysKeepsNothing",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "name": "Child",
+                "secret": "nested"
+              }
+            },
+            "as": "o1046"
+          },
+          "bind": "s2310",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "secret": "first"
+              }
+            },
+            "as": "o1047"
+          },
+          "bind": "s2311",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "secret": "first"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "name": "Parent",
+                "secret": "hidden",
+                "child": {
+                  "$obj": "o1046"
+                },
+                "children": [
+                  {
+                    "$obj": "o1047"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o1048"
+          },
+          "bind": "s2312",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "name": "Parent",
+              "secret": "hidden",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "name": "Child",
+                  "secret": "nested"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "secret": "first"
+                  }
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1048"
+            },
+            "method": "only",
+            "args": {
+              "keys": []
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "DocumentTrimTest::testExceptDropsTheGivenTopLevelKeysOnly",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "name": "Child",
+                "secret": "nested"
+              }
+            },
+            "as": "o1049"
+          },
+          "bind": "s2314",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "secret": "first"
+              }
+            },
+            "as": "o1050"
+          },
+          "bind": "s2315",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "secret": "first"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "name": "Parent",
+                "secret": "hidden",
+                "child": {
+                  "$obj": "o1049"
+                },
+                "children": [
+                  {
+                    "$obj": "o1050"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o1051"
+          },
+          "bind": "s2316",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "name": "Parent",
+              "secret": "hidden",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "name": "Child",
+                  "secret": "nested"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "secret": "first"
+                  }
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1051"
+            },
+            "method": "except",
+            "args": {
+              "keys": [
+                "secret",
+                "tags"
+              ]
+            }
+          },
+          "expect": {
+            "$id": "parent",
+            "name": "Parent",
+            "child": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            },
+            "children": [
+              {
+                "$id": "first",
+                "secret": "first"
+              },
+              "plain"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentTrimTest::testExceptWithNoKeysEqualsGetArrayCopy",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "name": "Child",
+                "secret": "nested"
+              }
+            },
+            "as": "o1052"
+          },
+          "bind": "s2318",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "secret": "first"
+              }
+            },
+            "as": "o1053"
+          },
+          "bind": "s2319",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "secret": "first"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "name": "Parent",
+                "secret": "hidden",
+                "child": {
+                  "$obj": "o1052"
+                },
+                "children": [
+                  {
+                    "$obj": "o1053"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o1054"
+          },
+          "bind": "s2320",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "name": "Parent",
+              "secret": "hidden",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "name": "Child",
+                  "secret": "nested"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "secret": "first"
+                  }
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1054"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "parent",
+            "name": "Parent",
+            "secret": "hidden",
+            "child": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            },
+            "children": [
+              {
+                "$id": "first",
+                "secret": "first"
+              },
+              "plain"
+            ],
+            "tags": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1054"
+            },
+            "method": "except",
+            "args": {
+              "keys": []
+            }
+          },
+          "expect": {
+            "$id": "parent",
+            "name": "Parent",
+            "secret": "hidden",
+            "child": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            },
+            "children": [
+              {
+                "$id": "first",
+                "secret": "first"
+              },
+              "plain"
+            ],
+            "tags": [
+              "a",
+              "b"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentTrimTest::testTrimmingLeavesTheDocumentUntouched",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "child",
+                "name": "Child",
+                "secret": "nested"
+              }
+            },
+            "as": "o1055"
+          },
+          "bind": "s2323",
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "secret": "first"
+              }
+            },
+            "as": "o1056"
+          },
+          "bind": "s2324",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "secret": "first"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "parent",
+                "name": "Parent",
+                "secret": "hidden",
+                "child": {
+                  "$obj": "o1055"
+                },
+                "children": [
+                  {
+                    "$obj": "o1056"
+                  },
+                  "plain"
+                ],
+                "tags": [
+                  "a",
+                  "b"
+                ]
+              }
+            },
+            "as": "o1057"
+          },
+          "bind": "s2325",
+          "expect": {
+            "$document": {
+              "$id": "parent",
+              "name": "Parent",
+              "secret": "hidden",
+              "child": {
+                "$document": {
+                  "$id": "child",
+                  "name": "Child",
+                  "secret": "nested"
+                }
+              },
+              "children": [
+                {
+                  "$document": {
+                    "$id": "first",
+                    "secret": "first"
+                  }
+                },
+                "plain"
+              ],
+              "tags": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "only",
+            "args": {
+              "keys": [
+                "child"
+              ]
+            }
+          },
+          "expect": {
+            "child": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "except",
+            "args": {
+              "keys": [
+                "name"
+              ]
+            }
+          },
+          "expect": {
+            "$id": "parent",
+            "secret": "hidden",
+            "child": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            },
+            "children": [
+              {
+                "$id": "first",
+                "secret": "first"
+              },
+              "plain"
+            ],
+            "tags": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "Parent"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "getDocument",
+            "args": {
+              "key": "child"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "child",
+              "name": "Child",
+              "secret": "nested"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1055"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "name"
+            }
+          },
+          "expect": "Child"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1057"
+            },
+            "method": "getDocuments",
+            "args": {
+              "key": "children"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "secret": "first"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1056"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "secret"
+            }
+          },
+          "expect": "first"
+        }
+      ]
+    }
+  ]
+}

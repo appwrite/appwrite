@@ -1,0 +1,22 @@
+[package]
+name = "utopia-lock"
+description = "Locks: Redis leases across hosts, in-process mutexes and semaphores, and file locks across processes."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository = "https://github.com/utopia-rs/lock"
+publish.workspace = true
+
+[dependencies]
+getrandom.workspace = true
+php-std.workspace = true
+redis.workspace = true
+rustix.workspace = true
+thiserror.workspace = true
+utopia-async.workspace = true
+
+
+[package.metadata.utopia]
+category = "platform"
+php-sync = "77472c1b8a93038318b37b73474f3a876a9a6abd"

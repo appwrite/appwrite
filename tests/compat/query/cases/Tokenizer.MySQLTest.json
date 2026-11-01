@@ -1,0 +1,3373 @@
+{
+  "source": "packages/query/tests/Tokenizer/MySQLTest.php",
+  "cases": [
+    {
+      "name": "testHashComment",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT * # comment\nFROM users"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Star"
+              },
+              "value": "*",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 8
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LineComment"
+              },
+              "value": "--  comment",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": "\n",
+              "position": 20
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 21
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 25
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 26
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 31
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Star"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::LineComment"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "--  comment"
+      ]
+    },
+    {
+      "name": "testHashCommentFilteredOut",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT * # this is a hash comment\nFROM users"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 15
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 16
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Star"
+              },
+              "value": "*",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 8
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LineComment"
+              },
+              "value": "--  this is a hash comment",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": "\n",
+              "position": 35
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 36
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 40
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 41
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 46
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Star"
+              },
+              "value": "*",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 36
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "users",
+              "position": 41
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 46
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Star"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        }
+      ]
+    },
+    {
+      "name": "testBacktickQuoting",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT `name` FROM `users`"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 13
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`name`",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 13
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`users`",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`name`",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 14
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`users`",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "`name`",
+        "`users`"
+      ]
+    },
+    {
+      "name": "testHashCommentInsideSingleQuotedString",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT '#not-a-comment' FROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'#not-a-comment'",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 30
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'#not-a-comment'",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 29
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 30
+            }
+          }
+        ],
+        "SELECT",
+        "'#not-a-comment'",
+        "FROM",
+        "t",
+        "",
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::String"
+        },
+        "'#not-a-comment'"
+      ]
+    },
+    {
+      "name": "testHashCommentInsideBacktickIdentifier",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT `col#name` FROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`col#name`",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 24
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`col#name`",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 24
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        "`col#name`"
+      ]
+    },
+    {
+      "name": "testHashCommentInsideDoubleQuotedIdentifier",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT \"col#name\" FROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"col#name\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 24
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"col#name\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 24
+            }
+          }
+        ],
+        "SELECT",
+        "\"col#name\""
+      ]
+    },
+    {
+      "name": "testHashCommentWithEscapedQuote",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT 'it''s a #test' FROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'it''s a #test'",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 27
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 29
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'it''s a #test'",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 29
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::String"
+        },
+        "'it''s a #test'"
+      ]
+    },
+    {
+      "name": "testHashCommentWithBackslashEscape",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT 'it\\'s a #test' FROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'it\\'s a #test'",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 22
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 27
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 29
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::String"
+              },
+              "value": "'it\\'s a #test'",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 23
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 28
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 29
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::String"
+        },
+        "'it\\'s a #test'"
+      ]
+    },
+    {
+      "name": "testMultipleHashComments",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT 1 #first\nSELECT 2 #second\nSELECT 3"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 15
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 16
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 17
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 12
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 8
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LineComment"
+              },
+              "value": "-- first",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": "\n",
+              "position": 17
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 18
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "2",
+              "position": 25
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 26
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LineComment"
+              },
+              "value": "-- second",
+              "position": 27
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": "\n",
+              "position": 36
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 37
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 43
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "3",
+              "position": 44
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 17,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 45
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Integer"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::LineComment"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Integer"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::LineComment"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Integer"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "-- first",
+        "-- second"
+      ]
+    },
+    {
+      "name": "testHashCommentAtEndOfInput",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT 1 #comment"
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 8
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LineComment"
+              },
+              "value": "-- comment",
+              "position": 9
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 19
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Integer"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Whitespace"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::LineComment"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        },
+        "-- comment",
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Integer"
+              },
+              "value": "1",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 19
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Integer"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        }
+      ]
+    },
+    {
+      "name": "testHashCommentInsideEscapedBacktickIdentifier",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT `col``#name` FROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 11
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`col``#name`",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 20
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 25
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "`col``#name`",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 20
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 25
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        "`col``#name`"
+      ]
+    },
+    {
+      "name": "testHashCommentInsideEscapedDoubleQuotedIdentifier",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT \"col\"\"#name\" FROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                }
+              ]
+            ]
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 10
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$o": 11
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"col\"\"#name\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 19
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 20
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 24
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 25
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"col\"\"#name\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 20
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 25
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 26
+            }
+          }
+        ],
+        "SELECT",
+        "\"col\"\"#name\""
+      ]
+    },
+    {
+      "name": "testHashInsideDoubleQuotedStringWithBackslashEscapeIsNotRewritten",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testHashInsidePlainDoubleQuotedIdentifierIsNotRewritten",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testHashAfterDoubleQuotedIdentifierIsRewritten",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          },
+          {
+            "call": "tokenize",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT \"a\" # trailing comment\nFROM t"
+            ]
+          },
+          {
+            "static": "filter",
+            "class": "Tokenizer\\Tokenizer",
+            "args": [
+              [
+                {
+                  "$o": 2
+                },
+                {
+                  "$o": 3
+                },
+                {
+                  "$o": 4
+                },
+                {
+                  "$o": 5
+                },
+                {
+                  "$o": 6
+                },
+                {
+                  "$o": 7
+                },
+                {
+                  "$o": 8
+                },
+                {
+                  "$o": 9
+                },
+                {
+                  "$o": 10
+                },
+                {
+                  "$o": 11
+                }
+              ]
+            ]
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 12
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 13
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 14
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 15
+            }
+          },
+          {
+            "get": "type",
+            "on": {
+              "$o": 16
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 2,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 3,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 6
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 4,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"a\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 5,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 10
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 6,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::LineComment"
+              },
+              "value": "--  trailing comment",
+              "position": 11
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 7,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": "\n",
+              "position": 31
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 8,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 32
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 9,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Whitespace"
+              },
+              "value": " ",
+              "position": 36
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 10,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 37
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 11,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 38
+            }
+          }
+        ],
+        [
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 12,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "SELECT",
+              "position": 0
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 13,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+              },
+              "value": "\"a\"",
+              "position": 7
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 14,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Keyword"
+              },
+              "value": "FROM",
+              "position": 32
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 15,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Identifier"
+              },
+              "value": "t",
+              "position": 37
+            }
+          },
+          {
+            "$value": "Tokenizer\\Token",
+            "id": 16,
+            "props": {
+              "type": {
+                "$enum": "Tokenizer\\TokenType::Eof"
+              },
+              "value": "",
+              "position": 38
+            }
+          }
+        ],
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Keyword"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Identifier"
+        },
+        {
+          "$enum": "Tokenizer\\TokenType::Eof"
+        }
+      ]
+    },
+    {
+      "name": "testHashReplacementEmitsTrailingSpaceForReTokenization",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testHashInsideSingleQuotedStringIsNotRewritten",
+      "op": "tokenizer",
+      "args": {
+        "program": [
+          {
+            "new": "Tokenizer\\MySQL",
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Tokenizer\\MySQL",
+          "id": 1
+        }
+      ]
+    }
+  ]
+}
