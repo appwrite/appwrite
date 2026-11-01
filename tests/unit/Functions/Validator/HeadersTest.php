@@ -131,6 +131,26 @@ final class HeadersTest extends TestCase
         ];
         $this->assertTrue($this->object->isValid($headers));
 
+        $headers = [
+            'content-type' => "text/plain\r\nx-appwrite-user-id: victim",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'X-Header' => "value\nx-appwrite-key: forged",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'X-Header' => "value\x00",
+        ];
+        $this->assertFalse($this->object->isValid($headers));
+
+        $headers = [
+            'X-Header' => "value\twith tab",
+        ];
+        $this->assertTrue($this->object->isValid($headers));
+
         $headers = 123;
         $this->assertFalse($this->object->isValid($headers));
 

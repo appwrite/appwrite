@@ -7,10 +7,8 @@ import { useT } from '@/lib/i18n/translate'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 
 interface WizardLayoutProps {
-  /** Wizard title displayed in the header */
+  /** Wizard title displayed in the header. Title only, never a subtitle. */
   title: string | ReactNode
-  /** Optional description displayed below the title */
-  description?: string | ReactNode
   /** Optional content to render at the bottom of the fixed header */
   headerBottom?: ReactNode
   /** Optional content rendered above the main content/sidebar grid (inside the scroll area) */
@@ -80,13 +78,13 @@ interface WizardLayoutProps {
  * WizardLayout Component
  *
  * A reusable layout for multi-step wizards with consistent header, content, sidebar, and footer structure.
+ * The header is title-only. Do not add a description or subtitle.
  * Automatically handles browser history navigation with fallback support, and ESC key to close.
  *
  * @example
  * ```tsx
  * <WizardLayout
  *   title="Change Plan"
- *   description="Upgrade or downgrade your organization's billing plan"
  *   fallbackPath="/organizations/$orgId/settings/billing"
  *   sidebar={<EstimatedTotalBox />}
  *   footerAlign="right"
@@ -104,7 +102,6 @@ interface WizardLayoutProps {
  */
 export function WizardLayout({
   title,
-  description,
   headerBottom,
   contentTop,
   headerActions,
@@ -238,7 +235,7 @@ export function WizardLayout({
     return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [handleClose])
   const containerClasses = fullscreen
-    ? 'fixed inset-0 z-[9998] flex h-[100dvh] max-h-[100dvh] w-screen flex-col overflow-hidden bg-background'
+    ? 'pointer-events-auto fixed inset-0 z-[9998] flex h-[100dvh] max-h-[100dvh] w-screen flex-col overflow-hidden bg-background'
     : 'flex h-full flex-col'
 
   const headerClasses = fullscreen
@@ -298,17 +295,6 @@ export function WizardLayout({
                   >
                     {typeof title === 'string' ? t(title) : title}
                   </h1>
-                  {description && (
-                    <div className="mt-0.5">
-                      {typeof description === 'string' ? (
-                        <p className="text-[12px] text-muted-foreground truncate">
-                          {t(description)}
-                        </p>
-                      ) : (
-                        description
-                      )}
-                    </div>
-                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">

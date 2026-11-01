@@ -167,6 +167,7 @@ class Update extends Action
         $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
             $claimed = null; // A retried attempt starts over
             // Lock the user first, as an address change does, so a voided invite cannot slip through
+            /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $targetUser->getId(), forUpdate: true));
 
             // Re-read under a lock, a concurrent accept of the same invite must not be counted twice
@@ -193,14 +194,16 @@ class Update extends Action
                 default => null,
             };
 
-            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in
-            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false)) {
+            // Accepting while signed out proves an unverified email or phone, so whoever registered it keeps no other way in.
+            // MFA in force is left alone: the address alone must not discard a second factor
+            $guarded = !$hasSession && $user->getMinimumFactors() > 1;
+            if (!$hasSession && $verification !== null && !$user->getAttribute($verification, false) && !$guarded) {
                 $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
                 $claimed = $user;
             }
 
-            if ($verification !== null) {
+            if ($verification !== null && !$guarded) {
                 $targetUser->setAttribute($verification, true);
                 $authorization->skip(fn () => $dbForProject->updateDocument('users', $targetUser->getId(), new Document([$verification => true])));
             }

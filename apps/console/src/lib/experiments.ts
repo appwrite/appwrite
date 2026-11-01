@@ -10,7 +10,7 @@ import {
 export const QUALITY_ACCOUNT_LABEL = 'quality'
 
 export type Experiment = {
-  flag: keyof ConsoleProfileFeatures
+  flag: 'analytics' | 'projectEnvironments' | 'projectTransfers'
   name: string
   description: string
   /** Day the experiment reached the popover, as `YYYY-MM-DD`. */
@@ -25,22 +25,19 @@ export const EXPERIMENTS: readonly Experiment[] = [
   {
     flag: 'analytics',
     name: 'Appwrite Analytics',
-    description:
-      'Show Analytics in the console and track visitors, pages, sources, campaigns, and custom events in a project.',
+    description: 'Visitor, page, and campaign tracking.',
     introducedAt: '2026-10-23',
   },
   {
     flag: 'projectEnvironments',
     name: 'Project environments',
-    description:
-      'Switch between environments of a project, such as staging and production, and create one as a copy of the project.',
+    description: 'Switch or clone staging and production.',
     introducedAt: '2026-10-29',
   },
   {
     flag: 'projectTransfers',
     name: 'Project transfers',
-    description:
-      'Transfer a project with a link that another organization claims, in place of moving it to one of your organizations.',
+    description: 'Move a project to another organization.',
     introducedAt: '2026-10-29',
   },
 ]
