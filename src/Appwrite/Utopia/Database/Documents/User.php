@@ -331,6 +331,9 @@ class User extends Document
             ];
 
         $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven) {
+            // A locking read first, so the snapshot is taken after concurrent credential issuance commits
+            $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
