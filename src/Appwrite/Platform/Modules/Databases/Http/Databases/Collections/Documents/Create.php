@@ -291,6 +291,7 @@ class Create extends Action
         $dbForDatabases = $getDatabasesDB($database, $collection);
 
         $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $dbForProject, $database, $transactionId) {
+            $this->assertNoOperators($document);
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.

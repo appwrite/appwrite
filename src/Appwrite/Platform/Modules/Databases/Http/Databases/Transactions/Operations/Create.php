@@ -157,6 +157,10 @@ class Create extends Action
                 }
             }
 
+            if (\is_array($operation['data'] ?? null)) {
+                $this->parseStagedOperators($operation['action'], $operation['data'], $collection);
+            }
+
             $document = null;
             if (\in_array($operation['action'], ['update', 'delete', 'upsert', 'increment', 'decrement'])) {
                 $documentId = $operation[$this->getResourceId()] ?? null;
