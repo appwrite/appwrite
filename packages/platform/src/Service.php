@@ -64,13 +64,7 @@ abstract class Service
      */
     public function getAction(string $key): ?Action
     {
-        $action = $this->actions[$key] ?? null;
-
-        if (\is_string($action)) {
-            $action = $this->actions[$key] = new $action();
-        }
-
-        return $action;
+        return isset($this->actions[$key]) ? $this->resolveAction($key) : null;
     }
 
     /**
@@ -80,12 +74,24 @@ abstract class Service
      */
     public function getActions(): array
     {
-        foreach ($this->actions as $key => $action) {
-            if (\is_string($action)) {
-                $this->actions[$key] = new $action();
-            }
+        $actions = [];
+
+        foreach (\array_keys($this->actions) as $key) {
+            $actions[$key] = $this->resolveAction($key);
         }
 
-        return $this->actions;
+        return $actions;
+    }
+
+    private function resolveAction(string $key): Action
+    {
+        $action = $this->actions[$key];
+
+        if (\is_string($action)) {
+            $action = new $action();
+            $this->actions[$key] = $action;
+        }
+
+        return $action;
     }
 }
