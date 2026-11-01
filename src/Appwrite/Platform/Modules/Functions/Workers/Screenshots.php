@@ -104,6 +104,13 @@ class Screenshots extends Action
 
         Span::add('site.framework', $site->getAttribute('framework', ''));
 
+        // An earlier attempt stored the screenshots and failed after: finish its last steps instead of capturing again
+        if ($deployment->getAttribute('screenshotLight', '') !== '' && $deployment->getAttribute('screenshotDark', '') !== '') {
+            $this->resume($message, $dbForPlatform, $dbForProject, $project, $site, $deployment);
+
+            return;
+        }
+
         // Realtime preparation
         $event = "sites.[siteId].deployments.[deploymentId].update";
         $queueForRealtime
@@ -243,12 +250,9 @@ class Screenshots extends Action
                 throw new PermanentFailure('Site deleted during capture');
             }
 
-            // Filed under the team on the queued message, which a move since the build may have left
-            try {
-                (new Access($dbForPlatform))->grantDeployment($dbForProject, $project, $deployment->getId());
-            } catch (\Throwable $th) {
-                Console::warning('Failed to grant the screenshots of deployment ' . $deployment->getId() . ' to the project\'s team: ' . $th->getMessage());
-            }
+            // Filed under the team on the queued message, which a move since the build may have left. A failure
+            // retries the job, which finds the screenshots stored and only grants them.
+            (new Access($dbForPlatform))->grantDeployment($dbForProject, $project, $deployment->getId());
         } catch (\Throwable $th) {
             $date = \date('H:i:s');
             $reason = $th->getMessage() === '' ? \get_class($th) : $th->getMessage();
@@ -271,6 +275,31 @@ class Screenshots extends Action
         }
 
         $this->recordTelemetry($counter, 'success');
+    }
+
+    /**
+     * Point the site at the stored screenshots and grant them to the project's team, as a capture ends.
+     */
+    protected function resume(Message $message, Database $dbForPlatform, Database $dbForProject, Document $project, Document $site, Document $deployment): void
+    {
+        Span::add('screenshot.resumed', true);
+
+        try {
+            $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
+                'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
+            ]));
+
+            (new Access($dbForPlatform))->grantDeployment($dbForProject, $project, $deployment->getId());
+        } catch (\Throwable $th) {
+            if ($message->isLastAttempt()) {
+                $this->abandon($project, $deployment->getId(), $th->getMessage());
+
+                return;
+            }
+
+            throw $th;
+        }
     }
 
     /**
