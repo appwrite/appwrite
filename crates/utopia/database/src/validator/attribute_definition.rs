@@ -60,6 +60,7 @@ const SPATIAL_TYPES: [ColumnType; 3] = [ColumnType::Point, ColumnType::Linestrin
 ///     default_attributes: 0, default_indexes: 0, index_length: 0, uid_length: 36, document_size: 0,
 ///     min_date_time: default_min(), max_date_time: default_max(),
 ///     id_type: ColumnType::Integer, keywords: vec![], internal_index_keys: vec![],
+///     escalated_string_byte_cap: true,
 /// };
 /// let profile = Profile::new(Arc::new(limits), Capabilities::EMPTY, Features::EMPTY, false, false, None);
 /// let validator = AttributeDefinition::new(vec![], profile);

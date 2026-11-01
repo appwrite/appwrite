@@ -573,6 +573,7 @@ impl Adapter for Mongo {
             id_type: ColumnType::Uuid7,
             keywords: Vec::new(),
             internal_index_keys: Vec::new(),
+            escalated_string_byte_cap: true,
         });
         self.state.lock().limits = Some(limits.clone());
         limits

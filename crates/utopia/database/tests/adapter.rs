@@ -46,6 +46,7 @@ fn limits() -> Arc<Limits> {
         id_type: ColumnType::Integer,
         keywords: vec![],
         internal_index_keys: vec![],
+        escalated_string_byte_cap: true,
     })
 }
 

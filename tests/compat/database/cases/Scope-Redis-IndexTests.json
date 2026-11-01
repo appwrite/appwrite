@@ -2080,7 +2080,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -2185,7 +2186,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -2301,7 +2303,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -2368,7 +2371,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
             }
           }
         }
@@ -8955,7 +8959,8 @@
                     "$enum": "Query\\Schema\\ColumnType::Integer"
                   },
                   "keywords": [],
-                  "internalIndexKeys": []
+                  "internalIndexKeys": [],
+                  "escalatedStringByteCap": false
                 }
               },
               "capabilities": [
@@ -9054,7 +9059,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -9088,7 +9094,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -9232,7 +9239,8 @@
                     "$enum": "Query\\Schema\\ColumnType::Integer"
                   },
                   "keywords": [],
-                  "internalIndexKeys": []
+                  "internalIndexKeys": [],
+                  "escalatedStringByteCap": false
                 }
               },
               "capabilities": [

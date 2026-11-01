@@ -8073,7 +8073,8 @@
                     "_created_at",
                     "_updated_at",
                     "_tenant_id"
-                  ]
+                  ],
+                  "escalatedStringByteCap": false
                 }
               },
               "capabilities": [
@@ -134230,7 +134231,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         },

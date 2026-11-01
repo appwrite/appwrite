@@ -101060,7 +101060,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -103648,7 +103649,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         },

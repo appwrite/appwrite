@@ -143,6 +143,7 @@ pub fn profile_with(options: ProfileOptions) -> Profile {
         id_type: ColumnType::Integer,
         keywords: Vec::new(),
         internal_index_keys: Vec::new(),
+        escalated_string_byte_cap: true,
     };
     Profile::new(
         Arc::new(limits),

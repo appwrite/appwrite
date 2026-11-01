@@ -551,8 +551,8 @@ final class Core
         return match ($method) {
             'load' => $cache->load((string) ($a['key'] ?? ''), (int) ($a['ttl'] ?? Database::TTL), (string) ($a['hash'] ?? '')),
             'save' => $cache->save((string) ($a['key'] ?? ''), $data(), (string) ($a['hash'] ?? ''), (int) ($a['ttl'] ?? 0)) !== false,
-            'save_with_lease' => $cache->saveWithLease((string) ($a['key'] ?? ''), $data(), (string) ($a['hash'] ?? ''), (string) ($a['generation'] ?? '')) !== false,
-            'get_generation' => $cache->getGeneration((string) ($a['key'] ?? '')),
+            'save_with_lease' => $cache->saveWithLease((string) ($a['key'] ?? ''), $data(), (string) ($a['hash'] ?? ''), (string) ($a['version'] ?? '')) !== false,
+            'get_lease' => $cache->getLease((string) ($a['key'] ?? '')),
             'touch' => $cache->touch((string) ($a['key'] ?? ''), (string) ($a['hash'] ?? '')),
             'list' => $cache->list((string) ($a['key'] ?? '')),
             'purge' => $cache->purge((string) ($a['key'] ?? ''), (string) ($a['hash'] ?? '')),

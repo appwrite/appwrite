@@ -191,6 +191,7 @@ impl Sql {
     /// resizing, and MariaDB-style types for internal columns.
     pub fn set_emulate_mysql(&self, emulate: bool) {
         self.engine_state().emulate_mysql = emulate;
+        self.state().lock().limits = None;
     }
 
     pub(crate) fn engine_state(&self) -> std::sync::MutexGuard<'_, EngineState> {

@@ -194,6 +194,7 @@ pub fn limits(l: &Limits) -> Json {
             ("idType", enums::encode(l.id_type)),
             ("keywords", strings(&l.keywords)),
             ("internalIndexKeys", strings(&l.internal_index_keys)),
+            ("escalatedStringByteCap", Json::from(l.escalated_string_byte_cap)),
         ],
     )
 }

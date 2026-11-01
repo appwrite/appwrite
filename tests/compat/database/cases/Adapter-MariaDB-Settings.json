@@ -5619,7 +5619,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -6053,7 +6054,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         }

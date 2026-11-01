@@ -208,6 +208,7 @@ impl Definitions {
 ///     default_attributes: 0, default_indexes: 0, index_length: 0, uid_length: 36, document_size: 0,
 ///     min_date_time: default_min(), max_date_time: default_max(),
 ///     id_type: ColumnType::Integer, keywords: vec![], internal_index_keys: vec![],
+///     escalated_string_byte_cap: true,
 /// };
 /// let profile = Profile::new(Arc::new(limits), Capabilities::of(&[Capability::DefinedAttributes]), Features::EMPTY, false, false, None);
 /// let mut movies = Collection::create("movies", "", vec![Attribute::string("title", 10).required(true)], vec![], None, true, Default::default()).unwrap();
@@ -512,8 +513,16 @@ impl Structure {
                     validators.push(Box::new(ByteLength::new(size)));
                     validators.push(Box::new(ByteLength::new(database::MAX_LONGTEXT_BYTES)));
                 }
-                ColumnType::Varchar | ColumnType::String => {
+                ColumnType::Varchar => {
                     validators.push(Box::new(Text::with_min(usize::try_from(size).unwrap_or(0), 0)));
+                }
+                ColumnType::String => {
+                    validators.push(Box::new(Text::with_min(usize::try_from(size).unwrap_or(0), 0)));
+                    if !attribute.array
+                        && let Some(cap) = self.profile.limits.string_escalated_storage_byte_limit(size)
+                    {
+                        validators.push(Box::new(ByteLength::new(cap)));
+                    }
                 }
                 ColumnType::Integer => {
                     let bits = if size >= 8 { 64 } else { 32 };

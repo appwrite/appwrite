@@ -637,9 +637,20 @@ impl Sql {
                 storage::INDEX_UPDATED_AT.to_owned(),
                 storage::INDEX_TENANT_ID.to_owned(),
             ],
+            escalated_string_byte_cap: self.limits_escalated_string_byte_cap(),
         });
         self.state().lock().limits = Some(limits.clone());
         limits
+    }
+
+    /// `limitsEscalatedStringByteCap()`: PostgreSQL stores an escalated string
+    /// in an uncapped `TEXT`, SQLite only caps it while emulating MySQL.
+    fn limits_escalated_string_byte_cap(&self) -> bool {
+        match self.engine {
+            Engine::Postgres => false,
+            Engine::Sqlite => self.engine_state().emulate_mysql,
+            _ => true,
+        }
     }
 
     /// `getAttributeWidth()`: the most bytes a row of the collection takes,

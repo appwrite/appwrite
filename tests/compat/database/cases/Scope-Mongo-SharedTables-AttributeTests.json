@@ -12854,7 +12854,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         }
@@ -13934,7 +13935,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -14794,7 +14796,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -14942,7 +14945,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -16301,7 +16305,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -16335,7 +16340,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -22832,7 +22838,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         }
@@ -22914,7 +22921,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         }
@@ -23623,7 +23631,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -23770,7 +23779,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Uuid7"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },

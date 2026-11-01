@@ -32,6 +32,7 @@ pub struct P {
     pub min_date_time: Option<DateTime>,
     pub max_date_time: Option<DateTime>,
     pub internal_index_keys: Vec<String>,
+    pub escalated_string_byte_cap: bool,
 }
 
 impl Default for P {
@@ -52,6 +53,7 @@ impl Default for P {
             min_date_time: None,
             max_date_time: None,
             internal_index_keys: vec![],
+            escalated_string_byte_cap: true,
         }
     }
 }
@@ -76,6 +78,7 @@ impl P {
             id_type: self.id_type,
             keywords: vec![],
             internal_index_keys: self.internal_index_keys,
+            escalated_string_byte_cap: self.escalated_string_byte_cap,
         };
         Profile::new(
             Arc::new(limits),

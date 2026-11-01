@@ -192,6 +192,7 @@ fn reserved_index_key() {
             capabilities: CAPABILITIES.to_vec(),
             index_length: 768,
             internal_index_keys: vec!["PRIMARY".into()],
+            escalated_string_byte_cap: true,
             ..P::default()
         }
         .build(),

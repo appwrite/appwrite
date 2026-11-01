@@ -140,6 +140,28 @@ pub struct Limits {
     pub keywords: Vec<String>,
     /// The names of the indexes every collection holds (`internalIndexKeys`).
     pub internal_index_keys: Vec<String>,
+    /// Whether a string escalated past varchar is stored in a byte-capped
+    /// `TEXT` type (`escalatedStringByteCap`, true by default; false on
+    /// PostgreSQL, Redis and SQLite without MySQL emulation).
+    pub escalated_string_byte_cap: bool,
+}
+
+impl Limits {
+    /// `stringEscalatedStorageByteLimit()`: the bytes a `String` attribute of
+    /// `size` stored outside varchar holds, matching `getSqlType()`; `None`
+    /// when the size fits varchar or the escalated types have no byte cap.
+    pub fn string_escalated_storage_byte_limit(&self, size: i64) -> Option<i64> {
+        if size <= self.varchar || !self.escalated_string_byte_cap {
+            return None;
+        }
+        Some(if size > 16_777_215 {
+            crate::database::MAX_LONGTEXT_BYTES
+        } else if size > 65_535 {
+            crate::database::MAX_MEDIUMTEXT_BYTES
+        } else {
+            crate::database::MAX_TEXT_BYTES
+        })
+    }
 }
 
 /// An optional group of adapter methods.

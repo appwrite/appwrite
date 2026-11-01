@@ -787,6 +787,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static> Adapter for Redis<C> {
             id_type: ColumnType::Integer,
             keywords: Vec::new(),
             internal_index_keys: Vec::new(),
+            escalated_string_byte_cap: false,
         });
         self.state.lock().limits = Some(limits.clone());
         limits

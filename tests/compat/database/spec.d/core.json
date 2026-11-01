@@ -1853,7 +1853,7 @@
       "doc": "A statement on the database's own connection, naming no schema but the database's: rows as lists of column => text"
     },
     "db.cache": {
-      "doc": "A method of the database's Cache (Utopia\\Cache\\Cache): method load|save|save_with_lease|get_generation|touch|list|purge, args by name (key, ttl, hash, data, generation). Saves report whether they stored"
+      "doc": "A method of the database's Cache (Utopia\\Cache\\Cache): method load|save|save_with_lease|get_lease|touch|list|purge, args by name (key, ttl, hash, data, version). Saves report whether they stored"
     },
     "db.mirror": {
       "doc": "A part of a Mirror database (from outside it): part source|destination, the Database it wraps as a handle (null without a destination)"

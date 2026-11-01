@@ -44,6 +44,7 @@ const BIG_INTEGER_SIZE: i64 = 8;
 ///     default_attributes: 0, default_indexes: 0, index_length: 768, uid_length: 36, document_size: 0,
 ///     min_date_time: default_min(), max_date_time: default_max(),
 ///     id_type: ColumnType::Integer, keywords: vec![], internal_index_keys: vec![],
+///     escalated_string_byte_cap: true,
 /// };
 /// let capabilities = Capabilities::of(&[Capability::DefinedAttributes, Capability::IndexKey]);
 /// let profile = Profile::new(Arc::new(limits), capabilities, Features::EMPTY, false, false, None);

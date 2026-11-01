@@ -319,6 +319,7 @@ pub(crate) fn limits() -> Limits {
         id_type: ColumnType::String,
         keywords: Vec::new(),
         internal_index_keys: Vec::new(),
+        escalated_string_byte_cap: true,
     }
 }
 

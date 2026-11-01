@@ -335,7 +335,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -817,7 +818,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -1299,7 +1301,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -1658,7 +1661,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -2155,7 +2159,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -2488,7 +2493,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         }
@@ -2841,7 +2847,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -3174,7 +3181,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         }
@@ -3527,7 +3535,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -3860,7 +3869,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         }
@@ -4090,7 +4100,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         },
@@ -4296,7 +4307,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         }
@@ -4634,7 +4646,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -4966,7 +4979,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -5299,7 +5313,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         }
@@ -5637,7 +5652,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": true
             }
           }
         },
@@ -5846,7 +5862,8 @@
                 "_created_at",
                 "_updated_at",
                 "_tenant_id"
-              ]
+              ],
+              "escalatedStringByteCap": false
             }
           }
         }
@@ -5902,7 +5919,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         }
@@ -5988,7 +6006,8 @@
                 "$enum": "Query\\Schema\\ColumnType::Integer"
               },
               "keywords": [],
-              "internalIndexKeys": []
+              "internalIndexKeys": [],
+              "escalatedStringByteCap": true
             }
           }
         },

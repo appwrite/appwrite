@@ -712,7 +712,7 @@
           "side": "a",
           "op": "db.cache",
           "args": {
-            "method": "get_generation",
+            "method": "get_lease",
             "args": {
               "key": {
                 "$ref": "key"
@@ -720,7 +720,13 @@
             }
           },
           "bind": "lease",
-          "expect": "0"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a lease is the cache's opaque CAS version"
+          }
         },
         {
           "op": "database.purge_cached_queries",
@@ -745,7 +751,7 @@
               "data": {
                 "value": "stale"
               },
-              "generation": {
+              "version": {
                 "$ref": "lease"
               }
             }
@@ -1483,7 +1489,7 @@
           "side": "a",
           "op": "db.cache",
           "args": {
-            "method": "get_generation",
+            "method": "get_lease",
             "args": {
               "key": {
                 "$ref": "key"
@@ -1491,7 +1497,13 @@
             }
           },
           "bind": "lease",
-          "expect": "0"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a lease is the cache's opaque CAS version"
+          }
         },
         {
           "op": "database.purge_cached_queries",
@@ -1516,7 +1528,7 @@
               "data": {
                 "value": "stale"
               },
-              "generation": {
+              "version": {
                 "$ref": "lease"
               }
             }

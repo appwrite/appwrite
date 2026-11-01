@@ -122,7 +122,7 @@ impl Sql {
         let quoted_alias = self.quote(alias);
 
         // `array_map()` keeps the keys: a map is encoded as a JSON object,
-        // which the engine then refuses (`Adapter/Postgres.php` line 1836).
+        // which the engine then refuses (`Adapter/Postgres.php` line 1842).
         let vector: Array = match query.values().values().next() {
             Some(utopia_query::Value::Array(values)) => values
                 .iter()
@@ -285,7 +285,7 @@ impl Sql {
                     None => continue,
                 }
             } else {
-                let value = comparable(&value, direction, 5825)?;
+                let value = comparable(&value, direction, 5831)?;
                 and.push(wrap(if direction == OrderDirection::Desc {
                     utopia_query::Query::less_than(internal, value)
                 } else {
@@ -642,7 +642,7 @@ mod tests {
 
     /// `getVectorOrderRaw()` maps the vector with `array_map()`, which keeps
     /// the keys: a map is bound as a JSON object (`Adapter/Postgres.php`
-    /// line 1836), a list as a JSON array.
+    /// line 1842), a list as a JSON array.
     #[utopia_async::test]
     async fn a_vector_order_keeps_the_vectors_keys() {
         let pdo = Pdo::connect("sqlite::memory:", None, None).await.unwrap();

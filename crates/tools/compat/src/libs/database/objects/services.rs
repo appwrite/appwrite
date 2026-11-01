@@ -463,6 +463,7 @@ fn limits_of(f: &Fields<'_>) -> R<Limits> {
         },
         keywords: f.strings("keywords").unwrap_or_default(),
         internal_index_keys: f.strings("internalIndexKeys").unwrap_or_default(),
+        escalated_string_byte_cap: f.opt_bool("escalatedStringByteCap")?.unwrap_or(true),
     })
 }
 
@@ -992,6 +993,15 @@ async fn dispatch(this: &mut Obj, method: &str, a: &Args, calls: &Calls) -> R<Op
                 object(input.clone())
             }
             _ => return fault(format!("Validator\\Authorization\\Input has no method `{method}`")),
+        }));
+    }
+    if let Some(limits) = this.downcast_ref::<LimitsObj>() {
+        return Ok(Some(match method {
+            "stringEscalatedStorageByteLimit" => limits
+                .0
+                .string_escalated_storage_byte_limit(a.int("size")?)
+                .map_or(Obj::Value(Value::Null), |b| Obj::Value(Value::Int(b))),
+            _ => return fault(format!("Adapter\\Limits has no method `{method}`")),
         }));
     }
     if let Some(profiler) = this.downcast_ref::<ProfilerObj>() {

@@ -112,6 +112,7 @@ fn an_index_definition_takes_its_length_and_reserved_keys_from_the_limits() {
             capabilities: vec![Capability::DefinedAttributes, Capability::IndexKey],
             index_length: 99,
             internal_index_keys: vec!["primary".into()],
+            escalated_string_byte_cap: true,
             ..P::default()
         }
         .build()

@@ -255,10 +255,10 @@ async fn cache_call(a: &Args) -> R<Obj> {
         }
         "save_with_lease" => {
             let data = value::to_plain(&inner.value("data")?);
-            let generation = inner.string_or("generation", "")?;
-            cache.save_with_lease(&key, &data, &hash, &generation).await.map_err(failed)?.into_obj()
+            let version = inner.string_or("version", "")?;
+            cache.save_with_lease(&key, &data, &hash, &version).await.map_err(failed)?.into_obj()
         }
-        "get_generation" => cache.generation(&key).await.map_err(failed)?.into_obj(),
+        "get_lease" => cache.generation(&key).await.map_err(failed)?.into_obj(),
         "touch" => cache.touch(&key, &hash).await.map_err(failed)?.into_obj(),
         "list" => strings(&cache.list(&key).await.map_err(failed)?),
         "purge" => cache.purge(&key, &hash).await.map_err(failed)?.into_obj(),
