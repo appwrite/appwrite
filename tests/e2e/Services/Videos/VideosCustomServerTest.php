@@ -82,6 +82,24 @@ final class VideosCustomServerTest extends Scope
         );
     }
 
+    public function testListProfilesTotalCountsEveryProfile(): void
+    {
+        $page = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::limit(1)->toString()],
+        ]);
+        $this->assertEquals(200, $page['headers']['status-code']);
+        $this->assertSame(['360p'], \array_column($page['body']['profiles'], 'name'));
+        $this->assertEquals(6, $page['body']['total'], 'total counts every profile for the codec, not the page');
+
+        $uncounted = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'queries' => [Query::limit(1)->toString()],
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $uncounted['headers']['status-code']);
+        $this->assertSame(['360p'], \array_column($uncounted['body']['profiles'], 'name'));
+        $this->assertEquals(0, $uncounted['body']['total']);
+    }
+
     public function testCreateProfile(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/project/videos/profiles', $this->headers(), [
