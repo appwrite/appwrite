@@ -1123,7 +1123,8 @@ jobs:
 
       # Traefik marks what its Rust router served (X-Appwrite-Backend: rust,
       # docker-compose.override.yml): the migrated paths must carry it and a
-      # PHP path must not.
+      # PHP path must not. Traefik picks up the Rust router a few seconds
+      # after the container starts, so each path gets up to 30s to switch.
       - name: Verify /v1/users, /v1/teams and /v1/storage are served by Rust
         run: |
           docker compose exec -T appwrite-rust /usr/local/bin/appwrite-rust health
@@ -1132,7 +1133,11 @@ jobs:
               | tr -d '\r' | awk -F': ' 'tolower($1) == "x-appwrite-backend" { print $2 }'
           }
           for path in /v1/users /v1/teams /v1/storage/buckets /v1/storage/buckets/unknown/files; do
-            served="$(backend "$path")"
+            for attempt in $(seq 1 15); do
+              served="$(backend "$path")"
+              [ "$served" = "rust" ] && break
+              sleep 2
+            done
             echo "$path: ${served:-php}"
             if [ "$served" != "rust" ]; then
               echo "::error::$path did not reach the Rust container"
