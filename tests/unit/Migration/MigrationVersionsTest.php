@@ -7,6 +7,7 @@ namespace Tests\Unit\Migration;
 use Appwrite\Migration\Migration;
 use Appwrite\Migration\Version\V24;
 use Appwrite\Migration\Version\V25;
+use Appwrite\Migration\Version\V26;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -44,6 +45,22 @@ final class MigrationVersionsTest extends TestCase
         if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
+
+        // V26 creates the video collections. 2.6.0 through 2.6.2 already shipped
+        // on V25, so the video migration belongs to 2.6.3. Mapping an earlier
+        // release to V26 would create the collections too soon, and leaving
+        // 2.6.3 on V25 would skip them. Class existence does not catch either swap.
+        $this->assertSame(
+            [
+                '2.4.0' => 'V25',
+                '2.5.0' => 'V25',
+                '2.6.0' => 'V25',
+                '2.6.1' => 'V25',
+                '2.6.2' => 'V25',
+                '2.6.3' => 'V26',
+            ],
+            \array_intersect_key(Migration::$versions, \array_flip(['2.4.0', '2.5.0', '2.6.0', '2.6.1', '2.6.2', '2.6.3']))
+        );
     }
 
     public function testV24CreatesAlertsCollectionForConsoleProject(): void
@@ -432,5 +449,177 @@ final class MigrationVersionsTest extends TestCase
         $user = $authorization->skip(fn () => $database->getDocument('users', 'legacy-user'));
 
         $this->assertSame('legacyuser@example.com', $user->getAttribute('emailCanonical'));
+    }
+
+    /**
+     * An install upgraded past Videos has none of the seven collections. V26
+     * creates them. A second run must not fail.
+     */
+    public function testV26CreatesVideoCollectionsIdempotently(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV26Videos')
+            ->setNamespace('migration_videos_' . \uniqid());
+        $database->create();
+
+        $migration = new V26();
+        $migration->setProject(
+            new Document(['$id' => 'project', '$sequence' => '1']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $collections = [
+            'videos',
+            'videosTimelines',
+            'videosRenditions',
+            'videosRenditionsSegments',
+            'videosProfiles',
+            'videosCaptions',
+            'videosCaptionsSegments',
+        ];
+        foreach ($collections as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist"
+            );
+        }
+
+        foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collectionId) {
+            $attributeIds = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $attributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+            }
+            $this->assertContains('size', $attributeIds, "Expected \"{$collectionId}\" to store retained bytes");
+        }
+
+        $reasons = [
+            'videos' => ['timelineStatus', 'timelineError'],
+            'videosRenditions' => ['error'],
+            'videosCaptions' => ['error'],
+        ];
+        foreach ($reasons as $collectionId => $expected) {
+            $attributeIds = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $attributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+            }
+            foreach ($expected as $attributeId) {
+                $this->assertContains($attributeId, $attributeIds, "Expected \"{$collectionId}\" to carry the job failure reason");
+            }
+        }
+
+        $timelineAttributeIds = [];
+        foreach ($database->getCollection('videosTimelines')->getAttribute('attributes', []) as $attribute) {
+            $timelineAttributeIds[] = $attribute instanceof Document ? $attribute->getId() : ($attribute['$id'] ?? '');
+        }
+        $this->assertNotContains('second', $timelineAttributeIds);
+        $this->assertNotContains('type', $timelineAttributeIds);
+    }
+
+    public function testV26SkipsConsoleProject(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV26Console')
+            ->setNamespace('migration_videos_console_' . \uniqid());
+        $database->create();
+
+        $migration = new V26();
+        $migration->setProject(
+            new Document(['$id' => 'console', '$sequence' => 'console']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migration->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $this->assertNull($database->findCollection('videos'));
+        $this->assertNull($database->findCollection('videosProfiles'));
+    }
+
+    /**
+     * On a shared-tables host the physical table and its _metadata row belong
+     * to no tenant, so a second project's migration finds the collections already.
+     */
+    public function testV26SharedTablesCreateGlobalCollections(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV26Shared')
+            ->setNamespace('migration_videos_shared_' . \uniqid())
+            ->setSharedTables(true)
+            ->setTenant(null);
+        $database->create();
+
+        $migrationA = new V26();
+        $database->setTenant('tenant-a');
+        $migrationA->setProject(
+            new Document(['$id' => 'project-a', '$sequence' => 'tenant-a']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migrationA->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, 'videos'));
+        $this->assertFalse($metadata->isEmpty());
+        $this->assertNull($metadata->getTenant());
+
+        $migrationB = new V26();
+        $database->setTenant('tenant-b');
+        $migrationB->setProject(
+            new Document(['$id' => 'project-b', '$sequence' => 'tenant-b']),
+            $database,
+            $database,
+            $authorization,
+        );
+
+        \ob_start();
+        try {
+            $migrationB->execute();
+        } finally {
+            \ob_end_clean();
+        }
+
+        foreach (['videos', 'videosProfiles', 'videosCaptions'] as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist for tenant-b"
+            );
+        }
     }
 }

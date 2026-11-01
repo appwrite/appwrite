@@ -70,7 +70,7 @@ import {
 } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 import type { StreamPlayerState } from './useStreamPlayer'
-import { TimelineSpriteThumb } from './TimelineSpriteThumb'
+import { TimelineThumbnail } from './TimelineThumbnail'
 
 const AUTO_LEVEL = '-1'
 const SUBTITLES_OFF = '-1'
@@ -723,7 +723,7 @@ export function VideoStreamPlayerControls({
                           `${OVERLAY_SURFACE_CLASS} [&_p]:text-white/80`,
                       )}
                     >
-                      <TimelineSpriteThumb
+                      <TimelineThumbnail
                         cue={scrubPreview.cue}
                         width={SCRUB_PREVIEW_WIDTH_PX}
                       />

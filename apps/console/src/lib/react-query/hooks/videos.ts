@@ -134,14 +134,15 @@ export async function fetchProjectVideos(
   if (!projectId) return { videos: [], total: 0 }
   const orderQuery =
     sortOrder === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy)
+  const trimmedSearch = search?.trim()
   const response = await sdk.forProject(projectId).videos.list({
     queries: [
       ...(filterQueries ?? []),
+      ...(trimmedSearch ? [Query.search('search', trimmedSearch)] : []),
       orderQuery,
       Query.limit(limit),
       Query.offset(page * limit),
     ],
-    search: search?.trim() || undefined,
   })
   return { videos: response.videos ?? [], total: response.total ?? 0 }
 }
@@ -167,10 +168,26 @@ export async function fetchVideoSubtitles(
   return await sdk.forProject(projectId).videos.listSubtitles({ videoId })
 }
 
+/** Project video profiles API (pinned SDK still targets `/videos/profiles`). */
+function projectVideoProfilesUrl(projectId: string, profileId?: string): URL {
+  const client = sdk.forProject(projectId).client
+  const path =
+    profileId === undefined
+      ? '/project/videos/profiles'
+      : `/project/videos/profiles/${encodeURIComponent(profileId)}`
+  return new URL(`${client.config.endpoint}${path}`)
+}
+
 export async function fetchVideoProfiles(
   projectId: string,
 ): Promise<Models.VideoProfileList> {
-  return await sdk.forProject(projectId).videos.listProfiles()
+  const res = (await sdk.forProject(projectId).client.call(
+    'get',
+    projectVideoProfilesUrl(projectId),
+    {},
+    {},
+  )) as Models.VideoProfileList
+  return { ...res, profiles: res.profiles ?? [] }
 }
 
 export type VideoCodecOption = {
@@ -211,7 +228,7 @@ function parseVttTimestamp(value: string): number {
   return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
-/** Parse a sprite-sheet WebVTT (`previews/{id}#xywh=x,y,w,h` cues). */
+/** Parse a thumbnail-sheet WebVTT (`thumbnails/{id}#xywh=x,y,w,h` cues). */
 export function parseVideoTimelineVtt(
   vtt: string,
   timelineUrl: string,
@@ -248,7 +265,7 @@ export function getVideoTimelineUrl(
 ): string {
   const endpoint = sdk.forProject(projectId).client.config.endpoint
   const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/timeline`,
+    `${endpoint}/videos/${encodeURIComponent(videoId)}/timelines`,
   )
   url.searchParams.set('project', projectId)
   url.searchParams.set('mode', 'admin')
@@ -694,11 +711,21 @@ export function useSaveVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (input: VideoProfileInput & { profileId?: string }) => {
-      const videos = sdk.forProject(projectId!).videos
       const { profileId, ...payload } = input
+      const client = sdk.forProject(projectId!).client
       return profileId
-        ? videos.updateProfile({ profileId, ...payload })
-        : videos.createProfile(payload)
+        ? (client.call(
+            'patch',
+            projectVideoProfilesUrl(projectId!, profileId),
+            { 'content-type': 'application/json' },
+            payload,
+          ) as Promise<Models.VideoProfile>)
+        : (client.call(
+            'post',
+            projectVideoProfilesUrl(projectId!),
+            { 'content-type': 'application/json' },
+            payload,
+          ) as Promise<Models.VideoProfile>)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -712,7 +739,12 @@ export function useDeleteVideoProfile(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (profileId: string) =>
-      sdk.forProject(projectId!).videos.deleteProfile({ profileId }),
+      sdk.forProject(projectId!).client.call(
+        'delete',
+        projectVideoProfilesUrl(projectId!, profileId),
+        { 'content-type': 'application/json' },
+        {},
+      ),
     onSuccess: async () => {
       await queryClient.refetchQueries({
         queryKey: videoKeys.profiles(projectId),

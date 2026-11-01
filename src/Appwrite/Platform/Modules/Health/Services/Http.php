@@ -10,6 +10,7 @@ use Appwrite\Platform\Modules\Health\Http\Health\Geo\Get as GetGeo;
 use Appwrite\Platform\Modules\Health\Http\Health\Get as GetHealth;
 use Appwrite\Platform\Modules\Health\Http\Health\PubSub\Get as GetPubSub;
 use Appwrite\Platform\Modules\Health\Http\Health\Queue\Failed\Get as GetFailedJobs;
+use Appwrite\Platform\Modules\Health\Http\Health\Queue\Videos\Get as GetQueueVideos;
 use Appwrite\Platform\Modules\Health\Http\Health\Stats\Get as GetStats;
 use Appwrite\Platform\Modules\Health\Http\Health\Storage\Get as GetStorage;
 use Appwrite\Platform\Modules\Health\Http\Health\Storage\Local\Get as GetStorageLocal;
@@ -37,6 +38,7 @@ class Http extends Service
         $this->addAction(GetGeo::getName(), GetGeo::class);
         $this->addAction(GetUsage::getName(), GetUsage::class);
 
+        $this->addAction(GetQueueVideos::getName(), GetQueueVideos::class);
         $this->addAction(GetFailedJobs::getName(), GetFailedJobs::class);
 
         $this->addAction(GetStats::getName(), GetStats::class);

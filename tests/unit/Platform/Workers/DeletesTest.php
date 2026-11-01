@@ -102,6 +102,7 @@ final class DeletesTest extends TestCase
                     deviceForFunctions: $device,
                     deviceForSites: $device,
                     deviceForBuilds: $device,
+                    deviceForVideos: $device,
                     telemetry: new NoTelemetry(),
                     certificates: $this->createStub(Certificates::class),
                     executor: $this->createStub(Executor::class),
@@ -168,6 +169,7 @@ final class DeletesTest extends TestCase
                 deviceForFunctions: $device,
                 deviceForSites: $device,
                 deviceForBuilds: $device,
+                deviceForVideos: $device,
                 telemetry: $telemetry,
                 certificates: $certificates,
                 executor: $this->createStub(Executor::class),
@@ -234,6 +236,7 @@ final class DeletesTest extends TestCase
             deviceForFunctions: $this->createStub(Device::class),
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
+            deviceForVideos: $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
             certificates: $this->createStub(Certificates::class),
             executor: $this->createStub(Executor::class),
@@ -340,7 +343,7 @@ final class DeletesTest extends TestCase
     private function createIdleUploads(array $uploads): string
     {
         $collections = Config::getParam('collections', []);
-        foreach (['targets', 'sessions', 'tokens', 'challenges', 'transactions', 'transactionLogs', 'presenceLogs', 'pushLedger', 'sites', 'deployments', 'migrations', 'rules'] as $id) {
+        foreach (['targets', 'sessions', 'tokens', 'challenges', 'transactions', 'transactionLogs', 'presenceLogs', 'pushLedger', 'sites', 'deployments', 'migrations', 'rules', 'videosRenditions', 'videosCaptions'] as $id) {
             $schema = $collections['console'][$id] ?? $collections['projects'][$id];
             $this->database->createCollection(Collection::create(id: $id, attributes: $schema['attributes'], indexes: $schema['indexes']));
         }
@@ -395,6 +398,7 @@ final class DeletesTest extends TestCase
             deviceForFunctions: $this->createStub(Device::class),
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
+            deviceForVideos: $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
             certificates: $this->createStub(Certificates::class),
             executor: $this->createStub(Executor::class),

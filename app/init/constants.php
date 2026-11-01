@@ -144,6 +144,8 @@ const APP_STORAGE_SITES = '/storage/sites';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
 const APP_STORAGE_CACHE = '/storage/cache';
+const APP_STORAGE_VIDEOS = '/storage/videos'; // Durable transcoded output: renditions, captions, thumbnail timelines
+const APP_STORAGE_VIDEOS_TMP = '/storage/videos-tmp'; // Scratch: source download + ffmpeg workdir, wiped per job
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
@@ -306,6 +308,11 @@ const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+// Must equal the collection id: the DELETE_TYPE_DOCUMENT branch of the
+// deletes worker dispatches on $document->getCollection().
+const DELETE_TYPE_VIDEOS = 'videos';
+const DELETE_TYPE_VIDEOS_RENDITIONS = 'videosRenditions';
+const DELETE_TYPE_VIDEOS_CAPTIONS = 'videosCaptions';
 const DELETE_TYPE_FILES = 'files';
 const DELETE_TYPE_INSTALLATIONS = 'installations';
 const DELETE_TYPE_RULES = 'rules';
@@ -467,6 +474,12 @@ const METRIC_BUILDS_COMPUTE  = 'builds.compute';
 const METRIC_BUILDS_COMPUTE_SUCCESS  = 'builds.compute.success';
 const METRIC_BUILDS_COMPUTE_FAILED  = 'builds.compute.failed';
 const METRIC_BUILDS_MB_SECONDS = 'builds.mbSeconds';
+const METRIC_VIDEOS = 'videos';
+const METRIC_VIDEOS_STORAGE = 'videos.storage';
+const METRIC_RENDITIONS = 'renditions';
+const METRIC_RENDITIONS_SUCCESS = 'renditions.success';
+const METRIC_RENDITIONS_FAILED = 'renditions.failed';
+const METRIC_RENDITIONS_COMPUTE = 'renditions.compute';
 const METRIC_EXECUTIONS  = 'executions';
 const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
 const METRIC_EXECUTIONS_MB_SECONDS = 'executions.mbSeconds';
@@ -545,6 +558,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_VIDEOS = 'videos';
 const RESOURCE_TYPE_MONITORS = 'monitors';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.

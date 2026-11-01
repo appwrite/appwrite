@@ -35,6 +35,9 @@ $member = [
     'targets.write',
     'subscribers.write',
     'subscribers.read',
+    'videos.play',
+    'videos.read',
+    'videos.write',
 ];
 
 $admins = [
@@ -84,6 +87,8 @@ $admins = [
     'mocks.write',
     'project.policies.read',
     'project.policies.write',
+    'project.profiles.read',
+    'project.profiles.write',
     'project.oauth2.read',
     'project.oauth2.write',
     'templates.read',
@@ -139,6 +144,9 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'videos.play',
+    'videos.read',
+    'videos.write',
 ];
 
 return [
@@ -161,6 +169,7 @@ return [
             'rows.write',
             'files.read',
             'files.write',
+            'videos.play',
             'locale.read',
             'avatars.read',
             'executions.write',
