@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-01T11:15:00Z",
+  "updated": "2026-11-01T12:05:00Z",
   "tasks": [
     {
       "id": "crate-layout",
@@ -709,9 +709,9 @@
       "id": "purges-db10",
       "title": "Match PHP's cache purges after database 10.0.0",
       "area": "Services",
-      "status": "todo",
-      "updated": "2026-11-01T11:15:00Z",
-      "note": "Before the database 10.0.0 port the parity diff showed Rust purging more cache keys than PHP on account.recovery.update (2 vs 8), account.delete (2 vs 8), teams.delete (2 vs 5) and teams.memberships.status (4 vs 10). Re-check on the Users and Storage lane after the port."
+      "status": "done",
+      "updated": "2026-11-01T12:05:00Z",
+      "note": "Fixed by the database 10.0.0 port: on 8e9ac9ee07 the four routes (account.recovery.update, account.delete, teams.delete, teams.memberships.status) purge the same keys in PHP and Rust. The two lanes then showed one different scenario each (users.list purges, account.sessions.phone effects), different in each lane: work landing after the diff's fixed 150 ms window. The diff now waits until the runtime has been quiet for 150 ms (at most 2 s)."
     }
   ]
 }
