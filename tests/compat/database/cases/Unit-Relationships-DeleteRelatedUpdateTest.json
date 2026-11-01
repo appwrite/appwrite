@@ -1421,6 +1421,19 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000151_child` AS `table_main` WHERE `parent` IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "parent1",
@@ -1430,6 +1443,19 @@
                 "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -1464,6 +1490,32 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT `_uid`, `_id`, `_permissions`, `_createdAt`, `_updatedAt` FROM `related_update_u000000000151_child` AS `table_main` WHERE `parent` IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "parent1",
@@ -1479,12 +1531,38 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000151_child` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
                 "bindings": {
                   ":_uid": "child1"
                 },
                 "durationMs": "<masked>",
                 "collection": "child",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "parent"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
                 "operation": "document_read",
                 "backtrace": "<masked>"
               }
@@ -1520,6 +1598,32 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000151_owner` AS `table_main` WHERE `_uid` COLLATE NOCASE IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "owner1",
@@ -1529,6 +1633,19 @@
                 "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "parent"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -1555,6 +1672,19 @@
                 "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000151__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -3127,6 +3257,19 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000152_child` AS `table_main` WHERE `parent` IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "parent1",
@@ -3136,6 +3279,19 @@
                 "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -3170,6 +3326,32 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT `_uid`, `_id`, `_permissions`, `_createdAt`, `_updatedAt` FROM `related_update_u000000000152_child` AS `table_main` WHERE `parent` IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "parent1",
@@ -3185,12 +3367,38 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000152_child` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
                 "bindings": {
                   ":_uid": "child1"
                 },
                 "durationMs": "<masked>",
                 "collection": "child",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "parent"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
                 "operation": "document_read",
                 "backtrace": "<masked>"
               }
@@ -3226,6 +3434,32 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000152_owner` AS `table_main` WHERE `_uid` COLLATE NOCASE IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "owner1",
@@ -3235,6 +3469,19 @@
                 "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "parent"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -3261,6 +3508,19 @@
                 "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000152__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -4795,6 +5055,19 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000153_child` AS `table_main` WHERE `parent` IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "parent1",
@@ -4804,6 +5077,19 @@
                 "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -4838,6 +5124,32 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT `_uid`, `_id`, `_permissions`, `_createdAt`, `_updatedAt` FROM `related_update_u000000000153_child` AS `table_main` WHERE `parent` IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "parent1",
@@ -4853,12 +5165,38 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "child"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000153_child` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
                 "bindings": {
                   ":_uid": "child1"
                 },
                 "durationMs": "<masked>",
                 "collection": "child",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "parent"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
                 "operation": "document_read",
                 "backtrace": "<masked>"
               }
@@ -4894,6 +5232,32 @@
             {
               "$value": "Profiler\\Log",
               "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
                 "query": "SELECT * FROM `related_update_u000000000153_owner` AS `table_main` WHERE `_uid` COLLATE NOCASE IN (?) ORDER BY `_id` ASC LIMIT ? OFFSET ?",
                 "bindings": [
                   "owner1",
@@ -4903,6 +5267,19 @@
                 "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "parent"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
@@ -4929,6 +5306,32 @@
                 "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": "<masked>"
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `related_update_u000000000153__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "owner"
+                },
+                "durationMs": "<masked>",
+                "collection": "_metadata",
+                "operation": "document_read",
                 "backtrace": "<masked>"
               }
             },
