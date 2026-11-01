@@ -142,34 +142,7 @@ class Screenshots extends Action
                 $routerHost = "$protocol://{$rule->getAttribute('domain')}";
             }
 
-            $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-            $apiKey = $jwtObj->encode([
-                Key::PURPOSE_CLAIM => Key::PURPOSE,
-                'hostname' => $rule->getAttribute('domain'),
-                'deploymentId' => $rule->getAttribute('deploymentId'),
-                'hostnameOverride' => true,
-                'disabledMetrics' => [
-                    METRIC_EXECUTIONS,
-                    METRIC_EXECUTIONS_COMPUTE,
-                    METRIC_EXECUTIONS_MB_SECONDS,
-                    METRIC_NETWORK_REQUESTS,
-                    METRIC_NETWORK_INBOUND,
-                    METRIC_NETWORK_OUTBOUND,
-                    str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
-                    str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
-                    str_replace(["{resourceType}"], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
-                ],
-                'bannerDisabled' => true,
-                'projectCheckDisabled' => true,
-                'previewAuthDisabled' => true,
-                'deploymentStatusIgnored' => true,
-                'runtimeEphemeral' => true,
-            ]);
-
-            $headers = [
-                'x-appwrite-hostname' => $rule->getAttribute('domain'),
-                'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
-            ];
+            $headers = $this->getHeaders($project, $rule);
 
             $framework = Config::getParam('frameworks', [])[$site->getAttribute('framework', '')] ?? null;
             $sleep = $framework['screenshotSleep'] ?? 3000;
@@ -194,6 +167,9 @@ class Screenshots extends Action
             $mimeType = "image/png";
             $updates = new Document([]);
 
+            // The project may have moved to another team since the build queued this capture
+            $teamId = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('teamId', '');
+
             foreach ($captures as $key => $screenshot) {
                 $fileId = Id::unique();
                 $fileName = $fileId . '.png';
@@ -206,7 +182,6 @@ class Screenshots extends Action
                     throw new \Exception("Screenshot failed to save");
                 }
 
-                $teamId = $project->getAttribute('teamId', '');
                 $file = new Document([
                     '$id' => $fileId,
                     '$permissions' => [
@@ -289,6 +264,43 @@ class Screenshots extends Action
         }
 
         $this->recordTelemetry($counter, 'success');
+    }
+
+    /**
+     * Request headers sent with the screenshot capture, authorizing the router to serve the rule's deployment.
+     *
+     * @return array<string, string>
+     */
+    protected function getHeaders(Document $project, Document $rule): array
+    {
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $apiKey = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'hostname' => $rule->getAttribute('domain'),
+            'deploymentId' => $rule->getAttribute('deploymentId'),
+            'hostnameOverride' => true,
+            'disabledMetrics' => [
+                METRIC_EXECUTIONS,
+                METRIC_EXECUTIONS_COMPUTE,
+                METRIC_EXECUTIONS_MB_SECONDS,
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+                str_replace(['{resourceType}'], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS),
+                str_replace(['{resourceType}'], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_COMPUTE),
+                str_replace(['{resourceType}'], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
+            ],
+            'bannerDisabled' => true,
+            'projectCheckDisabled' => true,
+            'previewAuthDisabled' => true,
+            'deploymentStatusIgnored' => true,
+            'runtimeEphemeral' => true,
+        ]);
+
+        return [
+            'x-appwrite-hostname' => $rule->getAttribute('domain'),
+            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+        ];
     }
 
     protected function abandon(Document $project, string $deploymentId, string $reason): void

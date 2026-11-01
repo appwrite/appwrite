@@ -28,6 +28,8 @@ class Cache
 
     private int $nextRecording = 0;
 
+    private string $namespace = '';
+
     /**
      * Set telemetry adapter. Instruments are created lazily on first use to
      * avoid emitting empty data point streams on every export interval.
@@ -70,6 +72,23 @@ class Cache
         $this->telemetry = new NoTelemetry();
     }
 
+    /** Return an independent view of the same backing cache under a key prefix. */
+    public function withNamespace(string $namespace): static
+    {
+        $cache = clone $this;
+        $cache->namespace = $namespace;
+        $cache->recordedPurges = [];
+
+        return $cache;
+    }
+
+    private function key(string $key): string
+    {
+        $key = $this->namespace.$key;
+
+        return $this->caseSensitive ? $key : \strtolower($key);
+    }
+
     /**
      * Toggle case sensitivity of keys inside cache
      *
@@ -88,7 +107,7 @@ class Cache
      */
     public function load(string $key, int $ttl, string $hash = ''): mixed
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
+        $key = $this->key($key);
         $hash = $this->caseSensitive ? $hash : strtolower($hash);
 
         $start = microtime(true);
@@ -121,7 +140,7 @@ class Cache
      */
     public function save(string $key, mixed $data, string $hash = '', int $ttl = 0): bool|string|array
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
+        $key = $this->key($key);
         $hash = $this->caseSensitive ? $hash : strtolower($hash);
         $start = microtime(true);
 
@@ -147,7 +166,7 @@ class Cache
      */
     public function loadMany(string $key, int $ttl, array $fields = []): array
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
+        $key = $this->key($key);
         if (! $this->caseSensitive) {
             $fields = array_map(strtolower(...), $fields);
         }
@@ -176,7 +195,7 @@ class Cache
      */
     public function saveMany(string $key, array $data, int $ttl = 0): array|false
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
+        $key = $this->key($key);
         if (! $this->caseSensitive) {
             $data = array_change_key_case($data, CASE_LOWER);
         }
@@ -196,15 +215,6 @@ class Cache
         }
     }
 
-    public function legacy(): Legacy
-    {
-        $legacy = new Legacy($this->adapter);
-        $legacy->setCaseSensitivity($this->caseSensitive);
-        $legacy->setTelemetry($this->telemetry);
-
-        return $legacy;
-    }
-
     public function supportsVersioning(): bool
     {
         return $this->adapter instanceof Feature\Versioned && $this->adapter->supportsVersioning();
@@ -217,19 +227,19 @@ class Cache
             return '';
         }
 
-        return $this->versionedAdapter()->getVersion($this->caseSensitive ? $key : \strtolower($key));
+        return $this->versionedAdapter()->getVersion($this->key($key));
     }
 
     /** @return array{version: string, value: mixed} */
     public function loadVersioned(string $key): array
     {
-        return $this->versionedAdapter()->loadVersioned($this->caseSensitive ? $key : \strtolower($key));
+        return $this->versionedAdapter()->loadVersioned($this->key($key));
     }
 
     /** @param array<int|string, mixed>|string $data */
     public function compareAndSwap(string $key, array|string $data, string $version): string|false
     {
-        $key = $this->caseSensitive ? $key : \strtolower($key);
+        $key = $this->key($key);
 
         return $this->versionedAdapter()->compareAndSwap($key, $data, '', $version);
     }
@@ -252,7 +262,7 @@ class Cache
         if ($key === '' || $key === '0' || empty($data) || ! $this->supportsVersioning() || $version === '') {
             return false;
         }
-        $key = $this->caseSensitive ? $key : \strtolower($key);
+        $key = $this->key($key);
         $hash = $this->caseSensitive ? $hash : \strtolower($hash);
 
         return $this->versionedAdapter()->compareAndSwap($key, $data, $hash, $version) !== false ? $data : false;
@@ -265,7 +275,7 @@ class Cache
      */
     public function touch(string $key, string $hash = ''): bool
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
+        $key = $this->key($key);
         $hash = $this->caseSensitive ? $hash : strtolower($hash);
 
         $start = microtime(true);
@@ -286,7 +296,7 @@ class Cache
      */
     public function list(string $key): array
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
+        $key = $this->key($key);
 
         $start = microtime(true);
         $result = $this->adapter->list($key);
@@ -306,10 +316,9 @@ class Cache
      */
     public function purge(string $key, string $hash = ''): bool
     {
-        $key = $this->caseSensitive ? $key : strtolower($key);
-        $hash = $this->caseSensitive ? $hash : strtolower($hash);
-
         $this->recordPurge($key, $hash);
+        $key = $this->key($key);
+        $hash = $this->caseSensitive ? $hash : strtolower($hash);
 
         $start = microtime(true);
         $result = $this->adapter->purge($key, $hash);

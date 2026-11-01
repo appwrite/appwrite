@@ -53,6 +53,7 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -274,6 +275,7 @@ function createConsoleSdkRaw(client: Client) {
     usage: new Usage(client),
     webhooks: new Webhooks(client),
     notifications: new Notifications(client),
+    zero: new Zero(client),
   }
 }
 

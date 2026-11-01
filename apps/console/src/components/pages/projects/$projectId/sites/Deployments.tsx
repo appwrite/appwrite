@@ -139,7 +139,7 @@ import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap, getPage } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 const DEPLOYMENTS_SELECT = [
   Query.select([
@@ -217,6 +217,7 @@ function detectVcsProvider(
 
 export function View() {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -1170,7 +1171,7 @@ export function View() {
                             {activeDomains.map((rule) => (
                               <a
                                 key={rule.$id}
-                                href={domainUrl(rule.domain)}
+                                href={visitUrl(rule.domain)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -1331,7 +1332,7 @@ export function View() {
                                 {activeDomains.map((rule) => (
                                   <a
                                     key={rule.$id}
-                                    href={domainUrl(rule.domain)}
+                                    href={visitUrl(rule.domain)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"

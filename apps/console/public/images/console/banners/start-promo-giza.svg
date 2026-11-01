@@ -1,0 +1,28 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="gizaGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="gizaBack">
+<path d="M140 170L218 296H62Z"/>
+<path d="M352 204L410 296H294Z"/>
+</g>
+<g id="giza">
+<path d="M241 96L359 296H123Z"/>
+<path d="M60 296H422V310H60Z"/>
+</g>
+</defs>
+<use href="#gizaBack" fill="#19191C"/>
+<use href="#gizaBack" fill="url(#gizaGrad)"/>
+<use href="#gizaBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#giza" fill="#19191C"/>
+<use href="#giza" fill="url(#gizaGrad)"/>
+<use href="#giza" stroke="#FD366E" stroke-width="1.36239"/>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M241 96L270 296"/><path d="M217.4 136H264.6"/><path d="M193.8 176H288.2"/><path d="M170.2 216H311.8"/><path d="M146.6 256H335.4"/><path d="M115.24 210H164.76"/><path d="M90.48 250H189.52"/><path d="M140 170L156 296"/><path d="M352 204L362 296"/></g>
+</svg>

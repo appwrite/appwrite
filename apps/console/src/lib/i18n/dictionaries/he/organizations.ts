@@ -1613,4 +1613,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'בנו על גבי Appwrite',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'צרו אפליקציות OAuth2 שמאפשרות למשתמשי Appwrite לחבר את הפרויקטים שלהם עם גישה מבוססת הסכמה ומוגבלת בהרשאות, במקום מפתחות API שמודבקים ידנית. פרסמו אותן במרקטפלייס כדי שכל ארגון יוכל למצוא אותן.',
+  'Set up auto-pay': 'הגדרת תשלום אוטומטי',
+  'Auto-pay is set up': 'התשלום האוטומטי הוגדר',
+  'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
+  'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
+    'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
+  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
 }

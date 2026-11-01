@@ -499,6 +499,7 @@ class Migrations extends Action
                 $this->project->getSequence(),
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
                 $this->resolveDestinationDatabaseDsn(...),
+                scopes: $this->getGrant($migration),
             ),
             DestinationCSV::getName() => DestinationCSV::fromResourceIds(
                 deviceForFiles: $this->deviceForFiles,
@@ -571,10 +572,29 @@ class Migrations extends Action
     }
 
     /**
+     * Scopes the migration may act with: those of the key that created it, or null for a console
+     * session. A migration with no recorded grant predates grants and gets none until retried.
+     *
+     * @return array<string>|null
+     */
+    protected function getGrant(Document $migration): ?array
+    {
+        $options = $migration->getAttribute('options', []);
+
+        return \array_key_exists('scopes', $options) ? $options['scopes'] : [];
+    }
+
+    /**
      * @throws Exception
      */
-    protected function generateAPIKey(Document $project): string
+    protected function generateAPIKey(Document $project, Document $migration): string
     {
+        $scopes = $this->getAPIKeyScopes();
+        $grant = $this->getGrant($migration);
+        if ($grant !== null) {
+            $scopes = \array_values(\array_intersect($scopes, $grant));
+        }
+
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
         $apiKey = $jwt->encode([
@@ -592,7 +612,7 @@ class Migrations extends Action
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
             ],
-            'scopes' => $this->getAPIKeyScopes(),
+            'scopes' => $scopes,
         ]);
 
         return API_KEY_EPHEMERAL . '_' . $apiKey;
@@ -617,7 +637,7 @@ class Migrations extends Action
     ): void {
         $project = $this->project;
 
-        $tempAPIKey = $this->generateAPIKey($project);
+        $tempAPIKey = $this->generateAPIKey($project, $migration);
 
         $transfer = $source = $destination = null;
         $caughtError = null;

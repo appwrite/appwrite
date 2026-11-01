@@ -24,8 +24,8 @@ use Utopia\Span\Span;
  * cohort without integer sequences, are read by page through the accessedAt index, and a project belongs to the slot
  * its ID hashes to.
  *
- * Before each block or page it enqueues, the sweep checks the deletes queue. At BACKLOG messages or more it waits WAIT
- * seconds once, and if the queue is still backed up it sends the slot's message to the maintenance queue again with a
+ * Before each block or page it enqueues, the sweep checks the deletes queue. When its oldest message has waited LAG
+ * seconds or more it waits WAIT seconds once, and if the queue is still backed up it sends the slot's message to the maintenance queue again with a
  * cursor at that block or page and returns, so no job outlives a short wait. A message older than one period is
  * skipped, since by then the slot's next run has superseded it.
  *
@@ -38,7 +38,7 @@ final readonly class Sweep
 
     public const int PAGE = 1000;
 
-    public const int BACKLOG = 100;
+    public const int LAG = 60;
 
     public const int WAIT = 10;
 
@@ -164,13 +164,13 @@ final readonly class Sweep
      */
     private function deferred(MaintenanceMessage $message, int $pass, string $cursor): bool
     {
-        $pending = $this->publisherForDeletes->getSize();
-        if ($pending >= self::BACKLOG) {
+        $age = $this->publisherForDeletes->getAge();
+        if ($age >= self::LAG) {
             $this->clock->sleep(self::WAIT);
-            $pending = $this->publisherForDeletes->getSize();
+            $age = $this->publisherForDeletes->getAge();
         }
 
-        if ($pending < self::BACKLOG) {
+        if ($age < self::LAG) {
             return false;
         }
 
@@ -189,8 +189,8 @@ final readonly class Sweep
             throw new \RuntimeException('Failed to defer maintenance for slot due at ' . $message->due);
         }
 
-        Span::add('maintenance.deferred', $pending);
-        Console::info('maintenance: deferred slot ' . $message->slot . ' due at ' . $message->due . ' behind ' . $pending . ' pending deletes');
+        Span::add('maintenance.deferred', $age);
+        Console::info('maintenance: deferred slot ' . $message->slot . ' due at ' . $message->due . ' while deletes wait ' . $age . 's');
 
         return true;
     }

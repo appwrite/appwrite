@@ -67,10 +67,10 @@ type EducationPlanCurtainProps = {
 }
 
 /**
- * The Education plan covers an organization for its first 6 months, and never
- * ends before November 1, 2026. During
- * the last 5 weeks the curtain is a reminder the team can dismiss for 24
- * hours. Once the plan ends it blocks the organization until the team picks
+ * The Education plan ends at the organization's `educationExpiresAt`, which
+ * Cloud computes (6 months, never before November 1, 2026, plus any extension
+ * support granted). During the last 5 weeks the curtain is a reminder the team can dismiss for 1
+ * day. Once the plan ends it blocks the organization until the team picks
  * another plan.
  */
 export function EducationPlanCurtain({ orgId }: EducationPlanCurtainProps) {
@@ -78,7 +78,11 @@ export function EducationPlanCurtain({ orgId }: EducationPlanCurtainProps) {
   const { organization } = useOrganizationById(
     features.billing ? orgId : undefined,
   )
-  const endsAt = getEducationPlanEndsAt(organization?.$createdAt)
+  // Not in the Console SDK's Organization model until Cloud releases the field.
+  const endsAt = getEducationPlanEndsAt(
+    (organization as { educationExpiresAt?: string | null } | null)
+      ?.educationExpiresAt,
+  )
   if (
     !features.billing ||
     !orgId ||

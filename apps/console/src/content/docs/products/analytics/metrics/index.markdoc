@@ -366,7 +366,7 @@ curl -G 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID
 | --- | --- | --- |
 | Neither | One row with totals for the whole range | Every metric on this page |
 | `dimensions` | One row per value, ranked by visitors (`eventName` by events), with `value` set | `visitors`, `sessions`, and `events` |
-| `interval` | One row per time bucket, oldest first, with `date` set | `visitors`, `sessions`, and `events` |
+| `interval` | One row per time bucket, oldest first, with `date` set | `visitors`, `sessions`, `pageviews`, and `events` |
 
 Without `dimensions` or `interval`, the single row looks like this:
 

@@ -4,6 +4,7 @@ import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
 import { CloudStatusBanner } from './CloudStatusBanner'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { ZeroBanner } from '@/components/global/shared/ZeroBanner'
 import { ProductHuntPromoBanner } from '@/components/global/shared/ProductHuntPromoBanner'
 import { StartPromoBanner } from '@/components/global/shared/StartPromoBanner'
 import { NetworkOfflineCurtain } from '@/components/global/shared/NetworkOfflineCurtain'
@@ -188,6 +189,7 @@ export function ConsoleLayout({
           {showNativeAppBar && <NativeAppBar />}
           <CloudStatusBanner />
           <ConsoleImpersonationBanner />
+          <ZeroBanner />
           {!hideHeader ? <ProductHuntPromoBanner /> : null}
           {!hideHeader ? <StartPromoBanner /> : null}
           {headerBanner}

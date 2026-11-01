@@ -11,15 +11,25 @@ import {
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
+import {
+  isLegacyConsolePath,
+  rewriteLegacyConsolePath,
+} from '@/lib/legacy-console-path'
+import { isZeroAccount } from '@/lib/zero/session'
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
  * email before org/project APIs. Unverified sessions must stay on /verify-email.
  */
 export function requiresConsoleEmailVerification(
-  account: Pick<Models.User, 'emailVerification'> | null | undefined,
+  account:
+    | (Pick<Models.User, 'emailVerification'> & { labels?: string[] })
+    | null
+    | undefined,
 ): boolean {
   if (!account) return false
+  // The anonymous owner of a Zero project has no email; claiming verifies one.
+  if (isZeroAccount(account)) return false
   return (
     getActiveProfileFeatures().userVerification && !account.emailVerification
   )
@@ -101,6 +111,23 @@ export function resolvePostAuthRedirect(redirect?: string): string | undefined {
 }
 
 /**
+ * Destination after a magic URL sign-in, `/` when the link names none or an
+ * unsafe one. Links may carry a legacy `/console/...` path, which the server
+ * only rewrites on a document load, so it is rewritten here. A fragment is
+ * dropped: route navigation carries only the path and query.
+ */
+export function resolveMagicUrlRedirect(redirect?: string | null): string {
+  let destination = redirect || undefined
+  if (destination && isValidRelativeRedirect(destination)) {
+    const url = new URL(destination, 'https://console.invalid')
+    destination = isLegacyConsolePath(url.pathname)
+      ? `${rewriteLegacyConsolePath(url.pathname, url.search)}${url.search}`
+      : destination.split('#')[0]
+  }
+  return resolvePostAuthRedirect(destination) ?? '/'
+}
+
+/**
  * Split a validated relative redirect into the `{ to, search }` shape TanStack
  * Router needs. Passing a URL with a query string directly as `to` drops the
  * search params - which would lose OAuth2 params like `client_id` (consent) or
@@ -152,6 +179,11 @@ export async function prefetchPostAuthDestination(
 ): Promise<void> {
   // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
   if (isOAuth2FlowRedirect(redirect)) return
+  // Claiming a transfer offers its own choice of organization, so a new account
+  // does not get a starter organization and project it did not ask for.
+  if (redirect && normalizeRedirectPathname(redirect) === '/transfer') {
+    return
+  }
   // Education enrollment provisions its own organization after verifying GitHub.
   if (redirect && normalizeRedirectPathname(redirect) === EDUCATION_JOIN_PATH) {
     return
