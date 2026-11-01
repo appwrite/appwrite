@@ -91,27 +91,6 @@ class Update extends Action
         $isAppUser = $user->isKey($authorization->getRoles());
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
-        if ($project->getId() === 'console') {
-            // Quick check: fetch up to 2 owners to determine if only one exists
-            $ownersCount = $dbForProject->count(
-                collection: 'memberships',
-                queries: [
-                    Query::containsAny('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getSequence()])
-                ],
-                max: 2
-            );
-
-            // Is the role change being requested by the user on their own membership?
-            $isCurrentUserAnOwner =  $user->getSequence() === $membership->getAttribute('userInternalId');
-
-            // Prevent role change if there's only one owner left,
-            // the requester is that owner, and the new `$roles` no longer include 'owner'
-            if ($ownersCount === 1 && $isOwner && $isCurrentUserAnOwner && !\in_array('owner', $roles)) {
-                throw new Exception(Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED, 'There must be at least one owner in the organization.');
-            }
-        }
-
         // Console organization developer/admin become bare privileged roles when
         // X-Appwrite-Organization is applied. Those roles must not authorize
         // membership role changes; only the team owner or an API key may.
@@ -119,11 +98,41 @@ class Update extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
         }
 
-        /**
-         * Update the roles
-         */
-        $membership->setAttribute('roles', $roles);
-        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['roles' => $roles]));
+        // An organization must keep a confirmed owner, whoever makes the change: a session, or an API key.
+        // Locking the team first serializes concurrent changes to its owners; counting after the update,
+        // in the same transaction, sees this change and refuses it as a whole.
+        $isDemotingConfirmedOwner = $project->getId() === 'console'
+            && $membership->getAttribute('confirm', false)
+            && \in_array('owner', $membership->getAttribute('roles', []), true)
+            && !\in_array('owner', $roles, true);
+
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $membership, $roles, $team, $isDemotingConfirmedOwner) {
+            if ($isDemotingConfirmedOwner) {
+                $dbForProject->getDocument('teams', $team->getId(), forUpdate: true);
+            }
+
+            $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['roles' => $roles]));
+
+            if (!$isDemotingConfirmedOwner) {
+                return $membership;
+            }
+
+            $owners = $dbForProject->count(
+                collection: 'memberships',
+                queries: [
+                    Query::containsAny('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getSequence()]),
+                    Query::equal('confirm', [true]),
+                ],
+                max: 1
+            );
+
+            if ($owners === 0) {
+                throw new Exception(Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED, 'There must be at least one owner in the organization.');
+            }
+
+            return $membership;
+        });
 
         /**
          * Replace membership on profile
