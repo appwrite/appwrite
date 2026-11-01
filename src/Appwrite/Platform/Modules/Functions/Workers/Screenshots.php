@@ -104,13 +104,6 @@ class Screenshots extends Action
 
         Span::add('site.framework', $site->getAttribute('framework', ''));
 
-        // An earlier attempt stored the screenshots and failed after: finish its last steps instead of capturing again
-        if ($deployment->getAttribute('screenshotLight', '') !== '' && $deployment->getAttribute('screenshotDark', '') !== '') {
-            $this->resume($message, $dbForPlatform, $dbForProject, $project, $site, $deployment);
-
-            return;
-        }
-
         // Realtime preparation
         $event = "sites.[siteId].deployments.[deploymentId].update";
         $queueForRealtime
@@ -119,6 +112,13 @@ class Screenshots extends Action
             ->setEvent($event)
             ->setParam('siteId', $site->getId())
             ->setParam('deploymentId', $deployment->getId());
+
+        // An earlier attempt stored the screenshots and failed after: finish its last steps instead of capturing again
+        if ($deployment->getAttribute('screenshotLight', '') !== '' && $deployment->getAttribute('screenshotDark', '') !== '') {
+            $this->resume($message, $dbForPlatform, $dbForProject, $queueForRealtime, $project, $site, $deployment);
+
+            return;
+        }
 
         $bucket = new Document();
         $files = [];
@@ -278,13 +278,18 @@ class Screenshots extends Action
     }
 
     /**
-     * Point the site at the stored screenshots and grant them to the project's team, as a capture ends.
+     * Announce the stored screenshots, point the site at them and grant them to the project's team, as a capture ends.
      */
-    protected function resume(Message $message, Database $dbForPlatform, Database $dbForProject, Document $project, Document $site, Document $deployment): void
+    protected function resume(Message $message, Database $dbForPlatform, Database $dbForProject, Realtime $queueForRealtime, Document $project, Document $site, Document $deployment): void
     {
         Span::add('screenshot.resumed', true);
 
         try {
+            // The earlier attempt may have failed before announcing the screenshots
+            $queueForRealtime
+                ->setPayload($deployment->getArrayCopy())
+                ->trigger();
+
             $dbForProject->updateDocument('sites', $site->getId(), new Document([
                 'deploymentScreenshotDark' => $deployment->getAttribute('screenshotDark', ''),
                 'deploymentScreenshotLight' => $deployment->getAttribute('screenshotLight', ''),
