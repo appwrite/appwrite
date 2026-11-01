@@ -194,8 +194,8 @@ interface CategoryNavigationProps {
   projectId: string
   navGroups: UsageNavGroup[]
   activeCategoryId: string
-  /** Monitors currently firing, flagged on the Alerts link. */
-  firingAlerts: number
+  /** Monitors currently firing, flagged on the Alerts link; null hides Monitoring (alerts preview off). */
+  firingAlerts: number | null
   className?: string
 }
 
@@ -289,21 +289,23 @@ function CategoryNavigation({
       role="navigation"
       aria-label={t('Usage categories')}
     >
-      <div className="space-y-0.5">
-        <UsageNavGroupHeading label="Monitoring" />
-        <MonitoringNavLink
-          projectId={projectId}
-          page="monitors"
-          isActive={activeCategoryId === 'monitors'}
-          firing={0}
-        />
-        <MonitoringNavLink
-          projectId={projectId}
-          page="alerts"
-          isActive={activeCategoryId === 'alerts'}
-          firing={firingAlerts}
-        />
-      </div>
+      {firingAlerts === null ? null : (
+        <div className="space-y-0.5">
+          <UsageNavGroupHeading label="Monitoring" />
+          <MonitoringNavLink
+            projectId={projectId}
+            page="monitors"
+            isActive={activeCategoryId === 'monitors'}
+            firing={0}
+          />
+          <MonitoringNavLink
+            projectId={projectId}
+            page="alerts"
+            isActive={activeCategoryId === 'alerts'}
+            firing={firingAlerts}
+          />
+        </div>
+      )}
       {navGroups.map((group) => (
         <div key={group.id} className="space-y-0.5">
           <UsageNavGroupHeading label={group.label} />
@@ -327,7 +329,7 @@ interface MobileCategoryDrawerProps {
   projectId: string
   navGroups: UsageNavGroup[]
   activeCategoryId: string
-  firingAlerts: number
+  firingAlerts: number | null
 }
 
 function MobileCategoryDrawer({
@@ -499,13 +501,17 @@ function UsageLayoutContent({
     getUsageCategoryIdFromPathname(location.pathname),
     plan,
   )
-  const { monitors } = useMonitors(projectId)
-  const firingAlerts = monitors.filter(
-    (monitor) => monitor.enabled && monitor.status === 'firing',
-  ).length
-  const alertMetric = ALERT_METRIC_BY_CATEGORY[categoryId]
-  const [filtersOpen, setFiltersOpen] = useState(false)
   const { features, isCloud, isSelfHosted } = useConsoleProfile()
+  const { monitors } = useMonitors(features.alerts ? projectId : null)
+  const firingAlerts = features.alerts
+    ? monitors.filter(
+        (monitor) => monitor.enabled && monitor.status === 'firing',
+      ).length
+    : null
+  const alertMetric = features.alerts
+    ? ALERT_METRIC_BY_CATEGORY[categoryId]
+    : undefined
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const filterAvailability = useMemo(
     () => ({ allowCity: !isSelfHosted }),
     [isSelfHosted],

@@ -30,6 +30,7 @@ import {
   useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { RetryPayment } from './RetryPayment'
 
@@ -38,6 +39,7 @@ export function BillingTab() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const orgId = params.orgId as string | undefined
+  const alertsEnabled = useConsoleProfile().features.alerts
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [isBackupPaymentMethod, setIsBackupPaymentMethod] = useState(false)
@@ -302,14 +304,18 @@ export function BillingTab() {
         },
         node: <BillingAlertsSection orgId={orgId} />,
       },
-      {
-        id: 'budget-monitors',
-        search: {
-          title: 'Budget monitors',
-          keywords: ['alerts', 'budget', 'webhook', 'monitors'],
-        },
-        node: <BudgetMonitors orgId={orgId} />,
-      },
+      ...(alertsEnabled
+        ? [
+            {
+              id: 'budget-monitors',
+              search: {
+                title: 'Budget monitors',
+                keywords: ['alerts', 'budget', 'webhook', 'monitors'],
+              },
+              node: <BudgetMonitors orgId={orgId} />,
+            },
+          ]
+        : []),
       {
         id: 'available-credits',
         search: {
@@ -342,6 +348,7 @@ export function BillingTab() {
     orgBillingReadonly,
     failedInvoice,
     orgId,
+    alertsEnabled,
     t,
   ])
 

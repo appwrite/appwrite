@@ -6,6 +6,7 @@ import {
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { AlertHistory } from '@/components/pages/projects/$projectId/usage/alerts/AlertHistory'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 
 /**
@@ -26,6 +27,13 @@ export const Route = createFileRoute(
 )({
   validateSearch: searchSchema,
   beforeLoad: ({ params, search }) => {
+    if (!getActiveProfileFeatures().alerts) {
+      throw redirect({
+        to: '/projects/$projectId/usage',
+        params,
+        replace: true,
+      })
+    }
     if (search.rule || search.metric) {
       const { rule, metric, resourceType, resourceId, threshold } = search
       throw redirect({

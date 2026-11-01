@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import {
   bucketsQueryOptions,
@@ -16,6 +16,7 @@ import { getBillingPlanResourceLimit } from '@/lib/billing/project-breakdown-res
 import { Monitors } from '@/components/pages/projects/$projectId/usage/monitors/Monitors'
 import type { RuleForm } from '@/components/pages/projects/$projectId/usage/monitors/RuleFields'
 import { canWriteMonitors } from '@/lib/console-access-checks'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import {
   MB_SECONDS_PER_GB_HOUR,
@@ -43,6 +44,15 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/usage/monitors',
 )({
   validateSearch: searchSchema,
+  beforeLoad: ({ params }) => {
+    if (!getActiveProfileFeatures().alerts) {
+      throw redirect({
+        to: '/projects/$projectId/usage',
+        params,
+        replace: true,
+      })
+    }
+  },
   head: () => ({ meta: [{ title: pageTitle('Monitors', 'Usage') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return

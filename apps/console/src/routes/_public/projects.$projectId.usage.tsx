@@ -33,6 +33,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/usage')({
     void queryClient
       .prefetchQuery(countriesQueryOptions())
       .catch(() => undefined)
+    if (!getActiveProfileFeatures().alerts) return
     // The sidebar flags firing monitors on the Alerts link; load them with the
     // page so the badge does not pop in. Editions without monitors answer with
     // an error, which leaves the badge off.
