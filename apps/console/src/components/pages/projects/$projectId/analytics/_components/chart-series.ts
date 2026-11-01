@@ -13,7 +13,11 @@ import type {
   AnalyticsRange,
 } from '@/lib/react-query/hooks'
 
-export type AnalyticsSeriesKey = 'events' | 'visitors' | 'sessions'
+export type AnalyticsSeriesKey =
+  | 'events'
+  | 'visitors'
+  | 'sessions'
+  | 'pageviews'
 
 export type AnalyticsChartPoint = {
   /** Short axis label. */
@@ -25,6 +29,7 @@ export type AnalyticsChartPoint = {
   events: number
   visitors: number
   sessions: number
+  pageviews: number
 }
 
 /**
@@ -77,16 +82,22 @@ export function buildAnalyticsChartPoints(
 
   const lookup = new Map<
     number,
-    { events: number; visitors: number; sessions: number }
+    { events: number; visitors: number; sessions: number; pageviews: number }
   >()
   for (const metric of metrics) {
     const key = bucketKey(metric.date, interval)
     if (key == null) continue
-    const current = lookup.get(key) ?? { events: 0, visitors: 0, sessions: 0 }
+    const current = lookup.get(key) ?? {
+      events: 0,
+      visitors: 0,
+      sessions: 0,
+      pageviews: 0,
+    }
     lookup.set(key, {
       events: current.events + (metric.events ?? 0),
       visitors: current.visitors + (metric.visitors ?? 0),
       sessions: current.sessions + (metric.sessions ?? 0),
+      pageviews: current.pageviews + (metric.pageviews ?? 0),
     })
   }
 
@@ -112,6 +123,7 @@ export function buildAnalyticsChartPoints(
       events: values?.events ?? 0,
       visitors: values?.visitors ?? 0,
       sessions: values?.sessions ?? 0,
+      pageviews: values?.pageviews ?? 0,
     })
     cursor = nextBucket(cursor, interval)
   }
@@ -178,8 +190,9 @@ export function sumAnalyticsSeries(
       events: acc.events + point.events,
       visitors: acc.visitors + point.visitors,
       sessions: acc.sessions + point.sessions,
+      pageviews: acc.pageviews + point.pageviews,
     }),
-    { events: 0, visitors: 0, sessions: 0 },
+    { events: 0, visitors: 0, sessions: 0, pageviews: 0 },
   )
 }
 
