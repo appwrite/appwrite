@@ -1,0 +1,318 @@
+---
+layout: post
+title: 'How we trained our own AI model for image cropping'
+description: Appwrite Cloud uses FocalNet, a 4.76M-parameter AI model, to crop images with gravity=auto. Here is how we trained it to match human crop preferences.
+date: 2026-09-28
+cover: /images/blog/how-we-trained-our-own-model/cover.avif
+timeToRead: 14
+author: torsten-dittmann
+category: ai, open-source
+featured: false
+unlisted: false
+callToAction: true
+draft: false
+faqs:
+  - question: 'What is FocalNet?'
+    answer: "FocalNet is Appwrite's open-source image cropping model. It predicts which parts of a photo matter as a 64 × 64 importance map, and scores up to 128 candidate crops in a single ONNX Runtime call. It has about 4.76 million parameters, including the crop ranker, and ships as a 19.45 MiB file under the MIT license, on [Hugging Face](https://huggingface.co/appwrite/focalnet) and [GitHub](https://github.com/appwrite/focalnet)."
+  - question: 'How was FocalNet trained?'
+    answer: 'In two phases. First, a small network learned to copy importance maps that two existing models, U²-Net and YuNet, produced for 500,000 photos from Open Images. This is called knowledge distillation. Then, with that network frozen, a 7,069-parameter ranking head learned which crops people prefer from the CPC and GAICD datasets.'
+  - question: 'What is knowledge distillation?'
+    answer: "Knowledge distillation trains a small student model to imitate a larger teacher model. The teacher labels the training data, so you get a smaller, faster model without paying people to label anything. FocalNet's teacher was the U²-Net and YuNet pipeline behind [AutoGravity](/blog/post/introducing-autogravity)."
+  - question: 'Does FocalNet replace U²-Net and YuNet in AutoGravity?'
+    answer: 'On Appwrite Cloud, yes. `gravity=auto` runs FocalNet. Self-hosted AutoGravity can do the same with `MODEL_BACKEND=focalnet`, which loads `focalnet-human.onnx` instead of YuNet and U²-Net and returns the selected crop along with its center as the focal point.'
+  - question: 'Why train your own AI model instead of using an existing one?'
+    answer: "The existing models answered a narrower question than we needed. AutoGravity's U²-Net and YuNet return a single point per photo, rely on a 44-million-parameter saliency model, and let one face override everything else. Training our own model let us weigh faces and other subjects in one importance map, rank whole crops by what people prefer, and do both in one pass with about a tenth of U²-Net's parameters."
+  - question: 'Why is there no INT8 version of FocalNet?'
+    answer: 'An 8-bit (INT8) version shrank the file to 6.37 MiB, but its importance maps became far less accurate, with the map error rising from 0.0998 to 0.426, and its 16:9 crops kept less of the subject than a plain center crop. The published model stays FP32. Quantization-aware training or another compact encoder may offer a better path to a smaller build.'
+  - question: 'Is FocalNet related to Focal Modulation Networks?'
+    answer: "No. Appwrite FocalNet is a crop-importance model built on a RepViT-M0.9 encoder. It shares a name with Microsoft Research's Focal Modulation Networks, also called FocalNets, a family of vision backbones, but uses none of their architecture."
+---
+
+We recently shipped [AutoGravity](/blog/post/introducing-autogravity), the service behind [`gravity=auto`](/docs/products/storage/images) in Appwrite Storage. When you ask Appwrite for a square thumbnail of a wide photo, AutoGravity decides where to crop. It started with two existing AI models: YuNet looks for faces, and when it finds none, U²-Net looks for whatever stands out most. That works, but it takes a 44-million-parameter model and a handwritten rule to produce a single point.
+
+So we trained our own AI model for image cropping. It's called **FocalNet**, and it has about 4.76 million parameters, including the crop ranker, roughly a tenth of U²-Net's. It looks at a photo, estimates which parts matter, and ranks possible crops by how people tend to frame photos, all in a single call. Appwrite Cloud uses FocalNet for `gravity=auto`. The [training code](https://github.com/appwrite/focalnet), the [trained model](https://huggingface.co/appwrite/focalnet), and our evaluation reports are open source under the MIT license.
+
+{% only_dark %}
+![A golden retriever and a two-person portrait, each with a centered square crop next to FocalNet's square crop](/images/blog/how-we-trained-our-own-model/examples.avif)
+{% /only_dark %}
+{% only_light %}
+![A golden retriever and a two-person portrait, each with a centered square crop next to FocalNet's square crop](/images/blog/how-we-trained-our-own-model/examples-light.avif)
+{% /only_light %}
+
+You don't need a machine learning background to follow along. We explain each idea the first time it comes up.
+
+# How we trained our own model in five steps
+
+1. **Collect photos.** We gathered 500,000 photos from Open Images V7, a public dataset, balanced across people, animals, food, vehicles, scenes, and more.
+2. **Label them automatically.** The two models behind AutoGravity marked what matters in every photo. No person drew a single label.
+3. **Train a small model to copy those labels.** This technique is called knowledge distillation.
+4. **Teach it taste.** A tiny add-on learned from datasets where people rated different crops of the same photo.
+5. **Ship one file.** The result is a single 19.45 MiB model file that runs on an ordinary CPU and even in a browser.
+
+# Why a face-first pipeline hits a ceiling
+
+Before FocalNet, AutoGravity answered two questions in order. First, is there a clear face? YuNet, a small face detector, checked. If it found a face with a confidence score of at least 0.85, AutoGravity returned the center of that face as the point to keep in view, and stopped there. Otherwise, U²-Net found the region that stands out most, and AutoGravity returned the center of that region instead.
+
+{% info title="Saliency, briefly" %}
+U²-Net is a saliency model. It highlights the parts of an image that stand out from their surroundings, like a dog on a lawn, and outputs a map where brighter pixels stand out more. It doesn't know what it found: a dog, a car, and a flower all look the same to it.
+{% /info %}
+
+That design has three limits:
+
+- **A face overrides everything.** Once YuNet finds a face, nothing else in the photo counts.
+- **A point is not a crop.** AutoGravity returns one point to keep in view. It can't judge whether a tighter or looser crop would look better.
+- **The saliency model is big.** U²-Net has about 44 million parameters, the numbers a model adjusts while it learns. That's 168 MiB on disk, or 42 MiB in the compressed version the original pipeline used by default.
+
+{% only_dark %}
+![Diagram comparing AutoGravity's YuNet, face check, and U²-Net path, which outputs a point, with FocalNet's single network, which outputs an importance map and crop scores](/images/blog/how-we-trained-our-own-model/pipelines.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram comparing AutoGravity's YuNet, face check, and U²-Net path, which outputs a point, with FocalNet's single network, which outputs an importance map and crop scores](/images/blog/how-we-trained-our-own-model/pipelines-light.avif)
+{% /only_light %}
+
+We wanted one model that weighs faces and other subjects together, judges whole crops instead of single points, and runs comfortably on a regular CPU.
+
+# Distilling a teacher we already trusted
+
+To train a model, you need lots of examples of the right answer. For cropping, that means maps of what matters in each photo. Nobody has hundreds of thousands of those lying around, and drawing them by hand was out of the question.
+
+We did have AutoGravity, which we had already tested on real photos. So we made it the teacher.
+
+{% info title="Knowledge distillation, briefly" %}
+Knowledge distillation trains a small student model to imitate a larger teacher. The teacher labels a pile of photos, and the student learns to reproduce the teacher's answers. You end up with a smaller, faster model without paying anyone to label data. The idea was popularized by a [2015 paper from Geoffrey Hinton, Oriol Vinyals, and Jeff Dean](https://arxiv.org/abs/1503.02531).
+{% /info %}
+
+For training, we changed one thing about the teacher: it no longer stops at the first face. Both models run on every photo, and their outputs are combined into one **importance map**. That's a 64 × 64 grid where each cell holds a number from 0 to 1 saying how much that part of the photo matters.
+
+The combination follows a simple rule. Each face becomes a soft spot on the map, and bigger, more confident faces count for more. When a photo contains faces, they get 75% of the total importance, and everything else U²-Net highlights shares the remaining 25%.
+
+{% only_dark %}
+![A statue's training target built from what U²-Net highlights plus a soft spot for the face, with faces holding 75% of the importance, followed by examples of two terns and a spaniel whose map is dominated by a stranger's face](/images/blog/how-we-trained-our-own-model/teacher-targets.avif)
+{% /only_dark %}
+{% only_light %}
+![A statue's training target built from what U²-Net highlights plus a soft spot for the face, with faces holding 75% of the importance, followed by examples of two terns and a spaniel whose map is dominated by a stranger's face](/images/blog/how-we-trained-our-own-model/teacher-targets-light.avif)
+{% /only_light %}
+
+A map is more useful than a point because you can score any crop against it. We call that score **retention**: the share of the map's total importance that lands inside the crop. On the terns above, a centered square keeps 41% of the importance, while the best square keeps 99.5%.
+
+The 75% rule is a judgment call, not a law of photography. On the spaniel, a stranger's face at the top edge gets most of the importance, so the best square slides up toward it. A student that imitates the teacher picks up this habit too. The FocalNet repository says as much: the face weight is a policy to check against your own images, not a definition of a good crop.
+
+# Building a 500,000-image training set
+
+The photos come from [Open Images V7](https://storage.googleapis.com/openimages/web/index.html), a large public dataset published by Google. We kept only photos licensed under CC BY 2.0, stored each photo's author, source, and license next to it, and resized every photo so its longest side is 640 pixels.
+
+{% only_dark %}
+![Four-step data pipeline from sorting photos by category through teacher labeling to holding out test photos, with a bar chart of photos per category](/images/blog/how-we-trained-our-own-model/training-data.avif)
+{% /only_dark %}
+{% only_light %}
+![Four-step data pipeline from sorting photos by category through teacher labeling to holding out test photos, with a bar chart of photos per category](/images/blog/how-we-trained-our-own-model/training-data-light.avif)
+{% /only_light %}
+
+Three decisions mattered most:
+
+- **Balance the categories.** Picking photos at random would over-represent whatever the dataset has most of. Instead, we sorted photos into categories (people, animals, food, vehicles, scenes, busy scenes, everything else) using the dataset's object labels, then drew a fixed number from each. The second batch of 400,000 leaned further toward people because the dataset didn't have enough food and busy scenes to keep the original mix.
+- **Label on GPUs.** Running the teacher on hundreds of thousands of photos is the slowest step. We split the 400,000-photo batch into chunks and processed them in parallel on several NVIDIA L4 GPUs rented through [Modal](https://modal.com).
+- **Keep test photos separate.** We removed duplicate photos, then set aside 10,000 photos as a validation set that the model never trains on.
+
+{% info title="Why validation data stays separate" %}
+A model can memorize its training photos instead of learning patterns that carry over to new ones. Measuring it on photos it has never seen, the validation set, is how you catch that. If copies of one photo land on both sides, the model gets tested on something it already studied, and the score looks better than it is.
+{% /info %}
+
+# A 4.75M-parameter student built on RepViT
+
+That 4.75 million (exactly 4,750,625 parameters) is the importance model alone. The crop ranker, added later, brings the published FocalNet to about 4.76 million.
+
+Image models are rarely trained from scratch. Our student starts from [RepViT-M0.9](https://arxiv.org/abs/2307.09283), a compact image model designed for phones. It had already learned general visual features, like edges, textures, and object parts, from more than a million labeled photos in the ImageNet dataset. Reusing that knowledge for our task is a common technique called **transfer learning**.
+
+The network has three parts:
+
+- **The encoder**, the pretrained RepViT, turns the photo into features: grids of numbers that describe what's in each region, at three levels of detail. It holds 4,717,792 of the importance model's 4,750,625 parameters.
+- **A feature pyramid** merges the three levels into one 32 × 32 grid.
+- **An importance head** scales that grid up to 64 × 64 and outputs the importance map. The pyramid and head together have just 32,833 parameters.
+
+{% only_dark %}
+![Architecture diagram: a photo scaled to 256 by 256 enters the RepViT-M0.9 encoder, a feature pyramid merges three levels of detail, and an importance head and a crop ranker share the result](/images/blog/how-we-trained-our-own-model/architecture.avif)
+{% /only_dark %}
+{% only_light %}
+![Architecture diagram: a photo scaled to 256 by 256 enters the RepViT-M0.9 encoder, a feature pyramid merges three levels of detail, and an importance head and a crop ranker share the result](/images/blog/how-we-trained-our-own-model/architecture-light.avif)
+{% /only_light %}
+
+Photos come in every shape, but the model expects a 256 × 256 square. So each photo is scaled to fit, and the leftover space is filled with padding. Training ignores the padding cells, and they're cut away from the output, so a wide panorama and a tall portrait both get maps that line up with the original photo.
+
+## How the student learns
+
+{% info title="Training in one paragraph" %}
+Training is a loop. The model predicts a map, a **loss function** scores how far that prediction is from the teacher's map, and an optimizer nudges the importance model's 4.75 million parameters so the score gets a little lower next time. One pass over the whole training set is called an **epoch**, and the **learning rate** sets how big each nudge is.
+{% /info %}
+
+FocalNet's loss function scores each prediction in two ways:
+
+- **Cell by cell.** Each of the 4,096 cells is compared with the teacher's value using binary cross-entropy, a standard measure for values between 0 and 1. Mistakes in important cells cost up to five times more.
+- **As a whole.** Both maps are treated as a fixed budget of importance, and a second measure, KL divergence, checks whether the student spends that budget in the same places as the teacher. It counts for a quarter as much as the first measure.
+
+The second check matters most on photos with faces, like the statue above. The statue's body cells are only about 1% as bright as the face, yet together they hold a quarter of all the importance. Cell-by-cell scoring alone would let a student ignore the body and barely lose points. The whole-map check catches that, and it measures what crop selection needs later: where the importance sits.
+
+# Training FocalNet on Modal in four runs
+
+We trained in four runs, each starting from where the previous one left off. The first two teach the student to copy the teacher. The last two train the crop ranker, which we cover further down.
+
+{% only_dark %}
+![Matrix of four training runs showing whether the encoder, importance head, and crop ranker were trained or frozen in each run, with data, epochs, and GPUs](/images/blog/how-we-trained-our-own-model/training-runs.avif)
+{% /only_dark %}
+{% only_light %}
+![Matrix of four training runs showing whether the encoder, importance head, and crop ranker were trained or frozen in each run, with data, epochs, and GPUs](/images/blog/how-we-trained-our-own-model/training-runs-light.avif)
+{% /only_light %}
+
+**Run 1** used 90,000 photos on one NVIDIA L40S GPU. The pretrained encoder stayed frozen for the first epoch, so the new head's random early updates could not overwrite what it already knew. After that, the encoder learned at a tenth of the head's learning rate. The best result came at epoch 15.
+
+We also rebalanced and augmented the data. Photos with faces were shown twice as often, and random mirroring plus small brightness and contrast changes gave the model more variety.
+
+**Run 2** continued from run 1 with all 490,000 training photos for 10 epochs at a lower learning rate. The best checkpoint, a saved snapshot of the model, came at epoch 7. On the same 1,000 validation photos, the extra data reduced the map error by 7.36% and the focal point error by 3.97%.
+
+Reading hundreds of thousands of small files over a network is slow, so we packed the dataset into archives of 5,000 photos each and copied them to the GPU machine's local disk. Every checkpoint records its settings and a fingerprint of its data, so an interrupted run can resume exactly where it stopped, and refuses to resume if anything changed.
+
+# Measuring the student against its teacher
+
+We tested the finished model on all 10,000 validation photos. Two numbers describe how close its maps are to the teacher's:
+
+- **Map error: 0.0998.** On the 0-to-1 scale, the student's cells are off by about 0.1 on average, which is the mean absolute error.
+- **Focal point error: 0.064.** The importance-weighted center of the student's map lands about 6% of the photo's size away from the teacher's.
+
+The more practical question is how much of the teacher's importance FocalNet's crops keep.
+
+{% only_dark %}
+![Dot plot of importance kept by center crops, FocalNet, and the best crop for the teacher's own map at three crop shapes, and bars showing how often each loses more than half the importance](/images/blog/how-we-trained-our-own-model/teacher-agreement.avif)
+{% /only_dark %}
+{% only_light %}
+![Dot plot of importance kept by center crops, FocalNet, and the best crop for the teacher's own map at three crop shapes, and bars showing how often each loses more than half the importance](/images/blog/how-we-trained-our-own-model/teacher-agreement-light.avif)
+{% /only_light %}
+
+| Crop shape | Center crop | FocalNet | Best crop for the teacher's map |
+| --- | ---: | ---: | ---: |
+| Square, 1:1 | 86.73% | **91.09%** | 92.79% |
+| Wide, 16:9 | 85.36% | **90.86%** | 92.33% |
+| Portrait, 4:5 | 79.87% | **85.56%** | 87.91% |
+
+The last column is the ceiling: what you'd get by cropping with the teacher's own map. A center crop is the floor. At every shape, FocalNet closes 71 to 79% of the gap between them.
+
+A center crop does fine on most photos: at 16:9 it keeps a median of 93.7% of the importance. The averages hide the failures. At 16:9, a center crop loses more than half the importance on 8.62% of photos, while FocalNet does so on 3.76%. FocalNet beats the center crop by more than 10 percentage points on 16.7% of photos and falls that far behind it on only 1.3%.
+
+These numbers measure agreement with the teacher, not whether people like the crops. That takes a different kind of data.
+
+# Teaching FocalNet what people prefer
+
+The importance map says what to keep. It says nothing about framing, such as whether the subject needs breathing room or whether a tight crop reads better than a loose one. For that, we added a small **crop ranker** trained on human opinions.
+
+The ranker looks at each candidate crop and compares what's inside with what's outside, using the features and importance map the network has already computed. It also considers the crop's size, position, and shape. A tiny network of just 7,069 parameters turns all of that into one score per crop. Because the expensive work is shared, scoring 128 crops adds almost nothing to the cost of computing the map.
+
+We trained it in two steps, on two public datasets where people rated crops:
+
+- **[CPC](https://www3.cs.stonybrook.edu/~cvl/projects/wei2018goods/VPN_CVPR2018s.html)** (Comparative Photo Composition): people compared 24 crops for each of 10,797 photos, and each crop's score averages six judgments. We pretrained on 9,717 of those photos.
+- **[GAICD](https://github.com/HuiZeng/Grid-Anchor-based-Image-Cropping-Pytorch)**: people scored many crops for each of 3,336 photos. We fine-tuned on 2,636, used 200 to pick the best checkpoint, and kept 500 for the final test.
+
+Training focuses on pairs of crops. Whenever people clearly preferred one crop over another, meaning their scores differ by at least 0.25, the ranker is penalized for ordering them the other way around, and the bigger the gap, the bigger the penalty. The encoder and importance head stayed frozen the whole time, so preference training can't change the importance map.
+
+{% only_dark %}
+![Line chart of how closely the ranker's ordering matches people's after each epoch, for GAICD-only and CPC-then-GAICD training against an importance-only baseline, and bars of test pairwise accuracy](/images/blog/how-we-trained-our-own-model/preference-ranking.avif)
+{% /only_dark %}
+{% only_light %}
+![Line chart of how closely the ranker's ordering matches people's after each epoch, for GAICD-only and CPC-then-GAICD training against an importance-only baseline, and bars of test pairwise accuracy](/images/blog/how-we-trained-our-own-model/preference-ranking-light.avif)
+{% /only_light %}
+
+Two measures show how well it worked:
+
+- **Pairwise accuracy:** given two crops of the same photo that people clearly ranked, how often the ranker agrees. Ranking crops by importance alone gets 71.5% of GAICD's 1.4 million test pairs right. The trained ranker gets 86.44%.
+- **Spearman correlation:** how closely the ranker's ordering of all crops matches people's ordering, where 1.0 means identical. It scored 0.76.
+
+Pretraining on CPC first gave the ranker a head start. After one epoch on GAICD, it was already where the GAICD-only ranker got after seven epochs, and it finished ahead on every test metric.
+
+| GAICD test | GAICD only | CPC, then GAICD |
+| --- | ---: | ---: |
+| Spearman correlation | 0.757 | **0.764** |
+| Pairwise accuracy | 86.00% | **86.44%** |
+
+One caveat: we looked at the GAICD test photos during several rounds of development, so treat these as engineering benchmarks rather than results on truly unseen data. A blind study with Appwrite's own images is the right next check.
+
+# How FocalNet picks a crop
+
+FocalNet doesn't invent crops from scratch. It ranks a fixed set of candidates, which keeps its behavior predictable.
+
+{% only_dark %}
+![The crop candidates for a square crop of the golden retriever photo at five zoom levels, followed by scoring, the safety check, and FocalNet's chosen crop](/images/blog/how-we-trained-our-own-model/crop-selection.avif)
+{% /only_dark %}
+{% only_light %}
+![The crop candidates for a square crop of the golden retriever photo at five zoom levels, followed by scoring, the safety check, and FocalNet's chosen crop](/images/blog/how-we-trained-our-own-model/crop-selection-light.avif)
+{% /only_light %}
+
+1. **Generate candidates.** For the requested shape, take the largest crop that fits, then versions zoomed to 90%, 80%, 70%, and 65%, each at up to five positions per axis. That's at most 125 crops, padded to a fixed batch of 128.
+2. **Score them in one call.** The model returns the importance map and one preference score per crop.
+3. **Run the safety check.** Using the map, measure how much importance each crop keeps, and drop any crop that falls more than 5 percentage points short of the best crop's retention.
+4. **Pick the highest preference score** among the crops that remain.
+
+The safety check is what makes it safe to let a learned sense of taste decide. The ranker may prefer a tighter crop, but it can't pick one that keeps noticeably less of the subject than the best option. On the retriever, it chose the 90% zoom at the left edge rather than the largest square. The scores only mean something when comparing crops of the same photo. They aren't probabilities.
+
+# Shipping one verified ONNX file
+
+{% info title="ONNX, briefly" %}
+ONNX is an open file format for trained models. You train in a framework like PyTorch, export to ONNX, and the same file runs anywhere ONNX Runtime does: on servers, inside a Go service like AutoGravity, or in a browser.
+{% /info %}
+
+Exporting is where a model can quietly break, so the export step checks its own work. It validates the file, runs the same inputs through PyTorch and ONNX Runtime to compare the outputs, and records the exact preprocessing steps and checksums inside the file. Both published ONNX builds match PyTorch to within 0.0051 on the 0-to-1 scale, our export limit of about 0.005.
+
+One speed trick didn't make it. RepViT can merge some of its internal layers after training so it runs faster, but on our trained model that shifted outputs by up to 0.0146, several times past that limit. We kept the unmerged version.
+
+We also tried to shrink the file with quantization, and it failed our quality bar.
+
+{% info title="Quantization, briefly" %}
+Quantization stores a model's numbers with fewer bits, for example 8-bit integers (INT8) instead of 32-bit floating-point numbers (FP32). The file gets smaller, but every number becomes less precise.
+{% /info %}
+
+{% only_dark %}
+![Dot plot showing the INT8 version of FocalNet keeping about as much importance as a center crop, below the FP32 version at every crop shape, with file size and error comparisons](/images/blog/how-we-trained-our-own-model/int8-quantization.avif)
+{% /only_dark %}
+{% only_light %}
+![Dot plot showing the INT8 version of FocalNet keeping about as much importance as a center crop, below the FP32 version at every crop shape, with file size and error comparisons](/images/blog/how-we-trained-our-own-model/int8-quantization-light.avif)
+{% /only_light %}
+
+The INT8 version was a third of the size, but at 16:9 its crops kept 84.90% of the teacher's importance, less than the 85.36% of a plain center crop. The published model stays FP32.
+
+On one CPU thread of an Apple Silicon Mac mini, the full pipeline takes a median of 44 ms per photo, including decoding the image, generating candidates, and picking the crop. The model call alone takes 34 ms, and four threads bring that model call down to about 12 ms.
+
+| ONNX Runtime 1.29, one photo at a time | 1 thread | 4 threads |
+| --- | ---: | ---: |
+| Model call, importance only | 33.44 ms | 11.35 ms |
+| Model call, with crop ranking | 33.86 ms | 11.69 ms |
+| Full pipeline, with crop ranking | 44.09 ms | 20.96 ms |
+
+For comparison, uncompressed U²-Net takes 290 to 390 ms per image on an Apple M3 Pro, measured on a different machine with a different setup. The same ONNX file also runs in the browser with ONNX Runtime Web: the FocalNet repository includes a small demo page where photos never leave your device.
+
+# Known limitations of FocalNet
+
+FocalNet is a small model trained on public data, and it inherits the limits of both:
+
+- **It inherits the teacher's biases.** The 75% face rule and U²-Net's blind spots are baked into the importance map, as the spaniel example shows.
+- **Public taste isn't your taste.** CPC and GAICD reflect their raters and their photos. Product shots, avatars, or screenshots may need different crops.
+- **The GAICD numbers are engineering benchmarks,** because the test photos informed development decisions.
+- **Dataset licenses are unclear.** The CPC and GAICD archives we reviewed state no explicit license, and the published model grants no rights to those datasets.
+- **FP32 only, for now.** No smaller version passes our quality bar yet.
+
+# Using FocalNet with AutoGravity and Appwrite Storage
+
+`gravity=auto` on [Appwrite Cloud](https://cloud.appwrite.io) runs FocalNet. Self-hosted AutoGravity can do the same by setting `MODEL_BACKEND=focalnet`. That loads `focalnet-human.onnx` instead of YuNet and U²-Net and returns the selected crop along with its center as the focal point.
+
+To try the model yourself, clone the repository, download the published model, and run a prediction with the FocalNet command-line tool:
+
+```bash
+git clone https://github.com/appwrite/focalnet && cd focalnet
+curl -fsSL -o focalnet-human.onnx \
+  "https://huggingface.co/appwrite/focalnet/resolve/main/focalnet-human.onnx"
+uv run focalnet predict-human focalnet-human.onnx photo.jpg --aspect-ratio 16:9
+```
+
+Distillation turned a pipeline we trusted into training data we could scale, and about 12,000 photos rated by people taught the result how to frame. If you store user images, start with `gravity=auto` on [Appwrite Cloud](https://cloud.appwrite.io), and read the code if you want to train FocalNet on your own photos.
+
+- [Image transformations in Appwrite Storage](/docs/products/storage/images)
+- [Appwrite Storage](/docs/products/storage)
+- [Introducing AutoGravity](/blog/post/introducing-autogravity)
+- [FocalNet source code on GitHub](https://github.com/appwrite/focalnet)
+- [FocalNet weights on Hugging Face](https://huggingface.co/appwrite/focalnet)
