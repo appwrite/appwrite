@@ -239,20 +239,26 @@ Http::init()
                     }
                 }
 
-                $userClone = clone $user;
-                $userClone->setAttribute('type', match ($apiKey->getType()) {
-                    API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
-                    API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
-                    default => ACTOR_TYPE_KEY_ORGANIZATION,
-                });
+                // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+                $auditUser = new Document([
+                    '$id' => $user->getId(),
+                    '$sequence' => $user->getSequence(),
+                    'name' => $user->getAttribute('name', ''),
+                    'email' => $user->getAttribute('email', ''),
+                    'type' => match ($apiKey->getType()) {
+                        API_KEY_STANDARD => ACTOR_TYPE_KEY_PROJECT,
+                        API_KEY_ACCOUNT => ACTOR_TYPE_KEY_ACCOUNT,
+                        default => ACTOR_TYPE_KEY_ORGANIZATION,
+                    },
+                ]);
 
                 if ($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_ORGANIZATION) {
-                    $userClone
+                    $auditUser
                         ->setAttribute('$id', $dbKey->getId())
                         ->setAttribute('$sequence', $dbKey->getSequence());
                 }
 
-                $auditContext->user = $userClone;
+                $auditContext->user = $auditUser;
             }
 
             // Apply permission
@@ -377,6 +383,13 @@ Http::init()
             )
         ) {
             $scopes[] = 'users.read';
+            $response->setHideCredentials(true);
+        }
+
+        // Reading users is not authority over their credentials. Minted keys are exempt, as their minter could grant users.write
+        // and user migrations read hashes with users.read; OAuth2 tokens only delegate their holder's role
+        $isMintedKey = ! empty($apiKey) && $apiKey->getType() !== API_KEY_OAUTH2;
+        if (\in_array('users.read', $scopes, true) && ! \in_array('users.write', $scopes, true) && ! $isMintedKey) {
             $response->setHideCredentials(true);
         }
 
@@ -584,7 +597,8 @@ Http::init()
     ->inject('user')
     ->inject('timelimit')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization) {
+    ->inject('params')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
         $response->setUser($user);
         $request->setUser($user);
 
@@ -618,9 +632,12 @@ Http::init()
                     '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
                 ];
 
-                foreach ($request->getParams() as $key => $value) {
+                // Path params are not part of the request input, and the query must not override them.
+                foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                     if (! empty($value)) {
-                        $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                        // Sign in matches emails case-insensitively, so the limit must too
+                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                     }
                 }
 
@@ -713,12 +730,14 @@ Http::init()
 
         /* If a session exists, use the target user (impersonated target or actor) for audit */
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
-            }
-            $auditContext->user = $userClone;
+            // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name', ''),
+                'email' => $targetUser->getAttribute('email', ''),
+                'type' => $targetUser->getAttribute('type') ?: ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            ]);
         }
 
         $rolesSource = $impersonatorUser->isEmpty() ? $user : $targetUser;
@@ -993,7 +1012,8 @@ Http::shutdown()
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit) {
+    ->inject('params')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, array $pathParams) {
         $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
         $abuseResetCode = $route->getLabel('abuse-reset', []);
         $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
@@ -1016,9 +1036,11 @@ Http::shutdown()
                 '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
             ];
 
-            foreach ($request->getParams() as $key => $value) {
+            foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
                 if (! empty($value)) {
-                    $params['{param-' . $key . '}'] = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
+                    // Sign in matches emails case-insensitively, so the limit must too
+                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
                 }
             }
 
@@ -1058,12 +1080,14 @@ Http::shutdown()
         }
 
         if (! $targetUser->isEmpty()) {
-            $userClone = clone $targetUser;
-            // $user doesn't support `type` and can cause unintended effects.
-            if (empty($targetUser->getAttribute('type'))) {
-                $userClone->setAttribute('type', $mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER);
-            }
-            $auditContext->user = $userClone;
+            // Audit only reads these attributes, avoid cloning the whole user with its sessions, memberships and tokens
+            $auditContext->user = new Document([
+                '$id' => $targetUser->getId(),
+                '$sequence' => $targetUser->getSequence(),
+                'name' => $targetUser->getAttribute('name', ''),
+                'email' => $targetUser->getAttribute('email', ''),
+                'type' => $targetUser->getAttribute('type') ?: ($mode === APP_MODE_ADMIN ? ACTOR_TYPE_ADMIN : ACTOR_TYPE_USER),
+            ]);
         } elseif ($auditContext->user === null || $auditContext->user->isEmpty()) {
             /**
              * User in the request is empty, and no user was set for auditing previously.

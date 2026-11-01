@@ -136,7 +136,9 @@ class Create extends Action
         $authenticator = $dbForProject->createDocument('authenticators', $authenticator);
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($model, Response::MODEL_MFA_TYPE), sensitive: ['secret', 'uri']);
 
         $response->dynamic($model, Response::MODEL_MFA_TYPE);
     }

@@ -32,7 +32,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Cancel build': 'ビルドをキャンセル',
   'Cancel deployment': 'デプロイをキャンセル',
   'Certificate generation failed': '証明書の生成に失敗しました',
-  'Check your permissions': '権限を確認してください',
   'Choose who can execute this function': 'この関数を実行できるユーザーを選択',
   'Clear filters and search': 'フィルターと検索をクリア',
   'Clone template': 'テンプレートをクローン',
@@ -46,6 +45,7 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Connect GitHub': 'GitHub を接続',
   'Connect GitLab': 'GitLab を接続',
   'Connect Bitbucket': 'Bitbucket を接続',
+  'Connect Gitea': 'Gitea を接続',
   'Connect Origin': 'Origin を接続',
   'Connect later': '後で接続',
   'Connect repository': 'リポジトリを接続',
@@ -89,7 +89,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Deployment is still building': 'デプロイはまだビルド中です',
   'Deployment rebuild started': 'デプロイの再ビルドを開始しました',
   'Detecting runtime...': 'ランタイムを検出中...',
-  'Disable automated commit comments': '自動コミットコメントを無効化',
+  'Skip pull request comments, checks and deployment reports':
+    'プルリクエストへのコメント、チェック、デプロイの報告をスキップ',
   'Disconnect Repository': 'リポジトリを切断',
   'Domain has been deleted': 'ドメインを削除しました',
   'Domain name': 'ドメイン名',
@@ -209,7 +210,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Local editor': 'ローカルエディター',
   'Logging updated successfully': 'ログ設定を更新しました',
   'Maximum 100 events allowed': 'イベントは最大 100 件までです',
-  'Missing a repository?': 'リポジトリが見つかりませんか?',
   'Missing repository connection': 'リポジトリが接続されていません',
   'Monthly on the 1st': '毎月 1 日',
   'Monthly on the 15th': '毎月 15 日',
@@ -321,10 +321,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'This action cannot be undone.': 'この操作は元に戻せません。',
   'this function': 'この関数',
   'Timeout updated successfully': 'タイムアウトを更新しました',
-  'Enterprise runtime options': 'Enterprise ランタイムオプション',
-  'The Enterprise plan includes always-on functions to minimize cold starts, as well as higher CPU and memory configurations for more demanding workloads.':
-    'Enterprise プランには、コールドスタートを最小化する Always-on 関数に加え、より高負荷なワークロード向けの CPU とメモリ構成が含まれます。',
-  'Contact us to learn more.': '詳しくはお問い合わせください。',
+  'Always-on functions and higher CPU and memory are available on Enterprise.':
+    'Enterprise プランでは、Always-on 関数や、より多くの CPU とメモリをご利用いただけます。',
   'to unlock additional specifications.': 'して、追加の仕様を利用できます。',
   'Total size': '合計サイズ',
   'Total Size': '合計サイズ',
@@ -406,8 +404,8 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'リポジトリを接続すると、自動デプロイを有効にできます',
   'Connect your function to a Git repository for automatic deployments':
     '関数を Git リポジトリに接続して、自動デプロイを有効にできます',
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
-    'Appwrite が、接続された GitHub リポジトリのコミットに自動コメントを投稿するかどうかを制御します (例: プルリクエストへのデプロイ情報)。サイレントモードが有効な場合でも、デプロイ、チェック、ビルドの動作は変わらず、コミットへのコメントのみがスキップされます。',
+  "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.":
+    'オンにすると、Appwrite はプルリクエストにコメントせず、チェックやデプロイを Git プロバイダーに報告しません。ビルドとデプロイは通常どおり実行されます。',
   'CPU and memory allocated on the build worker while your function image is produced.':
     '関数のイメージが生成される間、ビルドワーカーに割り当てられる CPU とメモリです。',
   'CPU and memory available to each function execution at runtime.':
@@ -428,8 +426,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
     '今すぐデプロイし、バージョン管理は後から関数の設定で CLI または Git 連携を使って接続できます。',
   'Directory containing your function code':
     '関数のコードが含まれるディレクトリ',
-  'Disable automated comments on repository commits':
-    'リポジトリのコミットへの自動コメントを無効にする',
   'Disabled - less log output per execution.':
     '無効 - 実行ごとのログ出力が少なくなります。',
   'Edit code locally and prepare gzip for deployment':
@@ -743,9 +739,6 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Failed to add email domain': 'メールドメインの追加に失敗しました',
   'Verify email domain': 'メールドメインを検証',
   'Add email domain': 'メールドメインを追加',
-  'Email domains': 'メールドメイン',
-  'No email domains yet': 'メールドメインはまだありません',
-  'Email domain has been deleted': 'メールドメインを削除しました',
   'Serve HTTP requests on your domain':
     'ドメインで HTTP リクエストを処理します',
   'Run on mail sent to any address on your domain':
@@ -753,14 +746,12 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Email domains need the email trigger.':
     'メールドメインにはメールトリガーが必要です。',
   'Enable it in settings': '設定で有効にする',
-  'Run this function on mail sent to domains you own.':
-    '所有するドメインに届いたメールでこの関数を実行します。',
-  'Add a domain, publish its MX and TXT records, then verify it to start receiving mail.':
-    'ドメインを追加し、MX レコードと TXT レコードを公開してから検証すると、メールの受信が始まります。',
   'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.':
     'MX レコードは Appwrite を指すため、他のメールを受信していないドメインまたはサブドメインを使用してください。',
   'Mail is delivered to Appwrite on port 25, so the MX record must point straight at the value above, not at a proxied hostname.':
     'メールはポート 25 で Appwrite に配信されるため、MX レコードはプロキシ経由のホスト名ではなく、上記の値を直接指す必要があります。',
   'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
     'このリージョンはまだメールサーバーを報告していないため、MX レコードを表示できません。先に TXT レコードを追加し、後で MX レコードを確認してください。',
+  "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
+    'この関数の Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
 }

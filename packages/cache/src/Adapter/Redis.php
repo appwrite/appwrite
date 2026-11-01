@@ -6,14 +6,14 @@ use Exception;
 use Redis as Client;
 use Throwable;
 use Utopia\Cache\Adapter;
-use Utopia\Cache\Adapter\Redis\Leasable;
 use Utopia\Cache\Adapter\Redis\NoScript;
+use Utopia\Cache\Adapter\Redis\Versioned;
 use Utopia\Cache\Codec;
 use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Feature\Batchable;
 use Utopia\Cache\Feature\Retryable;
 
-class Redis extends Leasable implements Adapter, Batchable, Retryable
+class Redis extends Versioned implements Adapter, Batchable, Retryable
 {
     protected Client $redis;
 
@@ -178,7 +178,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
 
         try {
             $value = $this->envelope->encode($data, time());
-            $this->execute(fn (): \Redis|int|false => $this->redis->hSet($key, $hash, $value));
+            $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, [$hash => $value, self::VERSION_FIELD => \bin2hex(\random_bytes(16))]));
 
             if ($ttl > 0) {
                 $this->execute(fn (): \Redis|bool => $this->redis->expire($key, $ttl));
@@ -213,6 +213,8 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
         if ($map === []) {
             return false;
         }
+
+        $map[self::VERSION_FIELD] = \bin2hex(\random_bytes(16));
 
         try {
             $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, $map));
@@ -253,7 +255,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return false;
         }
 
-        return $this->execute(fn (): \Redis|int|false => $this->redis->hSet($key, $hash, $value)) !== false;
+        return $this->execute(fn (): \Redis|bool => $this->redis->hMSet($key, [$hash => $value, self::VERSION_FIELD => \bin2hex(\random_bytes(16))])) !== false;
     }
 
     /**
@@ -268,7 +270,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             return [];
         }
 
-        // Don't expose reserved internal fields (generation, tombstone) as listable cache fields.
+        // Don't expose reserved internal fields (version, tombstone) as listable cache fields.
         return array_values(array_filter($keys, fn (string $field): bool => ! $this->isReserved($field)));
     }
 
@@ -299,7 +301,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             }
 
             return $this->confirmScript($result, $error);
-        });
+        }, idempotent: false);
     }
 
     protected function leaseEval(string $script, string $key, array $args): mixed
@@ -309,7 +311,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             $result = $this->redis->eval($script, [$key, ...$args], 1);
 
             return $this->confirmScript($result, (string) $this->redis->getLastError());
-        });
+        }, idempotent: false);
     }
 
     /**
@@ -326,11 +328,6 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
         return $result;
     }
 
-    protected function leaseHget(string $key, string $field): mixed
-    {
-        return $this->execute(fn (): \Redis|string|false => $this->redis->hGet($key, $field));
-    }
-
     public function flush(): bool
     {
         return (bool) $this->execute(fn (): \Redis|bool => $this->redis->flushDB());
@@ -343,6 +340,10 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
 
             return true;
         } catch (Exception) {
+            if ($this->redis->isConnected()) {
+                $this->redis->close();
+            }
+
             return false;
         }
     }
@@ -373,10 +374,11 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
     /**
      * Execute a Redis command with retry logic
      *
+     * A script is not idempotent: when its reply is lost Redis may already have run it, so it is never replayed.
      *
      * @throws \RedisException
      */
-    private function execute(callable $callback): mixed
+    private function execute(callable $callback, bool $idempotent = true): mixed
     {
         $attempts = 0;
         $maxAttempts = 1 + $this->maxRetries;
@@ -389,9 +391,15 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
                     throw $th;
                 }
 
+                // phpredis leaves the socket open when a script reply times out, and
+                // the next command would read that reply as its own
+                if ($this->redis->isConnected()) {
+                    $this->redis->close();
+                }
+
                 $attempts++;
 
-                if ($attempts >= $maxAttempts) {
+                if (! $idempotent || $attempts >= $maxAttempts) {
                     throw $th;
                 }
 
@@ -421,6 +429,7 @@ class Redis extends Leasable implements Adapter, Batchable, Retryable
             'went away',
             'socket',
             'read error on connection',
+            'protocol error', // how phpredis reports a timed-out script reply
             'connection lost',
             'timed out',
             'timeout',

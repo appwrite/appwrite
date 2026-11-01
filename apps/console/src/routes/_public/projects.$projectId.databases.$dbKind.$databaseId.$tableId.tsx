@@ -2,7 +2,10 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { pageTitle } from '@/lib/utils/page-title'
 import { dbNavLink, type DatabaseRouteKind } from '@/lib/database-routes'
-import { throwRedirectPostgresDbKind, throwRedirectMysqlDbKind } from '@/lib/database-route-redirects'
+import {
+  throwRedirectPostgresDbKind,
+  throwRedirectMysqlDbKind,
+} from '@/lib/database-route-redirects'
 
 const tableSearchSchema = z.object({
   tab: z
@@ -16,7 +19,7 @@ export const Route = createFileRoute(
   head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
   validateSearch: tableSearchSchema,
   beforeLoad: ({ params }) => {
-        throwRedirectPostgresDbKind(params.dbKind, {
+    throwRedirectPostgresDbKind(params.dbKind, {
       projectId: params.projectId,
       databaseId: params.databaseId,
       tableId: params.tableId,
@@ -27,7 +30,8 @@ export const Route = createFileRoute(
       tableId: params.tableId,
     })
   },
-  loader: ({ params, search }) => {
+  loaderDeps: ({ search }) => ({ tab: search.tab }),
+  loader: ({ params, deps }) => {
     const { projectId, dbKind, databaseId, tableId } = params
     const kind = dbKind as DatabaseRouteKind
     const nav = dbNavLink(kind)
@@ -37,7 +41,7 @@ export const Route = createFileRoute(
       databaseId,
       resourceId: tableId,
     }
-    const tab = search?.tab ?? 'rows'
+    const { tab } = deps
     if (tab === 'rows') {
       throw redirect({ ...nav.dataGrid(p) })
     }

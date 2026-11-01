@@ -910,6 +910,154 @@ trait MigrationsBase
         $this->assertDestinationDatabaseMissing($databaseId);
     }
 
+    public function testAppwriteMigrationRejectsKeyWithoutResourceScopes(): void
+    {
+        $body = [
+            'resources' => [Resource::TYPE_USER, Resource::TYPE_MEMBERSHIP],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ];
+
+        /**
+         * Test for FAILURE
+         */
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write']),
+        ], $body);
+
+        $this->assertSame(401, $migration['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $migration['body']['type']);
+
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'users.write']),
+        ], $body);
+
+        $this->assertSame(401, $migration['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $migration['body']['type']);
+
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'collections.write', 'documents.write']),
+        ], [
+            ...$body,
+            'resources' => [Resource::TYPE_DATABASE_DOCUMENTSDB, Resource::TYPE_COLLECTION, Resource::TYPE_DOCUMENT],
+        ]);
+
+        $this->assertSame(401, $migration['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $migration['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'users.write', 'teams.write']),
+        ], $body);
+
+        $this->assertSame(202, $migration['headers']['status-code']);
+        $this->assertContains('users.write', $migration['body']['options']['scopes']);
+        $this->assertContains('teams.write', $migration['body']['options']['scopes']);
+        $this->assertNotContains('project.write', $migration['body']['options']['scopes']);
+    }
+
+    public function testAppwriteMigrationRetryByKeyIsCappedToKeyScopes(): void
+    {
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'resources' => [Resource::TYPE_USER],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => 'invalid',
+        ]);
+
+        $this->assertSame(202, $migration['headers']['status-code']);
+        $this->assertNull($migration['body']['options']['scopes']);
+
+        $migrationId = $migration['body']['$id'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertSame('failed', $response['body']['status']);
+        }, 60_000, 1_000);
+
+        /**
+         * Test for FAILURE
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write']),
+        ]);
+
+        $this->assertSame(401, $retry['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $retry['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'users.write']),
+        ]);
+
+        $this->assertSame(204, $retry['headers']['status-code']);
+
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertIsArray($response['body']['options']['scopes']);
+            $this->assertContains('users.write', $response['body']['options']['scopes']);
+            $this->assertNotContains('teams.write', $response['body']['options']['scopes']);
+        }, 60_000, 1_000);
+    }
+
+    public function testAppwriteMigrationRejectsApiKeyBroaderThanGrant(): void
+    {
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'keys.write']),
+        ], [
+            'resources' => [Resource::TYPE_API_KEY],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $this->getProject()['$id'],
+            'apiKey' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertSame(202, $migration['headers']['status-code']);
+
+        $result = [];
+        $this->assertEventually(function () use ($migration, &$result) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migration['body']['$id'], [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $result = $response['body'];
+
+            $this->assertSame('finished', $result['stage']);
+        }, 60_000, 1_000);
+
+        $this->assertSame('failed', $result['status']);
+        $this->assertStringContainsString('API key has scopes this migration was not granted', implode("\n", $result['errors']));
+    }
+
     public function testAppwriteMigrationRejectsTablesDBKeyForDocumentsDB(): void
     {
         ['databaseId' => $databaseId] = $this->createSourceDocumentsDBDocument();
@@ -2841,7 +2989,15 @@ trait MigrationsBase
         $this->assertIsArray($completedExecution, 'Timed out waiting for the terminal execution event. Last message: ' . json_encode($lastMessage, JSON_PRETTY_PRINT));
         $this->assertSame('completed', $completedExecution['status'], 'Execution did not complete: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
         $this->assertSame(200, $completedExecution['responseStatusCode'], 'Execution returned an unexpected status: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
-        $this->assertStringContainsString('body-is-test', (string) $completedExecution['logs'], 'Execution completed without the logs it printed: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+        $this->assertArrayNotHasKey('logs', $completedExecution, 'Realtime sent execution logs to a project user: ' . json_encode($completedExecution, JSON_PRETTY_PRINT));
+
+        $stored = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $executionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $destinationProject['$id'],
+            'x-appwrite-key' => $destinationProject['apiKey'],
+        ]);
+        $this->assertSame(200, $stored['headers']['status-code']);
+        $this->assertStringContainsString('body-is-test', (string) $stored['body']['logs'], 'Execution completed without the logs it printed: ' . json_encode($stored['body'], JSON_PRETTY_PRINT));
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
@@ -2976,7 +3132,7 @@ trait MigrationsBase
             'outputDirectory' => './',
             'startCommand' => 'npm run start',
             'deploymentRetention' => 14,
-            'scopes' => ['users.read', 'files.read'],
+            'scopes' => ['users.read', 'files.read', 'databases.read'],
         ]);
 
         $this->assertEquals(201, $site['headers']['status-code'], 'Create site failed: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
@@ -3066,7 +3222,7 @@ trait MigrationsBase
         $this->assertEquals('static', $response['body']['adapter']);
         $this->assertSame('npm run start', $response['body']['startCommand']);
         $this->assertSame(14, $response['body']['deploymentRetention']);
-        $this->assertSame(['users.read', 'files.read'], $response['body']['scopes']);
+        $this->assertSame(['users.read', 'files.read', 'databases.read'], $response['body']['scopes']);
 
         // Verify deployment in destination
         $this->assertEventually(function () use ($siteId) {

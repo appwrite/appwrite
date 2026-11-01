@@ -164,6 +164,30 @@ class Migrations extends Action
             throw new \Exception('Project not found');
         }
 
+        // Skip redeliveries of a migration that already finished or is still running
+        $current = $dbForProject->getDocument('migrations', $migration->getId());
+        $status = $current->getAttribute('status');
+        $running = $status === 'processing'
+            && \strtotime($current->getUpdatedAt()) >= \time() - MIGRATION_STALL_TIMEOUT;
+
+        if ($status === 'completed' || $running) {
+            Console::warning('Migration(' . $migration->getId() . ') is already ' . $status . ', skipping this delivery');
+            return;
+        }
+
+        // Claim it: a concurrent delivery that read the same document conflicts here instead of running it twice.
+        try {
+            $dbForProject->withRequestTimestamp(
+                new \DateTime($current->getUpdatedAt()),
+                fn () => $dbForProject->updateDocument('migrations', $current->getId(), new Document([
+                    'status' => 'processing',
+                ]))
+            );
+        } catch (Conflict) {
+            Console::warning('Migration(' . $migration->getId() . ') was claimed by another delivery, skipping this one');
+            return;
+        }
+
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
@@ -475,6 +499,7 @@ class Migrations extends Action
                 $this->project->getSequence(),
                 OnDuplicate::tryFrom($options['onDuplicate'] ?? '') ?? OnDuplicate::Fail,
                 $this->resolveDestinationDatabaseDsn(...),
+                scopes: $this->getGrant($migration),
             ),
             DestinationCSV::getName() => DestinationCSV::fromResourceIds(
                 deviceForFiles: $this->deviceForFiles,
@@ -542,59 +567,34 @@ class Migrations extends Action
      */
     protected function getAPIKeyScopes(): array
     {
-        return [
-            'users.read',
-            'users.write',
-            'teams.read',
-            'teams.write',
-            'buckets.read',
-            'buckets.write',
-            'files.read',
-            'files.write',
-            'functions.read',
-            'functions.write',
-            'sites.read',
-            'sites.write',
-            'tokens.read',
-            'tokens.write',
-            'providers.read',
-            'providers.write',
-            'topics.read',
-            'topics.write',
-            'subscribers.read',
-            'subscribers.write',
-            'messages.read',
-            'messages.write',
-            'targets.read',
-            'targets.write',
-            'webhooks.read',
-            'webhooks.write',
-            'rules.read',
-            'rules.write',
-            'project.read',
-            'project.write',
-            'keys.read',
-            'keys.write',
-            'platforms.read',
-            'platforms.write',
-            'mocks.read',
-            'mocks.write',
-            'project.policies.read',
-            'project.policies.write',
-            'project.profiles.read',
-            'project.profiles.write',
-            'project.oauth2.read',
-            'project.oauth2.write',
-            'templates.read',
-            'templates.write',
-        ];
+        // Every project scope, so migrated functions and sites can keep theirs
+        return \array_keys(Config::getParam('projectScopes', []));
+    }
+
+    /**
+     * Scopes the migration may act with: those of the key that created it, or null for a console
+     * session. A migration with no recorded grant predates grants and gets none until retried.
+     *
+     * @return array<string>|null
+     */
+    protected function getGrant(Document $migration): ?array
+    {
+        $options = $migration->getAttribute('options', []);
+
+        return \array_key_exists('scopes', $options) ? $options['scopes'] : [];
     }
 
     /**
      * @throws Exception
      */
-    protected function generateAPIKey(Document $project): string
+    protected function generateAPIKey(Document $project, Document $migration): string
     {
+        $scopes = $this->getAPIKeyScopes();
+        $grant = $this->getGrant($migration);
+        if ($grant !== null) {
+            $scopes = \array_values(\array_intersect($scopes, $grant));
+        }
+
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
         $apiKey = $jwt->encode([
@@ -612,7 +612,7 @@ class Migrations extends Action
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
             ],
-            'scopes' => $this->getAPIKeyScopes(),
+            'scopes' => $scopes,
         ]);
 
         return API_KEY_EPHEMERAL . '_' . $apiKey;
@@ -637,7 +637,7 @@ class Migrations extends Action
     ): void {
         $project = $this->project;
 
-        $tempAPIKey = $this->generateAPIKey($project);
+        $tempAPIKey = $this->generateAPIKey($project, $migration);
 
         $transfer = $source = $destination = null;
         $caughtError = null;
@@ -1157,12 +1157,7 @@ class Migrations extends Action
             ->setParam('{{hello}}', $hello)
             ->setParam('{{footer}}', $footer)
             ->setParam('{{thanks}}', $thanks)
-            ->setParam('{{signature}}', $signature)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
-            ->setParam('{{type}}', $exportType)
-            ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
+            ->setParam('{{signature}}', $signature);
 
         if ($success) {
             $message
@@ -1183,6 +1178,9 @@ class Migrations extends Action
             'privacy' => $platform['privacyUrl'],
             'platform' => $platform['platformName'],
             'type' => $exportType,
+            'project' => $project->getAttribute('name'),
+            'user' => $user->getAttribute('name', $user->getAttribute('email')),
+            'size' => $success ? '' : (string) $sizeMB,
         ];
 
         $publisherForMails->enqueue(new MailMessage(

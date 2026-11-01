@@ -39,7 +39,7 @@ import {
 import { USER_PREFS_KEY_ORGANIZATION } from '@/lib/user-prefs-keys'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 
-const PERSONAL_ORG_NAME = 'Personal Projects'
+export const PERSONAL_ORG_NAME = 'Personal Projects'
 const FIRST_PROJECT_NAME = 'My first project'
 
 function isOrganizationCreationProhibited(

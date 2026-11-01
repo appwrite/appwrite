@@ -4,7 +4,7 @@ export function getExplorerMethodRoute(input: {
   operationId: string
 }) {
   return {
-    to: '/projects/$projectId/explorer',
+    to: '/projects/$projectId/playground',
     params: { projectId: input.projectId },
     search: {
       service: input.serviceId,
@@ -19,7 +19,7 @@ export function getExplorerMethodLinkUrl(input: {
   operationId: string
 }): string {
   const url = new URL(window.location.origin)
-  url.pathname = `/projects/${input.projectId}/explorer`
+  url.pathname = `/projects/${input.projectId}/playground`
   url.searchParams.set('service', input.serviceId)
   url.searchParams.set('operation', input.operationId)
   return url.toString()

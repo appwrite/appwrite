@@ -6,10 +6,11 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -17,15 +18,12 @@ use Utopia\Database\Id;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Platform\Enum;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createFirebaseMigration';
@@ -56,6 +54,7 @@ class Create extends Action
             ))
             ->param('resources', [], new ArrayList(new WhiteList(Firebase::getSupportedResources())), 'List of resources to migrate', example: '["user"]', enum: new Enum(name: 'FirebaseMigrationResource'))
             ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -68,6 +67,7 @@ class Create extends Action
     public function action(
         array $resources,
         string $serviceAccount,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
@@ -85,6 +85,8 @@ class Create extends Action
             throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
         }
 
+        $scopes = $this->authorize($request, $resources);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => Id::unique(),
             'status' => 'pending',
@@ -98,6 +100,9 @@ class Create extends Action
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
+            'options' => [
+                'scopes' => $scopes,
+            ],
         ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());

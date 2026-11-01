@@ -10,6 +10,7 @@ import {
   CreditCard,
   Link as LinkIcon,
   Pencil,
+  ShieldCheck,
   Trash2,
   Plus} from 'lucide-react'
 import { Link } from '@tanstack/react-router'
@@ -41,6 +42,7 @@ import { cn } from '@/lib/utils'
 import {
   useUpdatePaymentMethod,
   useDeletePaymentMethod,
+  useSetupPaymentMethodMandate,
   fetchPaymentMethods,
   organizationsFullQueryOptions,
   paymentMethodsQueryOptions,
@@ -52,6 +54,8 @@ import { DeletePaymentMethodModal } from './DeletePaymentMethod'
 import { PaymentMethodContextMenu } from './PaymentMethodContextMenu'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { toast } from 'sonner'
 
 interface AccountPaymentMethodsProps {
   onAddPaymentMethod?: () => void
@@ -71,6 +75,7 @@ export function AccountPaymentMethods({
   )
   useUpdatePaymentMethod()
   useDeletePaymentMethod()
+  const setupMandateMutation = useSetupPaymentMethodMandate()
 
   const paymentMethodsList =
     paymentMethodsData?.paymentMethods ??
@@ -132,6 +137,20 @@ export function AccountPaymentMethods({
       setSelectedPaymentMethod(method)
       setDeleteModalOpen(true)
     })
+  }
+
+  const handleSetupMandate = async (method: Models.PaymentMethod) => {
+    try {
+      await setupMandateMutation.mutateAsync({
+        paymentMethodId: method.$id,
+        providerMethodId: method.providerMethodId,
+        name: method.name ?? '',
+        state: method.state || undefined,
+      })
+      toast.success(t('Auto-pay is set up'))
+    } catch (error) {
+      toast.error(getErrorMessage(error, t('Failed to set up auto-pay')))
+    }
   }
 
   const handleEditSuccess = () => {
@@ -247,6 +266,8 @@ export function AccountPaymentMethods({
                       : false
 
                   const hasError = method.failed || method.expired
+                  const needsMandate =
+                    method.country?.toLowerCase() === 'in' && !method.mandateId
                   const linkedOrgs = getLinkedOrganizations(method.$id)
                   const isLinked = linkedMethodIds.has(method.$id)
 
@@ -256,6 +277,10 @@ export function AccountPaymentMethods({
                       paymentMethod={method}
                       onUpdate={handleEdit}
                       onDelete={handleDelete}
+                      onSetupMandate={
+                        needsMandate ? handleSetupMandate : undefined
+                      }
+                      setupMandatePending={setupMandateMutation.isPending}
                     >
                     <TableRow
                       className={cn(
@@ -377,6 +402,17 @@ export function AccountPaymentMethods({
                                 {t('Update')}
                               </MenuItemContent>
                             </DropdownMenuItem>
+                            {needsMandate && (
+                              <DropdownMenuItem
+                                className="text-[13px]"
+                                onClick={() => handleSetupMandate(method)}
+                                disabled={setupMandateMutation.isPending}
+                              >
+                                <MenuItemContent icon={ShieldCheck}>
+                                  {t('Set up auto-pay')}
+                                </MenuItemContent>
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-[13px]"

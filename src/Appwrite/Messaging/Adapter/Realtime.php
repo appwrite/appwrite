@@ -87,8 +87,11 @@ class Realtime extends MessagingAdapter
      *      'sessionId' -> [SESSION_ID] the session the connection was opened with, if any
      *      'impersonatedUserId' -> [USER_ID] when opened on that user's behalf
      *      'impersonator' -> ['projectId' => ..., 'userId' => ..., 'sessionId' => ...] who opened it then
+     *      'admin' -> ['userId' => ..., 'teamId' => ..., 'roles' => [...]] the console user an admin-mode
+     *                 connection runs as, and the membership that granted it access
      *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
      *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
+     *      'limits' -> ['subscriptions' => int, 'channels' => int, 'queries' => int] from its project's plan
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presence' -> ['projectId' => ..., 'userId' => ..., 'sequence' => ...] the row this
      *                    socket holds (by internal sequence), released on close; absent until a presence write
@@ -109,6 +112,20 @@ class Realtime extends MessagingAdapter
      * Across subscriptions: OR logic (any subscription matching = send event)
      */
     public array $subscriptions = [];
+
+    /**
+     * Open connections per owner, a project user or a guest's IP: [PROJECT_ID:OWNER] -> count
+     *
+     * @var array<string, int>
+     */
+    private array $ownerConnections = [];
+
+    /**
+     * The owner each counted connection belongs to: [CONNECTION_ID] -> PROJECT_ID:OWNER
+     *
+     * @var array<int|string, string>
+     */
+    private array $connectionOwners = [];
 
     private ?PubSubPool $pubSubPool = null;
 
@@ -151,20 +168,26 @@ class Realtime extends MessagingAdapter
         }
 
         $strings = [];
-        $data = [];
+        if (empty($queryGroup)) {
+            $strings[] = Query::select(['*'])->toString();
+        } else {
+            foreach ($queryGroup as $query) {
+                $strings[] = $query->toString();
+            }
+        }
+        $data = [
+            'strings' => $strings,
+            'compiled' => RuntimeQuery::prepare($queryGroup),
+            'count' => self::countQueries($queryGroup),
+        ];
 
-        if (!empty($channels)) {
-            if (empty($queryGroup)) {
-                $strings[] = Query::select(['*'])->toString();
-            } else {
-                foreach ($queryGroup as $query) {
-                    $strings[] = $query->toString();
+        // A subscription has one set of queries, so subscribing again with its id replaces them on its other channels too.
+        foreach ($this->connections[$identifier]['roles'] ?? [] as $role) {
+            foreach ($this->connections[$identifier]['channels'] ?? [] as $channel) {
+                if (isset($this->subscriptions[$projectId][$role][$channel][$identifier][$subscriptionId])) {
+                    $this->subscriptions[$projectId][$role][$channel][$identifier][$subscriptionId] = $data;
                 }
             }
-            $data = [
-                'strings' => $strings,
-                'compiled' => RuntimeQuery::prepare($queryGroup),
-            ];
         }
 
         foreach ($roles as $role) {
@@ -198,7 +221,7 @@ class Realtime extends MessagingAdapter
 
         // Recorded once by the connection handler or a presence write; every later (re)subscribe
         // keeps it, so a `subscribe` message after a presence message never drops the hold stash.
-        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire', 'presence'] as $key) {
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'admin', 'expire', 'jwtExpire', 'presence', 'limits'] as $key) {
             if (\array_key_exists($key, $existing)) {
                 $entry[$key] = $existing[$key];
             }
@@ -212,7 +235,7 @@ class Realtime extends MessagingAdapter
      * Retrieves subscription data including channels and queries directly from the subscriptions tree.
      *
      * @param mixed $connection Connection ID
-     * @return array Array of [subscriptionId => ['channels' => string[], 'queries' => string[]]]
+     * @return array Array of [subscriptionId => ['channels' => string[], 'queries' => string[], 'count' => int]]
      */
     public function getSubscriptionMetadata(mixed $connection): array
     {
@@ -242,6 +265,7 @@ class Realtime extends MessagingAdapter
                         $subscriptions[$subscriptionId] = [
                             'channels' => [],
                             'queries' => $data['strings'] ?? [],
+                            'count' => $data['count'] ?? 0,
                         ];
                     }
                     if (!\in_array($channel, $subscriptions[$subscriptionId]['channels'])) {
@@ -432,6 +456,88 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Counts a connection against its owner, a user id or a guest owner from getGuestOwner(),
+     * moving it off any owner it was counted for before. An empty owner is not counted. Returns
+     * false, leaving the count as it was, when the owner already holds $limit connections.
+     */
+    public function addConnection(mixed $connection, string $projectId, string $owner, int $limit): bool
+    {
+        if ($owner === '') {
+            $this->removeConnection($connection);
+            return true;
+        }
+
+        $key = $projectId . ':' . $owner;
+        if (($this->connectionOwners[$connection] ?? null) === $key) {
+            return true;
+        }
+        if (($this->ownerConnections[$key] ?? 0) >= $limit) {
+            return false;
+        }
+
+        $this->removeConnection($connection);
+        $this->connectionOwners[$connection] = $key;
+        $this->ownerConnections[$key] = ($this->ownerConnections[$key] ?? 0) + 1;
+
+        return true;
+    }
+
+    /**
+     * The owner a guest's connections are counted under: its IPv4 address, or the /64 network
+     * of its IPv6 address, as one IPv6 user holds the whole /64. Empty for an unknown address.
+     */
+    public static function getGuestOwner(string $ip): string
+    {
+        $address = @\inet_pton($ip);
+        if ($address === false) {
+            return '';
+        }
+        // An IPv4 address seen through a dual-stack socket arrives as ::ffff:a.b.c.d.
+        if (\strlen($address) === 16 && \str_starts_with($address, \str_repeat("\0", 10) . "\xff\xff")) {
+            $address = \substr($address, 12);
+        }
+        if (\strlen($address) === 16) {
+            return 'ip:' . \inet_ntop(\substr($address, 0, 8) . \str_repeat("\0", 8)) . '/64';
+        }
+
+        return 'ip:' . \inet_ntop($address);
+    }
+
+    /**
+     * Stops counting a connection against its owner. Idempotent.
+     */
+    public function removeConnection(mixed $connection): void
+    {
+        $key = $this->connectionOwners[$connection] ?? null;
+        if ($key === null) {
+            return;
+        }
+
+        unset($this->connectionOwners[$connection]);
+        if (--$this->ownerConnections[$key] <= 0) {
+            unset($this->ownerConnections[$key]);
+        }
+    }
+
+    /**
+     * Connection IDs of every connection in a project, whether or not it
+     * currently subscribes to anything.
+     *
+     * @return array<int, mixed>
+     */
+    public function getProjectConnections(string $projectId): array
+    {
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) === $projectId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
      * Connection IDs of every connection a user opened, in any project, while
      * impersonating someone else.
      *
@@ -447,6 +553,48 @@ class Realtime extends MessagingAdapter
         foreach ($this->connections as $connectionId => $connection) {
             $impersonator = $connection['impersonator'] ?? null;
             if (($impersonator['projectId'] ?? null) === $projectId && ($impersonator['userId'] ?? null) === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
+     * Connection IDs of every admin-mode connection a console user opened, in any project.
+     *
+     * @return array<int, mixed>
+     */
+    public function getAdminConnections(string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['admin']['userId'] ?? null) === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
+     * Connection IDs of every admin-mode connection opened through a membership of the organization.
+     *
+     * @return array<int, mixed>
+     */
+    public function getTeamAdminConnections(string $teamId): array
+    {
+        if ($teamId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['admin']['teamId'] ?? null) === $teamId) {
                 $connections[] = $connectionId;
             }
         }
@@ -742,9 +890,16 @@ class Realtime extends MessagingAdapter
      *
      * @throws QueryException
      */
-    public static function constructSubscriptions(array $channelNames, callable $getQueryParam): array
-    {
+    public static function constructSubscriptions(
+        array $channelNames,
+        callable $getQueryParam,
+        int $maxSubscriptions = APP_LIMIT_REALTIME_SUBSCRIPTIONS,
+        int $maxChannels = APP_LIMIT_REALTIME_CHANNELS,
+        int $maxQueries = APP_LIMIT_REALTIME_QUERIES,
+    ): array {
         $subscriptions = [];
+        $channelCount = 0;
+        $queryCount = 0;
 
         /**
          * Reserved channel params with expected type
@@ -774,11 +929,20 @@ class Realtime extends MessagingAdapter
 
             if ($params === null) {
                 if (!isset($subscriptions[0])) {
+                    if (\count($subscriptions) >= $maxSubscriptions) {
+                        throw new QueryException('Connection must have at most ' . $maxSubscriptions . ' subscriptions.');
+                    }
                     $subscriptions[0] = ['channels' => [], 'queries' => []];
                 }
                 $subscriptions[0]['channels'][] = $channel;
+                if (++$channelCount > $maxChannels) {
+                    throw new QueryException('Connection must have at most ' . $maxChannels . ' channels across its subscriptions.');
+                }
                 if (empty($subscriptions[0]['queries'])) {
                     $subscriptions[0]['queries'] = [Query::select(['*'])];
+                    if (++$queryCount > $maxQueries) {
+                        throw new QueryException('Connection must have at most ' . $maxQueries . ' queries across its subscriptions.');
+                    }
                 }
 
                 continue;
@@ -790,16 +954,30 @@ class Realtime extends MessagingAdapter
 
             foreach ($params as $index => $slot) {
                 if (!isset($subscriptions[$index])) {
+                    // Counted before parsing, so an oversized URL is rejected without the work.
+                    if (\count($subscriptions) >= $maxSubscriptions) {
+                        throw new QueryException('Connection must have at most ' . $maxSubscriptions . ' subscriptions.');
+                    }
                     $subscriptions[$index] = ['channels' => [], 'queries' => []];
                 }
 
                 if (!\in_array($channel, $subscriptions[$index]['channels'], true)) {
                     $subscriptions[$index]['channels'][] = $channel;
+                    if (++$channelCount > $maxChannels) {
+                        throw new QueryException('Connection must have at most ' . $maxChannels . ' channels across its subscriptions.');
+                    }
                 }
 
                 if (empty($subscriptions[$index]['queries'])) {
                     $raw = \is_array($slot) ? $slot : [$slot];
+                    if (\count($raw) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                        throw new QueryException('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.');
+                    }
                     $subscriptions[$index]['queries'] = self::convertQueries($raw);
+                    $queryCount += self::countQueries($subscriptions[$index]['queries']);
+                    if ($queryCount > $maxQueries) {
+                        throw new QueryException('Connection must have at most ' . $maxQueries . ' queries across its subscriptions.');
+                    }
                 }
             }
         }
@@ -816,6 +994,13 @@ class Realtime extends MessagingAdapter
      */
     public static function convertQueries(mixed $queries): array
     {
+        // Same as the REST API: a value count alone does not bound how long one value can be.
+        foreach ((array) $queries as $query) {
+            if (\is_string($query) && \strlen($query) > APP_LIMIT_ARRAY_ELEMENT_SIZE) {
+                throw new QueryException('A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.');
+            }
+        }
+
         $queries = Query::parseQueries($queries);
         $stack = $queries;
         $allowed = implode(', ', array_map(fn (Method $m) => $m->value, RuntimeQuery::ALLOWED_QUERIES));
@@ -836,10 +1021,38 @@ class Realtime extends MessagingAdapter
 
             if (in_array($method, [Method::And, Method::Or], true)) {
                 \array_push($stack, ...$query->getValues());
+            } elseif (\count($query->getValues()) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+                throw new QueryException('A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.');
             }
         }
 
+        if (self::countQueries($queries) > APP_LIMIT_ARRAY_PARAMS_SIZE) {
+            throw new QueryException('A subscription must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries, counting the ones nested in and/or.');
+        }
+
         return $queries;
+    }
+
+    /**
+     * Counts queries, including the ones nested in and/or.
+     *
+     * @param array<Query> $queries
+     */
+    public static function countQueries(array $queries): int
+    {
+        $count = 0;
+        $stack = $queries;
+
+        while (!empty($stack)) {
+            $query = \array_pop($stack);
+            $count++;
+
+            if (\in_array($query->getMethod(), [Method::And, Method::Or], true)) {
+                \array_push($stack, ...$query->getValues());
+            }
+        }
+
+        return $count;
     }
 
     /**
@@ -888,13 +1101,8 @@ class Realtime extends MessagingAdapter
                 }
                 break;
             case 'rules':
-                $channels[] = 'console';
-                $channels[] = 'projects.' . $project->getId();
-                $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
-                break;
             case 'migrations':
-                // Migrations carry project data, so only those who can read the project receive them.
+                // Rules and migrations carry project data, so only those who can read the project receive them.
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';
@@ -904,7 +1112,16 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $parts[1];
                 $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                $roles = $project->getPermissionsByType(PermissionType::Read);
+                // A project-wide sign-out: every connection of this project re-validates
+                // its session against the new invalidation timestamp in the realtime worker.
+                if (($parts[2] ?? '') === 'sessions' && ($parts[3] ?? '') === 'delete') {
+                    $permissionsChanged = true;
+                }
+                // A transfer changes who may read the project, so the worker re-authorizes its tails.
+                if (($parts[2] ?? '') === 'update' && ($parts[3] ?? '') === 'team') {
+                    $permissionsChanged = true;
+                }
                 break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
@@ -937,7 +1154,7 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
-                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                    $roles = $project->getPermissionsByType(PermissionType::Read);
                 } elseif (in_array($resource, ['rows', 'documents'])) {
                     if ($database->isEmpty()) {
                         throw new \Exception('Database needs to be passed to Realtime for Document/Row events in the Database.');
@@ -997,10 +1214,11 @@ class Realtime extends MessagingAdapter
                         $roles = $payload->getPermissionsByType(PermissionType::Read);
                     }
                 } elseif ($parts[2] === 'deployments') {
+                    // Build logs are project data; a member scoped to a sibling project must not receive them
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
-                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                    $roles = $project->getPermissionsByType(PermissionType::Read);
                 }
 
                 break;
@@ -1009,7 +1227,7 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'console';
                     $channels[] = 'projects.' . $project->getId();
                     $projectId = 'console';
-                    $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                    $roles = $project->getPermissionsByType(PermissionType::Read);
                 }
                 break;
             case 'reports':

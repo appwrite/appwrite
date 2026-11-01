@@ -15,10 +15,10 @@ export const EDUCATION_PLAN_REMINDER_MS = 5 * 7 * 24 * 60 * 60 * 1000
 const DAY_MS = 24 * 60 * 60 * 1000
 
 /**
- * "Remind me later" hides the reminder this long. It is only offered while
- * more time than this remains, so a snooze never runs into the end date.
+ * "Remind me later" hides the reminder this long. It is offered on every
+ * visit until the plan ends; a stored dismiss is ignored once it has ended.
  */
-export const EDUCATION_PLAN_DISMISS_MS = 2 * DAY_MS
+export const EDUCATION_PLAN_DISMISS_MS = DAY_MS
 const DISMISS_STORAGE_PREFIX = 'console.educationPlanExpiry.dismissedUntil.'
 
 export function educationPlanDismissStorageKey(organizationId: string): string {
@@ -64,17 +64,17 @@ export function daysUntilEducationPlanEnds(
   return Math.ceil(remaining / DAY_MS)
 }
 
-/** False in the last days before the plan ends and once it has ended. */
+/** False once the plan has ended. */
 export function canSnoozeEducationPlanReminder(
   endsAt: number,
   now = Date.now(),
 ): boolean {
-  return endsAt - now > EDUCATION_PLAN_DISMISS_MS
+  return !isEducationPlanEnded(endsAt, now)
 }
 
 /**
- * A dismiss hides the reminder for 2 days. In the last days and once the plan
- * ends, a stored dismiss no longer counts.
+ * A dismiss hides the reminder for 1 day. Once the plan ends, a stored
+ * dismiss no longer counts.
  */
 export function isEducationPlanReminderSnoozed(
   endsAt: number,

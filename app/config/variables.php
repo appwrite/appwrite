@@ -529,6 +529,42 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_SUBSCRIPTIONS',
+                'description' => 'Maximum number of subscriptions one realtime connection can hold. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_CHANNELS',
+                'description' => 'Maximum number of channels one realtime connection can subscribe to, counted across all of its subscriptions. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_QUERIES',
+                'description' => 'Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in and/or. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REALTIME_PERMISSION_TIMEOUT',
+                'description' => 'Maximum number of seconds the realtime server waits for a permission-change event to be verified against the database. When verification fails or does not finish in time, the affected connections are closed unverified and event delivery moves on, so one stuck database connection cannot stall realtime delivery. Clients re-authenticate on reconnect. Minimum 0.1. Default value is: 5.',
+                'introduction' => '2.7.0',
+                'default' => '5',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -598,6 +634,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'description' => 'Maximum number of connections the bundled PostgreSQL server accepts. Every API worker and worker coroutine holds its own connections, so raise it on hosts with many cores. Default value is: 500.',
+                'introduction' => '2.7.0',
+                'default' => '500',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
@@ -1840,7 +1885,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_MAINTENANCE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
+                'description' => 'How often, in seconds, the maintenance process runs system cleanups, and how often the scheduler runs maintenance for each project accessed in the last 30 days. Those projects are spread across five-minute slices like inactive ones, so use a multiple of 300. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
                 'required' => false,
@@ -1876,7 +1921,7 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_START_TIME',
-                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start its system cleanups. Project maintenance runs in slices around the clock. The default value is 00:00.',
                 'introduction' => '1.6.2',
                 'default' => '00:00',
                 'required' => false,

@@ -2961,12 +2961,20 @@
             "expire",
             "description"
         ],
+        "organization.createProjectTransfer": [
+            "projectId",
+            "recipientId",
+            "expire"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
         "organization.deleteProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.deleteProjectTransfer": [
+            "transferId"
         ],
         "organization.getProject": [
             "projectId"
@@ -2975,7 +2983,16 @@
             "projectId",
             "keyId"
         ],
+        "organization.getProjectTransfer": [
+            "transferId",
+            "secret"
+        ],
         "organization.listProjectKeys": [
+            "projectId",
+            "queries",
+            "total"
+        ],
+        "organization.listProjectTransfers": [
             "projectId",
             "queries",
             "total"
@@ -2996,6 +3013,10 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "organization.updateProjectTransferStatus": [
+            "transferId",
+            "secret"
         ],
         "ping.get": [],
         "presences.delete": [
@@ -3055,14 +3076,6 @@
             "number",
             "otp"
         ],
-        "project.createVideoProfile": [
-            "name",
-            "videoBitRate",
-            "audioBitRate",
-            "width",
-            "height",
-            "codec"
-        ],
         "project.createSMTPTest": [
             "emails"
         ],
@@ -3072,6 +3085,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.createVideoProfile": [
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height",
+            "codec"
         ],
         "project.createWebPlatform": [
             "platformId",
@@ -3093,11 +3114,12 @@
         "project.deletePlatform": [
             "platformId"
         ],
-        "project.deleteVideoProfile": [
-            "profileId"
-        ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
+        ],
+        "project.deleteVideoProfile": [
+            "profileId"
         ],
         "project.get": [],
         "project.getEmailTemplate": [
@@ -3119,11 +3141,12 @@
         "project.getPolicy": [
             "policyId"
         ],
-        "project.getVideoProfile": [
-            "profileId"
-        ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
+        ],
+        "project.getVideoProfile": [
+            "profileId"
         ],
         "project.listEmailTemplates": [
             "queries",
@@ -3149,13 +3172,13 @@
             "queries",
             "total"
         ],
-        "project.listVideoProfiles": [
-            "queries",
-            "codec"
-        ],
         "project.listVariables": [
             "queries",
             "total"
+        ],
+        "project.listVideoProfiles": [
+            "queries",
+            "codec"
         ],
         "project.updateAndroidPlatform": [
             "platformId",
@@ -3182,6 +3205,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -3532,13 +3558,8 @@
             "number",
             "symbols"
         ],
-        "project.updateVideoProfile": [
-            "profileId",
-            "name",
-            "videoBitRate",
-            "audioBitRate",
-            "width",
-            "height"
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -3581,6 +3602,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.updateVideoProfile": [
+            "profileId",
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height"
         ],
         "project.updateWebPlatform": [
             "platformId",
@@ -7256,14 +7285,6 @@
             "number",
             "otp"
         ],
-        "project.createVideoProfile": [
-            "name",
-            "videoBitRate",
-            "audioBitRate",
-            "width",
-            "height",
-            "codec"
-        ],
         "project.createSMTPTest": [
             "emails"
         ],
@@ -7273,6 +7294,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.createVideoProfile": [
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height",
+            "codec"
         ],
         "project.createWebPlatform": [
             "platformId",
@@ -7294,11 +7323,12 @@
         "project.deletePlatform": [
             "platformId"
         ],
-        "project.deleteVideoProfile": [
-            "profileId"
-        ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
+        ],
+        "project.deleteVideoProfile": [
+            "profileId"
         ],
         "project.get": [],
         "project.getEmailTemplate": [
@@ -7320,11 +7350,12 @@
         "project.getPolicy": [
             "policyId"
         ],
-        "project.getVideoProfile": [
-            "profileId"
-        ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
+        ],
+        "project.getVideoProfile": [
+            "profileId"
         ],
         "project.listEmailTemplates": [
             "queries",
@@ -7350,13 +7381,13 @@
             "queries",
             "total"
         ],
-        "project.listVideoProfiles": [
-            "queries",
-            "codec"
-        ],
         "project.listVariables": [
             "queries",
             "total"
+        ],
+        "project.listVideoProfiles": [
+            "queries",
+            "codec"
         ],
         "project.updateAndroidPlatform": [
             "platformId",
@@ -7383,6 +7414,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -7733,13 +7767,8 @@
             "number",
             "symbols"
         ],
-        "project.updateVideoProfile": [
-            "profileId",
-            "name",
-            "videoBitRate",
-            "audioBitRate",
-            "width",
-            "height"
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -7782,6 +7811,14 @@
             "value",
             "secret",
             "description"
+        ],
+        "project.updateVideoProfile": [
+            "profileId",
+            "name",
+            "videoBitRate",
+            "audioBitRate",
+            "width",
+            "height"
         ],
         "project.updateWebPlatform": [
             "platformId",

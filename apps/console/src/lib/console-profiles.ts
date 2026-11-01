@@ -69,6 +69,8 @@ export type ConsoleProfileFeatures = {
   videos: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
+  /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
+  projectTransfers: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -103,10 +105,6 @@ export type ConsoleProfileFeatures = {
   analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
-  /** Inbound email (SMTP) trigger card in function Executions settings. */
-  functionEmail: boolean
-  /** Custom inbound email (SMTP) domains on the function Domains tab. */
-  functionEmailDomains: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -140,6 +138,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
   projectEnvironments: 'Project environments',
+  projectTransfers: 'Project transfers',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -149,8 +148,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
-  functionEmail: 'Function email trigger',
-  functionEmailDomains: 'Function email domains',
 }
 
 export type ConsoleProfile = {
@@ -196,6 +193,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       projectEnvironments: false,
+      projectTransfers: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -206,9 +204,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: false,
-      // Off until launch; enable from Debug → Feature flags.
-      functionEmail: false,
-      functionEmailDomains: false,
     },
   },
   'self-hosted': {
@@ -242,6 +237,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       nativeDbsMongo: false,
       videos: false,
       projectEnvironments: false,
+      projectTransfers: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,
@@ -251,8 +247,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: false,
-      functionEmail: false,
-      functionEmailDomains: false,
     },
   },
 }

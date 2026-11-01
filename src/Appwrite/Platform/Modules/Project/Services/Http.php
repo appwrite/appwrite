@@ -86,6 +86,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Upd
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyFreeEmail\Update as UpdateDenyFreeEmailPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyRealtimeGuests\Update as UpdateDenyRealtimeGuestsPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\Get as GetPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MembershipPrivacy\Update as UpdateMembershipPrivacyPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\MFAFactors\Update as UpdateMFAFactorsPolicy;
@@ -102,8 +103,11 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionLimit\Update as UpdateSessionLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as UpdateUserLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
+use Appwrite\Platform\Modules\Project\Http\Project\Prefs\Get as GetPrefs;
+use Appwrite\Platform\Modules\Project\Http\Project\Prefs\Update as UpdatePrefs;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
+use Appwrite\Platform\Modules\Project\Http\Project\Sessions\Delete as DeleteSessions;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests\Create as CreateSMTPTest;
 use Appwrite\Platform\Modules\Project\Http\Project\SMTP\Update as UpdateSMTP;
 use Appwrite\Platform\Modules\Project\Http\Project\Templates\Email\Get as GetTemplate;
@@ -136,6 +140,13 @@ class Http extends Service
         $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
         $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
         $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
+
+        // Prefs
+        $this->addAction(GetPrefs::getName(), new GetPrefs());
+        $this->addAction(UpdatePrefs::getName(), new UpdatePrefs());
+
+        // Sessions
+        $this->addAction(DeleteSessions::getName(), new DeleteSessions());
 
         // SMTP
         $this->addAction(UpdateSMTP::getName(), new UpdateSMTP());
@@ -205,6 +216,7 @@ class Http extends Service
         $this->addAction(UpdateDenyDisposableEmailPolicy::getName(), new UpdateDenyDisposableEmailPolicy());
         $this->addAction(UpdateDenyFreeEmailPolicy::getName(), new UpdateDenyFreeEmailPolicy());
         $this->addAction(UpdateDenyCorporateEmailPolicy::getName(), new UpdateDenyCorporateEmailPolicy());
+        $this->addAction(UpdateDenyRealtimeGuestsPolicy::getName(), new UpdateDenyRealtimeGuestsPolicy());
 
         // Profiles
         $this->addAction(CreateProfile::getName(), new CreateProfile());

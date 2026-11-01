@@ -38,6 +38,7 @@ import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { isCloudProfile } from '@/lib/console-profiles'
 
 export function AddSmtpDomainWizard() {
   const t = useT()
@@ -46,8 +47,8 @@ export function AddSmtpDomainWizard() {
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
-  const { features } = useConsoleProfile()
-  const enabled = features.functionEmailDomains
+  // Inbound email is Cloud-only.
+  const { isCloud: enabled } = useConsoleProfile()
 
   const createMutation = useCreateSmtpDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
@@ -79,13 +80,15 @@ export function AddSmtpDomainWizard() {
   }
 
   useEffect(() => {
-    if (!enabled) {
+    // useConsoleProfile applies debug overrides only after mount, so read the
+    // profile directly here or a debug override closes the wizard on open.
+    if (!isCloudProfile()) {
       navigate({
         to: '/projects/$projectId/functions/$functionId/domains',
         params: { projectId: projectId!, functionId: functionId! },
       })
     }
-  }, [enabled, navigate, projectId, functionId])
+  }, [navigate, projectId, functionId])
 
   if (!enabled) {
     return null
@@ -128,7 +131,7 @@ export function AddSmtpDomainWizard() {
       })
       if (created.status === 'verified') {
         await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'smtp', 'function', projectId, functionId],
+          queryKey: ['proxy-rules', 'function', projectId, functionId],
         })
         toast.success(t('Email domain verified'))
         leave()
@@ -148,9 +151,6 @@ export function AddSmtpDomainWizard() {
         rule.$id,
       )) as SmtpProxyRule
       if (updated.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'smtp', 'function', projectId, functionId],
-        })
         toast.success(t('Email domain verified'))
         leave()
       } else {

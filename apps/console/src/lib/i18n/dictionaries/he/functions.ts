@@ -72,7 +72,6 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
   Change: 'שינוי',
   chars: 'תווים',
-  'Check your permissions': 'בדקו את ההרשאות שלכם',
   'Choose the directory containing your function code':
     'בחרו את התיקייה שמכילה את קוד הפונקציה שלכם',
   'Choose who can execute this function': 'בחרו מי יכול להריץ את הפונקציה הזו',
@@ -109,6 +108,7 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Connect GitHub': 'חיבור GitHub',
   'Connect GitLab': 'חיבור GitLab',
   'Connect Bitbucket': 'חיבור Bitbucket',
+  'Connect Gitea': 'חיבור Gitea',
   'Connect Origin': 'חיבור Origin',
   'Connect later': 'חיבור מאוחר יותר',
   'Connect repository': 'חיבור repo',
@@ -120,8 +120,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Content Delivery Network': 'רשת אספקת תוכן (CDN)',
   Contribute: 'תרומה לפרויקט',
   // pragma: allowlist secret
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
-    'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים ב-repo ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
+  "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.":
+    'כשהמצב פעיל, Appwrite לא מוסיף תגובות ל-pull requests ולא מדווח לספק ה-Git שלכם על בדיקות ופריסות. הבנייה והפריסה ממשיכות כרגיל.', // pragma: allowlist secret
   Copy: 'העתקה',
   'Copy as JSON': 'העתקה כ-JSON',
   'Copy gzip (base64)': 'העתקת gzip (base64)',
@@ -188,9 +188,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Detecting runtime...': 'מזהה סביבת ריצה...',
   'Directory containing your function code':
     'תיקייה שמכילה את קוד הפונקציה שלכם',
-  'Disable automated comments on repository commits':
-    'השבתת תגובות אוטומטיות על קומיטים ב-repo',
-  'Disable automated commit comments': 'השבתת תגובות אוטומטיות על קומיטים',
+  'Skip pull request comments, checks and deployment reports':
+    'דילוג על תגובות ב-pull requests, בדיקות ודיווחי פריסה',
   Disabled: 'מושבת',
   'Disabled - less log output per execution.':
     'מושבת - פחות פלט לוגים לכל הרצה.',
@@ -381,7 +380,6 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Maximum time a single execution may run before it is stopped. Use a higher value for slow I/O or heavy work; use a lower value to cap run time. Allowed range is 1–900 seconds.':
     'הזמן המקסימלי שהרצה בודדת יכולה לרוץ לפני שהיא נעצרת. השתמשו בערך גבוה יותר לעבודות כבדות או קלט/פלט איטי; השתמשו בערך נמוך יותר כדי להגביל את זמן הריצה. הטווח המותר הוא 1 עד 900 שניות.',
   Method: 'מתודה',
-  'Missing a repository?': 'חסר לכם repo?',
   'Missing repository connection': 'חסר חיבור ל-repo',
   Monthly: 'חודשי',
   'Monthly on the 1st': 'חודשי ב-1 לחודש',
@@ -593,10 +591,8 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Timeout must be between 1 and 900 seconds':
     'ה-Timeout חייב להיות בין 1 ל-900 שניות',
   'Timeout updated successfully': 'ה-Timeout עודכן בהצלחה',
-  'Enterprise runtime options': 'אפשרויות runtime ב-Enterprise',
-  'The Enterprise plan includes always-on functions to minimize cold starts, as well as higher CPU and memory configurations for more demanding workloads.':
-    'תוכנית Enterprise כוללת פונקציות Always-on לצמצום cold starts, וגם תצורות CPU וזיכרון גבוהות יותר לעומסים תובעניים.',
-  'Contact us to learn more.': 'צרו קשר לפרטים נוספים.',
+  'Always-on functions and higher CPU and memory are available on Enterprise.':
+    'פונקציות Always-on ומשאבי CPU וזיכרון גבוהים יותר זמינים בתוכנית Enterprise.',
   'to make it available to end users.': 'כדי להפוך אותה לזמינה למשתמשי קצה.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
   'Total size': 'גודל כולל',
@@ -744,23 +740,18 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Failed to add email domain': 'הוספת דומיין האימייל נכשלה',
   'Verify email domain': 'אימות דומיין אימייל',
   'Add email domain': 'הוספת דומיין אימייל',
-  'Email domains': 'דומייני אימייל',
-  'No email domains yet': 'אין עדיין דומייני אימייל',
-  'Email domain has been deleted': 'דומיין האימייל נמחק',
   'Serve HTTP requests on your domain': 'הגשת בקשות HTTP בדומיין שלכם',
   'Run on mail sent to any address on your domain':
     'הרצה על דואר שנשלח לכל כתובת בדומיין שלכם',
   'Email domains need the email trigger.':
     'דומייני אימייל דורשים את טריגר האימייל.',
   'Enable it in settings': 'הפעילו אותו בהגדרות',
-  'Run this function on mail sent to domains you own.':
-    'הריצו את הפונקציה הזו על דואר שנשלח לדומיינים בבעלותכם.',
-  'Add a domain, publish its MX and TXT records, then verify it to start receiving mail.':
-    'הוסיפו דומיין, פרסמו את רשומות ה-MX וה-TXT שלו ואז אמתו אותו כדי להתחיל לקבל דואר.',
   'Use a domain or subdomain that receives no other mail, since its MX record will point to Appwrite.':
     'השתמשו בדומיין או בתת-דומיין שלא מקבל דואר אחר, כי רשומת ה-MX שלו תצביע אל Appwrite.',
   'Mail is delivered to Appwrite on port 25, so the MX record must point straight at the value above, not at a proxied hostname.':
     'הדואר נמסר אל Appwrite בפורט 25, ולכן רשומת ה-MX חייבת להצביע ישירות לערך שלמעלה ולא לשם מארח שעובר דרך פרוקסי.',
   'This region does not report its mail server yet, so the MX record cannot be shown. Add the TXT record now and come back for the MX record later.':
     'האזור הזה עדיין לא מדווח על שרת הדואר שלו, ולכן לא ניתן להציג את רשומת ה-MX. הוסיפו עכשיו את רשומת ה-TXT וחזרו מאוחר יותר לרשומת ה-MX.',
+  "This function's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
+    'התקנת ה-Git של הפונקציה הזו כבר לא מגיעה ל-repo שלה, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
 }

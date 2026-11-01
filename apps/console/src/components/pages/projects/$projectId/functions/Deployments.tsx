@@ -6,6 +6,7 @@ import {
   useRef,
   useContext,
 } from 'react'
+import { isSmtpRule, webDomainQueries } from '@/lib/function-smtp-domain'
 import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
@@ -140,7 +141,7 @@ import { DeploymentsToolbarContext } from './Layout'
 import { getQueryParam, queryParamToMap } from '@/lib/table-filters'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
-import { domainUrl } from '@/lib/domains/url'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 function formatSize(bytes: number | bigint): string {
   return formatDecimalBytes(bytes)
@@ -223,6 +224,7 @@ function detectVcsProvider(
 
 export function View() {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
@@ -393,14 +395,14 @@ export function View() {
     })
   }, [projectId, functionId, queryClient])
 
-  // Fetch domains for the function (filter by active deployment)
-  // Use same params as domains tab to share cache
+  // Fetch web domains for the function (filter by active deployment)
   const { data: domainsData } = useFunctionDomains(
     projectId,
     functionId,
     0,
     DOMAINS_DEFAULT_PAGE_SIZE,
     '',
+    webDomainQueries(),
   )
 
   // Fetch runtimes to get runtime name
@@ -415,8 +417,11 @@ export function View() {
   // Filter domains for active deployment and sort by length (shortest first), limit to 3
   const activeDomains = useMemo(() => {
     const filtered =
-      domainsData?.rules?.filter((rule) =>
-        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
+      domainsData?.rules?.filter(
+        (rule) =>
+          // Email (SMTP) rules share the list but have no web URL.
+          !isSmtpRule(rule) &&
+          proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
@@ -425,8 +430,10 @@ export function View() {
 
   // Check if there are more domains than displayed
   const totalActiveDomains =
-    domainsData?.rules?.filter((rule) =>
-      proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
+    domainsData?.rules?.filter(
+      (rule) =>
+        !isSmtpRule(rule) &&
+        proxyRuleServesActiveDeployment(rule, activeDeployment?.$id),
     ).length || 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 
@@ -1091,7 +1098,7 @@ export function View() {
                         {activeDomains.map((rule) => (
                           <a
                             key={rule.$id}
-                            href={domainUrl(rule.domain)}
+                            href={visitUrl(rule.domain)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-[13px] font-mono link-neutral"
@@ -2159,10 +2166,7 @@ export function View() {
               </RadioGroup>
               {hasUnavailableSpecifications(specifications) && (
                 <div className="mt-3">
-                  <SpecificationsUpgradeNote
-                    orgId={project?.teamId}
-                    showContactSales
-                  />
+                  <SpecificationsUpgradeNote orgId={project?.teamId} />
                 </div>
               )}
             </div>

@@ -56,10 +56,11 @@ return [
         'queueEnv' => '_APP_JOBS_QUEUE_NAME',
         'coroutines' => 8,
     ],
+    // Each job captures light and dark together, so 4 jobs keep the browser at 8 captures.
     'screenshots' => [
         'queue' => Event::SCREENSHOTS_QUEUE_NAME,
         'queueEnv' => '_APP_SCREENSHOTS_QUEUE_NAME',
-        'coroutines' => 8,
+        'coroutines' => 4,
     ],
     'certificates' => [
         'queue' => Event::CERTIFICATES_QUEUE_NAME,
