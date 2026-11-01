@@ -2912,6 +2912,45 @@ trait MessagingBase
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
         }, 10000, 500);
+
+        // Test scheduled to draft for SMS message
+        $smsUser = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'phone' => '+1' . \rand(1000000000, 9999999999),
+            'password' => 'password',
+            'name' => 'Messaging User SMS',
+        ]);
+        $smsTargetId = $smsUser['body']['targets'][0]['$id'];
+
+        $smsMessage = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$smsTargetId],
+            'content' => 'SMS draft cancellation test',
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 120),
+        ]);
+
+        $this->assertEquals(201, $smsMessage['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $smsMessage['body']['status']);
+        $this->assertNotNull($smsMessage['body']['scheduledAt']);
+
+        $updatedSmsMessage = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $smsMessage['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(200, $updatedSmsMessage['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $updatedSmsMessage['body']['status']);
     }
 
     public function testDraftToScheduledMessage(): void
