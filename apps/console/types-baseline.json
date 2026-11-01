@@ -260,7 +260,7 @@
     "TS2339: Property 'totalDue' does not exist on type '{}'.": 2
   },
   "src/components/pages/organizations/$orgId/overview/CreateProjectDialog.tsx": {
-    "TS18046: 'r' is of type 'unknown'.": 2,
+    "TS18046: 'r' is of type 'unknown'.": 1,
     "TS18046: 'region' is of type 'unknown'.": 13,
     "TS2339: Property 'message' does not exist on type '{}'.": 1
   },
