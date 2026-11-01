@@ -177,11 +177,15 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
             };
             let phone_proof = verification == Some("phoneVerification");
             // Accepting while signed out proves an unverified email or
-            // phone, so whoever registered it keeps no other way in.
+            // phone, so whoever registered it keeps no other way in. MFA in
+            // force is left alone: the address alone must not discard a
+            // second factor.
+            let guarded = !has_session && user.minimum_factors() > 1;
             let mut claimed = None;
             if let Some(attribute) = verification
                 && !has_session
                 && !matches!(locked.get(attribute), Some(Value::Bool(true)))
+                && !guarded
             {
                 let proven = if phone_proof { "sms" } else { "email" };
                 authorization
@@ -190,7 +194,9 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
                     .map_err(|e| utopia_database::Error::new(Kind::Exception, e.message.into_owned()))?;
                 claimed = Some(user.id.clone());
             }
-            if let Some(attribute) = verification {
+            if let Some(attribute) = verification
+                && !guarded
+            {
                 let mut verified = Document::default();
                 verified.put(attribute, Value::Bool(true));
                 authorization.skip(db.update_document("users", &target_id, verified)).await?;

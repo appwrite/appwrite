@@ -255,9 +255,7 @@ pub(in crate::platform) async fn auth(
 
     // MFA.
     if let Some(user) = ctx.user.as_ref().filter(|_| !key_actor) {
-        let has_totp =
-            user.authenticators.iter().any(|a| a.kind.as_deref() == Some("totp") && a.verified == Some(true));
-        let minimum = if user.mfa == Some(true) && (user.verified() || has_totp) { 2 } else { 1 };
+        let minimum = user.minimum_factors();
         if !ctx.route.has_group("mfa") {
             let impersonating = ctx.target_user.is_some();
             let factors = ctx.session.as_ref().map(|s| s.factors.len());
