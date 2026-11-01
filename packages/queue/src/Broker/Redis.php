@@ -603,6 +603,26 @@ class Redis implements Synchronous, Consumer
     }
 
     /**
+     * Messages are pushed on the left and received from the right, so the right end is the oldest still waiting.
+     * One the codec cannot read reads as 0; the consumer parks it as poison.
+     */
+    public function getQueueAge(Queue $queue): int
+    {
+        $oldest = $this->commands->listRange("{$queue->namespace}.queue.{$queue->name}", 1, -1)[0] ?? null;
+        if (!\is_string($oldest)) {
+            return 0;
+        }
+
+        try {
+            $envelope = $this->codec->decode($oldest);
+        } catch (\Throwable) {
+            return 0;
+        }
+
+        return \is_array($envelope) && \is_numeric($envelope['timestamp'] ?? null) ? \max(0, \time() - (int) $envelope['timestamp']) : 0;
+    }
+
+    /**
      * Everything this queue could not get through, from all three lists it uses.
      */
     public function getFailedCount(Queue $queue): int

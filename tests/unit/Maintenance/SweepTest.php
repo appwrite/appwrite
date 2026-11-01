@@ -127,7 +127,7 @@ final class SweepTest extends TestCase
         $message = new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, cohort: Cohort::Active);
 
         // Backed up with nothing draining, so the first page defers before enqueuing anything.
-        $publisher = new QueuePublisher($this->clock, 0, 150);
+        $publisher = new QueuePublisher($this->clock, 0, 150, Sweep::LAG);
         ($this->sweep($publisher))($message);
 
         $this->assertSame([], $publisher->payloads(self::QUEUE));
@@ -174,20 +174,35 @@ final class SweepTest extends TestCase
         $this->assertSame([], \array_values(\array_intersect(\array_keys($reached), $this->excluded)));
     }
 
-    public function testBackedUpQueueDefersTheSliceAtTheNextBlock(): void
+    public function testBackedUpQueueDefersTheSliceAtItsFirstBlock(): void
+    {
+        $due = $this->week->modify('+3 hours');
+        $this->blocks($due);
+        $this->clock = new TestClock($due);
+        // Five queued for LAG seconds and nothing draining: shallow, but stuck.
+        $publisher = new QueuePublisher($this->clock, 0, 5, Sweep::LAG);
+
+        ($this->sweep($publisher))($this->message($due));
+
+        $first = $this->slot($due->getTimestamp()) * Sweep::BLOCK;
+        $this->assertSame([], $publisher->payloads(self::QUEUE));
+        $this->assertSame([$this->message($due, cursor: (string) \max(0, $first - 1))->toArray()], $publisher->payloads(self::MAINTENANCE));
+        $this->assertSame((float) ($due->getTimestamp() + Sweep::WAIT), (float) $this->clock->now()->format('U.u'));
+    }
+
+    public function testDeepQueueThatKeepsUpDoesNotDefer(): void
     {
         $due = $this->week->modify('+3 hours');
         $rows = $this->blocks($due);
         $this->clock = new TestClock($due);
-        // 50 queued and nothing draining: the first block takes it past BACKLOG, so the second cannot start.
-        $publisher = new QueuePublisher($this->clock, 0, 50);
+        // A thousand queued, the oldest for a few seconds: deep, but consumers keep up.
+        $publisher = new QueuePublisher($this->clock, 0, 1000, 5);
 
         ($this->sweep($publisher))($this->message($due));
 
-        $second = ($this->slot($due->getTimestamp()) + self::SLOTS) * Sweep::BLOCK;
-        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 0, 60), 0)), $this->sorted($this->projects($publisher)));
-        $this->assertSame([$this->message($due, cursor: (string) ($second - 1))->toArray()], $publisher->payloads(self::MAINTENANCE));
-        $this->assertSame((float) ($due->getTimestamp() + Sweep::WAIT), (float) $this->clock->now()->format('U.u'));
+        $this->assertSame($this->sorted(\array_column($rows, 0)), $this->sorted($this->projects($publisher)));
+        $this->assertSame([], $publisher->payloads(self::MAINTENANCE));
+        $this->assertSame((float) $due->getTimestamp(), (float) $this->clock->now()->format('U.u'));
     }
 
     public function testQueueDrainingWithinTheWaitContinuesTheSlice(): void
@@ -195,8 +210,8 @@ final class SweepTest extends TestCase
         $due = $this->week->modify('+3 hours');
         $rows = $this->blocks($due);
         $this->clock = new TestClock($due);
-        // 150 queued, six drained a second: under BACKLOG after the wait, and back at 150 after each block of 60.
-        $publisher = new QueuePublisher($this->clock, 6, 150);
+        // 60 queued for LAG seconds, six drained a second: empty after the wait, and what the slice adds is fresh.
+        $publisher = new QueuePublisher($this->clock, 6, 60, Sweep::LAG);
 
         ($this->sweep($publisher))($this->message($due));
 
@@ -205,7 +220,7 @@ final class SweepTest extends TestCase
 
         $start = (float) $due->getTimestamp();
         $starts = \array_values(\array_unique(\array_map(fn (float $time): int => (int) ($time - $start), $publisher->times(self::QUEUE))));
-        $this->assertSame([Sweep::WAIT, 2 * Sweep::WAIT, 3 * Sweep::WAIT], $starts);
+        $this->assertSame([Sweep::WAIT], $starts);
     }
 
     public function testCursorResumesAfterTheBlocksAlreadyEnqueued(): void
@@ -231,13 +246,12 @@ final class SweepTest extends TestCase
             $rows[] = [($sequence <= 60 ? 'old-' : 'never-') . $sequence, $sequence, $sequence <= 60 ? $due->modify('-60 days') : null, self::REGION];
         }
         $this->database = Projects::seed(new Uuid7Memory(), $rows);
-        $message = new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION);
 
-        // The accessedAt pass takes the queue from 50 past BACKLOG, so the never-accessed pass defers from its start.
-        $deferred = new QueuePublisher($this->clock, 0, 50);
-        ($this->sweep($deferred))($message);
+        // Backed up from the never-accessed pass's start, so it defers there and keeps its pass.
+        $deferred = new QueuePublisher($this->clock, 0, 5, Sweep::LAG);
+        ($this->sweep($deferred))(new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, pass: 1));
 
-        $this->assertSame($this->sorted(\array_column(\array_slice($rows, 0, 60), 0)), $this->sorted($this->projects($deferred)));
+        $this->assertSame([], $this->projects($deferred));
         $this->assertSame([(new MaintenanceMessage(slot: 0, slots: 1, due: $due->getTimestamp(), period: $this->cycle()->seconds(), region: self::REGION, pass: 1))->toArray()], $deferred->payloads(self::MAINTENANCE));
 
         $resumed = $this->publisher();
@@ -278,7 +292,7 @@ final class SweepTest extends TestCase
         $this->blocks($due);
         $this->clock = new TestClock($due);
         // Backed up with nothing draining, so the first publish attempt is the deferral itself.
-        $publisher = new QueuePublisher($this->clock, 0, 150);
+        $publisher = new QueuePublisher($this->clock, 0, 150, Sweep::LAG);
         $publisher->refuse = 1;
 
         $failed = null;

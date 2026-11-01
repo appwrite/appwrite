@@ -167,6 +167,9 @@ class Screenshots extends Action
             $mimeType = "image/png";
             $updates = new Document([]);
 
+            // The project may have moved to another team since the build queued this capture
+            $teamId = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('teamId', '');
+
             foreach ($captures as $key => $screenshot) {
                 $fileId = Id::unique();
                 $fileName = $fileId . '.png';
@@ -179,7 +182,6 @@ class Screenshots extends Action
                     throw new \Exception("Screenshot failed to save");
                 }
 
-                $teamId = $project->getAttribute('teamId', '');
                 $file = new Document([
                     '$id' => $fileId,
                     '$permissions' => [

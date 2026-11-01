@@ -99,134 +99,134 @@ class Legacy extends Base
 
     public function registerDatabaseActions(Service $service): void
     {
-        $service->addAction(CreateDatabase::getName(), new CreateDatabase());
-        $service->addAction(GetDatabase::getName(), new GetDatabase());
-        $service->addAction(UpdateDatabase::getName(), new UpdateDatabase());
-        $service->addAction(DeleteDatabase::getName(), new DeleteDatabase());
-        $service->addAction(ListDatabases::getName(), new ListDatabases());
+        $service->addAction(CreateDatabase::getName(), CreateDatabase::class);
+        $service->addAction(GetDatabase::getName(), GetDatabase::class);
+        $service->addAction(UpdateDatabase::getName(), UpdateDatabase::class);
+        $service->addAction(DeleteDatabase::getName(), DeleteDatabase::class);
+        $service->addAction(ListDatabases::getName(), ListDatabases::class);
     }
 
     private function registerCollectionActions(Service $service): void
     {
-        $service->addAction(CreateCollection::getName(), new CreateCollection());
-        $service->addAction(GetCollection::getName(), new GetCollection());
-        $service->addAction(UpdateCollection::getName(), new UpdateCollection());
-        $service->addAction(DeleteCollection::getName(), new DeleteCollection());
-        $service->addAction(ListCollections::getName(), new ListCollections());
+        $service->addAction(CreateCollection::getName(), CreateCollection::class);
+        $service->addAction(GetCollection::getName(), GetCollection::class);
+        $service->addAction(UpdateCollection::getName(), UpdateCollection::class);
+        $service->addAction(DeleteCollection::getName(), DeleteCollection::class);
+        $service->addAction(ListCollections::getName(), ListCollections::class);
     }
 
     private function registerDocumentActions(Service $service): void
     {
-        $service->addAction(CreateDocument::getName(), new CreateDocument());
-        $service->addAction(GetDocument::getName(), new GetDocument());
-        $service->addAction(UpdateDocument::getName(), new UpdateDocument());
-        $service->addAction(UpdateDocuments::getName(), new UpdateDocuments());
-        $service->addAction(UpsertDocument::getName(), new UpsertDocument());
-        $service->addAction(UpsertDocuments::getName(), new UpsertDocuments());
-        $service->addAction(DeleteDocument::getName(), new DeleteDocument());
-        $service->addAction(DeleteDocuments::getName(), new DeleteDocuments());
-        $service->addAction(ListDocuments::getName(), new ListDocuments());
-        $service->addAction(CreateDocumentsQuery::getName(), new CreateDocumentsQuery());
-        $service->addAction(IncrementDocumentAttribute::getName(), new IncrementDocumentAttribute());
-        $service->addAction(DecrementDocumentAttribute::getName(), new DecrementDocumentAttribute());
+        $service->addAction(CreateDocument::getName(), CreateDocument::class);
+        $service->addAction(GetDocument::getName(), GetDocument::class);
+        $service->addAction(UpdateDocument::getName(), UpdateDocument::class);
+        $service->addAction(UpdateDocuments::getName(), UpdateDocuments::class);
+        $service->addAction(UpsertDocument::getName(), UpsertDocument::class);
+        $service->addAction(UpsertDocuments::getName(), UpsertDocuments::class);
+        $service->addAction(DeleteDocument::getName(), DeleteDocument::class);
+        $service->addAction(DeleteDocuments::getName(), DeleteDocuments::class);
+        $service->addAction(ListDocuments::getName(), ListDocuments::class);
+        $service->addAction(CreateDocumentsQuery::getName(), CreateDocumentsQuery::class);
+        $service->addAction(IncrementDocumentAttribute::getName(), IncrementDocumentAttribute::class);
+        $service->addAction(DecrementDocumentAttribute::getName(), DecrementDocumentAttribute::class);
 
     }
 
     private function registerAttributeActions(Service $service): void
     {
         // Attribute top-level actions
-        $service->addAction(GetAttribute::getName(), new GetAttribute());
-        $service->addAction(DeleteAttribute::getName(), new DeleteAttribute());
-        $service->addAction(ListAttributes::getName(), new ListAttributes());
+        $service->addAction(GetAttribute::getName(), GetAttribute::class);
+        $service->addAction(DeleteAttribute::getName(), DeleteAttribute::class);
+        $service->addAction(ListAttributes::getName(), ListAttributes::class);
 
         // Attribute: Boolean
-        $service->addAction(CreateBooleanAttribute::getName(), new CreateBooleanAttribute());
-        $service->addAction(UpdateBooleanAttribute::getName(), new UpdateBooleanAttribute());
+        $service->addAction(CreateBooleanAttribute::getName(), CreateBooleanAttribute::class);
+        $service->addAction(UpdateBooleanAttribute::getName(), UpdateBooleanAttribute::class);
 
         // Attribute: Datetime
-        $service->addAction(CreateDatetimeAttribute::getName(), new CreateDatetimeAttribute());
-        $service->addAction(UpdateDatetimeAttribute::getName(), new UpdateDatetimeAttribute());
+        $service->addAction(CreateDatetimeAttribute::getName(), CreateDatetimeAttribute::class);
+        $service->addAction(UpdateDatetimeAttribute::getName(), UpdateDatetimeAttribute::class);
 
         // Attribute: Email
-        $service->addAction(CreateEmailAttribute::getName(), new CreateEmailAttribute());
-        $service->addAction(UpdateEmailAttribute::getName(), new UpdateEmailAttribute());
+        $service->addAction(CreateEmailAttribute::getName(), CreateEmailAttribute::class);
+        $service->addAction(UpdateEmailAttribute::getName(), UpdateEmailAttribute::class);
 
         // Attribute: Enum
-        $service->addAction(CreateEnumAttribute::getName(), new CreateEnumAttribute());
-        $service->addAction(UpdateEnumAttribute::getName(), new UpdateEnumAttribute());
+        $service->addAction(CreateEnumAttribute::getName(), CreateEnumAttribute::class);
+        $service->addAction(UpdateEnumAttribute::getName(), UpdateEnumAttribute::class);
 
         // Attribute: Float
-        $service->addAction(CreateFloatAttribute::getName(), new CreateFloatAttribute());
-        $service->addAction(UpdateFloatAttribute::getName(), new UpdateFloatAttribute());
+        $service->addAction(CreateFloatAttribute::getName(), CreateFloatAttribute::class);
+        $service->addAction(UpdateFloatAttribute::getName(), UpdateFloatAttribute::class);
 
         // Attribute: Integer
-        $service->addAction(CreateIntegerAttribute::getName(), new CreateIntegerAttribute());
-        $service->addAction(UpdateIntegerAttribute::getName(), new UpdateIntegerAttribute());
+        $service->addAction(CreateIntegerAttribute::getName(), CreateIntegerAttribute::class);
+        $service->addAction(UpdateIntegerAttribute::getName(), UpdateIntegerAttribute::class);
 
         // Attribute: BigInt
-        $service->addAction(CreateBigIntAttribute::getName(), new CreateBigIntAttribute());
-        $service->addAction(UpdateBigIntAttribute::getName(), new UpdateBigIntAttribute());
+        $service->addAction(CreateBigIntAttribute::getName(), CreateBigIntAttribute::class);
+        $service->addAction(UpdateBigIntAttribute::getName(), UpdateBigIntAttribute::class);
 
         // Attribute: IP
-        $service->addAction(CreateIPAttribute::getName(), new CreateIPAttribute());
-        $service->addAction(UpdateIPAttribute::getName(), new UpdateIPAttribute());
+        $service->addAction(CreateIPAttribute::getName(), CreateIPAttribute::class);
+        $service->addAction(UpdateIPAttribute::getName(), UpdateIPAttribute::class);
 
         // Attribute: Line
-        $service->addAction(CreateLineAttribute::getName(), new CreateLineAttribute());
-        $service->addAction(UpdateLineAttribute::getName(), new UpdateLineAttribute());
+        $service->addAction(CreateLineAttribute::getName(), CreateLineAttribute::class);
+        $service->addAction(UpdateLineAttribute::getName(), UpdateLineAttribute::class);
 
         // Attribute: Point
-        $service->addAction(CreatePointAttribute::getName(), new CreatePointAttribute());
-        $service->addAction(UpdatePointAttribute::getName(), new UpdatePointAttribute());
+        $service->addAction(CreatePointAttribute::getName(), CreatePointAttribute::class);
+        $service->addAction(UpdatePointAttribute::getName(), UpdatePointAttribute::class);
 
         // Attribute: Polygon
-        $service->addAction(CreatePolygonAttribute::getName(), new CreatePolygonAttribute());
-        $service->addAction(UpdatePolygonAttribute::getName(), new UpdatePolygonAttribute());
+        $service->addAction(CreatePolygonAttribute::getName(), CreatePolygonAttribute::class);
+        $service->addAction(UpdatePolygonAttribute::getName(), UpdatePolygonAttribute::class);
 
         // Attribute: Relationship
-        $service->addAction(CreateRelationshipAttribute::getName(), new CreateRelationshipAttribute());
-        $service->addAction(UpdateRelationshipAttribute::getName(), new UpdateRelationshipAttribute());
+        $service->addAction(CreateRelationshipAttribute::getName(), CreateRelationshipAttribute::class);
+        $service->addAction(UpdateRelationshipAttribute::getName(), UpdateRelationshipAttribute::class);
 
         // Attribute: String
-        $service->addAction(CreateStringAttribute::getName(), new CreateStringAttribute());
-        $service->addAction(UpdateStringAttribute::getName(), new UpdateStringAttribute());
+        $service->addAction(CreateStringAttribute::getName(), CreateStringAttribute::class);
+        $service->addAction(UpdateStringAttribute::getName(), UpdateStringAttribute::class);
 
         // Attribute: URL
-        $service->addAction(CreateURLAttribute::getName(), new CreateURLAttribute());
-        $service->addAction(UpdateURLAttribute::getName(), new UpdateURLAttribute());
+        $service->addAction(CreateURLAttribute::getName(), CreateURLAttribute::class);
+        $service->addAction(UpdateURLAttribute::getName(), UpdateURLAttribute::class);
 
         // Attribute: Varchar
-        $service->addAction(CreateVarcharAttribute::getName(), new CreateVarcharAttribute());
-        $service->addAction(UpdateVarcharAttribute::getName(), new UpdateVarcharAttribute());
+        $service->addAction(CreateVarcharAttribute::getName(), CreateVarcharAttribute::class);
+        $service->addAction(UpdateVarcharAttribute::getName(), UpdateVarcharAttribute::class);
 
         // Attribute: Text
-        $service->addAction(CreateTextAttribute::getName(), new CreateTextAttribute());
-        $service->addAction(UpdateTextAttribute::getName(), new UpdateTextAttribute());
+        $service->addAction(CreateTextAttribute::getName(), CreateTextAttribute::class);
+        $service->addAction(UpdateTextAttribute::getName(), UpdateTextAttribute::class);
 
         // Attribute: Mediumtext
-        $service->addAction(CreateMediumtextAttribute::getName(), new CreateMediumtextAttribute());
-        $service->addAction(UpdateMediumtextAttribute::getName(), new UpdateMediumtextAttribute());
+        $service->addAction(CreateMediumtextAttribute::getName(), CreateMediumtextAttribute::class);
+        $service->addAction(UpdateMediumtextAttribute::getName(), UpdateMediumtextAttribute::class);
 
         // Attribute: Longtext
-        $service->addAction(CreateLongtextAttribute::getName(), new CreateLongtextAttribute());
-        $service->addAction(UpdateLongtextAttribute::getName(), new UpdateLongtextAttribute());
+        $service->addAction(CreateLongtextAttribute::getName(), CreateLongtextAttribute::class);
+        $service->addAction(UpdateLongtextAttribute::getName(), UpdateLongtextAttribute::class);
     }
 
     private function registerIndexActions(Service $service): void
     {
-        $service->addAction(CreateIndex::getName(), new CreateIndex());
-        $service->addAction(GetIndex::getName(), new GetIndex());
-        $service->addAction(DeleteIndex::getName(), new DeleteIndex());
-        $service->addAction(ListIndexes::getName(), new ListIndexes());
+        $service->addAction(CreateIndex::getName(), CreateIndex::class);
+        $service->addAction(GetIndex::getName(), GetIndex::class);
+        $service->addAction(DeleteIndex::getName(), DeleteIndex::class);
+        $service->addAction(ListIndexes::getName(), ListIndexes::class);
     }
 
     private function registerTransactionActions(Service $service): void
     {
-        $service->addAction(CreateTransaction::getName(), new CreateTransaction());
-        $service->addAction(GetTransaction::getName(), new GetTransaction());
-        $service->addAction(UpdateTransaction::getName(), new UpdateTransaction());
-        $service->addAction(DeleteTransaction::getName(), new DeleteTransaction());
-        $service->addAction(ListTransactions::getName(), new ListTransactions());
-        $service->addAction(CreateOperations::getName(), new CreateOperations());
+        $service->addAction(CreateTransaction::getName(), CreateTransaction::class);
+        $service->addAction(GetTransaction::getName(), GetTransaction::class);
+        $service->addAction(UpdateTransaction::getName(), UpdateTransaction::class);
+        $service->addAction(DeleteTransaction::getName(), DeleteTransaction::class);
+        $service->addAction(ListTransactions::getName(), ListTransactions::class);
+        $service->addAction(CreateOperations::getName(), CreateOperations::class);
     }
 }

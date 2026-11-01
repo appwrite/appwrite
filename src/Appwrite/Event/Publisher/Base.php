@@ -30,4 +30,12 @@ readonly class Base
     {
         return $this->publisher->getQueueSize($queue, $failed);
     }
+
+    /**
+     * Get how long, in seconds, the oldest waiting message of a queue has waited
+     */
+    public function getQueueAge(Queue $queue): int
+    {
+        return $this->publisher->getQueueAge($queue);
+    }
 }

@@ -3,12 +3,6 @@ import {
   type BillingPlanRecord,
 } from '@/lib/utils/plan-filter'
 
-/** An Education organization is covered for this many months after it is created. */
-export const EDUCATION_PLAN_DURATION_MONTHS = 6
-
-/** No Education organization is disabled before this instant, however old it is. */
-export const EDUCATION_PLAN_EARLIEST_END_AT = Date.UTC(2026, 10, 1)
-
 /** The curtain starts reminding the team this long before the plan ends. */
 export const EDUCATION_PLAN_REMINDER_MS = 5 * 7 * 24 * 60 * 60 * 1000
 
@@ -26,18 +20,15 @@ export function educationPlanDismissStorageKey(organizationId: string): string {
 }
 
 /**
- * When the Education plan ends for an organization created at `createdAt`:
- * 6 months after creation, but never before November 1, 2026.
+ * When the Education plan ends, from the organization's `educationExpiresAt`,
+ * which Cloud computes. Null when absent or invalid, so nothing is shown.
  */
 export function getEducationPlanEndsAt(
-  createdAt: string | null | undefined,
+  educationExpiresAt: string | null | undefined,
 ): number | null {
-  if (!createdAt) return null
-  const created = new Date(createdAt)
-  if (Number.isNaN(created.getTime())) return null
-  const endsAt = new Date(created)
-  endsAt.setUTCMonth(endsAt.getUTCMonth() + EDUCATION_PLAN_DURATION_MONTHS)
-  return Math.max(endsAt.getTime(), EDUCATION_PLAN_EARLIEST_END_AT)
+  if (!educationExpiresAt) return null
+  const endsAt = new Date(educationExpiresAt).getTime()
+  return Number.isNaN(endsAt) ? null : endsAt
 }
 
 export function isEducationPlanEnded(

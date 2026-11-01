@@ -15,11 +15,11 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(GetReport::getName(), new GetReport());
-        $this->addAction(ListReports::getName(), new ListReports());
-        $this->addAction(DeleteReport::getName(), new DeleteReport());
+        $this->addAction(GetReport::getName(), GetReport::class);
+        $this->addAction(ListReports::getName(), ListReports::class);
+        $this->addAction(DeleteReport::getName(), DeleteReport::class);
 
-        $this->addAction(GetInsight::getName(), new GetInsight());
-        $this->addAction(ListInsights::getName(), new ListInsights());
+        $this->addAction(GetInsight::getName(), GetInsight::class);
+        $this->addAction(ListInsights::getName(), ListInsights::class);
     }
 }

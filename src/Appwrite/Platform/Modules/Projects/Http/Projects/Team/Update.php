@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Projects\Http\Projects\Team;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Action;
+use Appwrite\Screenshots\Access;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -54,10 +55,11 @@ class Update extends Action
             ->inject('dbForPlatform')
             ->inject('targetUser')
             ->inject('queueForRealtime')
+            ->inject('getProjectDB')
             ->callback($this->action(...));
     }
 
-    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, User $targetUser, Realtime $queueForRealtime): void
+    public function action(string $projectId, string $teamId, Response $response, Database $dbForPlatform, User $targetUser, Realtime $queueForRealtime, callable $getProjectDB): void
     {
         $project = $dbForPlatform->getDocument('projects', $projectId);
         $team = $dbForPlatform->getDocument('teams', $teamId);
@@ -116,6 +118,8 @@ class Update extends Action
         foreach ($vcsComments as $vcsComment) {
             $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
         }
+
+        (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     }
