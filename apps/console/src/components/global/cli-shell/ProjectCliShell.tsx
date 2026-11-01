@@ -45,18 +45,9 @@ import {
   HalloweenCautionTape,
   HalloweenCornerTape,
 } from '@/components/global/shared/HalloweenCautionTape'
-import {
-  ChristmasBow,
-  ChristmasGarland,
-} from '@/components/global/shared/ChristmasGarland'
-import {
-  HanukkahBand,
-  HanukkahCornerDreidel,
-} from '@/components/global/shared/HanukkahBand'
-import {
-  FourthOfJulyRibbon,
-  FourthOfJulySparkler,
-} from '@/components/global/shared/FourthOfJulyRibbon'
+import { ChristmasGarland } from '@/components/global/shared/ChristmasGarland'
+import { HanukkahCornerDreidel } from '@/components/global/shared/HanukkahDreidel'
+import { FourthOfJulySparkler } from '@/components/global/shared/FourthOfJulySparkler'
 import { useHalloween } from '@/hooks/use-halloween'
 import { useChristmas } from '@/hooks/use-christmas'
 import { useHanukkah } from '@/hooks/use-hanukkah'
@@ -437,8 +428,6 @@ function ProjectCliShellPanel({
 
       {halloween && <HalloweenCautionTape />}
       {christmas && <ChristmasGarland />}
-      {hanukkah && <HanukkahBand />}
-      {fourthOfJuly && <FourthOfJulyRibbon />}
 
       <div className="flex h-11 shrink-0 items-center justify-between gap-4 border-b border-border bg-muted/20 px-4 sm:px-6">
         <CliShellHeaderTitle
@@ -600,7 +589,6 @@ function ProjectCliShellPanel({
       />
 
       {halloween && <HalloweenCornerTape />}
-      {christmas && <ChristmasBow />}
       {hanukkah && <HanukkahCornerDreidel />}
       {fourthOfJuly && <FourthOfJulySparkler />}
     </div>

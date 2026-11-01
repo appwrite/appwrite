@@ -93,6 +93,7 @@ export const heCatalog: EnCatalog = {
         blocks: 'Blocks',
         generator: 'Generator',
         impersonate: 'התחזות',
+        hideHolidayDecorations: 'הסתרת קישוטי החג',
       },
       search: {
         ...enCatalog.app.header.search,

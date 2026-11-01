@@ -1371,6 +1371,4 @@ export const jaSharedUiDictionary: Record<string, string> = {
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',
-  // Hanukkah terminal band
-  'Happy Hanukkah': 'ハヌカおめでとう',
 }

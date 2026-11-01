@@ -1,38 +1,5 @@
 import { useId } from 'react'
 
-const STAR =
-  'M0-1 .24-.31.95-.31.38.12.59.81 0 .38-.59.81-.38.12-.95-.31-.24-.31Z'
-
-/** Stars-and-stripes ribbon across the top of the terminal, with a passing sheen. */
-export function FourthOfJulyRibbon() {
-  const id = useId().replace(/:/g, '')
-
-  return (
-    <div className="relative h-4 shrink-0 overflow-hidden" aria-hidden>
-      <svg className="absolute inset-x-0 top-0 h-2.5 w-full bg-[#0A3161]">
-        <defs>
-          <pattern id={id} width="14" height="10" patternUnits="userSpaceOnUse">
-            <path
-              transform="translate(7 5) scale(2.2)"
-              d={STAR}
-              fill="#FFFFFF"
-            />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill={`url(#${id})`} />
-      </svg>
-      <div
-        className="absolute inset-x-0 bottom-0 h-1.5"
-        style={{
-          backgroundImage:
-            'linear-gradient(to bottom, #B31942 0 33%, #FFFFFF 33% 66%, #B31942 66%)',
-        }}
-      />
-      <div className="july-sheen absolute inset-y-0 start-0 w-1/4 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-    </div>
-  )
-}
-
 /** Short rays for one crackle; the three layers take turns so the sparks never repeat. */
 const SPARK_LAYERS = [
   [0, 33, 71, 118, 160, 205, 244, 290, 331],

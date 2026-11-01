@@ -84,6 +84,7 @@ export const enCatalog = {
         blocks: 'Blocks',
         generator: 'Generator',
         impersonate: 'Impersonate',
+        hideHolidayDecorations: 'Hide holiday decorations',
       },
       search: {
         compactPlaceholder: 'Search...',

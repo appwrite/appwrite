@@ -1770,16 +1770,6 @@ html:not([lang='en']):not([lang='he']) {
   }
 }
 
-@keyframes july-sheen {
-  0% {
-    transform: translateX(-100%);
-  }
-  45%,
-  100% {
-    transform: translateX(400%);
-  }
-}
-
 @keyframes july-crackle {
   0%,
   30% {
@@ -1844,10 +1834,6 @@ html:not([lang='en']):not([lang='he']) {
   animation: july-billow 3.6s ease-in-out infinite alternate;
   transform-box: fill-box;
   transform-origin: top center;
-}
-
-.july-sheen {
-  animation: july-sheen 7s ease-in-out infinite;
 }
 
 .july-crackle {

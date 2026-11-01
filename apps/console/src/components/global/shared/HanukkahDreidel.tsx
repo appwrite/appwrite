@@ -108,3 +108,17 @@ export function Dreidel({
     </g>
   )
 }
+
+/** Dreidel spinning in the terminal's bottom corner until it falls on פ; parent must be `relative`. */
+export function HanukkahCornerDreidel() {
+  return (
+    <svg
+      viewBox="-16 -34 32 36"
+      className="pointer-events-none absolute bottom-3 end-6 z-20 h-12 w-auto overflow-visible drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)]"
+      aria-hidden
+    >
+      <ellipse cx="0" cy="0.4" rx="6" ry="1.3" fill="#000" fillOpacity="0.35" />
+      <Dreidel topple delay="-3s" />
+    </svg>
+  )
+}

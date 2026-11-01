@@ -33,6 +33,7 @@ import {
   TriangleAlert,
   Sparkles,
   Eye,
+  EyeOff,
   Home,
   LayoutDashboard,
   BookOpen,
@@ -56,7 +57,11 @@ import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/P
 import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
 import { PhotoAvatar } from '@/components/global/shared/Avatar'
 import { useLocation, useNavigate, useParams } from '@tanstack/react-router'
-import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
+import {
+  useDismissConsoleBanner,
+  useProject,
+  useOrganizationScopes,
+} from '@/lib/react-query/hooks'
 import {
   canShowConnectSection,
   canCreateProject,
@@ -119,6 +124,12 @@ import { useHalloween } from '@/hooks/use-halloween'
 import { useChristmas } from '@/hooks/use-christmas'
 import { useHanukkah } from '@/hooks/use-hanukkah'
 import { useFourthOfJuly } from '@/hooks/use-fourth-of-july'
+import {
+  CHRISTMAS_BANNER_ID,
+  FOURTH_OF_JULY_BANNER_ID,
+  HALLOWEEN_BANNER_ID,
+  HANUKKAH_BANNER_ID,
+} from '@/lib/console-banners'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { resolveInitHref } from '@/lib/init/links'
@@ -691,6 +702,17 @@ export function ConsoleHeader({
   const christmas = useChristmas()
   const hanukkah = useHanukkah()
   const fourthOfJuly = useFourthOfJuly()
+  // Holiday schedules never overlap, so at most one is showing.
+  const holidayBannerId = halloween
+    ? HALLOWEEN_BANNER_ID
+    : christmas
+      ? CHRISTMAS_BANNER_ID
+      : hanukkah
+        ? HANUKKAH_BANNER_ID
+        : fourthOfJuly
+          ? FOURTH_OF_JULY_BANNER_ID
+          : null
+  const dismissBanner = useDismissConsoleBanner()
 
   return (
     <div className="@container relative w-full overflow-visible">
@@ -2102,6 +2124,16 @@ export function ConsoleHeader({
                   <DropdownMenuSeparator className="my-1 bg-border" />
 
                   <ThemeToggle />
+
+                  {holidayBannerId && (
+                    <DropdownMenuItem
+                      onClick={() => dismissBanner.mutate(holidayBannerId)}
+                      className={ACCOUNT_MENU_ITEM_CLASS}
+                    >
+                      <EyeOff className="h-4 w-4" />
+                      <span>{headerCopy.accountMenu.hideHolidayDecorations}</span>
+                    </DropdownMenuItem>
+                  )}
 
                   <DropdownMenuSeparator className="my-1 bg-border" />
 

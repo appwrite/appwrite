@@ -94,6 +94,7 @@ export const jaCatalog: EnCatalog = {
         blocks: 'Blocks',
         generator: 'Generator',
         impersonate: 'なりすまし',
+        hideHolidayDecorations: 'ホリデー装飾を非表示',
       },
       search: {
         ...enCatalog.app.header.search,
