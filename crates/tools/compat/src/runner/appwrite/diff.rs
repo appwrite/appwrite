@@ -1594,6 +1594,8 @@ fn request(
 struct Monitor {
     lines: mpsc::UnboundedReceiver<(String, Vec<String>)>,
     marker: redis::aio::MultiplexedConnection,
+    /// Commands read by `settle`, not yet returned by `until_marker`.
+    pending: Vec<(String, Vec<String>)>,
 }
 
 impl Monitor {
@@ -1618,7 +1620,28 @@ impl Monitor {
         });
         let client = redis::Client::open(format!("redis://{address}")).map_err(|e| e.to_string())?;
         let marker = client.get_multiplexed_async_connection().await.map_err(|e| e.to_string())?;
-        Ok(Monitor { lines: rx, marker })
+        Ok(Monitor { lines: rx, marker, pending: Vec::new() })
+    }
+
+    /// Waits until the given clients have sent nothing for `quiet`, at most
+    /// `limit`: work after the response (shutdown jobs, queue messages) can
+    /// take longer than a fixed pause on a busy machine, and what lands late
+    /// would be missed here and counted in the next scenario.
+    async fn settle(&mut self, clients: &[String], quiet: Duration, limit: Duration) {
+        let deadline = std::time::Instant::now() + limit;
+        let mut idle = std::time::Instant::now() + quiet;
+        loop {
+            let until = idle.min(deadline);
+            match utopia_async::time::timeout_at(until, self.lines.recv()).await {
+                Ok(Some((client, args))) => {
+                    if clients.contains(&client) {
+                        idle = std::time::Instant::now() + quiet;
+                    }
+                    self.pending.push((client, args));
+                }
+                _ => return,
+            }
+        }
     }
 
     /// Sends a marker command and returns every command received before it
@@ -1627,7 +1650,7 @@ impl Monitor {
         let key = format!("compat-diff-marker:{name}");
         let _: Option<String> =
             redis::cmd("GET").arg(&key).query_async(&mut self.marker).await.map_err(|e| e.to_string())?;
-        let mut out = Vec::new();
+        let mut out = std::mem::take(&mut self.pending);
         let deadline = std::time::Instant::now() + Duration::from_secs(10);
         loop {
             let next = utopia_async::time::timeout_at(deadline, self.lines.recv()).await;
@@ -2347,8 +2370,9 @@ async fn record(
     monitor.until_marker(&format!("{}:{}:start", scenario.n, twin.runtime)).await?;
     let (method, url, headers, body) = request(scenario, twin, other, console, &prepared);
     let reply = api.send(&method, &url, &headers, body.as_ref()).await?;
-    // Work after the response (Rust's shutdown jobs) lands within this.
-    utopia_async::sleep(Duration::from_millis(150)).await;
+    // Work after the response (Rust's shutdown jobs) lands before the
+    // runtime goes quiet.
+    monitor.settle(&twin.ips, Duration::from_millis(150), Duration::from_secs(2)).await;
     let commands = monitor.until_marker(&format!("{}:{}:end", scenario.n, twin.runtime)).await?;
     let after = tables(db, &twin.prefix).await?;
 
