@@ -70,6 +70,16 @@ final class VideosCustomServerTest extends Scope
             \array_column($response['body']['profiles'], '$id'),
             \array_column($explicit['body']['profiles'], '$id')
         );
+
+        $withoutTotal = $this->client->call(Client::METHOD_GET, '/project/videos/profiles', $this->headers(), [
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $withoutTotal['headers']['status-code']);
+        $this->assertEquals(0, $withoutTotal['body']['total']);
+        $this->assertEquals(
+            \array_column($response['body']['profiles'], '$id'),
+            \array_column($withoutTotal['body']['profiles'], '$id')
+        );
     }
 
     public function testCreateProfile(): void

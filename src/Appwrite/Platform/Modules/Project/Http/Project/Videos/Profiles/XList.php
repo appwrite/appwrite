@@ -20,6 +20,7 @@ use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Query\Method as QueryMethod;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\WhiteList;
 
 class XList extends Base
@@ -55,6 +56,7 @@ class XList extends Base
             ))
             ->param('queries', [], new VideoProfiles(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', VideoProfiles::ALLOWED_ATTRIBUTES), true)
             ->param('codec', self::CODEC_H264, new WhiteList(self::codecIds(), true), 'Only return profiles for this encode codec. Defaults to `h264`.', true, enum: new Enum(name: 'VideoCodec'))
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -64,6 +66,7 @@ class XList extends Base
     public function action(
         array $queries,
         string $codec,
+        bool $includeTotal,
         Response $response,
         Database $dbForProject,
         Authorization $authorization
@@ -106,8 +109,11 @@ class XList extends Base
             $cursor->setValue($cursorDocument);
         }
 
+        $filterQueries = Query::groupByType($queries)->filters;
+
         try {
             $profiles = $authorization->skip(fn () => $dbForProject->find('videosProfiles', $queries));
+            $total = $includeTotal ? $authorization->skip(fn () => $dbForProject->count('videosProfiles', $filterQueries, APP_LIMIT_COUNT)) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         } catch (QueryException $e) {
@@ -116,7 +122,7 @@ class XList extends Base
 
         $response->dynamic(new Document([
             'profiles' => $profiles,
-            'total' => \count($profiles),
+            'total' => $total,
         ]), Response::MODEL_VIDEO_PROFILE_LIST);
     }
 }
