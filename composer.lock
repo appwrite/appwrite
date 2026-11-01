@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "97358ffd1cf376198b73aeffe4bbdb0b",
+    "content-hash": "00dfd99b52176f5ced0bc327929ced23",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4427,16 +4427,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "10.0.0",
+            "version": "dev-feat/estimate-count",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "06db36eb846dd49587708548c4f52f89cf947288"
+                "reference": "aea0d9a06b77fca1f329b45fc9b667db5c9df177"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/06db36eb846dd49587708548c4f52f89cf947288",
-                "reference": "06db36eb846dd49587708548c4f52f89cf947288",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/aea0d9a06b77fca1f329b45fc9b667db5c9df177",
+                "reference": "aea0d9a06b77fca1f329b45fc9b667db5c9df177",
                 "shasum": ""
             },
             "require": {
@@ -4494,9 +4494,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/10.0.0"
+                "source": "https://github.com/utopia-php/database/tree/feat/estimate-count"
             },
-            "time": "2026-10-31T22:42:40+00:00"
+            "time": "2026-11-01T18:16:20+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -7680,9 +7680,18 @@
             "time": "2026-09-25T13:20:01+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat/estimate-count",
+            "alias": "10.0.0",
+            "alias_normalized": "10.0.0.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
