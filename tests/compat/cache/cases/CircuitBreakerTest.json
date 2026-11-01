@@ -151,17 +151,24 @@
           "expect": false
         },
         {
-          "op": "adapter.generation",
+          "op": "adapter.version",
           "args": {
             "adapter": {
               "$ref": "cb"
             },
             "key": "key"
           },
-          "expect": "0"
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
-          "op": "adapter.save_with_lease",
+          "op": "adapter.compare_and_swap",
           "args": {
             "adapter": {
               "$ref": "cb"
@@ -169,9 +176,17 @@
             "key": "key",
             "data": "v",
             "hash": "key",
-            "generation": "0"
+            "version": {
+              "$ref": "lease1"
+            }
           },
-          "expect": true
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "op": "adapter.load",
@@ -978,7 +993,23 @@
           "expect": false
         },
         {
-          "op": "adapter.save_with_lease",
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "lease1",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "adapter.compare_and_swap",
           "args": {
             "adapter": {
               "$ref": "cb"
@@ -986,9 +1017,14 @@
             "key": "key",
             "data": "value",
             "hash": "key",
-            "generation": "0"
+            "version": "version"
           },
-          "expect": false
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
         },
         {
           "op": "adapter.touch",
@@ -1011,14 +1047,20 @@
           "expect": []
         },
         {
-          "op": "adapter.generation",
+          "op": "adapter.version",
           "args": {
             "adapter": {
               "$ref": "cb"
             },
             "key": "key"
           },
-          "expect": "0"
+          "bind": "lease2",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
         },
         {
           "op": "adapter.flush",
@@ -1081,6 +1123,832 @@
             "key": "missing"
           },
           "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testOpenCircuitRejectsCoordinationWithoutCallingTheBackend (getVersion)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "trip": true
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.calls",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "coordination.calls",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCoordinationFailuresOpenTheCircuitAndRecoveryUsesTheBackend (getVersion)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "minimum_throughput": 1
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "v2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "recovered",
+            "hash": "",
+            "version": {
+              "$ref": "v2"
+            }
+          },
+          "bind": "committed",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "recovered"
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "snap",
+              "path": "/version"
+            },
+            "b": {
+              "$ref": "committed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testOpenCircuitRejectsCoordinationWithoutCallingTheBackend (loadVersioned)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "trip": true
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.calls",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "coordination.calls",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCoordinationFailuresOpenTheCircuitAndRecoveryUsesTheBackend (loadVersioned)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "minimum_throughput": 1
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "v2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "recovered",
+            "hash": "",
+            "version": {
+              "$ref": "v2"
+            }
+          },
+          "bind": "committed",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "recovered"
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "snap",
+              "path": "/version"
+            },
+            "b": {
+              "$ref": "committed"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testOpenCircuitRejectsCoordinationWithoutCallingTheBackend (compareAndSwap)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 3600,
+            "trip": true
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.calls",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value",
+            "hash": "",
+            "version": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "coordination.calls",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "adapter.load",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testCoordinationFailuresOpenTheCircuitAndRecoveryUsesTheBackend (compareAndSwap)",
+      "steps": [
+        {
+          "op": "coordination.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "key"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "breaker.new",
+          "args": {
+            "timeout": 0,
+            "minimum_throughput": 1
+          },
+          "bind": "br",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "circuit_breaker.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "bind": "cb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": true
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "value",
+            "hash": "",
+            "version": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Versioned cache unavailable"
+            }
+          }
+        },
+        {
+          "op": "breaker.failures",
+          "args": {
+            "breaker": {
+              "$ref": "br"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "coordination.fail",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "failing": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "v2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key",
+            "data": "recovered",
+            "hash": "",
+            "version": {
+              "$ref": "v2"
+            }
+          },
+          "bind": "committed",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "cb"
+            },
+            "key": "key"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "recovered"
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "snap",
+              "path": "/version"
+            },
+            "b": {
+              "$ref": "committed"
+            }
+          },
+          "expect": true
         }
       ]
     }

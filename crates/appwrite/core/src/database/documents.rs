@@ -187,6 +187,18 @@ impl User {
         self.email_verification == Some(true) || self.phone_verification == Some(true)
     }
 
+    /// `User::getMinimumFactors()`: 2 when MFA is on and the user has a
+    /// second factor (a verified address or a verified first TOTP
+    /// authenticator), else 1.
+    pub fn minimum_factors(&self) -> usize {
+        let totp = self
+            .authenticators
+            .iter()
+            .find(|a| a.kind.as_deref() == Some("totp"))
+            .is_some_and(|a| a.verified == Some(true));
+        if self.mfa == Some(true) && (self.verified() || totp) { 2 } else { 1 }
+    }
+
     /// `User::getRoles()` for a session user.
     pub fn roles(&self) -> Vec<String> {
         let mut roles = Vec::with_capacity(4 + self.memberships.len() * 3 + self.labels.len());
@@ -711,5 +723,32 @@ impl User {
         )
         .await?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn totp(verified: bool) -> Authenticator {
+        Authenticator { kind: Some("totp".to_owned()), verified: Some(verified), ..Authenticator::default() }
+    }
+
+    #[test]
+    fn minimum_factors() {
+        let mut user = User::default();
+        assert_eq!(user.minimum_factors(), 1);
+        user.mfa = Some(true);
+        assert_eq!(user.minimum_factors(), 1, "MFA without a second factor");
+        user.email_verification = Some(true);
+        assert_eq!(user.minimum_factors(), 2, "a verified address");
+        user.email_verification = Some(false);
+        user.authenticators = vec![totp(true)];
+        assert_eq!(user.minimum_factors(), 2, "a verified TOTP authenticator");
+        user.authenticators = vec![totp(false), totp(true)];
+        assert_eq!(user.minimum_factors(), 1, "only the first TOTP authenticator counts");
+        user.mfa = Some(false);
+        user.authenticators = vec![totp(true)];
+        assert_eq!(user.minimum_factors(), 1, "MFA off");
     }
 }

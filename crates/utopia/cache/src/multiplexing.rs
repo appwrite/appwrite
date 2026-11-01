@@ -12,10 +12,10 @@ use utopia_async::net::TcpStream;
 use utopia_async::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use utopia_async::sync::{Notify, oneshot};
 
-use crate::adapter::{Adapter, Fields, blank, coerce, empty, field, now};
-use crate::lease::{self, Transport, is_reserved};
+use crate::adapter::{Adapter, Fields, Snapshot, blank, coerce, empty, field, now};
 use crate::redis_adapter::text;
 use crate::resp::{self, Reply};
+use crate::versioned::{self, Transport, VERSION_FIELD, is_reserved};
 use crate::{Codec, Envelope, Error, Json, Result};
 use utopia_telemetry::{Counter, NoTelemetry, Telemetry, UpDownCounter, Value as Attribute};
 
@@ -152,7 +152,7 @@ impl Shared {
 /// written under a send lock, so the queue's order is the wire order, and
 /// one reader task hands every reply to the next caller in the queue (Redis
 /// answers in order). Entries are stored like [`crate::Redis`] stores them,
-/// with the same leases.
+/// with the same versions.
 ///
 /// Two deadlines keep a slow server apart from a dead one. A caller that
 /// waits longer than `read_timeout` fails with [`Error::Timeout`] and leaves
@@ -240,7 +240,7 @@ impl<K: Codec> Multiplexing<K> {
         Ok(adapter)
     }
 
-    /// Refuses leased saves for `ms` milliseconds after a purge.
+    /// Refuses conditional saves for `ms` milliseconds after a purge.
     ///
     /// PHP: `setLeaseGraceWindow`.
     pub fn with_lease_grace_window(mut self, ms: i64) -> Self {
@@ -481,7 +481,9 @@ impl<K: Codec> Transport for Multiplexing<K> {
         command.extend_from_slice(args);
         self.command(&command).await
     }
+}
 
+impl<K: Codec> Multiplexing<K> {
     /// The value of one field of a hash, `None` when missing.
     async fn hget(&self, key: &str, field: &str) -> Result<Option<Vec<u8>>> {
         Ok(match self.command(&[b"HGET", key.as_bytes(), field.as_bytes()]).await? {
@@ -497,7 +499,7 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         if is_reserved(hash) {
             return Ok(None);
         }
-        Ok(match Transport::hget(self, key, hash).await? {
+        Ok(match self.hget(key, hash).await? {
             Some(stored) => self.envelope.decode(&stored, ttl, now()),
             None => None,
         })
@@ -515,7 +517,16 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         }
         let written = async {
             let value = self.envelope.encode(data, now())?;
-            self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), &value]).await?;
+            let version = versioned::fresh();
+            self.command(&[
+                b"HSET",
+                key.as_bytes(),
+                hash.as_bytes(),
+                &value,
+                VERSION_FIELD.as_bytes(),
+                version.as_bytes(),
+            ])
+            .await?;
             if ttl > 0 {
                 self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await?;
             }
@@ -535,9 +546,11 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         if is_reserved(hash) {
             return Ok(false);
         }
-        let Some(stored) = Transport::hget(self, key, hash).await? else { return Ok(false) };
+        let Some(stored) = self.hget(key, hash).await? else { return Ok(false) };
         let Some(value) = self.envelope.touch(&stored, now()) else { return Ok(false) };
-        self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), &value]).await?;
+        let version = versioned::fresh();
+        self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), &value, VERSION_FIELD.as_bytes(), version.as_bytes()])
+            .await?;
         Ok(true)
     }
 
@@ -551,7 +564,7 @@ impl<K: Codec> Adapter for Multiplexing<K> {
     }
 
     fn purge(&self, key: &str, hash: &str) -> impl Future<Output = Result<bool>> + Send {
-        lease::purge(self, self.grace_ms, key, hash)
+        versioned::purge(self, self.grace_ms, key, hash)
     }
 
     async fn flush(&self) -> Result<bool> {
@@ -625,6 +638,9 @@ impl<K: Codec> Adapter for Multiplexing<K> {
             command.push(f.as_bytes());
             command.push(v);
         }
+        let version = versioned::fresh();
+        command.push(VERSION_FIELD.as_bytes());
+        command.push(version.as_bytes());
         let written = async {
             self.command(&command).await?;
             if ttl > 0 {
@@ -641,22 +657,29 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         }
     }
 
-    fn leasable(&self) -> bool {
+    fn supports_versioning(&self) -> bool {
         true
     }
 
-    fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
-        lease::generation(self, key)
+    fn version(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
+        versioned::version(self, key)
     }
 
-    async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
-        match lease::try_save_with_lease(self, &self.envelope, self.grace_ms, key, data, hash, generation).await? {
-            Ok(stored) => Ok(stored),
-            Err(error) => {
-                self.shared.write_failure("saveWithLease", &error);
-                Ok(false)
-            }
+    fn load_versioned(&self, key: &str) -> impl Future<Output = Result<Snapshot>> + Send {
+        versioned::load_versioned(self, &self.envelope, key)
+    }
+
+    async fn compare_and_swap(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<Option<String>> {
+        let hash = versioned::cas_field(key, hash);
+        if is_reserved(hash) {
+            return Ok(None);
         }
+        let data = coerce(data, "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::compareAndSwap(): Argument #2 ($data)")?;
+        let written = async {
+            let value = self.envelope.encode(&data, now())?;
+            versioned::compare_and_swap(self, self.grace_ms, key, &value, hash, version).await
+        };
+        written.await.inspect_err(|error| self.shared.write_failure("compareAndSwap", error))
     }
 
     async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
@@ -666,7 +689,7 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         }
         // A key holding another kind of value is a miss, as on the other
         // adapters, whose replies keep errors apart from values.
-        match Transport::hget(self, key, hash).await {
+        match self.hget(key, hash).await {
             Err(Error::Redis(e)) if resp::is_wrongtype(&e) => Ok(None),
             other => other,
         }
@@ -680,8 +703,10 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         // A failed write is not stored, not an error. Unlike `save`, which
         // keeps PHP's answer (phpredis' `false` on an error reply is ignored),
         // an error reply (`WRONGTYPE`, `OOM`) is a failed write too.
-        if !matches!(self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), bytes]).await, Ok(reply) if !matches!(reply, Reply::Error(_)))
-        {
+        let version = versioned::fresh();
+        let command: [&[u8]; 6] =
+            [b"HSET", key.as_bytes(), hash.as_bytes(), bytes, VERSION_FIELD.as_bytes(), version.as_bytes()];
+        if !matches!(self.command(&command).await, Ok(reply) if !matches!(reply, Reply::Error(_))) {
             return Ok(false);
         }
         if ttl > 0
@@ -692,14 +717,18 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         Ok(true)
     }
 
-    fn save_bytes_with_lease(
+    async fn compare_and_swap_bytes(
         &self,
         key: &str,
         bytes: &[u8],
         hash: &str,
-        generation: &str,
-    ) -> impl Future<Output = Result<bool>> + Send {
-        lease::save_bytes_with_lease(self, self.grace_ms, key, bytes, hash, generation)
+        version: &str,
+    ) -> Result<Option<String>> {
+        let hash = versioned::cas_field(key, hash);
+        if blank(key) || is_reserved(hash) {
+            return Ok(None);
+        }
+        versioned::compare_and_swap(self, self.grace_ms, key, bytes, hash, version).await
     }
 
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {

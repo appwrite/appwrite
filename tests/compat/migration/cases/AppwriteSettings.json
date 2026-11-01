@@ -2538,6 +2538,496 @@
           }
         }
       ]
+    },
+    {
+      "name": "imported API keys are capped to the scopes the migration was granted",
+      "steps": [
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.new",
+          "args": {
+            "schemaless": true
+          },
+          "bind": "platform",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "id": "projects"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "id": "keys"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "projects",
+            "document": {
+              "$id": "destination-project"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {},
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\ApiKey",
+            "args": {
+              "id": "k1",
+              "name": "Key k1",
+              "scopes": [
+                "users.read"
+              ],
+              "expire": "",
+              "sdks": []
+            }
+          },
+          "bind": "k1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\ApiKey",
+            "args": {
+              "id": "k2",
+              "name": "Key k2",
+              "scopes": [
+                "users.read",
+                "users.write"
+              ],
+              "expire": "",
+              "sdks": []
+            }
+          },
+          "bind": "k2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\ApiKey",
+            "args": {
+              "id": "k3",
+              "name": "Key k3",
+              "scopes": [
+                "users.read",
+                "keys.write"
+              ],
+              "expire": "",
+              "sdks": []
+            }
+          },
+          "bind": "k3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Integrations\\ApiKey",
+            "args": {
+              "id": "k4",
+              "name": "Key k4",
+              "scopes": [],
+              "expire": "",
+              "sdks": []
+            }
+          },
+          "bind": "k4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "k1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "k2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "k3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "resource": {
+              "$ref": "k4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [
+                {
+                  "$id": "databaseInternalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "databaseId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "description",
+                  "type": "string",
+                  "size": 1024,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "documentSecurity",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": false,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": []
+                },
+                {
+                  "$id": "attributes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryAttributes"
+                  ]
+                },
+                {
+                  "$id": "indexes",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "array": false,
+                  "signed": true,
+                  "filters": [
+                    "subQueryIndexes"
+                  ]
+                }
+              ],
+              "indexes": []
+            },
+            "on_duplicate": "fail",
+            "platform": {
+              "$ref": "platform"
+            },
+            "internal_id": "7",
+            "scopes": [
+              "users.read",
+              "users.write"
+            ]
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s"
+            },
+            "destination": {
+              "$ref": "d"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "api-key"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "api-key",
+                "id": "k1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "api-key",
+                "id": "k2",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "api-key",
+                "id": "k3",
+                "status": "error",
+                "message": "API key has scopes this migration was not granted"
+              },
+              {
+                "$resource": "api-key",
+                "id": "k4",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d"
+            }
+          },
+          "expect": [
+            {
+              "code": 401,
+              "message": "API key has scopes this migration was not granted",
+              "resourceName": "api-key",
+              "resourceGroup": "integrations",
+              "resourceId": "k3",
+              "json": {
+                "code": 401,
+                "message": "API key has scopes this migration was not granted",
+                "resourceName": "api-key",
+                "resourceGroup": "integrations",
+                "resourceId": "k3",
+                "trace": "<masked>"
+              },
+              "previous": {
+                "class": "Utopia\\Migration\\Exception",
+                "message": "API key has scopes this migration was not granted"
+              }
+            }
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "api-key": {
+              "pending": 0,
+              "success": 3,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "platform"
+            },
+            "collection": "keys"
+          },
+          "mask": {
+            "paths": [
+              "/*/$id",
+              "/*/$createdAt",
+              "/*/$updatedAt",
+              "/*/secret"
+            ],
+            "reason": "Ids, secrets and dates the destination generates (ID::unique(), random_bytes(), now)"
+          },
+          "expect": [
+            {
+              "resourceInternalId": "7",
+              "resourceId": "destination-project",
+              "resourceType": "projects",
+              "name": "Key k1",
+              "description": "",
+              "scopes": [
+                "users.read"
+              ],
+              "expire": null,
+              "sdks": [],
+              "accessedAt": null,
+              "secret": "<masked>",
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "keys"
+            },
+            {
+              "resourceInternalId": "7",
+              "resourceId": "destination-project",
+              "resourceType": "projects",
+              "name": "Key k2",
+              "description": "",
+              "scopes": [
+                "users.read",
+                "users.write"
+              ],
+              "expire": null,
+              "sdks": [],
+              "accessedAt": null,
+              "secret": "<masked>",
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "keys"
+            },
+            {
+              "resourceInternalId": "7",
+              "resourceId": "destination-project",
+              "resourceType": "projects",
+              "name": "Key k4",
+              "description": "",
+              "scopes": [],
+              "expire": null,
+              "sdks": [],
+              "accessedAt": null,
+              "secret": "<masked>",
+              "$id": "<masked>",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "3",
+              "$collection": "keys"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -10,7 +10,7 @@ use php_std::types::Value;
 use utopia_circuit_breaker::{CircuitBreaker as Breaker, Failure};
 use utopia_telemetry::Telemetry;
 
-use crate::adapter::{Adapter, Fields};
+use crate::adapter::{Adapter, Fields, Snapshot};
 use crate::{Error, Result};
 
 impl Failure for Error {
@@ -86,6 +86,16 @@ impl<A: Adapter> CircuitBreaker<A> {
     async fn guarded<T>(&self, fallback: T, call: impl Future<Output = Result<T>>) -> Result<T> {
         self.breaker.call(move || fallback, call).await.map_err(breaker_error)
     }
+
+    /// A versioned operation: `call`'s value when the breaker lets it through
+    /// and it succeeds; [`Error::Unavailable`] when the circuit is open or
+    /// the call failed (the failure counts toward the breaker).
+    ///
+    /// PHP: `$this->breaker->call(open: fn () => throw new Unavailable('Versioned cache unavailable'), ...)`.
+    async fn versioned<T>(&self, call: impl Future<Output = Result<T>>) -> Result<T> {
+        let open = || Err(Error::Unavailable { message: "Versioned cache unavailable".to_owned(), previous: None });
+        self.breaker.call(open, async { call.await.map(Ok) }).await.map_err(breaker_error)?
+    }
 }
 
 impl<A: Adapter> Adapter for CircuitBreaker<A> {
@@ -158,22 +168,26 @@ impl<A: Adapter> Adapter for CircuitBreaker<A> {
         self.guarded(false, self.adapter.save_many(key, data, ttl)).await
     }
 
-    fn leasable(&self) -> bool {
-        true
+    fn supports_versioning(&self) -> bool {
+        self.adapter.supports_versioning()
     }
 
-    async fn generation(&self, key: &str) -> Result<String> {
-        if !self.adapter.leasable() {
-            return Ok("0".to_owned());
-        }
-        self.guarded("0".to_owned(), self.adapter.generation(key)).await
+    /// An open circuit or a failing backend fails with
+    /// [`Error::Unavailable`], never a fresh version.
+    async fn version(&self, key: &str) -> Result<String> {
+        self.versioned(self.adapter.version(key)).await
     }
 
-    async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
-        if !self.adapter.leasable() {
-            return self.save(key, data, hash, 0).await;
-        }
-        self.guarded(false, self.adapter.save_with_lease(key, data, hash, generation)).await
+    /// An open circuit or a failing backend fails with
+    /// [`Error::Unavailable`], never an evicted record.
+    async fn load_versioned(&self, key: &str) -> Result<Snapshot> {
+        self.versioned(self.adapter.load_versioned(key)).await
+    }
+
+    /// An open circuit or a failing backend fails with
+    /// [`Error::Unavailable`], never a conflict.
+    async fn compare_and_swap(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<Option<String>> {
+        self.versioned(self.adapter.compare_and_swap(key, data, hash, version)).await
     }
 
     async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
@@ -184,11 +198,14 @@ impl<A: Adapter> Adapter for CircuitBreaker<A> {
         self.guarded(false, self.adapter.save_bytes(key, bytes, hash, ttl)).await
     }
 
-    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, generation: &str) -> Result<bool> {
-        if !self.adapter.leasable() {
-            return self.save_bytes(key, bytes, hash, 0).await;
-        }
-        self.guarded(false, self.adapter.save_bytes_with_lease(key, bytes, hash, generation)).await
+    async fn compare_and_swap_bytes(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        version: &str,
+    ) -> Result<Option<String>> {
+        self.versioned(self.adapter.compare_and_swap_bytes(key, bytes, hash, version)).await
     }
 
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {

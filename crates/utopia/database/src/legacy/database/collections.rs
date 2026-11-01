@@ -405,7 +405,7 @@ impl Database {
         // cache without generations cannot tell, so nothing is shared.
         let cache = self.cache();
         let generation = match &shared {
-            Some(_) if cache.leasable() => cache.generation(&document_key).await.ok(),
+            Some(_) if cache.supports_versioning() => cache.lease(&document_key).await.ok(),
             _ => None,
         };
         let cached = match (&shared, &generation) {

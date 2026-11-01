@@ -266,9 +266,4 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         }
         Ok(true)
     }
-
-    /// No leases on a cluster: a plain save, as `save_with_lease`.
-    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, _generation: &str) -> Result<bool> {
-        self.save_bytes(key, bytes, hash, 0).await
-    }
 }

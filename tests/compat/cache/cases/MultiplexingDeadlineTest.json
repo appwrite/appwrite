@@ -104,12 +104,20 @@
                 }
               },
               {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:slow"
+                }
+              },
+              {
                 "op": "save_with_lease",
                 "args": {
                   "key": "${ns}:slow",
                   "data": "w",
                   "hash": "${ns}:slow",
-                  "generation": "0"
+                  "version": {
+                    "$result": 1
+                  }
                 }
               },
               {
@@ -126,8 +134,15 @@
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/1"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
             true,
+            "<masked>",
             true,
             "w",
             true
@@ -178,7 +193,7 @@
                   "key": "leased",
                   "data": "value",
                   "hash": "leased",
-                  "generation": "0"
+                  "version": "version-read-before-the-pause"
                 }
               }
             ]
@@ -186,7 +201,12 @@
           "expect": [
             false,
             false,
-            false,
+            {
+              "$error": {
+                "class": "Utopia\\Cache\\Adapter\\Redis\\TimeoutException",
+                "message": "Timed out waiting for Redis response after 0.050s"
+              }
+            },
             [
               {
                 "operation": "save",
@@ -197,7 +217,7 @@
                 "error": "TimeoutException"
               },
               {
-                "operation": "saveWithLease",
+                "operation": "compareAndSwap",
                 "error": "TimeoutException"
               }
             ]

@@ -173,6 +173,23 @@
           "expect": false
         },
         {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "k"
+          },
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
           "op": "cache.save_with_lease",
           "args": {
             "cache": {
@@ -181,7 +198,9 @@
             "key": "k",
             "data": "v",
             "hash": "",
-            "generation": "0"
+            "version": {
+              "$ref": "lease1"
+            }
           },
           "expect": true
         },
@@ -291,13 +310,6 @@
                 "value": 0,
                 "attributes": {
                   "operation": "saveMany",
-                  "adapter": "memory"
-                }
-              },
-              {
-                "value": 0,
-                "attributes": {
-                  "operation": "saveWithLease",
                   "adapter": "memory"
                 }
               }

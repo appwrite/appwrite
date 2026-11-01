@@ -660,6 +660,7 @@ final class Adapter implements Base, Benchmarks
                     onDuplicate: OnDuplicate::from($a['on_duplicate'] ?? 'fail'),
                     getDatabaseDSN: $dsn === null ? null : static fn (DatabaseResource $resource): string => $dsn . ':' . $resource->getId(),
                     collectionStructures: $a['structures'] ?? [],
+                    scopes: $a['scopes'] ?? null,
                 ));
             },
             'appwrite_destination.dsn' => function (array $a, Session $s) {

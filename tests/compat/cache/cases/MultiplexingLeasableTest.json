@@ -2,7 +2,7 @@
   "source": "packages/cache/tests/E2E/MultiplexingLeasableTest.php",
   "cases": [
     {
-      "name": "testFreshKeyHasZeroGeneration .. testFreshSaveAfterPurgeSucceeds",
+      "name": "testFreshKeyHasAnOpaqueVersion .. testFreshSaveAfterPurgeSucceeds",
       "steps": [
         {
           "op": "multiplexing.run",
@@ -11,7 +11,7 @@
             "options": {},
             "steps": [
               {
-                "op": "generation",
+                "op": "lease",
                 "args": {
                   "key": "${ns}:doc:1"
                 }
@@ -24,7 +24,9 @@
                     "v": 1
                   },
                   "hash": "${ns}:doc:1",
-                  "generation": "0"
+                  "version": {
+                    "$result": 0
+                  }
                 }
               },
               {
@@ -42,7 +44,7 @@
                 }
               },
               {
-                "op": "generation",
+                "op": "lease",
                 "args": {
                   "key": "${ns}:doc:1"
                 }
@@ -55,7 +57,9 @@
                     "stale": true
                   },
                   "hash": "${ns}:doc:1",
-                  "generation": "0"
+                  "version": {
+                    "$result": 0
+                  }
                 }
               },
               {
@@ -74,7 +78,9 @@
                     "v": 2
                   },
                   "hash": "${ns}:doc:1",
-                  "generation": "1"
+                  "version": {
+                    "$result": 4
+                  }
                 }
               },
               {
@@ -86,6 +92,12 @@
                 }
               },
               {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:2"
+                }
+              },
+              {
                 "op": "save_with_lease",
                 "args": {
                   "key": "${ns}:doc:2",
@@ -93,7 +105,9 @@
                     "v": 1
                   },
                   "hash": "field-a",
-                  "generation": "0"
+                  "version": {
+                    "$result": 9
+                  }
                 }
               },
               {
@@ -104,7 +118,7 @@
                 }
               },
               {
-                "op": "generation",
+                "op": "lease",
                 "args": {
                   "key": "${ns}:doc:2"
                 }
@@ -117,7 +131,9 @@
                     "stale": true
                   },
                   "hash": "field-a",
-                  "generation": "0"
+                  "version": {
+                    "$result": 9
+                  }
                 }
               },
               {
@@ -134,8 +150,17 @@
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/0",
+              "/4",
+              "/9",
+              "/12"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
-            "0",
+            "<masked>",
             true,
             {
               "$array": [
@@ -146,7 +171,7 @@
               ]
             },
             true,
-            "1",
+            "<masked>",
             false,
             false,
             true,
@@ -158,9 +183,10 @@
                 ]
               ]
             },
+            "<masked>",
             true,
             true,
-            "1",
+            "<masked>",
             false,
             false,
             []
@@ -188,6 +214,12 @@
             "options": {},
             "steps": [
               {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
                 "op": "save_with_lease",
                 "args": {
                   "key": "${ns}:doc:1",
@@ -195,7 +227,9 @@
                     "v": 1
                   },
                   "hash": "${ns}:doc:1",
-                  "generation": "0"
+                  "version": {
+                    "$result": 0
+                  }
                 }
               },
               {
@@ -205,17 +239,25 @@
                 }
               },
               {
-                "op": "generation",
+                "op": "lease",
                 "args": {
                   "key": "${ns}:doc:1"
                 }
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/0",
+              "/3"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
+            "<masked>",
             true,
             true,
-            "1"
+            "<masked>"
           ]
         }
       ],
@@ -237,6 +279,12 @@
                 "args": {}
               },
               {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
                 "op": "save_with_lease",
                 "args": {
                   "key": "${ns}:doc:1",
@@ -244,7 +292,9 @@
                     "v": 1
                   },
                   "hash": "${ns}:doc:1",
-                  "generation": "0"
+                  "version": {
+                    "$result": 1
+                  }
                 }
               },
               {
@@ -262,7 +312,7 @@
                 }
               },
               {
-                "op": "generation",
+                "op": "lease",
                 "args": {
                   "key": "${ns}:doc:1"
                 }
@@ -276,7 +326,7 @@
                 "args": {
                   "key": "${ns}:doc:1",
                   "data": "attacker",
-                  "hash": "__utopia_gen__"
+                  "hash": "__utopia_version__"
                 }
               },
               {
@@ -284,15 +334,17 @@
                 "args": {
                   "key": "${ns}:doc:1",
                   "data": "attacker",
-                  "hash": "__utopia_gen__",
-                  "generation": "1"
+                  "hash": "__utopia_version__",
+                  "version": {
+                    "$result": 5
+                  }
                 }
               },
               {
                 "op": "purge",
                 "args": {
                   "key": "${ns}:doc:1",
-                  "hash": "__utopia_gen__"
+                  "hash": "__utopia_version__"
                 }
               },
               {
@@ -300,14 +352,14 @@
                 "args": {
                   "key": "${ns}:doc:1",
                   "ttl": 60,
-                  "hash": "__utopia_gen__"
+                  "hash": "__utopia_version__"
                 }
               },
               {
                 "op": "touch",
                 "args": {
                   "key": "${ns}:doc:1",
-                  "hash": "__utopia_gen__"
+                  "hash": "__utopia_version__"
                 }
               },
               {
@@ -322,17 +374,27 @@
                   "key": "${ns}:doc:1",
                   "data": "stale",
                   "hash": "${ns}:doc:1",
-                  "generation": "0"
+                  "version": {
+                    "$result": 1
+                  }
                 }
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/1",
+              "/5"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
             true,
+            "<masked>",
             true,
             true,
             false,
-            "1",
+            "<masked>",
             1,
             false,
             false,
@@ -366,7 +428,7 @@
                 }
               },
               {
-                "op": "generation",
+                "op": "lease",
                 "args": {
                   "key": "${ns}:doc:1"
                 }
@@ -379,7 +441,9 @@
                     "stale": true
                   },
                   "hash": "${ns}:doc:1",
-                  "generation": "1"
+                  "version": {
+                    "$result": 1
+                  }
                 }
               },
               {
@@ -413,9 +477,15 @@
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/1"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
             false,
-            "1",
+            "<masked>",
             false,
             false,
             false,
@@ -441,6 +511,12 @@
             },
             "steps": [
               {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:1"
+                }
+              },
+              {
                 "op": "save_with_lease",
                 "args": {
                   "key": "${ns}:doc:1",
@@ -448,7 +524,9 @@
                     "fresh": true
                   },
                   "hash": "${ns}:doc:1",
-                  "generation": "1"
+                  "version": {
+                    "$result": 0
+                  }
                 }
               },
               {
@@ -461,7 +539,14 @@
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/0"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
+            "<masked>",
             true,
             {
               "$array": [
@@ -520,6 +605,12 @@
             },
             "steps": [
               {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:doc:9"
+                }
+              },
+              {
                 "op": "save_with_lease",
                 "args": {
                   "key": "${ns}:doc:9",
@@ -527,7 +618,9 @@
                     "v": 1
                   },
                   "hash": "${ns}:doc:9",
-                  "generation": "1"
+                  "version": {
+                    "$result": 0
+                  }
                 }
               },
               {
@@ -540,7 +633,14 @@
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/0"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
+            "<masked>",
             true,
             {
               "$array": [

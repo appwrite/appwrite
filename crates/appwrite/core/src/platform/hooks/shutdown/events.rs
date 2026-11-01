@@ -97,7 +97,7 @@ impl Job {
             return cached;
         }
         // Read before the database, so a purge in between rejects the save.
-        let generation = self.state.cache.generation(&key).await.ok();
+        let generation = self.state.cache.lease(&key).await.ok();
         // `EventProcessor::getFunctionsEvents`: every function's events, by
         // pages of 100.
         let mut events: Vec<String> = Vec::new();

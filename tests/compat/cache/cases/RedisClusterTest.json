@@ -1094,7 +1094,7 @@
                 }
               ],
               [
-                "__utopia_gen__",
+                "__utopia_version__",
                 "kept"
               ]
             ],
@@ -1124,7 +1124,7 @@
                 ]
               ]
             },
-            "__utopia_gen__": "kept"
+            "__utopia_version__": "kept"
           }
         },
         {
@@ -1165,7 +1165,7 @@
           "expect": [
             "a",
             "b",
-            "__utopia_gen__"
+            "__utopia_version__"
           ]
         },
         {
@@ -1198,7 +1198,7 @@
             },
             "key": "${ns}:m",
             "ttl": 60,
-            "hash": "__utopia_gen__"
+            "hash": "__utopia_version__"
           },
           "expect": "kept"
         },
@@ -1210,19 +1210,43 @@
             },
             "key": "${ns}:m",
             "data": "x",
-            "hash": "__utopia_gen__"
+            "hash": "__utopia_version__"
           },
           "expect": true
         },
         {
-          "op": "cache.generation",
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "c"
             },
             "key": "${ns}:m"
           },
-          "expect": "0"
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:m"
+          },
+          "bind": "lease2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "op": "cache.save_with_lease",
@@ -1233,9 +1257,11 @@
             "key": "${ns}:m",
             "data": "y",
             "hash": "h",
-            "generation": "9"
+            "version": {
+              "$ref": "lease2"
+            }
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "cache.load",
@@ -1247,7 +1273,7 @@
             "ttl": 60,
             "hash": "h"
           },
-          "expect": "y"
+          "expect": false
         },
         {
           "op": "cache.touch",
@@ -1258,7 +1284,7 @@
             "key": "${ns}:m",
             "hash": "h"
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "cache.purge",

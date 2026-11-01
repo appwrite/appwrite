@@ -53,7 +53,8 @@ async fn wrappers_and_dynamic_adapters_pass_bytes_on() {
     let cache = Cache::from_dyn(sharded.clone());
     for i in 0..8 {
         let key = format!("key:{i}");
-        assert!(cache.save_native_with_lease(&key, &i, "", "0").await.unwrap());
+        let version = cache.lease(&key).await.unwrap();
+        assert!(cache.save_native_with_lease(&key, &i, "", &version).await.unwrap());
         assert_eq!(cache.load_native::<i32>(&key, 60, "").await.unwrap(), Some(i));
         let stored = sharded.load_bytes(&key, "").await.unwrap().unwrap();
         assert!(Native::time(&stored).is_some());
@@ -94,8 +95,8 @@ async fn redis_keeps_native_entries_beside_php_fields() {
     assert!(ttl > 0 && ttl <= 60, "{ttl}");
 
     // Reserved fields are refused.
-    assert!(!cache.save_native(&key, &1, "__utopia_gen__", 0).await.unwrap());
-    assert_eq!(cache.load_native::<i32>(&key, 60, "__utopia_gen__").await.unwrap(), None);
+    assert!(!cache.save_native(&key, &1, "__utopia_version__", 0).await.unwrap());
+    assert_eq!(cache.load_native::<i32>(&key, 60, "__utopia_version__").await.unwrap(), None);
 
     // A purge of the key drops both.
     assert!(cache.purge(&key, "").await.unwrap());
@@ -121,14 +122,14 @@ async fn redis_leases_guard_native_saves() {
     ];
     for cache in caches {
         let key = unique("lease");
-        let generation = cache.generation(&key).await.unwrap();
+        let version = cache.lease(&key).await.unwrap();
         // A purge after the read: the stale save is refused.
         cache.purge(&key, "").await.unwrap();
-        assert!(!cache.save_native_with_lease(&key, &project(), "rust", &generation).await.unwrap());
+        assert!(!cache.save_native_with_lease(&key, &project(), "rust", &version).await.unwrap());
         assert_eq!(cache.load_native::<Project>(&key, 60, "rust").await.unwrap(), None);
-        // With the current generation it lands.
-        let generation = cache.generation(&key).await.unwrap();
-        assert!(cache.save_native_with_lease(&key, &project(), "rust", &generation).await.unwrap());
+        // With the current version it lands.
+        let version = cache.lease(&key).await.unwrap();
+        assert!(cache.save_native_with_lease(&key, &project(), "rust", &version).await.unwrap());
         assert_eq!(cache.load_native::<Project>(&key, 60, "rust").await.unwrap(), Some(project()));
         // An entry an older format wrote in the field is a miss, then replaced.
         assert!(cache.save(&key, &Value::from(r#"{"id":"old"}"#), "rust", 0).await.unwrap());

@@ -12,7 +12,7 @@ use php_std::types::Value;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 
-use crate::adapter::{Adapter, DynAdapter, Fields, now};
+use crate::adapter::{Adapter, DynAdapter, Fields, Snapshot, now};
 use crate::{Native, Result};
 use utopia_telemetry::{Counter, Histogram, NoTelemetry, Telemetry, Value as Attribute};
 
@@ -60,6 +60,7 @@ const DURATION_BUCKETS: [f64; 9] = [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 
 /// ```
 pub struct Cache<A: ?Sized = dyn DynAdapter> {
     case_sensitive: AtomicBool,
+    namespace: String,
     telemetry: RwLock<Instruments>,
     recordings: Recordings,
     adapter: Arc<A>,
@@ -92,6 +93,7 @@ impl Drop for Recording<'_> {
     }
 }
 
+#[derive(Clone)]
 struct Instruments {
     telemetry: Arc<dyn Telemetry>,
     duration: OnceLock<Histogram>,
@@ -139,6 +141,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     pub fn from_arc(adapter: Arc<A>) -> Self {
         Cache {
             case_sensitive: AtomicBool::new(false),
+            namespace: String::new(),
             telemetry: RwLock::new(Instruments::new(Arc::new(NoTelemetry))),
             recordings: Recordings::default(),
             adapter,
@@ -148,6 +151,47 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// The adapter.
     pub fn adapter(&self) -> &Arc<A> {
         &self.adapter
+    }
+
+    /// An independent view of the same backing cache whose keys are prefixed
+    /// with `namespace`: same adapter, case sensitivity and telemetry, its
+    /// own purge recordings. Recorded purges keep the logical keys, without
+    /// the namespace, so a cache receiving them applies its own once.
+    /// [`Cache::flush`] still flushes the whole backend.
+    ///
+    /// ```
+    /// use php_std::types::Value;
+    /// use utopia_cache::{Cache, Memory};
+    ///
+    /// # utopia_async::Runtime::new()?.block_on(async {
+    /// let backing = Cache::new(Memory::new());
+    /// let cache = backing.with_namespace("v2:");
+    /// cache.save("entry", &Value::from("warm"), "", 0).await?;
+    /// assert_eq!(backing.load("v2:entry", 60, "").await?, Some(Value::from("warm")));
+    /// # Ok::<(), utopia_cache::Error>(())
+    /// # })?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\Cache\Adapter\Memory;
+    /// use Utopia\Cache\Cache;
+    ///
+    /// $backing = new Cache(new Memory());
+    /// $cache = $backing->withNamespace('v2:');
+    /// $cache->save('entry', 'warm');
+    /// echo $backing->load('v2:entry', 60), "\n"; // warm
+    /// ```
+    ///
+    /// PHP: `withNamespace`, a clone whose namespace replaces this one's.
+    pub fn with_namespace(&self, namespace: &str) -> Self {
+        Cache {
+            case_sensitive: AtomicBool::new(self.case_sensitive()),
+            namespace: namespace.to_owned(),
+            telemetry: RwLock::new(self.telemetry.read().unwrap_or_else(|e| e.into_inner()).clone()),
+            recordings: Recordings::default(),
+            adapter: self.adapter.clone(),
+        }
     }
 
     /// Whether keys are case-sensitive.
@@ -183,6 +227,17 @@ impl<A: Adapter + ?Sized> Cache<A> {
         }
     }
 
+    /// The key the adapter stores `key` under: the namespace and the key,
+    /// lower-cased unless case-sensitive.
+    ///
+    /// PHP: `key()` (private).
+    fn key<'a>(&self, key: &'a str) -> Cow<'a, str> {
+        if self.namespace.is_empty() {
+            return self.fold(key);
+        }
+        Cow::Owned(self.fold(&format!("{}{key}", self.namespace)).into_owned())
+    }
+
     fn record(&self, start: Instant, operation: &str, key: Option<&str>) {
         let duration = start.elapsed().as_secs_f64();
         let name = self.adapter.name(key);
@@ -195,7 +250,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// The entry for `key` (and `hash`) if it was saved less than `ttl`
     /// seconds ago; `None` on a miss.
     pub async fn load(&self, key: &str, ttl: i64, hash: &str) -> Result<Option<Value>> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let hash = self.fold(hash);
         let start = Instant::now();
         let result = self.adapter.load(&key, ttl, &hash).await?;
@@ -235,7 +290,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub async fn load_native<T: DeserializeOwned>(&self, key: &str, ttl: i64, hash: &str) -> Result<Option<T>> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let hash = self.fold(hash);
         let start = Instant::now();
         let stored = self.adapter.load_bytes(&key, &hash).await?;
@@ -248,7 +303,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// also gives the key an expiry where the adapter supports it. Returns
     /// whether it was stored; fails when `data` cannot be encoded.
     pub async fn save_native<T: Serialize + ?Sized>(&self, key: &str, data: &T, hash: &str, ttl: i64) -> Result<bool> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let hash = self.fold(hash);
         let start = Instant::now();
         let stored = Native.encode(data, now())?;
@@ -257,25 +312,24 @@ impl<A: Adapter + ?Sized> Cache<A> {
         result
     }
 
-    /// [`Cache::save_native`] only if no purge happened since `generation`
-    /// was read, as [`Cache::save_with_lease`]. A plain save for adapters
-    /// without leases.
+    /// [`Cache::save_native`] only if the key's version is still `version`
+    /// (from [`Cache::lease`]), as [`Cache::save_with_lease`]: `false` for
+    /// adapters without versions or an empty version.
     pub async fn save_native_with_lease<T: Serialize + ?Sized>(
         &self,
         key: &str,
         data: &T,
         hash: &str,
-        generation: &str,
+        version: &str,
     ) -> Result<bool> {
-        let key = self.fold(key);
+        if crate::adapter::blank(key) || !self.supports_versioning() || version.is_empty() {
+            return Ok(false);
+        }
+        let key = self.key(key);
         let hash = self.fold(hash);
         let start = Instant::now();
         let stored = Native.encode(data, now())?;
-        let result = if self.adapter.leasable() {
-            self.adapter.save_bytes_with_lease(&key, &stored, &hash, generation).await
-        } else {
-            self.adapter.save_bytes(&key, &stored, &hash, 0).await
-        };
+        let result = self.adapter.compare_and_swap_bytes(&key, &stored, &hash, version).await.map(|v| v.is_some());
         self.record(start, "saveNativeWithLease", Some(&key));
         result
     }
@@ -283,7 +337,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// Saves `data` under `key` (and `hash`); `ttl > 0` also gives the key an
     /// expiry where the adapter supports it. Returns whether it was stored.
     pub async fn save(&self, key: &str, data: &Value, hash: &str, ttl: i64) -> Result<bool> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let hash = self.fold(hash);
         let start = Instant::now();
         let result = self.adapter.save(&key, data, &hash, ttl).await;
@@ -295,7 +349,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// omitted; an empty `fields` loads them all. Empty for adapters without
     /// fields.
     pub async fn load_many(&self, key: &str, ttl: i64, fields: &[&str]) -> Result<Fields> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let folded: Vec<Cow<'_, str>> = fields.iter().map(|f| self.fold(f)).collect();
         let fields: Vec<&str> = folded.iter().map(|f| f.as_ref()).collect();
         let start = Instant::now();
@@ -307,7 +361,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
     /// Writes every field of `data` in one round trip; `ttl > 0` gives the
     /// key an expiry. `false` on failure or for adapters without fields.
     pub async fn save_many(&self, key: &str, data: &Fields, ttl: i64) -> Result<bool> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let start = Instant::now();
         let result = if self.case_sensitive() {
             self.adapter.save_many(&key, data, ttl).await
@@ -323,41 +377,68 @@ impl<A: Adapter + ?Sized> Cache<A> {
         result
     }
 
-    /// Whether the adapter keeps generations ([`Cache::generation`]) and
-    /// leased saves. Not in PHP.
-    pub fn leasable(&self) -> bool {
-        self.adapter.leasable()
+    /// Whether the adapter keeps opaque versions, so [`Cache::lease`],
+    /// [`Cache::save_with_lease`] and the versioned operations work.
+    ///
+    /// PHP: `supportsVersioning`.
+    pub fn supports_versioning(&self) -> bool {
+        self.adapter.supports_versioning()
     }
 
-    /// The key's generation (advanced by each purge); `"0"` for adapters
-    /// without leases.
-    pub async fn generation(&self, key: &str) -> Result<String> {
-        if !self.adapter.leasable() {
-            return Ok("0".to_owned());
+    /// The key's version, captured before reading the source of truth and
+    /// presented to [`Cache::save_with_lease`]; `""` for adapters without
+    /// versions.
+    ///
+    /// PHP: `getLease`.
+    pub async fn lease(&self, key: &str) -> Result<String> {
+        if !self.supports_versioning() {
+            return Ok(String::new());
         }
-        let key = self.fold(key);
-        self.adapter.generation(&key).await
+        self.adapter.version(&self.key(key)).await
     }
 
-    /// Saves only if no purge happened since `generation` was read, closing
-    /// the cache-aside read-after-write race. A plain save for adapters
-    /// without leases.
-    pub async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
-        let key = self.fold(key);
+    /// The key's version and value in one atomic read. Fails with
+    /// [`Error::Unavailable`](crate::Error::Unavailable) for adapters without versions.
+    ///
+    /// PHP: `loadVersioned`, whose `value` is `false` on a miss.
+    pub async fn load_versioned(&self, key: &str) -> Result<Snapshot> {
+        self.adapter.load_versioned(&self.key(key)).await
+    }
+
+    /// Writes `data` under `key` only if its version is still `version`:
+    /// `Some` with the version committed, `None` on a conflict. Fails with
+    /// [`Error::Unavailable`](crate::Error::Unavailable) for adapters without
+    /// versions and when the backend fails.
+    ///
+    /// PHP: `compareAndSwap`, which returns `false` on a conflict.
+    pub async fn compare_and_swap(&self, key: &str, data: &Value, version: &str) -> Result<Option<String>> {
+        let data = crate::adapter::coerce(data, "Utopia\\Cache\\Cache::compareAndSwap(): Argument #2 ($data)")?;
+        self.adapter.compare_and_swap(&self.key(key), &data, "", version).await
+    }
+
+    /// Saves only if the key's version is still `version` (from
+    /// [`Cache::lease`]): nothing wrote or purged it since, closing the
+    /// cache-aside read-after-write race. `false` for adapters without
+    /// versions, an empty version, and the inputs [`Cache::save`] refuses.
+    ///
+    /// PHP: `saveWithLease`.
+    pub async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<bool> {
+        let data = crate::adapter::coerce(data, "Utopia\\Cache\\Cache::saveWithLease(): Argument #2 ($data)")?;
+        if crate::adapter::blank(key)
+            || crate::adapter::empty(&data)
+            || !self.supports_versioning()
+            || version.is_empty()
+        {
+            return Ok(false);
+        }
+        let key = self.key(key);
         let hash = self.fold(hash);
-        let start = Instant::now();
-        let result = if self.adapter.leasable() {
-            self.adapter.save_with_lease(&key, data, &hash, generation).await
-        } else {
-            self.adapter.save(&key, data, &hash, 0).await
-        };
-        self.record(start, "saveWithLease", Some(&key));
-        result
+        Ok(self.adapter.compare_and_swap(&key, &data, &hash, version).await?.is_some())
     }
 
     /// Refreshes an entry's timestamp without replacing its data.
     pub async fn touch(&self, key: &str, hash: &str) -> Result<bool> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let hash = self.fold(hash);
         let start = Instant::now();
         let result = self.adapter.touch(&key, &hash).await?;
@@ -367,7 +448,7 @@ impl<A: Adapter + ?Sized> Cache<A> {
 
     /// The fields stored under `key`.
     pub async fn list(&self, key: &str) -> Result<Vec<String>> {
-        let key = self.fold(key);
+        let key = self.key(key);
         let start = Instant::now();
         let result = self.adapter.list(&key).await?;
         self.record(start, "list", Some(&key));
@@ -376,11 +457,12 @@ impl<A: Adapter + ?Sized> Cache<A> {
 
     /// Removes the entry for `key` (or one `hash` of it).
     pub async fn purge(&self, key: &str, hash: &str) -> Result<bool> {
-        let key = self.fold(key);
         let hash = self.fold(hash);
+        let logical = self.fold(key);
         for purges in self.recordings.running().values_mut() {
-            purges.entry(key.to_string()).or_default().insert(hash.to_string());
+            purges.entry(logical.to_string()).or_default().insert(hash.to_string());
         }
+        let key = self.key(key);
         let start = Instant::now();
         let result = self.adapter.purge(&key, &hash).await?;
         self.record(start, "purge", Some(&key));

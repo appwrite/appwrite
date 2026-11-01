@@ -6,14 +6,14 @@ use indexmap::IndexMap;
 use php_std::types::Value;
 use redis::aio::{ConnectionLike, ConnectionManager};
 
-use crate::adapter::{Adapter, Fields, Retry, blank, coerce, empty, field, now};
-use crate::lease::{self, Transport, is_reserved};
+use crate::adapter::{Adapter, Fields, Retry, Snapshot, blank, coerce, empty, field, now};
 use crate::resp::Reply;
+use crate::versioned::{self, Transport, VERSION_FIELD, is_reserved};
 use crate::{Codec, Envelope, Error, Json, Result};
 
 /// Entries as fields of Redis hashes: `key` names the hash and `hash` the
 /// field (the key itself by default), each value an [`Envelope`]. Supports
-/// batches of fields, generation leases ([`crate::lease`]) and retries of
+/// batches of fields, opaque versions ([`crate::versioned`]) and retries of
 /// commands that failed on the connection.
 ///
 /// Like the PHP extension it ports, a server error reply makes a command
@@ -90,7 +90,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Redis<C, K> {
         self.retry
     }
 
-    /// Refuses leased saves for `ms` milliseconds after a purge; `0` (the
+    /// Refuses conditional saves for `ms` milliseconds after a purge; `0` (the
     /// default) disables the tombstone.
     ///
     /// PHP: `setLeaseGraceWindow`.
@@ -141,8 +141,11 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Redis<C, K> {
         })
     }
 
+    /// `HMSET key field value __utopia_version__ <fresh>`: every write
+    /// replaces the key's version.
     async fn hset(&self, key: &str, field: &str, value: &[u8]) -> Result<Reply> {
-        self.execute(redis::cmd("HSET").arg(key).arg(field).arg(value), true).await
+        let version = versioned::fresh();
+        self.execute(redis::cmd("HMSET").arg(key).arg(field).arg(value).arg(VERSION_FIELD).arg(version), true).await
     }
 }
 
@@ -222,11 +225,6 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Transport for 
         }
         confirm_script(self.execute(&cmd, false).await?)
     }
-
-    /// The value of one field of a hash, `None` when missing.
-    fn hget(&self, key: &str, field: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
-        Redis::hget(self, key, field)
-    }
 }
 
 impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Redis<C, K> {
@@ -281,7 +279,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
     }
 
     fn purge(&self, key: &str, hash: &str) -> impl Future<Output = Result<bool>> + Send {
-        lease::purge(self, self.grace_ms, key, hash)
+        versioned::purge(self, self.grace_ms, key, hash)
     }
 
     async fn flush(&self) -> Result<bool> {
@@ -360,6 +358,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         if !any {
             return Ok(false);
         }
+        cmd.arg(VERSION_FIELD).arg(versioned::fresh());
         if self.execute(&cmd, true).await.is_err() {
             return Ok(false);
         }
@@ -369,16 +368,29 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         Ok(true)
     }
 
-    fn leasable(&self) -> bool {
+    fn supports_versioning(&self) -> bool {
         true
     }
 
-    fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
-        lease::generation(self, key)
+    fn version(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
+        versioned::version(self, key)
     }
 
-    async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
-        lease::save_with_lease(self, &self.envelope, self.grace_ms, key, data, hash, generation).await
+    fn load_versioned(&self, key: &str) -> impl Future<Output = Result<Snapshot>> + Send {
+        versioned::load_versioned(self, &self.envelope, key)
+    }
+
+    async fn compare_and_swap(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<Option<String>> {
+        let hash = versioned::cas_field(key, hash);
+        if is_reserved(hash) {
+            return Ok(None);
+        }
+        let data = coerce(data, "Utopia\\Cache\\Adapter\\Redis::compareAndSwap(): Argument #2 ($data)")?;
+        let written = async {
+            let value = self.envelope.encode(&data, now())?;
+            versioned::compare_and_swap(self, self.grace_ms, key, &value, hash, version).await
+        };
+        written.await
     }
 
     async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
@@ -397,7 +409,7 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         // A failed write is not stored, not an error. Unlike `save`, which
         // keeps PHP's answer (phpredis' `false` on an error reply is ignored),
         // an error reply (`WRONGTYPE`, `OOM`) is a failed write too.
-        if !matches!(self.hset(key, hash, bytes).await, Ok(Reply::Int(_))) {
+        if !matches!(self.hset(key, hash, bytes).await, Ok(reply) if !matches!(reply, Reply::Error(_))) {
             return Ok(false);
         }
         if ttl > 0
@@ -408,13 +420,17 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         Ok(true)
     }
 
-    fn save_bytes_with_lease(
+    async fn compare_and_swap_bytes(
         &self,
         key: &str,
         bytes: &[u8],
         hash: &str,
-        generation: &str,
-    ) -> impl Future<Output = Result<bool>> + Send {
-        lease::save_bytes_with_lease(self, self.grace_ms, key, bytes, hash, generation)
+        version: &str,
+    ) -> Result<Option<String>> {
+        let hash = versioned::cas_field(key, hash);
+        if blank(key) || is_reserved(hash) {
+            return Ok(None);
+        }
+        versioned::compare_and_swap(self, self.grace_ms, key, bytes, hash, version).await
     }
 }

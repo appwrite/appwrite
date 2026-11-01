@@ -9,8 +9,12 @@
 //!
 //! Values are [`php_std::types::Value`]s: the Redis-protocol and Hazelcast
 //! adapters store them in an [`Envelope`] encoded with a [`Codec`] ([`Json`]
-//! by default, or [`Igbinary`]). Leases ([`lease`]) keep a stale reader from
-//! re-caching data a concurrent writer just purged.
+//! by default, or [`Igbinary`]). Opaque versions ([`versioned`]) keep a stale reader
+//! from re-caching data a concurrent writer just changed or purged:
+//! [`Cache::lease`] before reading the source of truth,
+//! [`Cache::save_with_lease`] after; [`Cache::load_versioned`] and
+//! [`Cache::compare_and_swap`] read and swap a record atomically.
+//! [`Cache::with_namespace`] is a view of the same backend under a key prefix.
 //!
 //! A load returns `None` on a miss; a save returns whether it stored.
 //!
@@ -23,18 +27,19 @@
 //! configures (Appwrite: [`Igbinary`]). Entries only Rust reads (its own
 //! fields, such as the project store's) go through [`Cache::load_native`]
 //! and [`Cache::save_native`]: typed Rust values in the [`Native`] format,
-//! with the same TTL, generation leases and purge tombstones, and no PHP
+//! with the same TTL, versioned saves and purge tombstones, and no PHP
 //! values built on the way.
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `Utopia\Cache\Cache` | [`Cache`] (`getSize` is [`Cache::size`], `getGeneration` [`Cache::generation`], `recordPurges` [`Cache::record_purges`] returning [`Purges`]) |
+//! | `Utopia\Cache\Cache` | [`Cache`] (`getSize` is [`Cache::size`], `getLease` [`Cache::lease`], `withNamespace` [`Cache::with_namespace`], `recordPurges` [`Cache::record_purges`] returning [`Purges`]) |
 //! | `Utopia\Cache\Adapter` | [`Adapter`], [`DynAdapter`] |
-//! | `Feature\Batchable`, `Feature\Leasable`, `Feature\Telemetry` | [`Adapter::batchable`], [`Adapter::leasable`], [`Adapter::set_telemetry`] and their methods |
+//! | `Feature\Batchable`, `Feature\Versioned`, `Feature\Telemetry` | [`Adapter::batchable`], [`Adapter::supports_versioning`], [`Adapter::set_telemetry`] and their methods (`getVersion` is [`Adapter::version`]; `loadVersioned` returns a [`Snapshot`]) |
+//! | `Exception\Unavailable` | [`Error::Unavailable`] |
 //! | `Feature\Retryable` | [`Retry`] (`with_max_retries`, `with_retry_delay` on each adapter) |
 //! | `Adapter\Memory`, `Adapter\None` | [`Memory`], [`None`] |
 //! | `Adapter\Filesystem` | [`Filesystem`] (streaming loads: [`Filesystem::open`]) |
-//! | `Adapter\Redis`, `Adapter\Redis\Leasable` | [`Redis`], [`lease`] |
+//! | `Adapter\Redis`, `Adapter\Redis\Versioned` | [`Redis`], [`versioned`] |
 //! | `Adapter\Redis\Multiplexing`, `Redis\ConnectionContext` | [`Multiplexing`], [`MultiplexingOptions`] |
 //! | `Adapter\Redis\Client` (`encode`, `parse`, `unwrap`), `RedisError` | [`resp::encode`], [`resp::parse`], [`resp::unwrap`], [`resp::Reply::Error`] |
 //! | `Adapter\Redis\NoScript` | [`resp::is_noscript`], [`Error::NoScript`] |
@@ -46,7 +51,7 @@
 //! | `Adapter\CircuitBreaker` (over `Utopia\CircuitBreaker\CircuitBreaker`) | [`CircuitBreaker`] over a [`utopia_circuit_breaker::CircuitBreaker`] |
 //! | `Codec`, `Codec\Json`, `Codec\Igbinary` | [`Codec`], [`Json`], [`Igbinary`] |
 //! | `Envelope` | [`Envelope`] |
-//! | (Rust only) | [`Native`], [`Cache::load_native`], [`Cache::save_native`], [`Cache::save_native_with_lease`], [`Adapter::load_bytes`], [`Adapter::save_bytes`], [`Adapter::save_bytes_with_lease`] |
+//! | (Rust only) | [`Native`], [`Cache::load_native`], [`Cache::save_native`], [`Cache::save_native_with_lease`], [`Adapter::load_bytes`], [`Adapter::save_bytes`], [`Adapter::compare_and_swap_bytes`] |
 //! | `Utopia\Telemetry\Adapter` | [`telemetry::Telemetry`] (the `utopia-telemetry` crate) |
 //!
 //! PHP's `load` returns `false` on a miss; Rust returns `None`. `save`
@@ -69,7 +74,6 @@ mod error;
 mod fastlz;
 #[cfg(feature = "filesystem")]
 mod filesystem;
-pub mod lease;
 #[cfg(feature = "memcached")]
 mod memcached;
 mod memory;
@@ -84,10 +88,11 @@ mod redis_adapter;
 mod redis_cluster;
 pub mod resp;
 mod sharding;
+pub mod versioned;
 /// The telemetry library the cache records its metrics with.
 pub use utopia_telemetry as telemetry;
 
-pub use adapter::{Adapter, BoxFuture, DynAdapter, Fields, Retry};
+pub use adapter::{Adapter, BoxFuture, DynAdapter, Fields, Retry, Snapshot};
 pub use breaker::CircuitBreaker;
 pub use cache::{Cache, Purges};
 pub use codec::{AnyCodec, Codec, Igbinary, Json};

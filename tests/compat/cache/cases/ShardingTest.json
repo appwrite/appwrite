@@ -1283,6 +1283,23 @@
           ]
         },
         {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:l"
+          },
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
           "op": "cache.save_with_lease",
           "args": {
             "cache": {
@@ -1291,7 +1308,9 @@
             "key": "${ns}:l",
             "data": "v",
             "hash": "h",
-            "generation": "0"
+            "version": {
+              "$ref": "lease1"
+            }
           },
           "expect": true
         },
@@ -1307,14 +1326,21 @@
           "expect": true
         },
         {
-          "op": "cache.generation",
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "c"
             },
             "key": "${ns}:l"
           },
-          "expect": "1"
+          "bind": "lease2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "op": "cache.touch",
@@ -1465,14 +1491,15 @@
           "expect": 2
         },
         {
-          "op": "cache.generation",
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "c"
             },
             "key": "k1"
           },
-          "expect": "0"
+          "bind": "lease1",
+          "expect": ""
         },
         {
           "op": "cache.save_with_lease",
@@ -1483,7 +1510,9 @@
             "key": "k1",
             "data": "w",
             "hash": "",
-            "generation": "0"
+            "version": {
+              "$ref": "lease1"
+            }
           },
           "expect": false
         },

@@ -10773,7 +10773,7 @@
                   "key": "${ns}:b",
                   "data": [
                     [
-                      "__utopia_gen__",
+                      "__utopia_version__",
                       1
                     ]
                   ]
@@ -10900,7 +10900,7 @@
             {
               "$error": {
                 "class": "RedisException",
-                "message": "WRONGTYPE Operation against a key holding the wrong kind of value script: 542e836590c1900b3e492adc3b1dc52a7ed10b1b, on @user_script:3."
+                "message": "WRONGTYPE Operation against a key holding the wrong kind of value script: e1c6e9f3fb92dc5ea642b0c11358961ca0585653, on @user_script:3."
               }
             },
             false

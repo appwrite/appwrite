@@ -430,11 +430,11 @@ impl Adapter for Leasable {
         "redis-leasable"
     }
 
-    fn leasable(&self) -> bool {
+    fn supports_versioning(&self) -> bool {
         self.leased || (!self.plain && !self.unleased)
     }
 
-    fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
+    fn version(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
         self.count();
         if let Some(answer) = self.intercepts.read().unwrap().generation.as_ref().and_then(|i| i(key, "", &Value::Null))
         {
@@ -444,16 +444,18 @@ impl Adapter for Leasable {
         std::future::ready(Ok(generation))
     }
 
-    fn save_with_lease(
+    /// A conditional save: the key's version is its generation, which only
+    /// purges advance, so a committed save keeps it.
+    fn compare_and_swap(
         &self,
         key: &str,
         data: &Value,
         hash: &str,
         generation: &str,
-    ) -> impl Future<Output = Result<bool>> + Send {
+    ) -> impl Future<Output = Result<Option<String>>> + Send {
         self.count();
         if let Some(answer) = self.intercept_save(key, hash, data) {
-            return std::future::ready(answer);
+            return std::future::ready(answer.map(|saved| saved.then(|| generation.to_owned())));
         }
         let allowed = {
             let mut state = self.state();
@@ -465,7 +467,7 @@ impl Adapter for Leasable {
                 true
             }
         };
-        std::future::ready(Ok(allowed && self.save_now(key, data, hash)))
+        std::future::ready(Ok((allowed && self.save_now(key, data, hash)).then(|| generation.to_owned())))
     }
 }
 

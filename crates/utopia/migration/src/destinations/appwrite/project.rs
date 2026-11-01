@@ -9,6 +9,7 @@ use super::Appwrite;
 use super::normalize_date_time;
 use super::schema::{attr, db_array, db_value, doc, s};
 use crate::error::{Error, Result};
+use crate::exception::Exception;
 use crate::resource::{Kind, ResourceRef, status, types};
 use crate::resources::{cast_bool, cast_int};
 use crate::sdk::query;
@@ -318,6 +319,24 @@ impl Appwrite {
 
     async fn create_api_key(&mut self, r: &ResourceRef) -> Result<bool> {
         let Kind::ApiKey(k) = r.kind() else { return Ok(false) };
+        // An imported key holds no scope the migration was not granted
+        if let Some(scopes) = &self.scopes
+            && !php_std::sort::array_diff(
+                &k.scopes,
+                &[&Array::from_list(scopes.iter().map(|s| Value::from(s.as_str())).collect())],
+            )
+            .map_err(|e| Error::exception(e.to_string(), 0))?
+            .is_empty()
+        {
+            return Err(Error::migration(Exception::new(
+                r.name(),
+                r.group(),
+                Some(r.id()),
+                "API key has scopes this migration was not granted",
+                Exception::CODE_UNAUTHORIZED,
+                None,
+            )));
+        }
         let existing = Self::find_one(
             &self.db_for_platform,
             "keys",
