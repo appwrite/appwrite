@@ -8,6 +8,7 @@ use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Screenshots\Access;
 use Appwrite\Screenshots\Client;
 use Appwrite\Screenshots\Exception as ScreenshotsException;
 use Exception;
@@ -167,8 +168,6 @@ class Screenshots extends Action
             $mimeType = "image/png";
             $updates = new Document([]);
 
-            // The project may have moved to another team since the build queued this capture
-            $teamId = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('teamId', '');
 
             foreach ($captures as $key => $screenshot) {
                 $fileId = Id::unique();
@@ -182,6 +181,7 @@ class Screenshots extends Action
                     throw new \Exception("Screenshot failed to save");
                 }
 
+                $teamId = $project->getAttribute('teamId', '');
                 $file = new Document([
                     '$id' => $fileId,
                     '$permissions' => [
@@ -241,6 +241,13 @@ class Screenshots extends Action
             if ($site->isEmpty()) {
                 $files = $captured;
                 throw new PermanentFailure('Site deleted during capture');
+            }
+
+            // Filed under the team on the queued message, which a move since the build may have left
+            try {
+                (new Access($dbForPlatform))->grantDeployment($dbForProject, $project, $deployment->getId());
+            } catch (\Throwable $th) {
+                Console::warning('Failed to grant the screenshots of deployment ' . $deployment->getId() . ' to the project\'s team: ' . $th->getMessage());
             }
         } catch (\Throwable $th) {
             $date = \date('H:i:s');

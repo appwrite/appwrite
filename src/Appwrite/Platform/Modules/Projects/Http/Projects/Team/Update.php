@@ -4,9 +4,8 @@ namespace Appwrite\Platform\Modules\Projects\Http\Projects\Team;
 
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
-use Appwrite\Permission;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Action;
-use Appwrite\Role;
+use Appwrite\Screenshots\Access;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -14,7 +13,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -121,47 +119,9 @@ class Update extends Action
             $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), new Document(['$permissions' => $permissions]));
         }
 
-        $this->grantScreenshots($dbForPlatform, $getProjectDB($project), $teamId);
+        (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    }
-
-    /**
-     * Site screenshots are files in the console's `screenshots` bucket, readable by the team that owned the
-     * project when they were captured, so the new team would otherwise never see them.
-     */
-    private function grantScreenshots(Database $dbForPlatform, Database $dbForProject, string $teamId): void
-    {
-        $bucket = $dbForPlatform->getDocument('buckets', 'screenshots');
-        if ($bucket->isEmpty()) {
-            return;
-        }
-
-        $updates = new Document([
-            '$permissions' => [Permission::read(Role::team(Id::custom($teamId)))],
-        ]);
-
-        $ids = [];
-        foreach ($dbForProject->cursor('deployments', [
-            Query::equal('resourceType', ['sites']),
-            Query::select(['screenshotLight', 'screenshotDark']),
-        ]) as $deployment) {
-            foreach (['screenshotLight', 'screenshotDark'] as $attribute) {
-                $id = $deployment->getAttribute($attribute, '');
-                if ($id !== '') {
-                    $ids[] = $id;
-                }
-            }
-
-            if (\count($ids) >= APP_DATABASE_QUERY_MAX_VALUES) {
-                $dbForPlatform->updateDocuments('bucket_' . $bucket->getSequence(), $updates, [Query::equal('$id', $ids)]);
-                $ids = [];
-            }
-        }
-
-        if ($ids !== []) {
-            $dbForPlatform->updateDocuments('bucket_' . $bucket->getSequence(), $updates, [Query::equal('$id', $ids)]);
-        }
     }
 
     private function isOwner(Database $dbForPlatform, User $user, string $teamInternalId): bool
