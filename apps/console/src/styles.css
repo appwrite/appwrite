@@ -1307,14 +1307,50 @@ html:not([lang='en']):not([lang='he']) {
   }
 }
 
-/* Christmas: header lights, sidebar trees, and terminal tape */
-@keyframes christmas-twinkle {
+/* Holiday sidebar scenes */
+@keyframes holiday-scene-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.holiday-scene-in {
+  animation: holiday-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Christmas: header lights, sidebar forest, terminal garland and bow */
+@keyframes christmas-bulb {
   0%,
   100% {
     opacity: 1;
   }
   50% {
-    opacity: 0.35;
+    opacity: 0.5;
+  }
+}
+
+@keyframes christmas-halo {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.1;
+  }
+}
+
+@keyframes christmas-twinkle {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.2;
   }
 }
 
@@ -1322,67 +1358,380 @@ html:not([lang='en']):not([lang='he']) {
   0%,
   100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.55;
+    transform: scale(0.85);
   }
 }
 
-@keyframes christmas-fall {
+@keyframes christmas-rays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes christmas-snowfall {
   from {
     transform: translateY(0);
-    opacity: 0.5;
   }
   to {
-    transform: translateY(14px);
-    opacity: 0.15;
+    transform: translateY(215px);
   }
 }
 
-@keyframes christmas-scene-in {
+@keyframes christmas-sway {
   from {
+    transform: translateX(-3px);
+  }
+  to {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes christmas-sleigh {
+  0% {
+    transform: translate(250px, 6px);
+  }
+  55%,
+  100% {
+    transform: translate(-70px, -14px);
+  }
+}
+
+@keyframes christmas-sleigh-bob {
+  from {
+    transform: translateY(-1px);
+  }
+  to {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes christmas-smoke {
+  0% {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translate(0, 0) scale(0.4);
   }
-  to {
+  20% {
     opacity: 1;
-    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(7px, -24px) scale(1.8);
   }
 }
 
-@keyframes christmas-marquee {
-  from {
-    transform: translateX(0);
+@keyframes christmas-window {
+  0%,
+  100% {
+    opacity: 1;
   }
-  to {
-    transform: translateX(-50%);
+  40% {
+    opacity: 0.82;
   }
+  60% {
+    opacity: 0.95;
+  }
+}
+
+.christmas-bulb {
+  animation: christmas-bulb 3.6s ease-in-out infinite;
+}
+
+.christmas-halo {
+  animation: christmas-halo 3.6s ease-in-out infinite;
 }
 
 .christmas-twinkle {
-  animation: christmas-twinkle 2.4s ease-in-out infinite;
+  animation: christmas-twinkle 3s ease-in-out infinite;
 }
 
 .christmas-glow {
-  animation: christmas-glow 2.8s ease-in-out infinite;
+  animation: christmas-glow 3s ease-in-out infinite;
   transform-box: fill-box;
   transform-origin: center;
 }
 
-.christmas-fall {
-  animation: christmas-fall 4.8s ease-in-out infinite alternate;
+.christmas-rays {
+  animation: christmas-rays 24s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
-.christmas-scene-in {
-  animation: christmas-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.christmas-snowfall {
+  animation: christmas-snowfall 9s linear infinite;
 }
 
-.christmas-marquee {
-  animation: christmas-marquee 40s linear infinite;
+.christmas-sway {
+  animation: christmas-sway 2.6s ease-in-out infinite alternate;
 }
 
-/* Hanukkah: header lights, sidebar scene, terminal tape, and menorah */
+.christmas-sleigh {
+  animation: christmas-sleigh 18s linear 1.5s infinite both;
+}
+
+.christmas-sleigh-bob {
+  animation: christmas-sleigh-bob 0.45s ease-in-out infinite alternate;
+}
+
+.christmas-smoke {
+  animation: christmas-smoke 4.2s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.christmas-window {
+  animation: christmas-window 4s ease-in-out infinite;
+}
+
+/* Hanukkah: header ornaments, sidebar window, terminal band and dreidel */
+@keyframes hanukkah-flame {
+  0%,
+  100% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  25% {
+    transform: scale(0.92, 1.08) skewX(3deg);
+  }
+  50% {
+    transform: scale(1.05, 0.94) skewX(-1deg);
+  }
+  75% {
+    transform: scale(0.96, 1.04) skewX(-3deg);
+  }
+}
+
+@keyframes hanukkah-halo {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.9);
+  }
+}
+
 @keyframes hanukkah-twinkle {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes hanukkah-window {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.55;
+  }
+  55% {
+    opacity: 0.9;
+  }
+}
+
+/* One spin: faces race past and slow down so פ ends up in front. */
+@keyframes hanukkah-dreidel-faces {
+  0% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.15, 0.55, 0.35, 1);
+  }
+  72%,
+  100% {
+    transform: translateX(-349.5px);
+  }
+}
+
+/* Wobbles on its tip while spinning, totters, then falls on its side. */
+@keyframes hanukkah-dreidel {
+  0% {
+    opacity: 0;
+  }
+  4%,
+  94% {
+    opacity: 1;
+  }
+  0%,
+  6%,
+  12%,
+  18%,
+  24%,
+  30%,
+  36%,
+  42%,
+  48%,
+  54%,
+  60% {
+    transform: rotate(-2deg);
+  }
+  3%,
+  9%,
+  15%,
+  21%,
+  27%,
+  33%,
+  39%,
+  45%,
+  51%,
+  57%,
+  63% {
+    transform: rotate(2deg);
+  }
+  67% {
+    transform: rotate(-7deg);
+  }
+  71% {
+    transform: rotate(9deg);
+  }
+  76% {
+    transform: rotate(-80deg);
+    animation-timing-function: ease-out;
+  }
+  79%,
+  100% {
+    transform: rotate(-75deg);
+  }
+  98%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hanukkah-dreidel-spin {
+  to {
+    transform: translateX(-36px);
+  }
+}
+
+@keyframes hanukkah-turn {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(-1);
+  }
+}
+
+@keyframes hanukkah-sway {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+
+.hanukkah-flame {
+  animation: hanukkah-flame 1.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+
+.hanukkah-halo {
+  animation: hanukkah-halo 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.hanukkah-twinkle {
+  animation: hanukkah-twinkle 3s ease-in-out infinite;
+}
+
+.hanukkah-window {
+  animation: hanukkah-window 5s ease-in-out infinite;
+}
+
+.hanukkah-dreidel {
+  animation: hanukkah-dreidel 8s linear infinite;
+}
+
+.hanukkah-dreidel-faces {
+  animation: hanukkah-dreidel-faces 8s infinite;
+}
+
+.hanukkah-dreidel-spin {
+  animation: hanukkah-dreidel-spin 1.8s linear infinite;
+}
+
+.hanukkah-turn {
+  animation: hanukkah-turn 6s ease-in-out infinite;
+}
+
+.hanukkah-sway {
+  animation: hanukkah-sway 3.4s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+
+/* Fourth of July: header bunting, sidebar fireworks, terminal ribbon and sparkler */
+@keyframes july-rocket {
+  0% {
+    opacity: 0;
+    transform: translateY(var(--rise));
+  }
+  3%,
+  25% {
+    opacity: 1;
+  }
+  27% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  30%,
+  100% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+
+@keyframes july-shell {
+  0%,
+  27% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(0.45);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.95);
+  }
+  75% {
+    opacity: 0.7;
+    transform: translateY(3px) scale(1);
+  }
+  92%,
+  100% {
+    opacity: 0;
+    transform: translateY(8px) scale(1.03);
+  }
+}
+
+@keyframes july-flash {
+  0%,
+  27% {
+    opacity: 0;
+  }
+  31% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes july-glitter {
   0%,
   100% {
     opacity: 1;
@@ -1392,178 +1741,140 @@ html:not([lang='en']):not([lang='he']) {
   }
 }
 
-@keyframes hanukkah-glow {
+@keyframes july-beacon {
   0%,
+  10% {
+    opacity: 1;
+  }
+  14%,
   100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.65;
+    opacity: 0.15;
   }
 }
 
-@keyframes hanukkah-scene-in {
+@keyframes july-ripple {
   from {
-    opacity: 0;
-    transform: translateY(12px);
+    transform: translateX(-3px);
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: translateX(3px);
   }
 }
 
-@keyframes hanukkah-marquee {
+@keyframes july-billow {
   from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-.hanukkah-twinkle {
-  animation: hanukkah-twinkle 2.4s ease-in-out infinite;
-}
-
-.hanukkah-glow {
-  animation: hanukkah-glow 2.8s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.hanukkah-scene-in {
-  animation: hanukkah-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.hanukkah-marquee {
-  animation: hanukkah-marquee 40s linear infinite;
-}
-
-@keyframes hanukkah-spin {
-  from {
-    transform: rotate(-18deg);
-  }
-  to {
-    transform: rotate(18deg);
-  }
-}
-
-.hanukkah-spin {
-  animation: hanukkah-spin 2.6s ease-in-out infinite alternate;
-  transform-origin: top center;
-}
-
-@keyframes hanukkah-flicker {
-  0%,
-  100% {
-    opacity: 1;
     transform: scaleY(1);
   }
-  18% {
-    opacity: 0.75;
-    transform: scaleY(0.86);
+  to {
+    transform: scaleY(1.08);
   }
-  42% {
+}
+
+@keyframes july-sheen {
+  0% {
+    transform: translateX(-100%);
+  }
+  45%,
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+@keyframes july-crackle {
+  0%,
+  30% {
     opacity: 1;
-    transform: scaleY(1.04);
   }
-  70% {
-    opacity: 0.82;
-    transform: scaleY(0.92);
+  34%,
+  100% {
+    opacity: 0;
   }
 }
 
-.hanukkah-flicker {
-  animation: hanukkah-flicker 1.8s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: center bottom;
-}
-
-/* Fourth of July: header bunting, sidebar fireworks, and terminal tape */
-@keyframes july-twinkle {
+@keyframes july-flicker {
   0%,
   100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-@keyframes july-burst {
-  0% {
-    opacity: 0.2;
-    transform: scale(0.55);
-  }
-  40% {
     opacity: 1;
     transform: scale(1);
   }
-  100% {
-    opacity: 0.25;
-    transform: scale(1.15);
+  50% {
+    opacity: 0.75;
+    transform: scale(0.88);
   }
 }
 
-@keyframes july-sway {
+@keyframes july-ember {
   from {
-    transform: rotate(-6deg);
-  }
-  to {
-    transform: rotate(6deg);
-  }
-}
-
-@keyframes july-scene-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes july-marquee {
-  from {
-    transform: translateX(0);
+    transform: translate(0, 0);
   }
   to {
-    transform: translateX(-50%);
+    opacity: 0;
+    transform: translate(2px, 16px);
   }
 }
 
-.july-twinkle {
-  animation: july-twinkle 2.4s ease-in-out infinite;
+.july-rocket {
+  animation: july-rocket 5.2s cubic-bezier(0.3, 0.7, 0.5, 1) infinite;
 }
 
-.july-burst {
-  animation: july-burst 2.6s ease-out infinite;
+.july-shell {
+  animation: july-shell 5.2s ease-out infinite;
   transform-box: fill-box;
   transform-origin: center;
 }
 
-.july-sway {
-  animation: july-sway 2.8s ease-in-out infinite alternate;
+.july-flash {
+  animation: july-flash 5.2s ease-out infinite;
+}
+
+.july-glitter {
+  animation: july-glitter 0.3s steps(2) infinite;
+}
+
+.july-beacon {
+  animation: july-beacon 2.2s linear infinite;
+}
+
+.july-ripple {
+  animation: july-ripple 3s ease-in-out infinite alternate;
+}
+
+.july-billow {
+  animation: july-billow 3.6s ease-in-out infinite alternate;
   transform-box: fill-box;
   transform-origin: top center;
 }
 
-.july-scene-in {
-  animation: july-scene-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+.july-sheen {
+  animation: july-sheen 7s ease-in-out infinite;
 }
 
-.july-marquee {
-  animation: july-marquee 40s linear infinite;
+.july-crackle {
+  animation: july-crackle 0.36s linear infinite;
+}
+
+.july-flicker {
+  animation: july-flicker 0.5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.july-ember {
+  animation: july-ember 2s ease-in infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  [class*='holiday-'],
   [class*='christmas-'],
   [class*='hanukkah-'],
   [class*='july-'] {
     animation: none !important;
+  }
+
+  .christmas-sleigh,
+  .july-rocket {
+    visibility: hidden;
   }
 }
 

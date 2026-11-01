@@ -113,7 +113,7 @@ import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
 import { HalloweenCobwebs } from '@/components/global/shared/HalloweenCobwebs'
 import { ChristmasLights } from '@/components/global/shared/ChristmasLights'
-import { HanukkahDreidels } from '@/components/global/shared/HanukkahDreidels'
+import { HanukkahOrnaments } from '@/components/global/shared/HanukkahOrnaments'
 import { FourthOfJulyBunting } from '@/components/global/shared/FourthOfJulyBunting'
 import { useHalloween } from '@/hooks/use-halloween'
 import { useChristmas } from '@/hooks/use-christmas'
@@ -2126,7 +2126,7 @@ export function ConsoleHeader({
       </header>
       {halloween && <HalloweenCobwebs />}
       {christmas && <ChristmasLights />}
-      {hanukkah && <HanukkahDreidels />}
+      {hanukkah && <HanukkahOrnaments />}
       {fourthOfJuly && <FourthOfJulyBunting />}
     </div>
   )

@@ -1407,13 +1407,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   // Halloween caution tape
   Caution: 'זהירות',
   'Spooky zone': 'אזור מפחיד',
-  // Christmas tape
-  'Merry Christmas': 'חג מולד שמח',
-  'Ho ho ho': 'הו הו הו',
-  // Hanukkah tape
+  // Hanukkah terminal band
   'Happy Hanukkah': 'חג חנוכה שמח',
-  'Eight nights': 'שמונה לילות',
-  // Fourth of July tape
-  'Happy 4th': '4 ביולי שמח',
-  'Independence Day': 'ה-4 ביולי',
 }

@@ -1,8 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-
-/** Below this much free space the scene would crowd the nav, so it stays hidden. */
-const MIN_HEIGHT = 140
-const MIN_HEIGHT_COMPACT = 120
+import { HolidaySidebarScene } from '@/components/global/shared/HolidaySidebarScene'
 
 const BAT_PATH =
   'M12 3c-.8 0-1.4.6-1.6 1.3C9 2.8 6.6 2 4 2.6c1.3.8 1.8 2 1.6 3.3C4.4 5.3 2.6 5.4 0 6.6c2.2.3 3.8 1.3 4.6 2.8C6 8.6 7.8 8.8 9 9.8c.5-1.2 1.6-2 3-2s2.5.8 3 2c1.2-1 3-1.2 4.4-.4.8-1.5 2.4-2.5 4.6-2.8-2.6-1.2-4.4-1.3-5.6-.7-.2-1.3.3-2.5 1.6-3.3-2.6-.6-5 .2-6.4 1.7C13.4 3.6 12.8 3 12 3ZM11 3.4l.3-1.6.6 1.2Zm2 0-.3-1.6-.6 1.2Z'
@@ -308,32 +304,14 @@ function CompactScene() {
 
 /**
  * Moonlit graveyard that fills the free sidebar space above Settings, or a
- * narrow strip of it on the collapsed rail. Parent must be a flex column; the
- * scene only takes space nothing else needs.
+ * narrow strip of it on the collapsed rail.
  */
 export function HalloweenScene({ compact = false }: { compact?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [height, setHeight] = useState(0)
-
-  useEffect(() => {
-    const element = ref.current
-    if (!element) return
-    const observer = new ResizeObserver(([entry]) => {
-      setHeight(entry.contentRect.height)
-    })
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [])
-
-  const roomy = height >= (compact ? MIN_HEIGHT_COMPACT : MIN_HEIGHT)
-
   return (
-    <div
-      ref={ref}
-      className="pointer-events-none relative -mx-3 -mb-4 min-h-0 flex-1 basis-0 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_30%)]"
-      aria-hidden
-    >
-      {roomy && (compact ? <CompactScene /> : <FullScene />)}
-    </div>
+    <HolidaySidebarScene
+      compact={compact}
+      scene={<FullScene />}
+      rail={<CompactScene />}
+    />
   )
 }
