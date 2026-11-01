@@ -28,28 +28,28 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Init hook
-        $this->addAction(Init::getName(), new Init());
+        $this->addAction(Init::getName(), Init::class);
 
         // Projects
-        $this->addAction(CreateProject::getName(), new CreateProject());
-        $this->addAction(ListProjects::getName(), new ListProjects());
-        $this->addAction(GetProject::getName(), new GetProject());
-        $this->addAction(UpdateProject::getName(), new UpdateProject());
-        $this->addAction(DeleteProject::getName(), new DeleteProject());
+        $this->addAction(CreateProject::getName(), CreateProject::class);
+        $this->addAction(ListProjects::getName(), ListProjects::class);
+        $this->addAction(GetProject::getName(), GetProject::class);
+        $this->addAction(UpdateProject::getName(), UpdateProject::class);
+        $this->addAction(DeleteProject::getName(), DeleteProject::class);
 
         // Project keys
-        $this->addAction(CreateProjectKey::getName(), new CreateProjectKey());
-        $this->addAction(CreateEphemeralProjectKey::getName(), new CreateEphemeralProjectKey());
-        $this->addAction(ListProjectKeys::getName(), new ListProjectKeys());
-        $this->addAction(GetProjectKey::getName(), new GetProjectKey());
-        $this->addAction(UpdateProjectKey::getName(), new UpdateProjectKey());
-        $this->addAction(DeleteProjectKey::getName(), new DeleteProjectKey());
+        $this->addAction(CreateProjectKey::getName(), CreateProjectKey::class);
+        $this->addAction(CreateEphemeralProjectKey::getName(), CreateEphemeralProjectKey::class);
+        $this->addAction(ListProjectKeys::getName(), ListProjectKeys::class);
+        $this->addAction(GetProjectKey::getName(), GetProjectKey::class);
+        $this->addAction(UpdateProjectKey::getName(), UpdateProjectKey::class);
+        $this->addAction(DeleteProjectKey::getName(), DeleteProjectKey::class);
 
         // Project transfers
-        $this->addAction(CreateProjectTransfer::getName(), new CreateProjectTransfer());
-        $this->addAction(ListProjectTransfers::getName(), new ListProjectTransfers());
-        $this->addAction(GetProjectTransfer::getName(), new GetProjectTransfer());
-        $this->addAction(DeleteProjectTransfer::getName(), new DeleteProjectTransfer());
-        $this->addAction(UpdateProjectTransferStatus::getName(), new UpdateProjectTransferStatus());
+        $this->addAction(CreateProjectTransfer::getName(), CreateProjectTransfer::class);
+        $this->addAction(ListProjectTransfers::getName(), ListProjectTransfers::class);
+        $this->addAction(GetProjectTransfer::getName(), GetProjectTransfer::class);
+        $this->addAction(DeleteProjectTransfer::getName(), DeleteProjectTransfer::class);
+        $this->addAction(UpdateProjectTransferStatus::getName(), UpdateProjectTransferStatus::class);
     }
 }
