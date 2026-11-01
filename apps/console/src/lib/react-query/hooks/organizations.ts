@@ -46,6 +46,8 @@ import {
 
 const ESTIMATION_STALE_TIME = 5 * 60 * 1000
 const EMPTY_ESTIMATION_INVITES: string[] = []
+// One identity while the list is pending or failed: callers pass it to effects.
+const EMPTY_PROJECTS: Models.Project[] = []
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolveOrganizationCanonicalPlan } from '@/lib/utils/plan-filter'
 import {
@@ -3002,7 +3004,7 @@ export function useOrganizationProjects(
   )
 
   return {
-    projects: data?.projects || [],
+    projects: data?.projects || EMPTY_PROJECTS,
     total: data?.total || 0,
     isLoading,
     error,
