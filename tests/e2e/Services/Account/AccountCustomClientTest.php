@@ -8063,7 +8063,7 @@ final class AccountCustomClientTest extends Scope
     /**
      * Enables TOTP MFA on the account and leaves a challenge pending on a second session.
      *
-     * @return array{totp: \OTPHP\TOTP, current: array<string, string>, other: array<string, string>, otherId: string, challengeId: string}
+     * @return array{totp: \OTPHP\TOTP, enrollmentOtp: string, current: array<string, string>, other: array<string, string>, otherId: string, challengeId: string}
      */
     protected function createPendingMFAChallenge(array $data): array
     {
