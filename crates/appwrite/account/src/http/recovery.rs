@@ -326,21 +326,25 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
             let mut profile = profile.clone();
             let mut updates = Document::default();
             base::password_updates(&mut updates, &hashed, &history, pwned);
-            updates.put("emailVerification", Value::Bool(true));
             async move {
                 let token = db.get_document("tokens", &token_id, Vec::new(), false).await?;
                 if !db.delete_document("tokens", &token_id).await? {
                     return Ok(None);
                 }
                 // Recovery proves an unverified email, so whoever registered
-                // it keeps no other way in.
+                // it keeps no other way in. MFA in force is left alone, so the
+                // new password still needs the second factor to sign in.
                 let auth = db.authorization();
                 let locked = auth.skip(db.get_document("users", &profile.id, Vec::new(), true)).await?;
-                let claimed = !matches!(locked.get("emailVerification"), Some(Value::Bool(true)));
+                let guarded = User::from(&locked).minimum_factors() > 1;
+                let claimed = !matches!(locked.get("emailVerification"), Some(Value::Bool(true))) && !guarded;
                 if claimed {
                     auth.skip(Box::pin(profile.revoke_credentials(&db, console, "email"))).await.map_err(|e| {
                         utopia_database::Error::new(utopia_database::Kind::Exception, e.message.into_owned())
                     })?;
+                }
+                if !guarded {
+                    updates.put("emailVerification", Value::Bool(true));
                 }
                 let skipped = base::skipped(&[]);
                 db.skip_filters(Some(skipped.as_slice()), db.update_document("users", &profile.id, updates)).await?;

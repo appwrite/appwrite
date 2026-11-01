@@ -797,10 +797,16 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
                     return Err(utopia_database::Error::new(utopia_database::Kind::NotFound, "token claimed"));
                 }
                 // Proving an unverified email or phone claims the account, so
-                // whoever registered it keeps no other way in.
+                // whoever registered it keeps no other way in. MFA in force is
+                // left alone: the address alone must not discard a second
+                // factor, so the session stays short of factors and the address
+                // stays unverified until the account is signed into with that
+                // factor.
+                let guarded = User::from(&locked).minimum_factors() > 1;
                 let mut claimed = false;
                 if let Some(attribute) = verification
                     && !locked.get(attribute).is_some_and(|v| matches!(v, Value::Bool(true)))
+                    && !guarded
                 {
                     let proven = if attribute == "phoneVerification" { "sms" } else { "email" };
                     auth.skip(Box::pin(user.revoke_credentials(&db, console, proven))).await.map_err(|e| {
@@ -809,24 +815,28 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
                     claimed = true;
                 }
                 let session = db.create_document("sessions", session).await?;
-                if let Some(attribute) = verification {
+                let mut verified = None;
+                if let Some(attribute) = verification
+                    && !guarded
+                {
                     let mut updates = Document::default();
                     updates.put(attribute, Value::Bool(true));
                     db.update_document("users", &user.id, updates).await?;
+                    verified = Some(attribute);
                 }
-                Ok((session, claimed, user))
+                Ok((session, claimed, user, verified))
             }
         })
         .await;
-    let (session, claimed) = match created {
-        Ok((session, claimed, revoked)) => {
+    let (session, claimed, verified) = match created {
+        Ok((session, claimed, revoked, verified)) => {
             user = revoked;
-            (Session::from(&session), claimed)
+            (Session::from(&session), claimed, verified)
         }
         Err(e) if e.is_a(utopia_database::Kind::NotFound) => return Err(Error::new(ErrorType::UserInvalidToken)),
         Err(e) => return Err(e.into()),
     };
-    match verification {
+    match verified {
         Some("emailVerification") => user.email_verification = Some(true),
         Some(_) => user.phone_verification = Some(true),
         None => {}

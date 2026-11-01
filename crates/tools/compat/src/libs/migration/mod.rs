@@ -1482,6 +1482,7 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                     Arc::new(move |r: &ResourceRef| format!("{d}:{}", r.id()))
                 }),
                 collection_structures: structures,
+                scopes: a.opt("scopes").map(strings),
             };
             match AppwriteDestination::new(
                 a.opt_str("project")?.unwrap_or("destination-project"),
