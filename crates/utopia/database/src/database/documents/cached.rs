@@ -244,7 +244,7 @@ impl Database {
         let cache = self.cache();
         let saved = cache.save_with_lease(document_key, &assoc(pairs), field, generation).await?;
         if !saved {
-            let fails = generation == "0" && cache.generation(document_key).await? == "0";
+            let fails = generation == "0" && cache.lease(document_key).await? == "0";
             self.settings().definition_fills_fail = fails;
             return Ok(());
         }
@@ -318,15 +318,15 @@ impl Database {
             if blocked_at.saturating_add(self.cache_writer_timeout()) > now {
                 return Ok(Epoch { value: None, blocked_at: Some(blocked_at) });
             }
-            let finished = cache.generation(&format!("{collection_key}#finished")).await?;
+            let finished = cache.lease(&format!("{collection_key}#finished")).await?;
             return Ok(Epoch {
                 value: Some(format!("{LAPSED_PREFIX}{tombstone}{SEPARATOR}{finished}")),
                 blocked_at: None,
             });
         }
-        let started = cache.generation(&format!("{collection_key}#started")).await?;
+        let started = cache.lease(&format!("{collection_key}#started")).await?;
         if (separator.is_some() && started == stamp)
-            || started == cache.generation(&format!("{collection_key}#finished")).await?
+            || started == cache.lease(&format!("{collection_key}#finished")).await?
         {
             return Ok(Epoch { value: Some(marker.to_owned()), blocked_at: None });
         }
@@ -338,9 +338,9 @@ impl Database {
     /// (`restoreDocumentCacheEpoch()`).
     async fn restore_document_cache_epoch(&self, collection_key: &str, now: i64) -> Result<Epoch> {
         let cache = self.cache();
-        let started = cache.generation(&format!("{collection_key}#started")).await?;
+        let started = cache.lease(&format!("{collection_key}#started")).await?;
         let epoch_key = format!("{collection_key}#epoch");
-        if started != cache.generation(&format!("{collection_key}#finished")).await? {
+        if started != cache.lease(&format!("{collection_key}#finished")).await? {
             let tombstone = format!("{BLOCKED_PREFIX}{}{SEPARATOR}{now}", create_document_cache_token());
             cache.save(&epoch_key, &text(&tombstone), "", 0).await?;
             return Ok(Epoch { value: None, blocked_at: Some(now) });

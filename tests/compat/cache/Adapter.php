@@ -29,6 +29,7 @@ use Utopia\Cache\Codec;
 use Utopia\Cache\Codec\Igbinary;
 use Utopia\Cache\Codec\Json;
 use Utopia\Cache\Envelope;
+use Utopia\Cache\Exception\Unavailable;
 use Utopia\Cache\Feature;
 use Utopia\CircuitBreaker\CircuitBreaker as Breaker;
 use Utopia\Pools\Adapter\Stack;
@@ -243,6 +244,22 @@ final class Adapter implements Base, Benchmarks
 
                 return;
             },
+            'coordination.new' => fn (array $a, Session $s) => $s->handle(new CoordinationMemory()),
+            'coordination.fail' => function (array $a, Session $s) {
+                $adapter = $s->get($a['adapter']);
+                if (!$adapter instanceof CoordinationMemory) {
+                    throw new Fault('not a coordination adapter');
+                }
+                $adapter->failing = $a['failing'];
+
+                return;
+            },
+            'coordination.calls' => function (array $a, Session $s) {
+                $adapter = $s->get($a['adapter']);
+
+                return $adapter instanceof CoordinationMemory ? $adapter->calls : throw new Fault('not a coordination adapter');
+            },
+            'breaker.failures' => fn (array $a, Session $s) => self::breaker($a['breaker'], $s)->getFailureCount(),
             'probe.new' => fn (array $a, Session $s) => $s->handle(new ProbeAdapter()),
             'probe.calls' => function (array $a, Session $s) {
                 $adapter = $s->get($a['adapter']);
@@ -262,6 +279,7 @@ final class Adapter implements Base, Benchmarks
             'cache.new' => fn (array $a, Session $s) => $s->handle(new Cache(self::adapter($a['adapter'], $s))),
             'cache.set_case_sensitivity' => fn (array $a, Session $s) => self::cache($a, $s)->setCaseSensitivity($a['value']),
             'cache.case_sensitive' => fn (array $a, Session $s) => self::cache($a, $s)->caseSensitive,
+            'cache.with_namespace' => fn (array $a, Session $s) => $s->handle(self::cache($a, $s)->withNamespace($a['namespace'])),
             'cache.record_purges' => fn (array $a, Session $s) => self::recordPurges(self::cache($a, $s), (array) $a['steps']),
             'cache.set_telemetry' => function (array $a, Session $s) {
                 $telemetry = $s->get($a['telemetry']);
@@ -321,6 +339,7 @@ final class Adapter implements Base, Benchmarks
             'raw.hget' => fn (array $a, Session $s) => self::raw($a, $s)->hGet($a['key'], $a['field']),
             'raw.hset' => fn (array $a, Session $s) => self::raw($a, $s)->hSet($a['key'], $a['field'], $a['value']),
             'raw.set' => fn (array $a, Session $s) => (bool) self::raw($a, $s)->set($a['key'], $a['value']),
+            'raw.del' => fn (array $a, Session $s) => self::raw($a, $s)->del($a['key']),
             'raw.hexists' => fn (array $a, Session $s) => (bool) self::raw($a, $s)->hExists($a['key'], $a['field']),
             'raw.ttl' => function (array $a, Session $s) {
                 $ttl = self::raw($a, $s)->ttl($a['key']);
@@ -377,15 +396,23 @@ final class Adapter implements Base, Benchmarks
             },
         ];
 
-        foreach (self::METHODS as $op) {
+        foreach ([...self::METHODS, ...self::CACHE_METHODS] as $op) {
             $ops['cache.' . $op] = fn (array $a, Session $s) => self::call(self::cache($a, $s), $op, $a);
+        }
+        foreach ([...self::METHODS, ...self::ADAPTER_METHODS] as $op) {
             $ops['adapter.' . $op] = fn (array $a, Session $s) => self::call(self::adapter($a['adapter'], $s), $op, $a);
         }
 
         return $ops;
     }
 
-    private const array METHODS = ['load', 'save', 'touch', 'list', 'purge', 'flush', 'ping', 'size', 'load_many', 'save_many', 'generation', 'save_with_lease'];
+    private const array METHODS = ['load', 'save', 'touch', 'list', 'purge', 'flush', 'ping', 'size', 'load_many', 'save_many', 'supports_versioning', 'load_versioned', 'compare_and_swap'];
+
+    /** Methods only the facade has. */
+    private const array CACHE_METHODS = ['lease', 'save_with_lease'];
+
+    /** Methods only adapters have. */
+    private const array ADAPTER_METHODS = ['version'];
 
     /**
      * One cache or adapter method with the case's arguments.
@@ -409,14 +436,20 @@ final class Adapter implements Base, Benchmarks
             'save_many' => $target instanceof Cache
                 ? $target->saveMany($a['key'], self::fields($a['data']), $a['ttl'] ?? 0)
                 : ($target instanceof Feature\Batchable ? $target->saveMany($a['key'], self::fields($a['data']), $a['ttl'] ?? 0) : false),
-            'generation' => $target instanceof Cache
-                ? $target->getGeneration($a['key'])
-                : ($target instanceof Feature\Leasable ? $target->getGeneration($a['key']) : '0'),
+            'supports_versioning' => $target instanceof Cache
+                ? $target->supportsVersioning()
+                : $target instanceof Feature\Versioned && $target->supportsVersioning(),
+            'lease' => $target instanceof Cache ? $target->getLease($a['key']) : throw new Fault('lease is a cache method'),
+            'version' => self::versioned($target)->getVersion($a['key']),
             'save_with_lease' => $target instanceof Cache
-                ? $target->saveWithLease($a['key'], Typed::decode($a['data']), $a['hash'], $a['generation'])
-                : ($target instanceof Feature\Leasable
-                    ? $target->saveWithLease($a['key'], Typed::decode($a['data']), $a['hash'], $a['generation'])
-                    : $target->save($a['key'], Typed::decode($a['data']), $a['hash'])),
+                ? $target->saveWithLease($a['key'], Typed::decode($a['data']), $a['hash'], $a['version'])
+                : throw new Fault('saveWithLease is a cache method'),
+            'load_versioned' => (function (array $snapshot): array {
+                return ['version' => $snapshot['version'], 'value' => Typed::dump($snapshot['value'])];
+            })($target instanceof Cache ? $target->loadVersioned($a['key']) : self::versioned($target)->loadVersioned($a['key'])),
+            'compare_and_swap' => $target instanceof Cache
+                ? $target->compareAndSwap($a['key'], Typed::decode($a['data']), $a['version'])
+                : self::versioned($target)->compareAndSwap($a['key'], Typed::decode($a['data']), $a['hash'] ?? '', $a['version']),
             default => throw new Fault("unknown method {$op}"),
         };
 
@@ -427,8 +460,21 @@ final class Adapter implements Base, Benchmarks
         if ($op === 'load_many') {
             return (object) array_map(Typed::dump(...), $result);
         }
+        if ($op === 'load_versioned') {
+            return $result;
+        }
 
         return Typed::dump($result);
+    }
+
+    /**
+     * The adapter as `Feature\Versioned`. An adapter without it has no such methods; it fails as the
+     * facade and the wrappers do over one (`Unavailable('Versioned cache required')`), as Rust's
+     * `Adapter` trait defaults do.
+     */
+    private static function versioned(Cache|CacheAdapter $target): Feature\Versioned
+    {
+        return $target instanceof Feature\Versioned ? $target : throw new Unavailable('Versioned cache required');
     }
 
     /**
@@ -526,9 +572,17 @@ final class Adapter implements Base, Benchmarks
             try {
                 foreach ($a['steps'] as $step) {
                     $args = $step['args'] ?? [];
-                    $step['args'] = $args instanceof \stdClass ? [] : $args;
+                    $step['args'] = array_map(
+                        // {"$result": n, "field"?: name}: an earlier step's result, or one field of it.
+                        fn (mixed $v): mixed => \is_array($v) && isset($v['$result'])
+                            ? (isset($v['field']) ? $results[$v['$result']][$v['field']] : $results[$v['$result']])
+                            : $v,
+                        $args instanceof \stdClass ? [] : $args,
+                    );
                     try {
-                        if ($step['op'] === 'sleep') {
+                        if ($step['op'] === 'same') {
+                            $results[] = $step['args']['a'] === $step['args']['b'];
+                        } elseif ($step['op'] === 'sleep') {
                             \Swoole\Coroutine::sleep((float) $step['args']['seconds']);
                             $results[] = null;
                         } elseif ($step['op'] === 'load_equals') {
@@ -890,5 +944,45 @@ final class RecordingTelemetry extends TestTelemetry
         ksort($points);
 
         return $points;
+    }
+}
+
+/** CircuitBreakerTest's real in-process cache with a controllable transport failure. */
+final class CoordinationMemory extends Memory
+{
+    public int $calls = 0;
+
+    public bool $failing = false;
+
+    private function check(): void
+    {
+        $this->calls++;
+        if ($this->failing) {
+            throw new \RuntimeException('Transport unavailable');
+        }
+    }
+
+    #[\Override]
+    public function getVersion(string $key): string
+    {
+        $this->check();
+
+        return parent::getVersion($key);
+    }
+
+    #[\Override]
+    public function loadVersioned(string $key): array
+    {
+        $this->check();
+
+        return parent::loadVersioned($key);
+    }
+
+    #[\Override]
+    public function compareAndSwap(string $key, array|string $data, string $hash, string $version): string|false
+    {
+        $this->check();
+
+        return parent::compareAndSwap($key, $data, $hash, $version);
     }
 }

@@ -210,7 +210,7 @@ impl Query {
 
     /// `getGeneration()`.
     pub async fn generation(&self, entry: &Entry) -> Result<String> {
-        Ok(self.cache.generation(&entry.key).await?)
+        Ok(self.cache.lease(&entry.key).await?)
     }
 
     /// Caches `results` for `entry` under `generation` (`set()`).
@@ -294,8 +294,8 @@ impl Query {
         let epoch_key = epoch_key(key);
         let started_key = started_key(key);
         let finished_key = finished_key(key);
-        let started = cache.generation(&started_key).await?;
-        let finished = cache.generation(&finished_key).await?;
+        let started = cache.lease(&started_key).await?;
+        let finished = cache.lease(&finished_key).await?;
         let current = string(&cache.load(&epoch_key, PERMANENT, "").await?);
         let ours = is_tombstone_of(current.as_deref(), token);
 
@@ -314,8 +314,8 @@ impl Query {
         }
 
         cache.purge(&finished_key, "").await?;
-        let next_started = cache.generation(&started_key).await?;
-        let next_finished = cache.generation(&finished_key).await?;
+        let next_started = cache.lease(&started_key).await?;
+        let next_finished = cache.lease(&finished_key).await?;
 
         if next_started == next_finished {
             return self.publish(key, &next_finished).await;
@@ -351,7 +351,7 @@ impl Query {
     async fn epoch(&self, key: &str, collection: &str, writer_timeout: i64) -> Result<Option<String>> {
         let value = self.cache.load(&epoch_key(key), PERMANENT, "").await?;
         if missing(&value) {
-            return Ok((self.cache.generation(key).await? == NEVER_STARTED).then(|| INITIAL_EPOCH.to_owned()));
+            return Ok((self.cache.lease(key).await? == NEVER_STARTED).then(|| INITIAL_EPOCH.to_owned()));
         }
         let Some(value) = string(&value).filter(|v| !v.is_empty()) else {
             return Ok(None);
@@ -369,8 +369,8 @@ impl Query {
         if !value.starts_with(ACTIVE_PREFIX) {
             return Ok(None);
         }
-        let started = self.cache.generation(&started_key(key)).await?;
-        if started != stamp && started != self.cache.generation(&finished_key(key)).await? {
+        let started = self.cache.lease(&started_key(key)).await?;
+        if started != stamp && started != self.cache.lease(&finished_key(key)).await? {
             return Ok(None);
         }
         Ok(Some(marker.to_owned()))
@@ -392,8 +392,8 @@ impl Query {
         if stamp.wrapping_add(ttl.min(writer_timeout)) > now {
             return Ok(None);
         }
-        let started = self.cache.generation(&started_key(key)).await?;
-        let finished = self.cache.generation(&finished_key(key)).await?;
+        let started = self.cache.lease(&started_key(key)).await?;
+        let finished = self.cache.lease(&finished_key(key)).await?;
         if stamp.wrapping_add(if started == finished { ttl } else { writer_timeout }) > now {
             return Ok(None);
         }

@@ -247,24 +247,24 @@ impl utopia_cache::Adapter for ObservedCache {
         self.inner.name(key)
     }
 
-    fn leasable(&self) -> bool {
+    fn supports_versioning(&self) -> bool {
         true
     }
 
-    async fn generation(&self, key: &str) -> utopia_cache::Result<String> {
+    async fn version(&self, key: &str) -> utopia_cache::Result<String> {
         self.count("getGeneration", key)?;
-        self.inner.generation(key).await
+        self.inner.version(key).await
     }
 
-    async fn save_with_lease(
+    async fn compare_and_swap(
         &self,
         key: &str,
         data: &php_std::Value,
         hash: &str,
-        generation: &str,
-    ) -> utopia_cache::Result<bool> {
+        version: &str,
+    ) -> utopia_cache::Result<Option<String>> {
         self.count("saveWithLease", key)?;
-        self.inner.save_with_lease(key, data, hash, generation).await
+        self.inner.compare_and_swap(key, data, hash, version).await
     }
 }
 

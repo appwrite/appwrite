@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use php_std::types::Value;
 
-use crate::adapter::{Adapter, Fields};
+use crate::adapter::{Adapter, Fields, Snapshot};
 use crate::{Error, Result};
 use utopia_telemetry::Telemetry;
 
@@ -131,22 +131,27 @@ impl<A: Adapter> Adapter for Sharding<A> {
         self.shard(key).save_many(key, data, ttl)
     }
 
-    fn leasable(&self) -> bool {
-        true
+    /// Whether every shard keeps versions.
+    fn supports_versioning(&self) -> bool {
+        self.adapters.iter().all(|adapter| adapter.supports_versioning())
     }
 
-    fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
-        self.shard(key).generation(key)
+    fn version(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
+        self.shard(key).version(key)
     }
 
-    fn save_with_lease(
+    fn load_versioned(&self, key: &str) -> impl Future<Output = Result<Snapshot>> + Send {
+        self.shard(key).load_versioned(key)
+    }
+
+    fn compare_and_swap(
         &self,
         key: &str,
         data: &Value,
         hash: &str,
-        generation: &str,
-    ) -> impl Future<Output = Result<bool>> + Send {
-        self.shard(key).save_with_lease(key, data, hash, generation)
+        version: &str,
+    ) -> impl Future<Output = Result<Option<String>>> + Send {
+        self.shard(key).compare_and_swap(key, data, hash, version)
     }
 
     fn load_bytes(&self, key: &str, hash: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
@@ -157,14 +162,14 @@ impl<A: Adapter> Adapter for Sharding<A> {
         self.shard(key).save_bytes(key, bytes, hash, ttl)
     }
 
-    fn save_bytes_with_lease(
+    fn compare_and_swap_bytes(
         &self,
         key: &str,
         bytes: &[u8],
         hash: &str,
-        generation: &str,
-    ) -> impl Future<Output = Result<bool>> + Send {
-        self.shard(key).save_bytes_with_lease(key, bytes, hash, generation)
+        version: &str,
+    ) -> impl Future<Output = Result<Option<String>>> + Send {
+        self.shard(key).compare_and_swap_bytes(key, bytes, hash, version)
     }
 
     fn set_telemetry(&self, _telemetry: Arc<dyn Telemetry>) {

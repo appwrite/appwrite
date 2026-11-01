@@ -17,13 +17,32 @@ use utopia_telemetry::Telemetry;
 /// PHP: `loadMany`, `saveMany`.
 pub type Fields = IndexMap<String, Value>;
 
+/// A key's version and value, read in one atomic step.
+///
+/// PHP: the `['version' => ..., 'value' => ...]` array `loadVersioned()`
+/// returns, whose `value` is `false` on a miss (`None` here).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Snapshot {
+    /// The key's version.
+    pub version: String,
+    /// The value of the key's own field, `None` when absent.
+    pub value: Option<Value>,
+}
+
+/// The failure of a versioned operation on an adapter without versions.
+///
+/// PHP: `new Unavailable('Versioned cache required')`.
+pub(crate) fn required() -> crate::Error {
+    crate::Error::Unavailable { message: "Versioned cache required".to_owned(), previous: None }
+}
+
 /// A cache backend.
 ///
 /// Entries live under a `key`; adapters that store hashes keep several
 /// fields under one key, chosen by `hash` (an empty or `"0"` hash means the
 /// key itself). A load misses (`None`) when the entry is absent or older than
 /// its `ttl`. Implement it to add a backend; the optional capabilities
-/// (batches of fields, leases, telemetry) have defaults that behave like an
+/// (batches of fields, versions, telemetry) have defaults that behave like an
 /// adapter without them.
 pub trait Adapter: Send + Sync {
     /// The entry for `key` (and `hash`) when it was written less than `ttl`
@@ -76,32 +95,48 @@ pub trait Adapter: Send + Sync {
         async { Ok(false) }
     }
 
-    /// Whether [`Adapter::generation`] and [`Adapter::save_with_lease`] guard
-    /// against stale writes.
+    /// Whether the adapter keeps opaque versions: [`Adapter::version`],
+    /// [`Adapter::load_versioned`] and [`Adapter::compare_and_swap`] work.
+    /// Wrappers answer for what they wrap.
     ///
-    /// PHP: `Feature\Leasable`.
-    fn leasable(&self) -> bool {
+    /// PHP: `Feature\Versioned::supportsVersioning()`.
+    fn supports_versioning(&self) -> bool {
         false
     }
 
-    /// The key's generation, advanced by every purge; `"0"` before the first
-    /// purge and without lease support.
-    fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
+    /// The key's version: an opaque identity, created when the key has none,
+    /// replaced by every write and dropped by every purge. Fails with
+    /// [`Error::Unavailable`](crate::Error::Unavailable) without version support.
+    ///
+    /// PHP: `Feature\Versioned::getVersion()`.
+    fn version(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
         let _ = key;
-        async { Ok("0".to_owned()) }
+        async { Err(required()) }
     }
 
-    /// Saves only if the key's generation is still `generation` (no purge
-    /// since the caller read it). Without lease support, a plain save.
-    fn save_with_lease(
+    /// The key's version and value in one atomic read, whatever the value's
+    /// age. Fails without version support.
+    ///
+    /// PHP: `Feature\Versioned::loadVersioned()`.
+    fn load_versioned(&self, key: &str) -> impl Future<Output = Result<Snapshot>> + Send {
+        let _ = key;
+        async { Err(required()) }
+    }
+
+    /// Writes `data` under `key` (and `hash`) only when the key's version is
+    /// still `version`: `Some` with the new version it committed, `None` on a
+    /// conflict. Fails without version support, and when the backend fails.
+    ///
+    /// PHP: `Feature\Versioned::compareAndSwap()`, which returns `false` on a conflict.
+    fn compare_and_swap(
         &self,
         key: &str,
         data: &Value,
         hash: &str,
-        generation: &str,
-    ) -> impl Future<Output = Result<bool>> + Send {
-        let _ = generation;
-        self.save(key, data, hash, 0)
+        version: &str,
+    ) -> impl Future<Output = Result<Option<String>>> + Send {
+        let _ = (key, data, hash, version);
+        async { Err(required()) }
     }
 
     /// The bytes [`Adapter::save_bytes`] stored under `key` (and `hash`),
@@ -132,20 +167,20 @@ pub trait Adapter: Send + Sync {
         async move { self.save(key, &data, hash, ttl).await }
     }
 
-    /// [`Adapter::save_bytes`] only if the key's generation is still
-    /// `generation`, as [`Adapter::save_with_lease`]. The default saves them
-    /// as a string through [`Adapter::save_with_lease`].
+    /// [`Adapter::save_bytes`] only when the key's version is still
+    /// `version`, as [`Adapter::compare_and_swap`]. The default writes them as
+    /// a string through [`Adapter::compare_and_swap`].
     ///
     /// Rust only: entries only Rust reads ([`crate::Cache::save_native_with_lease`]).
-    fn save_bytes_with_lease(
+    fn compare_and_swap_bytes(
         &self,
         key: &str,
         bytes: &[u8],
         hash: &str,
-        generation: &str,
-    ) -> impl Future<Output = Result<bool>> + Send {
+        version: &str,
+    ) -> impl Future<Output = Result<Option<String>>> + Send {
         let data = Value::Str(bytes.into());
-        async move { self.save_with_lease(key, &data, hash, generation).await }
+        async move { self.compare_and_swap(key, &data, hash, version).await }
     }
 
     /// Hands the adapter a telemetry backend for its own metrics. Ignored by
@@ -188,18 +223,20 @@ pub trait DynAdapter: Send + Sync {
     fn dyn_load_many<'a>(&'a self, key: &'a str, fields: &'a [&'a str], ttl: i64) -> BoxFuture<'a, Result<Fields>>;
     /// Object-safe [`Adapter::save_many`].
     fn dyn_save_many<'a>(&'a self, key: &'a str, data: &'a Fields, ttl: i64) -> BoxFuture<'a, Result<bool>>;
-    /// Object-safe [`Adapter::leasable`].
-    fn dyn_leasable(&self) -> bool;
-    /// Object-safe [`Adapter::generation`].
-    fn dyn_generation<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<String>>;
-    /// Object-safe [`Adapter::save_with_lease`].
-    fn dyn_save_with_lease<'a>(
+    /// Object-safe [`Adapter::supports_versioning`].
+    fn dyn_supports_versioning(&self) -> bool;
+    /// Object-safe [`Adapter::version`].
+    fn dyn_version<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<String>>;
+    /// Object-safe [`Adapter::load_versioned`].
+    fn dyn_load_versioned<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<Snapshot>>;
+    /// Object-safe [`Adapter::compare_and_swap`].
+    fn dyn_compare_and_swap<'a>(
         &'a self,
         key: &'a str,
         data: &'a Value,
         hash: &'a str,
-        generation: &'a str,
-    ) -> BoxFuture<'a, Result<bool>>;
+        version: &'a str,
+    ) -> BoxFuture<'a, Result<Option<String>>>;
     /// Object-safe [`Adapter::load_bytes`].
     fn dyn_load_bytes<'a>(&'a self, key: &'a str, hash: &'a str) -> BoxFuture<'a, Result<Option<Vec<u8>>>>;
     /// Object-safe [`Adapter::save_bytes`].
@@ -210,14 +247,14 @@ pub trait DynAdapter: Send + Sync {
         hash: &'a str,
         ttl: i64,
     ) -> BoxFuture<'a, Result<bool>>;
-    /// Object-safe [`Adapter::save_bytes_with_lease`].
-    fn dyn_save_bytes_with_lease<'a>(
+    /// Object-safe [`Adapter::compare_and_swap_bytes`].
+    fn dyn_compare_and_swap_bytes<'a>(
         &'a self,
         key: &'a str,
         bytes: &'a [u8],
         hash: &'a str,
-        generation: &'a str,
-    ) -> BoxFuture<'a, Result<bool>>;
+        version: &'a str,
+    ) -> BoxFuture<'a, Result<Option<String>>>;
     /// Object-safe [`Adapter::set_telemetry`].
     fn dyn_set_telemetry(&self, telemetry: Arc<dyn Telemetry>);
 }
@@ -259,20 +296,23 @@ impl<A: Adapter> DynAdapter for A {
     fn dyn_save_many<'a>(&'a self, key: &'a str, data: &'a Fields, ttl: i64) -> BoxFuture<'a, Result<bool>> {
         Box::pin(self.save_many(key, data, ttl))
     }
-    fn dyn_leasable(&self) -> bool {
-        self.leasable()
+    fn dyn_supports_versioning(&self) -> bool {
+        self.supports_versioning()
     }
-    fn dyn_generation<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<String>> {
-        Box::pin(self.generation(key))
+    fn dyn_version<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<String>> {
+        Box::pin(self.version(key))
     }
-    fn dyn_save_with_lease<'a>(
+    fn dyn_load_versioned<'a>(&'a self, key: &'a str) -> BoxFuture<'a, Result<Snapshot>> {
+        Box::pin(self.load_versioned(key))
+    }
+    fn dyn_compare_and_swap<'a>(
         &'a self,
         key: &'a str,
         data: &'a Value,
         hash: &'a str,
-        generation: &'a str,
-    ) -> BoxFuture<'a, Result<bool>> {
-        Box::pin(self.save_with_lease(key, data, hash, generation))
+        version: &'a str,
+    ) -> BoxFuture<'a, Result<Option<String>>> {
+        Box::pin(self.compare_and_swap(key, data, hash, version))
     }
     fn dyn_load_bytes<'a>(&'a self, key: &'a str, hash: &'a str) -> BoxFuture<'a, Result<Option<Vec<u8>>>> {
         Box::pin(self.load_bytes(key, hash))
@@ -286,14 +326,14 @@ impl<A: Adapter> DynAdapter for A {
     ) -> BoxFuture<'a, Result<bool>> {
         Box::pin(self.save_bytes(key, bytes, hash, ttl))
     }
-    fn dyn_save_bytes_with_lease<'a>(
+    fn dyn_compare_and_swap_bytes<'a>(
         &'a self,
         key: &'a str,
         bytes: &'a [u8],
         hash: &'a str,
-        generation: &'a str,
-    ) -> BoxFuture<'a, Result<bool>> {
-        Box::pin(self.save_bytes_with_lease(key, bytes, hash, generation))
+        version: &'a str,
+    ) -> BoxFuture<'a, Result<Option<String>>> {
+        Box::pin(self.compare_and_swap_bytes(key, bytes, hash, version))
     }
     fn dyn_set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         self.set_telemetry(telemetry)
@@ -337,14 +377,17 @@ impl Adapter for dyn DynAdapter {
     async fn save_many(&self, key: &str, data: &Fields, ttl: i64) -> Result<bool> {
         self.dyn_save_many(key, data, ttl).await
     }
-    fn leasable(&self) -> bool {
-        self.dyn_leasable()
+    fn supports_versioning(&self) -> bool {
+        self.dyn_supports_versioning()
     }
-    async fn generation(&self, key: &str) -> Result<String> {
-        self.dyn_generation(key).await
+    async fn version(&self, key: &str) -> Result<String> {
+        self.dyn_version(key).await
     }
-    async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
-        self.dyn_save_with_lease(key, data, hash, generation).await
+    async fn load_versioned(&self, key: &str) -> Result<Snapshot> {
+        self.dyn_load_versioned(key).await
+    }
+    async fn compare_and_swap(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<Option<String>> {
+        self.dyn_compare_and_swap(key, data, hash, version).await
     }
     async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
         self.dyn_load_bytes(key, hash).await
@@ -352,8 +395,14 @@ impl Adapter for dyn DynAdapter {
     async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {
         self.dyn_save_bytes(key, bytes, hash, ttl).await
     }
-    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, generation: &str) -> Result<bool> {
-        self.dyn_save_bytes_with_lease(key, bytes, hash, generation).await
+    async fn compare_and_swap_bytes(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        version: &str,
+    ) -> Result<Option<String>> {
+        self.dyn_compare_and_swap_bytes(key, bytes, hash, version).await
     }
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         self.dyn_set_telemetry(telemetry)
@@ -399,20 +448,23 @@ macro_rules! forward {
             fn save_many(&self, key: &str, data: &Fields, ttl: i64) -> impl Future<Output = Result<bool>> + Send {
                 (**self).save_many(key, data, ttl)
             }
-            fn leasable(&self) -> bool {
-                (**self).leasable()
+            fn supports_versioning(&self) -> bool {
+                (**self).supports_versioning()
             }
-            fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
-                (**self).generation(key)
+            fn version(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
+                (**self).version(key)
             }
-            fn save_with_lease(
+            fn load_versioned(&self, key: &str) -> impl Future<Output = Result<Snapshot>> + Send {
+                (**self).load_versioned(key)
+            }
+            fn compare_and_swap(
                 &self,
                 key: &str,
                 data: &Value,
                 hash: &str,
-                generation: &str,
-            ) -> impl Future<Output = Result<bool>> + Send {
-                (**self).save_with_lease(key, data, hash, generation)
+                version: &str,
+            ) -> impl Future<Output = Result<Option<String>>> + Send {
+                (**self).compare_and_swap(key, data, hash, version)
             }
             fn load_bytes(&self, key: &str, hash: &str) -> impl Future<Output = Result<Option<Vec<u8>>>> + Send {
                 (**self).load_bytes(key, hash)
@@ -420,14 +472,14 @@ macro_rules! forward {
             fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> impl Future<Output = Result<bool>> + Send {
                 (**self).save_bytes(key, bytes, hash, ttl)
             }
-            fn save_bytes_with_lease(
+            fn compare_and_swap_bytes(
                 &self,
                 key: &str,
                 bytes: &[u8],
                 hash: &str,
-                generation: &str,
-            ) -> impl Future<Output = Result<bool>> + Send {
-                (**self).save_bytes_with_lease(key, bytes, hash, generation)
+                version: &str,
+            ) -> impl Future<Output = Result<Option<String>>> + Send {
+                (**self).compare_and_swap_bytes(key, bytes, hash, version)
             }
             fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
                 (**self).set_telemetry(telemetry)

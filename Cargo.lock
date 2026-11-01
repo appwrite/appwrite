@@ -4424,6 +4424,7 @@ dependencies = [
  "bytes",
  "crc32fast",
  "flate2",
+ "getrandom 0.3.4",
  "hex",
  "indexmap",
  "php-std",

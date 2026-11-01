@@ -45,6 +45,10 @@ pub const OPS: &[&str] = &[
     "fs.mkdir",
     "fs.delete",
     "probe.new",
+    "coordination.new",
+    "coordination.fail",
+    "coordination.calls",
+    "breaker.failures",
     "probe.calls",
     "null_load.new",
     "telemetry.new",
@@ -73,6 +77,7 @@ pub const OPS: &[&str] = &[
     "raw.hset",
     "raw.set",
     "raw.hexists",
+    "raw.del",
     "raw.ttl",
     "raw.script_flush",
     "raw.tomb",
@@ -89,8 +94,12 @@ pub const OPS: &[&str] = &[
     "cache.size",
     "cache.load_many",
     "cache.save_many",
-    "cache.generation",
+    "cache.supports_versioning",
+    "cache.lease",
     "cache.save_with_lease",
+    "cache.load_versioned",
+    "cache.compare_and_swap",
+    "cache.with_namespace",
     "adapter.load",
     "adapter.save",
     "adapter.touch",
@@ -101,8 +110,10 @@ pub const OPS: &[&str] = &[
     "adapter.size",
     "adapter.load_many",
     "adapter.save_many",
-    "adapter.generation",
-    "adapter.save_with_lease",
+    "adapter.supports_versioning",
+    "adapter.version",
+    "adapter.load_versioned",
+    "adapter.compare_and_swap",
 ];
 
 /// A user document as Appwrite caches it: system attributes, permissions,
@@ -334,12 +345,22 @@ struct Handle {
     loads: Option<Arc<AtomicI64>>,
     purges: Option<Arc<AtomicI64>>,
     probe: Option<Arc<ProbeState>>,
+    coordination: Option<Arc<CoordinationState>>,
     cluster: Option<(Option<String>, Vec<String>)>,
 }
 
 impl Handle {
     fn new(adapter: Arc<dyn DynAdapter>) -> Self {
-        Handle { adapter, retry: None, grace: None, loads: None, purges: None, probe: None, cluster: None }
+        Handle {
+            adapter,
+            retry: None,
+            grace: None,
+            loads: None,
+            purges: None,
+            probe: None,
+            coordination: None,
+            cluster: None,
+        }
     }
 }
 
@@ -437,10 +458,39 @@ async fn method<A: Adapter + ?Sized>(target: Target<'_, A>, op: &str, a: &Args<'
             let data = fields(a.value("data")?)?;
             target.save_many(key()?, &data, a.opt_i64("ttl")?.unwrap_or(0)).await.map(Json::Bool)
         }
-        "generation" => target.generation(key()?).await.map(Json::String),
+        "supports_versioning" => Ok(Json::Bool(target.supports_versioning())),
+        "lease" => match target {
+            Target::Cache(c) => c.lease(key()?).await.map(Json::String),
+            Target::Adapter(_) => return Err(Fault::new("lease is a cache method")),
+        },
+        "version" => match target {
+            Target::Adapter(x) => x.version(key()?).await.map(Json::String),
+            Target::Cache(_) => return Err(Fault::new("version is an adapter method")),
+        },
         "save_with_lease" => {
             let data = typed::decode(a.value("data")?)?;
-            target.save_with_lease(key()?, &data, a.str("hash")?, a.str("generation")?).await.map(Json::Bool)
+            match target {
+                Target::Cache(c) => {
+                    c.save_with_lease(key()?, &data, a.str("hash")?, a.str("version")?).await.map(Json::Bool)
+                }
+                Target::Adapter(_) => return Err(Fault::new("saveWithLease is a cache method")),
+            }
+        }
+        "load_versioned" => {
+            let snapshot = match target {
+                Target::Cache(c) => c.load_versioned(key()?).await,
+                Target::Adapter(x) => x.load_versioned(key()?).await,
+            };
+            snapshot.map(|s| json!({ "version": s.version, "value": dump_load(s.value) }))
+        }
+        "compare_and_swap" => {
+            let data = typed::decode(a.value("data")?)?;
+            let version = a.str("version")?;
+            let swapped = match target {
+                Target::Cache(c) => c.compare_and_swap(key()?, &data, version).await,
+                Target::Adapter(x) => x.compare_and_swap(key()?, &data, hash()?, version).await,
+            };
+            swapped.map(|v| v.map_or(Json::Bool(false), Json::String))
         }
         other => return Err(Fault::new(format!("unknown method {other}"))),
     };
@@ -573,22 +623,10 @@ impl<A: Adapter + ?Sized> Target<'_, A> {
             Target::Adapter(x) => x.save_many(key, data, ttl).await,
         }
     }
-    async fn generation(&self, key: &str) -> utopia_cache::Result<String> {
+    fn supports_versioning(&self) -> bool {
         match self {
-            Target::Cache(c) => c.generation(key).await,
-            Target::Adapter(x) => x.generation(key).await,
-        }
-    }
-    async fn save_with_lease(
-        &self,
-        key: &str,
-        data: &Value,
-        hash: &str,
-        generation: &str,
-    ) -> utopia_cache::Result<bool> {
-        match self {
-            Target::Cache(c) => c.save_with_lease(key, data, hash, generation).await,
-            Target::Adapter(x) => x.save_with_lease(key, data, hash, generation).await,
+            Target::Cache(c) => c.supports_versioning(),
+            Target::Adapter(x) => x.supports_versioning(),
         }
     }
 }
@@ -795,6 +833,29 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             };
             Outcome::ok(Json::Null)
         }
+        "coordination.new" => {
+            let state = Arc::new(CoordinationState::default());
+            let adapter = Coordination { memory: Memory::new(), state: state.clone() };
+            Outcome::Ok(session.handle(Handle { coordination: Some(state), ..Handle::new(Arc::new(adapter)) }))
+        }
+        "coordination.fail" => {
+            let h = handle(session, a.value("adapter")?)?;
+            let state = h.coordination.ok_or_else(|| Fault::new("not a coordination adapter"))?;
+            state.failing.store(a.bool("failing")?, Ordering::SeqCst);
+            Outcome::Ok(Json::Null)
+        }
+        "coordination.calls" => {
+            let h = handle(session, a.value("adapter")?)?;
+            let state = h.coordination.ok_or_else(|| Fault::new("not a coordination adapter"))?;
+            Outcome::ok(state.calls.load(Ordering::SeqCst))
+        }
+        "breaker.failures" => {
+            let breaker = session.get::<Arc<Breaker>>(a.value("breaker")?)?.clone();
+            match breaker.failures().await {
+                Ok(failures) => Outcome::ok(failures),
+                Err(e) => Outcome::err(e.php_class(), e.to_string()),
+            }
+        }
         "probe.new" => {
             let state = Arc::new(ProbeState::default());
             let h =
@@ -818,6 +879,10 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         }
         "cache.set_case_sensitivity" => Outcome::ok(cache(session, &a)?.set_case_sensitivity(a.bool("value")?)),
         "cache.case_sensitive" => Outcome::ok(cache(session, &a)?.case_sensitive()),
+        "cache.with_namespace" => {
+            let view = cache(session, &a)?.with_namespace(a.str("namespace")?);
+            Outcome::Ok(session.handle(Arc::new(view)))
+        }
         "cache.record_purges" => {
             let c = cache(session, &a)?;
             record_purges(&c, a.value("steps")?).await?
@@ -921,6 +986,11 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             let v: String =
                 redis::cmd("SET").arg(a.str("key")?).arg(a.bytes("value")?).query_async(&mut c).await.map_err(fault)?;
             Outcome::ok(v == "OK")
+        }
+        "raw.del" => {
+            let mut c = raw(session, &a).await?;
+            let v: i64 = redis::cmd("DEL").arg(a.str("key")?).query_async(&mut c).await.map_err(fault)?;
+            Outcome::ok(v)
         }
         "raw.hexists" => {
             let mut c = raw(session, &a).await?;
@@ -1159,9 +1229,21 @@ async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {
     };
     for step in a.array("steps")? {
         let op = step.get("op").and_then(Json::as_str).ok_or_else(|| Fault::new("a step needs an op"))?;
-        let args = step.get("args").cloned().unwrap_or(Json::Object(Map::new()));
+        let mut args = step.get("args").cloned().unwrap_or(Json::Object(Map::new()));
+        // {"$result": n, "field"?: name}: an earlier step's result, or one field of it.
+        if let Json::Object(map) = &mut args {
+            for value in map.values_mut() {
+                let Some(n) = value.get("$result").and_then(Json::as_u64) else { continue };
+                let result = results.get(n as usize).cloned().unwrap_or(Json::Null);
+                *value = match value.get("field").and_then(Json::as_str) {
+                    Some(field) => result.get(field).cloned().unwrap_or(Json::Null),
+                    None => result,
+                };
+            }
+        }
         let sa = Args(&args);
         match op {
+            "same" => results.push(Json::Bool(sa.value("a")? == sa.value("b")?)),
             "sleep" => {
                 utopia_async::sleep(std::time::Duration::from_secs_f64(sa.f64("seconds")?)).await;
                 results.push(Json::Null);
@@ -1332,6 +1414,91 @@ impl Adapter for Probe {
     }
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         self.record(telemetry);
+    }
+}
+
+/// CircuitBreakerTest's `CoordinationMemory`: Memory whose versioned
+/// operations count their calls and fail while `failing` is set.
+#[derive(Default)]
+struct CoordinationState {
+    calls: AtomicI64,
+    failing: std::sync::atomic::AtomicBool,
+}
+
+struct Coordination {
+    memory: Memory,
+    state: Arc<CoordinationState>,
+}
+
+impl Coordination {
+    fn check(&self) -> utopia_cache::Result<()> {
+        self.state.calls.fetch_add(1, Ordering::SeqCst);
+        if self.state.failing.load(Ordering::SeqCst) {
+            return Err(Error::Runtime("Transport unavailable".into()));
+        }
+        Ok(())
+    }
+}
+
+impl Adapter for Coordination {
+    fn load(
+        &self,
+        key: &str,
+        ttl: i64,
+        hash: &str,
+    ) -> impl Future<Output = utopia_cache::Result<Option<Value>>> + Send {
+        self.memory.load(key, ttl, hash)
+    }
+    fn save(
+        &self,
+        key: &str,
+        data: &Value,
+        hash: &str,
+        ttl: i64,
+    ) -> impl Future<Output = utopia_cache::Result<bool>> + Send {
+        self.memory.save(key, data, hash, ttl)
+    }
+    fn touch(&self, key: &str, hash: &str) -> impl Future<Output = utopia_cache::Result<bool>> + Send {
+        self.memory.touch(key, hash)
+    }
+    fn list(&self, key: &str) -> impl Future<Output = utopia_cache::Result<Vec<String>>> + Send {
+        self.memory.list(key)
+    }
+    fn purge(&self, key: &str, hash: &str) -> impl Future<Output = utopia_cache::Result<bool>> + Send {
+        self.memory.purge(key, hash)
+    }
+    fn flush(&self) -> impl Future<Output = utopia_cache::Result<bool>> + Send {
+        self.memory.flush()
+    }
+    fn ping(&self) -> impl Future<Output = utopia_cache::Result<bool>> + Send {
+        self.memory.ping()
+    }
+    fn size(&self) -> impl Future<Output = utopia_cache::Result<i64>> + Send {
+        self.memory.size()
+    }
+    fn name(&self, key: Option<&str>) -> &str {
+        self.memory.name(key)
+    }
+    fn supports_versioning(&self) -> bool {
+        true
+    }
+    async fn version(&self, key: &str) -> utopia_cache::Result<String> {
+        self.check()?;
+        self.memory.version(key).await
+    }
+    async fn load_versioned(&self, key: &str) -> utopia_cache::Result<utopia_cache::Snapshot> {
+        self.check()?;
+        self.memory.load_versioned(key).await
+    }
+    async fn compare_and_swap(
+        &self,
+        key: &str,
+        data: &Value,
+        hash: &str,
+        version: &str,
+    ) -> utopia_cache::Result<Option<String>> {
+        self.check()?;
+        self.memory.compare_and_swap(key, data, hash, version).await
     }
 }
 

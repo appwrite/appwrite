@@ -626,7 +626,7 @@
       ]
     },
     {
-      "name": "testLeaseFallbackForNonLeasableAdapter",
+      "name": "testUnsupportedAdaptersCannotPerformConditionalFills",
       "steps": [
         {
           "op": "pool.new",
@@ -652,14 +652,24 @@
           }
         },
         {
-          "op": "cache.generation",
+          "op": "cache.supports_versioning",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "c"
             },
             "key": "lease:fallback"
           },
-          "expect": "0"
+          "bind": "lease1",
+          "expect": ""
         },
         {
           "op": "cache.save_with_lease",
@@ -669,10 +679,10 @@
             },
             "key": "lease:fallback",
             "data": "value",
-            "hash": "lease:fallback",
-            "generation": "0"
+            "hash": "",
+            "version": ""
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "cache.load",
@@ -681,10 +691,9 @@
               "$ref": "c"
             },
             "key": "lease:fallback",
-            "ttl": 60,
-            "hash": "lease:fallback"
+            "ttl": 60
           },
-          "expect": "value"
+          "expect": false
         },
         {
           "op": "cache.load_many",
@@ -740,7 +749,7 @@
             },
             "key": "lease:fallback"
           },
-          "expect": true
+          "expect": false
         }
       ],
       "state": [

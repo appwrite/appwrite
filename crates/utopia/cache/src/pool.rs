@@ -4,7 +4,7 @@
 use php_std::types::Value;
 use utopia_pools::{Adapter as Idle, Connection, Resource, Stack};
 
-use crate::adapter::{Adapter, Fields};
+use crate::adapter::{Adapter, Fields, Snapshot};
 use crate::{Error, Result};
 
 /// A pool's error as a cache error: `init`'s own error when it is one.
@@ -59,6 +59,7 @@ fn pool_error(e: utopia_pools::Error) -> Error {
 pub struct Pool<A, S = Stack<A>> {
     pool: utopia_pools::Pool<A, S>,
     name: String,
+    versioned: bool,
 }
 
 impl<A: Adapter + Resource, S: Idle<A>> Pool<A, S> {
@@ -71,8 +72,9 @@ impl<A: Adapter + Resource, S: Idle<A>> Pool<A, S> {
     pub async fn new(pool: utopia_pools::Pool<A, S>) -> Result<Self> {
         let connection = pool.pop().await.map_err(pool_error)?;
         let name = connection.resource().name(None).to_owned();
+        let versioned = connection.resource().supports_versioning();
         pool.reclaim(&connection);
-        Ok(Pool { pool, name })
+        Ok(Pool { pool, name, versioned })
     }
 
     /// The pool the adapters are borrowed from.
@@ -161,19 +163,25 @@ impl<A: Adapter + Resource, S: Idle<A>> Adapter for Pool<A, S> {
         self.done(c, r).await
     }
 
-    fn leasable(&self) -> bool {
-        true
+    fn supports_versioning(&self) -> bool {
+        self.versioned
     }
 
-    async fn generation(&self, key: &str) -> Result<String> {
+    async fn version(&self, key: &str) -> Result<String> {
         let c = self.pop().await?;
-        let r = c.generation(key).await;
+        let r = c.version(key).await;
         self.done(c, r).await
     }
 
-    async fn save_with_lease(&self, key: &str, data: &Value, hash: &str, generation: &str) -> Result<bool> {
+    async fn load_versioned(&self, key: &str) -> Result<Snapshot> {
         let c = self.pop().await?;
-        let r = c.save_with_lease(key, data, hash, generation).await;
+        let r = c.load_versioned(key).await;
+        self.done(c, r).await
+    }
+
+    async fn compare_and_swap(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<Option<String>> {
+        let c = self.pop().await?;
+        let r = c.compare_and_swap(key, data, hash, version).await;
         self.done(c, r).await
     }
 
@@ -189,9 +197,15 @@ impl<A: Adapter + Resource, S: Idle<A>> Adapter for Pool<A, S> {
         self.done(c, r).await
     }
 
-    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, generation: &str) -> Result<bool> {
+    async fn compare_and_swap_bytes(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        version: &str,
+    ) -> Result<Option<String>> {
         let c = self.pop().await?;
-        let r = c.save_bytes_with_lease(key, bytes, hash, generation).await;
+        let r = c.compare_and_swap_bytes(key, bytes, hash, version).await;
         self.done(c, r).await
     }
 }

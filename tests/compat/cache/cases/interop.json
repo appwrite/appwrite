@@ -21747,14 +21747,39 @@
         },
         {
           "side": "a",
-          "op": "cache.generation",
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "w"
             },
             "key": "${ns}:doc"
           },
-          "expect": "0"
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "side": "b",
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "r"
+            },
+            "key": "${ns}:doc"
+          },
+          "bind": "lease2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "side": "b",
@@ -21768,7 +21793,9 @@
               "v": 1
             },
             "hash": "${ns}:doc",
-            "generation": "0"
+            "version": {
+              "$ref": "lease2"
+            }
           },
           "expect": true
         },
@@ -21805,14 +21832,21 @@
         },
         {
           "side": "b",
-          "op": "cache.generation",
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "r"
             },
             "key": "${ns}:doc"
           },
-          "expect": "1"
+          "bind": "lease3",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "side": "b",
@@ -21826,9 +21860,29 @@
               "stale": true
             },
             "hash": "${ns}:doc",
-            "generation": "0"
+            "version": {
+              "$ref": "lease2"
+            }
           },
           "expect": false
+        },
+        {
+          "side": "a",
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "w"
+            },
+            "key": "${ns}:doc"
+          },
+          "bind": "lease4",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "side": "a",
@@ -21842,7 +21896,9 @@
               "v": 2
             },
             "hash": "f",
-            "generation": "1"
+            "version": {
+              "$ref": "lease4"
+            }
           },
           "expect": true
         },
@@ -21860,14 +21916,21 @@
         },
         {
           "side": "a",
-          "op": "cache.generation",
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "w"
             },
             "key": "${ns}:doc"
           },
-          "expect": "2"
+          "bind": "lease5",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "side": "b",
@@ -22041,6 +22104,24 @@
         },
         {
           "side": "b",
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "r"
+            },
+            "key": "${ns}:t"
+          },
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "side": "b",
           "op": "cache.save_with_lease",
           "args": {
             "cache": {
@@ -22049,7 +22130,9 @@
             "key": "${ns}:t",
             "data": "v",
             "hash": "${ns}:t",
-            "generation": "1"
+            "version": {
+              "$ref": "lease1"
+            }
           },
           "expect": false
         },
@@ -22073,7 +22156,9 @@
             "key": "${ns}:t",
             "data": "v",
             "hash": "${ns}:t",
-            "generation": "1"
+            "version": {
+              "$ref": "lease1"
+            }
           },
           "expect": true
         },
@@ -22151,12 +22236,20 @@
                 }
               },
               {
+                "op": "lease",
+                "args": {
+                  "key": "${ns}:lease"
+                }
+              },
+              {
                 "op": "save_with_lease",
                 "args": {
                   "key": "${ns}:lease",
                   "data": "v",
                   "hash": "${ns}:lease",
-                  "generation": "0"
+                  "version": {
+                    "$result": 1
+                  }
                 }
               },
               {
@@ -22177,8 +22270,16 @@
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/1"
+            ],
+            "reason": "versions are random identities"
+          },
+          "bind": "m1",
           "expect": [
             true,
+            "<masked>",
             true,
             true
           ]
@@ -22292,7 +22393,7 @@
             "options": {},
             "steps": [
               {
-                "op": "generation",
+                "op": "lease",
                 "args": {
                   "key": "${ns}:lease"
                 }
@@ -22303,7 +22404,10 @@
                   "key": "${ns}:lease",
                   "data": "stale",
                   "hash": "${ns}:lease",
-                  "generation": "0"
+                  "version": {
+                    "$ref": "m1",
+                    "path": "/1"
+                  }
                 }
               },
               {
@@ -22323,8 +22427,14 @@
               }
             ]
           },
+          "mask": {
+            "paths": [
+              "/0"
+            ],
+            "reason": "versions are random identities"
+          },
           "expect": [
-            "1",
+            "<masked>",
             false,
             {
               "$array": [

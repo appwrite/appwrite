@@ -411,8 +411,8 @@ impl Database {
 
         let started_key = format!("{collection_key}#started");
         let finished_key = format!("{collection_key}#finished");
-        let started = cache.generation(&started_key).await?;
-        let finished = cache.generation(&finished_key).await?;
+        let started = cache.lease(&started_key).await?;
+        let finished = cache.lease(&finished_key).await?;
         let epoch_key = format!("{collection_key}#epoch");
         let loaded = cache.load(&epoch_key, PERMANENT, "").await?;
         let epoch = string(&loaded);
@@ -439,7 +439,7 @@ impl Database {
 
         let next_finished = self.finish_document_cache_write(collection_key, &finished, &loaded).await?;
 
-        let next_started = cache.generation(&started_key).await?;
+        let next_started = cache.lease(&started_key).await?;
         if next_started == next_finished {
             return self.publish_document_cache_epoch(collection_key, &next_finished, definition_key).await;
         }
@@ -505,7 +505,7 @@ impl Database {
         self.with_retries(
             || async {
                 if attempted.load(std::sync::atomic::Ordering::Relaxed) {
-                    let generation = cache.generation(&finished_key).await?;
+                    let generation = cache.lease(&finished_key).await?;
                     *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = generation;
                 }
                 let unchanged = *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) == finished;
@@ -513,7 +513,7 @@ impl Database {
                     attempted.store(true, std::sync::atomic::Ordering::Relaxed);
                     cache.purge(&finished_key, "").await?;
                 }
-                let generation = cache.generation(&finished_key).await?;
+                let generation = cache.lease(&finished_key).await?;
                 *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = generation.clone();
                 if generation == finished
                     && string(loaded).is_some()
@@ -762,7 +762,7 @@ impl Database {
             }
         }
 
-        let generation = match cache.generation(&physical_key).await {
+        let generation = match cache.lease(&physical_key).await {
             Ok(g) => g,
             Err(e) => {
                 warning(format!("Warning: Failed to get cache generation: {}", Error::from(e).message()));

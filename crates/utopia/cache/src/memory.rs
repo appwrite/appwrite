@@ -6,11 +6,12 @@ use std::sync::Mutex;
 use indexmap::IndexMap;
 use php_std::types::Value;
 
-use crate::Result;
-use crate::adapter::{Adapter, blank, coerce, empty, now};
+use crate::adapter::{Adapter, Snapshot, blank, coerce, empty, now};
+use crate::versioned::fresh as fresh_version;
+use crate::{Error, Result};
 
 /// Entries in this process, gone when it exits. Hashes are ignored: one
-/// entry per key.
+/// entry per key. Keeps opaque versions ([`Adapter::compare_and_swap`]).
 ///
 /// ```
 /// use php_std::types::Value;
@@ -36,7 +37,18 @@ use crate::adapter::{Adapter, blank, coerce, empty, now};
 /// ```
 #[derive(Debug, Default)]
 pub struct Memory {
-    store: Mutex<IndexMap<String, (i64, Value)>>,
+    store: Mutex<IndexMap<String, Entry>>,
+}
+
+/// One key: when it was written, its data (`false` for a key that only holds
+/// a version) and its version, once one was asked for or written.
+///
+/// PHP: `array{time: int, data: mixed, version?: string}`.
+#[derive(Debug, Clone)]
+struct Entry {
+    time: i64,
+    data: Value,
+    version: Option<String>,
 }
 
 impl Memory {
@@ -45,7 +57,7 @@ impl Memory {
         Self::default()
     }
 
-    fn with<T>(&self, f: impl FnOnce(&mut IndexMap<String, (i64, Value)>) -> T) -> T {
+    fn with<T>(&self, f: impl FnOnce(&mut IndexMap<String, Entry>) -> T) -> T {
         f(&mut self.store.lock().unwrap_or_else(|e| e.into_inner()))
     }
 }
@@ -56,7 +68,7 @@ impl Adapter for Memory {
             None
         } else {
             self.with(|store| match store.get(key) {
-                Some((time, data)) if fresh(*time, ttl, now()) => Some(data.clone()),
+                Some(entry) if fresh(entry.time, ttl, now()) => hit(&entry.data),
                 _ => None,
             })
         };
@@ -67,7 +79,8 @@ impl Adapter for Memory {
         let result = coerce(data, "Utopia\\Cache\\Adapter\\Memory::save(): Argument #2 ($data)").map(|data| {
             let stored = !blank(key) && !empty(&data);
             if stored {
-                self.with(|store| store.insert(key.to_owned(), (now(), data.into_owned())));
+                let entry = Entry { time: now(), data: data.into_owned(), version: Some(fresh_version()) };
+                self.with(|store| store.insert(key.to_owned(), entry));
             }
             stored
         });
@@ -78,7 +91,8 @@ impl Adapter for Memory {
         let touched = !blank(key)
             && self.with(|store| match store.get_mut(key) {
                 Some(entry) => {
-                    entry.0 = now();
+                    entry.time = now();
+                    entry.version = Some(fresh_version());
                     true
                 }
                 None => false,
@@ -112,6 +126,52 @@ impl Adapter for Memory {
     fn name(&self, _key: Option<&str>) -> &str {
         "memory"
     }
+
+    fn supports_versioning(&self) -> bool {
+        true
+    }
+
+    async fn version(&self, key: &str) -> Result<String> {
+        Ok(self.with(|store| version(store, key)))
+    }
+
+    async fn load_versioned(&self, key: &str) -> Result<Snapshot> {
+        let version = self.with(|store| version(store, key));
+        let value = self.load(key, i64::MAX, "").await?;
+        Ok(Snapshot { version, value })
+    }
+
+    async fn compare_and_swap(&self, key: &str, data: &Value, hash: &str, version: &str) -> Result<Option<String>> {
+        if self.with(|store| self::version(store, key)) != version {
+            return Ok(None);
+        }
+        if !self.save(key, data, hash, 0).await? {
+            return Err(Error::Unavailable { message: "Unable to save cache snapshot".to_owned(), previous: None });
+        }
+        let next = fresh_version();
+        self.with(|store| {
+            if let Some(entry) = store.get_mut(key) {
+                entry.version = Some(next.clone());
+            }
+        });
+        Ok(Some(next))
+    }
+}
+
+/// The data of an entry, `None` for a key that only holds a version.
+fn hit(data: &Value) -> Option<Value> {
+    match data {
+        Value::Bool(false) => None,
+        data => Some(data.clone()),
+    }
+}
+
+/// The key's version, giving a missing key an entry that holds only a
+/// version, as PHP's `getVersion()` does (`$this->store[$key] ??= ...`).
+fn version(store: &mut IndexMap<String, Entry>, key: &str) -> String {
+    let entry =
+        store.entry(key.to_owned()).or_insert_with(|| Entry { time: now(), data: Value::Bool(false), version: None });
+    entry.version.get_or_insert_with(fresh_version).clone()
 }
 
 /// `time + ttl > now`, overflowing into floats like PHP.

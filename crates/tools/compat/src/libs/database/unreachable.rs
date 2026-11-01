@@ -71,15 +71,15 @@ impl Adapter for Unreachable {
         gone()
     }
 
-    fn leasable(&self) -> bool {
+    fn supports_versioning(&self) -> bool {
         true
     }
 
-    async fn generation(&self, _key: &str) -> Result<String> {
+    async fn version(&self, _key: &str) -> Result<String> {
         gone()
     }
 
-    async fn save_with_lease(&self, _key: &str, _data: &Value, _hash: &str, _generation: &str) -> Result<bool> {
+    async fn compare_and_swap(&self, _key: &str, _data: &Value, _hash: &str, _version: &str) -> Result<Option<String>> {
         lease_gone()
     }
 }

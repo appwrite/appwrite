@@ -463,7 +463,7 @@ impl ProjectStore {
         let (_, document_key) = platform.cache_base_keys("projects", Some(id)).await?;
         // The generation is read before the document: a purge in between
         // changes it, so the copy kept below is never taken for current.
-        let generation = match platform.cache().generation(&document_key).await {
+        let generation = match platform.cache().lease(&document_key).await {
             Ok(generation) => Some(generation),
             Err(e) => {
                 tracing::warn!(error = %e, "project cache lookup failed");

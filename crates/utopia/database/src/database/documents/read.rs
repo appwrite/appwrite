@@ -229,7 +229,7 @@ impl Database {
 
         let mut generation = "0".to_owned();
         if fill_epoch.is_some() || fill_definition {
-            match self.cache().generation(&document_key).await {
+            match self.cache().lease(&document_key).await {
                 Ok(g) => generation = g,
                 Err(e) => {
                     super::super::warning(format!("Warning: Failed to get cache generation: {e}"));

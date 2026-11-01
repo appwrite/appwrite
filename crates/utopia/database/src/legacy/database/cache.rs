@@ -303,7 +303,7 @@ impl Database {
         if refresh {
             let _ = cache.purge(key, hash).await;
         }
-        let generation = cache.generation(key).await.unwrap_or_else(|_| "0".to_owned());
+        let generation = cache.lease(key).await.unwrap_or_else(|_| "0".to_owned());
         let value = f().await?;
         if !matches!(value, Value::Bool(false))
             && let Some(encoded) = cache_entry(&value)

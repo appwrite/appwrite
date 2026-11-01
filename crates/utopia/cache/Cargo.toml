@@ -1,6 +1,6 @@
 [package]
 name = "utopia-cache"
-description = "Key-value caching with expiring entries over memory, files, Redis, Redis Cluster, Memcached and Hazelcast, with sharding, pooling, circuit breaking and purge-safe leases."
+description = "Key-value caching with expiring entries over memory, files, Redis, Redis Cluster, Memcached and Hazelcast, with sharding, pooling, circuit breaking and purge-safe versioned writes."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -23,6 +23,7 @@ filesystem = []
 bytes.workspace = true
 crc32fast.workspace = true
 flate2.workspace = true
+getrandom.workspace = true
 hex.workspace = true
 indexmap.workspace = true
 php-std.workspace = true
@@ -41,4 +42,4 @@ utopia-telemetry.workspace = true
 
 [package.metadata.utopia]
 category = "data"
-php-sync = "0b0f85fadbce05d694d3a690cc630fb79c6e8bdf"
+php-sync = "3771bfa38cc3455b4ab30d6c39dfa0ad9b3c50da"

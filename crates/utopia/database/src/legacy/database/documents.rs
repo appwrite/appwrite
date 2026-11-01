@@ -336,7 +336,7 @@ impl Database {
 
         let mut generation = "0".to_owned();
         if !for_update {
-            generation = cache.generation(&document_key).await.unwrap_or_else(|_| "0".to_owned());
+            generation = cache.lease(&document_key).await.unwrap_or_else(|_| "0".to_owned());
         }
 
         let document = adapter.get_document(&collection, id, &queries, for_update).await?;

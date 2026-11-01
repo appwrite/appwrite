@@ -59,8 +59,8 @@
         "Utopia\\Cache\\Adapter\\Redis::__construct",
         "Utopia\\Cache\\Adapter\\Redis::setMaxRetries",
         "Utopia\\Cache\\Adapter\\Redis::setRetryDelay",
-        "Utopia\\Cache\\Adapter\\Redis\\Leasable::__construct",
-        "Utopia\\Cache\\Adapter\\Redis\\Leasable::setLeaseGraceWindow"
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::__construct",
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::setLeaseGraceWindow"
       ]
     },
     "memcached.new": {
@@ -145,6 +145,18 @@
     "cluster.raw_set": {
       "doc": "fixture: SET key value on the cache-cluster (a string where a cache hash is expected)"
     },
+    "coordination.new": {
+      "doc": "fixture: CircuitBreakerTest's CoordinationMemory (Memory whose versioned operations count calls and throw a RuntimeException while failing)"
+    },
+    "coordination.fail": {
+      "doc": "fixture: set a CoordinationMemory's failing flag"
+    },
+    "coordination.calls": {
+      "doc": "fixture: the versioned calls that reached a CoordinationMemory"
+    },
+    "breaker.failures": {
+      "doc": "fixture: $breaker->getFailureCount()"
+    },
     "probe.new": {
       "doc": "fixture: TelemetryTest's Memory adapter recording setTelemetry calls"
     },
@@ -219,11 +231,11 @@
     "adapter.grace": {
       "doc": "$adapter->getLeaseGraceWindow()",
       "covers": [
-        "Utopia\\Cache\\Adapter\\Redis\\Leasable::getLeaseGraceWindow"
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::getLeaseGraceWindow"
       ]
     },
     "multiplexing.run": {
-      "doc": "steps (cache methods, sleep, concurrent, load_equals: whether a load == data) on a Cache over a new Multiplexing(host, port, options) in one coroutine scheduler, then disconnect(); each step's result or error, (options.silent: against a local listener that never answers), and with options.write_failures the attributes of each cache.redis_multiplexing.write.failures point",
+      "doc": "steps (cache methods, sleep, concurrent, load_equals: whether a load == data, same: whether args a and b are equal; an argument {\"$result\": n, \"field\"?: name} is step n's result, or one field of it) on a Cache over a new Multiplexing(host, port, options) in one coroutine scheduler, then disconnect(); each step's result or error, (options.silent: against a local listener that never answers), and with options.write_failures the attributes of each cache.redis_multiplexing.write.failures point",
       "covers": [
         "Utopia\\Cache\\Adapter\\Redis\\Client::__construct",
         "Utopia\\Cache\\Adapter\\Redis\\Client::close",
@@ -504,6 +516,9 @@
     "raw.hexists": {
       "doc": "fixture: HEXISTS key field"
     },
+    "raw.del": {
+      "doc": "fixture: DEL key (a physical eviction)"
+    },
     "raw.ttl": {
       "doc": "fixture: TTL key: \"positive\" when in (0, at_most], else the TTL"
     },
@@ -629,7 +644,7 @@
         "Utopia\\Cache\\Adapter\\Pool::purge",
         "Utopia\\Cache\\Adapter\\CircuitBreaker::purge",
         "Utopia\\Cache\\Adapter\\RedisCluster::purge",
-        "Utopia\\Cache\\Adapter\\Redis\\Leasable::purge"
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::purge"
       ]
     },
     "cache.flush": {
@@ -727,34 +742,80 @@
         "Utopia\\Cache\\Adapter\\RedisCluster::saveMany"
       ]
     },
-    "cache.generation": {
-      "doc": "$cache->getGeneration(...)",
+    "cache.supports_versioning": {
+      "doc": "$cache->supportsVersioning()",
       "covers": [
-        "Utopia\\Cache\\Cache::getGeneration"
+        "Utopia\\Cache\\Cache::supportsVersioning"
       ]
     },
-    "adapter.generation": {
-      "doc": "$adapter->getGeneration(...)",
+    "cache.lease": {
+      "doc": "$cache->getLease(key)",
       "covers": [
-        "Utopia\\Cache\\Adapter\\Sharding::getGeneration",
-        "Utopia\\Cache\\Adapter\\Pool::getGeneration",
-        "Utopia\\Cache\\Adapter\\CircuitBreaker::getGeneration",
-        "Utopia\\Cache\\Adapter\\Redis\\Leasable::getGeneration"
+        "Utopia\\Cache\\Cache::getLease"
+      ]
+    },
+    "adapter.supports_versioning": {
+      "doc": "$adapter instanceof Feature\\Versioned && $adapter->supportsVersioning()",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::supportsVersioning",
+        "Utopia\\Cache\\Adapter\\Sharding::supportsVersioning",
+        "Utopia\\Cache\\Adapter\\Pool::supportsVersioning",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::supportsVersioning",
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::supportsVersioning"
+      ]
+    },
+    "adapter.version": {
+      "doc": "$adapter->getVersion(key); an adapter without Feature\\Versioned fails with Unavailable('Versioned cache required'), as the wrappers do over one",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::getVersion",
+        "Utopia\\Cache\\Adapter\\Sharding::getVersion",
+        "Utopia\\Cache\\Adapter\\Pool::getVersion",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::getVersion",
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::getVersion"
       ]
     },
     "cache.save_with_lease": {
-      "doc": "$cache->saveWithLease(...)",
+      "doc": "$cache->saveWithLease(key, data, hash, version)",
       "covers": [
         "Utopia\\Cache\\Cache::saveWithLease"
       ]
     },
-    "adapter.save_with_lease": {
-      "doc": "$adapter->saveWithLease(...)",
+    "cache.load_versioned": {
+      "doc": "$cache->loadVersioned(key): {version, value}",
       "covers": [
-        "Utopia\\Cache\\Adapter\\Sharding::saveWithLease",
-        "Utopia\\Cache\\Adapter\\Pool::saveWithLease",
-        "Utopia\\Cache\\Adapter\\CircuitBreaker::saveWithLease",
-        "Utopia\\Cache\\Adapter\\Redis\\Leasable::saveWithLease"
+        "Utopia\\Cache\\Cache::loadVersioned"
+      ]
+    },
+    "cache.compare_and_swap": {
+      "doc": "$cache->compareAndSwap(key, data, version): the committed version or false",
+      "covers": [
+        "Utopia\\Cache\\Cache::compareAndSwap"
+      ]
+    },
+    "cache.with_namespace": {
+      "doc": "$cache->withNamespace(namespace): a handle to the view",
+      "covers": [
+        "Utopia\\Cache\\Cache::withNamespace"
+      ]
+    },
+    "adapter.load_versioned": {
+      "doc": "$adapter->loadVersioned(key): {version, value}",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::loadVersioned",
+        "Utopia\\Cache\\Adapter\\Sharding::loadVersioned",
+        "Utopia\\Cache\\Adapter\\Pool::loadVersioned",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::loadVersioned",
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::loadVersioned"
+      ]
+    },
+    "adapter.compare_and_swap": {
+      "doc": "$adapter->compareAndSwap(key, data, hash?, version): the committed version or false",
+      "covers": [
+        "Utopia\\Cache\\Adapter\\Memory::compareAndSwap",
+        "Utopia\\Cache\\Adapter\\Sharding::compareAndSwap",
+        "Utopia\\Cache\\Adapter\\Pool::compareAndSwap",
+        "Utopia\\Cache\\Adapter\\CircuitBreaker::compareAndSwap",
+        "Utopia\\Cache\\Adapter\\Redis\\Versioned::compareAndSwap"
       ]
     },
     "fuzz.roundtrip": {
@@ -1036,28 +1097,45 @@
     },
     {
       "symbol": "Utopia\\Cache\\Adapter\\RedisCluster::list",
-      "description": "Unlike Redis, the cluster adapter has no leases and does not hide or protect the reserved __utopia_gen__/__utopia_tomb__ fields.",
+      "description": "Unlike Redis, the cluster adapter has no leases and does not hide or protect the reserved __utopia_version__/__utopia_tomb__ fields.",
       "case": "RedisClusterTest.json#names, seeds, retries, batches and field purges"
     }
   ],
   "state_mask": {
     "redis@cache-redis/11,6": {
       "paths": [
-        "/*/value/__utopia_tomb__"
+        "/*/value/__utopia_tomb__",
+        "/*/value/__utopia_version__"
       ],
-      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran"
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran; versions are random"
     },
     "redis@cache-redis-shared": {
       "paths": [
-        "/*/value/__utopia_tomb__"
+        "/*/value/__utopia_tomb__",
+        "/*/value/__utopia_version__"
       ],
-      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran"
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran; versions are random"
     },
     "redis@cache-redis-mux/10,15": {
       "paths": [
-        "/*/value/__utopia_tomb__"
+        "/*/value/__utopia_tomb__",
+        "/*/value/__utopia_version__"
       ],
-      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran"
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran; versions are random"
+    },
+    "redis@cache-redis-shared/12,13,14": {
+      "paths": [
+        "/*/value/__utopia_tomb__",
+        "/*/value/__utopia_version__"
+      ],
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran; versions are random"
+    },
+    "redis@cache-redis/12,13,14,7,8,9": {
+      "paths": [
+        "/*/value/__utopia_tomb__",
+        "/*/value/__utopia_version__"
+      ],
+      "reason": "tombstones are deadlines in microseconds of the Redis clock when the purge ran; versions are random"
     }
   },
   "deviations": [

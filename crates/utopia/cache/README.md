@@ -5,7 +5,7 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-Key-value caching with expiring entries over memory, files, Redis, Redis Cluster, Memcached and Hazelcast, with sharding, pooling, circuit breaking and purge-safe leases.
+Key-value caching with expiring entries over memory, files, Redis, Redis Cluster, Memcached and Hazelcast, with sharding, pooling, circuit breaking and purge-safe versioned writes.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 
@@ -82,7 +82,7 @@ std::fs::remove_dir_all(&dir)?;
 
 ## Cache Rust-only data natively
 
-A cache shared with a PHP runtime keeps PHP's codec; a cache only Rust reads uses the native codec. `save_native` and `load_native` store any `serde` type as a compact binary entry, with the same TTL, leases and purges as other entries, and without building PHP values. Keep such entries in fields PHP never reads (a purge of the key still drops them), and change the field when the type changes: the format carries no field names.
+A cache shared with a PHP runtime keeps PHP's codec; a cache only Rust reads uses the native codec. `save_native` and `load_native` store any `serde` type as a compact binary entry, with the same TTL, versioned saves and purges as other entries, and without building PHP values. Keep such entries in fields PHP never reads (a purge of the key still drops them), and change the field when the type changes: the format carries no field names.
 
 The native format is [postcard](https://docs.rs/postcard) behind a three-byte header (`0xF5`, `N`, the format version) and the save time. Postcard was picked on numbers: on a user document it encodes about six times and decodes about twice as fast as PHP's igbinary, and its entries are smaller. It is maintained, pure Rust, has a documented stable wire format, and fails cleanly on truncated or hostile input: every length is checked against the bytes left, so a corrupt entry is a miss, never a panic or an oversized allocation. bincode is no longer maintained, bitcode's derive cannot encode recursive types such as JSON trees, and rkyv needs its own derives and an aligned copy of each entry before reading it.
 
@@ -99,8 +99,8 @@ let cache = Cache::new(Memory::new());
 
 utopia_async::Runtime::new()?.block_on(async {
     let events = Events { names: vec!["users.*.create".into()] };
-    let generation = cache.generation("project:1").await?;
-    assert!(cache.save_native_with_lease("project:1", &events, "rust:events:v1", &generation).await?);
+    let version = cache.lease("project:1").await?;
+    assert!(cache.save_native_with_lease("project:1", &events, "rust:events:v1", &version).await?);
     assert_eq!(cache.load_native::<Events>("project:1", 3600, "rust:events:v1").await?, Some(events));
     Ok::<_, utopia_cache::Error>(())
 })?;
@@ -132,7 +132,7 @@ utopia_async::Runtime::new()?.block_on(async {
 
 ## Refuse stale writes after a purge
 
-A reader that loads from the database while a writer purges the cache could put the old row back. Read the key's generation before the database read and save with `save_with_lease`: the save is refused when a purge happened in between.
+A reader that loads from the database while a writer purges the cache could put the old row back. Read the key's version with `lease` before the database read and save with `save_with_lease`: the save is refused when a write or purge happened in between. On adapters without versions (Memcached, the filesystem, Redis Cluster) `lease` is empty and `save_with_lease` stores nothing, so the reader skips the cache.
 
 ```rust
 use php_std::types::Value;
@@ -142,10 +142,10 @@ utopia_async::Runtime::new()?.block_on(async {
     let client = redis::Client::open("redis://localhost:6379")?;
     let cache = Cache::new(Redis::new(client.get_connection_manager().await?));
 
-    let generation = cache.generation("guide:doc").await?;
+    let version = cache.lease("guide:doc").await?;
     // ... read the document from the database, while a writer purges it ...
     cache.purge("guide:doc", "").await?;
-    assert!(!cache.save_with_lease("guide:doc", &Value::from("stale"), "", &generation).await?);
+    assert!(!cache.save_with_lease("guide:doc", &Value::from("stale"), "", &version).await?);
     Ok::<_, Box<dyn std::error::Error>>(())
 })?;
 ```

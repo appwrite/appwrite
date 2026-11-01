@@ -562,16 +562,6 @@ impl<K: Codec> Adapter for Hazelcast<K> {
         }
         self.put(key, bytes.to_vec()).await
     }
-
-    fn save_bytes_with_lease(
-        &self,
-        key: &str,
-        bytes: &[u8],
-        hash: &str,
-        _generation: &str,
-    ) -> impl std::future::Future<Output = Result<bool>> + Send {
-        self.save_bytes(key, bytes, hash, 0)
-    }
 }
 
 #[cfg(test)]

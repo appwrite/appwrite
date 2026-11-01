@@ -830,17 +830,41 @@
           "expect": false
         },
         {
-          "op": "adapter.generation",
+          "op": "adapter.version",
           "args": {
             "adapter": {
               "$ref": "a"
             },
             "key": "Mixed"
           },
-          "expect": "0"
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
-          "op": "adapter.save_with_lease",
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "key": "Lease"
+          },
+          "bind": "lease2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.compare_and_swap",
           "args": {
             "adapter": {
               "$ref": "a"
@@ -848,9 +872,17 @@
             "key": "Lease",
             "data": "v",
             "hash": "Lease",
-            "generation": "7"
+            "version": {
+              "$ref": "lease2"
+            }
           },
-          "expect": true
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "op": "adapter.load",
@@ -919,14 +951,38 @@
           "expect": false
         },
         {
-          "op": "cache.generation",
+          "op": "cache.lease",
           "args": {
             "cache": {
               "$ref": "c"
             },
             "key": "K"
           },
-          "expect": "0"
+          "bind": "lease1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "Lease"
+          },
+          "bind": "lease2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
         },
         {
           "op": "cache.save_with_lease",
@@ -937,7 +993,9 @@
             "key": "Lease",
             "data": "v",
             "hash": "h",
-            "generation": "0"
+            "version": {
+              "$ref": "lease2"
+            }
           },
           "expect": true
         },
@@ -1445,6 +1503,528 @@
         }
       ],
       "state": []
+    },
+    {
+      "name": "testTouchInvalidatesThePreviousLease",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-version",
+            "data": "original"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-version"
+          },
+          "bind": "before",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.touch",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-version"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-version"
+          },
+          "bind": "after",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "before"
+            },
+            "b": {
+              "$ref": "after"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-version",
+            "data": "stale",
+            "hash": "",
+            "version": {
+              "$ref": "before"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "touch-version",
+            "ttl": 60
+          },
+          "expect": "original"
+        }
+      ]
+    },
+    {
+      "name": "testConditionalFillsRejectTheSameEmptyInputsAsOrdinarySaves",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {},
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": ""
+          },
+          "bind": "l0",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "",
+            "data": "value",
+            "hash": "",
+            "version": {
+              "$ref": "l0"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "0"
+          },
+          "bind": "l1",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "0",
+            "data": "value",
+            "hash": "",
+            "version": {
+              "$ref": "l1"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "0",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key"
+          },
+          "bind": "l2",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "data": "",
+            "hash": "",
+            "version": {
+              "$ref": "l2"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key"
+          },
+          "bind": "l3",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "data": "0",
+            "hash": "",
+            "version": {
+              "$ref": "l3"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key"
+          },
+          "bind": "l4",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "cache.save_with_lease",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "data": [],
+            "hash": "",
+            "version": {
+              "$ref": "l4"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "key",
+            "ttl": 60
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.supports_versioning",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.version",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "direct"
+          },
+          "bind": "v",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "direct"
+          },
+          "bind": "snap",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": false
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "v"
+            },
+            "b": {
+              "$ref": "snap",
+              "path": "/version"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "direct",
+            "data": "value",
+            "hash": "h",
+            "version": {
+              "$ref": "v"
+            }
+          },
+          "bind": "next",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "direct",
+            "data": "lost",
+            "hash": "h",
+            "version": {
+              "$ref": "v"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.compare_and_swap",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "direct",
+            "data": "",
+            "hash": "",
+            "version": {
+              "$ref": "next"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Unable to save cache snapshot"
+            }
+          }
+        },
+        {
+          "op": "adapter.load_versioned",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            },
+            "key": "direct"
+          },
+          "bind": "snap2",
+          "mask": {
+            "paths": [
+              "/version"
+            ],
+            "reason": "versions are random identities"
+          },
+          "expect": {
+            "version": "<masked>",
+            "value": "value"
+          }
+        },
+        {
+          "op": "adapter.size",
+          "args": {
+            "adapter": {
+              "$ref": "m"
+            }
+          },
+          "expect": 4
+        },
+        {
+          "op": "cache.compare_and_swap",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "direct",
+            "data": [],
+            "version": {
+              "$ref": "next"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Cache\\Exception\\Unavailable",
+              "message": "Unable to save cache snapshot"
+            }
+          }
+        }
+      ]
     }
   ]
 }
