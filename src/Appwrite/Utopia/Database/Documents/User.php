@@ -331,7 +331,7 @@ class User extends Document
             ];
 
         $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven) {
-            // A locking read first, so the snapshot is taken after concurrent credential issuance commits
+            // A locking read first, so the snapshot follows any issuance that committed under the same lock
             $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
 
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
