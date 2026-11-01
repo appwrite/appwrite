@@ -102,7 +102,7 @@ export function ProductHuntPromoBanner() {
         href={PRODUCT_HUNT_URL}
         target="_blank"
         rel="noopener noreferrer"
-        {...analyticsAttrs(PRODUCT_HUNT_BANNER.event)}
+        {...analyticsAttrs(PRODUCT_HUNT_BANNER.event!)}
         aria-label={`${t('Appwrite 2.0 is launching on Product Hunt today')}. ${t('Share your take')}`}
         className="group relative z-0 flex min-h-14 w-full cursor-pointer items-center justify-center gap-1.5 ps-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-3 sm:ps-12 sm:pe-12"
       >

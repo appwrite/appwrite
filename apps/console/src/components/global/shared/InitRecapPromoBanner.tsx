@@ -126,7 +126,7 @@ export function InitRecapPromoBanner() {
 
       <Link
         to="/init"
-        {...analyticsAttrs(INIT_RECAP_PROMO_BANNER.event)}
+        {...analyticsAttrs(INIT_RECAP_PROMO_BANNER.event!)}
         aria-label={`${t('Catch up on Init')}. ${t('View recap')}`}
         onClick={persistDismiss}
         className="group block p-4 pt-3 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"

@@ -86,7 +86,7 @@ export function PostgresPromoBanner() {
         to="/projects/$projectId/databases/create"
         params={{ projectId }}
         search={CREATE_DATABASE_WIZARD_POSTGRES_SEARCH}
-        {...analyticsAttrs(POSTGRES_PROMO_BANNER.event)}
+        {...analyticsAttrs(POSTGRES_PROMO_BANNER.event!)}
         aria-label={`${t('Appwrite now speaks PostgreSQL')}. ${t('Setup')}`}
         className="group relative z-0 flex min-h-14 w-full cursor-pointer items-center justify-center gap-1.5 ps-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-3 sm:ps-12 sm:pe-12"
       >

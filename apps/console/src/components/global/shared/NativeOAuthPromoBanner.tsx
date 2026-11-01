@@ -82,7 +82,7 @@ export function NativeOAuthPromoBanner() {
           <Link
             to="/projects/$projectId/auth/social-providers"
             params={{ projectId }}
-            {...analyticsAttrs(NATIVE_OAUTH_PROMO_BANNER.event)}
+            {...analyticsAttrs(NATIVE_OAUTH_PROMO_BANNER.event!)}
             className="inline-flex h-9 min-w-0 flex-1 items-center justify-center rounded-md bg-[#fd366e] px-3 text-[13px] font-medium text-white transition-colors hover:bg-[#fd366e]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           >
             {t('Configure OAuth')}

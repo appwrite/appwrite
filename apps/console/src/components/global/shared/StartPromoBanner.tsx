@@ -187,7 +187,7 @@ export function StartPromoBanner() {
         >
           <Link
             to={BLOG_POST_PATH}
-            {...analyticsAttrs(banner.event)}
+            {...analyticsAttrs(banner.event!)}
             aria-label={`${headline}. ${subline} ${ctaLabel}`}
             className="group relative z-0 flex min-h-28 w-full cursor-pointer items-center justify-center px-3 pe-10 transition-colors hover:bg-white/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:gap-7 sm:px-9 sm:pe-12"
           >
