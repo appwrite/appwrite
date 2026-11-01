@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  Bell,
   FlaskConical,
   Layers,
   type LucideIcon,
@@ -30,6 +31,7 @@ import { useMarkExperimentsSeen } from '@/lib/react-query/hooks'
 import { parseExperimentsSeenAt, type UserPrefs } from '@/lib/user-prefs-keys'
 
 const EXPERIMENT_ICONS = {
+  alerts: Bell,
   analytics: ANALYTICS_PRODUCT_ICON,
   projectEnvironments: Layers,
   projectTransfers: ArrowLeftRight,

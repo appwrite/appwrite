@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Console\Services;
 
+use Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe\Create as CreateAlertsUnsubscribe;
+use Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe\Delete as DeleteAlertsUnsubscribe;
+use Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe\Get as GetAlertsUnsubscribe;
 use Appwrite\Platform\Modules\Console\Http\Init\API;
 use Appwrite\Platform\Modules\Console\Http\Init\Web;
 use Appwrite\Platform\Modules\Console\Http\OAuth2Providers\XList as ListOAuth2Providers;
@@ -35,6 +38,11 @@ class Http extends Service
         $this->addAction(ListKeyScopes::getName(), ListKeyScopes::class);
         $this->addAction(ListOrganizationScopes::getName(), ListOrganizationScopes::class);
         $this->addAction(GetResourceAvailability::getName(), GetResourceAvailability::class);
+
+        // Alert email unsubscribe links, which carry a signed token instead of a session
+        $this->addAction(GetAlertsUnsubscribe::getName(), GetAlertsUnsubscribe::class);
+        $this->addAction(CreateAlertsUnsubscribe::getName(), CreateAlertsUnsubscribe::class);
+        $this->addAction(DeleteAlertsUnsubscribe::getName(), DeleteAlertsUnsubscribe::class);
 
         // web redirects to the console
         $this->addAction(RedirectRoot::getName(), RedirectRoot::class);
