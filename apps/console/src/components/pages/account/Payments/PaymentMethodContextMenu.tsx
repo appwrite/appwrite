@@ -9,7 +9,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
-import { Copy, FileJson, Pencil, Trash2 } from 'lucide-react'
+import { Copy, FileJson, Pencil, ShieldCheck, Trash2 } from 'lucide-react'
 import { fetchPaymentMethod } from '@/lib/react-query/hooks'
 import { copyResourceAsJson, copyToClipboard } from '@/lib/utils/context-menu'
 import { ContextMenuIcon } from '@/components/global/shared/ContextMenuIcon'
@@ -20,6 +20,9 @@ interface PaymentMethodContextMenuProps {
   paymentMethod: Models.PaymentMethod
   onUpdate: (method: Models.PaymentMethod) => void
   onDelete: (method: Models.PaymentMethod) => void
+  /** Only set for cards that can take a mandate. */
+  onSetupMandate?: (method: Models.PaymentMethod) => void
+  setupMandatePending?: boolean
   children: React.ReactNode
 }
 
@@ -27,6 +30,8 @@ export function PaymentMethodContextMenu({
   paymentMethod,
   onUpdate,
   onDelete,
+  onSetupMandate,
+  setupMandatePending,
   children,
 }: PaymentMethodContextMenuProps) {
   const t = useT()
@@ -42,6 +47,15 @@ export function PaymentMethodContextMenu({
           <ContextMenuIcon icon={Pencil} />
           {t('Update')}
         </ContextMenuItem>
+        {onSetupMandate && (
+          <ContextMenuItem
+            disabled={setupMandatePending}
+            onSelect={() => onSetupMandate(paymentMethod)}
+          >
+            <ContextMenuIcon icon={ShieldCheck} />
+            {t('Set up auto-pay')}
+          </ContextMenuItem>
+        )}
         <ContextMenuSeparator />
         <ContextMenuSub>
           <ContextMenuSubTrigger>
