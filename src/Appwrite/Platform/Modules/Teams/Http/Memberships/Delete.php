@@ -86,39 +86,37 @@ class Delete extends Action
 
         $this->validate($profile, $team, $dbForProject);
 
-        if ($project->getId() === 'console') {
-            // Quick check:
-            // fetch up to 2 owners to determine if only one exists
-            $ownersCount = $dbForProject->count(
+        // An organization must keep a confirmed owner, whoever deletes the membership: a session, or an API key.
+        // Counting after the delete, in the same transaction, keeps an unauthorized caller on the 401 path.
+        $isConfirmedOwner = $membership->getAttribute('confirm', false)
+            && \in_array('owner', $membership->getAttribute('roles', []), true);
+
+        $dbForProject->withTransaction(function () use ($dbForProject, $membership, $project, $team, $isConfirmedOwner) {
+            try {
+                $dbForProject->deleteDocument('memberships', $membership->getId());
+            } catch (AuthorizationException $exception) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            if ($project->getId() !== 'console' || !$isConfirmedOwner) {
+                return;
+            }
+
+            $owners = $dbForProject->count(
                 collection: 'memberships',
                 queries: [
                     Query::containsAny('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getSequence()])
+                    Query::equal('teamInternalId', [$team->getSequence()]),
+                    Query::equal('confirm', [true]),
                 ],
-                max: 2
+                max: 1
             );
 
-            // Is the deletion being requested by the user on their own membership and they are also the owner?
-            $isSelfOwner =
-                in_array('owner', $membership->getAttribute('roles')) &&
-                $membership->getAttribute('userInternalId') === $user->getSequence();
-
-            if ($ownersCount === 1 && $isSelfOwner) {
-                /**
-                 * Prevent removal if the user is the only owner, this is because -
-                 *
-                 * 1. Other roles [if exists] can neither add a new owner nor delete the organization.
-                 * 2. If the only owner is removed, while there were no other members, the organization isn't marked for deletion and stays in a limbo.
-                 */
+            if ($owners === 0) {
+                // Other roles can neither add an owner nor delete the organization, so it would be left unmanageable
                 throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
             }
-        }
-
-        try {
-            $dbForProject->deleteDocument('memberships', $membership->getId());
-        } catch (AuthorizationException $exception) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        });
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 

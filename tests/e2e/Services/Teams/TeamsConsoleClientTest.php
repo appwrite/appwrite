@@ -355,6 +355,47 @@ final class TeamsConsoleClientTest extends Scope
         $this->assertEquals('User is not allowed to modify roles', $response['body']['message']);
     }
 
+    public function testPendingOwnerInviteDoesNotCountAsAnOwner(): void
+    {
+        $teamUid = $this->createTeamHelper()['teamUid'];
+        $headers = array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $invite = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', $headers, [
+            'email' => uniqid() . 'pending-owner@localhost.test',
+            'name' => 'Pending Owner',
+            'roles' => ['owner'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $invite['headers']['status-code']);
+        $this->assertFalse($invite['body']['confirm']);
+
+        $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', $headers);
+        $this->assertSame(200, $memberships['headers']['status-code']);
+        $owner = \array_values(\array_filter($memberships['body']['memberships'], fn (array $membership) => $membership['confirm']))[0];
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamUid . '/memberships/' . $owner['$id'], $headers, [
+            'roles' => ['developer'],
+        ]);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('membership_downgrade_prohibited', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $owner['$id'], $headers);
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('membership_deletion_prohibited', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $owner['$id'], $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame(['owner'], $response['body']['roles']);
+
+        // Revoking the pending owner invite is still allowed
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $invite['body']['$id'], $headers);
+        $this->assertSame(204, $response['headers']['status-code']);
+    }
+
     public function testConsoleDeveloperCannotUpdateMembershipRoles(): void
     {
         $teamData = $this->createTeamHelper();
