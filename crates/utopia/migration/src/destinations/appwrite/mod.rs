@@ -56,6 +56,7 @@ pub struct Appwrite {
     on_duplicate: OnDuplicate,
     database_dsn: Option<DsnResolver>,
     collection_structures: Array,
+    scopes: Option<Vec<String>>,
     row_buffer: Vec<Document>,
     orphans_by_table: IndexMap<String, Orphans>,
     processed_two_way_pairs: HashSet<String>,
@@ -95,6 +96,9 @@ pub struct Options {
     /// Structures by database type, used over `collection_structure` for
     /// that type (PHP: `$collectionStructures`).
     pub collection_structures: Array,
+    /// Scopes the migration was granted; imported API keys may hold no
+    /// others. `None` grants every scope (PHP: `$scopes`).
+    pub scopes: Option<Vec<String>>,
 }
 
 impl Appwrite {
@@ -103,7 +107,8 @@ impl Appwrite {
     ///
     /// PHP: `new Appwrite($project, $endpoint, $key, $dbForProject,
     /// $getDatabasesDB, $collectionStructure, $dbForPlatform,
-    /// $projectInternalId, $onDuplicate, $getDatabaseDSN, $collectionStructures)`.
+    /// $projectInternalId, $onDuplicate, $getDatabaseDSN, $collectionStructures,
+    /// $scopes)`.
     pub fn new(project: &str, endpoint: &str, key: &str, options: Options) -> Result<Self> {
         let mut client = Client::new();
         client.set_endpoint(endpoint)?;
@@ -126,6 +131,7 @@ impl Appwrite {
             on_duplicate: options.on_duplicate,
             database_dsn: options.database_dsn,
             collection_structures: options.collection_structures,
+            scopes: options.scopes,
             row_buffer: Vec::new(),
             orphans_by_table: IndexMap::new(),
             processed_two_way_pairs: HashSet::new(),
