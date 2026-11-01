@@ -12,7 +12,10 @@ abstract class Service
 
     public const TYPE_WORKER = 'Worker';
 
-    protected array $actions;
+    /**
+     * @var array<string, Action|class-string<Action>>
+     */
+    protected array $actions = [];
 
     protected string $type;
 
@@ -35,9 +38,11 @@ abstract class Service
     }
 
     /**
-     * Add
+     * Add an action, or its class name to construct it on first use.
+     *
+     * @param Action|class-string<Action> $action
      */
-    public function addAction(string $key, Action $action): Service
+    public function addAction(string $key, Action|string $action): Service
     {
         $this->actions[$key] = $action;
 
@@ -59,14 +64,28 @@ abstract class Service
      */
     public function getAction(string $key): ?Action
     {
-        return $this->actions[$key] ?? null;
+        $action = $this->actions[$key] ?? null;
+
+        if (\is_string($action)) {
+            $action = $this->actions[$key] = new $action();
+        }
+
+        return $action;
     }
 
     /**
      * Get Actions
+     *
+     * @return array<string, Action>
      */
     public function getActions(): array
     {
+        foreach ($this->actions as $key => $action) {
+            if (\is_string($action)) {
+                $this->actions[$key] = new $action();
+            }
+        }
+
         return $this->actions;
     }
 }

@@ -11,7 +11,7 @@ class Tasks extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_TASK;
-        $this->addAction(StatsResources::getName(), new StatsResources());
-        $this->addAction(UsageSetup::getName(), new UsageSetup());
+        $this->addAction(StatsResources::getName(), StatsResources::class);
+        $this->addAction(UsageSetup::getName(), UsageSetup::class);
     }
 }
