@@ -1,0 +1,40 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="registanGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="registanBack">
+<path d="M96 196H186V296H96Z"/>
+<path d="M296 196H386V296H296Z"/>
+<path d="M118 170H164V196H118Z"/>
+<path d="M118 170C118 134 164 134 164 170Z"/>
+<path d="M318 170H364V196H318Z"/>
+<path d="M318 170C318 134 364 134 364 170Z"/>
+</g>
+<g id="registan">
+<path d="M186 104H296V296H186Z"/>
+<path d="M176 98H306V106H176Z"/>
+<path d="M100 118H114V296H100Z"/>
+<path d="M96 110H118V118H96Z"/>
+<path d="M98 110C98 98 116 98 116 110Z"/>
+<path d="M368 118H382V296H368Z"/>
+<path d="M364 110H386V118H364Z"/>
+<path d="M366 110C366 98 384 98 384 110Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#registanBack" fill="#19191C"/>
+<use href="#registanBack" fill="url(#registanGrad)"/>
+<use href="#registanBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#registan" fill="#19191C"/>
+<use href="#registan" fill="url(#registanGrad)"/>
+<use href="#registan" stroke="#FD366E" stroke-width="1.36239"/>
+<g fill="#19191C" stroke="#FD366E" stroke-width="1.36239"><path d="M206 296V176C206 151.5 227 134 241 121.4C255 134 276 151.5 276 176V296Z"/><path d="M106 250V230C106 224.4 110.8 220.4 114 217.52C117.2 220.4 122 224.4 122 230V250Z"/><path d="M134 250V230C134 224.4 138.8 220.4 142 217.52C145.2 220.4 150 224.4 150 230V250Z"/><path d="M160 250V230C160 224.4 164.8 220.4 168 217.52C171.2 220.4 176 224.4 176 230V250Z"/><path d="M306 250V230C306 224.4 310.8 220.4 314 217.52C317.2 220.4 322 224.4 322 230V250Z"/><path d="M334 250V230C334 224.4 338.8 220.4 342 217.52C345.2 220.4 350 224.4 350 230V250Z"/><path d="M360 250V230C360 224.4 364.8 220.4 368 217.52C371.2 220.4 376 224.4 376 230V250Z"/></g>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M196 114H286V296H196Z"/><path d="M141 140L141 170"/><path d="M130 144L130 170"/><path d="M152 144L152 170"/><path d="M341 140L341 170"/><path d="M330 144L330 170"/><path d="M352 144L352 170"/><path d="M100 150H114"/><path d="M100 190H114"/><path d="M100 230H114"/><path d="M368 150H382"/><path d="M368 190H382"/><path d="M368 230H382"/><path d="M241 132L243.06 137.17L248.61 137.53L244.33 141.08L245.7 146.47L241 143.5L236.3 146.47L237.67 141.08L233.39 137.53L238.94 137.17Z"/></g>
+</svg>

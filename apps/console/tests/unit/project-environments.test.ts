@@ -4,6 +4,7 @@ import {
   PROJECT_ENVIRONMENT_DOT_CLASS_PRODUCTION,
   projectEnvironmentDotClass,
   sortProjectEnvironments,
+  suggestProjectEnvironmentName,
 } from '@/lib/project-environments'
 
 describe('project environment dot colors', () => {
@@ -60,5 +61,47 @@ describe('project environment order', () => {
     const copy = [...environments]
     sortProjectEnvironments(environments, ['staging'])
     expect(environments).toEqual(copy)
+  })
+})
+
+describe('project environment name suggestion', () => {
+  test('the first unused name is Stage, then Dev, then QA', () => {
+    expect(suggestProjectEnvironmentName([])).toBe('Stage')
+    expect(suggestProjectEnvironmentName(['Stage'])).toBe('Dev')
+    expect(suggestProjectEnvironmentName(['staging'])).toBe('Dev')
+    expect(suggestProjectEnvironmentName(['STAGE', 'dev'])).toBe('QA')
+  })
+
+  test('aliases of a suggestion count as taken', () => {
+    expect(suggestProjectEnvironmentName(['Development'])).toBe('Stage')
+    expect(
+      suggestProjectEnvironmentName(['Stage', 'development']),
+    ).toBe('QA')
+    expect(suggestProjectEnvironmentName(['testing'])).toBe('Stage')
+  })
+
+  test('the project name is treated as taken', () => {
+    expect(suggestProjectEnvironmentName(['My App'])).toBe('Stage')
+    expect(suggestProjectEnvironmentName(['Stage'])).toBe('Dev')
+  })
+
+  test('an empty string is returned when every suggestion is taken', () => {
+    expect(
+      suggestProjectEnvironmentName([
+        'Stage',
+        'QA',
+        'Dev',
+        'Preview',
+        'Test',
+        'Sandbox',
+        'Demo',
+        'UAT',
+        'Beta',
+      ]),
+    ).toBe('')
+  })
+
+  test('blank taken names are ignored', () => {
+    expect(suggestProjectEnvironmentName(['', '  '])).toBe('Stage')
   })
 })

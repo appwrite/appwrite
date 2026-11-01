@@ -1,6 +1,9 @@
+import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import {
+  emptyProjectEnvironmentCopySelection,
+  fullProjectEnvironmentCopySelection,
   PROJECT_ENVIRONMENT_COPY_GROUPS,
   type ProjectEnvironmentCopyGroupId,
   type ProjectEnvironmentCopySelection,
@@ -8,33 +11,77 @@ import {
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
-interface ResourcesStepProps {
+interface CopyResourcesProps {
   selection: ProjectEnvironmentCopySelection
   onGroupChange: (
     groupId: ProjectEnvironmentCopyGroupId,
     patch: Partial<{ structure: boolean; data: boolean }>,
   ) => void
+  onSelectionChange: (selection: ProjectEnvironmentCopySelection) => void
   isCopyEmpty: boolean
   disabled: boolean
 }
 
 /** What the environment copies from the project: a structure box per group, and its data on request. */
-export function ResourcesStep({
+export function CopyResources({
   selection,
   onGroupChange,
+  onSelectionChange,
   isCopyEmpty,
   disabled,
-}: ResourcesStepProps) {
+}: CopyResourcesProps) {
   const t = useT()
+  const allSelected = PROJECT_ENVIRONMENT_COPY_GROUPS.every((group) => {
+    const picked = selection[group.id]
+    return picked.structure && (!group.data || picked.data)
+  })
+  const noneSelected = PROJECT_ENVIRONMENT_COPY_GROUPS.every(
+    (group) => !selection[group.id].structure,
+  )
 
   return (
-    <div className="space-y-2">
-      <Label>{t('What to copy')}</Label>
-      <div className="rounded-lg border border-border divide-y divide-border">
+    <section className="space-y-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <Label>{t('What to copy')}</Label>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            {t(
+              'Structure is selected by default. Include data only where you need it.',
+            )}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-[13px]"
+            onClick={() =>
+              onSelectionChange(fullProjectEnvironmentCopySelection())
+            }
+            disabled={disabled || allSelected}
+          >
+            {t('Select all')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-[13px]"
+            onClick={() =>
+              onSelectionChange(emptyProjectEnvironmentCopySelection())
+            }
+            disabled={disabled || noneSelected}
+          >
+            {t('Deselect all')}
+          </Button>
+        </div>
+      </div>
+      <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/50">
         {PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => {
           const picked = selection[group.id]
           return (
-            <div key={group.id} className="px-3 py-2.5 space-y-2">
+            <div key={group.id} className="space-y-2 px-4 py-3">
               <div className="flex items-start gap-3">
                 <Checkbox
                   id={`environment-copy-${group.id}`}
@@ -100,6 +147,6 @@ export function ResourcesStep({
           {t('Pick what to copy, or start from an empty environment.')}
         </p>
       )}
-    </div>
+    </section>
   )
 }

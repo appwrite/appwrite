@@ -5096,6 +5096,91 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($account['body']['phone']);
     }
 
+    public function testClaimingUnverifiedEmailKeepsMFAInForce(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+        $serverHeaders = \array_merge($headers, ['x-appwrite-key' => $this->getProject()['apiKey']]);
+        $ownerHeaders = \array_merge($headers, ['cookie' => 'a_session_' . $projectId . '=' . $data['session']]);
+
+        $authenticator = $this->client->call(Client::METHOD_POST, '/account/mfa/authenticators/totp', $ownerHeaders);
+        $this->assertSame(200, $authenticator['headers']['status-code']);
+        $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
+        if ($totp->expiresIn() <= 5) {
+            $this->getNextTOTP($totp, $totp->now());
+        }
+        $verification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $ownerHeaders, [
+            'otp' => $totp->now(),
+        ]);
+        $this->assertSame(200, $verification['headers']['status-code']);
+        $mfa = $this->client->call(Client::METHOD_PATCH, '/account/mfa', $ownerHeaders, ['mfa' => true]);
+        $this->assertSame(200, $mfa['headers']['status-code']);
+        $this->assertFalse($mfa['body']['emailVerification']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', $headers, [
+            'userId' => $data['id'],
+            'email' => $data['email'],
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $mail = $this->getLastEmailByAddress($data['email']);
+        $secret = substr($mail['text'], strpos($mail['text'], '&secret=', 0) + 8, 64);
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', $headers, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        // The mailbox alone is one factor, the session must still pass the TOTP challenge
+        $account = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]));
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['id'], $serverHeaders);
+        $this->assertTrue($user['body']['mfa']);
+        $this->assertFalse($user['body']['emailVerification']);
+        $factors = $this->client->call(Client::METHOD_GET, '/users/' . $data['id'] . '/mfa/factors', $serverHeaders);
+        $this->assertTrue($factors['body']['totp']);
+        $login = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $data['email'],
+            'password' => $data['password'],
+        ]);
+        $this->assertSame(201, $login['headers']['status-code']);
+
+        // A recovery email resets the password but cannot discard the second factor either
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $data['email'],
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $secret = $this->extractQueryParamsFromEmailLink($this->getLastEmailByAddress($data['email'], function ($email) {
+            $this->assertStringContainsString('Password Reset', (string) $email['subject']);
+        })['html'])['secret'];
+        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $data['id'],
+            'secret' => $secret,
+            'password' => 'recovered-password',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', $this->createSessionCookie($data['email'], 'recovered-password')['headers']);
+        $this->assertSame(401, $account['headers']['status-code']);
+        $this->assertSame('user_more_factors_required', $account['body']['type']);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['id'], $serverHeaders);
+        $this->assertTrue($user['body']['mfa']);
+        $this->assertFalse($user['body']['emailVerification']);
+        $factors = $this->client->call(Client::METHOD_GET, '/users/' . $data['id'] . '/mfa/factors', $serverHeaders);
+        $this->assertTrue($factors['body']['totp']);
+    }
+
     public function testCreatePhoneSessionRevokesUnverifiedAccountCredentials(): void
     {
         $this->ensurePhoneAuthEnabled();

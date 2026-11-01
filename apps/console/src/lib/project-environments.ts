@@ -1,7 +1,8 @@
 /**
- * A row in the environment switcher: either the project itself (the default
- * environment, which has no environment document of its own) or one of the
- * environments listed under it. Every row is a project the Console can open.
+ * A row in the environment switcher: either the project itself (production,
+ * which has no environment document of its own and is always labeled
+ * Production) or one of the environments listed under it. Every row is a
+ * project the Console can open.
  */
 export interface ProjectEnvironmentOption {
   id: string
@@ -45,6 +46,46 @@ export function sortProjectEnvironments<T extends { $id: string }>(
     if (rankB === undefined) return -1
     return rankA - rankB
   })
+}
+
+/**
+ * Names offered when creating an environment, in order. A suggestion is
+ * skipped when any of its aliases is already used (case-insensitive). After
+ * the list is exhausted the field stays empty.
+ */
+const PROJECT_ENVIRONMENT_NAME_SUGGESTIONS: readonly {
+  name: string
+  aliases: readonly string[]
+}[] = [
+  { name: 'Stage', aliases: ['stage', 'staging'] },
+  { name: 'Dev', aliases: ['dev', 'development'] },
+  { name: 'QA', aliases: ['qa', 'quality assurance'] },
+  { name: 'Preview', aliases: ['preview'] },
+  { name: 'Test', aliases: ['test', 'testing'] },
+  { name: 'Sandbox', aliases: ['sandbox'] },
+  { name: 'Demo', aliases: ['demo'] },
+  { name: 'UAT', aliases: ['uat'] },
+  { name: 'Beta', aliases: ['beta'] },
+]
+
+/**
+ * The next unused environment name, or an empty string when every suggestion
+ * is already taken. `takenNames` are existing environment names and the
+ * project's own name.
+ */
+export function suggestProjectEnvironmentName(
+  takenNames: readonly string[],
+): string {
+  const taken = new Set(
+    takenNames.map((name) => name.trim().toLowerCase()).filter(Boolean),
+  )
+
+  for (const suggestion of PROJECT_ENVIRONMENT_NAME_SUGGESTIONS) {
+    if (suggestion.aliases.some((alias) => taken.has(alias))) continue
+    return suggestion.name
+  }
+
+  return ''
 }
 
 /**
@@ -174,6 +215,26 @@ export function defaultProjectEnvironmentCopySelection(): ProjectEnvironmentCopy
     PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
       group.id,
       { structure: true, data: false },
+    ]),
+  ) as ProjectEnvironmentCopySelection
+}
+
+/** No group is copied. */
+export function emptyProjectEnvironmentCopySelection(): ProjectEnvironmentCopySelection {
+  return Object.fromEntries(
+    PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
+      group.id,
+      { structure: false, data: false },
+    ]),
+  ) as ProjectEnvironmentCopySelection
+}
+
+/** Every group and, where it has one, its data. */
+export function fullProjectEnvironmentCopySelection(): ProjectEnvironmentCopySelection {
+  return Object.fromEntries(
+    PROJECT_ENVIRONMENT_COPY_GROUPS.map((group) => [
+      group.id,
+      { structure: true, data: Boolean(group.data) },
     ]),
   ) as ProjectEnvironmentCopySelection
 }

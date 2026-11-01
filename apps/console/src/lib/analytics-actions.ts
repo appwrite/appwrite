@@ -1,3 +1,5 @@
+import type { SalesSource } from '@/lib/sales/contact-sales'
+
 /**
  * Curated analytics actions for low-cardinality, specific Plausible event names.
  *
@@ -28,6 +30,7 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
+  'zero-claim': 'Zero Claim Clicked',
   'header-console': 'Header Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
@@ -154,6 +157,18 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-apply-coupon': 'Upgrade Apply Coupon Clicked',
   'upgrade-apply-coupon-confirm': 'Upgrade Apply Coupon Confirm Clicked',
   'upgrade-free-conflict-choice': 'Upgrade Free Conflict Choice Selected',
+
+  // In-console sales links (see `SALES_SOURCES`)
+  'billing-contact-sales': 'Billing Contact Sales Clicked',
+  'settings-contact-sales': 'Settings Contact Sales Clicked',
+  'members-contact-sales': 'Members Contact Sales Clicked',
+  'backups-contact-sales': 'Backups Contact Sales Clicked',
+  'activity-contact-sales': 'Activity Contact Sales Clicked',
+  'specs-contact-sales': 'Specifications Contact Sales Clicked',
+  'replicas-contact-sales': 'Replicas Contact Sales Clicked',
+  'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'support-contact-sales': 'Support Contact Sales Clicked',
+  'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
 
   // Console project sidebar
   'nav-sidebar-overview': 'Sidebar Overview Clicked',
@@ -381,6 +396,20 @@ const UPGRADE_PLAN_SELECT_ACTIONS: Record<string, AnalyticsActionId> = {
   'tier-enterprise': 'upgrade-select-enterprise',
 }
 
+const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
+  billing: 'billing-contact-sales',
+  settings: 'settings-contact-sales',
+  members: 'members-contact-sales',
+  backups: 'backups-contact-sales',
+  activity: 'activity-contact-sales',
+  specs: 'specs-contact-sales',
+  replicas: 'replicas-contact-sales',
+  compliance: 'compliance-contact-sales',
+  support: 'support-contact-sales',
+  'support-ticket': 'support-ticket-contact-sales',
+  'plan-picker': 'upgrade-contact-sales',
+}
+
 /** Exact docs global-nav hrefs → curated actions (top-level section entries only). */
 const DOCS_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   '/docs': 'docs-nav-home',
@@ -435,6 +464,12 @@ export function getUpgradePlanSelectAnalyticsAction(
     UPGRADE_PLAN_SELECT_ACTIONS[key] ??
     UPGRADE_PLAN_SELECT_ACTIONS[key.replace(/\s+/g, '-')]
   )
+}
+
+export function getContactSalesAnalyticsAction(
+  source: SalesSource,
+): AnalyticsActionId {
+  return CONTACT_SALES_ACTIONS[source]
 }
 
 export function getDocsNavAnalyticsAction(

@@ -765,8 +765,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   '1 hour': 'שעה אחת',
   '30 days': '30 ימים',
   'Activity retention': 'שמירת נתוני פעילות',
-  'Upgrade or contact sales for longer retention.':
-    'שדרגו או פנו למכירות לשמירת נתונים ממושכת יותר.',
+  'Upgrade for longer retention.': 'שדרגו לשמירת נתונים ממושכת יותר.',
+  'Longer retention is available on Enterprise.':
+    'שמירת נתונים ממושכת יותר זמינה בתוכנית Enterprise.',
   'Limited activity history': 'היסטוריית פעילות מוגבלת',
   'of activity history.': 'של היסטוריית פעילות.',
   'of activity history. Upgrade for longer retention.':
@@ -3340,6 +3341,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שינויים כאן לא משפיעים על פרודקשן.',
   'Name the environment and choose where it starts.':
     'תנו שם לסביבה ובחרו מאיפה היא מתחילה.',
+  'An environment is a separate project. Copying keeps the IDs of what it brings over.':
+    'סביבה היא פרויקט נפרד. בהעתקה נשמרים המזהים של מה שמועתק.',
+  'Structure and settings are cloned, data only where you ask for it.':
+    'מבנה והגדרות משובטים. נתונים רק היכן שתבקשו.',
+  'Structure is selected by default. Include data only where you need it.':
+    'המבנה מסומן כברירת מחדל. כללו נתונים רק היכן שצריך.',
   'Pick what to copy from the project.': 'בחרו מה להעתיק מהפרויקט.',
   'Point your app at the new environment.':
     'כוונו את האפליקציה שלכם לסביבה החדשה.',
@@ -3594,8 +3601,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // Environment copy at creation, its progress card, and backups in environments
   'Start from': 'נקודת התחלה',
   'Empty environment': 'סביבה ריקה',
-  'Nothing is copied from the project.': 'דבר לא מועתק מהפרויקט.',
-  'Copy of the project': 'עותק של הפרויקט',
+  'Nothing is copied from the project. You handle the scaffolding.':
+    'דבר לא מועתק מהפרויקט. אתם מטפלים במבנה.',
+  'Clone of the project': 'שכפול של הפרויקט',
   'Structure and settings are copied, data only where you ask for it. The copy runs after the environment is created and keeps the IDs of what it copies.':
     'המבנה וההגדרות מועתקים, והנתונים רק היכן שתבקשו זאת. ההעתקה מתבצעת לאחר יצירת הסביבה ושומרת על המזהים של מה שהיא מעתיקה.',
   'What to copy': 'מה להעתיק',
