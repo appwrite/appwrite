@@ -12,25 +12,14 @@ use futures_util::StreamExt;
 
 use super::super::transactions::{ContextState, PurgeEvent};
 use super::super::{Database, METADATA, TTL, warning};
-use super::cached::{
-    ACTIVE_PREFIX, BLOCKED_PREFIX, PERMANENT, SEPARATOR, TOKEN_SEPARATOR, create_document_cache_token, random_hex, text,
-};
-use crate::cache::{Owners, Target, Tokens};
+use super::cached::{create_document_cache_token, random_hex, text};
+use crate::cache::{Mutation, Target, Tokens};
 use crate::document::Document;
 use crate::error::{Error, Kind, Result};
 use crate::event::{Domain, Event};
 use crate::permission::PermissionType;
 use crate::validator::authorization::Input;
 use crate::value::{Array, ArrayKey, Ext, Str, Value, from_plain, to_plain};
-
-/// How many times a write tries to register as an owner of a collection's
-/// document cache (`DOCUMENT_CACHE_REGISTRATION_ATTEMPTS`).
-const DOCUMENT_CACHE_REGISTRATION_ATTEMPTS: usize = 2;
-
-/// A `RuntimeException`.
-fn runtime(message: String) -> Error {
-    Error::new(Kind::Runtime, message)
-}
 
 /// Whether a loaded cache value is a miss (`false` or `null`).
 fn missing(value: &Option<php_std::Value>) -> bool {
@@ -284,15 +273,11 @@ impl Database {
         Ok(true)
     }
 
-    /// Publishes a tombstone before the write, then drops the definition
-    /// that carried the previous epoch, so readers refill it with the
-    /// tombstone (`blockDocumentCacheEpoch()`). A write whose registration
-    /// keeps failing still blocks with its tombstone: its activation
-    /// finishes it while the tombstone is its own, and otherwise retires
-    /// whatever readers filled while it ran. An epoch that cannot be read is
-    /// purged all the same, so a cache that cannot confirm the purge fails
-    /// the write; `false` when the cache holds no epoch Each step is retried
-    /// first, so a blip shorter than the retries does not cost the write.
+    /// Registers the write before it starts, then retires the definition
+    /// carrying the old epoch (`blockDocumentCacheEpoch()`); `false` on a
+    /// cache without versions, which caches no documents. Each step is
+    /// retried first, so a blip shorter than the retries does not cost the
+    /// write.
     async fn block_document_cache_epoch(
         &self,
         collection_key: &str,
@@ -300,43 +285,11 @@ impl Database {
         definition_key: &str,
     ) -> Result<bool> {
         let cache = self.cache();
-        let epoch_key = format!("{collection_key}#epoch");
-        if !self.register_document_cache_owner(collection_key, token).await?
-            && missing(&cache.load(&epoch_key, PERMANENT, "").await?)
-        {
-            self.with_retries(
-                || async {
-                    cache.purge(&epoch_key, "").await?;
-                    Ok(())
-                },
-                3,
-                100,
-            )
-            .await?;
+        if !cache.supports_versioning() {
             return Ok(false);
         }
-        self.with_retries(
-            || async {
-                let tombstone = format!("{BLOCKED_PREFIX}{token}{SEPARATOR}{}", php_std::datetime::time());
-                if !cache.save(&epoch_key, &text(&tombstone), "", 0).await? {
-                    return Err(runtime(format!("Failed to block document cache epoch '{epoch_key}'")));
-                }
-                Ok(())
-            },
-            3,
-            100,
-        )
-        .await?;
-        let started_key = format!("{collection_key}#started");
-        self.with_retries(
-            || async {
-                cache.purge(&started_key, "").await?;
-                Ok(())
-            },
-            3,
-            100,
-        )
-        .await?;
+        let timeout = self.cache_writer_timeout();
+        self.with_retries(|| Mutation::new(cache.clone()).begin(collection_key, token, timeout), 3, 100).await?;
         self.with_retries(
             || async {
                 self.purge_cached_definition(definition_key).await?;
@@ -347,19 +300,6 @@ impl Database {
         )
         .await?;
         Ok(true)
-    }
-
-    /// Registers a write as an owner of a collection's document cache,
-    /// trying [`DOCUMENT_CACHE_REGISTRATION_ATTEMPTS`] times
-    /// (`registerDocumentCacheOwner()`).
-    async fn register_document_cache_owner(&self, collection_key: &str, token: &str) -> Result<bool> {
-        let owners = Owners::new(self.cache());
-        for _ in 0..DOCUMENT_CACHE_REGISTRATION_ATTEMPTS {
-            if owners.register(collection_key, token).await? {
-                return Ok(true);
-            }
-        }
-        Ok(false)
     }
 
     /// `purgeCachedDefinition()`.
@@ -390,9 +330,9 @@ impl Database {
         failure.map_or(Ok(()), Err)
     }
 
-    /// Replaces this write's tombstone with a fresh epoch once no other
-    /// write to the collection is in flight; writes older than the writer
-    /// timeout no longer count as in flight (`activateDocumentCacheEpoch()`).
+    /// Releases the write, which always changes the collection's epoch,
+    /// even when eviction lost its registration, then retires the definition
+    /// carrying the old one (`activateDocumentCacheEpoch()`).
     async fn activate_document_cache_epoch(
         &self,
         collection_key: &str,
@@ -400,191 +340,22 @@ impl Database {
         definition_key: &str,
     ) -> Result<()> {
         let cache = self.cache();
-        let registration = Owners::new(cache.clone()).find(collection_key, token).await?;
-        let owner = cache.load(&registration.key, TTL, &registration.field).await?;
-        let is_token = |owner: &Option<php_std::Value>| string(owner).as_deref() == Some(token);
-        if !missing(&owner) && !is_token(&owner) {
-            return Err(runtime(format!("Invalid document cache owner '{token}' for '{collection_key}'")));
-        }
-        let owned = is_token(&owner)
-            && self.release_document_cache_owner(&registration.key, &registration.field, collection_key, token).await?;
-
-        let started_key = format!("{collection_key}#started");
-        let finished_key = format!("{collection_key}#finished");
-        let started = cache.generation(&started_key).await?;
-        let finished = cache.generation(&finished_key).await?;
-        let epoch_key = format!("{collection_key}#epoch");
-        let loaded = cache.load(&epoch_key, PERMANENT, "").await?;
-        let epoch = string(&loaded);
-        let blocked = epoch.as_deref().is_some_and(|e| e.starts_with(BLOCKED_PREFIX));
-        let ours =
-            blocked && epoch.as_deref().is_some_and(|e| e.starts_with(&format!("{BLOCKED_PREFIX}{token}{SEPARATOR}")));
-
-        if started == finished {
-            if !blocked || ours {
-                self.publish_document_cache_epoch(collection_key, &finished, definition_key).await?;
-            }
-            return Ok(());
-        }
-
-        if !owned && !ours {
-            // This token was cleared by a cache flush or released as
-            // abandoned. Leave another writer's tombstone fail-closed, but
-            // retire whatever readers filled while it ran.
-            if epoch.is_some() && !blocked {
-                self.publish_document_cache_epoch(collection_key, &started, definition_key).await?;
-            }
-            return Ok(());
-        }
-
-        let next_finished = self.finish_document_cache_write(collection_key, &finished, &loaded).await?;
-
-        let next_started = cache.generation(&started_key).await?;
-        if next_started == next_finished {
-            return self.publish_document_cache_epoch(collection_key, &next_finished, definition_key).await;
-        }
-
-        if !registration.field.is_empty() && self.release_abandoned_document_cache_owners(&registration.key).await? {
-            return self.publish_document_cache_epoch(collection_key, &next_started, definition_key).await;
-        }
-
-        self.purge_cached_definition(definition_key).await?;
-        Ok(())
-    }
-
-    /// Releases this write's registration, and reports whether it was still
-    /// this write's to release; a purge that cannot be confirmed is retried
-    /// while the registration is still in place
-    /// (`releaseDocumentCacheOwner()`).
-    async fn release_document_cache_owner(
-        &self,
-        key: &str,
-        field: &str,
-        collection_key: &str,
-        token: &str,
-    ) -> Result<bool> {
-        let cache = self.cache();
-        let released = std::sync::atomic::AtomicBool::new(true);
-        self.with_retries(
-            || async {
-                if cache.purge(key, field).await? {
-                    return Ok(());
-                }
-                let owner = cache.load(key, TTL, field).await?;
-                if !missing(&owner) {
-                    return Err(runtime(format!(
-                        "Failed to release document cache owner '{token}' for '{collection_key}'"
-                    )));
-                }
-                released.store(false, std::sync::atomic::Ordering::Relaxed);
-                Ok(())
-            },
-            3,
-            100,
-        )
-        .await?;
-        Ok(released.into_inner())
-    }
-
-    /// Counts this write as finished and returns the `#finished` generation
-    /// after it (`finishDocumentCacheWrite()`). A cache flush restarts
-    /// generations, so an unchanged `#finished` only proves the purge was
-    /// lost while the epoch read with it is still in place; the purge is
-    /// retried only then, so a purge that did land is never counted twice.
-    async fn finish_document_cache_write(
-        &self,
-        collection_key: &str,
-        finished: &str,
-        loaded: &Option<php_std::Value>,
-    ) -> Result<String> {
-        let cache = self.cache();
-        let finished_key = format!("{collection_key}#finished");
-        let epoch_key = format!("{collection_key}#epoch");
-        let next = std::sync::Mutex::new(finished.to_owned());
-        let attempted = std::sync::atomic::AtomicBool::new(false);
-        self.with_retries(
-            || async {
-                if attempted.load(std::sync::atomic::Ordering::Relaxed) {
-                    let generation = cache.generation(&finished_key).await?;
-                    *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = generation;
-                }
-                let unchanged = *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) == finished;
-                if unchanged {
-                    attempted.store(true, std::sync::atomic::Ordering::Relaxed);
-                    cache.purge(&finished_key, "").await?;
-                }
-                let generation = cache.generation(&finished_key).await?;
-                *next.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = generation.clone();
-                if generation == finished
-                    && string(loaded).is_some()
-                    && cache.load(&epoch_key, PERMANENT, "").await? == *loaded
-                {
-                    return Err(runtime(format!("Failed to finish document cache invalidation '{epoch_key}'")));
-                }
-                Ok(())
-            },
-            3,
-            100,
-        )
-        .await?;
-        Ok(next.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner))
-    }
-
-    /// Publishes a fresh epoch carrying the started generation
-    /// (`publishDocumentCacheEpoch()`): until the next write starts, it is
-    /// current even while writes judged abandoned still count as unfinished.
-    async fn publish_document_cache_epoch(
-        &self,
-        collection_key: &str,
-        started: &str,
-        definition_key: &str,
-    ) -> Result<()> {
-        let epoch_key = format!("{collection_key}#epoch");
-        let epoch = format!("{ACTIVE_PREFIX}{}{SEPARATOR}{started}", random_hex());
-        self.with_retries(
-            || async {
-                if !self.cache().save(&epoch_key, &text(&epoch), "", 0).await? {
-                    return Err(runtime(format!("Failed to activate document cache epoch '{epoch_key}'")));
-                }
-                Ok(())
-            },
-            3,
-            100,
-        )
-        .await?;
-        self.with_retries(
-            || async {
-                self.purge_cached_definition(definition_key).await?;
-                Ok(())
-            },
-            3,
-            100,
-        )
-        .await
-    }
-
-    /// Releases every other writer still registered when all of them are
-    /// older than the writer timeout; a token without a creation time counts
-    /// as live (`releaseAbandonedDocumentCacheOwners()`).
-    async fn release_abandoned_document_cache_owners(&self, owners: &str) -> Result<bool> {
-        let cache = self.cache();
-        let now = php_std::datetime::time();
         let timeout = self.cache_writer_timeout();
-        let mut abandoned = Vec::new();
-        for token in cache.list(owners).await? {
-            let created = token.find(TOKEN_SEPARATOR).map_or("", |i| &token[..i]);
-            if created.is_empty()
-                || !created.bytes().all(|b| b.is_ascii_digit())
-                || php_std::format::str_to_int(created.as_bytes()).wrapping_add(timeout) > now
-            {
-                return Ok(false);
-            }
-            abandoned.push(token);
-        }
-        for token in abandoned {
-            cache.purge(owners, &token).await?;
-        }
-        Ok(true)
+        let finished =
+            self.with_retries(|| Mutation::new(cache.clone()).finish(collection_key, token, timeout), 3, 100).await;
+        let purged = self
+            .with_retries(
+                || async {
+                    self.purge_cached_definition(definition_key).await?;
+                    Ok(())
+                },
+                3,
+                100,
+            )
+            .await;
+        // PHP purges in a `finally`: its failure replaces the finish.s.
+        purged?;
+        finished
     }
 
     /// Runs a cache operation under the document's tenant when tenant per
@@ -672,11 +443,8 @@ impl Database {
         let epoch_key = format!("{}#epoch", self.query_cache_key(&collection, namespace).await?);
         let cache = self.cache();
         let rotate = async {
-            let existing = cache.load(&epoch_key, TTL, "").await?;
-            Ok::<bool, Error>(
-                (missing(&existing) || cache.purge(&epoch_key, "").await?)
-                    && cache.save(&epoch_key, &text(&random_hex()), "", 0).await?,
-            )
+            cache.purge(&epoch_key, "").await?;
+            Ok::<bool, Error>(cache.save(&epoch_key, &text(&random_hex()), "", 0).await?)
         };
         let rotated = match rotate.await {
             Ok(r) => r,
@@ -700,10 +468,11 @@ impl Database {
         Ok(rotated)
     }
 
-    /// Runs `callback` behind a generation-protected cache-aside lookup
+    /// Runs `callback` behind a version-protected cache-aside lookup
     /// (`withCache()`): the cached value of `key` (and `hash`), else the
-    /// callback's, cached. `hash` `None` (and any call inside a
-    /// transaction) runs the callback uncached; PHP's default hash is `""`.
+    /// callback's, cached. `hash` `None`, any call inside a transaction and
+    /// a cache without versions run the callback uncached; PHP's default
+    /// hash is `""`.
     ///
     /// Cached documents are read back as documents of their collection,
     /// cast, checked for TTL expiry and for read permission.
@@ -718,10 +487,10 @@ impl Database {
         let Some(hash) = hash else {
             return callback().await;
         };
-        if self.inner.adapter.in_transaction() {
+        let cache = self.cache();
+        if self.inner.adapter.in_transaction() || !cache.supports_versioning() {
             return callback().await;
         }
-        let cache = self.cache();
 
         let epoch_key = format!("{key}#epoch");
         let epoch = async {
@@ -762,11 +531,11 @@ impl Database {
             }
         }
 
-        let generation = match cache.generation(&physical_key).await {
-            Ok(g) => g,
+        let version = match cache.lease(&physical_key).await {
+            Ok(v) => v,
             Err(e) => {
-                warning(format!("Warning: Failed to get cache generation: {}", Error::from(e).message()));
-                "0".to_owned()
+                warning(format!("Warning: Failed to get cache version: {}", Error::from(e).message()));
+                return callback().await;
             }
         };
 
@@ -774,7 +543,7 @@ impl Database {
 
         if !matches!(value, Value::Bool(false))
             && let Some(encoded) = encode_cache_value(&value)
-            && let Err(e) = cache.save_with_lease(&physical_key, &encoded, "", generation.as_str()).await
+            && let Err(e) = cache.save_with_lease(&physical_key, &encoded, "", version.as_str()).await
         {
             warning(format!("Warning: Failed to save cache value: {}", Error::from(e).message()));
         }

@@ -178,6 +178,10 @@ pub enum Kind {
     /// library's builder refused, passed through where PHP's adapter does
     /// not wrap it in a [`Kind::Query`] error (an upsert's statement).
     QueryValidation,
+    /// `Utopia\Cache\Exception\Unavailable`: the cache could not confirm
+    /// an operation (a versioned record that kept changing or is invalid,
+    /// a flush that failed), passed through from utopia-php/cache.
+    CacheUnavailable,
 }
 
 impl Kind {
@@ -226,13 +230,14 @@ impl Kind {
             Kind::InvalidArgument => "InvalidArgumentException",
             Kind::BadMethodCall => "BadMethodCallException",
             Kind::QueryValidation => "Utopia\\Query\\Exception\\ValidationException",
+            Kind::CacheUnavailable => "Utopia\\Cache\\Exception\\Unavailable",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 42] = [
+        const ALL: [Kind; 43] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Schema,
@@ -275,6 +280,7 @@ impl Kind {
             Kind::InvalidArgument,
             Kind::BadMethodCall,
             Kind::QueryValidation,
+            Kind::CacheUnavailable,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -315,7 +321,8 @@ impl Kind {
             | Kind::DateMalformedString
             | Kind::InvalidArgument
             | Kind::BadMethodCall
-            | Kind::QueryValidation => None,
+            | Kind::QueryValidation
+            | Kind::CacheUnavailable => None,
             Kind::MongoUnsent => Some(Kind::Mongo),
             _ => Some(Kind::Database),
         }
@@ -532,6 +539,7 @@ impl From<utopia_cache::Error> for Error {
     fn from(e: utopia_cache::Error) -> Self {
         let kind = match e.php_class() {
             "RedisException" => Kind::Redis,
+            "Utopia\\Cache\\Exception\\Unavailable" => Kind::CacheUnavailable,
             "RuntimeException" => Kind::Runtime,
             "InvalidArgumentException" => Kind::InvalidArgument,
             "JsonException" => Kind::Json,

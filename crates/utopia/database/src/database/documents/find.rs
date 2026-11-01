@@ -306,7 +306,7 @@ impl Database {
                 let query_cache = self.query_cache();
                 let mut results: Option<Vec<Document>> = None;
                 let mut entry = None;
-                let mut generation = String::new();
+                let mut version = String::new();
                 if let Some(query_cache) = &query_cache
                     && collection.id() != METADATA
                     && adapter.supports(Capability::Caching)
@@ -356,14 +356,14 @@ impl Database {
                             if let Some(cached) = query_cache.get(&found).await? {
                                 return Ok((Some(cached), None, String::new()));
                             }
-                            let generation = query_cache.generation(&found).await?;
-                            Ok::<_, Error>((None, Some(found), generation))
+                            let version = query_cache.lease(&found).await?;
+                            Ok::<_, Error>((None, Some(found), version))
                         };
                         match lookup.await {
                             Ok((cached, found, g)) => {
                                 results = cached;
                                 entry = found;
-                                generation = g;
+                                version = g;
                             }
                             Err(e) if !e.is_engine_error() => {
                                 warning(format!("Warning: Failed to get query results from cache: {}", e.message()));
@@ -393,7 +393,7 @@ impl Database {
                         if let (Some(entry), Some(query_cache)) = (&entry, &query_cache)
                             && !self.is_read_from_replica()
                         {
-                            match query_cache.set(entry, &results, &generation).await {
+                            match query_cache.set(entry, &results, &version).await {
                                 Ok(_) => {}
                                 Err(e) if !e.is_engine_error() => {
                                     warning(format!("Failed to save query results to cache: {}", e.message()));

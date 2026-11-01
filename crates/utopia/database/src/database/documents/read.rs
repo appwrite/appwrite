@@ -156,7 +156,8 @@ impl Database {
             super::super::transactions::ContextState::get(&c.state().document_cache_mutations, &collection_key)
                 .is_some()
         });
-        let cacheable = !for_update
+        let cacheable = self.cache().supports_versioning()
+            && !for_update
             && joins.is_empty()
             && (!in_transaction || self.is_cached_in_transaction(&document_key))
             && !blocked;
@@ -227,12 +228,15 @@ impl Database {
             }
         }
 
-        let mut generation = "0".to_owned();
+        let mut version = String::new();
         if fill_epoch.is_some() || fill_definition {
-            match self.cache().generation(&document_key).await {
-                Ok(g) => generation = g,
+            match self.cache().lease(&document_key).await {
+                Ok(v) => version = v,
                 Err(e) => {
-                    super::super::warning(format!("Warning: Failed to get cache generation: {e}"));
+                    fill_epoch = None;
+                    fill_definition = false;
+                    cache_failed = true;
+                    super::super::warning(format!("Warning: Failed to get cache version: {e}"));
                 }
             }
         }
@@ -284,10 +288,10 @@ impl Database {
                 [(ArrayKey::Str(Str::from(CACHE_EMPTY_MARKER)), Value::Bool(true))].into_iter().collect();
             let saved = match &fill_epoch {
                 Some(epoch) if relationships.is_empty() && missing => {
-                    self.save_cached_document(&document_key, &field, epoch, marker, &generation).await
+                    self.save_cached_document(&document_key, &field, epoch, marker, &version).await
                 }
                 _ if fill_definition => {
-                    self.save_cached_definition(&document_key, &field, marker, None, &generation, None).await
+                    self.save_cached_definition(&document_key, &field, marker, None, &version).await
                 }
                 _ => Ok(()),
             };
@@ -345,7 +349,7 @@ impl Database {
 
         let saved = match &fill_epoch {
             Some(epoch) if relationships.is_empty() => {
-                self.save_cached_document(&document_key, &field, epoch, document.array_copy(), &generation).await
+                self.save_cached_document(&document_key, &field, epoch, document.array_copy(), &version).await
             }
             _ if fill_definition => {
                 let validity = Validity {
@@ -358,8 +362,7 @@ impl Database {
                     &field,
                     document.array_copy(),
                     Some(validity),
-                    &generation,
-                    Some((described.as_str(), state.value.as_deref())),
+                    &version,
                 )
                 .await
             }
@@ -368,6 +371,9 @@ impl Database {
         match saved {
             Ok(()) => {}
             Err(e) if !e.is_engine_error() => {
+                if definition {
+                    self.settings().definition_fills_fail = true;
+                }
                 super::super::warning(format!("Failed to save document to cache: {}", e.message()));
             }
             Err(e) => return Err(e),

@@ -61,7 +61,7 @@
 //! | `Adapter\Feature\*` | [`adapter::Feature`], [`adapter::Casting`], [`adapter::Connection`], [`adapter::QueryBuilder`], [`adapter::RawQuery`], [`adapter::Relationships`], [`adapter::Schemaless`], [`adapter::Spatial`], [`adapter::Timeouts`], [`adapter::Upserts`] |
 //! | `Utopia\Database\Validator\*` | [`validator`] |
 //! | `Utopia\Database\Database` and its traits | [`Database`] (its constants and `internalAttributesFor()` in [`database`]), [`database::Hook`] (what `addHook()` takes), [`database::Filter`] (`addFilter()`), [`database::Callback`] (`onNext`), [`database::Context`] (an invalidation scope) |
-//! | `Utopia\Database\Cache\*` | [`cache::Query`], [`cache::Invalidator`], [`cache::Owners`], [`cache::Scope`], [`cache::Entry`], [`cache::Epoch`], [`cache::Region`], [`cache::Registration`] |
+//! | `Utopia\Database\Cache\*` | [`cache::Query`], [`cache::Invalidator`], [`cache::Mutation`], [`cache::Scope`], [`cache::Entry`], [`cache::Epoch`], [`cache::Region`] |
 //! | `Hook\Permissions`, `Hook\Relationships`, `Hook\Cascade`, `Hook\Preparation`, `Hook\PreparedCreate` | [`hook::Permissions`], [`hook::relationships::Relationships`], [`hook::relationships::Cascade`], [`hook::relationships::Preparation`], [`hook::relationships::PreparedCreate`] |
 //! | `Utopia\Database\Mirror`, `Mirror\Filter`, `Mirror\Failure` | [`mirror::Mirror`] (a [`Database`] that is one: [`mirror::Mirror::of`]), [`mirror::Filter`], [`mirror::Failure`] (`onError()`'s callbacks: [`mirror::ErrorCallback`]) |
 //! | `Utopia\Database\Exception` and `Exception\*` | [`Error`], [`Kind`] |

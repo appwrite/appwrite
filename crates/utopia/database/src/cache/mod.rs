@@ -1,7 +1,7 @@
 //! The query cache: `find()` results per collection, its invalidation, and
 //! the value objects both take.
 //!
-//! The cache is shared with the PHP library (`utopia-php/database` 8.x)
+//! The cache is shared with the PHP library (`utopia-php/database` 10.x)
 //! through Redis, so keys, fields and stored values are byte for byte what
 //! PHP reads and writes.
 //!
@@ -13,11 +13,10 @@
 //! | `Cache\Entry` | [`Entry`] |
 //! | `Cache\Epoch` | [`Epoch`] |
 //! | `Cache\Region` | [`Region`] |
-//! | `Cache\Registration` | [`Registration`] |
-//! | `Cache\Owners`, `Cache\Fields` | [`Owners`] |
+//! | `Cache\Mutation` | [`Mutation`] |
 
 mod invalidator;
-mod owners;
+mod mutation;
 mod query;
 
 #[cfg(test)]
@@ -26,7 +25,7 @@ pub(crate) mod testing;
 mod tests;
 
 pub use invalidator::Invalidator;
-pub use owners::Owners;
+pub use mutation::Mutation;
 pub use query::Query;
 
 use crate::document::Document;
@@ -123,17 +122,6 @@ impl Default for Region {
     fn default() -> Self {
         Region { ttl: 3600, enabled: true }
     }
-}
-
-/// Where a write's owner token is registered.
-///
-/// PHP: `Utopia\Database\Cache\Registration`.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct Registration {
-    /// `$key`.
-    pub key: String,
-    /// `$field` (empty for a key of its own).
-    pub field: String,
 }
 
 /// What a mutation writes, for the invalidation to find the collections it

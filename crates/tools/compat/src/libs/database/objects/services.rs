@@ -10,7 +10,7 @@ use futures_util::FutureExt as _;
 use serde_json::{Map, Value as Json, json};
 use utopia_database::adapter::sql::hook::{column, join, permission, tenant};
 use utopia_database::adapter::{Feature, Limits, Profile};
-use utopia_database::cache::{self, Entry, Epoch, Invalidator, Owners, Region, Registration, Scope};
+use utopia_database::cache::{self, Entry, Epoch, Invalidator, Mutation, Region, Scope};
 use utopia_database::capability::Capability;
 use utopia_database::database::Hook;
 use utopia_database::event::{DispatcherHook, Domain, Event};
@@ -51,10 +51,10 @@ php_object!(InputObj, "Validator\\Authorization\\Input", |_i| values::object(
     vec![]
 ));
 
-/// A `Cache\Owners` (no public properties).
+/// A `Cache\Mutation` (no public properties).
 #[derive(Clone)]
-pub struct OwnersObj(pub Arc<Owners>);
-php_object!(OwnersObj, "Cache\\Owners", |_o| values::object("Cache\\Owners", vec![]));
+pub struct MutationObj(pub Arc<Mutation>);
+php_object!(MutationObj, "Cache\\Mutation", |_o| values::object("Cache\\Mutation", vec![]));
 
 /// A `State\Value`: a value scoped to the future that overrides it.
 #[derive(Clone)]
@@ -185,10 +185,6 @@ php_object!(Epoch, "Cache\\Epoch", |e| values::object(
 php_object!(Region, "Cache\\Region", |r| values::object(
     "Cache\\Region",
     vec![("ttl", Json::from(r.ttl)), ("enabled", Json::Bool(r.enabled))]
-));
-php_object!(Registration, "Cache\\Registration", |r| values::object(
-    "Cache\\Registration",
-    vec![("key", Json::String(r.key.clone())), ("field", Json::String(r.field.clone()))]
 ));
 php_object!(RowMetadata, "Hook\\RowMetadata", |m| values::object(
     "Hook\\RowMetadata",
@@ -557,10 +553,6 @@ pub fn decode_value(class: &str, fields: &Json) -> R<Option<Obj>> {
             ttl: j.get("ttl").and_then(Json::as_i64).unwrap_or(3600),
             enabled: j.get("enabled").and_then(Json::as_bool).unwrap_or(true),
         }),
-        "Cache\\Registration" => object(Registration {
-            key: j.get("key").and_then(Json::as_str).unwrap_or_default().to_owned(),
-            field: j.get("field").and_then(Json::as_str).unwrap_or_default().to_owned(),
-        }),
         "Hook\\RowMetadata" => object(RowMetadata { tenant: decode_with(cx, j.get("tenant").unwrap_or(&Json::Null))? }),
         "State\\Snapshot" => object(SnapshotObj(snapshot_of(cx, &j)?)),
         "Validator\\Authorization\\Input" => object(InputObj(Input::new("", Vec::new()))),
@@ -735,12 +727,11 @@ async fn build(class: &str, a: &Args, calls: &Calls) -> R<Option<Obj>> {
             let cache = dbmod::cache(a, "cache").await?;
             object(QueryCacheObj(Arc::new(cache::Query::new(cache, a.int_or("slots", cache::Query::SLOTS)?)?)))
         }
-        "Cache\\Owners" => object(OwnersObj(Arc::new(Owners::new(dbmod::cache(a, "cache").await?)))),
+        "Cache\\Mutation" => object(MutationObj(Arc::new(Mutation::new(dbmod::cache(a, "cache").await?)))),
         "Cache\\Scope" => object(scope_of(Some(&a.cx), a.json())?),
         "Cache\\Entry" => object(entry_of(a.json())),
         "Cache\\Epoch" => object(Epoch { value: a.opt_string("value")?, blocked_at: a.opt_int("blockedAt")? }),
         "Cache\\Region" => object(Region { ttl: a.int_or("ttl", 3600)?, enabled: a.bool_or("enabled", true)? }),
-        "Cache\\Registration" => object(Registration { key: s("key")?, field: a.string_or("field", "")? }),
         "Cache\\Invalidator" => {
             let query_cache = dbmod::query_cache(a, "queryCache").await?;
             let Some(query_cache) = query_cache else {
@@ -1012,12 +1003,20 @@ async fn dispatch(this: &mut Obj, method: &str, a: &Args, calls: &Calls) -> R<Op
         let q = q.0.clone();
         return query_cache(&q, this, method, a).await.map(Some);
     }
-    if let Some(o) = this.downcast_ref::<OwnersObj>() {
-        let o = o.0.clone();
+    if let Some(m) = this.downcast_ref::<MutationObj>() {
+        let m = m.0.clone();
+        let (key, timeout) = (a.string("key")?, a.int("timeout")?);
         return Ok(Some(match method {
-            "register" => o.register(&a.string("key")?, &a.string("token")?).await?.into_obj(),
-            "find" => object(o.find(&a.string("key")?, &a.string("token")?).await?),
-            _ => return fault(format!("Cache\\Owners has no method `{method}`")),
+            "read" => object(m.read(&key, timeout).await?),
+            "begin" => {
+                m.begin(&key, &a.string("token")?, timeout).await?;
+                Obj::Value(Value::Null)
+            }
+            "finish" => {
+                m.finish(&key, &a.string("token")?, timeout).await?;
+                Obj::Value(Value::Null)
+            }
+            _ => return fault(format!("Cache\\Mutation has no method `{method}`")),
         }));
     }
     if let Some(scope) = this.downcast_ref::<Scope>() {
@@ -1231,8 +1230,8 @@ async fn query_cache(q: &Arc<cache::Query>, this: &Obj, method: &str, a: &Args) 
                 .into_obj()
         }
         "get" => q.get(&entry()?).await?.into_obj(),
-        "getGeneration" => q.generation(&entry()?).await?.into_obj(),
-        "set" => q.set(&entry()?, &a.documents("results")?, &a.string("generation")?).await?.into_obj(),
+        "getLease" => q.lease(&entry()?).await?.into_obj(),
+        "set" => q.set(&entry()?, &a.documents("results")?, &a.string("version")?).await?.into_obj(),
         "invalidateCollection" => {
             q.invalidate_collection(&scope()?, &a.string("collection")?).await?;
             Obj::null()

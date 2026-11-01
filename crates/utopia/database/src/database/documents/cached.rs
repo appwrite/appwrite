@@ -5,15 +5,15 @@
 //! PHP: `loadCachedDocument()`, `saveCachedDocument()`,
 //! `createDefinitionInstance()`, `loadCachedDefinition()`,
 //! `saveCachedDefinition()`, `isCachedInTransaction()`, `isTtlExpired()`,
-//! `loadDocumentCacheState()`, `restoreDocumentCacheEpoch()` and
-//! `createDocumentCacheToken()` of `Trait\Documents`. The entries are PHP's
+//! `loadDocumentCacheState()` and `createDocumentCacheToken()` of
+//! `Trait\Documents`. The entries are PHP's
 //! arrays, byte for byte once the cache's codec writes them.
 
 use std::collections::HashMap;
 use std::sync::{LazyLock, Mutex};
 
 use super::super::{Database, METADATA, TTL};
-use crate::cache::Epoch;
+use crate::cache::{Epoch, Mutation};
 use crate::capability::Capability;
 use crate::collection::Collection;
 use crate::document::Document;
@@ -22,18 +22,6 @@ use crate::value::{Array, ArrayKey, Str, Value, from_plain, to_plain};
 
 /// The marker a cached miss holds (`CACHE_EMPTY_MARKER`).
 pub(crate) const CACHE_EMPTY_MARKER: &str = "$empty";
-/// `DOCUMENT_CACHE_ACTIVE_PREFIX`.
-pub(crate) const ACTIVE_PREFIX: &str = "active:";
-/// `DOCUMENT_CACHE_BLOCKED_PREFIX`.
-pub(crate) const BLOCKED_PREFIX: &str = "blocked:";
-/// `DOCUMENT_CACHE_LAPSED_PREFIX`.
-pub(crate) const LAPSED_PREFIX: &str = "lapsed:";
-/// `DOCUMENT_CACHE_SEPARATOR`.
-pub(crate) const SEPARATOR: &str = "@";
-/// `DOCUMENT_CACHE_TOKEN_SEPARATOR`.
-pub(crate) const TOKEN_SEPARATOR: &str = ".";
-/// `DOCUMENT_CACHE_PERMANENT` (`PHP_INT_MAX`).
-pub(crate) const PERMANENT: i64 = i64::MAX;
 /// `DOCUMENT_CACHE_RECHECK`.
 pub(crate) const RECHECK: i64 = 60;
 /// `DOCUMENT_CACHE_EPOCH`.
@@ -83,7 +71,7 @@ pub(crate) fn random_hex() -> String {
 
 /// A write's token: `<time>.<32 hex>` (`createDocumentCacheToken()`).
 pub(crate) fn create_document_cache_token() -> String {
-    format!("{}{TOKEN_SEPARATOR}{}", php_std::datetime::time(), random_hex())
+    format!("{}.{}", php_std::datetime::time(), random_hex())
 }
 
 /// A cache array (string keys, plain values) as a database array.
@@ -147,10 +135,10 @@ impl Database {
         field: &str,
         epoch: &str,
         document: Array,
-        generation: &str,
+        version: &str,
     ) -> Result<()> {
         let entry = assoc(vec![(EPOCH, text(epoch)), (FIELD, text(field)), (VALUE, to_plain(&Value::Array(document)))]);
-        self.cache().save_with_lease(document_key, &entry, field, generation).await?;
+        self.cache().save_with_lease(document_key, &entry, field, version).await?;
         Ok(())
     }
 
@@ -220,18 +208,15 @@ impl Database {
     }
 
     /// Caches a definition's copy (`saveCachedDefinition()`); `validity`
-    /// `None` stores no validity keys (PHP's `[]`). With `is_current` (the
-    /// collection key the definition describes, and the epoch it was read
-    /// under: PHP's `$isCurrent`), a fill made without generations is
-    /// dropped when that epoch moved on.
+    /// `None` stores no validity keys (PHP's `[]`). The opaque `version`
+    /// rejects a definition filled after a concurrent invalidation.
     pub(crate) async fn save_cached_definition(
         &self,
         document_key: &str,
         field: &str,
         document: Array,
         validity: Option<Validity>,
-        generation: &str,
-        is_current: Option<(&str, Option<&str>)>,
+        version: &str,
     ) -> Result<()> {
         let mut pairs: Vec<(&str, php_std::Value)> = Vec::new();
         if let Some(validity) = validity {
@@ -241,20 +226,8 @@ impl Database {
         }
         pairs.push((FIELD, text(field)));
         pairs.push((VALUE, to_plain(&Value::Array(document))));
-        let cache = self.cache();
-        let saved = cache.save_with_lease(document_key, &assoc(pairs), field, generation).await?;
-        if !saved {
-            let fails = generation == "0" && cache.generation(document_key).await? == "0";
-            self.settings().definition_fills_fail = fails;
-            return Ok(());
-        }
+        self.cache().save_with_lease(document_key, &assoc(pairs), field, version).await?;
         self.settings().definition_fills_fail = false;
-        if generation == "0"
-            && let Some((described, epoch)) = is_current
-            && self.load_document_cache_state(described).await.value.as_deref() != epoch
-        {
-            cache.purge(document_key, "").await?;
-        }
         Ok(())
     }
 
@@ -285,70 +258,22 @@ impl Database {
         Ok(false)
     }
 
-    /// The epoch a collection's documents may be cached under, or none
-    /// while a write to it is in flight, with the time that write blocked it
-    /// (`loadDocumentCacheState()`). A tombstone older than the writer
-    /// timeout lapses into an epoch of its own.
+    /// The epoch a collection's documents may be cached under (the current
+    /// CAS identity of its mutation record), or none while writers are
+    /// registered, with the time the oldest blocked it
+    /// (`loadDocumentCacheState()`). A cache without versions caches
+    /// nothing, so it is always blocked.
     pub(crate) async fn load_document_cache_state(&self, collection_key: &str) -> Epoch {
         let now = php_std::datetime::time();
-        match self.try_load_document_cache_state(collection_key, now).await {
+        if !self.cache().supports_versioning() {
+            return Epoch { value: None, blocked_at: Some(now) };
+        }
+        match Mutation::new(self.cache()).read(collection_key, self.cache_writer_timeout()).await {
             Ok(epoch) => epoch,
             Err(e) => {
                 super::super::warning(format!("Warning: Failed to load document cache epoch: {}", e.message()));
-                Epoch { value: None, blocked_at: Some(now) }
+                Epoch { value: None, blocked_at: Some(php_std::datetime::time()) }
             }
         }
-    }
-
-    async fn try_load_document_cache_state(&self, collection_key: &str, now: i64) -> Result<Epoch> {
-        let cache = self.cache();
-        let record = match cache.load(&format!("{collection_key}#epoch"), PERMANENT, "").await? {
-            Some(php_std::Value::Str(s)) if !s.is_empty() => String::from_utf8_lossy(s.as_bytes()).into_owned(),
-            _ => return self.restore_document_cache_epoch(collection_key, now).await,
-        };
-        let separator = record.rfind(SEPARATOR);
-        let marker = separator.map_or(record.as_str(), |i| &record[..i]);
-        let stamp = separator.map_or("", |i| &record[i + 1..]);
-        if let Some(tombstone) = record.strip_prefix(BLOCKED_PREFIX) {
-            let blocked_at = if !stamp.is_empty() && stamp.bytes().all(|b| b.is_ascii_digit()) {
-                php_std::format::str_to_int(stamp.as_bytes())
-            } else {
-                0
-            };
-            if blocked_at.saturating_add(self.cache_writer_timeout()) > now {
-                return Ok(Epoch { value: None, blocked_at: Some(blocked_at) });
-            }
-            let finished = cache.generation(&format!("{collection_key}#finished")).await?;
-            return Ok(Epoch {
-                value: Some(format!("{LAPSED_PREFIX}{tombstone}{SEPARATOR}{finished}")),
-                blocked_at: None,
-            });
-        }
-        let started = cache.generation(&format!("{collection_key}#started")).await?;
-        if (separator.is_some() && started == stamp)
-            || started == cache.generation(&format!("{collection_key}#finished")).await?
-        {
-            return Ok(Epoch { value: Some(marker.to_owned()), blocked_at: None });
-        }
-        self.restore_document_cache_epoch(collection_key, now).await
-    }
-
-    /// Replaces a missing or unusable epoch: a fresh one when no write is
-    /// counted in flight, else a tombstone of its own
-    /// (`restoreDocumentCacheEpoch()`).
-    async fn restore_document_cache_epoch(&self, collection_key: &str, now: i64) -> Result<Epoch> {
-        let cache = self.cache();
-        let started = cache.generation(&format!("{collection_key}#started")).await?;
-        let epoch_key = format!("{collection_key}#epoch");
-        if started != cache.generation(&format!("{collection_key}#finished")).await? {
-            let tombstone = format!("{BLOCKED_PREFIX}{}{SEPARATOR}{now}", create_document_cache_token());
-            cache.save(&epoch_key, &text(&tombstone), "", 0).await?;
-            return Ok(Epoch { value: None, blocked_at: Some(now) });
-        }
-        let epoch = format!("{ACTIVE_PREFIX}{}", random_hex());
-        if !cache.save(&epoch_key, &text(&format!("{epoch}{SEPARATOR}{started}")), "", 0).await? {
-            return Ok(Epoch { value: None, blocked_at: Some(now) });
-        }
-        Ok(Epoch { value: Some(epoch), blocked_at: None })
     }
 }

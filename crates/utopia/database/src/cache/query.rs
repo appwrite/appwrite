@@ -7,27 +7,11 @@ use std::sync::{Arc, RwLock};
 use php_std::Str;
 use utopia_cache::Cache;
 
-use super::{Entry, Owners, Region, Scope};
+use super::{Entry, Mutation, Region, Scope};
 use crate::document::Document;
 use crate::error::{Error, Kind, Result};
 use crate::value::{Array, ArrayKey, Value, to_plain};
 
-/// `ACTIVE_PREFIX`.
-const ACTIVE_PREFIX: &str = "active:";
-/// `INITIAL_EPOCH`.
-const INITIAL_EPOCH: &str = "active:initial";
-/// `BLOCKED_PREFIX`.
-const BLOCKED_PREFIX: &str = "blocked:";
-/// `LAPSED_PREFIX`.
-const LAPSED_PREFIX: &str = "lapsed:";
-/// `TOKEN_SEPARATOR`.
-const TOKEN_SEPARATOR: &str = ".";
-/// `SEPARATOR`.
-const SEPARATOR: &str = "@";
-/// `NEVER_STARTED`.
-const NEVER_STARTED: &str = "0";
-/// `PERMANENT` (`PHP_INT_MAX`).
-const PERMANENT: i64 = i64::MAX;
 /// `VERSION`.
 const VERSION: i64 = 2;
 /// `BLOCK_FIELD`.
@@ -36,14 +20,6 @@ const BLOCK_FIELD: &str = "block";
 /// A string of the cache.
 fn text(value: &str) -> php_std::Value {
     php_std::Value::Str(Str::from(value))
-}
-
-/// A cache value as a string, when it is one (PHP's `is_string()`).
-fn string(value: &Option<php_std::Value>) -> Option<String> {
-    match value {
-        Some(php_std::Value::Str(s)) => Some(String::from_utf8_lossy(s.as_bytes()).into_owned()),
-        _ => None,
-    }
 }
 
 /// Whether a loaded value is a miss (`false` or `null`).
@@ -151,18 +127,21 @@ impl Query {
         queries: &Value,
         context: &str,
     ) -> Result<Option<Entry>> {
-        if !self.region(collection).enabled {
+        if !self.cache.supports_versioning() || !self.region(collection).enabled {
             return Ok(None);
         }
         let key = self.collection_key(scope, collection);
-        let Some(epoch) = self.epoch(&key, collection, scope.writer_timeout).await? else {
+        let Some(epoch) = Mutation::new(self.cache.clone()).read(&key, scope.writer_timeout).await?.value else {
             return Ok(None);
         };
         let field =
             md5_serialized(&assoc(vec![("queries", queries.clone()), ("context", Value::Str(Str::from(context)))]));
         // hexdec() of 8 hex digits always fits an integer.
         let slot = i64::from_str_radix(&field[..8], 16).unwrap_or(0) % self.slots;
-        Ok(Some(Entry { key, collection: collection.to_owned(), field, epoch, slot: slot.to_string() }))
+        // Cache transports alias field '0' to the default field; conditional
+        // fills must use the same field.
+        let slot = if slot == 0 { String::new() } else { slot.to_string() };
+        Ok(Some(Entry { key, collection: collection.to_owned(), field, epoch, slot }))
     }
 
     /// The results cached for `entry` (`get()`).
@@ -208,13 +187,14 @@ impl Query {
         Ok(Some(documents))
     }
 
-    /// `getGeneration()`.
-    pub async fn generation(&self, entry: &Entry) -> Result<String> {
-        Ok(self.cache.generation(&entry.key).await?)
+    /// The version a fill of `entry` is presented with (`getLease()`).
+    pub async fn lease(&self, entry: &Entry) -> Result<String> {
+        Ok(self.cache.lease(&entry.key).await?)
     }
 
-    /// Caches `results` for `entry` under `generation` (`set()`).
-    pub async fn set(&self, entry: &Entry, results: &[Document], generation: &str) -> Result<bool> {
+    /// Caches `results` for `entry` while its version is still `version`
+    /// (`set()`).
+    pub async fn set(&self, entry: &Entry, results: &[Document], version: &str) -> Result<bool> {
         let documents: php_std::Array = results
             .iter()
             .enumerate()
@@ -231,7 +211,7 @@ impl Query {
             .map(|(k, v)| (ArrayKey::Str(Str::from(k)), v))
             .collect(),
         );
-        Ok(self.cache.save_with_lease(&entry.key, &data, &entry.slot, generation).await?)
+        Ok(self.cache.save_with_lease(&entry.key, &data, &entry.slot, version).await?)
     }
 
     /// `invalidateCollection()`: block and activate at once.
@@ -245,184 +225,37 @@ impl Query {
     /// A write's token (`createToken()`): `<time>.<32 hex>`, which records
     /// when it was created so a later activation can tell an abandoned write.
     pub fn create_token(&self) -> String {
-        format!("{}{TOKEN_SEPARATOR}{}", php_std::datetime::time(), random_hex())
+        format!("{}.{}", php_std::datetime::time(), random_hex())
     }
 
-    /// Publishes a shared tombstone before a mutation starts
-    /// (`blockCollection()`). The previous epoch's results stay until a fill
-    /// of their slot replaces them.
-    ///
-    /// Fails ([`crate::Kind::Runtime`]) when the owner cannot be registered
-    /// or the tombstone saved.
+    /// Registers the mutation's token before it starts, then retires the
+    /// block field (`blockCollection()`). A cache without versions caches
+    /// nothing, so there is nothing to block.
     pub async fn block_collection(&self, key: &str, token: &str) -> Result<()> {
-        if !Owners::new(self.cache.clone()).register(key, token).await? {
-            return Err(runtime(format!("Failed to register query cache owner for '{key}'")));
+        if self.cache.supports_versioning() {
+            Mutation::new(self.cache.clone()).begin(key, token, Scope::WRITER_TIMEOUT).await?;
+            self.cache.purge(key, BLOCK_FIELD).await?;
         }
-        let tombstone = format!("{BLOCKED_PREFIX}{token}{SEPARATOR}{}", php_std::datetime::time());
-        if !self.cache.save(&epoch_key(key), &text(&tombstone), "", 0).await? {
-            return Err(runtime(format!("Failed to block query cache epoch for '{key}'")));
-        }
-        self.cache.purge(&started_key(key), "").await?;
-        self.cache.purge(key, BLOCK_FIELD).await?;
         Ok(())
     }
 
-    /// Replaces this mutation's tombstone with a fresh epoch once no other
-    /// mutation is in progress (`activateCollection()`); `writer_timeout`
-    /// is the seconds after which another writer's registration is treated
-    /// as abandoned.
-    ///
-    /// Fails ([`crate::Kind::Runtime`]) for another owner's registration,
-    /// an owner that cannot be released, a lost finish, or an epoch that
-    /// cannot be published.
+    /// Releases the mutation's token, which rotates the collection's epoch
+    /// (`activateCollection()`); `writer_timeout` is the seconds after which
+    /// another writer's registration is treated as abandoned.
     pub async fn activate_collection(&self, key: &str, token: &str, writer_timeout: i64) -> Result<()> {
-        let cache = &self.cache;
-        let registration = Owners::new(cache.clone()).find(key, token).await?;
-        let owner = cache.load(&registration.key, PERMANENT, &registration.field).await?;
-        if !missing(&owner) && !is_text(owner.as_ref(), token) {
-            return Err(runtime(format!("Invalid query cache owner for '{key}'")));
-        }
-        let mut owned = is_text(owner.as_ref(), token);
-        if owned && !cache.purge(&registration.key, &registration.field).await? {
-            let owner = cache.load(&registration.key, PERMANENT, &registration.field).await?;
-            if !missing(&owner) {
-                return Err(runtime(format!("Failed to release query cache owner for '{key}'")));
-            }
-            owned = false;
-        }
-
-        let epoch_key = epoch_key(key);
-        let started_key = started_key(key);
-        let finished_key = finished_key(key);
-        let started = cache.generation(&started_key).await?;
-        let finished = cache.generation(&finished_key).await?;
-        let current = string(&cache.load(&epoch_key, PERMANENT, "").await?);
-        let ours = is_tombstone_of(current.as_deref(), token);
-
-        if started == finished {
-            if !owned && (ours || !is_tombstone(current.as_deref())) {
-                self.publish(key, &finished).await?;
-            }
-            return Ok(());
-        }
-
-        if !owned && !ours {
-            if current.as_deref().is_some_and(|c| c.starts_with(ACTIVE_PREFIX)) {
-                self.publish(key, &started).await?;
-            }
-            return Ok(());
-        }
-
-        cache.purge(&finished_key, "").await?;
-        let next_started = cache.generation(&started_key).await?;
-        let next_finished = cache.generation(&finished_key).await?;
-
-        if next_started == next_finished {
-            return self.publish(key, &next_finished).await;
-        }
-
-        if next_finished == finished
-            && is_tombstone_of(string(&cache.load(&epoch_key, PERMANENT, "").await?).as_deref(), token)
-        {
-            return Err(runtime(format!("Failed to finish query cache invalidation for '{key}'")));
-        }
-
-        if !registration.field.is_empty() && self.release_abandoned_owners(&registration.key, writer_timeout).await? {
-            self.publish(key, &next_started).await?;
+        if self.cache.supports_versioning() {
+            Mutation::new(self.cache.clone()).finish(key, token, writer_timeout).await?;
         }
         Ok(())
     }
 
     /// `flush()`.
     ///
-    /// Fails ([`crate::Kind::Runtime`]) when the cache is not flushed
-    /// (`Failed to flush query cache`).
+    /// Fails ([`crate::Kind::CacheUnavailable`]) when the cache is not
+    /// flushed (`Failed to flush query cache`).
     pub async fn flush(&self) -> Result<()> {
         if !self.cache.flush().await? {
-            return Err(runtime("Failed to flush query cache".to_owned()));
-        }
-        Ok(())
-    }
-
-    /// The epoch results may be read and filled under, or none while a write
-    /// is in flight (`getEpoch()`). Epochs never expire; an active epoch
-    /// carries the started generation it was published at, and the initial
-    /// epoch needs a results hash no write has purged.
-    async fn epoch(&self, key: &str, collection: &str, writer_timeout: i64) -> Result<Option<String>> {
-        let value = self.cache.load(&epoch_key(key), PERMANENT, "").await?;
-        if missing(&value) {
-            return Ok((self.cache.generation(key).await? == NEVER_STARTED).then(|| INITIAL_EPOCH.to_owned()));
-        }
-        let Some(value) = string(&value).filter(|v| !v.is_empty()) else {
-            return Ok(None);
-        };
-        let Some(separator) = value.rfind(SEPARATOR) else {
-            return Ok(None);
-        };
-        let marker = &value[..separator];
-        let stamp = &value[separator + 1..];
-
-        if value.starts_with(BLOCKED_PREFIX) {
-            let stamp = php_std::format::str_to_int(stamp.as_bytes());
-            return self.lapsed_epoch(key, collection, &value, stamp, writer_timeout).await;
-        }
-        if !value.starts_with(ACTIVE_PREFIX) {
-            return Ok(None);
-        }
-        let started = self.cache.generation(&started_key(key)).await?;
-        if started != stamp && started != self.cache.generation(&finished_key(key)).await? {
-            return Ok(None);
-        }
-        Ok(Some(marker.to_owned()))
-    }
-
-    /// The epoch a tombstone lapses into: after the region TTL once no
-    /// write is counted in flight, after the writer timeout while one is
-    /// (`getLapsedEpoch()`).
-    async fn lapsed_epoch(
-        &self,
-        key: &str,
-        collection: &str,
-        tombstone: &str,
-        stamp: i64,
-        writer_timeout: i64,
-    ) -> Result<Option<String>> {
-        let now = php_std::datetime::time();
-        let ttl = self.region(collection).ttl;
-        if stamp.wrapping_add(ttl.min(writer_timeout)) > now {
-            return Ok(None);
-        }
-        let started = self.cache.generation(&started_key(key)).await?;
-        let finished = self.cache.generation(&finished_key(key)).await?;
-        if stamp.wrapping_add(if started == finished { ttl } else { writer_timeout }) > now {
-            return Ok(None);
-        }
-        Ok(Some(format!("{LAPSED_PREFIX}{}{SEPARATOR}{finished}", &tombstone[BLOCKED_PREFIX.len()..])))
-    }
-
-    /// Releases every other writer still registered when all of them are
-    /// older than the writer timeout; a token without a creation time counts
-    /// as live (`releaseAbandonedOwners()`).
-    async fn release_abandoned_owners(&self, owners: &str, writer_timeout: i64) -> Result<bool> {
-        let now = php_std::datetime::time();
-        let mut abandoned = Vec::new();
-        for token in self.cache.list(owners).await? {
-            match token_time(&token) {
-                Some(created) if created.wrapping_add(writer_timeout) <= now => abandoned.push(token),
-                _ => return Ok(false),
-            }
-        }
-        for token in abandoned {
-            self.cache.purge(owners, &token).await?;
-        }
-        Ok(true)
-    }
-
-    /// Publishes a fresh active epoch carrying `finished` (`publish()`).
-    async fn publish(&self, key: &str, finished: &str) -> Result<()> {
-        let epoch = format!("{ACTIVE_PREFIX}{}{SEPARATOR}{finished}", random_hex());
-        if !self.cache.save(&epoch_key(key), &text(&epoch), "", 0).await? {
-            return Err(runtime(format!("Failed to activate query cache for '{key}'")));
+            return Err(Error::new(Kind::CacheUnavailable, "Failed to flush query cache"));
         }
         Ok(())
     }
@@ -434,31 +267,4 @@ impl Query {
         }
         Ok(())
     }
-}
-
-/// The time a token was created at (`getTokenTime()`): its digits before
-/// the first `.`, `None` when there are none.
-pub(crate) fn token_time(token: &str) -> Option<i64> {
-    let time = token.find(TOKEN_SEPARATOR).map_or("", |i| &token[..i]);
-    (!time.is_empty() && time.bytes().all(|b| b.is_ascii_digit())).then(|| php_std::format::str_to_int(time.as_bytes()))
-}
-
-fn is_tombstone(value: Option<&str>) -> bool {
-    value.is_some_and(|v| v.starts_with(BLOCKED_PREFIX))
-}
-
-fn is_tombstone_of(value: Option<&str>, token: &str) -> bool {
-    value.is_some_and(|v| v.starts_with(&format!("{BLOCKED_PREFIX}{token}{SEPARATOR}")))
-}
-
-fn epoch_key(key: &str) -> String {
-    format!("{key}#epoch")
-}
-
-fn finished_key(key: &str) -> String {
-    format!("{key}#finished")
-}
-
-fn started_key(key: &str) -> String {
-    format!("{key}#started")
 }
