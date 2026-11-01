@@ -99,13 +99,18 @@ class Update extends Action
         }
 
         // An organization must keep a confirmed owner, whoever makes the change: a session, or an API key.
-        // Counting after the update, in the same transaction, sees this change and refuses it as a whole.
+        // Locking the team first serializes concurrent changes to its owners; counting after the update,
+        // in the same transaction, sees this change and refuses it as a whole.
         $isDemotingConfirmedOwner = $project->getId() === 'console'
             && $membership->getAttribute('confirm', false)
             && \in_array('owner', $membership->getAttribute('roles', []), true)
             && !\in_array('owner', $roles, true);
 
         $membership = $dbForProject->withTransaction(function () use ($dbForProject, $membership, $roles, $team, $isDemotingConfirmedOwner) {
+            if ($isDemotingConfirmedOwner) {
+                $dbForProject->getDocument('teams', $team->getId(), forUpdate: true);
+            }
+
             $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['roles' => $roles]));
 
             if (!$isDemotingConfirmedOwner) {

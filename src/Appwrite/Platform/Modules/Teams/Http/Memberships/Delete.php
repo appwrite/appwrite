@@ -87,18 +87,24 @@ class Delete extends Action
         $this->validate($profile, $team, $dbForProject);
 
         // An organization must keep a confirmed owner, whoever deletes the membership: a session, or an API key.
-        // Counting after the delete, in the same transaction, keeps an unauthorized caller on the 401 path.
-        $isConfirmedOwner = $membership->getAttribute('confirm', false)
+        // Locking the team first serializes concurrent changes to its owners; counting after the delete,
+        // in the same transaction, keeps an unauthorized caller on the 401 path.
+        $isConfirmedOwner = $project->getId() === 'console'
+            && $membership->getAttribute('confirm', false)
             && \in_array('owner', $membership->getAttribute('roles', []), true);
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $membership, $project, $team, $isConfirmedOwner) {
+        $dbForProject->withTransaction(function () use ($dbForProject, $membership, $team, $isConfirmedOwner) {
+            if ($isConfirmedOwner) {
+                $dbForProject->getDocument('teams', $team->getId(), forUpdate: true);
+            }
+
             try {
                 $dbForProject->deleteDocument('memberships', $membership->getId());
             } catch (AuthorizationException $exception) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            if ($project->getId() !== 'console' || !$isConfirmedOwner) {
+            if (!$isConfirmedOwner) {
                 return;
             }
 
