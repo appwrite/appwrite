@@ -1140,6 +1140,13 @@
             "queries",
             "total"
         ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -2821,6 +2828,34 @@
         ],
         "migrations.retry": [
             "migrationId"
+        ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify"
         ],
         "notifications.list": [
             "queries",
@@ -5276,6 +5311,13 @@
             "queries",
             "total"
         ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -6933,6 +6975,34 @@
         ],
         "migrations.retry": [
             "migrationId"
+        ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",

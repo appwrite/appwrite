@@ -18,6 +18,7 @@ import { AddCreditsModal } from './AddCreditsModal'
 import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
+import { BudgetMonitors } from './BudgetMonitors'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
 import {
   SettingsCardsList,
@@ -29,6 +30,7 @@ import {
   useOrganizationBillingInvoicePresence,
   isOrganizationBillingReadonlyStatus,
 } from '@/lib/react-query/hooks'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { RetryPayment } from './RetryPayment'
 
@@ -37,6 +39,7 @@ export function BillingTab() {
   const params = useParams({ strict: false })
   const navigate = useNavigate()
   const orgId = params.orgId as string | undefined
+  const alertsEnabled = useConsoleProfile().features.alerts
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [isBackupPaymentMethod, setIsBackupPaymentMethod] = useState(false)
@@ -44,9 +47,7 @@ export function BillingTab() {
   const [retryInvoiceOpen, setRetryInvoiceOpen] = useState(false)
 
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
-  const orgRefs = organization
-    ? asOrganizationPaymentRefs(organization)
-    : null
+  const orgRefs = organization ? asOrganizationPaymentRefs(organization) : null
 
   const primaryPaymentMethod = useOrganizationPaymentMethod(
     orgId,
@@ -59,8 +60,7 @@ export function BillingTab() {
 
   const failedInvoice = orgRefs?.failedInvoice
   const hasFailedInvoice = isSubscriptionFailedInvoiceWithError(failedInvoice)
-  const { data: invoicePresence } =
-    useOrganizationBillingInvoicePresence(orgId)
+  const { data: invoicePresence } = useOrganizationBillingInvoicePresence(orgId)
   const hasInvoiceRequiringAuthentication =
     !hasFailedInvoice &&
     invoicePresence?.hasInvoiceRequiringAuthentication === true
@@ -220,10 +220,10 @@ export function BillingTab() {
             'upgrade',
             'downgrade',
             'change plan',
-      'pro',
-      'scale',
-      'core',
-      'free',
+            'pro',
+            'scale',
+            'core',
+            'free',
             'next payment',
             'charges',
             'billing cycle',
@@ -235,7 +235,13 @@ export function BillingTab() {
         id: 'payment-history',
         search: {
           title: 'Payment history',
-          keywords: ['invoice', 'invoices', 'receipt', 'payment history', 'paid'],
+          keywords: [
+            'invoice',
+            'invoices',
+            'receipt',
+            'payment history',
+            'paid',
+          ],
         },
         node: <PaymentHistory />,
       },
@@ -280,7 +286,13 @@ export function BillingTab() {
         id: 'budget-cap',
         search: {
           title: 'Budget cap',
-          keywords: ['budget', 'spending limit', 'cap', 'overage', 'usage limit'],
+          keywords: [
+            'budget',
+            'spending limit',
+            'cap',
+            'overage',
+            'usage limit',
+          ],
         },
         node: <BudgetCapSection orgId={orgId} />,
       },
@@ -292,11 +304,30 @@ export function BillingTab() {
         },
         node: <BillingAlertsSection orgId={orgId} />,
       },
+      ...(alertsEnabled
+        ? [
+            {
+              id: 'budget-monitors',
+              search: {
+                title: 'Budget monitors',
+                keywords: ['alerts', 'budget', 'webhook', 'monitors'],
+              },
+              node: <BudgetMonitors orgId={orgId} />,
+            },
+          ]
+        : []),
       {
         id: 'available-credits',
         search: {
           title: 'Available credits',
-          keywords: ['credits', 'balance', 'coupon', 'promo', 'prepaid', 'add credits'],
+          keywords: [
+            'credits',
+            'balance',
+            'coupon',
+            'promo',
+            'prepaid',
+            'add credits',
+          ],
         },
         node: (
           <AvailableCreditsSection
@@ -317,6 +348,7 @@ export function BillingTab() {
     orgBillingReadonly,
     failedInvoice,
     orgId,
+    alertsEnabled,
     t,
   ])
 

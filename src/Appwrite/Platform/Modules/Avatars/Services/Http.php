@@ -21,16 +21,16 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(GetCreditCard::getName(), new GetCreditCard());
-        $this->addAction(GetBrowser::getName(), new GetBrowser());
-        $this->addAction(GetFlag::getName(), new GetFlag());
-        $this->addAction(GetImage::getName(), new GetImage());
-        $this->addAction(GetFavicon::getName(), new GetFavicon());
-        $this->addAction(GetQR::getName(), new GetQR());
-        $this->addAction(GetInitials::getName(), new GetInitials());
-        $this->addAction(GetScreenshot::getName(), new GetScreenshot());
-        $this->addAction(GetPhoto::getName(), new GetPhoto());
-        $this->addAction(UpdatePhoto::getName(), new UpdatePhoto());
-        $this->addAction(DeletePhoto::getName(), new DeletePhoto());
+        $this->addAction(GetCreditCard::getName(), GetCreditCard::class);
+        $this->addAction(GetBrowser::getName(), GetBrowser::class);
+        $this->addAction(GetFlag::getName(), GetFlag::class);
+        $this->addAction(GetImage::getName(), GetImage::class);
+        $this->addAction(GetFavicon::getName(), GetFavicon::class);
+        $this->addAction(GetQR::getName(), GetQR::class);
+        $this->addAction(GetInitials::getName(), GetInitials::class);
+        $this->addAction(GetScreenshot::getName(), GetScreenshot::class);
+        $this->addAction(GetPhoto::getName(), GetPhoto::class);
+        $this->addAction(UpdatePhoto::getName(), UpdatePhoto::class);
+        $this->addAction(DeletePhoto::getName(), DeletePhoto::class);
     }
 }

@@ -76,6 +76,8 @@ return [
             Attribute::boolean(key: 'impersonator', default: false),
             Attribute::string(key: 'photoId'),
             Attribute::integer(key: 'photoSize', width: IntegerWidth::Bits64, default: 0),
+            // Monitors whose alert emails a console user stopped, and `type:<type>` for every monitor of a type.
+            Attribute::string(key: 'alertsUnsubscribed', size: Database::LENGTH_KEY, default: [], array: true),
         ],
         'indexes' => [
             Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: [OrderDirection::Asc]),

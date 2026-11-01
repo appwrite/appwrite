@@ -24,6 +24,7 @@ export const DEFAULT_SCOPES = [
   'keys.write',
   'platforms.write',
   'webhooks.write',
+  'monitors.write',
   'users.write',
   'teams.read',
   'teams.write',
@@ -77,6 +78,7 @@ export type ConsoleAccess = {
   canWriteKeys: boolean
   canWritePlatforms: boolean
   canWriteWebhooks: boolean
+  canWriteMonitors: boolean
   canWriteUsers: boolean
   canWriteTeams: boolean
   canWriteMessages: boolean
@@ -129,6 +131,7 @@ export function deriveAccessFromRolesScopes(
     canWriteKeys: has('keys.write'),
     canWritePlatforms: has('platforms.write'),
     canWriteWebhooks: has('webhooks.write'),
+    canWriteMonitors: has('monitors.write'),
     canWriteUsers: has('users.write'),
     canWriteTeams: has('teams.write'),
     canWriteMessages: has('messages.write'),

@@ -1096,7 +1096,8 @@ class Realtime extends MessagingAdapter
                 break;
             case 'rules':
             case 'migrations':
-                // Rules and migrations carry project data, so only those who can read the project receive them.
+            case 'monitors':
+                // Rules, migrations and alerts carry project data, so only those who can read the project receive them.
                 $channels[] = 'console';
                 $channels[] = 'projects.' . $project->getId();
                 $projectId = 'console';

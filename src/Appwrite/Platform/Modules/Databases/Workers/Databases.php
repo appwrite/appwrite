@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Workers;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Realtime;
 use Exception;
@@ -93,6 +94,11 @@ class Databases extends Action
         }
 
         Span::add('database.id', $database->getId());
+
+        if (\strval($type) === DATABASE_TYPE_DELETE_DATABASE) {
+            // Monitors scoped to the database go with it; their alert history stays.
+            (new Monitors($dbForPlatform))->deleteWatching($project, 'database', $database);
+        }
 
         match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $dbForProject, $dbForDatabases),

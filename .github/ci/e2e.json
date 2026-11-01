@@ -180,6 +180,22 @@
       "paths": ["src/Appwrite/Platform/Modules/Advisor/"]
     },
     {
+      "name": "Alerts",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "documentsdb": true,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Alerts/",
+        "src/Appwrite/Alert/",
+        "src/Appwrite/Schedule/Source/Alerts.php",
+        "src/Appwrite/Platform/Tasks/ScheduleAlerts.php",
+        "src/Appwrite/Platform/Workers/Notifications.php",
+        "app/config/alerts.php",
+        "app/config/locale/templates/email-alert.tpl"
+      ]
+    },
+    {
       "name": "Locale",
       "runner": "e2e",
       "functional": true,
