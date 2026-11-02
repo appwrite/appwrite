@@ -762,8 +762,9 @@ class Get extends Base
             ];
 
             // Store an email only once the provider attests it, and never one another user's identity holds.
-            // A different address drops the stored one; a missing email or an unverified repeat keeps it.
+            // Any other response clears it, so an address the provider no longer attests stops matching.
             $refresh = function () use ($dbForProject, $user, $identity, $providerEmail, $isVerified, $changes): void {
+                $changes['providerEmail'] = '';
                 if ($isVerified && !empty($providerEmail)) {
                     $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                         Query::equal('providerEmail', [$providerEmail]),
@@ -772,9 +773,6 @@ class Get extends Base
                     if ($identityWithMatchingEmail->isEmpty()) {
                         $changes['providerEmail'] = $providerEmail;
                     }
-                }
-                if (!isset($changes['providerEmail']) && !empty($providerEmail) && $providerEmail !== $identity->getAttribute('providerEmail', '')) {
-                    $changes['providerEmail'] = '';
                 }
 
                 $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));

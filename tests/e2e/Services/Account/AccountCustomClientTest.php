@@ -4891,13 +4891,13 @@ final class AccountCustomClientTest extends Scope
         $this->assertSame($providerEmail, $identity()['providerEmail']);
 
         /**
-         * Test for SUCCESS - a later unverified sign-in keeps the stored email
+         * Test for SUCCESS - a later unverified sign-in clears the stored email
          */
         $configure('canonical-' . $providerEmail . '#unverified');
 
         $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock', ['x-appwrite-project' => $projectId]);
         $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
-        $this->assertSame($providerEmail, $identity()['providerEmail']);
+        $this->assertSame('', $identity()['providerEmail']);
     }
 
     public function testOAuth2LinkedEmailFollowsAddressChanges(): void
@@ -4990,10 +4990,11 @@ final class AccountCustomClientTest extends Scope
         $ownerId = $link('canonical-' . $uid . '|' . $first);
 
         /**
-         * Test for SUCCESS - the same address keeps the stored email, verified or not
+         * Test for SUCCESS - the same address stays stored only while the provider attests it
          */
         $this->assertSame($first, $signIn('canonical-' . $uid . '|' . $first, $ownerId));
-        $this->assertSame($first, $signIn('canonical-' . $uid . '|' . $first . '#unverified', $ownerId));
+        $this->assertSame('', $signIn('canonical-' . $uid . '|' . $first . '#unverified', $ownerId));
+        $this->assertSame($first, $signIn('canonical-' . $uid . '|' . $first, $ownerId));
 
         /**
          * Test for SUCCESS - a different unverified address drops the stored email
@@ -5060,7 +5061,22 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($linkerId, $response['body']['userId']);
 
-        // Later sign-ins without an attested email keep the stored one
+        $storedEmail = function () use ($projectId, $sub): string {
+            $response = $this->client->call(Client::METHOD_GET, '/users/identities', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'queries' => [Query::equal('providerUid', [$sub])->toString()],
+            ]);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertCount(1, $response['body']['identities']);
+
+            return $response['body']['identities'][0]['providerEmail'];
+        };
+        $this->assertSame($providerEmail, $storedEmail());
+
+        // A sign-in that no longer attests the email, or omits it, clears it until the next verified one
         foreach ([['email' => $providerEmail, 'email_verified' => false], []] as $claims) {
             $response = $this->createIdTokenSession([
                 'provider' => 'mock',
@@ -5068,6 +5084,14 @@ final class AccountCustomClientTest extends Scope
             ]);
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertEquals($linkerId, $response['body']['userId']);
+            $this->assertSame('', $storedEmail());
+
+            $response = $this->createIdTokenSession([
+                'provider' => 'mock',
+                'idToken' => $this->mintIdToken(['sub' => $sub, 'email' => $providerEmail, 'email_verified' => true]),
+            ]);
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertSame($providerEmail, $storedEmail());
         }
 
         /**
