@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Range;
 
 class Create extends Action
 {
@@ -43,6 +44,18 @@ class Create extends Action
                     )
                 ],
                 contentType: ContentType::JSON,
-            ));
+            ))
+            ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
+            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
+            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->inject('request')
+            ->inject('response')
+            ->inject('user')
+            ->inject('store')
+            ->inject('proofForToken')
+            ->inject('project')
+            ->inject('console')
+            ->inject('mode');
     }
 }
