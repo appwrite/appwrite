@@ -6,7 +6,7 @@ return [
         'name' => 'Home',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'web/home.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -34,7 +34,7 @@ return [
         'name' => 'Account',
         'subtitle' => 'The Account service allows you to authenticate and manage a user account.',
         'description' => '/docs/services/account.md',
-        'controller' => 'api/account.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/account',
@@ -118,7 +118,7 @@ return [
         'name' => 'Projects',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
         'description' => '',
-        'controller' => 'api/projects.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',
@@ -211,6 +211,34 @@ return [
         'icon' => '',
         'platforms' => ['server', 'console'],
     ],
+    'monitors' => [
+        'key' => 'monitors',
+        'name' => 'Monitors',
+        'subtitle' => 'The Monitors service watches your project\'s usage and raises an alert when a monitor\'s rules hold, announced by email, in the console or to a webhook.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
+    'alerts' => [
+        'key' => 'alerts',
+        'name' => 'Alerts',
+        'subtitle' => 'The Alerts service lists the alerts your monitors raised: when each fired, the readings while it fired, and when it resolved.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
     'tokens' => [
         'key' => 'tokens',
         'name' => 'Tokens',
@@ -286,7 +314,7 @@ return [
         'name' => 'Mock',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'mock.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -300,7 +328,7 @@ return [
         'name' => 'GraphQL',
         'subtitle' => 'The GraphQL API allows you to query and mutate your Appwrite server using GraphQL.',
         'description' => '/docs/services/graphql.md',
-        'controller' => 'api/graphql.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/graphql',

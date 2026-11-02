@@ -1757,6 +1757,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Usage alerts',
+                'Show usage monitors and alerts (Usage sidebar pages, quick actions, budget monitors in billing, alert webhook events).',
+                'alerts',
+                profileId,
+                features.alerts,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Analytics humans/bots filter',
                 'Clicking Humans or Bots in analytics filters the page (via an empty vs non-empty bot category).',
                 'analyticsTrafficFilter',
@@ -2108,6 +2116,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     profileId,
     features.videos,
     features.analytics,
+    features.alerts,
     features.analyticsTrafficFilter,
     features.appwritePush,
     features.nativeDbsMongo,

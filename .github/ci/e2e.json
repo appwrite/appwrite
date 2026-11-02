@@ -52,7 +52,6 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Network/Validator/Origin.php",
         "src/Appwrite/Network/Validator/Redirect.php",
         "src/Appwrite/Auth/OAuth2",
@@ -146,8 +145,7 @@
       "functional": false,
       "processes": null,
       "paths": [
-        "app/controllers/api/graphql.php",
-        "app/controllers/api/account.php",
+        "src/Appwrite/Platform/Modules/GraphQL/",
         "src/Appwrite/Platform/Modules/Account/",
         "src/Appwrite/Platform/Modules/Avatars/",
         "src/Appwrite/Platform/Modules/Databases/",
@@ -180,6 +178,22 @@
       "paths": ["src/Appwrite/Platform/Modules/Advisor/"]
     },
     {
+      "name": "Alerts",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "documentsdb": true,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Alerts/",
+        "src/Appwrite/Alert/",
+        "src/Appwrite/Schedule/Source/Alerts.php",
+        "src/Appwrite/Platform/Tasks/ScheduleAlerts.php",
+        "src/Appwrite/Platform/Workers/Notifications.php",
+        "app/config/alerts.php",
+        "app/config/locale/templates/email-alert.tpl"
+      ]
+    },
+    {
       "name": "Locale",
       "runner": "e2e",
       "functional": true,
@@ -194,7 +208,6 @@
       "documentsdb": true,
       "paths": [
         "src/Appwrite/Platform/Modules/Projects/",
-        "app/controllers/api/projects.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
@@ -222,7 +235,6 @@
         "app/realtime.php",
         "src/Appwrite/Realtime/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
@@ -346,7 +358,6 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Webhooks/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
@@ -476,6 +487,7 @@
       "processes": 1,
       "paths": [
         "app/mqtt.php",
+        "app/init/mqtt/",
         "src/Appwrite/Mqtt/",
         "src/Appwrite/Messaging/Adapter/Mqtt.php",
         "src/Appwrite/Messaging/Adapter/Push/",

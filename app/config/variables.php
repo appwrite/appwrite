@@ -117,6 +117,33 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_OPENSSL_KEY_V2',
+                'description' => 'The next server secret key, used once `_APP_OPENSSL_KEY_CURRENT` is set to 2. Rotate by adding the next version, making it current, re-encrypting stored data with the `encryption` task, then raising `_APP_OPENSSL_KEY_OLDEST`. Keep every version that still encrypts stored data or files.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_CURRENT',
+                'description' => 'Version of `_APP_OPENSSL_KEY_V{version}` that signs new tokens and encrypts new data. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_OLDEST',
+                'description' => 'Oldest key version still accepted when verifying tokens and signatures, such as JWTs and ephemeral API keys. Every configured version from this one up is accepted. Raise it to retire a key. Stored data keeps decrypting with the version it records. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_NOTIFICATIONS_TRACKING_SECRET',
                 'description' => 'Secret key used to sign notification logo tracking tokens. This must be the same value for API containers and notification workers. Change it from the default value before running in production.',
                 'introduction' => '1.9.0',
@@ -434,7 +461,7 @@ return [
             [
                 'name' => '_APP_LOGGING_FORMAT',
                 'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
-                'introduction' => '1.9.6',
+                'introduction' => '2.7.0',
                 'default' => 'pretty',
                 'required' => false,
                 'question' => '',
@@ -553,15 +580,6 @@ return [
                 'description' => 'Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in and/or. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
                 'introduction' => '2.7.0',
                 'default' => '100',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_REALTIME_PERMISSION_TIMEOUT',
-                'description' => 'Maximum number of seconds the realtime server waits for a permission-change event to be verified against the database. When verification fails or does not finish in time, the affected connections are closed unverified and event delivery moves on, so one stuck database connection cannot stall realtime delivery. Clients re-authenticate on reconnect. Minimum 0.1. Default value is: 5.',
-                'introduction' => '2.7.0',
-                'default' => '5',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1981,6 +1999,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_ALERTS',
+                'description' => 'How long a resolved alert is kept, in seconds. A firing alert is always kept. The default value is 7776000 seconds (90 days).',
+                'introduction' => '2.7.0',
+                'default' => '7776000',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -2074,6 +2101,24 @@ return [
                 'description' => 'Interval in seconds between resource-count snapshots. Each active project is counted once per interval, at a slot spread across it.',
                 'introduction' => '',
                 'default' => '3600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALERTS_INTERVAL',
+                'description' => 'Interval in seconds between two evaluations of each alert rule. Each rule is evaluated once per interval, at a slot spread across it. The default value is 60 seconds.',
+                'introduction' => '2.7.0',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALERTS_USAGE_LAG',
+                'description' => 'Seconds behind the evaluation time that usage monitors read usage, so events still being written are counted by a later evaluation instead of missed. The default value is 120 seconds.',
+                'introduction' => '2.7.0',
+                'default' => '120',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

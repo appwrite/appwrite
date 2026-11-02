@@ -330,7 +330,7 @@ export function ConsoleSidebar({
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
   const { features, isCloud } = useConsoleProfile()
-  const { project } = useProject(projectId)
+  const { project, projectData } = useProject(projectId)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
@@ -386,7 +386,10 @@ export function ConsoleSidebar({
   const showSettings =
     !features.orgRoles ||
     (!scopesLoading && canShowProjectSettings(access, features))
-  const showGetStarted = canShowGetStartedSection(access, features)
+  // An environment is set up from its production project, so it has nothing
+  // to get started with
+  const showGetStarted =
+    canShowGetStartedSection(access, features) && !projectData?.parentId
   const showHalloweenScene = useHalloween()
   const showAgentNav = canShowAgentMcpConnectCta(access, features)
   const { data: consents } = useAccountConsents({

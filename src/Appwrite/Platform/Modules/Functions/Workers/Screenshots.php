@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
@@ -167,6 +168,9 @@ class Screenshots extends Action
             $mimeType = "image/png";
             $updates = new Document([]);
 
+            // The project may have moved to another team since the build queued this capture
+            $teamId = $dbForPlatform->getDocument('projects', $project->getId())->getAttribute('teamId', '');
+
             foreach ($captures as $key => $screenshot) {
                 $fileId = Id::unique();
                 $fileName = $fileId . '.png';
@@ -179,7 +183,6 @@ class Screenshots extends Action
                     throw new \Exception("Screenshot failed to save");
                 }
 
-                $teamId = $project->getAttribute('teamId', '');
                 $file = new Document([
                     '$id' => $fileId,
                     '$permissions' => [
@@ -271,7 +274,7 @@ class Screenshots extends Action
      */
     protected function getHeaders(Document $project, Document $rule): array
     {
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', 900, 0);
         $apiKey = $jwt->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'hostname' => $rule->getAttribute('domain'),

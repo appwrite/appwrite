@@ -24,6 +24,8 @@ class Event
 
     public const NOTIFICATIONS_QUEUE_NAME = 'v1-notifications';
 
+    public const ALERTS_QUEUE_NAME = 'v1-alerts';
+
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
 
