@@ -176,7 +176,7 @@ function buildDiagramNodeParameterDocs(): DiagramApiParameterDoc[] {
     {
       name: 'nodes[].imageSrc',
       type: 'string',
-      description: 'Screenshot element image URL or data URI. Use POST for data URIs.',
+      description: 'Screenshot element public https image URL or data URI. Use POST for data URIs.',
     },
     {
       name: 'nodes[].focusX',

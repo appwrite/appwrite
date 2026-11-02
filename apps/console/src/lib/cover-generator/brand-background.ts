@@ -28,6 +28,10 @@ import {
 } from '@/lib/cover-generator/cover-icon-tone'
 import { isCoverLucideIconValue, parseCoverLucideIconName } from '@/lib/cover-generator/lucide-icon-utils'
 import { loadCoverLucideIconSvgBuffer } from '@/lib/cover-generator/lucide-icon-render'
+import {
+  fetchCoverRemoteImageBuffer,
+  resolveCoverRemoteImageUrl,
+} from '@/lib/cover-generator/remote-image'
 import type { CoverThemeFamily, CoverThemeId } from '@/lib/cover-generator/themes'
 
 export function buildCoverBrandBackgroundParts(
@@ -137,8 +141,9 @@ export async function resolveCoverImageHref(
                 : 'application/octet-stream'
     return readCoverPublicAssetDataUri(value, mime)
   }
-  if (/^https?:\/\//i.test(value)) return value
-  return null
+  // Image fields are caller-supplied on the public generator endpoints, so a
+  // remote source is only kept when it names a public https host.
+  return resolveCoverRemoteImageUrl(value)?.href ?? null
 }
 
 export async function loadCoverImageBuffer(
@@ -158,13 +163,7 @@ export async function loadCoverImageBuffer(
     if (!match?.[1]) return null
     return Buffer.from(match[1], 'base64')
   }
-  try {
-    const response = await fetch(href)
-    if (!response.ok) return null
-    return Buffer.from(await response.arrayBuffer())
-  } catch {
-    return null
-  }
+  return fetchCoverRemoteImageBuffer(href)
 }
 
 /** Breathing room so icon artwork is not flush against the export slot edge. */
