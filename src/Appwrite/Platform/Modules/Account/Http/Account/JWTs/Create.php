@@ -2,13 +2,21 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\JWTs;
 
+use Ahc\Jwt\JWT;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Auth\Store;
+use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Range;
 
 class Create extends Action
@@ -56,6 +64,46 @@ class Create extends Action
             ->inject('proofForToken')
             ->inject('project')
             ->inject('console')
-            ->inject('mode');
+            ->inject('mode')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        int $duration,
+        Request $request,
+        Response $response,
+        User $user,
+        Store $store,
+        ProofsToken $proofForToken,
+        Document $project,
+        Document $console,
+        string $mode,
+    ): void {
+        if (!empty($request->getHeaderLine('x-appwrite-jwt', ''))) {
+            throw new Exception(Exception::USER_JWT_CREATION_DENIED);
+        }
+
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
+
+        if (!$sessionId) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document([
+                'jwt' => $jwt->encode([
+                    // In admin mode the session is a console session, whatever project is being managed.
+                    'projectId' => $mode === APP_MODE_ADMIN ? 'console' : $project->getId(),
+                    'userId' => $user->getId(),
+                    'sessionId' => $sessionId,
+                ])
+            ]), Response::MODEL_JWT);
     }
 }
