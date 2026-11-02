@@ -16,7 +16,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:2.2.7 AS base
+FROM appwrite/base:2.2.8 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -134,7 +134,7 @@ EXPOSE 80
 
 CMD [ "php", "app/http.php" ]
 
-FROM appwrite/base:2.2.7-xdebug AS xdebug
+FROM appwrite/base:2.2.8-xdebug AS xdebug
 
 FROM base AS development
 
