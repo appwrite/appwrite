@@ -3,7 +3,10 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback;
 
 use Appwrite\Platform\Action;
+use Utopia\Config\Config;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
@@ -24,6 +27,15 @@ class Create extends Action
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->label('scope', 'public')
             ->label('origin', '*')
-            ->label('docs', false);
+            ->label('docs', false)
+            ->param('projectId', '', new Text(1024), 'Project ID.')
+            ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
+            ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
+            // 512 more for the app's state: 256 printable ASCII chars, at most doubled by JSON escaping
+            ->param('state', '', new Text(2048 + 512), 'Login state params.', true)
+            ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
+            ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+            ->inject('request')
+            ->inject('response');
     }
 }
