@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Account\Services;
 
 use Appwrite\Platform\Modules\Account\Http\Account\Create as CreateAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Delete as DeleteAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Email\Update as UpdateEmail;
 use Appwrite\Platform\Modules\Account\Http\Account\Get as GetAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\JWTs\Create as CreateJWT;
 use Appwrite\Platform\Modules\Account\Http\Account\Memberships\XList as ListMemberships;
@@ -80,6 +81,7 @@ class Http extends Service
             ->addAction(GetPrefs::getName(), GetPrefs::class)
             ->addAction(UpdateName::getName(), UpdateName::class)
             ->addAction(UpdatePassword::getName(), UpdatePassword::class)
+            ->addAction(UpdateEmail::getName(), UpdateEmail::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
