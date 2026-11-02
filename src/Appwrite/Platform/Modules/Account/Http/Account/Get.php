@@ -2,11 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
 
@@ -42,6 +44,18 @@ class Get extends Action
                 contentType: ContentType::JSON
             ))
             ->inject('response')
-            ->inject('targetUser');
+            ->inject('targetUser')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        Response $response,
+        User $targetUser,
+    ): void {
+        if ($targetUser->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $response->dynamic($targetUser, Response::MODEL_ACCOUNT);
     }
 }
