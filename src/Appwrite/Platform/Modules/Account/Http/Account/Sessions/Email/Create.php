@@ -18,6 +18,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Auth\Store;
@@ -34,12 +35,20 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 
 class Create extends Action
 {
     use HTTP;
+
+    /**
+     * Failed logins one IP may make on a project per hour. The route's own limit counts per email, so an IP
+     * that changes the email on every attempt never meets it: on Cloud one IP made 632,746 failed console
+     * logins in an hour and took over accounts with reused passwords.
+     */
+    private const int FAILED_LOGINS_LIMIT = 100;
 
     public static function getName(): string
     {
@@ -98,6 +107,7 @@ class Create extends Action
             ->inject('cookieDomain')
             ->inject('authorization')
             ->inject('pwnedPasswords')
+            ->inject('timelimit')
             ->callback($this->action(...));
     }
 
@@ -123,6 +133,7 @@ class Create extends Action
         ?string $cookieDomain,
         Authorization $authorization,
         PasswordPwned $pwnedPasswords,
+        callable $timelimit,
     ): void {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -133,6 +144,35 @@ class Create extends Action
         }
         $duration ??= $maxDuration;
 
+        // Only failures count, and a success does not reset the count: logging in to an account of one's own
+        // between guesses buys nothing. Requests with a key or a privileged session are exempt, as from every abuse limit.
+        $roles = $authorization->getRoles();
+        $countFailures = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
+            && ! $user->isKey($roles)
+            && ! $user->isPrivileged($roles);
+        $failedLoginsLimit = self::FAILED_LOGINS_LIMIT;
+        $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
+        if (\in_array($project->getId(), $increasedLimitProjects, true)) {
+            $failedLoginsLimit *= 100;
+        }
+        $failedLogins = function (callable $callback) use ($timelimit, $failedLoginsLimit, $project, $request): mixed {
+            try {
+                return $timelimit('failed-logins:{projectId}:{ip}', $failedLoginsLimit, 3600, fn (TimeLimit $timeLimit): mixed => $callback($timeLimit->withParams([
+                    '{projectId}' => $project->getId(),
+                    '{ip}' => $request->getIP(),
+                ])));
+            } catch (\Throwable $th) {
+                // A limiter outage fails open, as in the shared abuse check, rather than refusing every login.
+                \error_log((string) $th);
+
+                return false;
+            }
+        };
+
+        if ($countFailures && $failedLogins(fn (TimeLimit $timeLimit): bool => $timeLimit->peek()->limited)) {
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Too many failed logins from this IP. Try again later.');
+        }
+
         $profile = $dbForProject->findOne('users', [
             Query::equal('email', [$email]),
         ]);
@@ -140,6 +180,10 @@ class Create extends Action
         $userProofForPassword = ProofsPassword::createHash($profile->getAttribute('hash', $proofForPassword->getHash()->getName()), $profile->getAttribute('hashOptions', $proofForPassword->getHash()->getOptions()));
 
         if ($profile->isEmpty() || empty($profile->getAttribute('passwordUpdate')) || !$userProofForPassword->verify($password, $profile->getAttribute('password'))) {
+            if ($countFailures) {
+                $failedLogins(fn (TimeLimit $timeLimit) => $timeLimit->check());
+            }
+
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
