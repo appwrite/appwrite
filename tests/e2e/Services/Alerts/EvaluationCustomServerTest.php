@@ -1941,17 +1941,27 @@ final class EvaluationCustomServerTest extends Scope
     /**
      * Alert statuses the monitor's events delivered to `$path`, oldest first. Every
      * webhook of the project gets every monitor's events, so they are told apart by the alert.
+     * Delivery is at least once, so a repeat of an alert's `$id` and `status` is skipped, as a receiver would.
      *
      * @return list<string|null>
      */
     private function eventStatuses(string $path, string $monitorId): array
     {
         $statuses = [];
+        $seen = [];
         foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [] as $request) {
             $alert = \json_decode($request['data'] ?? '{}', true);
-            if (($alert['monitorId'] ?? null) === $monitorId) {
-                $statuses[] = $alert['status'] ?? null;
+            if (($alert['monitorId'] ?? null) !== $monitorId) {
+                continue;
             }
+
+            $key = ($alert['$id'] ?? '') . ':' . ($alert['status'] ?? '');
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $statuses[] = $alert['status'] ?? null;
         }
 
         return $statuses;
