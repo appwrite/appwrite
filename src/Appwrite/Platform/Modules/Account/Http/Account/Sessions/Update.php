@@ -8,6 +8,8 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
@@ -45,6 +47,14 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10);
+            ->label('abuse-limit', 10)
+            ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Session ID. Use the string \'current\' to update the current device session.', true, ['dbForProject'])
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('project')
+            ->inject('queueForEvents')
+            ->inject('session')
+            ->inject('clientForOAuth2');
     }
 }
