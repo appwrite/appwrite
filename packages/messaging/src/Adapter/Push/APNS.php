@@ -137,8 +137,9 @@ class APNS extends PushAdapter
         }
         // A later push with the same tag replaces the earlier one on the device. APNs refuses a
         // collapse ID over 64 bytes, so a longer tag is left out rather than failing the push.
-        if (!\is_null($message->getTag()) && \strlen($message->getTag()) <= 64) {
-            $headers[] = 'apns-collapse-id: ' . $message->getTag();
+        $tag = $message->getTag();
+        if ($tag !== null && \strlen($tag) <= 64) {
+            $headers[] = 'apns-collapse-id: ' . $tag;
         }
 
         $response = new Response($this->getType());
