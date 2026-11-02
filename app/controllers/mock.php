@@ -5,7 +5,6 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
@@ -14,56 +13,6 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
 use Utopia\System\System;
-
-Http::post('/v1/mock/api-key-unprefixed')
-    ->desc('Create API Key (without standard prefix)')
-    ->groups(['mock', 'api', 'projects'])
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->param('projectId', '', new UID(), 'Project ID.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
-        $isDevelopment = System::getEnv('_APP_ENV', 'production') === 'development';
-
-        if (!$isDevelopment) {
-            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
-        }
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $scopes = array_keys(Config::getParam('projectScopes'));
-
-        $key = new Document([
-            '$id' => Id::unique(),
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'resourceInternalId' => $project->getSequence(),
-            'resourceId' => $project->getId(),
-            'resourceType' => 'projects',
-            'name' => 'Outdated key',
-            'scopes' => $scopes,
-            'expire' => null,
-            'sdks' => [],
-            'accessedAt' => null,
-            'secret' => \bin2hex(\random_bytes(128)),
-        ]);
-
-        $key = $dbForPlatform->createDocument('keys', $key);
-
-        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($key, Response::MODEL_KEY);
-    });
 
 Http::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
