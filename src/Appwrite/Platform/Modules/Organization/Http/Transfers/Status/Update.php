@@ -8,6 +8,7 @@ use Appwrite\Platform\Modules\Organization\Http\Transfers\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -46,7 +47,7 @@ class Update extends Action
                 description: <<<EOT
                 Claim a project with the transfer ID and secret its owner shared with you. The project moves to your organization, and the transfer can't be used again.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -59,6 +60,7 @@ class Update extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
+            ->inject('targetUser')
             ->inject('authorization')
             ->inject('auditContext')
             ->callback($this->action(...));
@@ -70,9 +72,12 @@ class Update extends Action
         Response $response,
         Database $dbForPlatform,
         Document $team,
+        User $targetUser,
         Authorization $authorization,
         AuditContext $auditContext,
     ) {
+        $this->assertOwner($targetUser, $team);
+
         $transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
 
         if ($transfer->isEmpty() || $transfer->getAttribute('resourceType') !== 'projects') {

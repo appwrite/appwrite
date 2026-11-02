@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Organization\Http\Transfers;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -13,6 +14,21 @@ use Utopia\Database\Validator\Authorization;
 class Action extends AppwriteAction
 {
     use AppwritePermission;
+
+    /**
+     * Moving a project to another organization hands it, and every row in it, to whoever
+     * owns that organization. Only a confirmed team-wide owner of the organization the
+     * project leaves, or the one it arrives in, may take part - the same rule
+     * PATCH /v1/projects/:projectId/team enforces. Developers and admins hold
+     * projects.write for everything else, and an API key carries no membership at all,
+     * so an organization key with that scope is refused here too.
+     */
+    protected function assertOwner(User $user, Document $team): void
+    {
+        if (!$user->isOwner($team->getId())) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, 'Transferring a project requires the owner role on the organization.');
+        }
+    }
 
     /**
      * Find a project transfer created by the organization.

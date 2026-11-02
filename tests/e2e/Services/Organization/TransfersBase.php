@@ -114,6 +114,52 @@ trait TransfersBase
         ], $headers), $params);
     }
 
+    /**
+     * A console user with a confirmed developer membership of the organization, so the only
+     * thing between them and a transfer is the team-wide projects.write scope the role carries.
+     *
+     * @return array<string, string> console session headers acting on the organization
+     */
+    protected function getDeveloperHeaders(string $teamId): array
+    {
+        $user = $this->getUser(true);
+        $session = ['cookie' => 'a_session_console=' . $user['session']];
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getConsoleHeaders()), [
+            'email' => $user['email'],
+            'name' => $user['name'],
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+
+        $invite = $this->getLastEmailByAddress($user['email'], function ($email) {
+            $this->assertStringContainsString('/join-us', $email['html'] ?? '');
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
+
+        // Accepted with the invited user's own session, so their password is not revoked as
+        // an unproven way into the account
+        $confirmed = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membership['body']['$id'] . '/status', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $session), [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirmed['headers']['status-code']);
+        $this->assertTrue($confirmed['body']['confirm']);
+        $this->assertSame(['developer'], $confirmed['body']['roles']);
+
+        return array_merge($session, [
+            'x-appwrite-organization' => $teamId,
+        ]);
+    }
+
     public function testCreateProjectTransfer(): void
     {
         $projectId = $this->createOwnerProject();
@@ -430,5 +476,59 @@ trait TransfersBase
             'x-appwrite-project' => 'console',
         ], $this->getOwnerHeaders()));
         $this->assertSame(200, $project['headers']['status-code']);
+    }
+
+    public function testProjectTransferRequiresOwnership(): void
+    {
+        $projectId = $this->createOwnerProject();
+        $developer = $this->getDeveloperHeaders(self::$ownerTeamId);
+
+        $recipient = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], $this->getConsoleHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Transfer Recipient',
+        ]);
+        $this->assertSame(200, $recipient['headers']['status-code']);
+        $recipientDeveloper = $this->getDeveloperHeaders($recipient['body']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        // projects.write moves everything else in the organization, but not the project itself
+        $response = $this->callTransfers(Client::METHOD_POST, '', $developer, ['projectId' => $projectId]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $transfer = $this->createTransfer($projectId);
+        $this->assertSame(201, $transfer['headers']['status-code']);
+
+        $response = $this->callTransfers(Client::METHOD_DELETE, '/' . $transfer['body']['$id'], $developer);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        // A developer of the organization the project would arrive in can't claim it either
+        $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transfer['body']['$id'] . '/status', $recipientDeveloper, [
+            'secret' => $transfer['body']['secret'],
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+        $project = $this->client->call(Client::METHOD_GET, '/organization/projects/' . $projectId, array_merge([
+            'x-appwrite-project' => 'console',
+        ], $this->getOwnerHeaders()));
+        $this->assertSame(200, $project['headers']['status-code']);
+        $this->assertSame(self::$ownerTeamId, $project['body']['teamId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The owner of the recipient organization claims the very same transfer
+        $response = $this->callTransfers(Client::METHOD_PATCH, '/' . $transfer['body']['$id'] . '/status', array_merge($this->getConsoleHeaders(), [
+            'x-appwrite-organization' => $recipient['body']['$id'],
+        ]), ['secret' => $transfer['body']['secret']]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($recipient['body']['$id'], $response['body']['teamId']);
     }
 }

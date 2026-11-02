@@ -259,6 +259,22 @@ class User extends Document
         return [];
     }
 
+    /**
+     * Does the user hold the team-wide owner role on the team through a confirmed membership?
+     *
+     * Ownership of the organization, not of a project inside it: a `project-{id}-owner`
+     * role is not the owner role. It gates handing a project to another organization,
+     * which rewrites who may read all of its data.
+     */
+    public function isOwner(string $teamId): bool
+    {
+        if ($teamId === '') {
+            return false;
+        }
+
+        return \in_array(self::ROLE_OWNER, $this->getMembershipRoles($teamId), true);
+    }
+
     private function getSession(string $sessionId): ?Document
     {
         return \array_find($this->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $sessionId);

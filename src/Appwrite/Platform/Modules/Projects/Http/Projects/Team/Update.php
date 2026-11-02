@@ -73,8 +73,8 @@ class Update extends Action
         }
 
         if (
-            !$this->isOwner($dbForPlatform, $targetUser, $project->getAttribute('teamInternalId', ''))
-            || !$this->isOwner($dbForPlatform, $targetUser, $team->getSequence())
+            !$targetUser->isOwner($project->getAttribute('teamId', ''))
+            || !$targetUser->isOwner($team->getId())
         ) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'Transferring a project requires the owner role on both the current and the destination organization.');
         }
@@ -122,20 +122,5 @@ class Update extends Action
         (new Access($dbForPlatform))->grant($getProjectDB($project), $project);
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    }
-
-    private function isOwner(Database $dbForPlatform, User $user, string $teamInternalId): bool
-    {
-        if ($user->isEmpty() || $teamInternalId === '') {
-            return false;
-        }
-
-        $membership = $dbForPlatform->findOne('memberships', [
-            Query::equal('teamInternalId', [$teamInternalId]),
-            Query::equal('userInternalId', [$user->getSequence()]),
-            Query::equal('confirm', [true]),
-        ]);
-
-        return \in_array(User::ROLE_OWNER, $membership->getAttribute('roles', []), true);
     }
 }

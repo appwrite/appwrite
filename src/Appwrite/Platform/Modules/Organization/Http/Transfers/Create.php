@@ -8,6 +8,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -53,7 +54,7 @@ class Create extends Action
 
                 Your organization can get the secret again by getting or listing the transfer. A transfer expires after 24 hours unless you set a different expiration date.
                 EOT,
-                auth: [AuthType::ADMIN, AuthType::ORGANIZATION],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -67,6 +68,7 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('team')
+            ->inject('targetUser')
             ->inject('authorization')
             ->inject('apiKey')
             ->inject('proofForToken')
@@ -81,11 +83,14 @@ class Create extends Action
         Response $response,
         Database $dbForPlatform,
         Document $team,
+        User $targetUser,
         Authorization $authorization,
         ?Key $apiKey,
         Token $proofForToken,
         AuditContext $auditContext,
     ) {
+        $this->assertOwner($targetUser, $team);
+
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
 
         if ($project->isEmpty() || $project->getId() === 'console' || $project->getAttribute('teamInternalId') !== $team->getSequence()) {
