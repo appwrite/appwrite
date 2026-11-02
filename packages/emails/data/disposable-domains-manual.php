@@ -20,4 +20,9 @@ return [
     'goldvester.com',
     'hiringview.com',
     'intownbox.com',
+    'fldubai.com',
+    'majema.org',
+    'oceanicwavel.com',
+    'rushvera.com',
+    'slotforgelab.com',
 ];

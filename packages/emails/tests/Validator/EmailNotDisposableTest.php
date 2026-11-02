@@ -39,6 +39,25 @@ class EmailNotDisposableTest extends TestCase
         $this->assertSame(true, $validator->isValid('user@enterprise.net'));
     }
 
+    public function test_subdomain_of_disposable_provider(): void
+    {
+        $validator = new EmailNotDisposable();
+
+        // Providers hand out a fresh subdomain per mailbox; only the registrable domain is listed.
+        $this->assertSame(false, $validator->isValid('carney33155d@6s.lucktaro.com'));
+        $this->assertSame(false, $validator->isValid('user@a.b.mailinator.com'));
+        $this->assertSame(false, $validator->isValid('quintina354f07@4k.rushvera.com'));
+    }
+
+    public function test_site_on_listed_public_suffix(): void
+    {
+        $validator = new EmailNotDisposable();
+
+        // it.com is listed and is also a public suffix, so it does not speak for the sites registered under it.
+        $this->assertSame(false, $validator->isValid('user@it.com'));
+        $this->assertSame(true, $validator->isValid('user@acme.it.com'));
+    }
+
     public function test_invalid_email_format(): void
     {
         $validator = new EmailNotDisposable();
