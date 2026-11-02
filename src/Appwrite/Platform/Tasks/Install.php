@@ -20,6 +20,7 @@ use Utopia\Auth\Proofs\Password;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Config\Config;
+use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Psr7\ContentType;
@@ -373,19 +374,25 @@ class Install extends Action
 
         $this->setInstallerConfig($config);
 
-        // Start Swoole-based installer server in background
-        // Redirect stdout/stderr to a log file so exec() returns immediately
-        // (otherwise the backgrounded process holds the pipe open and exec() hangs)
+        // Start Swoole-based installer server in background. The script sends its
+        // output to a log file, so the shell exits at once instead of waiting on a
+        // pipe the server holds open, and prints its PID. The log path and the
+        // command reach it as positional parameters, never in its text.
         $secret = Secret::generate()->value;
-        $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
         $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
-        $output = [];
-        \exec(
-            Secret::ENVIRONMENT . '=' . \escapeshellarg($secret)
-            . " php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!",
-            $output
-        );
-        $pid = isset($output[0]) ? (int) $output[0] : 0;
+        $server = (new Command('sh'))
+            ->flag('-c')
+            ->argument('log=$1; shift; "$@" > "$log" 2>&1 & echo $!')
+            ->argument('sh')
+            ->argument($logFile)
+            ->argument('env')
+            ->argument(Secret::ENVIRONMENT . '=' . $secret)
+            ->argument('php')
+            ->argument(dirname(__DIR__) . '/Installer/Server.php');
+        $stdout = '';
+        $stderr = '';
+        Console::execute($server, '', $stdout, $stderr);
+        $pid = (int) \trim($stdout);
 
         \register_shutdown_function(function () use ($pid) {
             if ($pid > 0 && \function_exists('posix_kill')) {
@@ -961,31 +968,25 @@ class Install extends Action
 
         if ($isLocalInstall) {
             $composePath = $this->hostPath !== '' ? $this->hostPath : $this->path;
-            $command = [
-                'docker',
-                'compose',
-                '--env-file',
-                $composePath . '/' . $this->getEnvFileName(),
-                '-f',
-                $composePath . '/' . $this->getComposeFileName(),
-                '--project-name',
-                'appwrite',
-                '--project-directory',
-                $composePath,
-                'exec',
-                'appwrite',
-                'migrate',
-            ];
+            $command = (new Command('docker'))
+                ->argument('compose')
+                ->option('--env-file', $composePath . '/' . $this->getEnvFileName())
+                ->option('-f', $composePath . '/' . $this->getComposeFileName())
+                ->option('--project-name', 'appwrite')
+                ->option('--project-directory', $composePath)
+                ->argument('exec')
+                ->argument('appwrite')
+                ->argument('migrate');
         } else {
-            $command = ['docker', 'exec', 'appwrite', 'migrate'];
+            $command = (new Command('docker'))->argument('exec')->argument('appwrite')->argument('migrate');
         }
-        $commandLine = implode(' ', array_map(escapeshellarg(...), $command));
 
-        $output = [];
-        \exec($commandLine . ' 2>&1', $output, $exit);
+        $stdout = '';
+        $stderr = '';
+        $exit = Console::execute($command, '', $stdout, $stderr);
 
         if ($exit !== 0) {
-            $message = trim(implode("\n", $output));
+            $message = trim($stdout . "\n" . $stderr);
             $this->updateProgress(
                 $progress,
                 InstallerServer::STEP_MIGRATION,
@@ -1020,6 +1021,17 @@ class Install extends Action
             $account = [];
         }
 
+        try {
+            $cpus = System::getCPUCores() ?: null;
+        } catch (\Throwable) {
+            $cpus = null;
+        }
+        try {
+            $ram = System::getMemoryTotal() ?: null;
+        } catch (\Throwable) {
+            $ram = null;
+        }
+
         return new Report(
             action: $isUpgrade ? Report::ACTION_UPGRADE : Report::ACTION_INSTALL,
             source: $source,
@@ -1034,8 +1046,8 @@ class Install extends Action
             ip: ($hostIp !== $domain) ? $hostIp : null,
             os: php_uname('s') . ' ' . php_uname('r'),
             arch: php_uname('m'),
-            cpus: ((int) trim((string) \shell_exec('nproc'))) ?: null,
-            ram: ((int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024)) ?: null,
+            cpus: $cpus,
+            ram: $ram,
         );
     }
 
@@ -1151,26 +1163,23 @@ class Install extends Action
      */
     private function connectInstallerToAppwriteNetwork(): void
     {
-        $network = escapeshellarg('appwrite');
-
         // Resolve our own container ID — works regardless of how the
         // container was started (--name, random name, etc.).
         $containerId = trim((string) @file_get_contents('/etc/hostname'));
         if ($containerId === '') {
             $containerId = InstallerServer::DEFAULT_CONTAINER;
         }
-        $container = escapeshellarg($containerId);
+        $connect = (new Command('docker'))->argument('network')->argument('connect')->argument('appwrite')->argument($containerId);
 
         $outputStr = '';
         for ($i = 0; $i < 10; $i++) {
-            $output = [];
-            @exec("docker network connect {$network} {$container} 2>&1", $output, $exitCode);
-
-            if ($exitCode === 0) {
+            $stdout = '';
+            $stderr = '';
+            if (Console::execute($connect, '', $stdout, $stderr) === 0) {
                 return;
             }
 
-            $outputStr = implode(' ', $output);
+            $outputStr = trim($stdout . ' ' . $stderr);
             if (str_contains($outputStr, 'already exists')) {
                 return;
             }
@@ -1313,7 +1322,7 @@ class Install extends Action
 
     protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI, ?callable $progress = null, bool $isUpgrade = false): void
     {
-        $env = '';
+        $env = [];
         if (!$useExistingConfig) {
             foreach ($input as $key => $value) {
                 if ($value === null || $value === '') {
@@ -1322,7 +1331,7 @@ class Install extends Action
                 if (!preg_match(self::PATTERN_ENV_VAR_NAME, $key)) {
                     throw new \Exception("Invalid environment variable name: $key");
                 }
-                $env .= $key . '=' . \escapeshellarg((string) $value) . ' ';
+                $env[] = $key . '=' . $value;
             }
         }
 
@@ -1355,27 +1364,17 @@ class Install extends Action
         $command[] = '--project-directory';
         $command[] = $composePath;
 
-        $validateCommand = $command;
-        $validateCommand[] = 'config';
-        $validateCommand[] = '--quiet';
-        \exec($env . implode(' ', array_map(escapeshellarg(...), $validateCommand)) . ' 2>&1', $validateOutput, $validateExit);
-        if ($validateExit !== 0) {
-            $message = trim(implode("\n", $validateOutput));
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute($this->compose($env, [...$command, 'config', '--quiet']), '', $stdout, $stderr) !== 0) {
+            $message = trim($stdout . "\n" . $stderr);
             throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
         }
 
-        $servicesCommand = $command;
-        $servicesCommand[] = 'config';
-        $servicesCommand[] = '--services';
-
-        $command[] = 'up';
-        $command[] = '-d';
-        $command[] = '--remove-orphans';
-        $command[] = '--renew-anon-volumes';
-        $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command));
+        $up = $this->compose($env, [...$command, 'up', '-d', '--remove-orphans', '--renew-anon-volumes']);
 
         if ($progress) {
-            $totalServices = $this->countComposeServices($env . implode(' ', array_map(escapeshellarg(...), $servicesCommand)));
+            $totalServices = $this->countComposeServices($this->compose($env, [...$command, 'config', '--services']));
             if ($totalServices > 0) {
                 $verb = $isUpgrade ? 'Restarting' : 'Starting';
                 try {
@@ -1388,46 +1387,65 @@ class Install extends Action
                 } catch (\Throwable) {
                 }
             }
-            $result = $this->execWithContainerProgress($commandLine, $totalServices, $progress, $isUpgrade);
-            $output = $result['output'];
+            $result = $this->execWithContainerProgress($up, $totalServices, $progress, $isUpgrade);
+            $message = trim(implode("\n", $result['output']));
             $exit = $result['exit'];
         } else {
-            \exec($commandLine . ' 2>&1', $output, $exit);
+            $exit = Console::execute($up, '', $stdout, $stderr);
+            $message = trim($stdout . "\n" . $stderr);
         }
 
         if ($exit !== 0) {
-            $message = trim(implode("\n", $output));
             $previous = $message !== '' ? new \RuntimeException($message) : null;
             throw new \RuntimeException('Failed to start containers', 0, $previous);
         }
-        if ($isLocalInstall && $isCLI && !empty($output)) {
-            Console::log(implode("\n", $output));
+        if ($isLocalInstall && $isCLI && $message !== '') {
+            Console::log($message);
         }
+    }
+
+    /**
+     * docker compose run through env, so its variables reach it as arguments
+     * rather than as a shell assignment in front of it.
+     *
+     * @param list<string> $env KEY=value pairs
+     * @param list<string> $argv
+     */
+    private function compose(array $env, array $argv): Command
+    {
+        $command = new Command('env');
+        foreach ([...$env, ...$argv] as $argument) {
+            $command->argument($argument);
+        }
+
+        return $command;
     }
 
     /**
      * Services in the merged compose configuration, overrides included.
      */
-    private function countComposeServices(string $commandLine): int
+    private function countComposeServices(Command $command): int
     {
-        \exec($commandLine . ' 2> /dev/null', $services, $exit);
-        if ($exit !== 0) {
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute($command, '', $stdout, $stderr) !== 0) {
             return 0;
         }
 
-        return count(array_filter($services, fn (string $service): bool => trim($service) !== ''));
+        return count(array_filter(explode("\n", $stdout), fn (string $service): bool => trim($service) !== ''));
     }
 
-    private function execWithContainerProgress(string $commandLine, int $totalServices, callable $progress, bool $isUpgrade): array
+    private function execWithContainerProgress(Command $command, int $totalServices, callable $progress, bool $isUpgrade): array
     {
         $verb = $isUpgrade ? 'Restarting' : 'Starting';
         $message = "$verb Docker containers...";
         $started = 0;
         $output = [];
 
+        // argv, with stderr joining stdout: the progress lines arrive on either
         $process = proc_open(
-            $commandLine . ' 2>&1',
-            [1 => ['pipe', 'w']],
+            $command->toArray(),
+            [1 => ['pipe', 'w'], 2 => ['redirect', 1]],
             $pipes
         );
 
@@ -1607,20 +1625,17 @@ class Install extends Action
             return null;
         }
 
-        $command = \implode(' ', \array_map(\escapeshellarg(...), [
-            'docker',
-            'inspect',
-            '--format',
-            '{{ json .Mounts }}',
-            $containerId,
-        ]));
-        $output = [];
-        @\exec($command . ' 2>/dev/null', $output, $exitCode);
-        if ($exitCode !== 0 || empty($output)) {
+        $inspect = (new Command('docker'))
+            ->argument('inspect')
+            ->option('--format', '{{ json .Mounts }}')
+            ->argument($containerId);
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute($inspect, '', $stdout, $stderr) !== 0 || \trim($stdout) === '') {
             return null;
         }
 
-        $mounts = \json_decode(\implode("\n", $output), true);
+        $mounts = \json_decode($stdout, true);
         if (!\is_array($mounts)) {
             return null;
         }
