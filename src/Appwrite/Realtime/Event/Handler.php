@@ -406,6 +406,9 @@ class Handler
                 // Fails closed: a reconnect re-authenticates with fresh roles.
                 $abandoned = true;
 
+                // No read roles detaches every tail; a fresh subscribe re-authorizes it.
+                $this->eventTailRegistry->reauthorizeProject($projectId, [], fn (int $connection): array => []);
+
                 $closing = [];
                 foreach ($this->realtime->getProjectConnections($projectId) as $connection) {
                     $userId = $this->realtime->connections[$connection]['userId'] ?? '';
