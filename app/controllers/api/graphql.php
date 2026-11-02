@@ -4,10 +4,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\MethodType;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -46,65 +42,6 @@ Http::init()
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
-    });
-
-Http::post('/v1/graphql')
-    ->desc('GraphQL endpoint')
-    ->groups(['graphql'])
-    ->label('scope', 'graphql')
-    ->label('sdk', new Method(
-        namespace: 'graphql',
-        group: 'graphql',
-        name: 'query',
-        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
-        description: '/docs/references/graphql/post.md',
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_ANY,
-            )
-        ],
-        type: MethodType::GRAPHQL,
-        additionalParameters: [
-            'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false, 'example' => '{"query":"query { localeGet { ip } }"}'],
-        ],
-    ))
-    ->label('abuse-limit', 60)
-    ->label('abuse-time', 60)
-    ->inject('request')
-    ->inject('response')
-    ->inject('schema')
-    ->inject('promiseAdapter')
-    ->action(function (Request $request, Response $response, GQLSchema $schema, Adapter $promiseAdapter) {
-        $query = $request->getParams();
-
-        if ($request->getHeaderLine('x-sdk-graphql') == 'true') {
-            $query = $query['query'] ?? [];
-
-            // JSON `{}` is decoded as stdClass; the executor requires an array.
-            if ($query instanceof \stdClass) {
-                $query = \get_object_vars($query);
-            }
-            if (!\is_array($query)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The query must be a JSON object or an array of JSON objects, such as {"query": "...", "variables": {}}.');
-            }
-        }
-
-        $type = $request->getHeaderLine('content-type');
-
-        if (\str_starts_with($type, 'application/graphql')) {
-            $query = parseGraphql($request);
-        }
-
-        if (\str_starts_with($type, 'multipart/form-data')) {
-            $query = parseMultipart($query, $request);
-        }
-
-        $output = execute($schema, $promiseAdapter, $query);
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_OK)
-            ->json($output);
     });
 
 /**
