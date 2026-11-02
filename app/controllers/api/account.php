@@ -10,10 +10,6 @@ use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
-use Appwrite\SDK\Method;
-use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -31,9 +27,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
-use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 
@@ -283,47 +277,3 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
-
-Http::delete('/v1/account/identities/:identityId')
-    ->desc('Delete identity')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('event', 'users.[userId].identities.[identityId].delete')
-    ->label('audits.event', 'identity.delete')
-    ->label('audits.resource', 'identity/{request.$identityId}')
-    ->label('audits.userId', '{user.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'identities',
-        name: 'deleteIdentity',
-        description: '/docs/references/account/delete-identity.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::NONE
-    ))
-    ->param('identityId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Identity ID.', false, ['dbForProject'])
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $queueForEvents) {
-
-        $identity = $dbForProject->getDocument('identities', $identityId);
-
-        if ($identity->isEmpty()) {
-            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
-        }
-
-        $dbForProject->deleteDocument('identities', $identityId);
-
-        $queueForEvents
-            ->setParam('userId', $identity->getAttribute('userId'))
-            ->setParam('identityId', $identity->getId())
-            ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
-
-        $response->noContent();
-    });

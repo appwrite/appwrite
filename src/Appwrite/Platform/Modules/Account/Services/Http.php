@@ -6,6 +6,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Create as CreateAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Delete as DeleteAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Email\Update as UpdateEmail;
 use Appwrite\Platform\Modules\Account\Http\Account\Get as GetAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Identities\Delete as DeleteIdentity;
 use Appwrite\Platform\Modules\Account\Http\Account\Identities\XList as ListIdentities;
 use Appwrite\Platform\Modules\Account\Http\Account\JWTs\Create as CreateJWT;
 use Appwrite\Platform\Modules\Account\Http\Account\Memberships\XList as ListMemberships;
@@ -114,6 +115,7 @@ class Http extends Service
             ->addAction(UpdatePushTarget::getName(), UpdatePushTarget::class)
             ->addAction(DeletePushTarget::getName(), DeletePushTarget::class)
             ->addAction(ListIdentities::getName(), ListIdentities::class)
+            ->addAction(DeleteIdentity::getName(), DeleteIdentity::class)
             ->addAction(CreateEmailVerificationOTP::getName(), CreateEmailVerificationOTP::class)
             ->addAction(UpdateEmailVerificationOTP::getName(), UpdateEmailVerificationOTP::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
