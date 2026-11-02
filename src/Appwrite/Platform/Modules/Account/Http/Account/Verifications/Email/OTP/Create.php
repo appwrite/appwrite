@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 
 class Create extends Action
 {
@@ -45,6 +46,18 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{userId}');
+            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+            ->inject('request')
+            ->inject('response')
+            ->inject('project')
+            ->inject('platform')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('locale')
+            ->inject('queueForEvents')
+            ->inject('publisherForMails')
+            ->inject('proofForCode')
+            ->inject('authorization');
     }
 }
