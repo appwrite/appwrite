@@ -2,13 +2,17 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email;
 
+use Appwrite\Auth\Validator\Password;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
 
 class Create extends Action
 {
@@ -49,6 +53,27 @@ class Create extends Action
             ))
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'projectId:{projectId},url:{url},email:{param-email}')
-            ->label('abuse-reset', [201]);
+            ->label('abuse-reset', [201])
+            ->param('email', '', new EmailValidator(), 'User email.')
+            ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+            ->param('duration', null, new Nullable(new Range(60, TOKEN_EXPIRATION_LOGIN_LONG)), 'Session length in seconds. Minimum is 60 seconds, and it cannot exceed the project maximum session length. Defaults to the project maximum session length.', true)
+            ->inject('request')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('project')
+            ->inject('platform')
+            ->inject('locale')
+            ->inject('geo')
+            ->inject('queueForEvents')
+            ->inject('bus')
+            ->inject('hooks')
+            ->inject('store')
+            ->inject('proofForPassword')
+            ->inject('proofForToken')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
+            ->inject('authorization')
+            ->inject('pwnedPasswords');
     }
 }
