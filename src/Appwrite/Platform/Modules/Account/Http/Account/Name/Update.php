@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -43,6 +44,11 @@ class Update extends Action
                     )
                 ],
                 contentType: ContentType::JSON
-            ));
+            ))
+            ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('queueForEvents');
     }
 }
