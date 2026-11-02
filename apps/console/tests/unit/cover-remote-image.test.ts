@@ -18,12 +18,14 @@ const PNG_PIXEL = Buffer.from(
 
 const originalFetch = globalThis.fetch
 const fetchCalls: string[] = []
+const fetchInits: RequestInit[] = []
 
 /** Records every outbound request so blocked targets can be asserted as never fetched. */
 function stubFetch(respond: (url: string) => Response): void {
-  globalThis.fetch = (async (input: RequestInfo | URL) => {
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = input instanceof Request ? input.url : String(input)
     fetchCalls.push(url)
+    fetchInits.push(init ?? {})
     return respond(url)
   }) as typeof fetch
 }
@@ -38,6 +40,7 @@ function lookupFake(
 afterEach(() => {
   globalThis.fetch = originalFetch
   fetchCalls.length = 0
+  fetchInits.length = 0
 })
 
 describe('isPublicCoverImageAddress', () => {
@@ -95,6 +98,8 @@ describe('parseCoverRemoteImageUrl', () => {
     'http://appwrite.svc.cluster.local/logo.png',
     'http://user:secret@example.com/logo.png',
     'http://example.com:9200/logo.png',
+    'http://example.com:443/logo.png',
+    'https://example.com:80/logo.png',
   ])('rejects %s', (value) => {
     expect(parseCoverRemoteImageUrl(value)).toBeNull()
   })
@@ -160,7 +165,45 @@ describe('fetchCoverRemoteImageBuffer', () => {
     )
 
     expect(buffer?.equals(PNG_PIXEL)).toBe(true)
-    expect(fetchCalls).toEqual(['https://images.example.com/logo.png'])
+  })
+
+  test('pins the connection to the validated address', async () => {
+    stubFetch(
+      () =>
+        new Response(PNG_PIXEL, { headers: { 'Content-Type': 'image/png' } }),
+    )
+
+    await fetchCoverRemoteImageBuffer('https://images.example.com/logo.png', {
+      lookup: lookupFake({ 'images.example.com': ['93.184.216.34'] }),
+    })
+
+    // The connection goes to the address that was just validated rather than to
+    // a second lookup of the hostname, which closes the rebinding window. TLS
+    // still identifies the hostname.
+    expect(fetchCalls).toEqual(['https://93.184.216.34/logo.png'])
+    const init = fetchInits[0] as RequestInit & {
+      headers: Record<string, string>
+      tls: { serverName: string }
+    }
+    expect(init.headers.Host).toBe('images.example.com')
+    expect(init.tls.serverName).toBe('images.example.com')
+  })
+
+  test('pins an IPv6 address in brackets', async () => {
+    stubFetch(
+      () =>
+        new Response(PNG_PIXEL, { headers: { 'Content-Type': 'image/png' } }),
+    )
+
+    await fetchCoverRemoteImageBuffer('https://images.example.com/logo.png', {
+      lookup: lookupFake({
+        'images.example.com': ['2606:2800:220:1:248:1893:25c8:1946'],
+      }),
+    })
+
+    expect(fetchCalls).toEqual([
+      'https://[2606:2800:220:1:248:1893:25c8:1946]/logo.png',
+    ])
   })
 
   test('does not follow redirects into the private network', async () => {
@@ -177,12 +220,13 @@ describe('fetchCoverRemoteImageBuffer', () => {
         lookup: lookupFake(),
       }),
     ).resolves.toBeNull()
-    expect(fetchCalls).toEqual(['https://images.example.com/logo.png'])
+    expect(fetchCalls).toEqual(['https://93.184.216.34/logo.png'])
   })
 
   test('follows redirects between public hosts', async () => {
-    stubFetch((url) =>
-      url === 'https://images.example.com/logo.png'
+    let hop = 0
+    stubFetch(() =>
+      hop++ === 0
         ? new Response(null, {
             status: 302,
             headers: { Location: 'https://cdn.example.com/logo.png' },
@@ -197,9 +241,12 @@ describe('fetchCoverRemoteImageBuffer', () => {
 
     expect(buffer?.equals(PNG_PIXEL)).toBe(true)
     expect(fetchCalls).toEqual([
-      'https://images.example.com/logo.png',
-      'https://cdn.example.com/logo.png',
+      'https://93.184.216.34/logo.png',
+      'https://93.184.216.34/logo.png',
     ])
+    expect(
+      fetchInits.map((init) => (init.headers as Record<string, string>).Host),
+    ).toEqual(['images.example.com', 'cdn.example.com'])
   })
 
   test('rejects hosts that resolve to a private address', async () => {

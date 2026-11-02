@@ -1,4 +1,5 @@
 import { lookup } from 'node:dns/promises'
+import { checkServerIdentity, type PeerCertificate } from 'node:tls'
 import sharp from 'sharp'
 
 /**
@@ -11,9 +12,9 @@ import sharp from 'sharp'
  * on default HTTP ports, redirects are followed one validated hop at a time,
  * and the response must be a bounded, decodable image.
  *
- * The platform `fetch()` resolves the host again itself, so the address cannot
- * be pinned to the one that was validated; a record flipped inside that window
- * is the one gap left open here.
+ * The request is pinned to the address that was validated, so a record flipped
+ * between the lookup and the connection cannot redirect it into the private
+ * network.
  */
 
 export const COVER_REMOTE_IMAGE_TIMEOUT_MS = 5_000
@@ -28,6 +29,12 @@ const COVER_REMOTE_IMAGE_CONTENT_TYPES = [
   'image/svg+xml',
   'image/webp',
 ]
+
+// What a browser asks for. A list of concrete image types with no wildcard
+// makes some CDNs answer 406, and the header is only a hint anyway: the
+// response type is checked on the way in.
+const COVER_REMOTE_IMAGE_ACCEPT =
+  'image/avif,image/webp,image/png,image/svg+xml,*/*;q=0.8'
 
 /** Suffixes that only ever name hosts inside a private network. */
 const PRIVATE_HOST_SUFFIXES = [
@@ -201,8 +208,9 @@ function isPublicHostname(hostname: string): boolean {
 
 /**
  * Parses a caller-supplied remote image URL, rejecting everything that is not
- * a plain HTTP(S) request to a public host on a default port. Address literals
- * are classified here; named hosts are resolved in {@link isPublicCoverImageUrl}.
+ * a plain HTTP(S) request to a public host on its scheme's default port.
+ * Address literals are classified here; named hosts are resolved in
+ * {@link resolveCoverImageAddress}.
  */
 export function parseCoverRemoteImageUrl(
   source: string | undefined,
@@ -219,7 +227,11 @@ export function parseCoverRemoteImageUrl(
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
   if (url.username || url.password) return null
-  if (url.port && url.port !== '80' && url.port !== '443') return null
+  // An explicit port is only ever the one the scheme would have used anyway;
+  // `https://host:80` must not slip through the http default.
+  if (url.port && url.port !== (url.protocol === 'http:' ? '80' : '443')) {
+    return null
+  }
 
   const host = stripIpv6Brackets(url.hostname).toLowerCase()
   if (!host) return null
@@ -237,25 +249,30 @@ async function lookupAddresses(hostname: string): Promise<string[]> {
 
 /**
  * Resolves the host and requires every address to be public, so a public name
- * pointing at an internal address never gets contacted.
+ * pointing at an internal address never gets contacted. Returns the address the
+ * request is then pinned to.
  */
-export async function isPublicCoverImageUrl(
+export async function resolveCoverImageAddress(
   url: URL,
   resolve: CoverRemoteImageLookup = lookupAddresses,
-): Promise<boolean> {
+): Promise<string | null> {
   const host = stripIpv6Brackets(url.hostname).toLowerCase()
   if (parseIpv4(host) !== null || parseIpv6(host) !== null) {
-    return isPublicCoverImageAddress(host)
+    return isPublicCoverImageAddress(host) ? host : null
   }
 
   let addresses: string[]
   try {
     addresses = await resolve(host)
   } catch {
-    return false
+    return null
   }
 
-  return addresses.length > 0 && addresses.every(isPublicCoverImageAddress)
+  if (!addresses.length || !addresses.every(isPublicCoverImageAddress)) {
+    return null
+  }
+
+  return addresses[0]
 }
 
 function isRedirect(status: number): boolean {
@@ -316,6 +333,41 @@ async function readBoundedImageBody(
 }
 
 /**
+ * Requests the image over a connection pinned to the address that was just
+ * validated, so the host cannot resolve to something private on the second
+ * lookup `fetch()` would otherwise make. TLS keeps the original hostname for
+ * SNI and certificate identity.
+ *
+ * Pinning needs per-request TLS control, which the Bun runtime the console
+ * ships on provides. Elsewhere the request goes out by hostname.
+ */
+function requestCoverRemoteImage(url: URL, address: string): Promise<Response> {
+  const init: RequestInit = {
+    redirect: 'manual',
+    signal: AbortSignal.timeout(COVER_REMOTE_IMAGE_TIMEOUT_MS),
+    headers: { Accept: COVER_REMOTE_IMAGE_ACCEPT },
+  }
+
+  const host = stripIpv6Brackets(url.hostname)
+  if (!('Bun' in globalThis) || host === address) {
+    return fetch(url.href, init)
+  }
+
+  const pinned = new URL(url)
+  pinned.hostname = address.includes(':') ? `[${address}]` : address
+
+  return fetch(pinned.href, {
+    ...init,
+    headers: { ...init.headers, Host: url.host },
+    tls: {
+      serverName: url.hostname,
+      checkServerIdentity: (_address: string, certificate: PeerCertificate) =>
+        checkServerIdentity(url.hostname, certificate),
+    },
+  } as RequestInit)
+}
+
+/**
  * Fetches a caller-supplied image URL, or returns `null` for anything that is
  * blocked, unreachable or not an image. The uniform `null` keeps the renderer
  * from leaking whether a target exists.
@@ -328,15 +380,12 @@ export async function fetchCoverRemoteImageBuffer(
   let url = parseCoverRemoteImageUrl(source)
 
   for (let hop = 0; url && hop <= COVER_REMOTE_IMAGE_MAX_REDIRECTS; hop += 1) {
-    if (!(await isPublicCoverImageUrl(url, resolve))) return null
+    const address = await resolveCoverImageAddress(url, resolve)
+    if (!address) return null
 
     let response: Response
     try {
-      response = await fetch(url.href, {
-        redirect: 'manual',
-        signal: AbortSignal.timeout(COVER_REMOTE_IMAGE_TIMEOUT_MS),
-        headers: { Accept: COVER_REMOTE_IMAGE_CONTENT_TYPES.join(', ') },
-      })
+      response = await requestCoverRemoteImage(url, address)
     } catch {
       return null
     }
