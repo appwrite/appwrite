@@ -8,6 +8,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 
 class Get extends Action
@@ -42,6 +43,16 @@ class Get extends Action
                 contentType: ContentType::JSON
             ))
             ->inject('response')
-            ->inject('targetUser');
+            ->inject('targetUser')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        Response $response,
+        Document $targetUser,
+    ): void {
+        $prefs = $targetUser->getAttribute('prefs', []);
+
+        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     }
 }
