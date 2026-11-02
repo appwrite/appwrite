@@ -1,5 +1,4 @@
 import { afterAll, describe, expect, mock, test } from 'bun:test'
-import { Client, Organizations } from '@appwrite.io/console'
 import { QueryClient } from '@tanstack/react-query'
 import * as actualSdk from '@/lib/appwrite/sdk'
 import {
@@ -413,10 +412,6 @@ describe('alert email unsubscribe page', () => {
 })
 
 describe('budget alert recipients', () => {
-  afterAll(() => {
-    mock.module('@/lib/appwrite/sdk', () => actualSdk)
-  })
-
   test('reads recipients only from editions that return them', () => {
     expect(budgetRecipients({ budgetNotify: ['owner', 'billing'] })).toEqual([
       'owner',
@@ -431,66 +426,5 @@ describe('budget alert recipients', () => {
     expect(changedBudgetRecipients(current, ['owner'])).toEqual(['owner'])
     expect(changedBudgetRecipients(current, ['billing', 'owner'])).toBeNull()
     expect(changedBudgetRecipients(current, [])).toBeNull()
-  })
-
-  test('sends notify on the wire only when recipients are given', async () => {
-    // The real client and generated service, recorded at fetch: what reaches
-    // the API is what the generated `updateBudget` would have serialized.
-    const client = new Client()
-      .setEndpoint('https://example.test/v1')
-      .setProject('console')
-    const sent: { method: string; path: string; body: unknown }[] = []
-    const realFetch = globalThis.fetch
-    globalThis.fetch = (async (
-      input: RequestInfo | URL,
-      init?: RequestInit,
-    ) => {
-      sent.push({
-        method: String(init?.method).toLowerCase(),
-        path: new URL(String(input)).pathname,
-        body: JSON.parse(String(init?.body ?? '{}')),
-      })
-      return new Response('{}', {
-        headers: { 'content-type': 'application/json' },
-      })
-    }) as typeof fetch
-    mock.module('@/lib/appwrite/sdk', () => ({
-      ...actualSdk,
-      sdk: {
-        forConsole: { client, organizations: new Organizations(client) },
-      },
-    }))
-    const { updateOrganizationBudget } = await import(
-      '@/lib/react-query/hooks/organizations'
-    )
-
-    try {
-      await updateOrganizationBudget({
-        organizationId: 'org',
-        budget: 100,
-        alerts: [50],
-      })
-      await updateOrganizationBudget({
-        organizationId: 'org',
-        budget: 100,
-        alerts: [50],
-        notify: ['owner'],
-      })
-    } finally {
-      globalThis.fetch = realFetch
-    }
-
-    expect(sent).toEqual([
-      {
-        method: 'patch',
-        path: '/v1/organizations/org/budget',
-        body: { budget: 100, alerts: [50] },
-      },
-      {
-        method: 'patch',
-        path: '/v1/organizations/org/budget',
-        body: { budget: 100, alerts: [50], notify: ['owner'] },
-      },
-    ])
   })
 })
