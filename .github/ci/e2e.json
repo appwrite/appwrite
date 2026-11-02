@@ -145,7 +145,7 @@
       "functional": false,
       "processes": null,
       "paths": [
-        "app/controllers/api/graphql.php",
+        "src/Appwrite/Platform/Modules/GraphQL/",
         "src/Appwrite/Platform/Modules/Account/",
         "src/Appwrite/Platform/Modules/Avatars/",
         "src/Appwrite/Platform/Modules/Databases/",
@@ -208,7 +208,6 @@
       "documentsdb": true,
       "paths": [
         "src/Appwrite/Platform/Modules/Projects/",
-        "app/controllers/api/projects.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",

@@ -6,7 +6,7 @@ return [
         'name' => 'Home',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'web/home.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -118,7 +118,7 @@ return [
         'name' => 'Projects',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
         'description' => '',
-        'controller' => 'api/projects.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',
@@ -314,7 +314,7 @@ return [
         'name' => 'Mock',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'mock.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -328,7 +328,7 @@ return [
         'name' => 'GraphQL',
         'subtitle' => 'The GraphQL API allows you to query and mutate your Appwrite server using GraphQL.',
         'description' => '/docs/services/graphql.md',
-        'controller' => 'api/graphql.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/graphql',
