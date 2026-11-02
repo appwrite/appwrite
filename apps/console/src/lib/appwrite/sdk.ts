@@ -669,8 +669,8 @@ export const sdk = {
   // Endpoint is set from cached region (setProjectRegion when project is fetched) or explicit region param.
   // Always fetch project first in loaders so region is cached before project-scoped calls.
   //
-  // Inside an environment of the project (the `environment` search param of the
-  // project routes), every call acts in that environment. The few calls meant for
+  // Inside an environment of the project (the working context kept by
+  // `@/lib/active-environment`), every call acts in that environment. The few calls meant for
   // the project itself while there, such as listing its environments, pass
   // `environment: null`; a caller that knows another environment names it.
   forProject(

@@ -129,7 +129,10 @@ export function CreateEnvironmentWizardView({
       project?.name ?? '',
     ])
     setName(suggested)
-    setEnvironmentId(suggestProjectEnvironmentId(suggested))
+    // An ID typed while the environments were loading is the user's; keep it.
+    if (!idTouched.current) {
+      setEnvironmentId(suggestProjectEnvironmentId(suggested))
+    }
     if (suggested) {
       requestAnimationFrame(() => nameInputRef.current?.select())
     }

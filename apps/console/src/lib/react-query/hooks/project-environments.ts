@@ -27,7 +27,6 @@ import {
   updateProjectEnvironment,
   type ProjectEnvironment,
 } from '@/lib/appwrite/project-environments'
-import { fetchEnvironmentCopyMigrations } from './migrations'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** One page covers the per-plan environment cap many times over. */
@@ -235,50 +234,4 @@ export function useDeleteProjectEnvironment(
       })
     },
   })
-}
-
-/**
- * Hook finding the copy of a freshly created environment from its project, so
- * the creation wizard can hand it to the environment's progress card: the
- * newest Appwrite to Appwrite migration of the environment, polled until the
- * environment lists it. Realtime cannot carry it, as the wizard is on the
- * parent project and the migration announces itself on the environment.
- *
- * @param projectId - The project the environment belongs to
- * @param environmentId - The environment, once created
- * @param region - The project's region
- * @param enabled - False until there is a copy to find
- * @returns The migration, or null until the environment lists it
- */
-export function useEnvironmentCopyMigration(
-  projectId: string | null | undefined,
-  environmentId: string | null | undefined,
-  region: string | undefined,
-  enabled = true,
-) {
-  const { data } = useQuery({
-    queryKey: [
-      'migrations',
-      'project',
-      projectId,
-      'environment-copy',
-      environmentId,
-      'created',
-      region,
-    ],
-    queryFn: async () => {
-      const result = await fetchEnvironmentCopyMigrations(
-        projectId!,
-        region,
-        environmentId!,
-      )
-      return { migration: result.migrations[0] ?? null }
-    },
-    enabled: !!projectId && !!environmentId && enabled,
-    refetchInterval: (query) => (query.state.data?.migration ? false : 2000),
-    refetchOnWindowFocus: false,
-    retry: false,
-  })
-
-  return data?.migration ?? null
 }
