@@ -1,30 +1,40 @@
 /**
- * The environment the Console is working in, for everything that is not a React
- * component. An environment is a project of its own underneath, but it has no
- * project ID of its own: it is always the project it belongs to plus an
- * environment ID. `sdk.forProject` reads the active one and sends it as
- * `X-Appwrite-Environment` on every project request, so the whole Console acts
- * in the environment without each hook knowing, and the query cache keys on it
- * so one environment's data never shows in another.
+ * The environment the Console is working in, per project, for everything that is
+ * not a React component. An environment is a project of its own underneath, but
+ * it has no project ID of its own: it is always the project it belongs to plus
+ * an environment ID. `sdk.forProject` reads the one for that project and sends
+ * it as `X-Appwrite-Environment` on every request, so the whole Console acts in
+ * the environment without each hook knowing.
  *
- * It is not a URL parameter: it is a working context, like a selected
- * organization, kept per project in session storage so a reload restores it and
- * different tabs can sit in different environments. The project routes restore
- * it on entry, before any project-scoped request runs.
+ * It is kept per project, not as a single "active" value: route intent-preload
+ * runs another project's `beforeLoad` while the user is still in the current
+ * one, so a single global would be clobbered and the current project's requests
+ * would lose their environment. It is not a URL parameter either, but a working
+ * context like a selected organization, persisted per project in session storage
+ * so a reload restores it and different tabs can sit in different environments.
+ *
+ * An environment and the project it belongs to share the project's ID, so they
+ * share every React Query key. Rather than scope the keys — which would leave
+ * invalidation and realtime merges matching across environments on the raw key —
+ * only one environment's data for a project is ever cached at a time: changing
+ * the environment of a project drops that project's queries so the new context
+ * refetches. The app registers that drop through `onChange`.
  */
 
 import { useSyncExternalStore } from 'react'
 
-export interface ActiveEnvironment {
-  /** The project the environment belongs to, named in X-Appwrite-Project */
-  projectId: string
-  environmentId: string
-}
-
-let active: ActiveEnvironment | null = null
+/** projectId → environmentId the Console is in for that project */
+const environments = new Map<string, string>()
 const listeners = new Set<() => void>()
-
 const STORAGE_PREFIX = 'console:environment:'
+
+/** Called when a project's environment changes, so the app can drop its queries. */
+let onChange: ((projectId: string) => void) | null = null
+export function registerActiveEnvironmentChange(
+  handler: (projectId: string) => void,
+): void {
+  onChange = handler
+}
 
 function notify(): void {
   for (const listener of listeners) listener()
@@ -52,55 +62,46 @@ function read(projectId: string): string | null {
   }
 }
 
-function apply(next: ActiveEnvironment | null): void {
-  if (
-    next?.projectId === active?.projectId &&
-    next?.environmentId === active?.environmentId
-  ) {
-    return
+function set(projectId: string, environmentId: string | null): void {
+  if (!projectId) return
+  const previous = environments.get(projectId) ?? null
+  const next = environmentId || null
+  if (previous === next) return
+
+  if (next) {
+    environments.set(projectId, next)
+  } else {
+    environments.delete(projectId)
   }
-  active = next
   notify()
+  // The other environment's data must not linger in the shared project keys.
+  onChange?.(projectId)
 }
 
 /**
- * Enter, or with no environment ID leave, the environment of a project. Persists
- * the choice so the project routes restore it on the next entry and after a reload.
+ * Enter, or with no environment ID leave, the environment of a project, and
+ * persist the choice so the project routes restore it on the next entry.
  */
 export function setActiveEnvironment(
   projectId: string,
   environmentId: string | null | undefined,
 ): void {
-  const id = environmentId || null
-  if (projectId) persist(projectId, id)
-  apply(id && projectId ? { projectId, environmentId: id } : null)
+  persist(projectId, environmentId || null)
+  set(projectId, environmentId || null)
 }
 
 /**
- * Make the active environment the one saved for this project, or none. Called by
- * the project routes on entry, before project-scoped requests run, so the store
- * always matches the project the Console is in.
+ * Make the project's environment the one saved for it, or none. Called by the
+ * project routes on entry, before project-scoped requests run — only for the
+ * project being entered, so preloading another project never clobbers this one.
  */
 export function restoreActiveEnvironment(projectId: string): void {
-  const id = projectId ? read(projectId) : null
-  apply(id && projectId ? { projectId, environmentId: id } : null)
+  set(projectId, read(projectId))
 }
 
-export function getActiveEnvironment(): ActiveEnvironment | null {
-  return active
-}
-
-/** The active environment's ID when it belongs to `projectId`, else null. */
+/** The environment ID the Console is in for `projectId`, or null for production. */
 export function getActiveEnvironmentId(projectId: string): string | null {
-  return active?.projectId === projectId ? active.environmentId : null
-}
-
-/**
- * What tells one environment's cache from another's: a prefix for every query
- * key hash, empty outside an environment so production keys stay as they are.
- */
-export function activeEnvironmentCacheScope(): string {
-  return active ? `${active.projectId}/${active.environmentId}` : ''
+  return projectId ? (environments.get(projectId) ?? null) : null
 }
 
 export function subscribeActiveEnvironment(listener: () => void): () => void {
@@ -114,7 +115,7 @@ function getServerSnapshot(): string | null {
   return null
 }
 
-/** The active environment's ID for `projectId`, re-rendering when it changes. */
+/** The environment ID the Console is in for `projectId`, re-rendering on change. */
 export function useActiveEnvironmentId(
   projectId: string | undefined,
 ): string | null {

@@ -1,20 +1,10 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  hashKey,
-} from '@tanstack/react-query'
-import { activeEnvironmentCacheScope } from '@/lib/active-environment'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { registerActiveEnvironmentChange } from '@/lib/active-environment'
 
 export function getContext() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        // An environment of a project shares the project's ID, and with it every
-        // query key. Hashing the keys under the environment the Console is in keeps
-        // one environment's data out of another's cache; invalidation matches on
-        // the keys themselves, so it reaches every environment's copy as before.
-        queryKeyHashFn: (queryKey) =>
-          hashKey([activeEnvironmentCacheScope(), ...queryKey]),
         // Disable automatic refetching on window focus to reduce CPU usage
         refetchOnWindowFocus: false,
         // Don't refetch on mount if data exists
@@ -29,6 +19,18 @@ export function getContext() {
         gcTime: 0, // Will be overridden by individual hooks
       },
     },
+  })
+
+  // An environment and the project it belongs to share the project's ID and so
+  // share every query key. Only one of them is ever cached for a project at a
+  // time: when a project's environment changes, drop that project's queries so
+  // the new context refetches and nothing of the old one lingers or is matched
+  // by a later invalidation on the shared key.
+  registerActiveEnvironmentChange((projectId: string) => {
+    queryClient.removeQueries({
+      predicate: (query) =>
+        Array.isArray(query.queryKey) && query.queryKey.includes(projectId),
+    })
   })
 
   // Expose queryClient to window for debugging in development

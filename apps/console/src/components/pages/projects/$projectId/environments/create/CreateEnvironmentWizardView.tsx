@@ -16,8 +16,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  getActiveEnvironmentId,
   setActiveEnvironment,
-  useActiveEnvironmentId,
 } from '@/lib/active-environment'
 import { isValidProjectId, PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
@@ -75,7 +75,6 @@ export function CreateEnvironmentWizardView({
   const t = useT()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
-  const activeEnvironmentId = useActiveEnvironmentId(projectId)
   const region = project?.region
 
   const [name, setName] = useState('')
@@ -101,20 +100,24 @@ export function CreateEnvironmentWizardView({
   const isCreating = createEnvironmentMutation.isPending
   const isCopy = startFrom === 'project'
 
-  // Environments are created from production: inside an environment, this page
-  // goes to the project with none named. Read the live profile (including the
-  // experiment override); useConsoleProfile's first paint is the canonical
-  // cloud default, which has this flag off and would bounce to overview.
+  // Environments are created from production: opened inside an environment, this
+  // page leaves it once, on entry. It does not react to the active environment
+  // afterwards, so entering the environment just created here is not undone.
+  // Read the live profile (including the experiment override); useConsoleProfile's
+  // first paint is the canonical cloud default, which has this flag off and would
+  // bounce to overview.
+  const leftEnvironmentOnEntry = useRef(false)
   useEffect(() => {
     if (!getActiveProfileFeatures().projectEnvironments) {
       void navigate({ to: '/projects/$projectId', params: { projectId } })
       return
     }
-    if (activeEnvironmentId) {
-      // Create from production: leave any environment the Console sat in.
+    if (leftEnvironmentOnEntry.current) return
+    leftEnvironmentOnEntry.current = true
+    if (getActiveEnvironmentId(projectId)) {
       setActiveEnvironment(projectId, null)
     }
-  }, [activeEnvironmentId, projectId, navigate])
+  }, [projectId, navigate])
 
   useEffect(() => {
     if (nameSuggested.current || nameTouched.current || isLoadingEnvironments) {

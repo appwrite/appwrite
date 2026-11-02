@@ -70,7 +70,11 @@ import {
   setInitialLoaderShellGate,
 } from '@/lib/initial-loader/shell-gates'
 import { ProjectEnvironmentBanner } from '@/components/pages/projects/$projectId/shared/ProjectEnvironmentBanner'
-import { restoreActiveEnvironment } from '@/lib/active-environment'
+import {
+  getActiveEnvironmentId,
+  restoreActiveEnvironment,
+  setActiveEnvironment,
+} from '@/lib/active-environment'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
 const DATABASE_TABLE_VIEW_TABS = new Set([
   'rows',
@@ -255,12 +259,37 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // re-fetch project.get and hang the fullscreen loader.
     let projectData: Awaited<ReturnType<typeof fetchProject>>
     try {
-      projectData = await context.queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000,
-        retry: false,
-      })
+      try {
+        projectData = await context.queryClient.ensureQueryData({
+          queryKey: ['project', projectId],
+          queryFn: () => fetchProject(projectId),
+          staleTime: 5 * 60 * 1000,
+          retry: false,
+        })
+      } catch (projectError) {
+        // The restored environment may have been deleted while this tab was
+        // elsewhere, which fails the fetch with the header set. Leave it and
+        // load the project itself rather than carry a dead environment on every
+        // request. Any other error falls through to the handling below.
+        if (
+          getActiveEnvironmentId(projectId) &&
+          getAppwriteErrorInfo(projectError).type ===
+            'project_environment_not_found'
+        ) {
+          setActiveEnvironment(projectId, null)
+          context.queryClient.removeQueries({
+            queryKey: ['project', projectId],
+          })
+          projectData = await context.queryClient.ensureQueryData({
+            queryKey: ['project', projectId],
+            queryFn: () => fetchProject(projectId),
+            staleTime: 5 * 60 * 1000,
+            retry: false,
+          })
+        } else {
+          throw projectError
+        }
+      }
       registerProjectRegionFromProject(projectData)
 
       // Self-hosted usage availability is a backend capability. Resolve the
