@@ -1629,7 +1629,7 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_SITES_STREAMING',
+                'name' => '_APP_COMPUTE_STREAMING',
                 'description' => 'Allows a site to send its response in chunks as the runtime produces it, so a progressively rendered page reaches the visitor before it has finished. By default, set to \'disabled\'. A streamed response is not compressed, so it reaches the visitor sooner but carries more bytes. Requires an executor that supports response format 0.12.0.',
                 'introduction' => '',
                 'default' => 'disabled',
