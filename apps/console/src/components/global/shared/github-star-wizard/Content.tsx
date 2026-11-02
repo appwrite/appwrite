@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { Star, X } from 'lucide-react'
+import { ExternalLink, Star, X } from 'lucide-react'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
 import { Button } from '@/components/ui/button'
@@ -86,7 +86,7 @@ const STAR_FIELD: readonly FieldStar[] = [
     delayMs: 300,
     twinkleMs: 3200,
     floatMs: 8600,
-    tone: 'brand',
+    tone: 'neutral',
   },
   {
     top: '42%',
@@ -113,7 +113,7 @@ const STAR_FIELD: readonly FieldStar[] = [
     delayMs: 700,
     twinkleMs: 2800,
     floatMs: 12600,
-    tone: 'accent',
+    tone: 'neutral',
   },
   {
     top: '72%',
@@ -131,7 +131,7 @@ const STAR_FIELD: readonly FieldStar[] = [
     delayMs: 1000,
     twinkleMs: 3400,
     floatMs: 8800,
-    tone: 'brand',
+    tone: 'neutral',
   },
   {
     top: '88%',
@@ -221,7 +221,7 @@ const STAR_FIELD: readonly FieldStar[] = [
     delayMs: 1100,
     twinkleMs: 4300,
     floatMs: 11400,
-    tone: 'accent',
+    tone: 'neutral',
   },
   {
     top: '82%',
@@ -243,11 +243,10 @@ const STAR_FIELD: readonly FieldStar[] = [
   },
 ]
 
-/** Three streaks on long, offset loops so the sky stays quietly busy. */
+/** Two streaks on long, offset loops so the sky stays quietly alive. */
 const SHOOTING_STARS = [
-  { top: '14%', right: '6%', delayMs: 2500, durationMs: 9000 },
-  { top: '36%', right: '18%', delayMs: 7800, durationMs: 13000 },
-  { top: '8%', right: '42%', delayMs: 13400, durationMs: 17000 },
+  { top: '14%', right: '6%', delayMs: 2500, durationMs: 11000 },
+  { top: '8%', right: '42%', delayMs: 9400, durationMs: 17000 },
 ] as const
 
 export type GithubStarWizardContentProps = {
@@ -286,7 +285,8 @@ export function GithubStarWizardContent({
   // live GitHub count when the API answers; otherwise keep the build-time one.
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      setStarCount(GITHUB_STARS_COUNT)
+      // Only start the count-up if a fast live response has not landed yet.
+      setStarCount((current) => (current === 0 ? GITHUB_STARS_COUNT : current))
     })
     const controller = new AbortController()
     void fetch(GITHUB_REPO_API, {
@@ -352,7 +352,6 @@ export function GithubStarWizardContent({
           >
             <div className="star-wizard-nebula star-wizard-nebula--pink" />
             <div className="star-wizard-nebula star-wizard-nebula--purple" />
-            <div className="star-wizard-nebula star-wizard-nebula--blend" />
             {STAR_FIELD.map((star, index) => (
               <span
                 key={index}
@@ -500,6 +499,7 @@ export function GithubStarWizardContent({
                     onClick={onStar}
                   >
                     {t('Star on GitHub')}
+                    <ExternalLink className="h-4 w-4" aria-hidden />
                   </a>
                 </Button>
                 <div>

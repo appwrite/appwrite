@@ -19,7 +19,7 @@
   height: 56%;
   background: radial-gradient(
     ellipse at center,
-    color-mix(in srgb, var(--chart-brand) 24%, transparent) 0%,
+    color-mix(in srgb, var(--chart-brand) 14%, transparent) 0%,
     transparent 68%
   );
   animation: star-wizard-drift-a 26s ease-in-out infinite alternate;
@@ -32,28 +32,10 @@
   height: 52%;
   background: radial-gradient(
     ellipse at center,
-    color-mix(in srgb, #7c67fe 20%, transparent) 0%,
+    color-mix(in srgb, #7c67fe 11%, transparent) 0%,
     transparent 68%
   );
   animation: star-wizard-drift-b 32s ease-in-out infinite alternate;
-}
-
-.star-wizard-nebula--blend {
-  top: 28%;
-  right: -18%;
-  width: 48%;
-  height: 48%;
-  background: radial-gradient(
-    ellipse at center,
-    color-mix(
-        in srgb,
-        color-mix(in srgb, var(--chart-brand) 55%, #7c67fe) 16%,
-        transparent
-      )
-      0%,
-    transparent 70%
-  );
-  animation: star-wizard-drift-c 38s ease-in-out infinite alternate;
 }
 
 @keyframes star-wizard-drift-a {
@@ -74,15 +56,6 @@
   }
 }
 
-@keyframes star-wizard-drift-c {
-  from {
-    transform: translate3d(0, -5%, 0) scale(0.95);
-  }
-  to {
-    transform: translate3d(-10%, 7%, 0) scale(1.12);
-  }
-}
-
 /*
  * Twinkle animates opacity while the float animates transform, so the two
  * loops layer on one element without fighting over a property.
@@ -100,10 +73,10 @@
 @keyframes star-wizard-twinkle {
   0%,
   100% {
-    opacity: 0.12;
+    opacity: 0.1;
   }
   50% {
-    opacity: 1;
+    opacity: 0.75;
   }
 }
 
@@ -118,13 +91,13 @@
 
 .star-wizard-star--brand {
   background: var(--chart-brand);
-  box-shadow: 0 0 8px 1.5px
-    color-mix(in srgb, var(--chart-brand) 65%, transparent);
+  box-shadow: 0 0 5px 1px
+    color-mix(in srgb, var(--chart-brand) 40%, transparent);
 }
 
 .star-wizard-star--accent {
   background: #7c67fe;
-  box-shadow: 0 0 8px 1.5px rgb(124 103 254 / 0.6);
+  box-shadow: 0 0 5px 1px rgb(124 103 254 / 0.35);
 }
 
 .star-wizard-star--neutral {
@@ -170,7 +143,7 @@
 .star-wizard-halo {
   background: radial-gradient(
     ellipse at center,
-    color-mix(in srgb, var(--chart-brand) 16%, transparent) 0%,
+    color-mix(in srgb, var(--chart-brand) 9%, transparent) 0%,
     transparent 70%
   );
   animation: star-wizard-breathe 6s ease-in-out infinite;
