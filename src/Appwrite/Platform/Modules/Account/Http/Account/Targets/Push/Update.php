@@ -8,7 +8,11 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 class Update extends Action
 {
@@ -43,6 +47,16 @@ class Update extends Action
                     )
                 ],
                 contentType: ContentType::JSON
-            ));
+            ))
+            ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Target ID.', false, ['dbForProject'])
+            ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+            ->param('bundleId', '', new Text(256), 'App bundle ID of the device registering an APNs token. Routes an APNs target to the enabled APNs provider for this bundle ID and `environment`.', true)
+            ->param('environment', '', new WhiteList(['sandbox', 'production'], true), 'APNs environment the token belongs to, `sandbox` or `production`. Used with `bundleId`.', true)
+            ->inject('queueForEvents')
+            ->inject('user')
+            ->inject('request')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('authorization');
     }
 }
