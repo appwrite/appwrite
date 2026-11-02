@@ -135,8 +135,9 @@ class APNS extends PushAdapter
         if (!\is_null($priority)) {
             $headers[] = 'apns-priority: ' . $priority;
         }
-        // A later push with the same tag replaces the earlier one on the device.
-        if (!\is_null($message->getTag())) {
+        // A later push with the same tag replaces the earlier one on the device. APNs refuses a
+        // collapse ID over 64 bytes, so a longer tag is left out rather than failing the push.
+        if (!\is_null($message->getTag()) && \strlen($message->getTag()) <= 64) {
             $headers[] = 'apns-collapse-id: ' . $message->getTag();
         }
 
