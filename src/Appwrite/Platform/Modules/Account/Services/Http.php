@@ -33,6 +33,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Crea
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Get as GetOAuth2Callback;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Get as CreateOAuth2Session;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirect\Get as GetOAuth2Redirect;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Phone\Update as UpdatePhoneSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Token\Create as CreateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Update as UpdateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
@@ -69,6 +70,7 @@ class Http extends Service
             ->addAction(CreateMagicURLToken::getName(), CreateMagicURLToken::class)
             ->addAction(CreateEmailToken::getName(), CreateEmailToken::class)
             ->addAction(UpdateMagicURLSession::getName(), UpdateMagicURLSession::class)
+            ->addAction(UpdatePhoneSession::getName(), UpdatePhoneSession::class)
             ->addAction(CreatePhoneToken::getName(), CreatePhoneToken::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
