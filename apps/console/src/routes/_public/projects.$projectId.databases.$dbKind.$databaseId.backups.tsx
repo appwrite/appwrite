@@ -63,7 +63,9 @@ export const Route = createFileRoute(
 
     // An environment is backed up with its project: its backup routes refuse,
     // so nothing is asked of them
-    if (!project?.parentId) {
+    if (
+      !(project as { environmentId?: string | null } | undefined)?.environmentId
+    ) {
       await Promise.all([
         queryClient.prefetchQuery(
           backupPoliciesQueryOptions(
@@ -85,7 +87,8 @@ export const Route = createFileRoute(
     }
 
     const database = queryClient.getQueryData<{ name?: string }>(
-      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
+      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind)
+        .queryKey,
     )
     return { database }
   },

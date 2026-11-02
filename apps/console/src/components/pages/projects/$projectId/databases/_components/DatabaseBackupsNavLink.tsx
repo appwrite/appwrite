@@ -73,7 +73,9 @@ export function DatabaseBackupsNavLink({
   // An environment is backed up with the project it belongs to, never on its own:
   // its backup routes refuse, so the tab is disabled rather than reached.
   const { projectData } = useProject(projectId)
-  const isEnvironment = !!projectData?.parentId
+  const isEnvironment = !!(
+    projectData as { environmentId?: string | null } | undefined
+  )?.environmentId
   const disabled = disabledProp || isEnvironment
   const disabledTooltip = isEnvironment
     ? ENVIRONMENT_BACKUPS_TOOLTIP

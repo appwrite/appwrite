@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, CheckCircle2, Loader2, X } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,8 @@ import {
   useLatestEnvironmentCopyMigration,
   useProject,
 } from '@/lib/react-query/hooks'
+import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
+import { getConsoleProject } from '@/lib/appwrite/console-projects'
 import { migrationProgress } from '@/lib/project-environments'
 import { useT } from '@/lib/i18n/translate'
 
@@ -113,8 +115,22 @@ interface EnvironmentCopyBoxProps {
 export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
   const queryClient = useQueryClient()
   const { projectData } = useProject(projectId)
-  const parentId = projectData?.parentId || undefined
-  const { project: parent } = useProject(parentId)
+  // The project answers as the environment while the Console is in one
+  const environmentId =
+    (projectData as { environmentId?: string | null } | undefined)
+      ?.environmentId || undefined
+  // The project itself, read on its own routes: the copy's source
+  const { data: parent } = useQuery({
+    queryKey: ['project', 'console', projectId, projectData?.teamId],
+    queryFn: () =>
+      getConsoleProject({
+        projectId,
+        organizationId: projectData!.teamId,
+      }),
+    enabled: !!environmentId && !!projectData?.teamId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+  })
   const { sessionCopyIds, dismissedCopyIds, addCopyId, dismissCopy } =
     useSessionMigrations(projectId)
 
@@ -122,7 +138,7 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
   // IDs, so the latest copy is looked up once and tracked again while under way.
   const latest = useLatestEnvironmentCopyMigration(
     projectId,
-    !!parentId && sessionCopyIds.length === 0,
+    !!environmentId && sessionCopyIds.length === 0,
   )
 
   useEffect(() => {
@@ -160,9 +176,9 @@ export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
     }
   }, [migrations, projectId, queryClient])
 
-  if (!parentId || visible.length === 0) return null
+  if (!environmentId || visible.length === 0) return null
 
-  const sourceName = parent?.name || parentId
+  const sourceName = parent?.name || projectId
 
   return (
     <div className="w-full max-w-sm space-y-2">

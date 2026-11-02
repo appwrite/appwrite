@@ -1,9 +1,20 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  QueryClient,
+  QueryClientProvider,
+  hashKey,
+} from '@tanstack/react-query'
+import { activeEnvironmentCacheScope } from '@/lib/active-environment'
 
 export function getContext() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
+        // An environment of a project shares the project's ID, and with it every
+        // query key. Hashing the keys under the environment the Console is in keeps
+        // one environment's data out of another's cache; invalidation matches on
+        // the keys themselves, so it reaches every environment's copy as before.
+        queryKeyHashFn: (queryKey) =>
+          hashKey([activeEnvironmentCacheScope(), ...queryKey]),
         // Disable automatic refetching on window focus to reduce CPU usage
         refetchOnWindowFocus: false,
         // Don't refetch on mount if data exists

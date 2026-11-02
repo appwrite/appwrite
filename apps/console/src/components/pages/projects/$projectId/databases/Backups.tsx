@@ -3,6 +3,7 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, BackupServices } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { setActiveEnvironment } from '@/lib/active-environment'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { formatDateTime } from '@/lib/date-utils'
@@ -28,18 +29,21 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow} from '@/components/ui/table'
+  TableRow,
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle} from '@/components/ui/dialog'
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -50,7 +54,8 @@ import { ENVIRONMENT_BACKUPS_TOOLTIP } from './_components/DatabaseBackupsNavLin
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger} from '@/components/ui/tooltip'
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   Plus,
   Archive,
@@ -61,7 +66,8 @@ import {
   CheckCircle2,
   AlertCircle,
   CircleDashed,
-  Lock} from 'lucide-react'
+  Lock,
+} from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -75,7 +81,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue} from '@/components/ui/select'
+  SelectValue,
+} from '@/components/ui/select'
 import type { Models } from '@appwrite.io/console'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { cn } from '@/lib/utils'
@@ -107,24 +114,30 @@ function getBackupStatus(status: string) {
     completed: {
       label: 'Complete',
       icon: CheckCircle2,
-      badgeVariant: 'completed'},
+      badgeVariant: 'completed',
+    },
     uploading: {
       label: 'Processing',
       icon: CircleDashed,
-      badgeVariant: 'processing'},
+      badgeVariant: 'processing',
+    },
     downloading: {
       label: 'Processing',
       icon: CircleDashed,
-      badgeVariant: 'processing'},
-    failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' }}
+      badgeVariant: 'processing',
+    },
+    failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' },
+  }
   const statusInfo = statusMap[status] || {
     label: 'Waiting',
     icon: Clock,
-    badgeVariant: 'pending' as BackupStatusVariant}
+    badgeVariant: 'pending' as BackupStatusVariant,
+  }
   return {
     label: statusInfo.label,
     badgeVariant: statusInfo.badgeVariant,
-    icon: statusInfo.icon}
+    icon: statusInfo.icon,
+  }
 }
 
 interface BackupsViewProps {
@@ -159,8 +172,11 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   const { project, projectData } = useProject(projectId)
   const region = project?.region
   // An environment is backed up with the project it belongs to: its backup
-  // routes refuse, so nothing is asked of them
-  const isEnvironment = !!projectData?.parentId
+  // routes refuse, so nothing is asked of them. The project answers as the
+  // environment while the Console is in one.
+  const isEnvironment = !!(
+    projectData as { environmentId?: string | null } | undefined
+  )?.environmentId
 
   // Get organization plan to check backups availability
   const { plan: organizationPlan, isLoading: planLoading } =
@@ -267,7 +283,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
             schedule: policy.schedule,
             name: policy.name,
             resourceId: policy.resourceId || databaseId,
-            enabled: policy.enabled ?? true}),
+            enabled: policy.enabled ?? true,
+          }),
         ),
       )
     },
@@ -290,12 +307,14 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ]})
+        ],
+      })
       setCreatePolicyDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to create backup policy'))
-    }})
+    },
+  })
 
   const deletePolicyMutation = useMutation({
     mutationFn: async (policyId: string) => {
@@ -312,13 +331,15 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ]})
+        ],
+      })
       setDeletePolicyDialogOpen(false)
       setSelectedPolicy(null)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete backup policy'))
-    }})
+    },
+  })
 
   // Archive mutations
   const createArchiveMutation = useMutation({
@@ -326,7 +347,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
       const projectSdk = sdk.forProject(projectId)
       return projectSdk.backups.createArchive({
         services: [BackupServices.Databases],
-        resourceId: databaseId})
+        resourceId: databaseId,
+      })
     },
     onSuccess: () => {
       toast.success(t('Database backup has started'))
@@ -338,12 +360,14 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ]})
+        ],
+      })
       setCreateManualBackupDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to create backup'))
-    }})
+    },
+  })
 
   const deleteArchiveMutation = useMutation({
     mutationFn: async (archiveId: string) => {
@@ -360,13 +384,15 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ]})
+        ],
+      })
       setDeleteBackupDialogOpen(false)
       setSelectedBackup(null)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete backup'))
-    }})
+    },
+  })
 
   const bulkDeleteArchivesMutation = useMutation({
     mutationFn: async (archiveIds: string[]) => {
@@ -392,13 +418,15 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           projectId,
           'database',
           databaseId,
-        ]})
+        ],
+      })
       setSelectedBackups(new Set())
       setBulkDeleteDialogOpen(false)
     },
     onError: (error: Error) => {
       toast.error(error.message || t('Failed to delete backups'))
-    }})
+    },
+  })
 
   const createRestorationMutation = useMutation({
     mutationFn: async (params: {
@@ -430,7 +458,9 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           {
             oldId: databaseId,
             newId:
-              variables.restoreTo === 'new' ? variables.newResourceId || '' : '',
+              variables.restoreTo === 'new'
+                ? variables.newResourceId || ''
+                : '',
             newName:
               variables.restoreTo === 'new'
                 ? variables.newResourceName || ''
@@ -443,11 +473,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
             : [enrichedRestoration, ...prev],
         )
         queryClient.setQueryData<Models.BackupRestoration[]>(
-          databaseRestoreMigrationsQueryOptions(
-            projectId,
-            databaseId,
-            dbKind,
-          ).queryKey,
+          databaseRestoreMigrationsQueryOptions(projectId, databaseId, dbKind)
+            .queryKey,
           (previous) => {
             const list = previous ?? []
             if (
@@ -582,7 +609,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                 <Button asChild variant="outline" size="sm">
                   <Link
                     to="/projects/$projectId/databases"
-                    params={{ projectId: projectData.parentId as string }}
+                    params={{ projectId }}
+                    onClick={() => setActiveEnvironment(projectId, null)}
                   >
                     {t('Open the project')}
                   </Link>
@@ -601,7 +629,11 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
         <UpgradeCurtain
           isLocked={true}
           orgId={project?.teamId}
-          message={t('Backups are available on Appwrite Cloud Pro and higher plans.') /* pragma: allowlist secret */}
+          message={
+            t(
+              'Backups are available on Appwrite Cloud Pro and higher plans.',
+            ) /* pragma: allowlist secret */
+          }
         >
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
@@ -677,399 +709,405 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           showPlanLimitWarning && 'pt-4 sm:pt-6',
         )}
       >
-      {showsFirstRunEmptyState ? (
-        <BackupsEmptyState
-          docsPath="/docs/products/databases/tablesdb/backups"
-          onCreatePolicy={() => setCreatePolicyDialogOpen(true)}
-          onManualBackup={() => setCreateManualBackupDialogOpen(true)}
-          createPolicyDisabled={isAtBackupPoliciesLimit}
-          createPolicyDisabledTooltip={createPolicyDisabledTooltip}
-        />
-      ) : (
-      <div className={backupsViewGridClass}>
-        {/* Policies Section */}
-        <div className={backupsViewPoliciesColumnClass}>
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Policies')}
-              </h3>
-              <Badge
-                variant="secondary"
-                className="text-[12px] font-normal"
-              >
-                {backupPoliciesLimit > 0
-                  ? `${policies.length}/${backupPoliciesLimit}`
-                  : t('Unlimited')}
-              </Badge>
-            </div>
-            {isAtBackupPoliciesLimit ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button
-                      onClick={() => setCreatePolicyDialogOpen(true)}
-                      variant="brandCta"
-                      disabled
-                      size="sm"
-                      className="h-8 gap-1.5 text-[12px] font-medium"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      {t('Create policy')}
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">{createPolicyDisabledTooltip}</p>
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button
-                onClick={() => setCreatePolicyDialogOpen(true)}
-                variant="brandCta"
-                size="sm"
-                className="h-8 gap-1.5 text-[12px] font-medium"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                {t('Create policy')}
-              </Button>
-            )}
-          </div>
-          <div className="flex-1">
-            {isPoliciesActuallyLoading ? (
-              <div className="flex h-full min-h-[280px] items-center justify-center rounded-lg border border-border bg-card py-12 text-center">
-                <div className="text-muted-foreground">
-                  {t('Loading policies...')}
+        {showsFirstRunEmptyState ? (
+          <BackupsEmptyState
+            docsPath="/docs/products/databases/tablesdb/backups"
+            onCreatePolicy={() => setCreatePolicyDialogOpen(true)}
+            onManualBackup={() => setCreateManualBackupDialogOpen(true)}
+            createPolicyDisabled={isAtBackupPoliciesLimit}
+            createPolicyDisabledTooltip={createPolicyDisabledTooltip}
+          />
+        ) : (
+          <div className={backupsViewGridClass}>
+            {/* Policies Section */}
+            <div className={backupsViewPoliciesColumnClass}>
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    {t('Policies')}
+                  </h3>
+                  <Badge
+                    variant="secondary"
+                    className="text-[12px] font-normal"
+                  >
+                    {backupPoliciesLimit > 0
+                      ? `${policies.length}/${backupPoliciesLimit}`
+                      : t('Unlimited')}
+                  </Badge>
                 </div>
-              </div>
-            ) : policies.length === 0 ? (
-              <EmptyState
-                icon={Archive}
-                title={t('Ensure your data stays safe')}
-                description={t(
-                  'Create a backup policy to automate regular and secure data protection.',
+                {isAtBackupPoliciesLimit ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button
+                          onClick={() => setCreatePolicyDialogOpen(true)}
+                          variant="brandCta"
+                          disabled
+                          size="sm"
+                          className="h-8 gap-1.5 text-[12px] font-medium"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          {t('Create policy')}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">{createPolicyDisabledTooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    onClick={() => setCreatePolicyDialogOpen(true)}
+                    variant="brandCta"
+                    size="sm"
+                    className="h-8 gap-1.5 text-[12px] font-medium"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    {t('Create policy')}
+                  </Button>
                 )}
-                isEmpty={true}
-                variant="card"
-                iconSize="md"
-                className="flex h-full min-h-[280px] flex-col items-center justify-center"
-              />
-            ) : (
-              <div className="space-y-3">
-                {policies.map((policy) => {
-                  const previousBackup = getPreviousBackup(policy.$id)
-                  const scheduleText =
-                    policy.schedule === '0 * * * *'
-                      ? t('Runs hourly')
-                      : policy.schedule.includes('* * *')
-                        ? t('Runs daily')
-                        : t('Runs on schedule')
-                  const retentionText =
-                    policy.retention === 36500
-                      ? t('Retained forever')
-                      : policy.retention === 7
-                        ? t('Retained for 1 week')
-                        : policy.retention === 1
-                          ? t('Retained for 1 day')
-                          : `${t('Retained for')} ${policy.retention} ${t('days')}`
-
-                  return (
-                    <div
-                      key={policy.$id}
-                      className="rounded-lg border border-border bg-background p-4"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="text-[14px] font-medium text-foreground">
-                              {policy.name || t('Unnamed Policy')}
-                            </h4>
-                          </div>
-                          <p className="text-[13px] text-muted-foreground">
-                            {scheduleText} • {retentionText}
-                          </p>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <RowActionsMenuTrigger />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedPolicy(policy)
-                                setDeletePolicyDialogOpen(true)
-                              }}
-                            >
-                              <MenuItemContent icon={Trash2}>
-                                {t('Delete')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      <div className="border-t border-border my-3" />
-                      <div className="grid grid-cols-2 gap-4 text-[13px]">
-                        <div>
-                          <div className="text-muted-foreground mb-1.5">
-                            {t('Previous')}
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            {previousBackup ? (
-                              <>
-                                <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
-                                <DateTooltip date={previousBackup.$createdAt} />
-                              </>
-                            ) : (
-                              <>
-                                <div className="h-2 w-2 rounded-full bg-muted-foreground shrink-0" />
-                                <span className="text-foreground">
-                                  {t('No backups yet')}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-muted-foreground mb-1.5">
-                            {t('Next')}
-                          </div>
-                          <div className="text-foreground">
-                            {getNextBackupDate(policy.schedule)}
-                          </div>
-                        </div>
-                      </div>
+              </div>
+              <div className="flex-1">
+                {isPoliciesActuallyLoading ? (
+                  <div className="flex h-full min-h-[280px] items-center justify-center rounded-lg border border-border bg-card py-12 text-center">
+                    <div className="text-muted-foreground">
+                      {t('Loading policies...')}
                     </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </div>
+                  </div>
+                ) : policies.length === 0 ? (
+                  <EmptyState
+                    icon={Archive}
+                    title={t('Ensure your data stays safe')}
+                    description={t(
+                      'Create a backup policy to automate regular and secure data protection.',
+                    )}
+                    isEmpty={true}
+                    variant="card"
+                    iconSize="md"
+                    className="flex h-full min-h-[280px] flex-col items-center justify-center"
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {policies.map((policy) => {
+                      const previousBackup = getPreviousBackup(policy.$id)
+                      const scheduleText =
+                        policy.schedule === '0 * * * *'
+                          ? t('Runs hourly')
+                          : policy.schedule.includes('* * *')
+                            ? t('Runs daily')
+                            : t('Runs on schedule')
+                      const retentionText =
+                        policy.retention === 36500
+                          ? t('Retained forever')
+                          : policy.retention === 7
+                            ? t('Retained for 1 week')
+                            : policy.retention === 1
+                              ? t('Retained for 1 day')
+                              : `${t('Retained for')} ${policy.retention} ${t('days')}`
 
-        {/* Backups Section */}
-        <div className={backupsViewArchivesColumnClass}>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Backups')}
-              </h3>
-            </div>
-            <Button
-              variant="brandCta"
-              onClick={() => setCreateManualBackupDialogOpen(true)}
-              size="sm"
-              className="h-8 gap-1.5 text-[12px] font-medium"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {t('Manual backup')}
-            </Button>
-          </div>
-          <div className="flex-1">
-            {isArchivesActuallyLoading ? (
-              <div className="flex h-full min-h-[280px] items-center justify-center rounded-lg border border-border bg-card py-12 text-center">
-                <div className="text-muted-foreground">
-                  {t('Loading backups...')}
-                </div>
-              </div>
-            ) : archives.length === 0 ? (
-              <EmptyState
-                icon={Archive}
-                title={t('No backups yet')}
-                description={t(
-                  'Create a manual backup or set up a policy to get started.',
-                )}
-                isEmpty={true}
-                variant="card"
-                iconSize="md"
-                className="flex h-full min-h-[280px] flex-col items-center justify-center"
-              />
-            ) : (
-              <>
-                <div className="rounded-lg border border-border bg-card">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="w-[50px] px-4 py-3">
-                          <Checkbox
-                            checked={
-                              archives.length > 0 &&
-                              archives.every((archive) =>
-                                selectedBackups.has(archive.$id),
-                              )
-                            }
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedBackups(
-                                  new Set(archives.map((a) => a.$id)),
-                                )
-                              } else {
-                                setSelectedBackups(new Set())
-                              }
-                            }}
-                          />
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                          {t('Backup ID')}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
-                          {t('Created')}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                          {t('Size')}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
-                          {t('Status')}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          {t('Policy')}
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {archives.map((archive) => {
-                        const status = getBackupStatus(archive.status)
-                        const StatusIcon = status.icon
-                        // Handle null policyId for manual backups (API may return null even though type says string)
-                        const policyId = archive.policyId as
-                          | string
-                          | null
-                          | undefined
-                        const policy = policyId
-                          ? policies.find((p) => p.$id === policyId)
-                          : null
-
-                        return (
-                          <TableRow
-                            key={archive.$id}
-                            className="hover:bg-muted/50"
-                          >
-                            <TableCell className="px-4 py-3">
-                              <Checkbox
-                                checked={selectedBackups.has(archive.$id)}
-                                onCheckedChange={(checked) => {
-                                  const newSelected = new Set(selectedBackups)
-                                  if (checked) {
-                                    newSelected.add(archive.$id)
-                                  } else {
-                                    newSelected.delete(archive.$id)
-                                  }
-                                  setSelectedBackups(newSelected)
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <CopyableId
-                                id={archive.$id}
-                                size="sm"
-                                maxWidth={180}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <DateTooltip
-                                date={archive.$createdAt}
-                                className="text-[12px] font-medium text-muted-foreground"
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <code className="text-[12px] font-mono text-muted-foreground">
-                                {formatSize(archive.size)}
-                              </code>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              <Badge
-                                variant={status.badgeVariant}
-                                className="gap-1.5 text-[11px] font-medium"
-                              >
-                                <StatusIcon className="h-3 w-3" />
-                                {t(status.label)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
-                              {policy ? (
-                                <span className="text-[12px] text-foreground">
+                      return (
+                        <div
+                          key={policy.$id}
+                          className="rounded-lg border border-border bg-background p-4"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="text-[14px] font-medium text-foreground">
                                   {policy.name || t('Unnamed Policy')}
-                                </span>
-                              ) : (
-                                <span className="text-[12px] text-muted-foreground">
-                                  {t('Manual')}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="px-4 py-3 text-end pe-4">
-                              <div className="flex justify-end">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <RowActionsMenuTrigger />
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    {archive.status === 'completed' && (
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          setSelectedBackup(archive)
-                                          setRestoreDialogOpen(true)
-                                        }}
-                                      >
-                                        <MenuItemContent icon={RotateCcw}>
-                                          {t('Restore')}
-                                        </MenuItemContent>
-                                      </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(
-                                          archive.$id,
-                                        )
-                                        toast.success(
-                                          t('Backup ID copied to clipboard'),
-                                        )
-                                      }}
-                                    >
-                                      <MenuItemContent icon={Copy}>
-                                        {t('Copy ID')}
-                                      </MenuItemContent>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => {
-                                        setSelectedBackup(archive)
-                                        setDeleteBackupDialogOpen(true)
-                                      }}
-                                    >
-                                      <MenuItemContent icon={Trash2}>
-                                        {t('Delete')}
-                                      </MenuItemContent>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                </h4>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-                {archivesTotal > 0 && (
-                  <div className="mt-4">
-                    <Pagination
-                      currentPage={backupsPage}
-                      totalItems={archivesTotal}
-                      pageSize={backupsPageSize}
-                      pageSizeOptions={[12, 18, 36, 72]}
-                      onPageChange={handlePageChange}
-                      onPageSizeChange={handlePageSizeChange}
-                      showTotal={true}
-                      itemLabel={t('backups')}
-                    />
+                              <p className="text-[13px] text-muted-foreground">
+                                {scheduleText} • {retentionText}
+                              </p>
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <RowActionsMenuTrigger />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedPolicy(policy)
+                                    setDeletePolicyDialogOpen(true)
+                                  }}
+                                >
+                                  <MenuItemContent icon={Trash2}>
+                                    {t('Delete')}
+                                  </MenuItemContent>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <div className="border-t border-border my-3" />
+                          <div className="grid grid-cols-2 gap-4 text-[13px]">
+                            <div>
+                              <div className="text-muted-foreground mb-1.5">
+                                {t('Previous')}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                {previousBackup ? (
+                                  <>
+                                    <div className="h-2 w-2 rounded-full bg-green-500 shrink-0" />
+                                    <DateTooltip
+                                      date={previousBackup.$createdAt}
+                                    />
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="h-2 w-2 rounded-full bg-muted-foreground shrink-0" />
+                                    <span className="text-foreground">
+                                      {t('No backups yet')}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-muted-foreground mb-1.5">
+                                {t('Next')}
+                              </div>
+                              <div className="text-foreground">
+                                {getNextBackupDate(policy.schedule)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
-              </>
-            )}
+              </div>
+            </div>
+
+            {/* Backups Section */}
+            <div className={backupsViewArchivesColumnClass}>
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-[15px] font-semibold text-foreground">
+                    {t('Backups')}
+                  </h3>
+                </div>
+                <Button
+                  variant="brandCta"
+                  onClick={() => setCreateManualBackupDialogOpen(true)}
+                  size="sm"
+                  className="h-8 gap-1.5 text-[12px] font-medium"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t('Manual backup')}
+                </Button>
+              </div>
+              <div className="flex-1">
+                {isArchivesActuallyLoading ? (
+                  <div className="flex h-full min-h-[280px] items-center justify-center rounded-lg border border-border bg-card py-12 text-center">
+                    <div className="text-muted-foreground">
+                      {t('Loading backups...')}
+                    </div>
+                  </div>
+                ) : archives.length === 0 ? (
+                  <EmptyState
+                    icon={Archive}
+                    title={t('No backups yet')}
+                    description={t(
+                      'Create a manual backup or set up a policy to get started.',
+                    )}
+                    isEmpty={true}
+                    variant="card"
+                    iconSize="md"
+                    className="flex h-full min-h-[280px] flex-col items-center justify-center"
+                  />
+                ) : (
+                  <>
+                    <div className="rounded-lg border border-border bg-card">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-b border-border">
+                            <TableHead className="w-[50px] px-4 py-3">
+                              <Checkbox
+                                checked={
+                                  archives.length > 0 &&
+                                  archives.every((archive) =>
+                                    selectedBackups.has(archive.$id),
+                                  )
+                                }
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setSelectedBackups(
+                                      new Set(archives.map((a) => a.$id)),
+                                    )
+                                  } else {
+                                    setSelectedBackups(new Set())
+                                  }
+                                }}
+                              />
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                              {t('Backup ID')}
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                              {t('Created')}
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                              {t('Size')}
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                              {t('Status')}
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              {t('Policy')}
+                            </TableHead>
+                            <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[100px] pe-4"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {archives.map((archive) => {
+                            const status = getBackupStatus(archive.status)
+                            const StatusIcon = status.icon
+                            // Handle null policyId for manual backups (API may return null even though type says string)
+                            const policyId = archive.policyId as
+                              | string
+                              | null
+                              | undefined
+                            const policy = policyId
+                              ? policies.find((p) => p.$id === policyId)
+                              : null
+
+                            return (
+                              <TableRow
+                                key={archive.$id}
+                                className="hover:bg-muted/50"
+                              >
+                                <TableCell className="px-4 py-3">
+                                  <Checkbox
+                                    checked={selectedBackups.has(archive.$id)}
+                                    onCheckedChange={(checked) => {
+                                      const newSelected = new Set(
+                                        selectedBackups,
+                                      )
+                                      if (checked) {
+                                        newSelected.add(archive.$id)
+                                      } else {
+                                        newSelected.delete(archive.$id)
+                                      }
+                                      setSelectedBackups(newSelected)
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <CopyableId
+                                    id={archive.$id}
+                                    size="sm"
+                                    maxWidth={180}
+                                  />
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <DateTooltip
+                                    date={archive.$createdAt}
+                                    className="text-[12px] font-medium text-muted-foreground"
+                                  />
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <code className="text-[12px] font-mono text-muted-foreground">
+                                    {formatSize(archive.size)}
+                                  </code>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  <Badge
+                                    variant={status.badgeVariant}
+                                    className="gap-1.5 text-[11px] font-medium"
+                                  >
+                                    <StatusIcon className="h-3 w-3" />
+                                    {t(status.label)}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="px-4 py-3">
+                                  {policy ? (
+                                    <span className="text-[12px] text-foreground">
+                                      {policy.name || t('Unnamed Policy')}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[12px] text-muted-foreground">
+                                      {t('Manual')}
+                                    </span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="px-4 py-3 text-end pe-4">
+                                  <div className="flex justify-end">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <RowActionsMenuTrigger />
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        {archive.status === 'completed' && (
+                                          <DropdownMenuItem
+                                            onClick={() => {
+                                              setSelectedBackup(archive)
+                                              setRestoreDialogOpen(true)
+                                            }}
+                                          >
+                                            <MenuItemContent icon={RotateCcw}>
+                                              {t('Restore')}
+                                            </MenuItemContent>
+                                          </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            navigator.clipboard.writeText(
+                                              archive.$id,
+                                            )
+                                            toast.success(
+                                              t(
+                                                'Backup ID copied to clipboard',
+                                              ),
+                                            )
+                                          }}
+                                        >
+                                          <MenuItemContent icon={Copy}>
+                                            {t('Copy ID')}
+                                          </MenuItemContent>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedBackup(archive)
+                                            setDeleteBackupDialogOpen(true)
+                                          }}
+                                        >
+                                          <MenuItemContent icon={Trash2}>
+                                            {t('Delete')}
+                                          </MenuItemContent>
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    {archivesTotal > 0 && (
+                      <div className="mt-4">
+                        <Pagination
+                          currentPage={backupsPage}
+                          totalItems={archivesTotal}
+                          pageSize={backupsPageSize}
+                          pageSizeOptions={[12, 18, 36, 72]}
+                          onPageChange={handlePageChange}
+                          onPageSizeChange={handlePageSizeChange}
+                          showTotal={true}
+                          itemLabel={t('backups')}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      )}
+        )}
       </div>
 
       {/* Bulk Delete Action Bar */}
@@ -1116,8 +1154,12 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
             <DialogTitle>{t('Delete backups')}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {selectedBackups.size > 1
-                ? t('Are you sure you want to delete the selected backups? This action cannot be undone.')
-                : t('Are you sure you want to delete this backup? This action cannot be undone.')}
+                ? t(
+                    'Are you sure you want to delete the selected backups? This action cannot be undone.',
+                  )
+                : t(
+                    'Are you sure you want to delete this backup? This action cannot be undone.',
+                  )}
             </DialogDescription>
           </DialogHeader>
 
@@ -1245,7 +1287,8 @@ function CreatePolicyDialog({
   existingPoliciesCount,
   backupPoliciesLimit,
   orgId,
-  showContactSales}: CreatePolicyDialogProps) {
+  showContactSales,
+}: CreatePolicyDialogProps) {
   const t = useT()
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
   const [customPolicies, setCustomPolicies] = useState<
@@ -1289,7 +1332,8 @@ function CreatePolicyDialog({
         schedule: '0 * * * *',
         name: 'Hourly backup',
         resourceId: databaseId,
-        enabled: true})
+        enabled: true,
+      })
     }
     if (selectedPresets.includes('daily')) {
       policies.push({
@@ -1299,7 +1343,8 @@ function CreatePolicyDialog({
         schedule: '0 2 * * *',
         name: 'Daily backup',
         resourceId: databaseId,
-        enabled: true})
+        enabled: true,
+      })
     }
 
     // Add custom policies
@@ -1346,7 +1391,8 @@ function CreatePolicyDialog({
         schedule,
         name: custom.name || `${custom.frequency} backup`,
         resourceId: databaseId,
-        enabled: true})
+        enabled: true,
+      })
     })
 
     if (policies.length === 0) return
@@ -1365,8 +1411,7 @@ function CreatePolicyDialog({
     backupPoliciesLimit > 0
       ? Math.max(0, backupPoliciesLimit - existingPoliciesCount - totalPolicies)
       : null
-  const canSelectAnotherPreset =
-    remainingSlots == null || remainingSlots > 0
+  const canSelectAnotherPreset = remainingSlots == null || remainingSlots > 0
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -1391,7 +1436,9 @@ function CreatePolicyDialog({
                 </ContactSalesLink>
               </>
             ) : (
-              t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')
+              t(
+                'Your plan only supports the daily preset policy. Upgrade to create custom policies.',
+              )
             )}
           </DialogDescription>
         </DialogHeader>
@@ -1440,7 +1487,8 @@ function CreatePolicyDialog({
                   id="daily"
                   checked={selectedPresets.includes('daily')}
                   disabled={
-                    !selectedPresets.includes('daily') && !canSelectAnotherPreset
+                    !selectedPresets.includes('daily') &&
+                    !canSelectAnotherPreset
                   }
                   onCheckedChange={(checked) => {
                     if (checked) {
@@ -1485,7 +1533,8 @@ function CreatePolicyDialog({
                         time: '02:00',
                         retention: 7,
                         retentionUnit: 'days',
-                        name: ''},
+                        name: '',
+                      },
                     ])
                   }}
                   disabled={!canCreateCustom}
@@ -1536,7 +1585,9 @@ function CreatePolicyDialog({
                           <SelectItem value="hourly">{t('Hourly')}</SelectItem>
                           <SelectItem value="daily">{t('Daily')}</SelectItem>
                           <SelectItem value="weekly">{t('Weekly')}</SelectItem>
-                          <SelectItem value="monthly">{t('Monthly')}</SelectItem>
+                          <SelectItem value="monthly">
+                            {t('Monthly')}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1558,7 +1609,9 @@ function CreatePolicyDialog({
 
                     {policy.frequency === 'weekly' && (
                       <div className="space-y-2">
-                        <Label className="text-[13px]">{t('Day of Week')}</Label>
+                        <Label className="text-[13px]">
+                          {t('Day of Week')}
+                        </Label>
                         <Select
                           value={policy.dayOfWeek?.[0]?.toString() || '1'}
                           onValueChange={(value) => {
@@ -1585,7 +1638,9 @@ function CreatePolicyDialog({
 
                     {policy.frequency === 'monthly' && (
                       <div className="space-y-2">
-                        <Label className="text-[13px]">{t('Day of Month')}</Label>
+                        <Label className="text-[13px]">
+                          {t('Day of Month')}
+                        </Label>
                         <Select
                           value={policy.dayOfMonth || 'first'}
                           onValueChange={(
@@ -1606,7 +1661,9 @@ function CreatePolicyDialog({
                             <SelectItem value="middle">
                               {t('Middle (15th)')}
                             </SelectItem>
-                            <SelectItem value="end">{t('End (28th)')}</SelectItem>
+                            <SelectItem value="end">
+                              {t('End (28th)')}
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1637,7 +1694,9 @@ function CreatePolicyDialog({
                           <SelectItem value="weeks">{t('Weeks')}</SelectItem>
                           <SelectItem value="months">{t('Months')}</SelectItem>
                           <SelectItem value="years">{t('Years')}</SelectItem>
-                          <SelectItem value="forever">{t('Forever')}</SelectItem>
+                          <SelectItem value="forever">
+                            {t('Forever')}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1710,7 +1769,8 @@ function CreateManualBackupDialog({
   open,
   onOpenChange,
   onSubmit,
-  isLoading}: CreateManualBackupDialogProps) {
+  isLoading,
+}: CreateManualBackupDialogProps) {
   const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1730,7 +1790,9 @@ function CreateManualBackupDialog({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-[13px]">
               <b>
-                {t('Depending on the size of your data, this may take a while.')}
+                {t(
+                  'Depending on the size of your data, this may take a while.',
+                )}
               </b>
             </AlertDescription>
           </Alert>
@@ -1775,7 +1837,8 @@ function RestoreBackupDialog({
   backup,
   databaseId,
   onSubmit,
-  isLoading}: RestoreBackupDialogProps) {
+  isLoading,
+}: RestoreBackupDialogProps) {
   const t = useT()
   const [restoreOption, setRestoreOption] = useState<'new' | 'same'>('new')
   const [newDatabaseName, setNewDatabaseName] = useState('')
@@ -1878,7 +1941,8 @@ function RestoreBackupDialog({
                 <span className="text-muted-foreground">{t('Age')}</span>
                 <span className="text-foreground">
                   {formatDistanceToNow(new Date(backup.$createdAt), {
-                    addSuffix: true})}
+                    addSuffix: true,
+                  })}
                 </span>
               </div>
             </div>
@@ -2046,7 +2110,8 @@ function DeletePolicyDialog({
   onOpenChange,
   policy,
   onConfirm,
-  isLoading}: DeletePolicyDialogProps) {
+  isLoading,
+}: DeletePolicyDialogProps) {
   const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -2065,7 +2130,9 @@ function DeletePolicyDialog({
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription className="text-[13px]">
-              {t('This will also delete all backups associated with this policy.')}
+              {t(
+                'This will also delete all backups associated with this policy.',
+              )}
             </AlertDescription>
           </Alert>
         </div>
@@ -2109,7 +2176,8 @@ function DeleteBackupDialog({
   onOpenChange,
   backup,
   onConfirm,
-  isLoading}: DeleteBackupDialogProps) {
+  isLoading,
+}: DeleteBackupDialogProps) {
   const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

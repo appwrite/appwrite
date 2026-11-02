@@ -1,12 +1,14 @@
 /**
  * React Query hooks for project environments.
  *
- * An environment is itself a project, linked to its parent by `parentId`, so the
- * list returns `Models.Project` rows and never contains the parent. `projectId`
- * here is always the parent, also while the Console is inside one of its
- * environments: the routes act on the calling project's environments. Cloud
- * only, so callers gate on the `projectEnvironments` profile feature and the
- * queries stay quiet (no retry) where the routes are absent.
+ * An environment is a project of its own underneath, but it has no project ID
+ * of its own: it is addressed with the project's ID in `X-Appwrite-Project` and
+ * its own ID in `X-Appwrite-Environment`, and the environment routes list it by
+ * that ID. The routes act on the project itself, never inside one of its
+ * environments, so every call here passes `environment: null` to leave the
+ * environment the Console may be in. Cloud only, so callers gate on the
+ * `projectEnvironments` profile feature and the queries stay quiet (no retry)
+ * where the routes are absent.
  */
 
 import {
@@ -16,9 +18,15 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { ID, Query, type Models } from '@appwrite.io/console'
+import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { createProjectEnvironment } from '@/lib/appwrite/project-environments'
+import {
+  createProjectEnvironment,
+  deleteProjectEnvironment,
+  listProjectEnvironments,
+  updateProjectEnvironment,
+  type ProjectEnvironment,
+} from '@/lib/appwrite/project-environments'
 import { fetchEnvironmentCopyMigrations } from './migrations'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -38,21 +46,22 @@ const PROJECT_ENVIRONMENTS_LIMIT = 100
  */
 async function fetchProjectEnvironments(projectId: string, region?: string) {
   if (!projectId) {
-    return { environments: [] as Models.Project[], total: 0 }
+    return { environments: [] as ProjectEnvironment[], total: 0 }
   }
 
-  const response = await sdk
-    .forProject(projectId, region)
-    .project.listEnvironments({
+  const response = await listProjectEnvironments(
+    sdk.forProject(projectId, region, { environment: null }).client,
+    {
       queries: [
         Query.orderDesc('$createdAt'),
         Query.limit(PROJECT_ENVIRONMENTS_LIMIT),
       ],
       total: true,
-    })
+    },
+  )
 
   return {
-    environments: response.projects ?? [],
+    environments: response.environments ?? [],
     total: response.total ?? 0,
   }
 }
@@ -122,6 +131,7 @@ export function useCreateProjectEnvironment(
       name,
       resources = [],
     }: {
+      /** The ID the environment is addressed by; generated when blank */
       environmentId?: string
       name: string
       /** Resource types to copy from the project; none for an empty environment */
@@ -131,21 +141,14 @@ export function useCreateProjectEnvironment(
         throw new Error('Project ID is required')
       }
 
-      const projectSdk = sdk.forProject(projectId, region)
-      const params = {
-        environmentId: environmentId?.trim() || ID.unique(),
-        name: name.trim(),
-      }
-
-      // The pinned SDK's createEnvironment drops `resources`; see createProjectEnvironment
-      if (resources.length > 0) {
-        return await createProjectEnvironment(projectSdk.client, {
-          ...params,
-          resources,
-        })
-      }
-
-      return await projectSdk.project.createEnvironment(params)
+      return await createProjectEnvironment(
+        sdk.forProject(projectId, region, { environment: null }).client,
+        {
+          environmentId: environmentId?.trim() || ID.unique(),
+          name: name.trim(),
+          ...(resources.length > 0 ? { resources } : {}),
+        },
+      )
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -182,17 +185,19 @@ export function useUpdateProjectEnvironment(
         throw new Error('Environment ID is required')
       }
 
-      return await sdk
-        .forProject(projectId, region)
-        .project.updateEnvironment({ environmentId, name: name.trim() })
+      return await updateProjectEnvironment(
+        sdk.forProject(projectId, region, { environment: null }).client,
+        { environmentId, name: name.trim() },
+      )
     },
-    onSuccess: async (_environment, { environmentId }) => {
+    onSuccess: async () => {
       await Promise.all([
         queryClient.refetchQueries({
           queryKey: ['project-environments', 'project', projectId],
         }),
-        // The environment is a project the Console may be showing right now.
-        queryClient.invalidateQueries({ queryKey: ['project', environmentId] }),
+        // The environment answers as its project, which the Console may be showing
+        // right now: its name is the environment's.
+        queryClient.invalidateQueries({ queryKey: ['project', projectId] }),
       ])
     },
   })
@@ -219,9 +224,10 @@ export function useDeleteProjectEnvironment(
         throw new Error('Environment ID is required')
       }
 
-      return await sdk
-        .forProject(projectId, region)
-        .project.deleteEnvironment({ environmentId })
+      await deleteProjectEnvironment(
+        sdk.forProject(projectId, region, { environment: null }).client,
+        { environmentId },
+      )
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -238,12 +244,14 @@ export function useDeleteProjectEnvironment(
  * environment lists it. Realtime cannot carry it, as the wizard is on the
  * parent project and the migration announces itself on the environment.
  *
+ * @param projectId - The project the environment belongs to
  * @param environmentId - The environment, once created
- * @param region - The environment's region, which the SDK cannot look up yet for a project it has not loaded
+ * @param region - The project's region
  * @param enabled - False until there is a copy to find
  * @returns The migration, or null until the environment lists it
  */
 export function useEnvironmentCopyMigration(
+  projectId: string | null | undefined,
   environmentId: string | null | undefined,
   region: string | undefined,
   enabled = true,
@@ -252,19 +260,21 @@ export function useEnvironmentCopyMigration(
     queryKey: [
       'migrations',
       'project',
-      environmentId,
+      projectId,
       'environment-copy',
+      environmentId,
       'created',
       region,
     ],
     queryFn: async () => {
       const result = await fetchEnvironmentCopyMigrations(
-        environmentId!,
+        projectId!,
         region,
+        environmentId!,
       )
       return { migration: result.migrations[0] ?? null }
     },
-    enabled: !!environmentId && enabled,
+    enabled: !!projectId && !!environmentId && enabled,
     refetchInterval: (query) => (query.state.data?.migration ? false : 2000),
     refetchOnWindowFocus: false,
     retry: false,

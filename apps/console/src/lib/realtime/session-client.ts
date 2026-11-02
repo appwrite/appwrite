@@ -1,5 +1,6 @@
 import { Client, ID } from '@appwrite.io/console'
 import { getProjectApiEndpoint, sdk } from '@/lib/appwrite/sdk'
+import { getActiveEnvironmentId } from '@/lib/active-environment'
 
 export async function createUserJwtForRealtime(
   projectId: string,
@@ -83,6 +84,12 @@ function buildRealtimeUrl(client: Client): string {
   const params = new URLSearchParams()
   params.set('project', client.config.project)
 
+  // Realtime takes the environment in the query, as there is no header to send
+  const environmentId = getActiveEnvironmentId(client.config.project)
+  if (environmentId) {
+    params.set('environment', environmentId)
+  }
+
   const jwt = client.config.jwt.trim()
   if (jwt) {
     params.set('jwt', jwt)
@@ -91,10 +98,14 @@ function buildRealtimeUrl(client: Client): string {
   return `${realtimeEndpoint}/realtime?${params.toString()}`
 }
 
-/** WebSocket URL shown in the Realtime UI (project only; never includes JWT). */
+/** WebSocket URL shown in the Realtime UI (project and environment only; never includes JWT). */
 export function getProjectRealtimeWebSocketUrl(projectId: string): string {
   const base = `${toWebSocketEndpoint(getProjectApiEndpoint(projectId))}/realtime`
-  return `${base}?project=${encodeURIComponent(projectId)}`
+  const environmentId = getActiveEnvironmentId(projectId)
+  const environment = environmentId
+    ? `&environment=${encodeURIComponent(environmentId)}`
+    : ''
+  return `${base}?project=${encodeURIComponent(projectId)}${environment}`
 }
 
 /**
@@ -197,7 +208,11 @@ export function createRealtimeSession(
   const startHeartbeat = (activeId: number) => {
     clearHeartbeat()
     heartbeatTimer = setInterval(() => {
-      if (activeId !== connectionId || !socket || socket.readyState !== WebSocket.OPEN) {
+      if (
+        activeId !== connectionId ||
+        !socket ||
+        socket.readyState !== WebSocket.OPEN
+      ) {
         return
       }
       sendMessage(socket, { type: 'ping' }, callbacks.onMessage)
@@ -231,7 +246,10 @@ export function createRealtimeSession(
     pendingSubscribes.set(subscriptionId, record)
   }
 
-  const handleIncomingMessage = (raw: RealtimeSocketMessage, activeId: number) => {
+  const handleIncomingMessage = (
+    raw: RealtimeSocketMessage,
+    activeId: number,
+  ) => {
     if (activeId !== connectionId) return
 
     callbacks.onMessage({
@@ -288,7 +306,8 @@ export function createRealtimeSession(
 
   const scheduleReconnect = () => {
     clearReconnectTimer()
-    if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError) return
+    if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError)
+      return
 
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       shouldReconnect = false
@@ -322,7 +341,8 @@ export function createRealtimeSession(
     })
     reconnectTimer = setTimeout(() => {
       reconnectTimer = undefined
-      if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError) return
+      if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError)
+        return
       reconnectAttempts += 1
       emitReconnectState({
         status: 'connecting',

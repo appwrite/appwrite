@@ -70,6 +70,7 @@ import {
   setInitialLoaderShellGate,
 } from '@/lib/initial-loader/shell-gates'
 import { ProjectEnvironmentBanner } from '@/components/pages/projects/$projectId/shared/ProjectEnvironmentBanner'
+import { restoreActiveEnvironment } from '@/lib/active-environment'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
 const DATABASE_TABLE_VIEW_TABS = new Set([
   'rows',
@@ -226,6 +227,12 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     if (!projectId) {
       return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
+
+    // Before anything is fetched: the environment the Console is in for this
+    // project decides what every project request below and in the child loaders
+    // acts on, and which cache it fills. Restored from session storage so a reload
+    // and a fresh navigation both land in the same environment.
+    restoreActiveEnvironment(projectId)
 
     // Region lookup may fail with 402 when budget-locked; ignore and continue.
     await ensureProjectRegion(context.queryClient, projectId).catch(() => {})
@@ -867,12 +874,15 @@ function ProjectLayout() {
       ) : null}
       {isPaused && projectForPaused && isZero ? (
         <ZeroExpiredCurtain />
-      ) : isPaused && projectForPaused && (
-        <PausedProjectCurtain
-          projectId={projectForPaused.$id}
-          teamId={projectForPaused.teamId}
-          onRestoreSuccess={() => setHidePausedCurtain(true)}
-        />
+      ) : (
+        isPaused &&
+        projectForPaused && (
+          <PausedProjectCurtain
+            projectId={projectForPaused.$id}
+            teamId={projectForPaused.teamId}
+            onRestoreSuccess={() => setHidePausedCurtain(true)}
+          />
+        )
       )}
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
