@@ -28,6 +28,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Delete as DeleteSess
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email\Create as CreateEmailPasswordSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Get as GetSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Get as CreateOAuth2Session;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Token\Create as CreateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Update as UpdateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
@@ -52,6 +53,7 @@ class Http extends Service
             ->addAction(CreateEmailPasswordSession::getName(), CreateEmailPasswordSession::class)
             ->addAction(CreateAnonymousSession::getName(), CreateAnonymousSession::class)
             ->addAction(CreateSession::getName(), CreateSession::class)
+            ->addAction(CreateOAuth2Session::getName(), CreateOAuth2Session::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
