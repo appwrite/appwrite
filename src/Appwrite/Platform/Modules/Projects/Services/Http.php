@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Projects\Services;
 
 use Appwrite\Platform\Modules\Projects\Http\Init;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Create as CreateProject;
+use Appwrite\Platform\Modules\Projects\Http\Projects\OAuth2\Update as UpdateProjectOAuth2;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\XList as ListProjects;
@@ -26,6 +27,7 @@ class Http extends Service
         $this->addAction(UpdateProject::getName(), UpdateProject::class);
         $this->addAction(ListProjects::getName(), ListProjects::class);
         $this->addAction(UpdateProjectTeam::getName(), UpdateProjectTeam::class);
+        $this->addAction(UpdateProjectOAuth2::getName(), UpdateProjectOAuth2::class);
 
         $this->addAction(CreateSchedule::getName(), CreateSchedule::class);
         $this->addAction(GetSchedule::getName(), GetSchedule::class);
