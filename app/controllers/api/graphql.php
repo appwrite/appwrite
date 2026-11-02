@@ -2,7 +2,6 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter;
-use Appwrite\GraphQL\Schema;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -16,7 +15,6 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\Database\Document;
 use Utopia\Http\Http;
 use Utopia\System\System;
 use Utopia\Validator\JSON;
@@ -190,10 +188,3 @@ function processResult($result, $debugFlags): array
         $result
     );
 }
-
-Http::shutdown()
-    ->groups(['schema'])
-    ->inject('project')
-    ->action(function (Document $project) {
-        Schema::setDirty($project->getId());
-    });
