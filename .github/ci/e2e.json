@@ -269,6 +269,7 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Proxy/",
+        "src/Appwrite/Network/Validator/DomainClaim.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
         "src/Appwrite/Certificates/"
       ]

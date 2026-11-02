@@ -961,6 +961,29 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
     }
 
+    public function testRuleVerificationRejectsOtherProjectsClaim(): void
+    {
+        // The fixture zone points this hostname at Appwrite, and claims it for a project
+        // that is not this one with a TXT record on _appwrite.<domain>.
+        $domain = \uniqid($this->getSide() . '-') . '.claimed.webapp.com';
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertStringContainsString('is claimed by another project', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('is claimed by another project', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+    }
+
     public function testUpdateRuleVerificationWithSameDataUpdatesTimestamp(): void
     {
         $domain = \uniqid() . '-timestamp-test.webapp.com';
