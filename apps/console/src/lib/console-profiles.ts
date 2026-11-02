@@ -69,7 +69,7 @@ export type ConsoleProfileFeatures = {
   videos: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
-  /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
+  /** Project and domain transfers: direct move to one of your organizations and hand-off with a claim link, in one card on the project's settings and on the domain's settings. */
   projectTransfers: boolean
   /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
@@ -140,7 +140,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
   projectEnvironments: 'Project environments',
-  projectTransfers: 'Project transfers',
+  projectTransfers: 'Project and domain transfers',
   alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',

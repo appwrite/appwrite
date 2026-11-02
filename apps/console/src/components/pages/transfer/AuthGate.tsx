@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { Check, Clock, FolderInput, TriangleAlert } from 'lucide-react'
+import { Check, Clock, FolderInput, Globe, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   AuthFlowDescription,
@@ -15,6 +15,7 @@ import { useNow } from '@/hooks/use-now'
 import type { ZeroProject } from '@/lib/appwrite/zero'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT, type Translator } from '@/lib/i18n/translate'
+import { buildTransferPath, type TransferResource } from '@/lib/transfers'
 import { performConsoleSignOut } from '@/lib/react-query/hooks/auth'
 import { useAccountZero } from '@/lib/react-query/hooks/zero'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
@@ -28,10 +29,12 @@ type AuthPage = '/sign-up' | '/sign-in'
  * unclaimed Zero project, whose session has to end first.
  */
 export function TransferAuthGate({
+  resource,
   transferId,
   secret,
   anonymous,
 }: {
+  resource: TransferResource
   transferId: string
   secret: string
   anonymous: boolean
@@ -41,11 +44,18 @@ export function TransferAuthGate({
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isLeaving, setIsLeaving] = useState(false)
-  const { data: zero } = useAccountZero({ enabled: anonymous, poll: true })
+  // Only a project link can be the Zero the anonymous owner holds
+  const isZeroClaim = anonymous && resource === 'projects'
+  const { data: zero } = useAccountZero({ enabled: isZeroClaim, poll: true })
 
-  const transferPath = `/transfer?${new URLSearchParams({ transferId, secret })}`
+  const transferPath = buildTransferPath(resource, transferId, secret)
 
-  const copy = describeTransferGate(t, now, anonymous ? zero : undefined)
+  const copy = describeTransferGate(
+    t,
+    now,
+    isZeroClaim ? zero : undefined,
+    resource,
+  )
   // A claimed project's link is spent, so signing in should not come back to it.
   const redirect = copy.state === 'claimed' ? undefined : transferPath
 
@@ -96,7 +106,7 @@ export function TransferAuthGate({
                   className="w-full"
                   onClick={() => void leaveForAuth('/sign-up')}
                   disabled={isLeaving}
-                  {...(anonymous ? analyticsAttrs('zero-claim') : {})}
+                  {...(isZeroClaim ? analyticsAttrs('zero-claim') : {})}
                 >
                   {t('Create an account')}
                 </Button>
@@ -135,7 +145,18 @@ export function describeTransferGate(
   t: Translator,
   now: number,
   zero: ZeroProject | undefined,
+  resource: TransferResource = 'projects',
 ) {
+  if (resource === 'domains') {
+    return {
+      icon: Globe,
+      title: t('Claim domain'),
+      description: t('Sign in or create an account to claim this domain.'),
+      deadline: null,
+      state: 'claim' as TransferGateState,
+    }
+  }
+
   if (!zero) {
     return {
       icon: FolderInput,

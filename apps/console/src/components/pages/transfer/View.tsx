@@ -7,13 +7,18 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { FolderInput, TriangleAlert } from 'lucide-react'
+import { FolderInput, Globe, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  getDomainTransfer,
+  updateDomainTransferStatus,
+} from '@/lib/appwrite/domain-transfers'
 import { sdk } from '@/lib/appwrite/sdk'
 import { PERSONAL_ORG_NAME } from '@/lib/ensure-personal-org'
 import {
   TRANSFER_DESTINATION_BLOCK_LABELS,
+  useDomainTransferDestinations,
   useOrganizations,
   useTransferDestinations,
 } from '@/lib/react-query/hooks'
@@ -24,7 +29,8 @@ import {
 import {
   getTransferOrganizations,
   pickTransferOrganization,
-} from '@/lib/project-transfer'
+  type TransferResource,
+} from '@/lib/transfers'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
@@ -47,15 +53,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-interface ClaimProjectTransferProps {
+interface ClaimTransferProps {
+  resource: TransferResource
   transferId: string
   secret: string
 }
 
-export function ClaimProjectTransfer({
+export function ClaimTransfer({
+  resource,
   transferId,
   secret,
-}: ClaimProjectTransferProps) {
+}: ClaimTransferProps) {
   const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -64,9 +72,48 @@ export function ClaimProjectTransfer({
   const hasLink = transferId !== '' && secret !== ''
   const hasOrganizations = organizationsLoading || organizations.length > 0
   const { features } = useConsoleProfile()
-  const destinations = useTransferDestinations(organizations)
+  const isDomain = resource === 'domains'
+  const projectDestinations = useTransferDestinations(organizations, !isDomain)
+  const domainDestinations = useDomainTransferDestinations(
+    organizations,
+    isDomain,
+  )
+  const destinations = isDomain ? domainDestinations : projectDestinations
+  const copy = isDomain
+    ? {
+        title: t('Claim domain'),
+        create: t(
+          'A domain moves into one of your organizations. Create one to receive it.',
+        ),
+        choose: t('Choose the organization that should receive this domain.'),
+        alreadyOwned: t(
+          'The domain already belongs to this organization. Select a different one.',
+        ),
+        ownerOnly: t(
+          'Only an owner of the organization can claim a domain into it.',
+        ),
+        ownerOnlyCreate: t(
+          'Only an owner of the organization can claim a domain into it. Create an organization you own to receive it.',
+        ),
+      }
+    : {
+        title: t('Claim project'),
+        create: t(
+          'A project moves into one of your organizations. Create one to receive it.',
+        ),
+        choose: t('Choose the organization that should receive this project.'),
+        alreadyOwned: t(
+          'The project already belongs to this organization. Select a different one.',
+        ),
+        ownerOnly: t(
+          'Only an owner of the organization can claim a project into it.',
+        ),
+        ownerOnlyCreate: t(
+          'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.',
+        ),
+      }
 
-  // The server only moves a project into an organization the user owns
+  // The server only moves a project or domain into an organization the user owns
   const scopes = useQueries({
     queries: organizations.map((organization) =>
       organizationScopesQueryOptions(organization.$id),
@@ -86,7 +133,7 @@ export function ClaimProjectTransfer({
       .filter((organization) => organization.eligible)
       .map((organization) => organization.id),
   )
-  // Owned, and not blocked by its role, billing or project limit
+  // Owned, and not blocked by its role, billing or plan limit
   const transferOrganizations = destinations.map(({ organization, block }) => ({
     id: organization.$id,
     eligible: block === null && ownedIds.has(organization.$id),
@@ -104,20 +151,23 @@ export function ClaimProjectTransfer({
     (check) => check.organization.$id === teamId,
   )
 
-  // The preview runs as the selected organization, so it reports whether that organization may claim it
+  // A project preview runs as the selected organization, so it reports whether that organization may claim it.
+  // A domain preview reads the same for everyone, since the domains API names the organization on the claim.
   const preview = useQuery({
-    queryKey: ['projectTransferPreview', transferId, teamId],
+    queryKey: [resource, 'transferPreview', transferId, teamId],
     queryFn: () =>
-      sdk.forConsole
-        .organization(teamId)
-        .getProjectTransfer({ transferId, secret }),
+      isDomain
+        ? getDomainTransfer(sdk.forConsole.client, { transferId, secret })
+        : sdk.forConsole
+            .organization(teamId)
+            .getProjectTransfer({ transferId, secret }),
     enabled: hasLink && teamId !== '',
     retry: false,
     // Keeps the details while the recipient is selected, so the picker doesn't flicker
     placeholderData: keepPreviousData,
   })
 
-  const claimMutation = useMutation({
+  const claimProjectMutation = useMutation({
     mutationFn: () =>
       sdk.forConsole
         .organization(teamId)
@@ -134,6 +184,29 @@ export function ClaimProjectTransfer({
       toast.error(getErrorMessage(error, t('Failed to claim project')))
     },
   })
+
+  const claimDomainMutation = useMutation({
+    mutationFn: () =>
+      updateDomainTransferStatus(sdk.forConsole.client, {
+        transferId,
+        secret,
+        teamId,
+      }),
+    onSuccess: async (domain) => {
+      toast.success(`${domain.domain} ${t('has been claimed')}`)
+      await queryClient.invalidateQueries({ queryKey: ['domains'] })
+      queryClient.removeQueries({ queryKey: ['domain', domain.$id] })
+      navigate({
+        to: '/organizations/$orgId/domains/$domainId',
+        params: { orgId: domain.teamId, domainId: domain.$id },
+      })
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, t('Failed to claim domain')))
+    },
+  })
+
+  const claimMutation = isDomain ? claimDomainMutation : claimProjectMutation
 
   // Someone who signed up to claim a link may own no organization to receive it
   const createOrganizationMutation = useMutation({
@@ -200,26 +273,30 @@ export function ClaimProjectTransfer({
         t('This transfer link is no longer valid.'),
       )
     : isAlreadyOwner
-      ? t(
-          'The project already belongs to this organization. Select a different one.',
-        )
+      ? copy.alreadyOwned
       : teamId !== '' && !ownedIds.has(teamId) && !rolesLoading
         ? ownedIds.size > 0 || !canCreateOrganization
-          ? t('Only an owner of the organization can claim a project into it.')
-          : t(
-              'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.',
-            )
-        : selected?.block === 'permission'
-          ? t("You don't have permission to add projects to this organization.")
-          : selected?.block === 'billing'
+          ? copy.ownerOnly
+          : copy.ownerOnlyCreate
+        : selected?.block === 'ownerRole'
+          ? copy.ownerOnly
+          : selected?.block === 'permission'
             ? t(
-                'This organization has billing issues. Resolve them before it can receive projects.',
+                "You don't have permission to add projects to this organization.",
               )
-            : selected?.block === 'projectLimit'
+            : selected?.block === 'billing'
               ? t(
-                  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.",
+                  'This organization has billing issues. Resolve them before it can receive projects.',
                 )
-              : null
+              : selected?.block === 'projectLimit'
+                ? t(
+                    "This organization has reached its plan's project limit. Upgrade its plan to claim this project.",
+                  )
+                : selected?.block === 'domainLimit'
+                  ? t(
+                      "This organization has reached its plan's domain limit. Upgrade its plan to claim this domain.",
+                    )
+                  : null
 
   const switchAccount = useAuthAccountSwitch()
   const goToDashboard = () => navigate({ to: '/' })
@@ -242,7 +319,7 @@ export function ClaimProjectTransfer({
                   variant="destructive"
                 />
                 <div className="space-y-1">
-                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowTitle>{copy.title}</AuthFlowTitle>
                   <AuthFlowDescription>
                     {t(
                       'This transfer link is incomplete. Ask the sender to share it again.',
@@ -261,14 +338,10 @@ export function ClaimProjectTransfer({
           ) : !hasOrganizations ? (
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <AuthFlowHeaderIcon icon={FolderInput} />
+                <AuthFlowHeaderIcon icon={isDomain ? Globe : FolderInput} />
                 <div className="space-y-1">
-                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
-                  <AuthFlowDescription>
-                    {t(
-                      'A project moves into one of your organizations. Create one to receive it.',
-                    )}
-                  </AuthFlowDescription>
+                  <AuthFlowTitle>{copy.title}</AuthFlowTitle>
+                  <AuthFlowDescription>{copy.create}</AuthFlowDescription>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -300,7 +373,7 @@ export function ClaimProjectTransfer({
                   variant="destructive"
                 />
                 <div className="space-y-1">
-                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowTitle>{copy.title}</AuthFlowTitle>
                   <AuthFlowDescription>
                     {t(
                       'This transfer is reserved for an organization you are not part of:',
@@ -332,9 +405,9 @@ export function ClaimProjectTransfer({
           ) : (
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <AuthFlowHeaderIcon icon={FolderInput} />
+                <AuthFlowHeaderIcon icon={isDomain ? Globe : FolderInput} />
                 <div className="space-y-1">
-                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowTitle>{copy.title}</AuthFlowTitle>
                   <AuthFlowDescription>
                     {preview.data ? (
                       <>
@@ -350,9 +423,7 @@ export function ClaimProjectTransfer({
                         <DateTooltip date={preview.data.expire} />.
                       </>
                     ) : (
-                      t(
-                        'Choose the organization that should receive this project.',
-                      )
+                      copy.choose
                     )}
                   </AuthFlowDescription>
                 </div>
@@ -430,7 +501,7 @@ export function ClaimProjectTransfer({
                   disabled={!canClaim}
                   onClick={() => claimMutation.mutate()}
                 >
-                  {t('Claim project')}
+                  {copy.title}
                 </Button>
                 {canCreateOrganization && (
                   <Button

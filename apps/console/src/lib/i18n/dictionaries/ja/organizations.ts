@@ -1565,9 +1565,11 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'プラン変更時にどのバックアップポリシーが停止するかを読み込めませんでした。',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'プラン変更時にどの専用データベースが停止されるかを読み込めませんでした。',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'このアプリをインストールした組織は、以下のスコープをアプリに付与します。インストールの作成または更新後、ユーザーはリダイレクト URL に戻ります。',
   'Installation settings updated': 'インストール設定を更新しました',
-  'No installation scopes are available.': '利用できるインストールスコープはありません。',
+  'No installation scopes are available.':
+    '利用できるインストールスコープはありません。',
   'Choose a new plan': '新しいプランを選択',
   'Plans could not be loaded. Refresh and try again.':
     'プランを読み込めませんでした。更新してやり直してください。',
@@ -1633,5 +1635,55 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
-  'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
+  'Only the card owner can set up auto-pay':
+    'カードの所有者のみが自動支払いを設定できます',
+  // Domain transfers between organizations
+  "You don't have permission to transfer domains in this organization.":
+    'この組織でドメインを移譲する権限がありません。',
+  'Failed to move domain': 'ドメインの移動に失敗しました',
+  'Transfer domain': 'ドメインの移譲',
+  "Change which organization owns this domain. Its DNS records move with it, and the new organization's plan and members apply from then on.":
+    'このドメインを所有する組織を変更します。DNS レコードはドメインと一緒に移動し、以降は新しい組織のプランとメンバーが適用されます。',
+  'Only organization owners and developers can transfer this domain. Ask an organization owner to transfer it or to update your role.':
+    'このドメインを移譲できるのは、組織のオーナーと開発者だけです。組織のオーナーに移譲を依頼するか、ロールの変更を依頼してください。',
+  'Move this domain to another organization you own. The move happens right away.':
+    'このドメインを、あなたがオーナーである別の組織に移動します。移動はすぐに反映されます。',
+  'Select an organization to move this domain to.':
+    'ドメインの移動先の組織を選択してください。',
+  'Move domain': 'ドメインを移動',
+  "Share a single-use link with someone in another organization. The domain moves when an owner of their organization claims it, and you don't need to be a member of it.":
+    '別の組織のユーザーに 1 回限りのリンクを共有します。相手の組織のオーナーが受け取るとドメインが移動します。相手の組織に所属している必要はありません。',
+  'Consider the following before transferring your domain:':
+    'ドメインを移譲する前に、次を考慮してください:',
+  'Members who are not part of the destination organization lose access to this domain and its DNS records.':
+    '移動先の組織のメンバーでないメンバーは、このドメインと DNS レコードにアクセスできなくなります。',
+  Renewals: '更新料金',
+  'The destination organization pays for renewals from then on, with its own payment method.':
+    '以降の更新料金は、移動先の組織が自身の支払い方法で支払います。',
+  'Active transfer links for this domain stop working after the move.':
+    '移動後、このドメインの有効な転送リンクは使用できなくなります。',
+  'Choose how long the link is valid and which organization can claim the domain.':
+    'リンクの有効期間と、ドメインを受け取れる組織を選択します。',
+  'Recommended. Only this organization can claim the domain, so the link is useless to anyone else who gets it. Leave empty to let any organization with the link claim it.':
+    '推奨。この組織だけがドメインを受け取れるため、リンクが他の人に渡っても使われることはありません。空欄にすると、リンクを持つどの組織でもドメインを受け取れます。',
+  'The domain already belongs to this organization.':
+    'ドメインはすでにこの組織に属しています。',
+  'The link will stop working and the domain can no longer be claimed with it.':
+    'リンクは無効になり、このリンクでドメインを受け取ることはできなくなります。',
+  'Claim domain': 'ドメインを受け取る',
+  'A domain moves into one of your organizations. Create one to receive it.':
+    'ドメインはあなたの組織のいずれかに移動します。受け取るには組織を作成してください。',
+  'Choose the organization that should receive this domain.':
+    'このドメインを受け取る組織を選択してください。',
+  'The domain already belongs to this organization. Select a different one.':
+    'ドメインはすでにこの組織に属しています。別の組織を選択してください。',
+  'Only an owner of the organization can claim a domain into it.':
+    'ドメインを組織に受け取れるのは、その組織のオーナーだけです。',
+  'Only an owner of the organization can claim a domain into it. Create an organization you own to receive it.':
+    'ドメインを組織に受け取れるのは、その組織のオーナーだけです。受け取るには、あなたがオーナーとなる組織を作成してください。',
+  'Failed to claim domain': 'ドメインの受け取りに失敗しました',
+  "This organization has reached its plan's domain limit. Upgrade its plan to claim this domain.":
+    'この組織はプランのドメイン数の上限に達しています。このドメインを受け取るには、プランをアップグレードしてください。',
+  'Sign in or create an account to claim this domain.':
+    'このドメインを受け取るには、サインインするかアカウントを作成してください。',
 }

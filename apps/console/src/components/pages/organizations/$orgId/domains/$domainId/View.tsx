@@ -106,6 +106,7 @@ import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
 import { ImportZoneDialog } from './ImportZone'
+import { TransferCard } from './_components/TransferCard'
 import { RetryVerification } from '../RetryVerification'
 import { DnsRecordContextMenu } from '../_components/DnsRecordContextMenu'
 import type { Models } from '@appwrite.io/console'
@@ -1793,8 +1794,12 @@ export function View({ initialData }: ViewProps = {}) {
                 </div>
               )}
 
+              {domain && supportsMultiTenancy && features.projectTransfers && (
+                <TransferCard domain={domain} />
+              )}
+
               {/* Transfer Domain Section (cloud multi-tenancy only) */}
-              {domain && supportsMultiTenancy && (
+              {domain && supportsMultiTenancy && !features.projectTransfers && (
                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
                   <div className="px-6 py-4">
                     <h3 className="text-[15px] font-semibold text-foreground">
@@ -1864,7 +1869,7 @@ export function View({ initialData }: ViewProps = {}) {
               )}
 
               {/* Transfer Confirmation Dialog */}
-              {domain && supportsMultiTenancy && (
+              {domain && supportsMultiTenancy && !features.projectTransfers && (
                 <Dialog
                   open={transferDialogOpen}
                   onOpenChange={setTransferDialogOpen}

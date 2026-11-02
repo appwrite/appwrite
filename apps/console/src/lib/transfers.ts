@@ -1,4 +1,21 @@
-/** Role a member needs in an organization to receive a transferred project. */
+/** What a transfer link hands over. */
+export type TransferResource = 'projects' | 'domains'
+
+/**
+ * The claim page path for a transfer link. Project links carry no resource,
+ * so links shared before domains could be transferred keep working.
+ */
+export function buildTransferPath(
+  resource: TransferResource,
+  transferId: string,
+  secret: string,
+): string {
+  const params = new URLSearchParams({ transferId, secret })
+  if (resource === 'domains') params.set('resource', 'domains')
+  return `/transfer?${params}`
+}
+
+/** Role a member needs in an organization to receive a transferred project or domain. */
 export const TRANSFER_RECIPIENT_ROLE = 'owner'
 
 export type TransferOrganization = {
@@ -7,8 +24,8 @@ export type TransferOrganization = {
 }
 
 /**
- * Which of the user's organizations can receive a transferred project: the
- * server only accepts a transfer into an organization the user owns. Roles
+ * Which of the user's organizations can receive a transferred project or
+ * domain: the server only accepts a transfer into an organization the user owns. Roles
  * that are unknown (still loading, or a profile without organization roles)
  * count as eligible, and the server has the final say.
  */
@@ -27,7 +44,7 @@ export function getTransferOrganizations(
 
 /**
  * The organization the picker should hold: the current choice while it can
- * receive the project, otherwise the first one that can. With none eligible
+ * receive the transfer, otherwise the first one that can. With none eligible
  * it keeps an organization selected so the transfer can still be previewed.
  */
 export function pickTransferOrganization(

@@ -18,8 +18,13 @@ import {
 } from './organizations'
 import { activeProjectsTotalQueryOptions } from './projects'
 
-/** Why an organization can't receive a transferred project. */
-export type TransferDestinationBlock = 'permission' | 'billing' | 'projectLimit'
+/** Why an organization can't receive a transferred project or domain. */
+export type TransferDestinationBlock =
+  | 'permission'
+  | 'ownerRole'
+  | 'billing'
+  | 'projectLimit'
+  | 'domainLimit'
 
 /** English labels for each block, translated where they render. */
 export const TRANSFER_DESTINATION_BLOCK_LABELS: Record<
@@ -27,13 +32,15 @@ export const TRANSFER_DESTINATION_BLOCK_LABELS: Record<
   string
 > = {
   permission: 'No permission',
+  ownerRole: 'Owner role required',
   billing: 'Billing issue',
   projectLimit: 'Project limit reached',
+  domainLimit: 'Domain limit reached',
 }
 
 export type TransferDestination = {
   organization: Organization
-  /** `null` when the organization can receive the project. */
+  /** `null` when the organization can receive the project or domain. */
   block: TransferDestinationBlock | null
   isChecking: boolean
 }

@@ -377,6 +377,22 @@ export function canBuyOrTransferOrgDomain(
   return canAccessOrgDomains(access, features)
 }
 
+/** Give a domain to another organization: owners and developers, who can update the domain. */
+export function canTransferDomain(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return canAccessOrgDomains(access, features)
+}
+
+/** Bring a domain into the organization, by a direct move or a transfer link: owners only. */
+export function canReceiveDomain(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return isCloudProfile() && whenOrgRoles(access, features, access.isOwner)
+}
+
 /** Organization marketplace tab (cloud profile; browse integrations). */
 export function canShowOrgMarketplaceTab(
   access: ConsoleAccess,

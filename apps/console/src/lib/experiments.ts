@@ -36,8 +36,8 @@ export const EXPERIMENTS: readonly Experiment[] = [
   },
   {
     flag: 'projectTransfers',
-    name: 'Project transfers',
-    description: 'Move a project to another organization.',
+    name: 'Project and domain transfers',
+    description: 'Move a project or domain to another organization.',
     introducedAt: '2026-10-29',
   },
 ]

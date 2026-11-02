@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'bun:test'
+import { describeTransferGate } from '@/components/pages/transfer/AuthGate'
 import {
+  buildTransferPath,
   getTransferOrganizations,
   pickTransferOrganization,
-} from '@/lib/project-transfer'
+} from '@/lib/transfers'
 
 describe('project transfer organizations', () => {
   test('a member who owns no organization has none to claim into', () => {
@@ -43,5 +45,34 @@ describe('project transfer organizations', () => {
   test('leaves the decision to the server when roles are unknown', () => {
     const organizations = getTransferOrganizations(['team-a'], {})
     expect(organizations).toEqual([{ id: 'team-a', eligible: true }])
+  })
+})
+
+describe('transfer links', () => {
+  test('a project link carries no resource, so links shared before domain transfers still open', () => {
+    expect(buildTransferPath('projects', 'transfer', 'secret')).toBe(
+      '/transfer?transferId=transfer&secret=secret',
+    )
+  })
+
+  test('a domain link names its resource, so the claim page asks the domains API', () => {
+    const path = buildTransferPath('domains', 'transfer', 's+1/2')
+    const search = new URLSearchParams(path.split('?')[1])
+
+    expect(path.startsWith('/transfer?')).toBe(true)
+    expect(search.get('resource')).toBe('domains')
+    expect(search.get('transferId')).toBe('transfer')
+    expect(search.get('secret')).toBe('s+1/2')
+  })
+
+  test('the sign-in gate for a domain link asks to claim the domain, whoever opened it', () => {
+    const t = (text: string) => text
+    const gate = describeTransferGate(t, Date.now(), undefined, 'domains')
+
+    expect(gate.title).toBe('Claim domain')
+    expect(gate.state).toBe('claim')
+    expect(describeTransferGate(t, Date.now(), undefined).title).toBe(
+      'Claim project',
+    )
   })
 })

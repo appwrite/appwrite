@@ -1552,7 +1552,8 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
   'Could not load which dedicated databases are spun down when your plan changes.':
     'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
-  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.':
+    'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
   'Installation settings updated': 'הגדרות ההתקנה עודכנו',
   'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
   'Choose a new plan': 'בחירת תוכנית חדשה',
@@ -1619,5 +1620,55 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
   'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
     'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
-  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  'Only the card owner can set up auto-pay':
+    'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
+  // Domain transfers between organizations
+  "You don't have permission to transfer domains in this organization.":
+    'אין לכם הרשאה להעביר דומיינים בארגון זה.',
+  'Failed to move domain': 'העברת הדומיין נכשלה',
+  'Transfer domain': 'העברת בעלות על הדומיין',
+  "Change which organization owns this domain. Its DNS records move with it, and the new organization's plan and members apply from then on.":
+    'שנו את הארגון שהדומיין שייך אליו. רשומות ה-DNS עוברות יחד עם הדומיין, ומאותו רגע חלים עליו התוכנית והחברים של הארגון החדש.',
+  'Only organization owners and developers can transfer this domain. Ask an organization owner to transfer it or to update your role.':
+    'רק בעלים ומפתחים בארגון יכולים להעביר את הדומיין. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'Move this domain to another organization you own. The move happens right away.':
+    'העבירו את הדומיין לארגון אחר שבבעלותכם. ההעברה מתבצעת מיד.',
+  'Select an organization to move this domain to.':
+    'בחרו ארגון שאליו יועבר הדומיין.',
+  'Move domain': 'העברת הדומיין',
+  "Share a single-use link with someone in another organization. The domain moves when an owner of their organization claims it, and you don't need to be a member of it.":
+    'שתפו קישור חד-פעמי עם מישהו בארגון אחר. הדומיין יועבר כשבעלים של הארגון שלהם יקבלו אותו, ואין צורך שתהיו חברים בארגון הזה.',
+  'Consider the following before transferring your domain:':
+    'שימו לב לנקודות הבאות לפני העברת הדומיין:',
+  'Members who are not part of the destination organization lose access to this domain and its DNS records.':
+    'חברים שאינם חלק מארגון היעד יאבדו את הגישה לדומיין ולרשומות ה-DNS שלו.',
+  Renewals: 'חידושים',
+  'The destination organization pays for renewals from then on, with its own payment method.':
+    'מאותו רגע ארגון היעד משלם על החידושים, באמצעי התשלום שלו.',
+  'Active transfer links for this domain stop working after the move.':
+    'קישורי ההעברה הפעילים של הדומיין יפסיקו לפעול אחרי ההעברה.',
+  'Choose how long the link is valid and which organization can claim the domain.':
+    'בחרו לכמה זמן הקישור תקף ואיזה ארגון יוכל לקבל את הדומיין.',
+  'Recommended. Only this organization can claim the domain, so the link is useless to anyone else who gets it. Leave empty to let any organization with the link claim it.':
+    'מומלץ. רק הארגון הזה יוכל לקבל את הדומיין, כך שהקישור לא יועיל לאף אחד אחר שיגיע אליו. השאירו ריק כדי לאפשר לכל ארגון שבידיו הקישור לקבל את הדומיין.',
+  'The domain already belongs to this organization.':
+    'הדומיין כבר שייך לארגון זה.',
+  'The link will stop working and the domain can no longer be claimed with it.':
+    'הקישור יפסיק לפעול ולא ניתן יהיה לקבל באמצעותו את הדומיין.',
+  'Claim domain': 'קבלת דומיין',
+  'A domain moves into one of your organizations. Create one to receive it.':
+    'דומיין עובר לאחד מהארגונים שלכם. צרו ארגון כדי לקבל אותו.',
+  'Choose the organization that should receive this domain.':
+    'בחרו את הארגון שיקבל את הדומיין.',
+  'The domain already belongs to this organization. Select a different one.':
+    'הדומיין כבר שייך לארגון זה. בחרו ארגון אחר.',
+  'Only an owner of the organization can claim a domain into it.':
+    'רק בעלים של הארגון יכולים לקבל דומיין לתוכו.',
+  'Only an owner of the organization can claim a domain into it. Create an organization you own to receive it.':
+    'רק בעלים של הארגון יכולים לקבל דומיין לתוכו. צרו ארגון בבעלותכם כדי לקבל אותו.',
+  'Failed to claim domain': 'קבלת הדומיין נכשלה',
+  "This organization has reached its plan's domain limit. Upgrade its plan to claim this domain.":
+    'הארגון הזה הגיע למגבלת הדומיינים של התוכנית שלו. שדרגו את התוכנית כדי לקבל את הדומיין.',
+  'Sign in or create an account to claim this domain.':
+    'התחברו או צרו חשבון כדי לקבל את הדומיין.',
 }
