@@ -615,9 +615,10 @@ class Nats implements Synchronous, Consumer, Bounded
             return null;
         }
 
-        // Zero only when it is written as one: anything left after the zeros and the
-        // point is a non-zero value that underflowed.
-        if ($seconds === 0.0 && \trim($value, '0.') !== '') {
+        // Zero only when it is written as one. The mantissa decides, so `0e5` is a zero
+        // and `1e-999` is a non-zero value that underflowed.
+        $mantissa = \explode('e', \strtolower($value), 2)[0];
+        if ($seconds === 0.0 && \trim($mantissa, '0.') !== '') {
             return null;
         }
 

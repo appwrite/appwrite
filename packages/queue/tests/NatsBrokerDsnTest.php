@@ -101,7 +101,7 @@ final class NatsBrokerDsnTest extends TestCase
 
     public function testAZeroDeadMaxAgeKeepsDeadLettersForever(): void
     {
-        foreach (['0', '0.0', '.0', '00'] as $zero) {
+        foreach (['0', '0.0', '.0', '00', '0e5', '0.0E-3'] as $zero) {
             $this->assertNull(Nats::dsnArguments(new DSN("nats://host:4222?deadMaxAge={$zero}"))['deadMaxAge'], "deadMaxAge={$zero}");
         }
     }
