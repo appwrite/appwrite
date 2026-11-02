@@ -3,6 +3,11 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Identities;
 
 use Appwrite\Platform\Action;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
 
 class Delete extends Action
@@ -12,5 +17,33 @@ class Delete extends Action
     public static function getName(): string
     {
         return 'deleteIdentity';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
+            ->setHttpPath('/v1/account/identities/:identityId')
+            ->desc('Delete identity')
+            ->groups(['api', 'account'])
+            ->label('scope', 'account')
+            ->label('event', 'users.[userId].identities.[identityId].delete')
+            ->label('audits.event', 'identity.delete')
+            ->label('audits.resource', 'identity/{request.$identityId}')
+            ->label('audits.userId', '{user.$id}')
+            ->label('sdk', new Method(
+                namespace: 'account',
+                group: 'identities',
+                name: 'deleteIdentity',
+                description: '/docs/references/account/delete-identity.md',
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_NOCONTENT,
+                        model: Response::MODEL_NONE,
+                    )
+                ],
+                contentType: ContentType::NONE
+            ));
     }
 }
