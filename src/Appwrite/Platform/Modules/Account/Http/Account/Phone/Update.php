@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Phone;
 
+use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -43,6 +45,18 @@ class Update extends Action
                     )
                 ],
                 contentType: ContentType::JSON
-            ));
+            ))
+            ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+            ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('hooks')
+            ->inject('proofForPassword')
+            ->inject('authorization')
+            ->inject('passwordsDictionary')
+            ->inject('pwnedPasswords');
     }
 }
