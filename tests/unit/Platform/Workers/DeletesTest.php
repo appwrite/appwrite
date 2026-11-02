@@ -262,6 +262,94 @@ final class DeletesTest extends TestCase
     }
 
     /**
+     * Provisioning creates a project's tables one by one with no rollback, so a
+     * failed run leaves a projects row over a partial set, and the orphan sweeps
+     * enqueue those rows for deletion. The read of `databases` must not take the
+     * whole job down: the platform row is already gone when the job runs, and a
+     * project without that table still has tables and storage to remove.
+     */
+    public function testDeletingAProjectWhoseDatabaseLacksTheDatabasesTableDropsTheRest(): void
+    {
+        $dbForProject = $this->projectDatabase(['users', 'cache']);
+        $adapter = $dbForProject->getAdapter();
+        $this->assertTrue($adapter->collectionExists('appwrite', 'users'));
+        $this->assertFalse($adapter->collectionExists('appwrite', 'databases'));
+
+        $this->deleteProject($dbForProject);
+
+        $this->assertFalse($adapter->collectionExists('appwrite', 'users'), 'the remaining project tables are dropped');
+        $this->assertFalse($adapter->collectionExists('appwrite', 'cache'));
+        $this->assertFalse($adapter->collectionExists('appwrite', Database::METADATA), 'the metadata table is dropped last');
+    }
+
+    /**
+     * The same job for a project whose database was never created at all: there is
+     * nothing to drop, and the job has to return so the storage cleanup runs and
+     * the message is acknowledged instead of being redelivered until it dead-letters.
+     */
+    public function testDeletingAProjectWhoseDatabaseWasNeverCreatedReturns(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $this->deleteProject($this->projectDatabase(null));
+    }
+
+    /**
+     * @param ?list<string> $collections null for a database that was never created
+     */
+    private function projectDatabase(?array $collections): Database
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+        $database = (new Database(new Memory(), new Cache(new MemoryCache())))
+            ->setDatabase('appwrite')
+            ->setNamespace('_7')
+            ->setAuthorization($authorization);
+        if ($collections === null) {
+            return $database;
+        }
+
+        $database->create();
+        foreach ($collections as $id) {
+            $database->createCollection(Collection::create(id: $id));
+        }
+
+        return $database;
+    }
+
+    private function deleteProject(Database $dbForProject): void
+    {
+        $payload = (new DeleteMessage(
+            type: DELETE_TYPE_DOCUMENT,
+            document: new Document(['$id' => 'orphan', '$sequence' => '7', '$collection' => DELETE_TYPE_PROJECTS, 'database' => 'db_fra1_01']),
+        ))->toArray();
+
+        (new Deletes())->action(
+            message: (new Message())->setPayload($payload),
+            project: new Document(),
+            dbForPlatform: $this->database,
+            getProjectDB: fn () => $dbForProject,
+            getDatabasesDB: fn () => $dbForProject,
+            deviceForFiles: $this->createStub(Device::class),
+            deviceForFunctions: $this->createStub(Device::class),
+            deviceForSites: $this->createStub(Device::class),
+            deviceForBuilds: $this->createStub(Device::class),
+            telemetry: new NoTelemetry(),
+            mqtt: $this->mqtt(),
+            certificates: $this->createStub(Certificates::class),
+            executor: $this->createStub(Executor::class),
+            executionRetention: '',
+            executionsRetentionCount: 0,
+            deploymentRetention: new Retention(),
+            publisherForDeletes: $this->createStub(DeletePublisher::class),
+            publisherForUsage: $this->createStub(UsagePublisher::class),
+            bus: new Bus(),
+            executionStore: $this->createStub(ExecutionStore::class),
+            queueForRealtime: $this->createStub(Realtime::class),
+        );
+    }
+
+    /**
      * The scheduler keeps every schedule in memory and syncs from the rows whose
      * resourceUpdatedAt moved since its last read. A row removed outright never
      * moves, so a deleted project's functions kept firing every minute until
