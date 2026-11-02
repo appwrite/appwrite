@@ -13,7 +13,7 @@ import {
   useOrganizationById,
   useUpdateOrganizationBudget,
 } from '@/lib/react-query/hooks'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   budgetRecipients,
   changedBudgetRecipients,
@@ -249,28 +249,33 @@ export function BillingAlertsSection({
           <p className="mt-0.5 text-[12px] text-muted-foreground">
             {t('Members with these roles are emailed when an alert fires.')}
           </p>
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            size="sm"
-            className="mt-3 flex-wrap"
-            value={recipients}
-            onValueChange={handleRecipientsChange}
-            disabled={updateBudgetMutation.isPending}
-          >
-            {RECIPIENT_ROLES.map((role) => (
-              <ToggleGroupItem
-                key={role.value}
-                value={role.value}
-                className="px-3 text-[13px]"
-                disabled={
-                  recipients.length === 1 && recipients[0] === role.value
-                }
-              >
-                {t(role.label)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
+            {RECIPIENT_ROLES.map((role) => {
+              const checked = recipients.includes(role.value)
+              return (
+                <label
+                  key={role.value}
+                  className="flex items-center gap-2 text-[13px] text-foreground has-[button:disabled]:cursor-not-allowed has-[button:disabled]:opacity-60"
+                >
+                  <Checkbox
+                    checked={checked}
+                    disabled={
+                      updateBudgetMutation.isPending ||
+                      (checked && recipients.length === 1)
+                    }
+                    onCheckedChange={(next) =>
+                      handleRecipientsChange(
+                        next === true
+                          ? [...recipients, role.value]
+                          : recipients.filter((value) => value !== role.value),
+                      )
+                    }
+                  />
+                  {t(role.label)}
+                </label>
+              )
+            })}
+          </div>
           {recipients.length === 1 && (
             <p className="mt-2 text-[12px] text-muted-foreground">
               {t('At least one role must receive budget alerts.')}
