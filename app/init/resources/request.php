@@ -2,7 +2,6 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Abuse\Failures as AbuseFailures;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
@@ -158,7 +157,6 @@ return function (Container $context): void {
     }, ['project', 'usageConnection']);
     $context->set('usagePolicy', fn () => new UsagePolicy(), []);
     $context->set('auditContext', fn () => new AuditContext(), []);
-    $context->set('abuseFailures', fn () => new AbuseFailures(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
         // A blocked actor keeps no capability, so the blocked check sees the actor

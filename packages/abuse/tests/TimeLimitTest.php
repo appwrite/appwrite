@@ -90,48 +90,22 @@ final class TimeLimitTest extends TestCase
         $this->assertTrue($adapter->check()->limited);
     }
 
-    public function testReleaseGivesBackOneHit(): void
+    public function testReleaseGivesBackOneHitWithoutGoingNegative(): void
     {
         $adapter = new Memory('ip:{ip}', 2, 60, $this->store)->withParam('{ip}', '127.0.0.1');
 
+        $adapter->release();
         $adapter->check();
-        $hit = $adapter->check();
+        $adapter->check();
         $this->assertTrue($adapter->check()->limited);
 
-        $adapter->release($hit);
+        $adapter->release();
         $this->assertFalse($adapter->check()->limited);
-        $this->assertTrue($adapter->check()->limited);
-    }
-
-    public function testReleaseOfARefusedCheckGivesNothingBack(): void
-    {
-        $adapter = new Memory('ip:{ip}', 1, 60, $this->store)->withParam('{ip}', '127.0.0.1');
-
-        $adapter->check();
-        $refused = $adapter->check();
-        $this->assertTrue($refused->limited);
-
-        $adapter->release($refused);
-        $this->assertTrue($adapter->check()->limited, 'A refused check recorded no hit, so it has none to give back');
-    }
-
-    public function testReleaseStaysInTheWindowOfItsHit(): void
-    {
-        $adapter = new Memory('ip:{ip}', 1, 60, $this->store)->withParam('{ip}', '127.0.0.1');
-
-        $hit = $adapter->check();
-        $this->store->now += 60;
-        $this->assertFalse($adapter->check()->limited);
-
-        $adapter->release($hit);
-        $this->assertTrue($adapter->check()->limited, 'Releasing an old window\'s hit must not free a slot in the current one');
     }
 
     public function testReleaseOnZeroLimitTouchesNoStorage(): void
     {
-        $adapter = new Memory('ip:{ip}', 0, 60, $this->store);
-
-        $adapter->release($adapter->check());
+        new Memory('ip:{ip}', 0, 60, $this->store)->release();
 
         $this->assertSame(0, $this->store->calls);
     }

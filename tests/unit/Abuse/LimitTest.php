@@ -14,30 +14,19 @@ use Utopia\Http\Route;
 
 final class LimitTest extends TestCase
 {
-    public function testResetOnAKeyNamingTheAccount(): void
+    public function testAttemptsCountEveryRequest(): void
     {
-        $limit = Limit::attempts('projectId:{projectId},url:{url},email:{param-email}', 10, resetOn: [201]);
+        $limit = Limit::attempts('ip:{ip},url:{url}', 60, 60);
 
-        $this->assertSame([201], $limit->resetOn);
         $this->assertFalse($limit->failures);
+        $this->assertSame(60, $limit->seconds);
     }
 
-    /**
-     * A success proves one account's secret; on a key naming no account, any success would clear the count.
-     */
-    public function testResetOnAKeyNamingNoAccountIsRefused(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-
-        Limit::attempts('projectId:{projectId},url:{url},ip:{ip}', 10, resetOn: [201]);
-    }
-
-    public function testFailuresAreNeverReset(): void
+    public function testFailuresCountOnlyFailedRequests(): void
     {
         $limit = Limit::failures('projectId:{projectId},url:{url},ip:{ip}', 100);
 
         $this->assertTrue($limit->failures);
-        $this->assertSame([], $limit->resetOn);
         $this->assertSame(3600, $limit->seconds);
     }
 

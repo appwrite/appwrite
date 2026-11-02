@@ -228,19 +228,16 @@ abstract class Base extends TestCase
             ->withParams(['{{ip}}' => \uniqid()]);
         $this->waitForWindowStart(1);
 
+        $adapter->release();
+        $this->assertSame(1, $adapter->peek()->remaining, 'Releasing an empty window does not go below zero');
+
         $this->assertFalse($adapter->check()->limited);
-        $hit = $adapter->check();
-        $this->assertFalse($hit->limited);
+        $this->assertFalse($adapter->check()->limited);
         $this->assertTrue($adapter->check()->limited);
 
-        $adapter->release($hit);
+        $adapter->release();
         $this->assertFalse($adapter->check()->limited, 'A released hit can be taken again');
         $this->assertTrue($adapter->check()->limited);
-
-        $adapter->release($hit);
-        $adapter->release($hit);
-        $adapter->release($hit);
-        $this->assertSame(1, $adapter->peek()->remaining, 'Releasing never goes below zero');
     }
 
     private function waitForWindowStart(int $seconds): int
