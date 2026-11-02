@@ -40,7 +40,6 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Auth\Proofs\Phrase;
@@ -709,60 +708,6 @@ Http::post('/v1/account/tokens/email')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN);
-    });
-
-Http::put('/v1/account/sessions/magic-url')
-    ->desc('Update magic URL session')
-    ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->groups(['api', 'account', 'session'])
-    ->label('scope', 'sessions.write')
-    ->label('audits.event', 'session.create')
-    ->label('audits.resource', 'user/{response.userId}')
-    ->label('audits.userId', '{response.userId}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'sessions',
-        name: 'updateMagicURLSession',
-        description: '/docs/references/account/create-session.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_SESSION,
-            )
-        ],
-        contentType: ContentType::JSON,
-        deprecated: new Deprecated(
-            since: '1.6.0',
-            replaceWith: 'account.createSession'
-        ),
-    ))
-    ->label('abuse-limit', 10)
-    ->label('abuse-key', ['ip:{ip},userId:{param-userId}', 'projectId:{projectId},url:{url},userId:{param-userId}'])
-    ->label('abuse-reset', [201])
-    ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
-    ->param('secret', '', new Text(256), 'Valid verification token.')
-    ->inject('request')
-    ->inject('response')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('platform')
-    ->inject('locale')
-    ->inject('geo')
-    ->inject('queueForEvents')
-    ->inject('bus')
-    ->inject('store')
-    ->inject('proofForCode')
-    ->inject('domainVerification')
-    ->inject('cookieDomain')
-    ->inject('authorization')
-    ->inject('mqtt')
-    ->inject('queueForRealtime')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime) use ($createSession) {
-        $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
-        $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime);
     });
 
 Http::put('/v1/account/sessions/phone')

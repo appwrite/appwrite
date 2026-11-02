@@ -28,6 +28,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Delete as DeleteSess
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email\Create as CreateEmailPasswordSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Get as GetSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\MagicURL\Update as UpdateMagicURLSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Create as CreateOAuth2Callback;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Get as GetOAuth2Callback;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Get as CreateOAuth2Session;
@@ -64,6 +65,7 @@ class Http extends Service
             ->addAction(GetOAuth2Redirect::getName(), GetOAuth2Redirect::class)
             ->addAction(CreateOAuth2Token::getName(), CreateOAuth2Token::class)
             ->addAction(CreateMagicURLToken::getName(), CreateMagicURLToken::class)
+            ->addAction(UpdateMagicURLSession::getName(), UpdateMagicURLSession::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
