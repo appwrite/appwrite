@@ -335,34 +335,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
-Http::get('/v1/account')
-    ->desc('Get account')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'account',
-        name: 'get',
-        description: '/docs/references/account/get.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USER,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
-    ->inject('response')
-    ->inject('targetUser')
-    ->action(function (Response $response, User $targetUser) {
-        if ($targetUser->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $response->dynamic($targetUser, Response::MODEL_ACCOUNT);
-    });
-
 Http::delete('/v1/account')
     ->desc('Delete account')
     ->groups(['api', 'account'])
