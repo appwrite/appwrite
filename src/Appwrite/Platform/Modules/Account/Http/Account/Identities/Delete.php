@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Identities;
 
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -50,6 +52,29 @@ class Delete extends Action
             ->param('identityId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Identity ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('queueForEvents');
+            ->inject('queueForEvents')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $identityId,
+        Response $response,
+        Database $dbForProject,
+        Event $queueForEvents,
+    ): void {
+        $identity = $dbForProject->getDocument('identities', $identityId);
+
+        if ($identity->isEmpty()) {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('identities', $identityId);
+
+        $queueForEvents
+            ->setParam('userId', $identity->getAttribute('userId'))
+            ->setParam('identityId', $identity->getId())
+            ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
+
+        $response->noContent();
     }
 }
