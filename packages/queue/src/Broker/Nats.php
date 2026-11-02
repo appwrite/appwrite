@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Utopia\Queue\Broker;
 
+use Utopia\DSN\DSN;
 use Utopia\Lock\Mutex;
 use Utopia\NATS\Connection as NatsConnection;
+use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\NoRespondersException;
@@ -153,6 +155,33 @@ class Nats implements Synchronous, Consumer, Bounded
      * because the socket is momentarily busy — matching Connection\Locking.
      */
     private const float ACQUIRE_TIMEOUT = -1;
+
+    /**
+     * Query parameters a `nats://` broker DSN may set, and how each is read; see
+     * {@see self::fromDSN()}. Each names the constructor parameter it sets.
+     *
+     * `inactiveThreshold` is deliberately absent. JetStream deletes an idle durable
+     * when it expires while this broker keeps serving the cached handle, so the fetch
+     * reads as an empty queue rather than an error: the worker stops receiving and
+     * says nothing while the jobs pile up. A DSN must not be able to switch that on.
+     *
+     * @var array<string, 'float'|'int'|'list'|'discard'>
+     */
+    public const array DSN_PARAMS = [
+        'ackWait' => 'float',
+        'maxDeliver' => 'int',
+        'replicas' => 'int',
+        'backoff' => 'list',
+        'deadMaxAge' => 'float',
+        'duplicateWindow' => 'float',
+        'maxAge' => 'float',
+        'maxMsgSize' => 'int',
+        'maxMsgs' => 'int',
+        'maxBytes' => 'int',
+        'discard' => 'discard',
+        'maxAckPending' => 'int',
+        'maxWaiting' => 'int',
+    ];
 
     /** @var array<string, bool> queues whose streams/consumers have been provisioned */
     private array $provisioned = [];
@@ -400,6 +429,185 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($this->inactiveThreshold !== null && $this->inactiveThreshold <= 0) {
             throw new \InvalidArgumentException('inactiveThreshold must be a positive number of seconds, or null to keep durable consumers forever');
         }
+    }
+
+    /**
+     * Build a broker from `nats://[user[:password]@]host[:port]?param=value&...`.
+     *
+     * The query string carries the queue's stream and consumer config, so a queue is
+     * tuned in configuration rather than a release, and a producer and a consumer that
+     * read the same DSN provision the same queue. Anything the DSN leaves out keeps
+     * the constructor's default. {@see self::dsnArguments()} reads the query.
+     *
+     * Everything that is code rather than configuration -- $onError, $codec,
+     * $messageId, $provisioning -- is passed by name in $arguments. A parameter the
+     * DSN owns is refused there, so a queue's config has one source.
+     *
+     * The connection is opened lazily, on first use, so this is safe to call before a
+     * fork and costs nothing on a broker that is never used.
+     *
+     * @param string $name Client name the server shows in `/connz`, so an operator
+     *        can tell which process holds a connection.
+     * @param mixed ...$arguments Other constructor parameters, by name.
+     */
+    public static function fromDSN(DSN $dsn, string $name = '', mixed ...$arguments): self
+    {
+        foreach (\array_keys($arguments) as $argument) {
+            if (!\is_string($argument)) {
+                throw new \InvalidArgumentException('fromDSN() takes the broker\'s other parameters by name');
+            }
+            if (\array_key_exists($argument, self::DSN_PARAMS) || $argument === 'source') {
+                throw new \InvalidArgumentException("{$argument} is read from the DSN; set it there");
+            }
+        }
+
+        $options = self::connectionOptions($dsn, $name);
+
+        // Spread by name: PHPStan cannot match an array's keys to parameters, but each
+        // value was cast to its parameter's type by dsnArguments() or passed by the
+        // caller, and the constructor still checks every range.
+        return new self(
+            static fn (): NatsConnection => NatsConnection::connect($options),
+            ...self::dsnArguments($dsn), // @phpstan-ignore argument.type
+            ...$arguments, // @phpstan-ignore argument.type
+        );
+    }
+
+    /**
+     * The constructor arguments a broker DSN's query string sets, validated and cast.
+     *
+     * Strict, because a DSN is typed by hand: an unknown parameter is a typo that
+     * would otherwise run the queue on defaults nobody chose, and every number is
+     * checked before it is cast because PHP reads `30s` as 30.0 and `4.9` as 4.
+     * Ranges are left to the constructor, which refuses what it cannot honour.
+     *
+     * The JetStream coupling between the redelivery knobs is resolved here rather
+     * than refused, because a DSN states intent: an explicit ackWait rewrites the
+     * schedule's first step, otherwise the first step is the ack wait, and a
+     * maxDeliver lowered into the schedule trims it to fit. Delays below a second
+     * are raised to one, and `deadMaxAge=0` keeps dead letters forever.
+     *
+     * @return array<string, float|int|list<float>|DiscardPolicy|null>
+     * @throws \InvalidArgumentException
+     */
+    public static function dsnArguments(DSN $dsn): array
+    {
+        if ($dsn->getScheme() !== 'nats') {
+            throw new \InvalidArgumentException("A NATS broker DSN must use the nats:// scheme, got {$dsn->getScheme()}://");
+        }
+
+        \parse_str($dsn->getQuery() ?? '', $query);
+
+        /** @var array<string, int> $counts */
+        $counts = [];
+        /** @var array<string, float> $seconds */
+        $seconds = [];
+        /** @var list<float>|null $backoff */
+        $backoff = null;
+        $discard = null;
+
+        foreach ($query as $param => $value) {
+            $param = (string) $param;
+            $kind = self::DSN_PARAMS[$param] ?? null;
+            if ($kind === null) {
+                throw new \InvalidArgumentException(\sprintf("Unknown parameter '%s' in the NATS broker DSN; allowed: %s", $param, \implode(', ', \array_keys(self::DSN_PARAMS))));
+            }
+            if (!\is_string($value)) {
+                throw new \InvalidArgumentException("Parameter '{$param}' in the NATS broker DSN is given more than once or as an array");
+            }
+
+            switch ($kind) {
+                case 'int':
+                    if (!\ctype_digit(\str_starts_with($value, '-') ? \substr($value, 1) : $value)) {
+                        throw new \InvalidArgumentException("{$param} must be a whole number, got \"{$value}\"");
+                    }
+                    $counts[$param] = (int) $value;
+                    break;
+                case 'float':
+                    if (!\is_numeric($value)) {
+                        throw new \InvalidArgumentException("{$param} must be a number of seconds, got \"{$value}\" -- units and suffixes are not read");
+                    }
+                    $seconds[$param] = (float) $value;
+                    break;
+                case 'list':
+                    $backoff = [];
+                    foreach (\explode(',', $value) as $step) {
+                        if (!\is_numeric($step)) {
+                            throw new \InvalidArgumentException("{$param} must be a comma-separated list of seconds, got \"{$value}\"");
+                        }
+                        $backoff[] = \max(1.0, (float) $step);
+                    }
+                    break;
+                case 'discard':
+                    $discard = match (\strtolower($value)) {
+                        'old' => DiscardPolicy::Old,
+                        'new' => DiscardPolicy::New,
+                        default => throw new \InvalidArgumentException("discard must be 'old' or 'new', got \"{$value}\""),
+                    };
+                    break;
+            }
+        }
+
+        foreach (['maxDeliver', 'replicas'] as $param) {
+            if (isset($counts[$param])) {
+                $counts[$param] = \max(1, $counts[$param]);
+            }
+        }
+        if (isset($seconds['ackWait'])) {
+            $seconds['ackWait'] = \max(1.0, $seconds['ackWait']);
+        }
+
+        /** @var array<string, float|int|list<float>|DiscardPolicy|null> $arguments */
+        $arguments = [...$counts, ...$seconds];
+
+        if (isset($seconds['deadMaxAge']) && $seconds['deadMaxAge'] <= 0) {
+            $arguments['deadMaxAge'] = null;
+        }
+        if ($discard !== null) {
+            $arguments['discard'] = $discard;
+        }
+
+        if ($backoff !== null) {
+            if (isset($seconds['ackWait'])) {
+                $backoff[0] = $seconds['ackWait'];
+            } else {
+                $arguments['ackWait'] = $backoff[0];
+            }
+
+            // The constructor's own default, when the DSN leaves maxDeliver out.
+            $maxDeliver = $counts['maxDeliver'] ?? 5;
+            if ($maxDeliver <= \count($backoff)) {
+                $backoff = $maxDeliver > 1 ? \array_slice($backoff, 0, $maxDeliver - 1) : null;
+            }
+            $arguments['backoff'] = $backoff;
+        }
+
+        \ksort($arguments);
+
+        return $arguments;
+    }
+
+    /**
+     * Connection options for a `nats://` DSN, for a caller that needs a raw
+     * connection to the same server. The credentials are URL-decoded.
+     */
+    public static function connectionOptions(DSN $dsn, string $name = ''): ConnectionOptions
+    {
+        $user = (string) $dsn->getUser();
+        $password = (string) $dsn->getPassword();
+
+        return new ConnectionOptions(
+            servers: 'nats://' . $dsn->getHost() . ':' . ($dsn->getPort() ?? '4222'),
+            name: $name,
+            user: $user !== '' ? $user : null,
+            pass: $password !== '' ? $password : null,
+        );
+    }
+
+    /** How many times a message is delivered before it is dead-lettered. */
+    public function getMaxDeliver(): int
+    {
+        return $this->maxDeliver;
     }
 
     /**
