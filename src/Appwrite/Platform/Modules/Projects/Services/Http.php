@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Projects\Http\Projects\Auth\MockNumbers\Update as 
 use Appwrite\Platform\Modules\Projects\Http\Projects\Create as CreateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\OAuth2\Update as UpdateProjectOAuth2;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Templates\Email\Delete as DeleteProjectEmailTemplate;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\XList as ListProjects;
 use Appwrite\Platform\Modules\Projects\Http\Schedules\Create as CreateSchedule;
@@ -30,6 +31,7 @@ class Http extends Service
         $this->addAction(UpdateProjectTeam::getName(), UpdateProjectTeam::class);
         $this->addAction(UpdateProjectOAuth2::getName(), UpdateProjectOAuth2::class);
         $this->addAction(UpdateProjectMockNumbers::getName(), UpdateProjectMockNumbers::class);
+        $this->addAction(DeleteProjectEmailTemplate::getName(), DeleteProjectEmailTemplate::class);
 
         $this->addAction(CreateSchedule::getName(), CreateSchedule::class);
         $this->addAction(GetSchedule::getName(), GetSchedule::class);
