@@ -2,12 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Email;
 
+use Appwrite\Auth\Validator\Password;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
 
 class Update extends Action
@@ -43,6 +45,20 @@ class Update extends Action
                     )
                 ],
                 contentType: ContentType::JSON
-            ));
+            ))
+            ->param('email', '', new EmailValidator(), 'User email.')
+            ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+            ->inject('requestTimestamp')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('project')
+            ->inject('hooks')
+            ->inject('plan')
+            ->inject('proofForPassword')
+            ->inject('authorization')
+            ->inject('passwordsDictionary')
+            ->inject('pwnedPasswords');
     }
 }
