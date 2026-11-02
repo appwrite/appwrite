@@ -587,11 +587,12 @@ final class V25Test extends TestCase
             'unverified' => ['email' => 'pending@example.com', 'emailVerification' => false],
             'canonical' => ['email' => 'johndoe@gmail.com', 'emailVerification' => true],
         ];
+        $sequences = [];
         foreach ($users as $userId => $user) {
-            $database->createDocument('users', new Document(['$id' => $userId, ...$user]));
+            $sequences[$userId] = $database->createDocument('users', new Document(['$id' => $userId, ...$user]))->getSequence();
         }
 
-        // identity => [owner, stored providerEmail, expected providerEmail]
+        // identity => [owner, stored providerEmail, expected providerEmail, owner internal ID override]
         $identities = [
             'matches' => ['verified', 'owner@example.com', 'owner@example.com'],
             'differs' => ['verified', 'other@example.com', ''],
@@ -601,11 +602,14 @@ final class V25Test extends TestCase
             'unverifiedOwnerCase' => ['unverified', 'Pending@Example.com', ''],
             'missingOwner' => ['deleted', 'owner@example.com', ''],
             'empty' => ['verified', '', ''],
+            // The user ID now belongs to a different user than the one that linked the identity
+            'reusedUserId' => ['verified', 'owner@example.com', '', '999999'],
         ];
-        foreach ($identities as $identityId => [$userId, $providerEmail]) {
+        foreach ($identities as $identityId => $identity) {
+            [$userId, $providerEmail] = $identity;
             $database->createDocument('identities', new Document([
                 '$id' => $identityId,
-                'userInternalId' => '1',
+                'userInternalId' => $identity[3] ?? ($sequences[$userId] ?? '999998'),
                 'userId' => $userId,
                 'provider' => 'mock',
                 'providerUid' => $identityId,
@@ -702,13 +706,13 @@ final class V25Test extends TestCase
             attributes: \array_values($collections['identities']['attributes']),
             indexes: \array_values($collections['identities']['indexes']),
         ));
-        $database->createDocument('users', new Document(['$id' => 'owner', 'email' => 'owner@example.com', 'emailVerification' => true]));
+        $owner = $database->createDocument('users', new Document(['$id' => 'owner', 'email' => 'owner@example.com', 'emailVerification' => true]));
 
         // Clearing most rows shrinks the filtered set while the scan advances
         for ($i = 0; $i < 250; $i++) {
             $database->createDocument('identities', new Document([
                 '$id' => 'identity' . $i,
-                'userInternalId' => '1',
+                'userInternalId' => $owner->getSequence(),
                 'userId' => 'owner',
                 'provider' => 'mock',
                 'providerUid' => 'identity' . $i,

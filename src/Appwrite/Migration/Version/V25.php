@@ -667,8 +667,10 @@ class V25 extends Migration
 
         foreach ($identities as $identity) {
             $user = $users[$identity->getAttribute('userId', '')] ?? null;
+            // The internal ID check stops a reused user ID from vouching for an older identity
             if (
                 $user !== null
+                && (string) $user->getSequence() === (string) $identity->getAttribute('userInternalId', '')
                 && $user->getAttribute('emailVerification', false) === true
                 && $this->isOwnerEmail((string) $identity->getAttribute('providerEmail', ''), (string) $user->getAttribute('email', ''))
             ) {
