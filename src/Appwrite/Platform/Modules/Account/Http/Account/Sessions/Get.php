@@ -2,14 +2,18 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
 
 class Get extends Action
@@ -47,6 +51,41 @@ class Get extends Action
             ->inject('response')
             ->inject('targetUser')
             ->inject('locale')
-            ->inject('session');
+            ->inject('session')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        ?string $sessionId,
+        Response $response,
+        User $targetUser,
+        Locale $locale,
+        ?Document $current,
+    ): void {
+        $sessions = $targetUser->getAttribute('sessions', []);
+        // While impersonating, the request runs on the impersonator's session, so 'current'
+        // resolves against none of the target's sessions and this throws. That matches the
+        // sessions list, which marks none of them current for the same reason.
+        $sessionId = ($sessionId === 'current')
+            ? $current?->getId()
+            : $sessionId;
+
+        foreach ($sessions as $session) {
+            /** @var Document $session */
+            if ($sessionId === $session->getId()) {
+                $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+
+                $session
+                    ->setAttribute('current', $session->getId() === $current?->getId())
+                    ->setAttribute('countryName', $countryName)
+                    ->setAttribute('secret', $session->getAttribute('secret', ''))
+                ;
+
+                $response->dynamic($session, Response::MODEL_SESSION);
+                return;
+            }
+        }
+
+        throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     }
 }
