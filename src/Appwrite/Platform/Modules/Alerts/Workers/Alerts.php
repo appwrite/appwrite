@@ -10,6 +10,7 @@ use Appwrite\Alert\Schedules;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Unsubscribe;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -455,7 +456,7 @@ class Alerts extends Action
         $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
         $consoleUrl = (string) ($platform['consoleUrl'] ?? '');
         $endpoint = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https') . '://' . ($platform['apiHostname'] ?? System::getEnv('_APP_DOMAIN', 'localhost')) . '/v1';
-        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $unsubscribe = new Unsubscribe([EncryptionKey::current()]);
         $type = (string) $monitor->getAttribute('type');
         $typeConfig = Config::getParam('alerts', [])['types'][$type] ?? [];
         // Every email of a type is stopped at once only where the type allows it.

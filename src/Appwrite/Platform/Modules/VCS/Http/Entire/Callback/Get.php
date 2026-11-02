@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Entire\Callback;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
@@ -189,16 +190,11 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
-        if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
-        }
-
         $decoded = \json_decode($this->decodeState($state), true);
         $decoded = \is_array($decoded) ? $decoded : [];
 
-        $signature = \hash_hmac('sha256', \json_encode([$decoded['projectId'] ?? '', $decoded['success'] ?? '', $decoded['failure'] ?? '']), $signingKey);
-        if (!\hash_equals($signature, \is_string($decoded['signature'] ?? null) ? $decoded['signature'] : '')) {
+        $signature = \is_string($decoded['signature'] ?? null) ? $decoded['signature'] : '';
+        if (!\array_any(EncryptionKey::accepted(), fn (string $key) => \hash_equals(\hash_hmac('sha256', \json_encode([$decoded['projectId'] ?? '', $decoded['success'] ?? '', $decoded['failure'] ?? '']), $key), $signature))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
 

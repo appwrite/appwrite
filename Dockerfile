@@ -75,6 +75,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
+    chmod +x /usr/local/bin/encryption && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/interval && \
     chmod +x /usr/local/bin/maintenance &&  \
