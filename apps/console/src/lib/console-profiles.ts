@@ -68,8 +68,9 @@ export type ConsoleProfileFeatures = {
   /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
   /**
-   * Review product (AI code review of GitHub pull requests) via the `reviews`
-   * service. Shown only where the server reports `_APP_REVIEWS_ENABLED`, since
+   * Internal only, switched on from the debug menu. Review product (AI code
+   * review of GitHub pull requests) via the `reviews` service. Even when on, it
+   * shows only where the server reports `_APP_REVIEWS_ENABLED`, since
    * self-hosted instances run the review service only when they opt in.
    */
   reviews: boolean
@@ -202,7 +203,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
-      reviews: true,
+      reviews: false,
       projectEnvironments: false,
       projectTransfers: false,
       alerts: false,
@@ -248,7 +249,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
-      reviews: true,
+      reviews: false,
       projectEnvironments: false,
       projectTransfers: false,
       alerts: false,
