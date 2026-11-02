@@ -698,7 +698,17 @@ export function PaymentMethodForm({
                   ])
                   // Unlinked, so this only removes the Appwrite row. Without
                   // it every later open lands back on this recovery step.
-                  deletePaymentMethodMutation.mutate({ paymentMethodId })
+                  deletePaymentMethodMutation.mutate(
+                    { paymentMethodId },
+                    {
+                      onError: (err) =>
+                        toast.error(
+                          err instanceof Error
+                            ? err.message
+                            : t('Failed to delete payment method'),
+                        ),
+                    },
+                  )
                 }
               }}
               disabled={isLoading}
