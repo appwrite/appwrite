@@ -43,6 +43,18 @@ class Update extends Action
                     )
                 ],
                 contentType: ContentType::JSON,
-            ));
+            ))
+            ->inject('request')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('store')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
+            ->inject('project')
+            ->inject('mqtt')
+            ->inject('queueForRealtime')
+            ->inject('usage');
     }
 }
