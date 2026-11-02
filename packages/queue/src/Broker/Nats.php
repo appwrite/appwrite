@@ -496,7 +496,21 @@ class Nats implements Synchronous, Consumer, Bounded
             throw new \InvalidArgumentException("A NATS broker DSN must use the nats:// scheme, got {$dsn->getScheme()}://");
         }
 
-        \parse_str($dsn->getQuery() ?? '', $query);
+        // Read by hand rather than with parse_str(), which keeps the last of a repeated
+        // key and rewrites `.` and spaces in names, so a duplicate or a mangled name
+        // would pass as a valid parameter.
+        $query = [];
+        foreach (\explode('&', $dsn->getQuery() ?? '') as $pair) {
+            if ($pair === '') {
+                continue;
+            }
+            [$name, $value] = \array_pad(\explode('=', $pair, 2), 2, '');
+            $name = \urldecode($name);
+            if (\array_key_exists($name, $query)) {
+                throw new \InvalidArgumentException("Parameter '{$name}' is given more than once in the NATS broker DSN");
+            }
+            $query[$name] = \urldecode($value);
+        }
 
         /** @var array<string, int> $counts */
         $counts = [];
@@ -507,35 +521,30 @@ class Nats implements Synchronous, Consumer, Bounded
         $discard = null;
 
         foreach ($query as $param => $value) {
-            $param = (string) $param;
             $kind = self::DSN_PARAMS[$param] ?? null;
             if ($kind === null) {
                 throw new \InvalidArgumentException(\sprintf("Unknown parameter '%s' in the NATS broker DSN; allowed: %s", $param, \implode(', ', \array_keys(self::DSN_PARAMS))));
             }
-            if (!\is_string($value)) {
-                throw new \InvalidArgumentException("Parameter '{$param}' in the NATS broker DSN is given more than once or as an array");
-            }
 
             switch ($kind) {
                 case 'int':
-                    if (!\ctype_digit(\str_starts_with($value, '-') ? \substr($value, 1) : $value)) {
+                    // Only the stream limits have a negative value, -1 for unlimited.
+                    $signed = \in_array($param, ['maxMsgs', 'maxBytes'], true) && \str_starts_with($value, '-');
+                    // Round-tripped so a value past PHP_INT_MAX is refused rather than
+                    // clamped to it, along with leading zeros and a sign.
+                    if (!\ctype_digit($signed ? \substr($value, 1) : $value) || (string) (int) $value !== $value) {
                         throw new \InvalidArgumentException("{$param} must be a whole number, got \"{$value}\"");
                     }
                     $counts[$param] = (int) $value;
                     break;
                 case 'float':
-                    if (!\is_numeric($value)) {
-                        throw new \InvalidArgumentException("{$param} must be a number of seconds, got \"{$value}\" -- units and suffixes are not read");
-                    }
-                    $seconds[$param] = (float) $value;
+                    $seconds[$param] = self::seconds($value) ?? throw new \InvalidArgumentException("{$param} must be a number of seconds, got \"{$value}\" -- units and suffixes are not read");
                     break;
                 case 'list':
                     $backoff = [];
                     foreach (\explode(',', $value) as $step) {
-                        if (!\is_numeric($step)) {
-                            throw new \InvalidArgumentException("{$param} must be a comma-separated list of seconds, got \"{$value}\"");
-                        }
-                        $backoff[] = \max(1.0, (float) $step);
+                        $delay = self::seconds($step) ?? throw new \InvalidArgumentException("{$param} must be a comma-separated list of seconds, got \"{$value}\"");
+                        $backoff[] = \max(1.0, $delay);
                     }
                     break;
                 case 'discard':
@@ -560,7 +569,8 @@ class Nats implements Synchronous, Consumer, Bounded
         /** @var array<string, float|int|list<float>|DiscardPolicy|null> $arguments */
         $arguments = [...$counts, ...$seconds];
 
-        if (isset($seconds['deadMaxAge']) && $seconds['deadMaxAge'] <= 0) {
+        // Exactly zero, so a negative typo still reaches the constructor's range check.
+        if (($seconds['deadMaxAge'] ?? null) === 0.0) {
             $arguments['deadMaxAge'] = null;
         }
         if ($discard !== null) {
@@ -588,8 +598,26 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
+     * A number of seconds as a DSN writes one, or null when it is anything else.
+     *
+     * is_numeric() alone admits surrounding whitespace, a leading `+` and `1e999`,
+     * which casts to INF; each is a value the operator did not write as a plain number.
+     */
+    private static function seconds(string $value): ?float
+    {
+        if (!\is_numeric($value) || \trim($value) !== $value || \str_starts_with($value, '+')) {
+            return null;
+        }
+
+        $seconds = (float) $value;
+
+        return \is_finite($seconds) ? $seconds : null;
+    }
+
+    /**
      * Connection options for a `nats://` DSN, for a caller that needs a raw
-     * connection to the same server. The credentials are URL-decoded.
+     * connection to the same server. The credentials are URL-decoded, and a user
+     * with no password is a token, as in a NATS URL.
      */
     public static function connectionOptions(DSN $dsn, string $name = ''): ConnectionOptions
     {
@@ -597,10 +625,12 @@ class Nats implements Synchronous, Consumer, Bounded
         $password = (string) $dsn->getPassword();
 
         return new ConnectionOptions(
+            // An IPv6 literal keeps its brackets in getHost(), so it joins the port as is.
             servers: 'nats://' . $dsn->getHost() . ':' . ($dsn->getPort() ?? '4222'),
             name: $name,
-            user: $user !== '' ? $user : null,
-            pass: $password !== '' ? $password : null,
+            user: $user !== '' && $password !== '' ? $user : null,
+            pass: $user !== '' && $password !== '' ? $password : null,
+            token: $user !== '' && $password === '' ? $user : null,
         );
     }
 

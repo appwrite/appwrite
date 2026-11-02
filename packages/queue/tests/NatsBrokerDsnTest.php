@@ -104,6 +104,14 @@ final class NatsBrokerDsnTest extends TestCase
         $this->assertNull(Nats::dsnArguments(new DSN('nats://host:4222?deadMaxAge=0'))['deadMaxAge']);
     }
 
+    public function testANegativeDeadMaxAgeIsRefusedRatherThanKeptForever(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('deadMaxAge must be a positive number of seconds');
+
+        Nats::fromDSN(new DSN('nats://host:4222?deadMaxAge=-1'));
+    }
+
     public function testUnlimitedStaysExpressible(): void
     {
         $this->assertInstanceOf(Nats::class, Nats::fromDSN(new DSN('nats://host:4222?maxMsgs=-1&maxBytes=-1')));
@@ -122,7 +130,15 @@ final class NatsBrokerDsnTest extends TestCase
         yield 'a list where one number goes' => ['nats://host:4222?ackWait=30,120'];
         yield 'a unit in the schedule' => ['nats://host:4222?backoff=30,2m,600'];
         yield 'an unknown discard policy' => ['nats://host:4222?discard=newest'];
-        yield 'a repeated parameter' => ['nats://host:4222?replicas[]=1&replicas[]=3'];
+        yield 'a repeated parameter' => ['nats://host:4222?replicas=1&replicas=3'];
+        yield 'an array-style parameter' => ['nats://host:4222?replicas[]=1&replicas[]=3'];
+        yield 'a negative count' => ['nats://host:4222?maxDeliver=-1'];
+        yield 'a count past PHP_INT_MAX' => ['nats://host:4222?maxBytes=99999999999999999999999'];
+        yield 'a signed count' => ['nats://host:4222?replicas=%2B3'];
+        yield 'whitespace around seconds' => ['nats://host:4222?ackWait=%2010'];
+        yield 'a signed number of seconds' => ['nats://host:4222?ackWait=%2B10'];
+        yield 'an infinite number of seconds' => ['nats://host:4222?maxAge=1e999'];
+        yield 'an infinite step in the schedule' => ['nats://host:4222?backoff=30,1e999'];
         yield 'another scheme' => ['redis://host:6379?replicas=3'];
     }
 
@@ -176,7 +192,22 @@ final class NatsBrokerDsnTest extends TestCase
         $this->assertSame(['nats://host:4223'], $options->servers);
         $this->assertSame('us@r', $options->user);
         $this->assertSame('p@ss', $options->pass);
+        $this->assertNull($options->token);
         $this->assertSame('edge/pod-1', $options->name);
+    }
+
+    public function testAUserWithoutAPasswordIsAToken(): void
+    {
+        $options = Nats::connectionOptions(new DSN('nats://s3cr3t-token@host:4222'));
+
+        $this->assertSame('s3cr3t-token', $options->token);
+        $this->assertNull($options->user);
+        $this->assertNull($options->pass);
+    }
+
+    public function testAnIpv6HostKeepsItsBrackets(): void
+    {
+        $this->assertSame(['nats://[::1]:4223'], Nats::connectionOptions(new DSN('nats://[::1]:4223'))->servers);
     }
 
     public function testConnectionOptionsDefaultThePortAndSendNoCredentials(): void
