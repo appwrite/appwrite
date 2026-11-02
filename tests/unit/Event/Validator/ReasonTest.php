@@ -13,46 +13,42 @@ final class ReasonTest extends TestCase
     private const int LENGTH = 64;
 
     /**
-     * @return array<string, array{string}>
+     * @return \Iterator<string, array{string}>
      */
-    public static function validReasons(): array
+    public static function validReasons(): \Iterator
     {
-        return [
-            'empty' => [''],
-            'plain' => ['Moved to SSR endpoint /api/checkout in storefront site'],
-            'symbols' => ['50% off, "quoted" & <tagged> — 100 % sure; a\\b'],
-            'czech' => ['Tým podpory pro spuštění obchodu'],
-            'hebrew' => ['העברת בעלות לצוות התמיכה'],
-            'japanese' => ['ドメインを移譲'],
-            'emoji with joiners' => ['Handed to 👨‍👩‍👧 team'],
-            'directional marks' => ["\u{200F}שלום\u{200E} ok"],
-            'at the limit' => [\str_repeat('a', self::LENGTH)],
-            'multibyte at the limit' => [\str_repeat('ž', self::LENGTH)],
-        ];
+        yield 'empty' => [''];
+        yield 'plain' => ['Moved to SSR endpoint /api/checkout in storefront site'];
+        yield 'symbols' => ['50% off, "quoted" & <tagged> — 100 % sure; a\\b'];
+        yield 'czech' => ['Tým podpory pro spuštění obchodu'];
+        yield 'hebrew' => ['העברת בעלות לצוות התמיכה'];
+        yield 'japanese' => ['ドメインを移譲'];
+        yield 'emoji with joiners' => ['Handed to 👨‍👩‍👧 team'];
+        yield 'directional marks' => ["\u{200F}שלום\u{200E} ok"];
+        yield 'at the limit' => [\str_repeat('a', self::LENGTH)];
+        yield 'multibyte at the limit' => [\str_repeat('ž', self::LENGTH)];
     }
 
     /**
-     * @return array<string, array{mixed}>
+     * @return \Iterator<string, array{mixed}>
      */
-    public static function invalidReasons(): array
+    public static function invalidReasons(): \Iterator
     {
-        return [
-            'not a string' => [123],
-            'over the limit' => [\str_repeat('a', self::LENGTH + 1)],
-            'invalid utf-8' => ["\xFF\xFE"],
-            'line feed' => ["first\nsecond"],
-            'carriage return' => ["first\rsecond"],
-            'tab' => ["first\tsecond"],
-            'nul' => ["first\0second"],
-            'escape' => ["\e[31mred"],
-            'delete' => ["first\x7Fsecond"],
-            'c1 control' => ["first\u{85}second"],
-            'line separator' => ["first\u{2028}second"],
-            'paragraph separator' => ["first\u{2029}second"],
-            'right-to-left override' => ["safe\u{202E}txt.exe"],
-            'left-to-right embedding' => ["\u{202A}text"],
-            'right-to-left isolate' => ["\u{2067}text\u{2069}"],
-        ];
+        yield 'not a string' => [123];
+        yield 'over the limit' => [\str_repeat('a', self::LENGTH + 1)];
+        yield 'invalid utf-8' => ["\xFF\xFE"];
+        yield 'line feed' => ["first\nsecond"];
+        yield 'carriage return' => ["first\rsecond"];
+        yield 'tab' => ["first\tsecond"];
+        yield 'nul' => ["first\0second"];
+        yield 'escape' => ["\e[31mred"];
+        yield 'delete' => ["first\x7Fsecond"];
+        yield 'c1 control' => ["first\u{85}second"];
+        yield 'line separator' => ["first\u{2028}second"];
+        yield 'paragraph separator' => ["first\u{2029}second"];
+        yield 'right-to-left override' => ["safe\u{202E}txt.exe"];
+        yield 'left-to-right embedding' => ["\u{202A}text"];
+        yield 'right-to-left isolate' => ["\u{2067}text\u{2069}"];
     }
 
     #[DataProvider('validReasons')]

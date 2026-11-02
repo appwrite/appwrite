@@ -56,7 +56,7 @@ final class ReasonTest extends Scope
         $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $team['body']['type']);
 
         // One line, with no control characters that could forge a second line or reorder the text.
-        foreach (["first\nsecond", "red \e[31malert", "safe\u{202E}txt.exe"] as $reason) {
+        foreach (["first\nsecond", "red \e[31malert", "safe\u{202E}txt.exe", "trailing line break\r\n", "\0leading NUL"] as $reason) {
             $team = $this->createTeam($name, \rawurlencode($reason));
             $this->assertSame(400, $team['headers']['status-code']);
             $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $team['body']['type']);

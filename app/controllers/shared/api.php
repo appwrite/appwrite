@@ -727,12 +727,13 @@ Http::init()
 
         // Why the caller made this request, shown next to it in Activity. Always percent-decoded, like a W3C Baggage value,
         // so clients that cannot send non-ASCII header bytes (browsers, Node) can send any language; a literal % goes as %25.
-        $reason = \trim(\rawurldecode($request->getHeaderLine('x-appwrite-reason', '')));
+        // Validated before trimming, so an encoded line break or NUL at either end is refused rather than dropped.
+        $reason = \rawurldecode($request->getHeaderLine('x-appwrite-reason', ''));
         $reasonValidator = new Reason(APP_LIMIT_AUDIT_REASON_LENGTH);
         if (! $reasonValidator->isValid($reason)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Reason header value: ' . $reasonValidator->getDescription() . ' Percent-encode it with encodeURIComponent.');
         }
-        $auditContext->reason = $reason;
+        $auditContext->reason = \trim($reason);
 
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
