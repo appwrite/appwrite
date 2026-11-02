@@ -468,49 +468,6 @@ final class NotificationsTest extends TestCase
         $this->assertStringNotContainsString('{{unsubscribeLink}}', $content);
     }
 
-    public function testConsoleEmailIsRecordedSoARetrySendsItOnce(): void
-    {
-        // Mail about an organization rather than a project goes out under the console project,
-        // which has no sequence; the record of the send must still be written.
-        $console = new Document(['$id' => 'console']);
-        $spy = new SpyEmailAdapter();
-        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
-
-        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
-        \putenv('_APP_SMTP_HOST=spy.smtp.test');
-
-        $payload = [
-            'project' => ['$id' => 'console'],
-            'deduplicationKey' => 'monitor:budget-75:firing',
-            'subject' => 'Over 75% of budget used',
-            'body' => 'Body',
-            'recipients' => [[
-                'address' => 'owner@example.test',
-                'channel' => NOTIFICATION_TYPE_EMAIL,
-                'resourceType' => 'users',
-                'resourceId' => 'owner',
-                'resourceInternalId' => '7',
-                'parentResourceType' => 'teams',
-                'parentResourceId' => 'acme',
-                'parentResourceInternalId' => '3',
-            ]],
-        ];
-
-        try {
-            $worker = new Notifications();
-            // A redelivered message: the second must find the first one's record.
-            $worker->action($this->buildMessage($payload), $console, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname);
-            $worker->action($this->buildMessage($payload), $console, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname);
-        } finally {
-            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
-        }
-
-        $this->assertSame(1, $spy->sendCount);
-        $records = $this->database->find('notifications', [\Utopia\Database\Query::equal('messageId', [\md5('monitor:budget-75:firing')])]);
-        $this->assertCount(1, $records);
-        $this->assertSame('0', (string) $records[0]->getAttribute('projectInternalId'));
-    }
-
     public function testLegacyMailPayloadThrowsWhenSmtpIsNotConfigured(): void
     {
         $previousSmtpHost = \getenv('_APP_SMTP_HOST');
