@@ -40,6 +40,8 @@ class Get extends Action
                     )
                 ],
                 contentType: ContentType::JSON
-            ));
+            ))
+            ->inject('response')
+            ->inject('targetUser');
     }
 }
