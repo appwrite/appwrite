@@ -2,12 +2,15 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\Phone;
 
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
 use Utopia\Platform\Scope\HTTP;
 
 class Create extends Action
@@ -47,6 +50,22 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse-limit', 10)
-            ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}']);
+            ->label('abuse-key', ['url:{url},phone:{param-phone}', 'url:{url},ip:{ip}'])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the phone number has never been used, a new account is created using the provided userId. Otherwise, if the phone number is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
+            ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+            ->inject('request')
+            ->inject('response')
+            ->inject('project')
+            ->inject('platform')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('publisherForMessaging')
+            ->inject('locale')
+            ->inject('usage')
+            ->inject('plan')
+            ->inject('store')
+            ->inject('proofForCode')
+            ->inject('authorization')
+            ->inject('apiKey');
     }
 }
