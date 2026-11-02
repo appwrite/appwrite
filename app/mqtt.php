@@ -89,7 +89,7 @@ $container->set('getConsoleDB', fn () => function () use ($register, $container)
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->platform(metadata: [
+    return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->platform(APP_DATABASE_TIMEOUT_MILLISECONDS_API, metadata: [
         'host' => \gethostname(),
         'project' => '_console',
     ]);
@@ -117,7 +117,7 @@ $container->set('getProjectDB', fn () => function (Document $project) use ($regi
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->project($project, metadata: [
+    return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->project($project, APP_DATABASE_TIMEOUT_MILLISECONDS_API, metadata: [
         'host' => \gethostname(),
         'project' => $project->getId(),
     ]);
@@ -254,7 +254,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
         });
     });
 
-    $eventHandler = new EventHandler($server, $handler, $mqtt, \max(0.1, (float) System::getEnv('_APP_MQTT_PERMISSION_TIMEOUT', '5')));
+    // As long as an API request lets a query run, so verification gives up only after the query would.
+    $eventHandler = new EventHandler($server, $handler, $mqtt, APP_DATABASE_TIMEOUT_MILLISECONDS_API / 1000);
 
     go(function () use ($register, $eventHandler): void {
         $attempts = 0;
