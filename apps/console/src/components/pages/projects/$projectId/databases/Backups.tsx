@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { Link, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, BackupServices } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -46,6 +46,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ENVIRONMENT_BACKUPS_TOOLTIP } from './_components/DatabaseBackupsNavLink'
 import {
   Tooltip,
   TooltipContent,
@@ -87,7 +88,12 @@ import {
 } from '@/lib/databases/backup-policy-plan-limits'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { BackupsEmptyState } from './_components/BackupsEmptyState'
-import { resolveOrganizationPlanDisplayLabel } from '@/lib/utils/plan-filter'
+import {
+  isSelfServiceProPlan,
+  resolveOrganizationPlanDisplayLabel,
+} from '@/lib/utils/plan-filter'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { toByteCount } from '@/lib/utils/byte-display-unit'
 
 type BackupStatusVariant = 'completed' | 'failed' | 'pending' | 'processing'
@@ -150,8 +156,11 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   >([])
 
   // Get project to get teamId for organization plan
-  const { project } = useProject(projectId)
+  const { project, projectData } = useProject(projectId)
   const region = project?.region
+  // An environment is backed up with the project it belongs to: its backup
+  // routes refuse, so nothing is asked of them
+  const isEnvironment = !!projectData?.parentId
 
   // Get organization plan to check backups availability
   const { plan: organizationPlan, isLoading: planLoading } =
@@ -162,24 +171,26 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
     planName: organizationPlan?.name ?? null,
     planId: organizationPlan?.$id,
   })
+  // Custom backup policies are Enterprise only, so Upgrade can't help Pro.
+  const showContactSales = isSelfServiceProPlan(organizationPlan)
 
   // Fetch policies and archives - only if backups are enabled
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
     projectId,
     databaseId,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
   const { data: archivesData, isLoading: archivesLoading } = useBackupArchives(
     projectId,
     databaseId,
     backupsPage - 1,
     backupsPageSize,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
   const { data: restoreMigrations } = useDatabaseRestoreMigrations(
     projectId,
     databaseId,
-    { enabled: backupsEnabled, dbKind },
+    { enabled: backupsEnabled && !isEnvironment, dbKind },
   )
 
   const visibleRestorations = (() => {
@@ -544,6 +555,46 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
     setSelectedBackups(new Set()) // Clear selection on page size change
   }
 
+  if (isEnvironment) {
+    return (
+      <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Backups')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(ENVIRONMENT_BACKUPS_TOOLTIP)}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 min-h-[400px]">
+            <EmptyState
+              icon={Archive}
+              title={t('Backed up with the project')}
+              description={t(
+                'Backup policies and archives are managed on the project this environment belongs to.',
+              )}
+              isEmpty={true}
+              variant="centered"
+              iconSize="md"
+              action={
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    to="/projects/$projectId/databases"
+                    params={{ projectId: projectData.parentId as string }}
+                  >
+                    {t('Open the project')}
+                  </Link>
+                </Button>
+              }
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (isBackupsDisabled) {
     return (
       <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
@@ -613,6 +664,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
           resourceName="backup policies"
           orgId={project?.teamId}
           fullWidth
+          salesSource={showContactSales ? 'backups' : undefined}
         />
       ) : null}
       <div
@@ -1103,6 +1155,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
         databaseId={databaseId}
         existingPoliciesCount={policies.length}
         backupPoliciesLimit={backupPoliciesLimit}
+        orgId={project?.teamId}
+        showContactSales={showContactSales}
       />
 
       {/* Create Manual Backup Dialog */}
@@ -1177,6 +1231,9 @@ interface CreatePolicyDialogProps {
   databaseId: string
   existingPoliciesCount: number
   backupPoliciesLimit: number
+  orgId: string | undefined
+  /** Point plans without custom policies at sales instead of Upgrade. */
+  showContactSales: boolean
 }
 
 function CreatePolicyDialog({
@@ -1186,7 +1243,9 @@ function CreatePolicyDialog({
   isLoading,
   databaseId,
   existingPoliciesCount,
-  backupPoliciesLimit}: CreatePolicyDialogProps) {
+  backupPoliciesLimit,
+  orgId,
+  showContactSales}: CreatePolicyDialogProps) {
   const t = useT()
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
   const [customPolicies, setCustomPolicies] = useState<
@@ -1315,9 +1374,25 @@ function CreatePolicyDialog({
         <DialogHeader className="px-6 pt-6 text-start">
           <DialogTitle>{t('Create backup policy')}</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            {supportsCustomPolicies
-              ? t('Choose preset policies or create custom backup schedules.')
-              : t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')}
+            {supportsCustomPolicies ? (
+              t('Choose preset policies or create custom backup schedules.')
+            ) : showContactSales ? (
+              <>
+                <EnterpriseBadge />
+                {t(
+                  'Your plan includes the daily backup policy. Custom schedules and retention are available on Enterprise.',
+                )}{' '}
+                <ContactSalesLink
+                  source="backups"
+                  orgId={orgId}
+                  className="font-medium text-foreground underline hover:no-underline"
+                >
+                  {t('Contact sales')}
+                </ContactSalesLink>
+              </>
+            ) : (
+              t('Your plan only supports the daily preset policy. Upgrade to create custom policies.')
+            )}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />

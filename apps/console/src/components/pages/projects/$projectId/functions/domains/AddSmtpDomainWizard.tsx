@@ -151,9 +151,6 @@ export function AddSmtpDomainWizard() {
         rule.$id,
       )) as SmtpProxyRule
       if (updated.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
         toast.success(t('Email domain verified'))
         leave()
       } else {

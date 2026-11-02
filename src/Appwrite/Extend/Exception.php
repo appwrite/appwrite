@@ -328,6 +328,11 @@ class Exception extends \Exception
     public const string PROJECT_INVALID_FAILURE_URL = 'project_invalid_failure_url';
     public const string PROJECT_RESERVED_PROJECT = 'project_reserved_project';
     public const string PROJECT_KEY_EXPIRED = 'project_key_expired';
+    public const string TRANSFER_NOT_FOUND = 'transfer_not_found';
+    public const string TRANSFER_INVALID_SECRET = 'transfer_invalid_secret';
+    public const string TRANSFER_EXPIRED = 'transfer_expired';
+    public const string TRANSFER_RECIPIENT_MISMATCH = 'transfer_recipient_mismatch';
+    public const string TRANSFER_ALREADY_OWNED = 'transfer_already_owned';
     public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
@@ -340,6 +345,16 @@ class Exception extends \Exception
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
     public const string WEBHOOK_DELIVERY_FAILED = 'webhook_delivery_failed';
+
+    /** Monitors */
+    public const string MONITOR_NOT_FOUND = 'monitor_not_found';
+    public const string MONITOR_ALREADY_EXISTS = 'monitor_already_exists';
+    public const string MONITOR_RULES_INVALID = 'monitor_rules_invalid';
+    public const string MONITOR_TYPE_MISMATCH = 'monitor_type_mismatch';
+    public const string MONITOR_RESOURCE_NOT_FOUND = 'monitor_resource_not_found';
+
+    /** Alerts */
+    public const string ALERT_NOT_FOUND = 'alert_not_found';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';

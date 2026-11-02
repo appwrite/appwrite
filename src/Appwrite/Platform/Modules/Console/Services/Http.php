@@ -2,6 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Console\Services;
 
+use Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe\Create as CreateAlertsUnsubscribe;
+use Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe\Delete as DeleteAlertsUnsubscribe;
+use Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe\Get as GetAlertsUnsubscribe;
 use Appwrite\Platform\Modules\Console\Http\Init\API;
 use Appwrite\Platform\Modules\Console\Http\Init\Web;
 use Appwrite\Platform\Modules\Console\Http\OAuth2Providers\XList as ListOAuth2Providers;
@@ -26,23 +29,28 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // API and Web init hooks!
-        $this->addAction(API::getName(), new API());
-        $this->addAction(Web::getName(), new Web());
+        $this->addAction(API::getName(), API::class);
+        $this->addAction(Web::getName(), Web::class);
 
-        $this->addAction(GetVariables::getName(), new GetVariables());
-        $this->addAction(GetEmailTemplate::getName(), new GetEmailTemplate());
-        $this->addAction(ListOAuth2Providers::getName(), new ListOAuth2Providers());
-        $this->addAction(ListKeyScopes::getName(), new ListKeyScopes());
-        $this->addAction(ListOrganizationScopes::getName(), new ListOrganizationScopes());
-        $this->addAction(GetResourceAvailability::getName(), new GetResourceAvailability());
+        $this->addAction(GetVariables::getName(), GetVariables::class);
+        $this->addAction(GetEmailTemplate::getName(), GetEmailTemplate::class);
+        $this->addAction(ListOAuth2Providers::getName(), ListOAuth2Providers::class);
+        $this->addAction(ListKeyScopes::getName(), ListKeyScopes::class);
+        $this->addAction(ListOrganizationScopes::getName(), ListOrganizationScopes::class);
+        $this->addAction(GetResourceAvailability::getName(), GetResourceAvailability::class);
+
+        // Alert email unsubscribe links, which carry a signed token instead of a session
+        $this->addAction(GetAlertsUnsubscribe::getName(), GetAlertsUnsubscribe::class);
+        $this->addAction(CreateAlertsUnsubscribe::getName(), CreateAlertsUnsubscribe::class);
+        $this->addAction(DeleteAlertsUnsubscribe::getName(), DeleteAlertsUnsubscribe::class);
 
         // web redirects to the console
-        $this->addAction(RedirectRoot::getName(), new RedirectRoot());
-        $this->addAction(RedirectAuth::getName(), new RedirectAuth());
-        $this->addAction(RedirectInvite::getName(), new RedirectInvite());
-        $this->addAction(RedirectLogin::getName(), new RedirectLogin());
-        $this->addAction(RedirectMFA::getName(), new RedirectMFA());
-        $this->addAction(RedirectRecover::getName(), new RedirectRecover());
-        $this->addAction(RedirectRegister::getName(), new RedirectRegister());
+        $this->addAction(RedirectRoot::getName(), RedirectRoot::class);
+        $this->addAction(RedirectAuth::getName(), RedirectAuth::class);
+        $this->addAction(RedirectInvite::getName(), RedirectInvite::class);
+        $this->addAction(RedirectLogin::getName(), RedirectLogin::class);
+        $this->addAction(RedirectMFA::getName(), RedirectMFA::class);
+        $this->addAction(RedirectRecover::getName(), RedirectRecover::class);
+        $this->addAction(RedirectRegister::getName(), RedirectRegister::class);
     }
 }

@@ -43,7 +43,7 @@ class Connection
     /** Set once the broker dropped the connection, so a callback resuming after a yield can tell it is gone. */
     public bool $closed = false;
 
-    /** CONNECT keep-alive interval in seconds; 0 disables keep-alive (the client is never reaped). */
+    /** Keep-alive interval in seconds the broker enforces (the client's, capped by the server); 0 disables keep-alive (the client is never reaped). */
     public int $keepAlive = 0;
 
     /** Absolute unix deadline (fractional seconds) past which a silent client is reaped; 0 while disabled. */

@@ -48,6 +48,15 @@ final class URLTest extends TestCase
         $this->assertTrue($this->url->isValid('https://example.com/callback#fragment'));
     }
 
+    public function testIsValidNonAscii(): void
+    {
+        $url = new URL();
+        $this->assertTrue($url->isValid('https://example.com/čšž'));
+        $this->assertTrue($url->isValid('https://example.com/?q=日本'));
+        $this->assertFalse($url->isValid('https://example.com/č š'));
+        $this->assertFalse($url->isValid('example.com/čšž'));
+    }
+
     public function testIsValidAllowedSchemes(): void
     {
         $this->url = new URL(['http', 'https']);

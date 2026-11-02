@@ -3419,6 +3419,108 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $user['headers']['status-code']);
     }
 
+    public function testEventTriggerPreservesEmptyPreferences(): void
+    {
+        $userId = ID::unique();
+        $functionId = $this->setupDeployedFunction('User deletion event', 'event-handler', [
+            'events' => ['users.' . $userId . '.delete'],
+        ]);
+
+        try {
+            /**
+             * Test for SUCCESS
+             */
+            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'name' => 'User without preferences',
+            ]);
+            $this->assertEquals(201, $user['headers']['status-code']);
+
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+
+            $this->assertEventually(function () use ($functionId, $userId) {
+                $executions = $this->listExecutions($functionId);
+                $this->assertEquals(200, $executions['headers']['status-code']);
+                $this->assertNotEmpty($executions['body']['executions']);
+                $execution = $executions['body']['executions'][0];
+                $this->assertEquals('completed', $execution['status']);
+                $this->assertStringContainsString($userId, (string) $execution['logs']);
+                $this->assertStringContainsString('"prefs":{}', (string) $execution['logs']);
+                $this->assertStringNotContainsString('"prefs":[]', (string) $execution['logs']);
+            }, 20000, 500);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
+    public function testScopesWithinKey(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['functions.read', 'functions.write', 'users.read']),
+        ];
+        $params = [
+            'name' => 'Scopes within key',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            ...$params,
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $function['headers']['status-code']);
+        $this->assertSame(['users.read'], $function['body']['scopes']);
+
+        $functionId = $function['body']['$id'];
+
+        $function = $this->updateFunction($functionId, [...$params, 'scopes' => ['users.read', 'users.write']]);
+        $this->assertSame(200, $function['headers']['status-code']);
+
+        // Scopes the function already has are kept by a key that lacks them
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            ...$params,
+            'scopes' => ['users.read', 'users.write'],
+        ]);
+        $this->assertSame(200, $function['headers']['status-code']);
+        $this->assertSame(['users.read', 'users.write'], $function['body']['scopes']);
+
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            ...$params,
+            'scopes' => ['users.read', 'databases.write'],
+        ]);
+        $this->assertSame(401, $function['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $function['body']['type']);
+
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId, $headers, [
+            ...$params,
+            'scopes' => ['users.read', 'users.write', 'databases.write'],
+        ]);
+        $this->assertSame(401, $function['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $function['body']['type']);
+
+        $function = $this->getFunction($functionId);
+        $this->assertSame(['users.read', 'users.write'], $function['body']['scopes']);
+
+        $this->cleanupFunction($functionId);
+    }
+
     public function testScopes()
     {
         $functionId = $this->setupFunction([

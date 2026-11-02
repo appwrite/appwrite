@@ -59,59 +59,59 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Providers
-        $this->addAction(CreateMailgunProvider::getName(), new CreateMailgunProvider());
-        $this->addAction(UpdateMailgunProvider::getName(), new UpdateMailgunProvider());
-        $this->addAction(CreateSendgridProvider::getName(), new CreateSendgridProvider());
-        $this->addAction(UpdateSendgridProvider::getName(), new UpdateSendgridProvider());
-        $this->addAction(CreateSesProvider::getName(), new CreateSesProvider());
-        $this->addAction(UpdateSesProvider::getName(), new UpdateSesProvider());
-        $this->addAction(CreateResendProvider::getName(), new CreateResendProvider());
-        $this->addAction(UpdateResendProvider::getName(), new UpdateResendProvider());
-        $this->addAction(CreateSmtpProvider::getName(), new CreateSmtpProvider());
-        $this->addAction(UpdateSmtpProvider::getName(), new UpdateSmtpProvider());
-        $this->addAction(CreateMsg91Provider::getName(), new CreateMsg91Provider());
-        $this->addAction(UpdateMsg91Provider::getName(), new UpdateMsg91Provider());
-        $this->addAction(CreateTelesignProvider::getName(), new CreateTelesignProvider());
-        $this->addAction(UpdateTelesignProvider::getName(), new UpdateTelesignProvider());
-        $this->addAction(CreateTextmagicProvider::getName(), new CreateTextmagicProvider());
-        $this->addAction(UpdateTextmagicProvider::getName(), new UpdateTextmagicProvider());
-        $this->addAction(CreateTwilioProvider::getName(), new CreateTwilioProvider());
-        $this->addAction(UpdateTwilioProvider::getName(), new UpdateTwilioProvider());
-        $this->addAction(CreateVonageProvider::getName(), new CreateVonageProvider());
-        $this->addAction(UpdateVonageProvider::getName(), new UpdateVonageProvider());
-        $this->addAction(CreateFcmProvider::getName(), new CreateFcmProvider());
-        $this->addAction(UpdateFcmProvider::getName(), new UpdateFcmProvider());
-        $this->addAction(CreateApnsProvider::getName(), new CreateApnsProvider());
-        $this->addAction(UpdateApnsProvider::getName(), new UpdateApnsProvider());
-        $this->addAction(CreateAppwriteProvider::getName(), new CreateAppwriteProvider());
-        $this->addAction(UpdateAppwriteProvider::getName(), new UpdateAppwriteProvider());
-        $this->addAction(ListProviders::getName(), new ListProviders());
-        $this->addAction(GetProvider::getName(), new GetProvider());
-        $this->addAction(DeleteProvider::getName(), new DeleteProvider());
+        $this->addAction(CreateMailgunProvider::getName(), CreateMailgunProvider::class);
+        $this->addAction(UpdateMailgunProvider::getName(), UpdateMailgunProvider::class);
+        $this->addAction(CreateSendgridProvider::getName(), CreateSendgridProvider::class);
+        $this->addAction(UpdateSendgridProvider::getName(), UpdateSendgridProvider::class);
+        $this->addAction(CreateSesProvider::getName(), CreateSesProvider::class);
+        $this->addAction(UpdateSesProvider::getName(), UpdateSesProvider::class);
+        $this->addAction(CreateResendProvider::getName(), CreateResendProvider::class);
+        $this->addAction(UpdateResendProvider::getName(), UpdateResendProvider::class);
+        $this->addAction(CreateSmtpProvider::getName(), CreateSmtpProvider::class);
+        $this->addAction(UpdateSmtpProvider::getName(), UpdateSmtpProvider::class);
+        $this->addAction(CreateMsg91Provider::getName(), CreateMsg91Provider::class);
+        $this->addAction(UpdateMsg91Provider::getName(), UpdateMsg91Provider::class);
+        $this->addAction(CreateTelesignProvider::getName(), CreateTelesignProvider::class);
+        $this->addAction(UpdateTelesignProvider::getName(), UpdateTelesignProvider::class);
+        $this->addAction(CreateTextmagicProvider::getName(), CreateTextmagicProvider::class);
+        $this->addAction(UpdateTextmagicProvider::getName(), UpdateTextmagicProvider::class);
+        $this->addAction(CreateTwilioProvider::getName(), CreateTwilioProvider::class);
+        $this->addAction(UpdateTwilioProvider::getName(), UpdateTwilioProvider::class);
+        $this->addAction(CreateVonageProvider::getName(), CreateVonageProvider::class);
+        $this->addAction(UpdateVonageProvider::getName(), UpdateVonageProvider::class);
+        $this->addAction(CreateFcmProvider::getName(), CreateFcmProvider::class);
+        $this->addAction(UpdateFcmProvider::getName(), UpdateFcmProvider::class);
+        $this->addAction(CreateApnsProvider::getName(), CreateApnsProvider::class);
+        $this->addAction(UpdateApnsProvider::getName(), UpdateApnsProvider::class);
+        $this->addAction(CreateAppwriteProvider::getName(), CreateAppwriteProvider::class);
+        $this->addAction(UpdateAppwriteProvider::getName(), UpdateAppwriteProvider::class);
+        $this->addAction(ListProviders::getName(), ListProviders::class);
+        $this->addAction(GetProvider::getName(), GetProvider::class);
+        $this->addAction(DeleteProvider::getName(), DeleteProvider::class);
 
         // Topics
-        $this->addAction(CreateTopic::getName(), new CreateTopic());
-        $this->addAction(ListTopics::getName(), new ListTopics());
-        $this->addAction(GetTopic::getName(), new GetTopic());
-        $this->addAction(UpdateTopic::getName(), new UpdateTopic());
-        $this->addAction(DeleteTopic::getName(), new DeleteTopic());
+        $this->addAction(CreateTopic::getName(), CreateTopic::class);
+        $this->addAction(ListTopics::getName(), ListTopics::class);
+        $this->addAction(GetTopic::getName(), GetTopic::class);
+        $this->addAction(UpdateTopic::getName(), UpdateTopic::class);
+        $this->addAction(DeleteTopic::getName(), DeleteTopic::class);
 
         // Subscribers
-        $this->addAction(CreateSubscriber::getName(), new CreateSubscriber());
-        $this->addAction(ListSubscribers::getName(), new ListSubscribers());
-        $this->addAction(GetSubscriber::getName(), new GetSubscriber());
-        $this->addAction(DeleteSubscriber::getName(), new DeleteSubscriber());
+        $this->addAction(CreateSubscriber::getName(), CreateSubscriber::class);
+        $this->addAction(ListSubscribers::getName(), ListSubscribers::class);
+        $this->addAction(GetSubscriber::getName(), GetSubscriber::class);
+        $this->addAction(DeleteSubscriber::getName(), DeleteSubscriber::class);
 
         // Messages
-        $this->addAction(CreateEmail::getName(), new CreateEmail());
-        $this->addAction(CreateSms::getName(), new CreateSms());
-        $this->addAction(CreatePush::getName(), new CreatePush());
-        $this->addAction(ListMessages::getName(), new ListMessages());
-        $this->addAction(ListTargets::getName(), new ListTargets());
-        $this->addAction(GetMessage::getName(), new GetMessage());
-        $this->addAction(UpdateEmail::getName(), new UpdateEmail());
-        $this->addAction(UpdateSms::getName(), new UpdateSms());
-        $this->addAction(UpdatePush::getName(), new UpdatePush());
-        $this->addAction(DeleteMessage::getName(), new DeleteMessage());
+        $this->addAction(CreateEmail::getName(), CreateEmail::class);
+        $this->addAction(CreateSms::getName(), CreateSms::class);
+        $this->addAction(CreatePush::getName(), CreatePush::class);
+        $this->addAction(ListMessages::getName(), ListMessages::class);
+        $this->addAction(ListTargets::getName(), ListTargets::class);
+        $this->addAction(GetMessage::getName(), GetMessage::class);
+        $this->addAction(UpdateEmail::getName(), UpdateEmail::class);
+        $this->addAction(UpdateSms::getName(), UpdateSms::class);
+        $this->addAction(UpdatePush::getName(), UpdatePush::class);
+        $this->addAction(DeleteMessage::getName(), DeleteMessage::class);
     }
 }

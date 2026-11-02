@@ -6,6 +6,7 @@ use Appwrite\AppwriteException;
 use Appwrite\Enums\ProjectAuthMethodId;
 use Appwrite\Enums\ProjectPolicyId;
 use Appwrite\Enums\ProjectProtocolId;
+use Appwrite\Models\PolicyDenyRealtimeGuests;
 use Appwrite\Models\PolicyPasskey;
 use Appwrite\Models\PolicyPasswordPwned;
 use Appwrite\Models\PolicyPasswordRotation;
@@ -829,6 +830,7 @@ class Appwrite extends Source
         $passwordPwned = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDPWNED());
         $passwordRotation = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDROTATION());
         $passkey = $this->getPolicyIfSupported(ProjectPolicyId::PASSKEY());
+        $denyRealtimeGuests = $this->getPolicyIfSupported(ProjectPolicyId::DENYREALTIMEGUESTS());
 
         $policies = new Policies(
             $this->projectId,
@@ -873,6 +875,7 @@ class Appwrite extends Source
                 'maxAge' => $passwordRotation->maxAge,
             ],
             passkeyRpId: $passkey instanceof PolicyPasskey ? $passkey->rpId : null,
+            denyRealtimeGuests: $denyRealtimeGuests instanceof PolicyDenyRealtimeGuests ? $denyRealtimeGuests->enabled : null,
         );
 
         $this->callback([$policies]);
@@ -1468,12 +1471,13 @@ class Appwrite extends Source
             /** @var Table $table */
             $lastRow = null;
             $iterationCount = 0;
+            $limit = $batchSize;
 
             while (true) {
                 $iterationCount++;
 
                 $queries = [
-                    $this->reader->queryLimit($batchSize),
+                    $this->reader->queryLimit($limit),
                     ...$this->queries,
                 ];
 
@@ -1504,7 +1508,18 @@ class Appwrite extends Source
 
                 $queries[] = $this->reader->querySelect($selects);
 
-                $response = $this->reader->listRows($table, $queries);
+                try {
+                    $response = $this->reader->listRows($table, $queries);
+                } catch (AppwriteException $error) {
+                    // A page of large rows can decode past the response size cap
+                    if ($error->getCode() !== \CURLE_FILESIZE_EXCEEDED || $limit === 1) {
+                        throw $error;
+                    }
+
+                    $limit = \intdiv($limit, 2);
+
+                    continue;
+                }
 
                 foreach ($response as $row) {
                     // HACK: Handle many to many (only for schema-based databases)
@@ -1567,7 +1582,7 @@ class Appwrite extends Source
 
                 $this->callback($rows);
 
-                if (count($response) < $batchSize) {
+                if (count($response) < $limit) {
                     break;
                 }
             }
@@ -2469,8 +2484,25 @@ class Appwrite extends Source
             $responseHeaders
         );
 
-        // content-length header missing, file is less than max buffer size
-        if (!array_key_exists('content-length', $responseHeaders)) {
+        // Archives past the server's read buffer stream without content-length
+        $fileSize = (int) ($responseHeaders['content-length'] ?? $deployment->sourceSize);
+
+        // Deployments that recorded no size report it in a ranged response
+        if (!array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
+            $rangeHeaders = [];
+
+            $this->call(
+                'GET',
+                "/functions/{$func->getId()}/deployments/{$deployment->id}/download",
+                ['range' => 'bytes=0-0'],
+                [],
+                $rangeHeaders
+            );
+
+            $fileSize = (int) (\explode('/', $rangeHeaders['content-range'] ?? '', 2)[1] ?? 0);
+        }
+
+        if (!array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
             $file = $this->call(
                 'GET',
                 "/functions/{$func->getId()}/deployments/{$deployment->id}/download",
@@ -2501,8 +2533,6 @@ class Appwrite extends Source
 
             return;
         }
-
-        $fileSize = (int) $responseHeaders['content-length'];
 
         if ($end >= $fileSize) {
             $end = $fileSize - 1;
@@ -3059,7 +3089,25 @@ class Appwrite extends Source
             $responseHeaders
         );
 
-        if (!\array_key_exists('content-length', $responseHeaders)) {
+        // Archives past the server's read buffer stream without content-length
+        $fileSize = (int) ($responseHeaders['content-length'] ?? $deployment->sourceSize);
+
+        // Deployments that recorded no size report it in a ranged response
+        if (!\array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
+            $rangeHeaders = [];
+
+            $this->call(
+                'GET',
+                "/sites/{$site->getId()}/deployments/{$deployment->id}/download",
+                ['range' => 'bytes=0-0'],
+                [],
+                $rangeHeaders
+            );
+
+            $fileSize = (int) (\explode('/', $rangeHeaders['content-range'] ?? '', 2)[1] ?? 0);
+        }
+
+        if (!\array_key_exists('content-length', $responseHeaders) && $fileSize === 0) {
             $file = $this->call(
                 'GET',
                 "/sites/{$site->getId()}/deployments/{$deployment->id}/download",
@@ -3089,8 +3137,6 @@ class Appwrite extends Source
 
             return;
         }
-
-        $fileSize = (int) $responseHeaders['content-length'];
 
         if ($end >= $fileSize) {
             $end = $fileSize - 1;

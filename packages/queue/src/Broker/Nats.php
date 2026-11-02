@@ -1646,6 +1646,32 @@ class Nats implements Synchronous, Consumer, Bounded
     }
 
     /**
+     * The first message past what the consumer has delivered is the oldest still waiting. One that cannot be read,
+     * or that was removed since the consumer was read, reads as 0.
+     */
+    public function getQueueAge(Queue $queue): int
+    {
+        $stream = $this->workStream($queue);
+
+        return $this->count(function () use ($stream): int {
+            $info = $this->commandsConsumer($stream)->info(true);
+            if ($info->numPending === 0) {
+                return 0;
+            }
+
+            $stored = $this->commandsJs()->getMessage($stream, $info->delivered->streamSeq + 1);
+
+            try {
+                $envelope = $this->codec->decode($stored->data);
+            } catch (\Throwable) {
+                return 0;
+            }
+
+            return \is_array($envelope) && \is_numeric($envelope['timestamp'] ?? null) ? \max(0, \time() - (int) $envelope['timestamp']) : 0;
+        });
+    }
+
+    /**
      * The dead stream, which is where every failure this broker keeps ends up: a
      * terminal reject and an exhausted one are copied to the same place.
      */

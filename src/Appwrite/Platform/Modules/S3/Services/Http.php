@@ -16,11 +16,11 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(Init::getName(), new Init());
-        $this->addAction(Get::getName(), new Get());
-        $this->addAction(Create::getName(), new Create());
-        $this->addAction(Delete::getName(), new Delete());
-        $this->addAction(ShutdownEvents::getName(), new ShutdownEvents());
-        $this->addAction(ShutdownUsage::getName(), new ShutdownUsage());
+        $this->addAction(Init::getName(), Init::class);
+        $this->addAction(Get::getName(), Get::class);
+        $this->addAction(Create::getName(), Create::class);
+        $this->addAction(Delete::getName(), Delete::class);
+        $this->addAction(ShutdownEvents::getName(), ShutdownEvents::class);
+        $this->addAction(ShutdownUsage::getName(), ShutdownUsage::class);
     }
 }

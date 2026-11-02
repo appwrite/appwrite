@@ -18,16 +18,16 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
-        $this->addAction(CreateProject::getName(), new CreateProject());
-        $this->addAction(UpdateProject::getName(), new UpdateProject());
-        $this->addAction(ListProjects::getName(), new ListProjects());
-        $this->addAction(UpdateProjectTeam::getName(), new UpdateProjectTeam());
+        $this->addAction(CreateProject::getName(), CreateProject::class);
+        $this->addAction(UpdateProject::getName(), UpdateProject::class);
+        $this->addAction(ListProjects::getName(), ListProjects::class);
+        $this->addAction(UpdateProjectTeam::getName(), UpdateProjectTeam::class);
 
-        $this->addAction(CreateSchedule::getName(), new CreateSchedule());
-        $this->addAction(GetSchedule::getName(), new GetSchedule());
-        $this->addAction(ListSchedules::getName(), new ListSchedules());
+        $this->addAction(CreateSchedule::getName(), CreateSchedule::class);
+        $this->addAction(GetSchedule::getName(), GetSchedule::class);
+        $this->addAction(ListSchedules::getName(), ListSchedules::class);
 
-        $this->addAction(ListStages::getName(), new ListStages());
-        $this->addAction(UpdateStages::getName(), new UpdateStages());
+        $this->addAction(ListStages::getName(), ListStages::class);
+        $this->addAction(UpdateStages::getName(), UpdateStages::class);
     }
 }

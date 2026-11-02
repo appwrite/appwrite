@@ -25,21 +25,21 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Buckets
-        $this->addAction(CreateBucket::getName(), new CreateBucket());
-        $this->addAction(GetBucket::getName(), new GetBucket());
-        $this->addAction(ListBuckets::getName(), new ListBuckets());
-        $this->addAction(UpdateBucket::getName(), new UpdateBucket());
-        $this->addAction(DeleteBucket::getName(), new DeleteBucket());
+        $this->addAction(CreateBucket::getName(), CreateBucket::class);
+        $this->addAction(GetBucket::getName(), GetBucket::class);
+        $this->addAction(ListBuckets::getName(), ListBuckets::class);
+        $this->addAction(UpdateBucket::getName(), UpdateBucket::class);
+        $this->addAction(DeleteBucket::getName(), DeleteBucket::class);
 
         // Files
-        $this->addAction(CreateFile::getName(), new CreateFile());
-        $this->addAction(GetFile::getName(), new GetFile());
-        $this->addAction(ListFiles::getName(), new ListFiles());
-        $this->addAction(UpdateFile::getName(), new UpdateFile());
-        $this->addAction(DeleteFile::getName(), new DeleteFile());
-        $this->addAction(GetFilePreview::getName(), new GetFilePreview());
-        $this->addAction(GetFileDownload::getName(), new GetFileDownload());
-        $this->addAction(GetFileView::getName(), new GetFileView());
-        $this->addAction(GetFileForPush::getName(), new GetFileForPush());
+        $this->addAction(CreateFile::getName(), CreateFile::class);
+        $this->addAction(GetFile::getName(), GetFile::class);
+        $this->addAction(ListFiles::getName(), ListFiles::class);
+        $this->addAction(UpdateFile::getName(), UpdateFile::class);
+        $this->addAction(DeleteFile::getName(), DeleteFile::class);
+        $this->addAction(GetFilePreview::getName(), GetFilePreview::class);
+        $this->addAction(GetFileDownload::getName(), GetFileDownload::class);
+        $this->addAction(GetFileView::getName(), GetFileView::class);
+        $this->addAction(GetFileForPush::getName(), GetFileForPush::class);
     }
 }

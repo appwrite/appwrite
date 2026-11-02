@@ -4,12 +4,14 @@ namespace Appwrite\Platform;
 
 use Appwrite\Platform\Modules\Account;
 use Appwrite\Platform\Modules\Advisor;
+use Appwrite\Platform\Modules\Alerts;
 use Appwrite\Platform\Modules\Avatars;
 use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
 use Appwrite\Platform\Modules\Health;
+use Appwrite\Platform\Modules\Locale;
 use Appwrite\Platform\Modules\Messaging;
 use Appwrite\Platform\Modules\Migrations;
 use Appwrite\Platform\Modules\Notifications;
@@ -41,6 +43,7 @@ class Appwrite extends Platform
         $this->addModule(new Presences\Module());
         $this->addModule(new Functions\Module());
         $this->addModule(new Health\Module());
+        $this->addModule(new Locale\Module());
         $this->addModule(new Messaging\Module());
         $this->addModule(new Notifications\Module());
         $this->addModule(new Sites\Module());
@@ -58,5 +61,6 @@ class Appwrite extends Platform
         $this->addModule(new Organization\Module());
         $this->addModule(new Project\Module());
         $this->addModule(new Advisor\Module());
+        $this->addModule(new Alerts\Module());
     }
 }

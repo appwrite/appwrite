@@ -1,3 +1,4 @@
+import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
 import type { Models } from '@appwrite.io/console'
@@ -93,6 +94,7 @@ function inferAccordionCategoryFromScopeId(scopeId: string): string {
   }
   if (/^advisor\./.test(id)) return 'Advisor'
   if (/^proxy\./.test(id)) return 'Proxy'
+  if (/^analytics\./.test(id)) return 'Analytics'
   if (/^organization\./.test(id)) return 'Organization'
   if (/^agent\./.test(id)) return 'Agent'
   return 'General'
@@ -126,6 +128,7 @@ const KNOWN_CATEGORY_ORDER = [
   'Advisor',
   'Agent',
   'Proxy',
+  'Analytics',
   'General',
 ]
 
@@ -215,6 +218,9 @@ export function getScopeCategoryIcon(
   if (c.includes('proxy')) {
     return Network
   }
+  if (c.includes('analytics')) {
+    return ANALYTICS_PRODUCT_ICON
+  }
   const id = scopeId?.toLowerCase() ?? ''
   if (id) {
     if (/^(users|teams|sessions)\./.test(id)) return Users
@@ -246,6 +252,7 @@ export function getScopeCategoryIcon(
     if (/^apps\./.test(id)) return Plug2
     if (/^advisor\./.test(id)) return ScanSearch
     if (/^proxy\./.test(id)) return Network
+    if (/^analytics\./.test(id)) return ANALYTICS_PRODUCT_ICON
     if (/^organization\./.test(id)) return Building2
     if (/^agent\./.test(id)) return Bot
   }

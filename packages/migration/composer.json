@@ -32,7 +32,7 @@
         "php": ">=8.5",
         "ext-curl": "*",
         "ext-openssl": "*",
-        "appwrite/appwrite": "^32.0.0",
+        "appwrite/appwrite": "^32.1.0",
         "utopia-php/database": "^8.3.4",
         "utopia-php/storage": "4.*",
         "halaxa/json-machine": "^1.2",

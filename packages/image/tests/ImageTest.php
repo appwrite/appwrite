@@ -6,6 +6,7 @@ namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 
 final class ImageTest extends TestCase
@@ -78,6 +79,7 @@ final class ImageTest extends TestCase
     #[DataProvider('unsupportedFormatProvider')]
     public function testRejectsFormatsOutsideTheAllowList(string $data): void
     {
+        $this->expectException(UnsupportedFormatException::class);
         $this->expectExceptionMessage('Unsupported image format');
 
         new Image($data);

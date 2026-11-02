@@ -18,6 +18,7 @@ use Utopia\Auth\Store;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -114,6 +115,10 @@ class Authentication extends Action
         if ($impersonatedUserId !== null) {
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an impersonated connection.');
         }
+        // Its authorization holds the admin roles, which no project session may keep.
+        if (isset($realtime->connections[$connectionId]['admin'])) {
+            throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Cannot re-authenticate on an admin-mode connection.');
+        }
         // The lookups above can yield; onClose drops the entry first, so a closed socket is never counted.
         if (!isset($realtime->connections[$connectionId])) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Connection is closed.');
@@ -163,7 +168,8 @@ class Authentication extends Action
         $eventTailRegistry->revalidateConnection($connectionId, $roles);
 
         if ($authorization !== null) {
-            $realtime->connections[$connectionId]['authorization'] = $authorization;
+            // Fresh, as for any session connection: the previous identity's roles must not carry over.
+            $realtime->connections[$connectionId]['authorization'] = new Authorization();
             $realtime->connections[$connectionId]['impersonatedUserId'] = $impersonatedUserId;
             $realtime->connections[$connectionId]['sessionId'] = $sessionId;
             $realtime->connections[$connectionId]['expire'] = $user->getSessionExpiry($sessionId);

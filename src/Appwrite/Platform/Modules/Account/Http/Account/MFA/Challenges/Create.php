@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\OTPToken;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -351,6 +352,7 @@ class Create extends Action
                     variables: $emailVariables,
                     customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                     platform: $platform,
+                    headers: OTPToken::from($code, $request->getOrigin())?->toHeaders() ?? [],
                 );
                 break;
         }

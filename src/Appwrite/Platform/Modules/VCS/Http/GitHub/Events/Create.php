@@ -199,12 +199,12 @@ class Create extends Action
     }
 
     /**
-     * Repositories with this provider repository id that are connected through an installation of this provider.
+     * Repositories with this provider repository id that are connected through the event's installation.
      *
      * @param array<Query> $queries
      * @return array<Document>
      */
-    private function findRepositories(string $providerRepositoryId, array $queries, Database $dbForPlatform, Authorization $authorization): array
+    private function findRepositories(string $providerRepositoryId, string $providerInstallationId, array $queries, Database $dbForPlatform, Authorization $authorization): array
     {
         $found = [];
         $cursor = null;
@@ -221,6 +221,7 @@ class Create extends Action
             $installations = empty($installationIds) ? [] : $authorization->skip(fn () => $dbForPlatform->find('installations', [
                 Query::equal('$id', $installationIds),
                 Query::equal('provider', ['github']),
+                Query::equal('providerInstallationId', [$providerInstallationId]),
                 Query::limit(\count($installationIds)),
             ]));
             $installationIds = \array_map(fn (Document $installation) => $installation->getId(), $installations);
@@ -286,7 +287,7 @@ class Create extends Action
         Span::add('vcs.github.event.installation.id', $providerInstallationId);
 
         // Find associated repositories
-        $repositories = $this->findRepositories($providerRepositoryId, [], $dbForPlatform, $authorization);
+        $repositories = $this->findRepositories($providerRepositoryId, $providerInstallationId, [], $dbForPlatform, $authorization);
 
         // Only the region hosting a linked project acts on the event, so every other region skips building the adapter.
         $isLinked = \array_any($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
@@ -346,7 +347,7 @@ class Create extends Action
                 return;
             }
 
-            $repositories = $this->findRepositories($providerRepositoryId, [Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
+            $repositories = $this->findRepositories($providerRepositoryId, $providerInstallationId, [Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
 
             // Only the region hosting a linked project acts on the event, so every other region skips the GitHub calls below.
             $isLinked = \array_any($repositories, function (Document $repository) use ($dbForPlatform, $authorization) {
@@ -390,11 +391,12 @@ class Create extends Action
             // Allowed external contributions cleanup
 
             $providerRepositoryId = $parsedPayload["repositoryId"] ?? '';
+            $providerInstallationId = $parsedPayload["installationId"] ?? '';
             $providerPullRequestId = $parsedPayload["pullRequestNumber"] ?? '';
             $external = $parsedPayload["external"] ?? true;
 
             if ($external) {
-                $repositories = $this->findRepositories($providerRepositoryId, [Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
+                $repositories = $this->findRepositories($providerRepositoryId, $providerInstallationId, [Query::orderDesc('$createdAt')], $dbForPlatform, $authorization);
 
                 foreach ($repositories as $repository) {
                     $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);

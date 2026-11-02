@@ -5,6 +5,7 @@ use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -97,19 +98,23 @@ $container->set('executor', fn () => new Executor(), []);
 // container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
 // own network). A malformed range throws rather than being skipped. Shared per process: without
 // connection reuse every request opens its own handle, and each with*() returns a copy.
-$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(), new PublicInternet(
-    ...\array_map(
-        fn (string $range) => new IPRange($range),
-        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
-    )
-)), []);
-$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new PublicInternet(
-    ...\array_map(
-        fn (string $range) => new IPRange($range),
-        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
-    )
-)), []);
 // cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
 $container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
     \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
 ]), new PublicInternet(
@@ -336,6 +341,11 @@ $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublis
 $container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForAlerts', fn (Publisher $publisher) => new AlertPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_ALERTS_QUEUE_NAME', Event::ALERTS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(

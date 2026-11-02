@@ -8,10 +8,13 @@ use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Row;
+use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 class ScheduleExecutions extends Action
@@ -27,6 +30,7 @@ class ScheduleExecutions extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
@@ -35,26 +39,30 @@ class ScheduleExecutions extends Action
         return 'schedule-executions';
     }
 
-    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): void
     {
         $source = new Source\Executions($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
-        $scheduler = new Scheduler(
-            source: $source,
-            syncSeconds: self::UPDATE_TIMER,
-            telemetry: $telemetry,
-            onError: function (\Throwable $error, ?Row $row = null): void {
-                Span::init('schedule.executions.reconcile');
-                if ($row?->data instanceof Document) {
-                    Span::add('project.id', (string) $row->data->getAttribute('projectId'));
-                    Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
-                    Span::add('schedule.id', $row->data->getId());
-                }
-                Span::current()?->finish(error: $error);
-            },
-        );
+        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForFunctions): void {
+            $scheduler = new Scheduler(
+                source: $source,
+                store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
+                syncSeconds: self::UPDATE_TIMER,
+                telemetry: $telemetry,
+                onError: function (\Throwable $error, ?Row $row = null): void {
+                    Span::init('schedule.executions.reconcile');
+                    if ($row?->data instanceof Document) {
+                        Span::add('project.id', (string) $row->data->getAttribute('projectId'));
+                        Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
+                        Span::add('schedule.id', $row->data->getId());
+                    }
+                    Span::current()?->finish(error: $error);
+                },
+            );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+            $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+        });
 
         Span::init('schedule.executions.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));

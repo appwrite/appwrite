@@ -238,9 +238,36 @@ class Notifications extends Action
         $body = $payload['body'] ?? '';
         $preview = $payload['preview'] ?? '';
 
-        $variables['subject'] = $subject;
-        $variables['heading'] = $variables['heading'] ?? $subject;
         $variables['year'] = \date('Y');
+
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+        }
+        $subject = \strip_tags($subjectTemplate->render());
+
+        $heading = $subject;
+        if (!empty($variables['heading'])) {
+            $headingTemplate = Template::fromString($variables['heading']);
+            foreach ($variables as $key => $value) {
+                $headingTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $heading = $headingTemplate->render(useContent: true);
+        }
+        $variables['subject'] = $subject;
+        $variables['heading'] = $heading;
+
+        // Expand the body's placeholders once, so values are inserted literally
+        if (!empty($body)) {
+            $bodyContent = Template::fromString($body);
+            foreach ($variables as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value);
+            }
+            foreach ($this->richTextParams as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $body = $bodyContent->render(useContent: true);
+        }
 
         $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'] ?? '';
@@ -279,12 +306,6 @@ class Notifications extends Action
         $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
 
         $body = $bodyTemplate->render();
-
-        $subjectTemplate = Template::fromString($subject);
-        foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value);
-        }
-        $subject = \strip_tags($subjectTemplate->render());
 
         $recipientHash = self::buildRecipientHash($recipient);
         $trackingSecret = System::getEnv('_APP_NOTIFICATIONS_TRACKING_SECRET');
@@ -344,6 +365,7 @@ class Notifications extends Action
                 replyToEmail: $replyTo,
                 attachments: $attachments,
                 html: true,
+                headers: \is_array($payload['headers'] ?? null) ? $payload['headers'] : [],
             );
 
             // A pooled adapter belongs to this send alone; a project's own SMTP is
@@ -614,6 +636,10 @@ class Notifications extends Action
             return $payloadSmtp;
         }
 
+        if ($this->isPlatformMail($payload)) {
+            return [];
+        }
+
         $smtp = $project->getAttribute('smtp', []);
         if (!\is_array($smtp) || empty($smtp['enabled'] ?? false)) {
             return [];
@@ -630,6 +656,18 @@ class Notifications extends Action
             'replyToEmail' => $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '',
             'replyToName' => $smtp['replyToName'] ?? '',
         ];
+    }
+
+    /**
+     * Mail the platform writes to a project's console users, such as an alert
+     * rule changing state, goes out through the platform mailer, never through
+     * the SMTP server the project configured for its own users.
+     *
+     * @param array<string, mixed> $payload
+     */
+    protected function isPlatformMail(array $payload): bool
+    {
+        return ($payload['template'] ?? '') === MAIL_TEMPLATE_ALERT;
     }
 
     private function validateConsoleRecipient(array $recipient): void

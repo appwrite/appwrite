@@ -363,6 +363,14 @@ class CSV extends Destination
         if (\is_object($value)) {
             return $this->convertObjectToCSV($value);
         }
+        if (\is_string($value)) {
+            // Spreadsheets evaluate cells starting with these as formulas. Values already quoted before one get
+            // another quote too, so the CSV source strips exactly one and they import back unchanged.
+            $unquoted = \ltrim($value, "'");
+            if ($unquoted !== '' && \str_contains("=+-@\t\r", $unquoted[0])) {
+                return "'" . $value;
+            }
+        }
         return (string)$value;
     }
 

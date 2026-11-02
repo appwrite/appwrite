@@ -107,6 +107,7 @@ import { PoliciesLayout, type PoliciesSubTab } from './policies/Layout'
 import { UsersPolicies } from './policies/Users'
 import { SessionsPolicies } from './policies/Sessions'
 import { MembershipsPolicies } from './policies/Memberships'
+import { RealtimePolicies } from './policies/Realtime'
 import { EmailsPolicies } from './policies/Emails'
 import { PasswordsPolicies } from './policies/Passwords'
 import { PasskeysPolicies } from './policies/Passkeys'
@@ -264,6 +265,7 @@ export function View({
       if (subTab === 'memberships') return 'memberships'
       if (subTab === 'passwords') return 'passwords'
       if (subTab === 'passkeys') return 'passkeys'
+      if (subTab === 'realtime') return 'realtime'
       if (subTab === 'sessions') return 'sessions'
       return 'sessions'
     }
@@ -2285,6 +2287,8 @@ export function View({
               <PasswordsPolicies projectId={projectId} />
             ) : policiesSubTab === 'passkeys' ? (
               <PasskeysPolicies projectId={projectId} />
+            ) : policiesSubTab === 'realtime' ? (
+              <RealtimePolicies projectId={projectId} />
             ) : (
               <SessionsPolicies projectId={projectId} />
             )}

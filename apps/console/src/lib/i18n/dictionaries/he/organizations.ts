@@ -663,7 +663,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Loading payment methods...': 'טוען אמצעי תשלום...',
   'Loading plan details...': 'טוען פרטי תוכנית...',
   'Loading plans...': 'טוען תוכניות...',
-  'Loading platforms': 'טוען פלטפורמות',
   'Loading price for': 'טוען מחיר עבור',
   'Loading projects...': 'טוען פרויקטים...',
   'Loading request usage': 'טוען נתוני שימוש בבקשות',
@@ -719,6 +718,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
+  'Need SSO or custom organization roles?':
+    'זקוקים ל-SSO או לתפקידי ארגון מותאמים?',
+  'Need a custom SLA or a private Slack channel?':
+    'זקוקים ל-SLA מותאם או לערוץ Slack פרטי?',
+  'Running Appwrite at scale?': 'מריצים את Appwrite בקנה מידה גדול?',
+  'Get a custom SLA, a private Slack channel, and SOC 2 and HIPAA without add-ons.':
+    'קבלו SLA מותאם, ערוץ Slack פרטי, ו-SOC 2 ו-HIPAA ללא תוספות.',
+  'Talk to sales': 'שיחה עם מכירות',
   'Need compliance, custom SLAs, or volume pricing?':
     'זקוקים לציות, הסכמי SLA מותאמים או תמחור לפי היקף?',
   Network: 'רשת',
@@ -1354,7 +1361,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'member slots': 'מקומות לחברים',
   members: 'חברים',
   month: 'חודש',
-  'more platforms': 'פלטפורמות נוספות',
   "now. Then you'll be charged": 'כעת. לאחר מכן תחויבו בסך',
   of: 'מתוך',
   'of budget': 'מהתקציב',
@@ -1607,4 +1613,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'בנו על גבי Appwrite',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'צרו אפליקציות OAuth2 שמאפשרות למשתמשי Appwrite לחבר את הפרויקטים שלהם עם גישה מבוססת הסכמה ומוגבלת בהרשאות, במקום מפתחות API שמודבקים ידנית. פרסמו אותן במרקטפלייס כדי שכל ארגון יוכל למצוא אותן.',
+  'Set up auto-pay': 'הגדרת תשלום אוטומטי',
+  'Auto-pay is set up': 'התשלום האוטומטי הוגדר',
+  'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
+  'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
+    'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
+  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
 }

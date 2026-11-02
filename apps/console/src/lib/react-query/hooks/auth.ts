@@ -150,6 +150,7 @@ import {
   sanitizeAccountPrefsForWrite,
   mergeDismissedBannerPrefs,
   clearDismissedBannerPrefs,
+  mergeExperimentsSeenAtPrefs,
   mergeAgentsDismissedProjectIdsPrefs,
   mergePremiumGeoOverviewDismissedProjectIdsPrefs,
   USER_PREFS_KEY_FEATURE_NOTIFICATIONS,
@@ -996,9 +997,7 @@ export function useUpdateSessionInvalidation(
  *
  * @param projectId - The project ID
  */
-export function useDeleteProjectSessions(
-  projectId: string | null | undefined,
-) {
+export function useDeleteProjectSessions(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: async () => {
       if (!projectId) {
@@ -1236,6 +1235,29 @@ export function useUpdateDenyCorporateEmailPolicy(
       return await projectEmailPolicyService(
         projectId,
       ).updateDenyCorporateEmailPolicy({ enabled })
+    },
+    onSuccess: () => {
+      invalidateProjectAuthQueries(queryClient, projectId)
+    },
+  })
+}
+
+/**
+ * Hook to update the deny realtime guests policy.
+ */
+export function useUpdateDenyRealtimeGuestsPolicy(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      return await sdk
+        .forProject(projectId)
+        .project.updateDenyRealtimeGuestsPolicy({ enabled })
     },
     onSuccess: () => {
       invalidateProjectAuthQueries(queryClient, projectId)
@@ -1811,6 +1833,32 @@ export function useClearConsoleBannerDismissal() {
         updatedPrefs,
         'clear-console-banner-dismissal',
       )
+    },
+    onSuccess: (updatedAccount) => {
+      syncConsoleAccountAfterMutation(queryClient, {
+        apiResult: updatedAccount,
+      })
+    },
+  })
+}
+
+/**
+ * Record in `console.previews.seenAt` that the user opened the previews popover.
+ */
+export function useMarkExperimentsSeen() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (seenAt: Date) => {
+      const account = getConsoleAccountFromCache(queryClient)
+
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      const updatedPrefs = mergeExperimentsSeenAtPrefs(account.prefs, seenAt)
+
+      return await updateAccountPrefs(updatedPrefs, 'mark-experiments-seen')
     },
     onSuccess: (updatedAccount) => {
       syncConsoleAccountAfterMutation(queryClient, {

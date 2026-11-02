@@ -90,7 +90,7 @@ return [
         'name' => 'Locale',
         'subtitle' => 'The Locale service allows you to customize your app based on your users\' location.',
         'description' => '/docs/services/locale.md',
-        'controller' => 'api/locale.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/locale',
@@ -132,7 +132,7 @@ return [
         'name' => 'Project',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
         'description' => '',
-        'controller' => 'api/project.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',
@@ -201,6 +201,34 @@ return [
         'key' => 'webhooks',
         'name' => 'Webhooks',
         'subtitle' => 'The Webhooks service allows you to manage your project webhooks.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
+    'monitors' => [
+        'key' => 'monitors',
+        'name' => 'Monitors',
+        'subtitle' => 'The Monitors service watches your project\'s usage and raises an alert when a monitor\'s rules hold, announced by email, in the console or to a webhook.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
+    'alerts' => [
+        'key' => 'alerts',
+        'name' => 'Alerts',
+        'subtitle' => 'The Alerts service lists the alerts your monitors raised: when each fired, the readings while it fired, and when it resolved.',
         'description' => '',
         'controller' => '', // Uses modules
         'sdk' => true,

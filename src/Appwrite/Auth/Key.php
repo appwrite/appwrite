@@ -110,6 +110,16 @@ class Key
             return true;
         }
 
+        return $this->mayGrant($scopes);
+    }
+
+    /**
+     * Whether this key may grant these scopes, such as to a function or site. A key grants no scope it does not hold.
+     *
+     * @param array<string> $scopes
+     */
+    public function mayGrant(array $scopes): bool
+    {
         return \array_diff($scopes, $this->scopes) === [];
     }
 
