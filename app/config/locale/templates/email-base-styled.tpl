@@ -93,6 +93,7 @@
             }
             h1 {
                 font-size: 22px;
+                font-weight: 500;
                 margin-bottom: 0px;
                 margin-top: 0px;
                 color: #19191c;
