@@ -27,25 +27,43 @@ final class PushTest extends Base
             title: 'Firing: Budget 100%',
             body: '$502 of the $500 budget.',
             data: ['alertId' => 'alert1', 'status' => 'firing'],
+            action: 'OPEN_ALERT',
             sound: 'siren.caf',
+            image: 'https://example.com/chart.png',
+            icon: 'ic_alert',
+            color: '#fd366e',
             tag: 'alert:alert1',
+            badge: 0,
+            contentAvailable: false,
             critical: true,
             priority: Priority::HIGH,
             channelId: 'alerts_critical',
+            mutableContent: false,
         ));
 
         $request = $this->getLastRequest();
 
         $this->assertSame('http://127.0.0.1:15000/mock-push', $request['url']);
         $this->assertSame('POST', $request['method']);
-        $this->assertSame(['device-a', 'device-b'], $request['data']['to']);
-        $this->assertSame('Firing: Budget 100%', $request['data']['title']);
-        $this->assertSame(['alertId' => 'alert1', 'status' => 'firing'], $request['data']['data']);
-        $this->assertSame('alert:alert1', $request['data']['tag']);
-        $this->assertTrue($request['data']['critical']);
-        $this->assertSame('high', $request['data']['priority']);
-        $this->assertSame('alerts_critical', $request['data']['channelId']);
-        $this->assertArrayNotHasKey('badge', $request['data']);
+        // Every field is forwarded under its own name; false and zero are values, not omissions.
+        $this->assertSame([
+            'to' => ['device-a', 'device-b'],
+            'title' => 'Firing: Budget 100%',
+            'body' => '$502 of the $500 budget.',
+            'data' => ['alertId' => 'alert1', 'status' => 'firing'],
+            'action' => 'OPEN_ALERT',
+            'sound' => 'siren.caf',
+            'image' => 'https://example.com/chart.png',
+            'icon' => 'ic_alert',
+            'color' => '#fd366e',
+            'tag' => 'alert:alert1',
+            'badge' => 0,
+            'contentAvailable' => false,
+            'critical' => true,
+            'priority' => 'high',
+            'channelId' => 'alerts_critical',
+            'mutableContent' => false,
+        ], $request['data']);
 
         $this->assertSame(2, $response['deliveredTo']);
         $this->assertSame('success', $response['results'][0]['status']);
@@ -67,6 +85,12 @@ final class PushTest extends Base
             to: ['device-a', Mock::EXPIRED_PREFIX . 'device-b'],
             title: 'Resolved: Egress',
         ));
+
+        // Fields the message does not set are left out of the payload.
+        $this->assertSame([
+            'to' => ['device-a', Mock::EXPIRED_PREFIX . 'device-b'],
+            'title' => 'Resolved: Egress',
+        ], $this->getLastRequest()['data']);
 
         $this->assertSame(1, $response['deliveredTo']);
         $this->assertSame('device-a', $response['results'][0]['recipient']);
