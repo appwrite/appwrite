@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/tooltip'
 import {
   Activity,
+  Globe,
   Link2,
   LogIn,
   LogOut,
