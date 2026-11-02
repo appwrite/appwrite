@@ -182,7 +182,11 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        // Drafts created with a scheduledAt have no schedule document yet, so create one on demand.
+        if (
+            (\is_null($currentScheduledAt) || \is_null($message->getAttribute('scheduleId')))
+            && !\is_null($scheduledAt ?? $currentScheduledAt)
+        ) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -191,14 +195,12 @@ class Update extends Action
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
-                'schedule' => $scheduledAt,
+                'schedule' => $scheduledAt ?? $currentScheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
 
             $message->setAttribute('scheduleId', $schedule->getId());
-        }
-
-        if (!\is_null($currentScheduledAt)) {
+        } elseif (!\is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
