@@ -8,6 +8,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
 
 class Create extends Action
@@ -46,6 +47,19 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse-limit', 10)
-            ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}']);
+            ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+            ->param('email', '', new EmailValidator(), 'User email.')
+            ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])
+            ->inject('request')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('project')
+            ->inject('platform')
+            ->inject('locale')
+            ->inject('publisherForMails')
+            ->inject('queueForEvents')
+            ->inject('proofForToken')
+            ->inject('authorization')
+            ->inject('apiKey');
     }
 }
