@@ -323,45 +323,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
-Http::patch('/v1/account/name')
-    ->desc('Update name')
-    ->groups(['api', 'account'])
-    ->label('event', 'users.[userId].update.name')
-    ->label('scope', 'account')
-    ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'account',
-        name: 'updateName',
-        description: '/docs/references/account/update-name.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USER,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
-    ->inject('response')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (string $name, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
-
-        $user->setAttribute('name', $name);
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-            'name' => $user->getAttribute('name'),
-        ]));
-
-        $queueForEvents->setParam('userId', $user->getId());
-
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
-    });
-
 Http::patch('/v1/account/password')
     ->desc('Update password')
     ->groups(['api', 'account'])

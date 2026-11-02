@@ -17,6 +17,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Create as C
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Get as GetRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Update as UpdateRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Update as UpdateMfa;
+use Appwrite\Platform\Modules\Account\Http\Account\Name\Update as UpdateName;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Create as CreatePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Delete as DeletePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Get as GetPasskey;
@@ -76,6 +77,7 @@ class Http extends Service
             ->addAction(CreatePhoneToken::getName(), CreatePhoneToken::class)
             ->addAction(CreateJWT::getName(), CreateJWT::class)
             ->addAction(GetPrefs::getName(), GetPrefs::class)
+            ->addAction(UpdateName::getName(), UpdateName::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
