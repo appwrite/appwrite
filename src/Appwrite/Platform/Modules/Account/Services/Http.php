@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Services;
 
 use Appwrite\Platform\Modules\Account\Http\Account\Create as CreateAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Delete as DeleteAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Get as GetAccount;
 use Appwrite\Platform\Modules\Account\Http\Account\Memberships\XList as ListMemberships;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Create as CreateAuthenticator;
@@ -34,6 +35,7 @@ class Http extends Service
         $this
             ->addAction(CreateAccount::getName(), CreateAccount::class)
             ->addAction(GetAccount::getName(), GetAccount::class)
+            ->addAction(DeleteAccount::getName(), DeleteAccount::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
