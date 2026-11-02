@@ -29,6 +29,11 @@ class OpenAITest extends Adapter
     protected function expectedModels(): array
     {
         return [
+            OpenAI::MODEL_GPT_6_ASTRA,
+            OpenAI::MODEL_GPT_6_1_SOL,
+            OpenAI::MODEL_GPT_6_1_TERRA,
+            OpenAI::MODEL_GPT_6_SOL,
+            OpenAI::MODEL_GPT_6_LUNA,
             OpenAI::MODEL_GPT_5_NANO,
             OpenAI::MODEL_GPT_4_5_PREVIEW,
             OpenAI::MODEL_GPT_4_1,
@@ -85,6 +90,47 @@ class OpenAITest extends Adapter
         $this->assertFalse($payload['stream']);
         $this->assertIsArray($payload['response_format']);
         $this->assertSame('json_schema', $payload['response_format']['type']);
+    }
+
+    public function testGpt6WithoutReasoningSendsTemperatureAndCompletionTokens(): void
+    {
+        $client = new Client()->queue(200, json_encode([
+            'choices' => [['message' => ['role' => 'assistant', 'content' => 'ok']]],
+        ]) ?: '');
+        $adapter = new OpenAI('secret', OpenAI::MODEL_GPT_6_1_TERRA, 2000, 0, client: $client);
+        $adapter->setReasoningEffort(OpenAI::REASONING_EFFORT_NONE);
+        $object = new SchemaObject();
+        $object->addProperty('ok', ['type' => SchemaObject::TYPE_BOOLEAN, 'description' => 'ok']);
+        $agent = new Agent($adapter);
+        $agent->setSchema(new Schema('Result', 'Result', $object, $object->getNames()));
+
+        $adapter->send([new Message('hi')]);
+
+        $payload = $client->lastPayload();
+        $this->assertSame(OpenAI::MODEL_GPT_6_1_TERRA, $payload['model']);
+        $this->assertSame('none', $payload['reasoning_effort']);
+        $this->assertEquals(0, $payload['temperature']);
+        $this->assertSame(2000, $payload['max_completion_tokens']);
+        $this->assertArrayNotHasKey('max_tokens', $payload);
+    }
+
+    public function testGpt6WithReasoningOmitsTemperature(): void
+    {
+        $client = new Client()->queue(200, json_encode([
+            'choices' => [['message' => ['role' => 'assistant', 'content' => 'ok']]],
+        ]) ?: '');
+        $adapter = new OpenAI('secret', OpenAI::MODEL_GPT_6_1_SOL, 2000, 0, client: $client);
+        $object = new SchemaObject();
+        $object->addProperty('ok', ['type' => SchemaObject::TYPE_BOOLEAN, 'description' => 'ok']);
+        $agent = new Agent($adapter);
+        $agent->setSchema(new Schema('Result', 'Result', $object, $object->getNames()));
+
+        $adapter->send([new Message('hi')]);
+
+        $payload = $client->lastPayload();
+        $this->assertArrayNotHasKey('temperature', $payload);
+        $this->assertArrayNotHasKey('reasoning_effort', $payload);
+        $this->assertSame(2000, $payload['max_completion_tokens']);
     }
 
     public function testStreamedResponseIsAssembledAcrossChunkBoundaries(): void
