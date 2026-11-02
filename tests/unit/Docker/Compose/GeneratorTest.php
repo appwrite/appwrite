@@ -55,6 +55,7 @@ final class GeneratorTest extends TestCase
         $this->assertArrayHasKey('appwrite-task-interval', $compose['services']);
         $this->assertArrayHasKey('appwrite-embedding', $compose['services']);
         $this->assertArrayHasKey('appwrite-autogravity', $compose['services']);
+        $this->assertArrayHasKey('appwrite-exiftool', $compose['services']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-worker']);
         $this->assertArrayNotHasKey('profiles', $compose['services']['appwrite-task-scheduler']);
     }
@@ -154,7 +155,7 @@ final class GeneratorTest extends TestCase
         ]);
 
         $this->assertSame(['mysqld', '--innodb-flush-method=fsync'], $mariadb['services']['mariadb']['command']);
-        $this->assertSame(['postgres'], $postgresql['services']['postgresql']['command']);
+        $this->assertSame(['postgres', '-c', 'max_connections=${_APP_DB_MAX_CONNECTIONS:-500}'], $postgresql['services']['postgresql']['command']);
         $this->assertSame([
             'redis-server',
             '--maxmemory',

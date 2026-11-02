@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "Stop IP-rotating bots with network-based Appwrite Firewall rules"
-description: Use Premium Geo DB network attributes in Appwrite Firewall to stop bots that rotate IP addresses on rented servers, with rules for your API, Functions, and Sites.
+title: "Stop IP-rotating bots with Appwrite Firewall"
+description: Learn how Appwrite Firewall and Premium Geo DB use network attributes to limit IP-rotating bots, protect sign-ups, and secure APIs, Functions, and Sites.
 date: 2026-10-05
 cover: /images/blog/firewall-network-rules-premium-geo-db/cover.avif
 timeToRead: 8

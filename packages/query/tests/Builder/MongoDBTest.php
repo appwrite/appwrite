@@ -1342,6 +1342,12 @@ class MongoDBTest extends TestCase
         $this->assertSame(1, $eventCount['$sum']);
     }
 
+    public function testFilterRelationshipThrowsException(): void
+    {
+        $this->expectException(UnsupportedException::class);
+        new Builder()->from('t')->filter([Query::relationship('attr', [Query::equal('x', [1])])])->build();
+    }
+
     public function testWindowFunctionUnsupportedThrows(): void
     {
         $this->expectException(UnsupportedException::class);

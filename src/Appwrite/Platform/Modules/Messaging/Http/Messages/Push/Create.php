@@ -18,7 +18,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
@@ -113,12 +113,12 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('title', '', new Text(256), 'Title for push notification.', true)
             ->param('body', '', new Text(64230), 'Body for push notification.', true)
-            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
-            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
-            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
+            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Topic IDs.', true, ['dbForProject'])
+            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of User IDs.', true, ['dbForProject'])
+            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Targets IDs.', true, ['dbForProject'])
             ->param('data', null, new Nullable(new JSONObject()), 'Additional key-value pair data for push notification.', true)
             ->param('action', '', new Text(256), 'Action for push notification.', true)
             ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
@@ -148,7 +148,7 @@ class Create extends Action
         $data = $this->normalizeJsonObject($data);
 
         $messageId = $messageId == 'unique()'
-            ? ID::unique()
+            ? Id::unique()
             : $messageId;
 
         if ($draft) {
@@ -201,19 +201,15 @@ class Create extends Action
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
-            $scheduleTime = $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
-            } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
-            }
+            $delivery = \is_null($scheduledAt) ? \time() : (new \DateTime($scheduledAt))->getTimestamp();
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
+            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
+                'exp' => $delivery + APP_PUSH_IMAGE_TOKEN_DURATION,
             ]);
 
             $image = [

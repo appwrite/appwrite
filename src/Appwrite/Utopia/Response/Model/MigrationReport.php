@@ -23,6 +23,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
+            ->addRule(Resource::TYPE_MEMBERSHIP, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of memberships to be migrated.',
+                'default' => 0,
+                'example' => 20,
+            ])
             ->addRule(Resource::TYPE_DATABASE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of databases to be migrated.',
@@ -124,6 +130,12 @@ class MigrationReport extends Model
                 'description' => 'Number of custom email templates to be migrated (one per templateId × locale pair).',
                 'default' => 0,
                 'example' => 7,
+            ])
+            ->addRule(Resource::TYPE_PROJECT_ENVIRONMENT, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of project environments to be migrated. Each is recreated under a new ID, empty: its own resources belong to a separate project.',
+                'default' => 0,
+                'example' => 2,
             ])
             ->addRule(Resource::TYPE_SITE, [
                 'type' => self::TYPE_INTEGER,

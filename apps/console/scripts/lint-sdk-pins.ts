@@ -1,7 +1,9 @@
 /**
  * Fail when a dependency is pinned to a pkg.vc preview build. Previews are fine
  * on a branch, never on main: they ship endpoints no release carries and
- * whatever generator their Cloud branch pinned.
+ * whatever generator their Cloud branch pinned. pkg.pr.new builds of this
+ * repository are fine on main: `bun run sdk:preview` builds them from a
+ * release's spec plus this repository's.
  *
  * Usage:
  *   bun run lint:sdk-pins

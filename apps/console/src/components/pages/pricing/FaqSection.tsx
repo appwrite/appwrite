@@ -29,7 +29,10 @@ export function FaqSection() {
                     {t(item.question)}
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="text-[13px] leading-6 text-muted-foreground">
+                <AccordionContent
+                  forceMount
+                  className="text-[13px] leading-6 text-muted-foreground"
+                >
                   {typeof item.answer === 'string' ? t(item.answer) : item.answer}
                 </AccordionContent>
               </AccordionItem>

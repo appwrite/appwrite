@@ -64,7 +64,7 @@ If a preset would create more than one rule, the preview combines the estimate s
 
 **Regional access.** When your product only serves certain markets, country presets block or allow API traffic at the edge instead of in application code. They are blunt: travelers, VPNs, and shared office IPs can get caught. Use the impact preview and adjust before you rely on them for compliance.
 
-**Scraping and bulk reads.** Presets can cap broad API traffic, tighten limits on database reads, or deny requests that look like hosting or datacenter networks. Some options need the [premium Geo DB addon](/docs/products/firewall/conditions#premium-geo-db). Server-side SDKs and Functions can look like datacenter traffic too, so confirm the preview against real usage and add a [bypass](/docs/products/firewall/actions) for trusted callers when you need one.
+**Scraping and bulk reads.** Presets can cap broad API traffic, tighten limits on database reads, or deny requests that look like hosting provider networks. Some options need the [premium Geo DB addon](/docs/products/firewall/conditions#premium-geo-db). Server-side SDKs and Functions can look like hosting traffic too, so confirm the preview against real usage and add a [bypass](/docs/products/firewall/actions) for trusted callers when you need one.
 
 The Console lists every preset, its defaults, and what it creates. Tune quotas from the impact preview rather than guessing from a blog post.
 

@@ -36,7 +36,7 @@ class Get extends Action
             ->setHttpPath('/v1/console/resources')
             ->desc('Check resource ID availability')
             ->groups(['api', 'projects'])
-            ->label('scope', 'rules.read')
+            ->label('scope', 'projects.read')
             ->label('sdk', new Method(
                 namespace: 'console',
                 group: null,

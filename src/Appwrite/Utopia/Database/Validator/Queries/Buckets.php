@@ -12,6 +12,7 @@ class Buckets extends Base
         'encryption',
         'antivirus',
         'transformations',
+        'stripMetadata',
     ];
 
     /**

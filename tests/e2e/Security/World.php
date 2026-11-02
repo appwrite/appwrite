@@ -6,7 +6,7 @@ namespace Tests\E2E\Security;
 
 use Appwrite\Utopia\Database\Documents\User;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 /**
@@ -201,7 +201,7 @@ final class World
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Security Owner',
@@ -235,7 +235,7 @@ final class World
         $team = ['headers' => [], 'body' => []];
         for ($attempt = 0; $attempt < 8; $attempt++) {
             $team = $client->call(Client::METHOD_POST, '/teams', $headers, [
-                'teamId' => ID::unique(),
+                'teamId' => Id::unique(),
                 'name' => 'Security Org',
             ]);
             $status = (int) ($team['headers']['status-code'] ?? 0);
@@ -269,7 +269,7 @@ final class World
         $project = ['headers' => [], 'body' => []];
         for ($attempt = 0; $attempt < 5; $attempt++) {
             $project = $client->call(Client::METHOD_POST, '/projects', $headers, [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'name' => $name,
                 'teamId' => $teamId,
@@ -298,7 +298,7 @@ final class World
             'cookie' => 'a_session_console=' . $ownerSession,
             'x-appwrite-project' => 'console',
         ], [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Security Key ' . $projectId,
             'scopes' => $scopes,
         ]), 201, 'api key');
@@ -317,7 +317,7 @@ final class World
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Security User',
@@ -351,7 +351,7 @@ final class World
             'x-appwrite-project' => $projectId,
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Victim Team',
         ]), 201, 'user team');
 
@@ -382,7 +382,7 @@ final class World
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Security Developer',

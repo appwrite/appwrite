@@ -77,6 +77,10 @@ describe('llms.txt decision card', () => {
     expect(txt).toContain(LLMS_BLOG_EXAMPLE_SLUG)
     expect(txt).toContain('/alternative-to.md')
     expect(txt).toContain('/alternative-to/supabase.md')
+    // `## Optional` is skippable by llms.txt readers; products must not be there.
+    expect(txt).toContain('## Products and pricing')
+    expect(txt).toContain('https://appwrite.io/pricing')
+    expect(txt).not.toContain('## Optional')
   })
 })
 
@@ -99,5 +103,17 @@ describe('robots.txt retrieval bots', () => {
     expect(robots).toContain('User-agent: PerplexityBot')
     expect(robots).toContain('User-agent: Google-Extended')
     expect(robots).toContain('Sitemap: https://appwrite.io/sitemap.xml')
+  })
+
+  test('keeps console paths disallowed in every group', () => {
+    const groups = getProductionRobotsTxt()
+      .split('\n\n')
+      .filter((block) => block.includes('User-agent:'))
+
+    expect(groups.length).toBeGreaterThan(1)
+    for (const group of groups) {
+      expect(group).toContain('Disallow: /projects/')
+      expect(group).toContain('Disallow: /account/')
+    }
   })
 })

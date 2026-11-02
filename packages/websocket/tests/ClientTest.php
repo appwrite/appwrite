@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\WebSocket\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\WebSocket\Client;
 
@@ -27,6 +28,30 @@ final class ClientTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         new Client('invalid-url');
+    }
+
+    #[DataProvider('unsupportedSchemeProvider')]
+    public function testConstructorRejectsUnsupportedScheme(string $url): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('WebSocket URL scheme must be ws or wss');
+        new Client($url);
+    }
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function unsupportedSchemeProvider(): \Iterator
+    {
+        yield 'http' => ['http://localhost:8080'];
+        yield 'https' => ['https://localhost:8443'];
+        yield 'tcp' => ['tcp://localhost:8080'];
+        yield 'missing' => ['//localhost:8080'];
+    }
+
+    public function testConstructorAcceptsSchemeInAnyCase(): void
+    {
+        $this->assertInstanceOf(Client::class, new Client('WSS://localhost:8443'));
     }
 
     public function testConstructorWithCustomOptions(): void

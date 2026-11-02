@@ -4,15 +4,22 @@ on:
     - cron: '30 1 * * *'  # 1:30am UTC, after the nightly build has taken 00:00
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   scan-image:
     name: Scan Docker Image
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Check out code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           submodules: recursive
+          persist-credentials: false
       - name: Build the Docker image
         run: DOCKER_BUILDKIT=1 docker build . --target production -t appwrite_image:latest
       - name: Run Trivy vulnerability scanner on image
@@ -33,9 +40,14 @@ jobs:
   scan-code:
     name: Scan Code
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Check out code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
       - name: Run Trivy vulnerability scanner on filesystem
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -61,6 +73,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Install Semgrep
         run: pipx install semgrep==1.179.0

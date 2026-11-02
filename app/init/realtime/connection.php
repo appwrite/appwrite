@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
@@ -114,6 +115,10 @@ return function (Container $container): void {
         return new Authorization();
     }, []);
 
+    $container->set('mode', function (Request $request, Document $project) use ($getMode): string {
+        return $getMode($request, $project);
+    }, ['request', 'project']);
+
     $container->set('project', function (Request $request, Document $console, Authorization $authorization) use ($getProjectId, $getDbForPlatform) {
         $projectId = $getProjectId($request);
 
@@ -126,7 +131,7 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['request', 'console', 'authorization']);
 
-    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization) use ($findRule) {
+    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization, string $mode) use ($findRule) {
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the console web app can live apart from the API host */
@@ -138,12 +143,15 @@ return function (Container $container): void {
         $consoleHostnames = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_CONSOLE_HOSTNAMES', ''))));
         $allowedHostnames = [...$allowedHostnames, ...$consoleHostnames];
 
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        /* Admin mode carries the console session, so only console hosts may use it */
+        if (!$project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $allowedHostnames = [...$allowedHostnames, ...Platform::getHostnames($project->getAttribute('platforms', []))];
         }
 
         $rule = $findRule($request, $project, $authorization);
-        if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        $trustedProjects = \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')));
+        $ruleAllowed = $mode !== APP_MODE_ADMIN || \in_array($rule->getAttribute('projectId', ''), $trustedProjects, true);
+        if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', '')) && $ruleAllowed) {
             $allowedHostnames[] = $rule->getAttribute('domain', '');
         }
 
@@ -156,14 +164,14 @@ return function (Container $container): void {
         }
 
         $allowedSchemes = [...($platform['schemas'] ?? [])];
-        if (!$project->isEmpty() && $project->getId() !== 'console') {
+        if (!$project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $allowedSchemes[] = 'exp';
             $allowedSchemes[] = 'appwrite-callback-' . $project->getId();
             $allowedSchemes = [...$allowedSchemes, ...Platform::getSchemes($project->getAttribute('platforms', []))];
         }
 
         return new Origin(\array_unique($allowedHostnames), \array_unique($allowedSchemes));
-    }, ['platform', 'request', 'project', 'authorization']);
+    }, ['platform', 'request', 'project', 'authorization', 'mode']);
 
     $container->set('proofForToken', function (): Token {
         $proofForToken = new Token();
@@ -207,7 +215,11 @@ return function (Container $container): void {
     $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
         $mode = $getMode($request, $project);
 
-        $authorization->setDefaultStatus(true);
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $authorization->setStatus(true);
 
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
@@ -230,10 +242,13 @@ return function (Container $container): void {
             }
         }
 
+        $sessionId = $user?->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt) ?? false;
+        // A session still owing a factor authenticates nobody, as over HTTP.
         if (
             !$user
             || $user->isEmpty()
-            || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || !$sessionId
+            || !$user->sessionFactorsMet($sessionId)
         ) {
             $user = new User([]);
         }
@@ -275,7 +290,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (!empty($jwtSessionId) && !$user->sessionActive($jwtSessionId)) {
+            if (!empty($jwtSessionId) && (!$user->sessionActive($jwtSessionId, $sessionsInvalidatedAt) || !$user->sessionFactorsMet($jwtSessionId))) {
                 $user = new User([]);
             }
         }
@@ -284,17 +299,21 @@ return function (Container $container): void {
         $accountKeyUserId = $request->getHeaderLine('x-appwrite-user', '');
 
         if (!empty($accountKeyUserId) && !empty($accountKey)) {
+            // Account keys act as the console user on the console project only. On any other
+            // project the credentials are rejected (as the HTTP gate does) rather than silently
+            // ignored, so a key-only client cannot fall through to a guest connection and a
+            // key+session combination cannot skip the mutual-authentication check.
+            if ($project->getId() !== 'console') {
+                throw new Exception(Exception::USER_UNAUTHORIZED, 'Account API keys can only be used with the console project.');
+            }
+
             if (!$user->isEmpty()) {
                 throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
             }
 
             $accountKeyUser = $authorization->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (!$accountKeyUser->isEmpty()) {
-                $key = $accountKeyUser->find(
-                    key: 'secret',
-                    find: $accountKey,
-                    subject: 'keys'
-                );
+                $key = Key::find($accountKeyUser->getAttribute('keys', []), $accountKey);
 
                 if (!empty($key)) {
                     $expire = $key->getAttribute('expire');
@@ -307,18 +326,29 @@ return function (Container $container): void {
             }
         }
 
+        // A blocked user is refused over HTTP, so here it connects as a guest.
+        if ($user->getAttribute('status') === false) {
+            $user = new User([]);
+        }
+
         $dbForPlatform->setMetadata('user', $user->getId());
         $dbForProject->setMetadata('user', $user->getId());
 
         return $user;
     }, ['request', 'project', 'console', 'authorization', 'store', 'proofForToken']);
 
-    $container->set('session', function (Request $request, User $user, Store $store, Token $proofForToken): ?Document {
+    $container->set('session', function (Request $request, Document $project, Document $console, User $user, Store $store, Token $proofForToken) use ($getMode): ?Document {
         if ($user->isEmpty()) {
             return null;
         }
 
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $mode = $getMode($request, $project);
+
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
         if (!$sessionId && !empty($authJWT)) {
@@ -337,7 +367,7 @@ return function (Container $container): void {
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+            if (($payload['userId'] ?? '') === $user->getId() && !empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) {
                 $sessionId = $jwtSessionId;
             }
         }
@@ -354,7 +384,7 @@ return function (Container $container): void {
         }
 
         return null;
-    }, ['request', 'user', 'store', 'proofForToken']);
+    }, ['request', 'project', 'console', 'user', 'store', 'proofForToken']);
 
     // A connection holds no token to present again, so it ends when the JWT it was
     // opened with expires, as an HTTP request with that JWT would then fail.

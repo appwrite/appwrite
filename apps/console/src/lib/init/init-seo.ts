@@ -42,7 +42,7 @@ export function getInitPageMetaTags(siteOrigin?: string) {
     canonical: resolveSiteAssetUrl('/init', origin),
     ogImage: getInitPageOgImageUrl(origin),
     siteOrigin: origin,
-  })]
+  })] as unknown as Array<Record<string, string>>
 }
 
 export function getInitPageRouteHead(siteOrigin?: string) {

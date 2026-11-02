@@ -289,6 +289,56 @@ class SentryTest extends TestCase
         $this->assertTrue(true);
     }
 
+    public function testExportReplacesInvalidUtf8InsteadOfDroppingTheEvent(): void
+    {
+        $client = new RecordingClient();
+        $exporter = new Sentry(dsn: 'https://key@sentry.io/123', client: $client);
+
+        $span = new Span('test');
+        $span->set('http.locale', "en\xC3\x28");
+        $span->finish(error: new \RuntimeException("bad \xFF byte"));
+
+        $exporter->export($span);
+
+        $this->assertCount(1, $client->requests);
+        $payload = $this->sentPayload($client);
+        $this->assertSame("bad \u{FFFD} byte", $payload['message']);
+        $this->assertSame("en\u{FFFD}(", $payload['contexts']['custom']['http.locale']);
+    }
+
+    public function testExportTruncatesTagsOnCharacterBoundaries(): void
+    {
+        $client = new RecordingClient();
+        $exporter = new Sentry(
+            dsn: 'https://key@sentry.io/123',
+            classifier: fn (string $key): SentryField => SentryField::Tag,
+            client: $client,
+        );
+
+        $span = new Span('test');
+        $span->set('tenant.name', str_repeat('€', 250));
+        $span->finish(error: new \RuntimeException('Test error'));
+
+        $exporter->export($span);
+
+        $this->assertCount(1, $client->requests);
+        $this->assertSame(str_repeat('€', 200), $this->sentPayload($client)['tags']['tenant.name']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function sentPayload(RecordingClient $client): array
+    {
+        $lines = explode("\n", (string) $client->requests[0]->getBody());
+        $this->assertCount(3, $lines);
+
+        $payload = json_decode($lines[2], true);
+        $this->assertIsArray($payload);
+
+        return $payload;
+    }
+
     public function testEnvelopeContainsChainedExceptions(): void
     {
         $root = new \LogicException('root cause');

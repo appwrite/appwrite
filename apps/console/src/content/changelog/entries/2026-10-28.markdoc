@@ -1,0 +1,18 @@
+---
+layout: changelog
+title: "Disposable email detection now covers nearly 100K domains"
+date: 2026-10-28
+tags: auth, security
+---
+
+We added about 26,000 new throwaway email domains to Appwrite's disposable email detection, bringing the total to nearly 100,000 blocked domains.
+
+Disposable addresses are a common way to abuse free resources, create fraudulent accounts, and support other malicious activity. With the [**Deny disposable emails**](/docs/products/auth/email-policies#deny-disposable-emails) policy enabled, sign-ups and email updates from these providers are rejected before an account is created.
+
+Projects that already have the policy enabled are protected by the expanded list automatically. To turn it on, open **Auth** > **Policies** in the Appwrite Console, or call `updateDenyDisposableEmailPolicy` from any server SDK.
+
+We will keep updating the list as new disposable email services appear.
+
+{% arrow_link href="/docs/products/auth/email-policies#deny-disposable-emails" %}
+Read the email policies docs
+{% /arrow_link %}

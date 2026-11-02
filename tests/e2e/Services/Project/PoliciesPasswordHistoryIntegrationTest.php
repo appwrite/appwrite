@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PoliciesPasswordHistoryIntegrationTest extends Scope
 {
@@ -41,7 +41,7 @@ final class PoliciesPasswordHistoryIntegrationTest extends Scope
 
         // Step 2: Sign up user with firstpassword (policy on, so signup populates history)
         $email = 'history_' . uniqid() . '@localhost.test';
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         $account = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',

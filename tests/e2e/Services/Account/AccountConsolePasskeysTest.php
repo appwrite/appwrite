@@ -10,7 +10,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Auth\Passkeys\Origin;
 use Utopia\Auth\Tests\Passkeys\Authenticator;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AccountConsolePasskeysTest extends Scope
 {
@@ -94,7 +94,7 @@ final class AccountConsolePasskeysTest extends Scope
         $email = \uniqid('passkey', true) . \bin2hex(\random_bytes(4)) . '@appwrite.io';
 
         $user = $this->client->call(Client::METHOD_POST, '/account', self::GUEST, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Passkey User',

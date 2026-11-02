@@ -196,4 +196,23 @@ final class RedisTest extends Base
         $this->assertSame('reconnect', self::$cache->save($key, 'reconnect', $key));
         $this->assertEquals('reconnect', self::$cache->load($key, 5));
     }
+
+    public function testAPurgeTheServerRejectsThrowsInsteadOfReportingNothingToPurge(): void
+    {
+        $redis = new Redis();
+        $redis->connect(Services::HOST, Services::REDIS_PORT);
+        $redis->set('test:plain', 'value');
+        $cache = new Cache(new RedisAdapter($redis));
+
+        try {
+            $cache->purge('test:plain');
+            $this->fail('A purge Redis rejected must not read as a purge of a missing key');
+        } catch (RedisException $error) {
+            $this->assertStringContainsString('WRONGTYPE', $error->getMessage());
+        } finally {
+            $redis->del('test:plain');
+        }
+
+        $this->assertFalse($cache->purge('test:missing'));
+    }
 }

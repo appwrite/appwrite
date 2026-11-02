@@ -11,6 +11,7 @@ use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
 use Utopia\Client\Client;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\Bitbucket;
+use Utopia\VCS\Adapter\Git\Entire;
 use Utopia\VCS\Adapter\Git\Gitea;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Adapter\Git\GitLab;
@@ -78,6 +79,26 @@ return [
             'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_ORIGIN_PRIVATE_KEY'],
             // No webhookSecret: Origin signs deliveries with its own Ed25519
             // key, verified against its published JWKS instead of a shared secret.
+        ],
+    ],
+    'entire' => [
+        'adapter' => Entire::class,
+        // No 'oauth2': Entire has no OAuth2 user flow either. Installs are
+        // approved on entire.io and confirmed by a signed receipt the adapter
+        // verifies against the core's published keys (getInstallUrl / verifyReceipt).
+        // Any core serves any installation; this defaults to the US one and
+        // _APP_VCS_ENTIRE_ENDPOINT picks a nearer jurisdiction.
+        'endpoint' => System::getEnv('_APP_VCS_ENTIRE_ENDPOINT', 'https://us.auth.entire.io'),
+        'variables' => [
+            // Factory::fromInstallation() reads appId + privateKey; the plugin
+            // slug is Entire's app id.
+            'appId' => ['required' => true, 'envVariable' => '_APP_VCS_ENTIRE_PLUGIN'],
+            'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_ENTIRE_PRIVATE_KEY'],
+            // The issuer registered on the plugin: the iss of its JWTs and
+            // the audience of its install receipts.
+            'issuer' => ['required' => true, 'envVariable' => '_APP_VCS_ENTIRE_ISSUER'],
+            // No webhookSecret: Entire signs deliveries with each cell's
+            // Ed25519 key, verified against its published JWKS instead of a shared secret.
         ],
     ],
     'bitbucket' => [

@@ -14,4 +14,10 @@ return [
     'tempmail.org',
     'throwaway.email',
     '10minutemail.com',
+    '37xiao.com',
+    'aboodbab.com',
+    'agaexpress.com',
+    'goldvester.com',
+    'hiringview.com',
+    'intownbox.com',
 ];

@@ -10,7 +10,7 @@ use Utopia\NATS\Connection;
 use Utopia\NATS\ConnectionOptions;
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\MaxPayloadException;
-use Utopia\NATS\Exception\NatsException;
+use Utopia\NATS\Exception\NoRespondersException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Headers;
 use Utopia\NATS\Message;
@@ -334,7 +334,8 @@ final class RequestsTest extends TestCase
         $this->assertStringContainsString("Trace: example\r\n", $observed);
         $this->assertStringContainsString("\r\npayload\r\n", $observed);
         $this->assertSame('ok', $results[0]->data);
-        $this->assertInstanceOf(NatsException::class, $results[1]);
+        // Typed, so a caller can tell "nobody is answering yet" from a refusal.
+        $this->assertInstanceOf(NoRespondersException::class, $results[1]);
         $connection->close();
     }
 

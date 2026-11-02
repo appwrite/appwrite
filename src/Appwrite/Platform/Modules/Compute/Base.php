@@ -19,12 +19,11 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -74,6 +73,97 @@ class Base extends Action
     }
 
     /**
+     * Specifications this instance can run, flagged by the plan's `$planKey`
+     * list. Ones larger than the plan's largest stay with `enabled` false so
+     * clients can show what a higher plan unlocks. Smaller ones are left out:
+     * builds have a floor, and no plan change makes those selectable.
+     *
+     * @return array<array<string, mixed>>
+     */
+    protected function getPlanSpecifications(array $plan, string $planKey): array
+    {
+        $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
+        $maxMemory = System::getEnv('_APP_COMPUTE_MEMORY', 0);
+        $limited = \array_key_exists($planKey, $plan);
+
+        $specifications = [];
+        foreach (Config::getParam('specifications', []) as $specification) {
+            // Treat 0 as no limit
+            if ((!empty($maxCpus) && $specification['cpus'] > $maxCpus) || (!empty($maxMemory) && $specification['memory'] > $maxMemory)) {
+                continue;
+            }
+
+            $specification['enabled'] = !$limited || \in_array($specification['slug'], $plan[$planKey], true);
+            $specifications[] = $specification;
+        }
+
+        if (!$limited) {
+            return $specifications;
+        }
+
+        $enabled = \array_filter($specifications, fn (array $specification) => $specification['enabled']);
+        $planCpus = \max([0, ...\array_column($enabled, 'cpus')]);
+        $planMemory = \max([0, ...\array_column($enabled, 'memory')]);
+
+        return \array_values(\array_filter(
+            $specifications,
+            fn (array $specification) => $specification['enabled']
+                || $specification['cpus'] > $planCpus
+                || $specification['memory'] > $planMemory
+        ));
+    }
+
+    /**
+     * Builds key their cache by runtime image, so a runtime change leaves the
+     * previous image's cache where no later build or delete looks for it.
+     */
+    protected function deleteStaleBuildCache(?Device $deviceForBuilds, string $projectId, Document $previous, Document $resource): void
+    {
+        if ($deviceForBuilds === null) {
+            return;
+        }
+
+        try {
+            $stale = Deployments::resourceCachePath($projectId, $previous);
+            if ($stale === Deployments::resourceCachePath($projectId, $resource)) {
+                return;
+            }
+            $deviceForBuilds->delete($stale);
+        } catch (\Throwable $th) {
+            // The update is already saved; a cache left behind costs storage, not correctness
+            Console::warning('Failed to delete stale build cache for ' . $resource->getId() . ': ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Owner and name of a repository linked through the installation.
+     *
+     * @return array{0: string, 1: string}
+     */
+    protected function resolveInstallationRepository(Git $adapter, Document $installation, string $providerRepositoryId): array
+    {
+        try {
+            $owner = $adapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int) $providerRepositoryId);
+            $repositoryName = $adapter->getRepositoryName($providerRepositoryId);
+
+            // Installation-wide webhooks are matched by repository id, so the repository must belong to this installation
+            if (\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $adapter->getSupportedWebhookScopes(), true)) {
+                $repository = $adapter->getRepository($owner, $repositoryName);
+                if (\strval($repository['id'] ?? '') !== $providerRepositoryId) {
+                    throw new RepositoryNotFound('Repository not found.');
+                }
+                if (!$adapter->hasAccessToAllRepositories()) {
+                    $adapter->getInstallationRepository($repositoryName);
+                }
+            }
+        } catch (RepositoryNotFound) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
+
+        return [$owner, $repositoryName];
+    }
+
+    /**
      * Templates can pin a version range (e.g. "0.3.*"); codeload only takes a
      * concrete ref, so resolve a range to the highest matching tag. Templates
      * are public github.com repositories regardless of the resource's own
@@ -97,7 +187,7 @@ class Base extends Action
 
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Deployments $deployments, int $buildTimeout, array $platform = [], string $referenceType = 'branch', string $reference = ''): Document
     {
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $entrypoint = $function->getAttribute('entrypoint', '');
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         if (empty($providerInstallationId)) {
@@ -188,11 +278,7 @@ class Base extends Action
             );
         } else {
             $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
+                '$permissions' => Deployments::permissions(),
                 ...$deployment->getArrayCopy(),
                 'status' => 'waiting',
             ]));
@@ -212,7 +298,7 @@ class Base extends Action
 
     public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, BuildPublisher $publisherForBuilds, Document $template, Git $vcs, bool $activate, Authorization $authorization, Deployments $deployments, int $buildTimeout, Bus $bus, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
@@ -267,11 +353,7 @@ class Base extends Action
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
+            '$permissions' => Deployments::permissions(),
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
@@ -301,11 +383,11 @@ class Base extends Action
         ]));
 
         $sitesDomain = $platform['sitesDomain'];
-        $domain = ID::unique() . "." . $sitesDomain;
+        $domain = Id::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-        $ruleId = $isMd5 ? md5($domain) : ID::unique();
+        $ruleId = $isMd5 ? md5($domain) : Id::unique();
 
         $rule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
@@ -365,12 +447,7 @@ class Base extends Action
         $branchDomain = null;
         if (!empty($providerBranch)) {
             try {
-                $branchDomain = (new BranchDomainFilter())->apply([
-                    'branch' => $providerBranch,
-                    'resourceId' => $site->getId(),
-                    'projectId' => $project->getId(),
-                    'sitesDomain' => $sitesDomain,
-                ]);
+                $branchDomain = $authorization->skip(fn () => self::branchDomain($project, $site, $providerBranch, $sitesDomain, $dbForPlatform));
             } catch (\InvalidArgumentException $error) {
                 // Deploy without a branch preview rather than store an unreachable rule
                 Console::warning('Skipping branch preview rule: ' . $error->getMessage());
@@ -439,6 +516,42 @@ class Base extends Action
     }
 
     /**
+     * The site's preview domain for a branch. A branch previewed before the
+     * domain hash was widened keeps the domain its rule already serves.
+     *
+     * @throws \InvalidArgumentException When the result is not a valid hostname
+     */
+    public static function branchDomain(Document $project, Document $site, string $branch, string $sitesDomain, Database $dbForPlatform): string
+    {
+        $input = [
+            'branch' => $branch,
+            'resourceId' => $site->getId(),
+            'projectId' => $project->getId(),
+            'sitesDomain' => $sitesDomain,
+        ];
+        $filter = new BranchDomainFilter();
+
+        $legacy = $filter->apply([...$input, 'legacy' => true]);
+        if (self::ownsBranchRule($dbForPlatform->getDocument('rules', md5($legacy)), $project, $site, $branch)) {
+            return $legacy;
+        }
+
+        return $filter->apply($input);
+    }
+
+    /**
+     * Whether a rule is the preview rule of this site's branch.
+     */
+    public static function ownsBranchRule(Document $rule, Document $project, Document $site, string $branch): bool
+    {
+        return !$rule->isEmpty()
+            && (string) $rule->getAttribute('projectInternalId') === (string) $project->getSequence()
+            && $rule->getAttribute('deploymentResourceType') === 'site'
+            && (string) $rule->getAttribute('deploymentResourceInternalId') === (string) $site->getSequence()
+            && $rule->getAttribute('deploymentVcsProviderBranch') === $branch;
+    }
+
+    /**
      * Create or repoint the site's branch-preview rule — and any manual rules
      * pinned to the branch — at a successfully built deployment.
      */
@@ -452,12 +565,7 @@ class Base extends Action
         }
 
         try {
-            $domain = (new BranchDomainFilter())->apply([
-                'branch' => $branchName,
-                'resourceId' => $site->getId(),
-                'projectId' => $project->getId(),
-                'sitesDomain' => $sitesDomain,
-            ]);
+            $domain = self::branchDomain($project, $site, $branchName, $sitesDomain, $dbForPlatform);
         } catch (\InvalidArgumentException $error) {
             // Skip only the preview rule: manual rules pinned to the branch
             // below still follow the deployment.
@@ -490,28 +598,32 @@ class Base extends Action
                 ]));
                 $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
             } catch (Duplicate) {
-                $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                    'deploymentId' => $deployment->getId(),
-                    'deploymentInternalId' => $deployment->getSequence(),
-                ]));
-                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                if (self::ownsBranchRule($dbForPlatform->getDocument('rules', $ruleId), $project, $site, $branchName)) {
+                    $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                        'deploymentId' => $deployment->getId(),
+                        'deploymentInternalId' => $deployment->getSequence(),
+                    ]));
+                    $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                } else {
+                    Console::warning("Skipping branch preview rule: {$domain} is held by another resource.");
+                }
             }
         }
 
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, [
+        foreach ($dbForPlatform->cursor('rules', [
             Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceInternalId', [$site->getSequence()]),
             Query::equal('deploymentResourceType', ['site']),
             Query::equal('deploymentVcsProviderBranch', [$branchName]),
             Query::equal('trigger', ['manual']),
-        ]);
+        ], batchSize: 25) as $rule) {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ]));
+            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+        }
     }
 
     /**
@@ -539,12 +651,12 @@ class Base extends Action
             // by whichever deployment happens to be the resource's first.
             Query::equal('deploymentVcsProviderBranch', ['']),
         ];
-        $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform, $authorization, $bus) {
+        foreach ($dbForPlatform->cursor('rules', $queries, batchSize: 25) as $rule) {
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'deploymentId' => $deployment->getId(),
                 'deploymentInternalId' => $deployment->getSequence(),
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
-        }, $queries);
+        }
     }
 }

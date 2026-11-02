@@ -4,6 +4,7 @@ import type { CoverRenderData } from '@/lib/cover-generator/types'
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 
 export const OG_IMAGE_PATH = '/og/image.png'
+export const OG_COVER_PATH = '/og/cover.jpg'
 
 /** Classic Open Graph canvas (≈1.91:1). Distinct from the 16:9 blog cover artboard. */
 export const OG_IMAGE_WIDTH = 1200
@@ -58,6 +59,16 @@ export function buildOgImageUrl(
   }
 
   return `${getSeoSiteOrigin(siteOrigin)}${OG_IMAGE_PATH}?${searchParams.toString()}`
+}
+
+/** X and LinkedIn cannot render AVIF cards, so AVIF covers are served as JPEG. */
+export function buildOgCoverUrl(cover: string, siteOrigin?: string): string {
+  if (!cover.startsWith('/')) return cover
+
+  const origin = getSeoSiteOrigin(siteOrigin)
+  if (!cover.endsWith('.avif')) return `${origin}${cover}`
+
+  return `${origin}${OG_COVER_PATH}?${new URLSearchParams({ path: cover }).toString()}`
 }
 
 export function parseOgImageRenderData(

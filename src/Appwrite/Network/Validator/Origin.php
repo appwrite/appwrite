@@ -62,6 +62,12 @@ class Origin extends Validator
         $this->scheme = $this->parseScheme($origin);
         $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');
 
+        // parse_url() and browser URL parsers split http(s) authority differently
+        // when it contains `\`. Require host[:port] so both agree on the host.
+        if ($this->isHttpScheme($this->scheme) && !$this->hasNormalizedAuthority($origin)) {
+            return false;
+        }
+
         $webPlatforms = [
             Platform::SCHEME_HTTP,
             Platform::SCHEME_HTTPS,
@@ -152,5 +158,39 @@ class Origin extends Validator
         } else {
             return $scheme;
         }
+    }
+
+    private function isHttpScheme(?string $scheme): bool
+    {
+        return $scheme === Platform::SCHEME_HTTP
+            || $scheme === Platform::SCHEME_HTTPS;
+    }
+
+    private function hasNormalizedAuthority(string $origin): bool
+    {
+        $marker = '://';
+        $start = strpos($origin, $marker);
+        if ($start === false) {
+            return false;
+        }
+
+        $start += strlen($marker);
+        $authority = substr($origin, $start, strcspn($origin, '/?#', $start));
+        if ($authority === '') {
+            return false;
+        }
+
+        if (str_contains($authority, '\\') || str_contains($authority, '@')) {
+            return false;
+        }
+
+        $length = strlen($authority);
+        for ($i = 0; $i < $length; $i++) {
+            if (ctype_cntrl($authority[$i])) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

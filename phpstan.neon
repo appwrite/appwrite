@@ -13,6 +13,11 @@ parameters:
   excludePaths:
     - tests/resources
   ignoreErrors:
+    # Database\Query::parseQueries inherits the base @throws Utopia\Query\Exception
+    # annotation, but late static binding wraps that as Database\Exception\Query.
+    -
+      identifier: catch.neverThrown
+      message: '#Dead catch - Utopia.Database.Exception.Query is never thrown#'
     # The E2E harness talks to the stack under test, not to a destination a user chose
     -
       identifier: function.disallowedCurl

@@ -627,17 +627,8 @@ abstract class Response
             return;
         }
 
-        $headersSize = 0;
-        foreach ($this->headers as $name => $values) {
-            foreach ($values as $value) {
-                $headersSize += \strlen($name . ': ' . $value);
-            }
-            $headersSize += (\count($values) - 1) * 2; // linebreaks
-        }
-        $headersSize += (\count($this->headers) - 1) * 2; // linebreaks
-
         $bodyLength = \strlen($body);
-        $this->size += $headersSize + $bodyLength;
+        $this->size += $this->headersSize() + $bodyLength;
 
         if ($bodyLength <= self::CHUNK_SIZE) {
             $this->end($body);
@@ -683,10 +674,6 @@ abstract class Response
             return;
         }
 
-        if ($end) {
-            $this->sent = true;
-        }
-
         $this->addHeader('X-Debug-Speed', (string) (microtime(true) - $this->startTime));
 
         if (!$this->headersSent) {
@@ -694,18 +681,38 @@ abstract class Response
                 ->appendCookies()
                 ->appendHeaders();
 
+            $this->size += $this->headersSize();
             $this->headersSent = true;
         }
 
         if (!$this->disablePayload) {
-            $this->write($body);
+            if ($body !== '' && !$this->write($body)) {
+                throw new \RuntimeException('Failed to write response chunk.');
+            }
+            $this->size += \strlen($body);
             if ($end) {
+                $this->sent = true;
                 $this->disablePayload();
                 $this->end();
             }
         } else {
+            $this->sent = true;
             $this->end();
         }
+    }
+
+    private function headersSize(): int
+    {
+        $headersSize = 0;
+        foreach ($this->headers as $name => $values) {
+            foreach ($values as $value) {
+                $headersSize += \strlen($name . ': ' . $value);
+            }
+            $headersSize += (\count($values) - 1) * 2; // linebreaks
+        }
+        $headersSize += (\count($this->headers) - 1) * 2; // linebreaks
+
+        return $headersSize;
     }
 
     /**

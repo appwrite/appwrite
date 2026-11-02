@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 2,
+  "configVersion": 0,
+  "workspaces": {
+    "": {
+      "name": "@appwrite.io/repo",
+      "devDependencies": {
+        "prettier": "^3.9.0",
+      },
+    },
+  },
+  "packages": {
+    "prettier": ["prettier@3.9.0", "", { "bin": "bin/prettier.cjs" }, "sha512-LjIqSIC5VYLzs9WedVmJ2ljNAGnU+DteIClbahu4L/DBeWjZ6iT/k1lAYyu9JUh+1xINxWadaPw/Pl63y/agAw=="],
+  }
+}

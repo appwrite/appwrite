@@ -53,8 +53,8 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
-            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Passkey ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
+            ->param('passkeyId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Passkey ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Passkey name. Max length: 128 chars.')
             ->inject('response')
             ->inject('dbForProject')

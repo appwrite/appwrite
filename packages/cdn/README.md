@@ -27,7 +27,7 @@ The cache API supports four purge modes:
 - key or cache-tag purges for providers like Fastly and Cloudflare
 - zone-wide purges, for when the whole cache has to go
 
-Domains are lowercase hostnames without a scheme or trailing slash. Paths begin with `/`; CDN resources are assumed to use HTTPS.
+Domains are lowercase hostnames without a scheme or trailing slash. Paths begin with `/` and contain no `.` or `..` segments; CDN resources are assumed to use HTTPS.
 
 ### Cloudflare
 
@@ -96,6 +96,45 @@ Keys are sent as given, in the request body, batched up to 256 per request. A Fa
 
 `purgeZone()` purges everything on the service (`purge_all`), which Fastly documents as taking up to two minutes, being incompatible with soft purge, and likely to spike origin traffic on a busy service. Prefer `purgeDomain()` or `purgeKeys()`.
 
+### CloudFront
+
+```php
+<?php
+
+use Utopia\Cdn\Cache;
+use Utopia\Cdn\Cache\Adapter\CloudFront;
+
+$cache = new Cache(new CloudFront(
+    accessKeyId: 'YOUR_ACCESS_KEY_ID',
+    secretAccessKey: 'YOUR_SECRET_ACCESS_KEY',
+    domainKeyPrefix: 'domain-',
+    tenantId: 'YOUR_DISTRIBUTION_TENANT_ID', // only for purgeKeys() and purgeZone()
+));
+
+// Looks up the distribution tenant serving example.com, then invalidates both paths on it.
+$cache->purgePaths('example.com', [
+    '/files/hero.png',
+    '/files/*',
+]);
+
+// Invalidates the cache tag "domain-example.com" on the tenant serving example.com.
+$cache->purgeDomain('example.com');
+
+// Invalidates both cache tags on the configured tenant.
+$cache->purgeKeys([
+    'host-deadbeef',
+    'deployment-12345',
+]);
+```
+
+The adapter targets [multi-tenant distributions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-config-options.html), which are invalidated one [distribution tenant](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateInvalidationForDistributionTenant.html) at a time. `purgePaths()` and `purgeDomain()` find the tenant from the domain (`GetDistributionTenantByDomain`), so one adapter serves every domain; a domain no tenant serves has nothing cached on CloudFront and its purge does nothing. `purgeKeys()` and `purgeZone()` carry no domain, so they need `tenantId` and raise `Exception\UnsupportedOperation` without it. A tenant's cache is shared by all of its domains, so a path purge reaches every domain on the tenant.
+
+Keys are [cache tags](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/invalidation-by-tags.html), sent as `#`-prefixed invalidation paths. They only match responses whose tags the origin listed in the header named by the distribution's `CacheTagConfig`, at most 50 per response. Like Fastly, `purgeDomain()` needs `domainKeyPrefix` to know which tag stands for a domain; pass `''` when the tag is the bare hostname. A tag CloudFront cannot store (empty, over 256 characters, or anything but visible ASCII without commas) raises `InvalidArgumentException` before anything is sent.
+
+`purgeZone()` invalidates `/*` on the tenant.
+
+Paths and tags are batched at `PATHS_PER_PURGE` and `KEYS_PER_PURGE`, both 150, which is CloudFront's default quota of paths or tags processed per second; consecutive batches of one purge are `batchInterval` milliseconds apart (1000 by default). A batch CloudFront throttles (`Throttling`, `TooManyInvalidationsInProgress` or HTTP 429) is resent up to `THROTTLE_RETRIES` (3) times, waiting `batchInterval`, then twice and four times as long; any other rejection fails the purge straight away. Requests are signed with AWS Signature Version 4 by `Aws\Signature`, which also accepts a session token for temporary credentials (`sessionToken`).
+
 ### Cache balancing
 
 `Cache\Adapter\Balancer` turns provider selection into configuration. Every provider is declared once as an option, filters decide which options a purge applies to, and the purge then reaches **all** of them — content cached by two providers has to be evicted from both.
@@ -144,7 +183,7 @@ Options stay ordinary balancer options, so `run()` still picks a single one thro
 
 `Cache\Adapter` declares the four purges every adapter offers — `purgePaths()`, `purgeDomain()`, `purgeKeys()` and `purgeZone()` — so a caller never has to know which provider is behind it. Providers differ in what they expose natively, and the adapter absorbs the difference: Cloudflare purges a hostname directly, while Fastly maps the same call onto a surrogate key. Where an adapter cannot serve an operation with the configuration it was given it raises `Exception\UnsupportedOperation`, rather than quietly doing something wider.
 
-Adapters name things alike, with provider-specific numbers behind the same names: `KEYS_PER_PURGE` is how many cache keys one request may carry, 256 on Fastly and 30 on Cloudflare. Only Cloudflare declares `PATHS_PER_PURGE`, because a Fastly URL purge takes one URL and has nothing to batch.
+Adapters name things alike, with provider-specific numbers behind the same names: `KEYS_PER_PURGE` is how many cache keys one request may carry, 256 on Fastly, 30 on Cloudflare and 150 on CloudFront. Only Cloudflare and CloudFront declare `PATHS_PER_PURGE`, because a Fastly URL purge takes one URL and has nothing to batch.
 
 ## Certificates
 
@@ -175,6 +214,8 @@ $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 
 `getCertificateStatus()` returns a `Certificates\Status` constant. Fastly keeps a subscription `pending` while it waits for the domain owner to prove ownership, so the provider also reads the subscription's TLS authorizations: when one is `blocked`, or the subscription has `failed`, it throws `Exception\Certificate` instead of returning a status. The exception carries `getStatus()` (`Status::BLOCKED` or `Status::FAILED`), `getChallenges()` (the DNS records to create, as `Certificates\Challenge` values with a `type`, `recordType`, `recordName` and `values`) and `getWarnings()` (Fastly's own instructions, such as a record that conflicts with a challenge). `FastlyTls::CHALLENGE_MANAGED_DNS` is the `_acme-challenge` CNAME challenge, the one that proves ownership without pointing the domain itself at Fastly.
 
+Fastly renews certificates on its own, but marks a subscription `failed` only a week after its certificate expired. When the newest certificate expires within a week and Fastly has not replaced it, `getCertificateStatus()` returns `Status::EXPIRING`. Alert on it rather than issue again: Fastly accepts a retry only once the subscription has failed. `isRenewRequired()` is true only when issuing does something: no subscription or a failed one, or, for `Fastly`, a domain missing from domain management, attached to another service, or detached.
+
 ```php
 use Utopia\Cdn\Exception\Certificate as CertificateException;
 
@@ -199,6 +240,16 @@ $fastlyCertificates = new Fastly(
 );
 ```
 
+A domain record whose `service_id` is empty is handled by what serves it:
+
+- A routing configuration serves it (`routing_configuration_id` is set): issuing, renewing and deleting leave it alone.
+- The configured service's active version holds it: it is a classic domain. Issuing and renewing leave it alone, and deleting removes it through a new service version.
+- Neither: the record is detached, and Fastly answers the hostname with its unknown-domain page while TLS still reports issued. `isRenewRequired()` returns true, and `issueCertificate()` issues TLS first and reassigns the record to the configured service only once the certificate is issued, as it does for a domain on another service. `deleteCertificate()` leaves it alone.
+
+Only the configured service's active version is read, through `GET /service/{id}/details`. A classic domain that another service in the account holds, with a record that names no service, therefore counts as detached, which is why deleting never touches a detached record.
+
+Fastly's `fqdn` filter is a partial match, so the provider reads the results page by page, following `meta.next_cursor` for up to 10 pages of 100, and fails rather than report a domain missing when the exact name has not turned up by then. When another request adds the domain between that lookup and the create, Fastly answers `400` with a detail saying the name has already been taken: the provider looks the domain up once more and carries on with that record, or fails naming the conflict when no record in the account matches.
+
 ### Cloudflare certificates
 
 Cloudflare certificates use Cloudflare for SaaS custom hostnames, which must be enabled for the zone and plan.
@@ -213,6 +264,35 @@ $cloudflareCertificates = new Cloudflare(
 ```
 
 Cloudflare custom-hostname issuance is treated as instant. Certificate status retrieval is not supported by this provider.
+
+### CloudFront certificates
+
+CloudFront certificates are AWS-managed certificates on [distribution tenants](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CreateDistributionTenant.html) of a multi-tenant distribution. Each domain gets its own tenant, named after the domain, and the tenant asks CloudFront for a certificate. AWS issues it and renews it for as long as the domain points at CloudFront, so there is no ACME account, no private key and nothing to import into ACM.
+
+```php
+use Utopia\Cdn\Certificates\Provider\CloudFront;
+
+$cloudFrontCertificates = new CloudFront(
+    accessKeyId: 'YOUR_ACCESS_KEY_ID',
+    secretAccessKey: 'YOUR_SECRET_ACCESS_KEY',
+    distributionId: 'YOUR_MULTI_TENANT_DISTRIBUTION_ID',
+    connectionGroupId: 'YOUR_CONNECTION_GROUP_ID', // optional; the account's default group otherwise
+);
+```
+
+- `issueCertificate()` creates the tenant with a certificate request, or sends a fresh request when the tenant's certificate failed, timed out, expired or was revoked, and enables a disabled tenant. It returns `null` until the certificate is issued, then a date `CloudFront::RECHECK_INTERVAL` ahead: AWS renews by itself, so the date is only when to look again.
+- `getCertificateStatus()` returns `Status::PENDING` while the certificate waits on validation and `Status::ISSUED` once issued, and throws `Exception\Certificate` with `Status::FAILED` when AWS has stopped trying.
+- `deleteCertificate()` disables the tenant, which CloudFront requires, and deletes it. When the disable has not propagated yet the delete throws, leaving the tenant disabled for a later attempt.
+
+By default the certificate is requested with a `self-hosted` validation token, which lets it be issued while the domain still points at another CDN. Whatever serves the domain then has to answer the certificate authority's request with a redirect to the token:
+
+```php
+foreach ($cloudFrontCertificates->getValidationTokens('cdn.example.com') as $token) {
+    // GET $token->from (http://cdn.example.com/.well-known/pki-validation/…) -> redirect to $token->to
+}
+```
+
+Pass `validationTokenHost: CloudFront::VALIDATION_TOKEN_HOST_CLOUDFRONT` when domains already point at CloudFront and CloudFront should answer itself. Requests are signed with `Aws\Signature` and need `cloudfront:CreateDistributionTenant`, `GetDistributionTenantByDomain`, `UpdateDistributionTenant`, `DeleteDistributionTenant` and `GetManagedCertificateDetails`.
 
 ### Certificate routing
 
@@ -235,10 +315,12 @@ $certificates = new Certificates(new Proxy(
 
 - [x] [Cloudflare](https://www.cloudflare.com/)
 - [x] [Fastly](https://www.fastly.com/)
+- [x] [Amazon CloudFront](https://aws.amazon.com/cloudfront/) (multi-tenant distributions)
 
 ### Certificates
 
 - [x] [Fastly TLS subscriptions](https://www.fastly.com/documentation/guides/getting-started/domains/securing-domains-with-tls/)
+- [x] [CloudFront distribution tenants with AWS-managed certificates](https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_GetManagedCertificateDetails.html)
 - [x] [Cloudflare for SaaS custom hostnames](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/domain-support/create-custom-hostnames/)
 
 ## System requirements

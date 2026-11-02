@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Proxy;
 
 use Tests\E2E\Client;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -202,6 +203,36 @@ trait ProxyBase
 
         $rule = $this->createAPIRule($domain . '/some-path');
         $this->assertEquals(400, $rule['headers']['status-code']);
+    }
+
+    public function testCreateRuleOnFunctionsFallbackDomain(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $domain = \uniqid() . '.fallback.localhost';
+        $ruleId = $this->setupAPIRule($domain);
+        $rule = $this->getRule($ruleId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('verified', $rule['body']['status']);
+        $this->cleanupRule($ruleId);
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->createAPIRule('fallback.localhost');
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        $rule = $this->createAPIRule('nested.' . \uniqid() . '.fallback.localhost');
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', 'fallback.localhost');
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertIsString($response['body']);
+        $this->assertStringContainsString('cannot be used for security reasons', $response['body']);
     }
 
     public function testCreateAPIRuleFoldsDomainCase(): void
@@ -747,6 +778,52 @@ trait ProxyBase
         $this->assertEquals(200, $rules['headers']['status-code']);
         $this->assertEquals(0, $rules['body']['total']);
         $this->assertCount(0, $rules['body']['rules']);
+    }
+
+    public function testListRulesCursorFromOtherProject(): void
+    {
+        $other = $this->getProject(true);
+        $otherRule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $other['$id'],
+            'x-appwrite-key' => $other['apiKey'],
+        ], [
+            'domain' => \uniqid() . '-other.custom.localhost',
+        ]);
+        $this->assertSame(201, $otherRule['headers']['status-code']);
+
+        $ruleId = $this->setupAPIRule(\uniqid() . '-cursor.custom.localhost');
+
+        /**
+         * Test for SUCCESS
+         */
+        $rules = $this->listRules([
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $ruleId]))->toString(),
+            ],
+        ]);
+        $this->assertSame(200, $rules['headers']['status-code']);
+        $this->assertNotContains($ruleId, \array_column($rules['body']['rules'], '$id'));
+
+        /**
+         * Test for FAILURE
+         */
+        // Another project's rule is no cursor here, as if it did not exist.
+        $rules = $this->listRules([
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $otherRule['body']['$id']]))->toString(),
+            ],
+        ]);
+        $this->assertSame(400, $rules['headers']['status-code']);
+        $this->assertSame('general_cursor_not_found', $rules['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $otherRule['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $other['$id'],
+            'x-appwrite-key' => $other['apiKey'],
+        ]);
+        $this->assertSame(204, $deleted['headers']['status-code']);
     }
 
     public function testRuleVerification(): void

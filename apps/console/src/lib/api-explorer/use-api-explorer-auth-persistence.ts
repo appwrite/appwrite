@@ -6,7 +6,7 @@ import type {
 } from './types'
 import {
   resolveApiExplorerAuthSnapshot,
-  writeApiExplorerAuthToLocalStorage,
+  writeApiExplorerAuthToStorage,
 } from './auth-storage'
 
 const API_EXPLORER_AUTH_PERSIST_DEBOUNCE_MS = 300
@@ -16,14 +16,17 @@ export function useApiExplorerAuthPersistence(
   fallbackPlatform: ApiExplorerProjectPlatform,
 ) {
   const [internalPlatform, setInternalPlatformState] =
-    useState<ApiExplorerProjectPlatform>(() =>
-      resolveApiExplorerAuthSnapshot(projectId, fallbackPlatform).platform,
+    useState<ApiExplorerProjectPlatform>(
+      () =>
+        resolveApiExplorerAuthSnapshot(projectId, fallbackPlatform).platform,
     )
   const [clientAuth, setClientAuthState] = useState<ApiExplorerClientAuthState>(
-    () => resolveApiExplorerAuthSnapshot(projectId, fallbackPlatform).clientAuth,
+    () =>
+      resolveApiExplorerAuthSnapshot(projectId, fallbackPlatform).clientAuth,
   )
   const [serverAuth, setServerAuthState] = useState<ApiExplorerServerAuthState>(
-    () => resolveApiExplorerAuthSnapshot(projectId, fallbackPlatform).serverAuth,
+    () =>
+      resolveApiExplorerAuthSnapshot(projectId, fallbackPlatform).serverAuth,
   )
 
   const skipPersistRef = useRef(true)
@@ -33,7 +36,10 @@ export function useApiExplorerAuthPersistence(
   > | null>(null)
 
   const hydrateFromStorage = useCallback(
-    (nextProjectId: string, nextFallbackPlatform: ApiExplorerProjectPlatform) => {
+    (
+      nextProjectId: string,
+      nextFallbackPlatform: ApiExplorerProjectPlatform,
+    ) => {
       skipPersistRef.current = true
       const snapshot = resolveApiExplorerAuthSnapshot(
         nextProjectId,
@@ -66,7 +72,7 @@ export function useApiExplorerAuthPersistence(
         const pending = pendingSnapshotRef.current
         if (!pending) return
         pendingSnapshotRef.current = null
-        writeApiExplorerAuthToLocalStorage(projectId, pending)
+        writeApiExplorerAuthToStorage(projectId, pending)
       }, API_EXPLORER_AUTH_PERSIST_DEBOUNCE_MS)
     },
     [projectId],
@@ -99,7 +105,9 @@ export function useApiExplorerAuthPersistence(
     (
       value:
         | ApiExplorerClientAuthState
-        | ((previous: ApiExplorerClientAuthState) => ApiExplorerClientAuthState),
+        | ((
+            previous: ApiExplorerClientAuthState,
+          ) => ApiExplorerClientAuthState),
     ) => {
       setClientAuthState(value)
     },
@@ -110,7 +118,9 @@ export function useApiExplorerAuthPersistence(
     (
       value:
         | ApiExplorerServerAuthState
-        | ((previous: ApiExplorerServerAuthState) => ApiExplorerServerAuthState),
+        | ((
+            previous: ApiExplorerServerAuthState,
+          ) => ApiExplorerServerAuthState),
     ) => {
       setServerAuthState(value)
     },

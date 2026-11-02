@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Message\ProjectContext;
 use Appwrite\Usage\Connection;
+use Swoole\Timer;
 use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -19,6 +20,45 @@ class StatsUsage extends Action
         METRIC_SITES_OUTBOUND => METRIC_NETWORK_OUTBOUND,
         METRIC_SITES_REQUESTS => METRIC_NETWORK_REQUESTS,
     ];
+
+    /**
+     * Messages fold into one batch, written this long after the batch opens.
+     * Each ClickHouse insert is a new part sorted into every projection and
+     * merged again later, so an insert per message kept small servers busy.
+     * A stopping worker waits for the batch, so this stays under Docker's
+     * 10 second stop timeout.
+     */
+    private const int FLUSH_DELAY_MS = 5_000;
+
+    /**
+     * How long a batch whose insert failed waits before the next attempt.
+     * Until it is written, the worker refuses messages so they stay in the
+     * queue instead of piling up in memory. Only the first retry runs on a
+     * timer; later ones run on the next message after this delay, so a
+     * stopping worker waits for at most one retry and stays under Docker's
+     * stop timeout.
+     */
+    private const int RETRY_DELAY_MS = 5_000;
+
+    /**
+     * The open batch, one accumulator per minute of event time. A folded event
+     * keeps the earliest time it absorbed, so events from different minutes
+     * must not share one, or usage slides into an earlier minute, hour or day.
+     *
+     * @var array<int, Accumulator>
+     */
+    private array $accumulators = [];
+
+    /**
+     * Batches whose insert failed, kept for the next attempt.
+     *
+     * @var list<Accumulator>
+     */
+    private array $retained = [];
+
+    private bool $retryScheduled = false;
+
+    private float $failedAt = 0.0;
 
     public static function getName(): string
     {
@@ -49,6 +89,15 @@ class StatsUsage extends Action
             throw new \RuntimeException('Missing payload');
         }
 
+        if ($this->retained !== []) {
+            if ((\microtime(true) - $this->failedAt) * 1000 >= self::RETRY_DELAY_MS) {
+                $this->write();
+            }
+            if ($this->retained !== []) {
+                throw new \RuntimeException('Usage events are not being written; refusing the message until the retained events are written');
+            }
+        }
+
         $tenant = $projectContext->sequence;
         if ($tenant === '') {
             Console::warning('Skipping usage event write: project has no sequence');
@@ -56,9 +105,15 @@ class StatsUsage extends Action
         }
 
         try {
-            $accumulator = new Accumulator($usageConnection->getUsage());
+            if ($this->accumulators === []) {
+                // One-shot rather than a tick: a pending timer keeps the worker's
+                // event loop alive only until it fires, so shutdown still writes it.
+                Timer::after(self::FLUSH_DELAY_MS, $this->flush(...));
+            }
+
             $projectId = (string) ($payload['project']['$id'] ?? '');
             $timestamp = $this->timestamp($payload, $message);
+            $accumulator = $this->accumulators[\intdiv($timestamp->getTimestamp(), 60)] ??= new Accumulator($usageConnection->getUsage());
 
             foreach ($payload['metrics'] ?? [] as $metric) {
                 $key = (string) ($metric['key'] ?? '');
@@ -118,14 +173,50 @@ class StatsUsage extends Action
                     allowNegative: $key === METRIC_REALTIME_CONNECTIONS,
                 );
             }
-
-            if ($accumulator->count() > 0 && !$accumulator->flush()) {
-                Console::error('Usage event flush returned false');
-            }
         } catch (\Throwable $th) {
-            // Usage analytics deliberately remains best-effort and inserts are
-            // not retried because the adapter has no durable deduplication key.
-            Console::error('Failed to write usage events: ' . $th->getMessage());
+            Console::error('Failed to collect usage events: ' . $th->getMessage());
+        }
+    }
+
+    private function flush(): void
+    {
+        $this->write();
+
+        if ($this->retained === [] || $this->retryScheduled) {
+            return;
+        }
+
+        $this->retryScheduled = true;
+        Timer::after(self::RETRY_DELAY_MS, function (): void {
+            $this->retryScheduled = false;
+            $this->write();
+        });
+    }
+
+    private function write(): void
+    {
+        // Detach first, so messages handled while the insert is in flight open the next batch.
+        $accumulators = [...$this->retained, ...\array_values($this->accumulators)];
+        $this->retained = [];
+        $this->accumulators = [];
+
+        foreach ($accumulators as $accumulator) {
+            if ($accumulator->count() === 0) {
+                continue;
+            }
+
+            try {
+                if ($accumulator->flush()) {
+                    continue;
+                }
+                Console::error('Usage event flush left entries unwritten');
+            } catch (\Throwable $th) {
+                Console::error('Failed to write usage events: ' . $th->getMessage());
+            }
+
+            // A failed batch stays in the accumulator, so the retry writes only what is left.
+            $this->retained[] = $accumulator;
+            $this->failedAt = \microtime(true);
         }
     }
 

@@ -294,6 +294,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/advanced/self-hosting/platforms/azure',
           },
           {
+            label: 'Kubernetes',
+            href: '/docs/advanced/self-hosting/platforms/kubernetes',
+          },
+          {
             label: 'Coolify',
             href: '/docs/advanced/self-hosting/platforms/coolify',
           },
@@ -1973,6 +1977,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Execute',
             href: '/docs/products/functions/execute',
           },
+          {
+            label: 'Email triggers',
+            href: '/docs/products/functions/email',
+          },
         ],
       },
       {
@@ -2582,6 +2590,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
           {
             label: 'Grok Build',
             href: '/docs/tooling/ai/agents/grok-build',
+          },
+          {
+            label: 'Pi',
+            href: '/docs/tooling/ai/agents/pi',
           },
         ],
       },

@@ -1,3 +1,5 @@
+import type { Models } from '@appwrite.io/console'
+
 export type FirewallImpactPoint = {
   date: string
   day: Date
@@ -16,3 +18,5 @@ export type FirewallActionActivityPoint = {
   /** Average solve time in ms this interval — challenge action only. */
   avgSolveTimeMs?: number
 }
+
+export type FirewallRule = Models.WafRuleList['rules'][number]

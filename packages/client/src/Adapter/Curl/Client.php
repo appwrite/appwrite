@@ -26,6 +26,7 @@ use Utopia\Client\Exception\ProtocolException;
 use Utopia\Client\Exception\ProxyException;
 use Utopia\Client\Exception\TimeoutException;
 use Utopia\Client\Exception\TlsException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Client\Redirect;
 use Utopia\Client\Response\Builder as ResponseBuilder;
 use Utopia\Client\Tls;
@@ -35,7 +36,7 @@ use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use ValueError;
 
-class Client implements Adapter
+class Client implements Adapter, ResponseStreamingClientInterface
 {
     private const float DEFAULT_CONNECT_TIMEOUT = 5.0;
 
@@ -188,14 +189,19 @@ class Client implements Adapter
         );
     }
 
+    public function supportsResponseStreaming(): bool
+    {
+        return true;
+    }
+
     /**
      * @param callable(string): void $sink
      *
      * @throws ClientExceptionInterface
      */
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
-        $parsed = $this->transfer($request, $sink);
+        $parsed = $this->transfer($request, $sink, $onResponse);
 
         return $this->responseBuilder->build(
             $parsed['status'],
@@ -218,7 +224,7 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    private function transfer(RequestInterface $request, callable $sink): array
+    private function transfer(RequestInterface $request, callable $sink, ?callable $onResponse = null): array
     {
         if (!\extension_loaded('curl')) {
             throw new AdapterPreconditionException($request, 'The curl extension is required.');
@@ -236,7 +242,29 @@ class Client implements Adapter
         $headers = '';
         $refused = null;
         $handle = $this->handle($request);
-        $options = $this->options($request, $headers, $refused, $sink, $decompress);
+        $notified = false;
+        $builder = $this->responseBuilder;
+        $notify = static function () use (&$notified, &$headers, $onResponse, $decompress, $request, $builder): void {
+            if ($notified || $onResponse === null) {
+                return;
+            }
+
+            $parsed = self::parseHeaderBlock($headers);
+            if ($parsed['status'] < 200 || $parsed['status'] > 599) {
+                throw new InvalidResponseException($request, 'Received an invalid final HTTP response.');
+            }
+
+            if ($decompress) {
+                $parsed['headers'] = self::decoded($parsed['headers']);
+            }
+
+            $notified = true;
+            $onResponse($builder->build($parsed['status'], $parsed['reason'], $parsed['headers'], '', $parsed['protocol']));
+        };
+        $options = $this->options($request, $headers, $refused, static function (string $chunk) use ($sink, $notify): void {
+            $notify();
+            $sink($chunk);
+        }, $decompress);
 
         try {
             if (curl_setopt_array($handle, $options) === false) {
@@ -263,15 +291,17 @@ class Client implements Adapter
             throw new ConnectionException($request, 'Connection closed before a complete HTTP response was received.');
         }
 
-        $parsed = $this->parseHeaderBlock($headers);
+        $parsed = self::parseHeaderBlock($headers);
 
         if ($parsed['status'] < 100 || $parsed['status'] > 599) {
             throw new InvalidResponseException($request, 'Received an invalid HTTP response.');
         }
 
         if ($decompress) {
-            $parsed['headers'] = $this->decoded($parsed['headers']);
+            $parsed['headers'] = self::decoded($parsed['headers']);
         }
+
+        $notify();
 
         return $parsed;
     }
@@ -557,7 +587,7 @@ class Client implements Adapter
      *
      * @return array<string, array<int, string>>
      */
-    private function decoded(array $headers): array
+    private static function decoded(array $headers): array
     {
         $encoded = false;
 
@@ -583,7 +613,7 @@ class Client implements Adapter
     /**
      * @return array{protocol: string, status: int, reason: string, headers: array<string, array<int, string>>}
      */
-    private function parseHeaderBlock(string $headerBlock): array
+    private static function parseHeaderBlock(string $headerBlock): array
     {
         $blocks = preg_split("/\r\n\r\n|\n\n|\r\r/", trim($headerBlock));
         $headers = $blocks === false ? [] : array_values(array_filter($blocks));

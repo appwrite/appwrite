@@ -63,6 +63,16 @@ export const productVisuals: readonly ProductVisual[] = [
     imageSrc: '/assets/visuals/messaging.avif',
     downloadHref: '/assets/visuals/messaging.avif',
   },
+  {
+    title: 'Appwrite Sites',
+    imageSrc: '/assets/visuals/sites.avif',
+    downloadHref: '/assets/visuals/sites.avif',
+  },
+  {
+    title: 'Appwrite Firewall',
+    imageSrc: '/assets/visuals/firewall.avif',
+    downloadHref: '/assets/visuals/firewall.avif',
+  },
 ]
 
 export const assetsTocSections = [

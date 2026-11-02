@@ -33,6 +33,11 @@ class Integer extends Validator
         if ($bits === 64 && $unsigned) {
             throw new \InvalidArgumentException('64-bit unsigned integers are not supported due to PHP integer limitations');
         }
+
+        if ($bits > \PHP_INT_SIZE * 8 - ($unsigned ? 1 : 0)) {
+            throw new \InvalidArgumentException(\sprintf('%d-bit %s integers do not fit the %d-bit integers of this PHP build', $bits, $unsigned ? 'unsigned' : 'signed', \PHP_INT_SIZE * 8));
+        }
+
         $this->bits = $bits;
         $this->unsigned = $unsigned;
     }
@@ -46,21 +51,12 @@ class Integer extends Validator
     {
         $signedness = $this->unsigned ? 'unsigned' : 'signed';
 
-        // Calculate min and max values based on bit size and signed/unsigned
-        if ($this->unsigned) {
-            $min = 0;
-            $max = (2 ** $this->bits) - 1;
-        } else {
-            $min = -(2 ** ($this->bits - 1));
-            $max = (2 ** ($this->bits - 1)) - 1;
-        }
-
         return \sprintf(
             'Value must be a valid %s %d-bit integer between %s and %s',
             $signedness,
             $this->bits,
-            number_format($min),
-            number_format($max),
+            \number_format($this->getMin()),
+            \number_format($this->getMax()),
         );
     }
 
@@ -115,6 +111,16 @@ class Integer extends Validator
         return $prefix . $this->bits;
     }
 
+    private function getMin(): int
+    {
+        return $this->unsigned ? 0 : -$this->getMax() - 1;
+    }
+
+    private function getMax(): int
+    {
+        return $this->unsigned ? (1 << $this->bits) - 1 : \PHP_INT_MAX >> (\PHP_INT_SIZE * 8 - $this->bits);
+    }
+
     /**
      * Is valid
      *
@@ -132,15 +138,6 @@ class Integer extends Validator
             return false;
         }
 
-        // Calculate min and max values based on bit size and signed/unsigned
-        if ($this->unsigned) {
-            $min = 0;
-            $max = (2 ** $this->bits) - 1;
-        } else {
-            $min = -(2 ** ($this->bits - 1));
-            $max = (2 ** ($this->bits - 1)) - 1;
-        }
-        // Check if value is within range
-        return $value >= $min && $value <= $max;
+        return $value >= $this->getMin() && $value <= $this->getMax();
     }
 }

@@ -115,18 +115,6 @@ parameters:
 			path: src/Server.php
 
 		-
-			message: '#^Offset ''cursor'' might not exist on array\{topic\: string, sequence\: int, cursor\: int\}\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 7
-			path: tests/ConnectionTest.php
-
-		-
-			message: '#^Offset ''topic'' might not exist on array\{topic\: string, sequence\: int, cursor\: int\}\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: tests/ConnectionTest.php
-
-		-
 			message: '#^Method Utopia\\Mqtt\\Tests\\DisconnectTest\:\:onWire\(\) should return array\{code\: int, reason\: string\|null\} but returns array\{code\: int\<0, 255\>, reason\: mixed\}\.$#'
 			identifier: return.type
 			count: 1

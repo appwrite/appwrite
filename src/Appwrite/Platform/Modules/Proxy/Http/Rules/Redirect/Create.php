@@ -13,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Enum;
@@ -76,7 +76,7 @@ class Create extends Action
                     '308' => 'PermanentRedirect',
                 ]
             ))
-            ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of parent resource.', false, ['dbForProject'])
+            ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of parent resource.', false, ['dbForProject'])
             ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.', enum: new Enum(
                 name: 'ProxyResourceType',
                 map: [
@@ -131,7 +131,7 @@ class Create extends Action
         }
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : Id::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 

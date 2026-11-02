@@ -38,7 +38,7 @@ class Get extends Action
                 group: null,
                 name: 'getFirebaseReport',
                 description: '/docs/references/migrations/migration-firebase-report.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

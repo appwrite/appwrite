@@ -54,7 +54,7 @@ Add your app **name** and **Bundle ID**. You can find your **Bundle Identifier**
 {% /tabsitem %}
 
 {% tabsitem #android title="Android" %}
-Add your app's **name** and **package name**, Your package name is generally the `applicationId` in your app-level [build.gradle](https://github.com/appwrite/playground-for-flutter/blob/master/android/app/build.gradle#L41) file.
+Add your app's **name** and **package name**, Your package name is generally the `applicationId` in your app-level `build.gradle` file.
 
 **Note**: If you've followed the commands above, you have created an Expo project. This means you need to define the package name in the `app.json` configuration. [More info](https://docs.expo.dev/versions/latest/config/app/#package)
 
@@ -72,7 +72,7 @@ You can skip optional steps.
 Install the Appwrite SDK for React Native and required dependencies.
 
 ```sh
-npx expo install react-native-appwrite react-native-url-polyfill
+npx expo install react-native-appwrite expo-file-system react-native-url-polyfill
 ```
 {% /section %}
 

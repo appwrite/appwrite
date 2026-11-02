@@ -54,7 +54,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   then: 'ואז',
   'already exists': 'כבר קיים',
   'is longer than 8192 allowed characters': 'ארוך מ-8192 התווים המותרים',
-  'contact sales': 'צרו קשר עם מכירות',
   'to include more repos.': 'כדי לכלול repos נוספים.',
   'to unlock additional specifications.': 'כדי לפתוח מפרטים נוספים.',
 
@@ -261,6 +260,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'File uploaded': 'הקובץ הועלה',
   'Filter name': 'שם הסינון',
   Filters: 'סינונים',
+  'Filtered by': 'מסונן לפי',
   'Find a branch...': 'חיפוש ענף...',
   'Fix payment': 'הסדרת התשלום',
   'Authorize payment': 'אישור תשלום',
@@ -297,6 +297,16 @@ export const heSharedUiDictionary: Record<string, string> = {
   Integer: 'מספר שלם',
   'Invalid JSON format': 'פורמט JSON לא תקין',
   'Invalid format': 'פורמט לא תקין',
+
+  // Custom ID field (IdInput)
+  'Invalid ID format': 'פורמט מזהה לא תקין',
+  'ID is too long': 'המזהה ארוך מדי',
+  'Allowed characters: letters and numbers only':
+    'תווים מותרים: אותיות וספרות בלבד',
+  'Allowed characters: lowercase letters, numbers, non-leading hyphen':
+    'תווים מותרים: אותיות קטנות, ספרות ומקף שאינו בתחילת המזהה',
+  'Allowed characters: alphanumeric, non-leading hyphen, underscore, period':
+    'תווים מותרים: אותיות וספרות, מקף שאינו בתחילת המזהה, קו תחתון ונקודה',
   'Join 24k+ developers': 'הצטרפו ליותר מ-24 אלף מפתחים',
   'Skip for now': 'דילוג לעכשיו',
   'Help other Appwriters on Discord and grow with the community.':
@@ -385,6 +395,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'My filters': 'הסינונים שלי',
   'Name, email, phone, or user ID…': 'שם, אימייל, טלפון או מזהה משתמש…',
   'Need more resources?': 'צריכים משאבים נוספים?',
+  'Higher CPU and memory are available on Enterprise.':
+    'משאבי CPU וזיכרון גבוהים יותר זמינים בתוכנית Enterprise.',
   'Next image': 'התמונה הבאה',
 
   // Empty states
@@ -484,6 +496,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Refresh repositories': 'רענון repos',
   'Reject non-essential': 'דחיית עוגיות לא חיוניות',
   'Remove filter': 'הסרת סינון',
+  'Filter by this value': 'סינון לפי ערך זה',
+  'Exclude this value': 'החרגת ערך זה',
   'Remove scope': 'הסרת הרשאה',
   Rename: 'שינוי שם',
   'Rename saved filter': 'שינוי שם סינון שמור',
@@ -998,9 +1012,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'חיבור פלטפורמות (ווב, iOS, Android, Flutter, שרת)',
   'Server API keys and tokens': 'מפתחות API וטוקנים לשרת',
-  // pragma: allowlist secret
-  'Browse and test Appwrite REST API endpoints':
-    'עיון ובדיקה של נקודות הקצה של Appwrite REST API', // pragma: allowlist secret
+  'Test REST API endpoints and Realtime subscriptions':
+    'בדיקת נקודות קצה של REST API ומינויי Realtime',
   'Users, teams, sessions and authentication providers':
     'משתמשים, צוותים, סשנים וספקי אימות',
   'Manage databases, tables and collections':
@@ -1013,7 +1026,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'סטרימינג וידאו אדפטיבי, גרסאות קידוד וכתוביות',
   'Audit log of project events': 'יומן ביקורת של אירועי הפרויקט',
-  'Realtime channels and live messages': 'ערוצי זמן אמת והודעות חיות', // pragma: allowlist secret
   'Usage statistics and quotas': 'נתוני שימוש ומכסות',
   'Website analytics and traffic insights': 'אנליטיקת אתרים ותובנות תעבורה',
   'Project settings, custom domains, variables, webhooks':
@@ -1378,4 +1390,22 @@ export const heSharedUiDictionary: Record<string, string> = {
   'App key copied': 'מפתח האפליקציה הועתק',
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
+  Previews: 'תצוגות מקדימות',
+  'Early access. Saved in this browser.':
+    'גישה מוקדמת. נשמר בדפדפן הזה.',
+  'Appwrite Analytics': 'Appwrite Analytics',
+  'Visitor, page, and campaign tracking.':
+    'מעקב אחרי מבקרים, עמודים וקמפיינים.',
+  'Project environments': 'סביבות פרויקט',
+  'Switch or clone staging and production.':
+    'מעבר או שכפול בין staging לפרודקשן.',
+  'Project transfers': 'העברות פרויקטים',
+  'Move a project to another organization.':
+    'העברת פרויקט לארגון אחר.',
+  'Repository not available': 'ה-repo לא זמין',
+  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
+    'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
+  // Halloween caution tape
+  Caution: 'זהירות',
+  'Spooky zone': 'אזור מפחיד',
 }

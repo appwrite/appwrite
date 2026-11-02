@@ -86,6 +86,7 @@ After [initializing](/docs/tooling/command-line/installation#initialization) you
             ],
             "events": [],
             "schedule": "",
+            "interval": 0,
             "timeout": 15,
             "entrypoint": "userAuth.js",
             "commands": "npm install",

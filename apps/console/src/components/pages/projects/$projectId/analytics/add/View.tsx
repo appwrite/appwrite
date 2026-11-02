@@ -180,8 +180,7 @@ export function View({ projectId, search }: ViewProps) {
         ? buildAnalyticsSetupPrompt(platform, {
             endpoint: getProjectApiEndpoint(projectId),
             projectId,
-            // Ingestion takes either ID; the snippet ID is meant for client code.
-            trackingId: property.snippetId || property.$id,
+            trackingId: property.$id,
             domain: property.domain,
             propertyName: property.name,
           })
@@ -434,12 +433,6 @@ export function View({ projectId, search }: ViewProps) {
                     {t('Property ID')}
                     <CopyableId id={property.$id} size="xs" />
                   </span>
-                  {property.snippetId && (
-                    <span className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
-                      {t('Snippet ID')}
-                      <CopyableId id={property.snippetId} size="xs" />
-                    </span>
-                  )}
                 </div>
               ) : null}
             </div>

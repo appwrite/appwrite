@@ -52,7 +52,8 @@ $adapter = new ClickHouse(
 );
 
 $usage = new Usage($adapter);
-$usage->setup(); // Creates events, gauges, and daily MV tables
+$usage->setup(); // Creates events, gauges, and daily MV tables, then applies retention
+$usage->migrate(); // Adds what an existing schema lacks, leaving retention as it is
 ```
 
 ### Using Database Adapter
@@ -104,7 +105,7 @@ $tenant->addBatch([
 Events are request-level metrics like bandwidth, executions, API calls. They are summed when aggregated.
 
 Event-specific columns (see `Metric::EVENT_COLUMNS`): `path`, `method`, `status`,
-`service`, `resource`, `resourceId`, `resourceInternalId`, `teamId`,
+`service`, `resource`, `resourceId`, `resourceInternalId`, `ordinal`, `teamId`,
 `teamInternalId`, `country`, `region`, `hostname`, `osCode`, `osName`,
 `osVersion`, `clientType`, `clientCode`, `clientName`, `clientVersion`,
 `clientEngine`, `clientEngineVersion`, `deviceName`, `deviceBrand`,
@@ -458,7 +459,7 @@ coroutines.
 
 ## System Requirements
 
-Utopia Framework requires PHP 8.4 or later. We recommend using the latest PHP version whenever possible.
+Utopia Framework requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
 
 ## Copyright and license
 

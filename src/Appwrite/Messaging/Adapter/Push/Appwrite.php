@@ -7,7 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\NotFound;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -64,27 +64,19 @@ class Appwrite extends PushAdapter
         $payload = $this->buildPayload($message);
         $response = new Response($this->getType());
 
-        // A target is either a campaign topic id or a reserved users/<id> name. Publish identifies a
-        // topic by id (persist/sequence/ledger) but subscribers match on the name, so resolve each
-        // target to [id, name] and fan out under the name. Topic ids resolve in one bulk query;
-        // reserved user topics auto-provision their row on first use.
-        $names = $this->topicNames(\array_values(\array_filter(
-            $message->getTo(),
-            fn (string $to): bool => !$this->isUserTopic($to),
-        )));
-
+        // A target is either a campaign topic id or a reserved users/<id> name. Both are the wire topic
+        // subscribers match on, so fan out under $to directly; the ledger keys by the same id, which for
+        // a reserved user topic is its md5, auto-provisioning the row on first use.
         foreach ($message->getTo() as $to) {
             try {
-                [$id, $name] = $this->isUserTopic($to)
-                    ? $this->createUserTopic($to)
-                    : [$to, $names[$to] ?? $to];
+                $id = $this->isUserTopic($to) ? $this->createUserTopic($to) : $to;
 
                 $sequence = $this->persist($id, $payload);
                 $this->broker->send(
                     $this->projectId,
                     [],
                     [],
-                    [$name],
+                    [$to],
                     [],
                     ['payload' => $payload, 'qos' => $this->qos, 'sequence' => $sequence, 'publishedAt' => \microtime(true)],
                 );
@@ -116,11 +108,11 @@ class Appwrite extends PushAdapter
      * The id space is shared with developer-created topics, so the resolved row's name is verified to
      * be the reserved one: a normal topic squatting the hash must never carry another user's pushes.
      *
-     * @return array{0: string, 1: string} [topic id, topic name]
+     * @return string the topic id
      */
-    private function createUserTopic(string $name): array
+    private function createUserTopic(string $name): string
     {
-        $id = ID::custom(\md5($name));
+        $id = Id::custom(\md5($name));
         $authorization = $this->dbForProject->getAuthorization();
 
         $topic = $authorization->skip(fn () => $this->dbForProject->getDocument('topics', $id));
@@ -141,20 +133,25 @@ class Appwrite extends PushAdapter
             throw new \RuntimeException("Reserved topic id for {$name} collides with an existing topic");
         }
 
-        return [$id, $name];
+        return $id;
     }
 
     /**
      * Append the notification to the ledger and return its per-topic sequence. Idempotent
-     * on (messageId, topic): a retry after a transient publish failure reuses the existing
-     * row and sequence instead of incrementing the topic counter or inserting a duplicate.
+     * on (messageId, topic instance): a retry after a transient publish failure reuses the
+     * existing row and sequence instead of incrementing the topic counter or inserting a duplicate.
      *
-     * The increment and insert run in one transaction, opened by locking the topic row
+     * The lookup, increment and insert run in one transaction, opened by locking the topic row
      * (getDocument FOR UPDATE). A concurrent attempt for the same message blocks on that
      * lock, then re-reads the ledger row this transaction committed rather than racing a
      * second increment — so the topic sequence can't advance without a matching row, and
-     * two attempts can't open a gap. The unique index on (messageId, topic) remains as a
-     * correctness backstop.
+     * two attempts can't open a gap. The unique index on (messageId, topicInternalId) remains
+     * as a correctness backstop.
+     *
+     * Rows are bound to the locked topic's internal id, so a topic deleted and recreated under
+     * the same id never shares a ledger, or a deduplication key, with its predecessor. Rows
+     * written before that binding have a null topicInternalId, which the unique index treats
+     * as distinct, so they never block a publish.
      */
     private function persist(string $topic, string $payload): int
     {
@@ -171,20 +168,15 @@ class Appwrite extends PushAdapter
     {
         $authorization = $this->dbForProject->getAuthorization();
 
-        $existing = $this->findLedger($authorization, $topic);
-        if (!$existing->isEmpty()) {
-            return (int) $existing->getAttribute('sequence');
-        }
-
         return (int) $authorization->skip(
             fn () => $this->dbForProject->withTransaction(function () use ($topic, $payload, $authorization): int {
-                // Lock the topic row so a concurrent attempt for the same message waits here.
-                if ($this->dbForProject->getDocument('topics', $topic, forUpdate: true)->isEmpty()) {
+                $document = $this->dbForProject->getDocument('topics', $topic, forUpdate: true);
+                if ($document->isEmpty()) {
                     throw new NotFound("Topic {$topic} does not exist");
                 }
+                $topicInternalId = (string) $document->getSequence();
 
-                // Re-check under the lock: a racing attempt may have persisted it already.
-                $existing = $this->findLedger($authorization, $topic);
+                $existing = $this->findLedger($authorization, $topicInternalId);
                 if (!$existing->isEmpty()) {
                     return (int) $existing->getAttribute('sequence');
                 }
@@ -194,8 +186,9 @@ class Appwrite extends PushAdapter
                     ->getAttribute('sequence');
 
                 $this->dbForProject->createDocument('pushLedger', new Document([
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'topic' => $topic,
+                    'topicInternalId' => $topicInternalId,
                     'data' => $payload,
                     'messageId' => $this->messageId,
                     'messageInternalId' => $this->messageInternalId,
@@ -207,41 +200,13 @@ class Appwrite extends PushAdapter
         );
     }
 
-    /**
-     * Resolve topic ids to the names subscribers match on, in one query.
-     *
-     * @param  array<int, string>  $topicIds
-     * @return array<string, string> id => name
-     */
-    private function topicNames(array $topicIds): array
-    {
-        if ($topicIds === []) {
-            return [];
-        }
-
-        $topics = $this->dbForProject->getAuthorization()->skip(
-            fn () => $this->dbForProject->find('topics', [
-                Query::equal('$id', $topicIds),
-                Query::select(['$id', 'name']),
-                Query::limit(\count($topicIds)),
-            ])
-        );
-
-        $names = [];
-        foreach ($topics as $topic) {
-            $names[$topic->getId()] = $topic->getAttribute('name');
-        }
-
-        return $names;
-    }
-
-    /** The existing ledger row for this campaign message on a topic, or an empty document. */
-    private function findLedger(Authorization $authorization, string $topic): Document
+    /** The existing ledger row for this campaign message on a topic instance, or an empty document. */
+    private function findLedger(Authorization $authorization, string $topicInternalId): Document
     {
         return $authorization->skip(
             fn () => $this->dbForProject->findOne('pushLedger', [
                 Query::equal('messageId', [$this->messageId]),
-                Query::equal('topic', [$topic]),
+                Query::equal('topicInternalId', [$topicInternalId]),
             ])
         );
     }

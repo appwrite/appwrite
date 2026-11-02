@@ -12,9 +12,14 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query'
 import { ID, Query, WafRuleAction, type Models } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
-import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME, LONG_STALE_TIME } from './constants'
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_STALE_TIME,
+  LONG_STALE_TIME,
+} from './constants'
 import {
   CHALLENGE_DIFFICULTY_DEFAULT,
   CHALLENGE_TTL_DEFAULT,
@@ -60,10 +65,7 @@ import type {
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import type { DateRange } from 'react-day-picker'
 import type { UsageChartInterval } from '@/lib/usage/chart-interval'
-import {
-  fetchProjectFunctionsByIds,
-  functionsQueryOptions,
-} from './functions'
+import { fetchProjectFunctionsByIds, functionsQueryOptions } from './functions'
 import { fetchProjectSitesByIds, sitesQueryOptions } from './sites'
 
 export type CreateFirewallRuleInput = {
@@ -119,8 +121,7 @@ export type UpdateFirewallRuleInput = {
 
 function conditionsPayload(conditions?: string[]) {
   if (!conditions || conditions.length === 0) return undefined
-  // SDK types this as string; API expects Query string array.
-  return conditions as unknown as string
+  return conditions
 }
 
 function invalidateFirewallAttackMode(
@@ -141,7 +142,7 @@ export async function fetchFirewallRules(
   resourceId?: string,
 ) {
   if (!projectId) {
-    return { rules: [] as Models.WafRule[], total: 0 }
+    return { rules: [] as FirewallRule[], total: 0 }
   }
 
   const queries = [
@@ -176,9 +177,7 @@ export type FirewallResourceNameMap = Record<string, string>
 
 function normalizeFirewallResourceIds(resourceIds: string[]): string[] {
   return [
-    ...new Set(
-      resourceIds.filter((id) => typeof id === 'string' && id.trim()),
-    ),
+    ...new Set(resourceIds.filter((id) => typeof id === 'string' && id.trim())),
   ].sort()
 }
 
@@ -222,7 +221,7 @@ export async function fetchFirewallResourceNames(
 export async function fetchFirewallRule(
   projectId: string,
   ruleId: string,
-): Promise<Models.WafRule> {
+): Promise<FirewallRule> {
   if (!projectId || !ruleId) {
     throw new Error('Project ID and rule ID are required')
   }
@@ -509,7 +508,7 @@ export async function fetchAttackModeRule(
   projectId: string,
   resourceType: FirewallResourceType,
   resourceId?: string,
-): Promise<Models.WafRule | null> {
+): Promise<FirewallRule | null> {
   if (!projectId) return null
   if (!isAttackModeScope(resourceType, resourceId)) return null
 
@@ -525,20 +524,19 @@ export async function fetchAttackModeRule(
     if (!isHttpNotFoundError(error)) throw error
   }
 
-  const queries = [
-    Query.equal('resourceType', resourceType),
-    Query.limit(25),
-  ]
+  const queries = [Query.equal('resourceType', resourceType), Query.limit(25)]
   const normalizedResourceId = resourceId?.trim()
   if (normalizedResourceId) {
     queries.unshift(Query.equal('resourceId', normalizedResourceId))
   }
 
-  const response = await waf.listRules({
-    queries,
-    search: ATTACK_MODE_RULE_NAME,
-    total: false,
-  }).catch(() => null)
+  const response = await waf
+    .listRules({
+      queries,
+      search: ATTACK_MODE_RULE_NAME,
+      total: false,
+    })
+    .catch(() => null)
 
   return (
     (response?.rules || []).find((rule) =>
@@ -563,7 +561,8 @@ export function attackModeRuleQueryOptions(
     ],
     queryFn: () =>
       fetchAttackModeRule(projectId!, resourceType, normalizedResourceId),
-    enabled: !!projectId && isAttackModeScope(resourceType, normalizedResourceId),
+    enabled:
+      !!projectId && isAttackModeScope(resourceType, normalizedResourceId),
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
@@ -624,8 +623,7 @@ export function useSetFirewallAttackMode(
           name: existing.name,
           description: existing.description,
           priority: existing.priority,
-          difficulty:
-            challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
+          difficulty: challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
           ttl: challenge?.ttl ?? CHALLENGE_TTL_DEFAULT,
         })
       }
@@ -643,8 +641,7 @@ export function useSetFirewallAttackMode(
           description: ATTACK_MODE_RULE_DESCRIPTION,
           priority: ATTACK_MODE_PRIORITY,
           conditions,
-          difficulty:
-            challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
+          difficulty: challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
           ttl: challenge?.ttl ?? CHALLENGE_TTL_DEFAULT,
         })
       }

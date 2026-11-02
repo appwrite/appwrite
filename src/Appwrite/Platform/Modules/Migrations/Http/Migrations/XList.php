@@ -41,7 +41,7 @@ class XList extends Action
                 group: null,
                 name: 'list',
                 description: '/docs/references/migrations/list-migrations.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -88,7 +88,7 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
         try {
             $migrations = $dbForProject->find('migrations', $queries);
             $total = $includeTotal ? $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT) : 0;

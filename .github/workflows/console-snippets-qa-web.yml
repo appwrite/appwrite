@@ -154,7 +154,9 @@ jobs:
             dev: npm run dev -- --port 5173 --strictPort
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor,
       # which makes Chrome's sandbox crash on launch ("session not created:
@@ -183,7 +185,7 @@ jobs:
           fi
 
       - name: Install mise
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2.4.4
         with:
           install: false
 
@@ -214,7 +216,7 @@ jobs:
           cd "$APP_DIR"
           ${{ matrix.post }}
 
-      - name: Install dependencies + Appwrite Web SDK
+      - name: Install dependencies + Appwrite Web SDK # zizmor: ignore[adhoc-packages] QA targets the latest published SDK
         run: |
           cd "$APP_DIR"
           npm install
@@ -285,7 +287,7 @@ jobs:
 
       - name: Upload Maestro logs and screenshots
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: connect-qa-web-${{ matrix.id }}
           path: apps/console/tests/connect-qa/artifacts/

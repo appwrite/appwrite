@@ -4,13 +4,17 @@ namespace Utopia\Queue;
 
 class Message
 {
+    public const int LARGE_SIZE = 1048576;
+
     protected string $pid;
     protected string $queue;
     protected int $timestamp;
     protected array $payload;
     protected int $attempts = 0;
+    protected ?int $maxAttempts = null;
     protected ?int $sequence = null;
     protected bool $terminal = false;
+    protected ?int $size = null;
 
     public function __construct(array $array = [])
     {
@@ -103,6 +107,29 @@ class Message
     }
 
     /**
+     * Deliveries the broker allows before it dead-letters a failure; null on a broker that doesn't say.
+     */
+    public function getMaxAttempts(): ?int
+    {
+        return $this->maxAttempts;
+    }
+
+    public function setMaxAttempts(?int $maxAttempts): self
+    {
+        $this->maxAttempts = $maxAttempts;
+
+        return $this;
+    }
+
+    /**
+     * Whether a failure on this delivery is dead-lettered. Always false on Redis.
+     */
+    public function isLastAttempt(): bool
+    {
+        return $this->maxAttempts !== null && $this->attempts + 1 >= $this->maxAttempts;
+    }
+
+    /**
      * The broker's own position for this message, where it has one.
      *
      * A stronger deduplication key than the pid for a handler that needs one.
@@ -122,6 +149,25 @@ class Message
         $this->sequence = $sequence;
 
         return $this;
+    }
+
+    public function getSize(): ?int
+    {
+        return $this->size;
+    }
+
+    public function setSize(?int $size): self
+    {
+        $this->size = $size;
+
+        return $this;
+    }
+
+    public static function warnIfLarge(string $queue, int $size): void
+    {
+        if ($size > self::LARGE_SIZE) {
+            \error_log(\sprintf('Large queue message: %d bytes on queue "%s"', $size, $queue));
+        }
     }
 
     /**

@@ -155,7 +155,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -287,7 +287,7 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -299,16 +299,16 @@ func main() {
 
     project := appwrite.NewProject(client)
     result, err := project.UpdateSMTP(
-        appwrite.WithUpdateSMTPHost("smtp.example.com"),
-        appwrite.WithUpdateSMTPPort(587),
-        appwrite.WithUpdateSMTPUsername("<USERNAME>"),
-        appwrite.WithUpdateSMTPPassword("<PASSWORD>"),
-        appwrite.WithUpdateSMTPSenderEmail("email@example.com"),
-        appwrite.WithUpdateSMTPSenderName("<SENDER_NAME>"),
-        appwrite.WithUpdateSMTPReplyToEmail("email@example.com"),
-        appwrite.WithUpdateSMTPReplyToName("<REPLY_TO_NAME>"),
-        appwrite.WithUpdateSMTPSecure("tls"),
-        appwrite.WithUpdateSMTPEnabled(true),
+        project.WithUpdateSMTPHost("smtp.example.com"),
+        project.WithUpdateSMTPPort(587),
+        project.WithUpdateSMTPUsername("<USERNAME>"),
+        project.WithUpdateSMTPPassword("<PASSWORD>"),
+        project.WithUpdateSMTPSenderEmail("email@example.com"),
+        project.WithUpdateSMTPSenderName("<SENDER_NAME>"),
+        project.WithUpdateSMTPReplyToEmail("email@example.com"),
+        project.WithUpdateSMTPReplyToName("<REPLY_TO_NAME>"),
+        project.WithUpdateSMTPSecure("tls"),
+        project.WithUpdateSMTPEnabled(true),
     )
 
     if err != nil {
@@ -621,13 +621,13 @@ let emailTemplate = try await project.updateEmailTemplate(
 ```server-go
 result, err := project.UpdateEmailTemplate(
     "verification",
-    appwrite.WithUpdateEmailTemplateLocale("en"),
-    appwrite.WithUpdateEmailTemplateSubject("<SUBJECT>"),
-    appwrite.WithUpdateEmailTemplateMessage("<MESSAGE>"),
-    appwrite.WithUpdateEmailTemplateSenderName("<SENDER_NAME>"),
-    appwrite.WithUpdateEmailTemplateSenderEmail("email@example.com"),
-    appwrite.WithUpdateEmailTemplateReplyToEmail("email@example.com"),
-    appwrite.WithUpdateEmailTemplateReplyToName("<REPLY_TO_NAME>"),
+    project.WithUpdateEmailTemplateLocale("en"),
+    project.WithUpdateEmailTemplateSubject("<SUBJECT>"),
+    project.WithUpdateEmailTemplateMessage("<MESSAGE>"),
+    project.WithUpdateEmailTemplateSenderName("<SENDER_NAME>"),
+    project.WithUpdateEmailTemplateSenderEmail("email@example.com"),
+    project.WithUpdateEmailTemplateReplyToEmail("email@example.com"),
+    project.WithUpdateEmailTemplateReplyToName("<REPLY_TO_NAME>"),
 )
 
 if err != nil {
@@ -760,7 +760,7 @@ let emailTemplate = try await project.getEmailTemplate(
 ```server-go
 result, err := project.GetEmailTemplate(
     "verification",
-    appwrite.WithGetEmailTemplateLocale("en"),
+    project.WithGetEmailTemplateLocale("en"),
 )
 
 if err != nil {
@@ -864,8 +864,8 @@ let emailTemplateList = try await project.listEmailTemplates(
 ```
 ```server-go
 result, err := project.ListEmailTemplates(
-    appwrite.WithListEmailTemplatesQueries([]interface{}{}),
-    appwrite.WithListEmailTemplatesTotal(false),
+    project.WithListEmailTemplatesQueries([]interface{}{}),
+    project.WithListEmailTemplatesTotal(false),
 )
 
 if err != nil {

@@ -2,8 +2,10 @@
 
 namespace Appwrite\Messaging;
 
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\SMTP\Validator\Host;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\DSN\DSN;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
@@ -36,8 +38,10 @@ use Utopia\Telemetry\Adapter as Telemetry;
  */
 class Provider
 {
-    public function __construct(private readonly Telemetry $telemetry)
-    {
+    public function __construct(
+        private readonly Telemetry $telemetry,
+        private readonly PublicHostname $hostname,
+    ) {
     }
 
     public function sms(Document $provider): ?SMSAdapter
@@ -98,13 +102,14 @@ class Provider
         $adapter = match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
-                $credentials['host'] ??  '',
+                $credentials['host'] ?? '',
                 $credentials['port'] ?? 25,
                 $credentials['username'] ?? '',
                 $credentials['password'] ?? '',
                 $options['encryption'] ?? '',
-                $options['autoTLS'] ??  false,
-                $options['mailer'] ??  '',
+                $options['autoTLS'] ?? false,
+                $options['mailer'] ?? '',
+                addresses: new Host($this->hostname)->addresses($credentials['host'] ?? ''),
             ),
             'mailgun' => new Mailgun(
                 $apiKey,
@@ -199,7 +204,7 @@ class Provider
         $from = System::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'provider' => $host,
             'type' => MESSAGE_TYPE_SMS,
             'name' => 'Internal SMS',

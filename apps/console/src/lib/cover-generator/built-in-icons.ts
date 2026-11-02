@@ -100,6 +100,7 @@ const COVER_BUILT_IN_ICON_CATEGORY_ICONS: Record<string, string[]> = {
     'zenflow.svg',
     'google-antigravity.svg',
     'grok-build.svg',
+    'pi.svg',
     'imagine.svg',
     'perplexity.svg',
     'elevenlabs.svg',

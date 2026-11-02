@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\Bcrypt;
 
-use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\Hash\Bcrypt as BcryptValidator;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -51,9 +51,9 @@ class Create extends Base
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('email', '', new EmailValidator(), 'User email.')
-            ->param('password', '', new Password(), 'User password hashed using Bcrypt.')
+            ->param('password', '', new BcryptValidator(), 'User password hashed using Bcrypt.')
             ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')

@@ -1,3 +1,5 @@
+import type { SalesSource } from '@/lib/sales/contact-sales'
+
 /**
  * Curated analytics actions for low-cardinality, specific Plausible event names.
  *
@@ -28,6 +30,7 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
+  'zero-claim': 'Zero Claim Clicked',
   'header-console': 'Header Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',
@@ -99,8 +102,12 @@ export const ANALYTICS_ACTIONS = {
   'enterprise-form-submit': 'Enterprise Form Submit Clicked',
   'education-sign-up': 'Education Sign Up Clicked',
   'education-connect-github': 'Education Connect GitHub Clicked',
-  'startups-apply-now': 'Startups Apply Now Clicked',
-  'startups-form-submit': 'Startups Form Submit Clicked',
+  'startups-get-started': 'Startups Get Started Clicked',
+  'startups-view-pricing': 'Startups View Pricing Clicked',
+  'agencies-get-started': 'Agencies Get Started Clicked',
+  'agencies-contact-sales': 'Agencies Contact Sales Clicked',
+  'innovation-get-started': 'Innovation Teams Get Started Clicked',
+  'innovation-contact-sales': 'Innovation Teams Contact Sales Clicked',
   'partners-form-submit': 'Partners Form Submit Clicked',
   'feedback-github-issue': 'Feedback GitHub Issue Clicked',
   'feedback-customer-story-submit': 'Feedback Customer Story Submit Clicked',
@@ -157,12 +164,24 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-apply-coupon-confirm': 'Upgrade Apply Coupon Confirm Clicked',
   'upgrade-free-conflict-choice': 'Upgrade Free Conflict Choice Selected',
 
+  // In-console sales links (see `SALES_SOURCES`)
+  'billing-contact-sales': 'Billing Contact Sales Clicked',
+  'settings-contact-sales': 'Settings Contact Sales Clicked',
+  'members-contact-sales': 'Members Contact Sales Clicked',
+  'backups-contact-sales': 'Backups Contact Sales Clicked',
+  'activity-contact-sales': 'Activity Contact Sales Clicked',
+  'specs-contact-sales': 'Specifications Contact Sales Clicked',
+  'replicas-contact-sales': 'Replicas Contact Sales Clicked',
+  'compliance-contact-sales': 'Compliance Contact Sales Clicked',
+  'support-contact-sales': 'Support Contact Sales Clicked',
+  'support-ticket-contact-sales': 'Support Ticket Contact Sales Clicked',
+
   // Console project sidebar
   'nav-sidebar-overview': 'Sidebar Overview Clicked',
   'nav-sidebar-apps': 'Sidebar Apps Clicked',
   'nav-sidebar-agents': 'Sidebar Agents Clicked',
   'nav-sidebar-api-keys': 'Sidebar API Keys Clicked',
-  'nav-sidebar-explorer': 'Sidebar Explorer Clicked',
+  'nav-sidebar-playground': 'Sidebar Playground Clicked',
   'nav-sidebar-auth': 'Sidebar Auth Clicked',
   'nav-sidebar-databases': 'Sidebar Databases Clicked',
   'nav-sidebar-storage': 'Sidebar Storage Clicked',
@@ -172,7 +191,6 @@ export const ANALYTICS_ACTIONS = {
   'nav-sidebar-sites': 'Sidebar Sites Clicked',
   'nav-sidebar-stores': 'Sidebar Stores Clicked',
   'nav-sidebar-activity': 'Sidebar Activity Clicked',
-  'nav-sidebar-realtime': 'Sidebar Realtime Clicked',
   'nav-sidebar-logs': 'Sidebar Logs Clicked',
   'nav-sidebar-usage': 'Sidebar Usage Clicked',
   'nav-sidebar-analytics': 'Sidebar Analytics Clicked',
@@ -195,6 +213,10 @@ export const ANALYTICS_ACTIONS = {
   'marketing-nav-products': 'Marketing Products Nav Clicked',
   'marketing-nav-docs': 'Marketing Docs Nav Clicked',
   'marketing-nav-pricing': 'Marketing Pricing Nav Clicked',
+  'marketing-nav-solutions': 'Marketing Solutions Nav Clicked',
+  'marketing-nav-startups': 'Marketing Startups Nav Clicked',
+  'marketing-nav-agencies': 'Marketing Agencies Nav Clicked',
+  'marketing-nav-innovation-teams': 'Marketing Innovation Teams Nav Clicked',
   'marketing-nav-enterprise': 'Marketing Enterprise Nav Clicked',
   'marketing-nav-customers': 'Marketing Customers Nav Clicked',
   'marketing-nav-blog': 'Marketing Blog Nav Clicked',
@@ -314,7 +336,7 @@ const SIDEBAR_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   apps: 'nav-sidebar-apps',
   agents: 'nav-sidebar-agents',
   'api-keys': 'nav-sidebar-api-keys',
-  explorer: 'nav-sidebar-explorer',
+  playground: 'nav-sidebar-playground',
   auth: 'nav-sidebar-auth',
   databases: 'nav-sidebar-databases',
   storage: 'nav-sidebar-storage',
@@ -324,7 +346,6 @@ const SIDEBAR_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   sites: 'nav-sidebar-sites',
   stores: 'nav-sidebar-stores',
   activity: 'nav-sidebar-activity',
-  realtime: 'nav-sidebar-realtime',
   logs: 'nav-sidebar-logs',
   usage: 'nav-sidebar-usage',
   analytics: 'nav-sidebar-analytics',
@@ -381,6 +402,20 @@ const UPGRADE_PLAN_SELECT_ACTIONS: Record<string, AnalyticsActionId> = {
   'tier-enterprise': 'upgrade-select-enterprise',
 }
 
+const CONTACT_SALES_ACTIONS: Record<SalesSource, AnalyticsActionId> = {
+  billing: 'billing-contact-sales',
+  settings: 'settings-contact-sales',
+  members: 'members-contact-sales',
+  backups: 'backups-contact-sales',
+  activity: 'activity-contact-sales',
+  specs: 'specs-contact-sales',
+  replicas: 'replicas-contact-sales',
+  compliance: 'compliance-contact-sales',
+  support: 'support-contact-sales',
+  'support-ticket': 'support-ticket-contact-sales',
+  'plan-picker': 'upgrade-contact-sales',
+}
+
 /** Exact docs global-nav hrefs → curated actions (top-level section entries only). */
 const DOCS_NAV_ACTIONS: Record<string, AnalyticsActionId> = {
   '/docs': 'docs-nav-home',
@@ -435,6 +470,12 @@ export function getUpgradePlanSelectAnalyticsAction(
     UPGRADE_PLAN_SELECT_ACTIONS[key] ??
     UPGRADE_PLAN_SELECT_ACTIONS[key.replace(/\s+/g, '-')]
   )
+}
+
+export function getContactSalesAnalyticsAction(
+  source: SalesSource,
+): AnalyticsActionId {
+  return CONTACT_SALES_ACTIONS[source]
 }
 
 export function getDocsNavAnalyticsAction(

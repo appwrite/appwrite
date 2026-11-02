@@ -189,6 +189,7 @@ Each included file contains the JSON array that would normally live under that k
         "execute": [],
         "events": [],
         "schedule": "",
+        "interval": 0,
         "timeout": 15,
         "enabled": true,
         "logging": true,

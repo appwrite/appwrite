@@ -49,6 +49,7 @@ class Exception extends \Exception
     public const string GENERAL_SMTP_DISABLED = 'general_smtp_disabled';
     public const string GENERAL_PHONE_DISABLED = 'general_phone_disabled';
     public const string GENERAL_PWNED_PASSWORDS_UNAVAILABLE = 'general_pwned_passwords_unavailable';
+    public const string GENERAL_CACHE_UNAVAILABLE = 'general_cache_unavailable';
     public const string GENERAL_ARGUMENT_INVALID = 'general_argument_invalid';
     public const string GENERAL_COLUMN_QUERY_LIMIT_EXCEEDED = 'general_column_query_limit_exceeded';
     public const string GENERAL_ATTRIBUTE_QUERY_LIMIT_EXCEEDED = 'general_attribute_query_limit_exceeded';
@@ -147,6 +148,7 @@ class Exception extends \Exception
 
     /** Membership */
     public const string MEMBERSHIP_NOT_FOUND = 'membership_not_found';
+    public const string MEMBERSHIP_ALREADY_EXISTS = 'membership_already_exists';
     public const string MEMBERSHIP_ALREADY_CONFIRMED = 'membership_already_confirmed';
     public const string MEMBERSHIP_DELETION_PROHIBITED = 'membership_deletion_prohibited';
     public const string MEMBERSHIP_DOWNGRADE_PROHIBITED = 'membership_downgrade_prohibited';
@@ -228,6 +230,7 @@ class Exception extends \Exception
     public const string DATABASE_ALREADY_EXISTS = 'database_already_exists';
     public const string DATABASE_TIMEOUT = 'database_timeout';
     public const string DATABASE_QUERY_ORDER_NULL = 'database_query_order_null';
+    public const string DATABASE_QUERY_OUT_OF_RANGE = 'database_query_out_of_range';
 
     /** Collections */
     public const string COLLECTION_NOT_FOUND = 'collection_not_found';
@@ -325,6 +328,11 @@ class Exception extends \Exception
     public const string PROJECT_INVALID_FAILURE_URL = 'project_invalid_failure_url';
     public const string PROJECT_RESERVED_PROJECT = 'project_reserved_project';
     public const string PROJECT_KEY_EXPIRED = 'project_key_expired';
+    public const string TRANSFER_NOT_FOUND = 'transfer_not_found';
+    public const string TRANSFER_INVALID_SECRET = 'transfer_invalid_secret';
+    public const string TRANSFER_EXPIRED = 'transfer_expired';
+    public const string TRANSFER_RECIPIENT_MISMATCH = 'transfer_recipient_mismatch';
+    public const string TRANSFER_ALREADY_OWNED = 'transfer_already_owned';
     public const string ACCOUNT_KEY_EXPIRED = 'account_key_expired';
 
     public const string PROJECT_SMTP_CONFIG_INVALID = 'project_smtp_config_invalid';
@@ -336,6 +344,17 @@ class Exception extends \Exception
     /** Webhooks */
     public const string WEBHOOK_NOT_FOUND = 'webhook_not_found';
     public const string WEBHOOK_ALREADY_EXISTS = 'webhook_already_exists';
+    public const string WEBHOOK_DELIVERY_FAILED = 'webhook_delivery_failed';
+
+    /** Monitors */
+    public const string MONITOR_NOT_FOUND = 'monitor_not_found';
+    public const string MONITOR_ALREADY_EXISTS = 'monitor_already_exists';
+    public const string MONITOR_RULES_INVALID = 'monitor_rules_invalid';
+    public const string MONITOR_TYPE_MISMATCH = 'monitor_type_mismatch';
+    public const string MONITOR_RESOURCE_NOT_FOUND = 'monitor_resource_not_found';
+
+    /** Alerts */
+    public const string ALERT_NOT_FOUND = 'alert_not_found';
 
     /** Router */
     public const string ROUTER_HOST_NOT_FOUND = 'router_host_not_found';

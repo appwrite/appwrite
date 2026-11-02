@@ -7,7 +7,6 @@ use Utopia\Abuse\Adapter\TimeLimit;
 use Utopia\Abuse\Adapter\TimeLimit\Database as AdapterDatabase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 
@@ -27,7 +26,14 @@ class DatabaseTest extends Base
 
     private static function initialiseDatabase(): Database
     {
-        $pdo = new PDO('mysql:host=' . Services::HOST . ';port=' . Services::MYSQL_PORT . ';charset=utf8mb4', 'root', 'password', MariaDB::getPdoAttributes());
+        $pdo = new PDO('mysql:host=' . Services::HOST . ';port=' . Services::MYSQL_PORT . ';charset=utf8mb4', 'root', 'password', [
+            PDO::ATTR_TIMEOUT => 3,
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true,
+        ]);
         $database = new Database(new MySQL($pdo), new Cache(new NoCache()));
         $database->setDatabase('utopiaTests');
         $database->setNamespace('namespace');

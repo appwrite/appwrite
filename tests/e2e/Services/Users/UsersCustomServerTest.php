@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 final class UsersCustomServerTest extends Scope
@@ -23,7 +23,7 @@ final class UsersCustomServerTest extends Scope
         $victimProject = $this->getProject();
         $attackerProject = $this->getProject(true);
 
-        $victimId = ID::unique();
+        $victimId = Id::unique();
         $victim = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $victimProject['$id'],
@@ -44,7 +44,7 @@ final class UsersCustomServerTest extends Scope
                 'x-appwrite-key' => $attackerProject['apiKey'],
             ], [
                 'userId' => $userId,
-                'email' => 'attacker-' . ID::unique() . '@appwrite.io',
+                'email' => 'attacker-' . Id::unique() . '@appwrite.io',
                 'password' => 'password',
             ]);
             $this->assertSame(201, $user['headers']['status-code']);
@@ -88,7 +88,7 @@ final class UsersCustomServerTest extends Scope
     {
         $project = $this->getProject();
         $otherProject = $this->getProject(true);
-        $userId = ID::unique();
+        $userId = Id::unique();
 
         foreach ([$project, $otherProject] as $p) {
             $user = $this->client->call(Client::METHOD_POST, '/users', [
@@ -97,7 +97,7 @@ final class UsersCustomServerTest extends Scope
                 'x-appwrite-key' => $p['apiKey'],
             ], [
                 'userId' => $userId,
-                'email' => 'legacy-' . ID::unique() . '@appwrite.io',
+                'email' => 'legacy-' . Id::unique() . '@appwrite.io',
                 'password' => 'password',
             ]);
             $this->assertSame(201, $user['headers']['status-code']);
@@ -180,6 +180,54 @@ final class UsersCustomServerTest extends Scope
     }
 
     /**
+     * As on the account JWT route, a JWT cannot mint a user's JWT, so it cannot
+     * outlive itself through the next one.
+     */
+    public function testCreateUserJWTRefusesJWTCallers(): void
+    {
+        $project = $this->getProject();
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'email' => 'jwt-caller-' . Id::unique() . '@appwrite.io',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $admin = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-mode' => 'admin',
+        ];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge($admin, [
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]));
+        $this->assertSame(201, $jwt['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $minted = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', array_merge($admin, [
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]));
+        $this->assertSame(201, $minted['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $refused = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/jwts', array_merge($admin, [
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]));
+        $this->assertSame(403, $refused['headers']['status-code']);
+        $this->assertSame('user_jwt_creation_denied', $refused['body']['type']);
+        $this->assertArrayNotHasKey('jwt', $refused['body']);
+    }
+
+    /**
      * Minting credentials for an existing user takes users.write; a key scoped
      * to sessions.write cannot reach those routes.
      */
@@ -190,8 +238,8 @@ final class UsersCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
-            'email' => 'sessions-key-' . ID::unique() . '@appwrite.io',
+            'userId' => Id::unique(),
+            'email' => 'sessions-key-' . Id::unique() . '@appwrite.io',
             'password' => 'password',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);
@@ -226,7 +274,7 @@ final class UsersCustomServerTest extends Scope
             [Client::METHOD_POST, '/users/' . $userId . '/tokens', []],
             [Client::METHOD_POST, '/users/' . $userId . '/jwts', []],
             [Client::METHOD_PATCH, '/users/' . $userId . '/password', ['password' => 'new-password']],
-            [Client::METHOD_PATCH, '/users/' . $userId . '/email', ['email' => 'changed-' . ID::unique() . '@appwrite.io']],
+            [Client::METHOD_PATCH, '/users/' . $userId . '/email', ['email' => 'changed-' . Id::unique() . '@appwrite.io']],
             [Client::METHOD_GET, '/users/' . $userId . '/mfa/recovery-codes', []],
             [Client::METHOD_GET, '/account', []],
             [Client::METHOD_POST, '/account/jwts', []],
@@ -239,6 +287,13 @@ final class UsersCustomServerTest extends Scope
             $this->assertArrayNotHasKey('secret', $response['body']);
             $this->assertArrayNotHasKey('jwt', $response['body']);
         }
+
+        $recoveryCodes = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/mfa/recovery-codes', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['users.read']),
+        ]);
+        $this->assertSame(401, $recoveryCodes['headers']['status-code']);
 
         $account = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
             'content-type' => 'application/json',
@@ -258,8 +313,8 @@ final class UsersCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
-            'email' => 'list-sessions-' . ID::unique() . '@appwrite.io',
+            'userId' => Id::unique(),
+            'email' => 'list-sessions-' . Id::unique() . '@appwrite.io',
             'password' => 'password',
         ]);
         $this->assertSame(201, $user['headers']['status-code']);

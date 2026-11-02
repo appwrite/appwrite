@@ -385,7 +385,7 @@ page = tables_db.list_rows(
 )
 ```
 ```server-deno
-import { Client, Query, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Query, TablesDB } from "npm:node-appwrite";
 
 const client = new Client()
   .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -431,8 +431,8 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/query"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/query"
 )
 
 func main() {
@@ -446,10 +446,10 @@ func main() {
     page, err := tablesDB.ListRows(
         "<DATABASE_ID>",
         "<TABLE_ID>",
-        appwrite.WithListRowsQueries([]string{
+        tablesDB.WithListRowsQueries([]string{
             query.Limit(25)
         }),
-        appwrite.WithListRowsTotal(false), // Skip computing total count
+        tablesDB.WithListRowsTotal(false), // Skip computing total count
     )
 
     if err != nil {
@@ -735,7 +735,7 @@ page = tables_db.list_rows(
 )
 ```
 ```server-deno
-import { Client, Query, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Query, TablesDB } from "npm:node-appwrite";
 
 const client = new Client()
   .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -781,9 +781,9 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/client"
-    "github.com/appwrite/sdk-for-go/tablesdb"
-    "github.com/appwrite/sdk-for-go/query"
+    "github.com/appwrite/sdk-for-go/v7/client"
+    "github.com/appwrite/sdk-for-go/v7/tablesdb"
+    "github.com/appwrite/sdk-for-go/v7/query"
 )
 
 func main() {

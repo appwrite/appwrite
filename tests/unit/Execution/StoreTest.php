@@ -402,6 +402,24 @@ final class StoreTest extends TestCase
         $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getAttribute('scheduledAt'));
     }
 
+    public function testWritesBypassAsyncInsertBuffer(): void
+    {
+        $client = new CapturingClient();
+        $store = $this->store($client);
+
+        $store->upsertMany('project', [
+            new Document(['$id' => 'first', 'resourceType' => 'functions', 'status' => 'waiting']),
+            new Document(['$id' => 'second', 'resourceType' => 'functions', 'status' => 'completed']),
+        ]);
+        $store->delete('project', new Document(['$id' => 'first', 'resourceType' => 'functions']));
+
+        $this->assertCount(2, $client->requests);
+        foreach ($client->requests as $request) {
+            \parse_str($request->getUri()->getQuery(), $parameters);
+            $this->assertSame('0', $parameters['async_insert'] ?? null);
+        }
+    }
+
     public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());
@@ -453,30 +471,5 @@ final class StoreTest extends TestCase
     private function jsonResponse(array $rows): ResponseInterface
     {
         return new Response(200, body: new Stream(\json_encode(['data' => $rows], JSON_THROW_ON_ERROR)));
-    }
-}
-
-final class CapturingClient implements ClientInterface
-{
-    /** @var list<RequestInterface> */
-    public array $requests = [];
-
-    /** @param list<ResponseInterface> $responses */
-    public function __construct(private array $responses = [])
-    {
-    }
-
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        $this->requests[] = $request;
-        return \array_shift($this->responses) ?? new Response(200);
-    }
-}
-
-final class FailingClient implements ClientInterface
-{
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        throw new \RuntimeException('ClickHouse unavailable');
     }
 }

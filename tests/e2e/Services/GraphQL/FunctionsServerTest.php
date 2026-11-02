@@ -10,8 +10,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Role;
 
 final class FunctionsServerTest extends Scope
 {
@@ -36,7 +36,7 @@ final class FunctionsServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Test Function',
                 'entrypoint' => 'index.js',
                 'runtime' => 'node-22',
@@ -118,7 +118,11 @@ final class FunctionsServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($deployment['body']['data']);
-        $this->assertArrayNotHasKey('errors', $deployment['body']);
+        $this->assertArrayNotHasKey(
+            'errors',
+            $deployment['body'],
+            \json_encode($deployment['body']['errors'] ?? [], JSON_THROW_ON_ERROR)
+        );
 
         // Poll get deployment until an error, or status is either 'ready' or 'failed'
         $deployment = $deployment['body']['data']['functionsCreateDeployment'];
@@ -179,7 +183,11 @@ final class FunctionsServerTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($execution['body']['data']);
-        $this->assertArrayNotHasKey('errors', $execution['body']);
+        $this->assertArrayNotHasKey(
+            'errors',
+            $execution['body'],
+            \json_encode($execution['body']['errors'] ?? [], JSON_THROW_ON_ERROR)
+        );
 
         self::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
         return self::$cachedExecution[$key];

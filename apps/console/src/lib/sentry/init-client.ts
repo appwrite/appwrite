@@ -4,6 +4,10 @@ import {
   getSentryEnvironment,
   isLocalDevelopmentRuntime,
 } from '@/lib/sentry/environment'
+import {
+  redactSentryBreadcrumb,
+  redactSentryEvent,
+} from '@/lib/sentry/redact-url'
 import { shouldSkipSentryError } from '@/lib/sentry/skip-error'
 
 let sentryInitialized = false
@@ -31,8 +35,9 @@ export function initSentryClient(options?: InitSentryClientOptions): boolean {
     sendDefaultPii: false,
     beforeSend(event, hint) {
       if (shouldSkipSentryError(hint.originalException)) return null
-      return event
+      return redactSentryEvent(event)
     },
+    beforeBreadcrumb: redactSentryBreadcrumb,
   })
   sentryInitialized = true
   return !!Sentry.getClient()
@@ -40,6 +45,19 @@ export function initSentryClient(options?: InitSentryClientOptions): boolean {
 
 export function isSentryClientInitialized(): boolean {
   return sentryInitialized && !!Sentry.getClient()
+}
+
+/**
+ * Run `fn` against the Sentry SDK after init. Callers should dynamic-import
+ * this module so the SDK stays out of the public first-load graph (INP).
+ */
+export function withSentryClient(
+  fn: (sentry: typeof Sentry) => void,
+  options?: InitSentryClientOptions,
+): boolean {
+  if (!initSentryClient(options)) return false
+  fn(Sentry)
+  return true
 }
 
 export type SentryDebugTestResult =

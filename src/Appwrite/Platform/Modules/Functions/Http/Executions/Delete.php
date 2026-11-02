@@ -61,8 +61,8 @@ class Delete extends Base
                 ],
                 contentType: ContentType::NONE
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
-            ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Execution ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('executionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Execution ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
@@ -209,7 +209,7 @@ class Delete extends Base
         $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
-            ->setPayload($response->output($execution, Response::MODEL_EXECUTION));
+            ->setPayload($response->output($execution, Response::MODEL_EXECUTION), sensitive: ['logs', 'errors']);
 
         $response->noContent();
     }

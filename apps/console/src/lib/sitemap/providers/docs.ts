@@ -1,3 +1,4 @@
+import { isFeatureGatedDocsSlugHidden } from '@/lib/docs/feature-gated-docs'
 import { DOCS_PAGES } from '@/lib/docs/generated/manifest'
 import type { SitemapEntry } from '../types'
 
@@ -11,6 +12,11 @@ export function getDocsSitemapEntries(): SitemapEntry[] {
   ]
 
   for (const page of DOCS_PAGES) {
+    if (
+      isFeatureGatedDocsSlugHidden(page.slug, { deferPartnersOnServer: true })
+    ) {
+      continue
+    }
     entries.push({
       path: page.slug ? `/docs/${page.slug}` : '/docs',
       priority: page.layout === 'tutorial' ? 0.7 : 0.8,

@@ -29,6 +29,11 @@ export type ApiExplorerProjectAuthSnapshot = {
 
 type ApiExplorerAuthStoragePayload = Record<string, unknown>
 
+type ApiExplorerKeys = Pick<
+  ApiExplorerServerAuthState,
+  'manualApiKey' | 'ephemeralApiKey'
+>
+
 function parsePlatform(value: unknown): ApiExplorerProjectPlatform | undefined {
   if (value === 'client' || value === 'server') return value
   return undefined
@@ -47,7 +52,9 @@ function parseStringArray(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string')
 }
 
-export function parseApiExplorerClientAuth(raw: unknown): ApiExplorerClientAuthState {
+export function parseApiExplorerClientAuth(
+  raw: unknown,
+): ApiExplorerClientAuthState {
   if (!raw || typeof raw !== 'object') {
     return { ...DEFAULT_API_EXPLORER_CLIENT_AUTH }
   }
@@ -59,7 +66,9 @@ export function parseApiExplorerClientAuth(raw: unknown): ApiExplorerClientAuthS
   }
 }
 
-export function parseApiExplorerServerAuth(raw: unknown): ApiExplorerServerAuthState {
+export function parseApiExplorerServerAuth(
+  raw: unknown,
+): ApiExplorerServerAuthState {
   if (!raw || typeof raw !== 'object') {
     return { ...DEFAULT_API_EXPLORER_SERVER_AUTH }
   }
@@ -67,7 +76,8 @@ export function parseApiExplorerServerAuth(raw: unknown): ApiExplorerServerAuthS
   const entry = raw as Record<string, unknown>
   return {
     mode: parseServerAuthMode(entry.mode),
-    manualApiKey: typeof entry.manualApiKey === 'string' ? entry.manualApiKey : '',
+    manualApiKey:
+      typeof entry.manualApiKey === 'string' ? entry.manualApiKey : '',
     ephemeralApiKey:
       typeof entry.ephemeralApiKey === 'string' ? entry.ephemeralApiKey : '',
     ephemeralDraftScopes: parseStringArray(entry.ephemeralDraftScopes),
@@ -75,27 +85,76 @@ export function parseApiExplorerServerAuth(raw: unknown): ApiExplorerServerAuthS
   }
 }
 
-function readStoragePayload(): ApiExplorerAuthStoragePayload {
-  if (typeof window === 'undefined') return {}
+const keysByProject = new Map<string, ApiExplorerKeys>()
 
+function withoutKeys(entry: unknown): unknown {
+  if (!entry || typeof entry !== 'object') return entry
+  const record = entry as Record<string, unknown>
+  if (!record.serverAuth || typeof record.serverAuth !== 'object') return entry
+  const serverAuth = record.serverAuth as Record<string, unknown>
+  return {
+    ...record,
+    serverAuth: {
+      mode: serverAuth.mode,
+      ephemeralDraftScopes: serverAuth.ephemeralDraftScopes,
+      ephemeralKeyScopes: serverAuth.ephemeralKeyScopes,
+    },
+  }
+}
+
+function hasKeys(entry: unknown): boolean {
+  if (!entry || typeof entry !== 'object') return false
+  const serverAuth = (entry as Record<string, unknown>).serverAuth
+  if (!serverAuth || typeof serverAuth !== 'object') return false
+  return 'manualApiKey' in serverAuth || 'ephemeralApiKey' in serverAuth
+}
+
+function writeStoragePayload(payload: ApiExplorerAuthStoragePayload): void {
+  localStorage.setItem(
+    API_EXPLORER_AUTH_LOCAL_STORAGE_KEY,
+    JSON.stringify(payload),
+  )
+}
+
+function readStoragePayload(): ApiExplorerAuthStoragePayload {
   try {
     const raw = localStorage.getItem(API_EXPLORER_AUTH_LOCAL_STORAGE_KEY)
     if (!raw) return {}
     const parsed: unknown = JSON.parse(raw)
     if (!parsed || typeof parsed !== 'object') return {}
-    return parsed as ApiExplorerAuthStoragePayload
+
+    const payload = parsed as ApiExplorerAuthStoragePayload
+    if (!Object.values(payload).some(hasKeys)) return payload
+
+    const scrubbed = Object.fromEntries(
+      Object.entries(payload).map(([projectId, entry]) => [
+        projectId,
+        withoutKeys(entry),
+      ]),
+    )
+    try {
+      writeStoragePayload(scrubbed)
+    } catch {
+      /* quota / read-only storage */
+    }
+    return scrubbed
   } catch {
     return {}
   }
 }
 
-export function readApiExplorerAuthFromLocalStorage(
+function readKeys(projectId: string): ApiExplorerKeys {
+  return (
+    keysByProject.get(projectId) ?? { manualApiKey: '', ephemeralApiKey: '' }
+  )
+}
+
+export function readApiExplorerAuthFromStorage(
   projectId: string,
 ): Partial<ApiExplorerProjectAuthSnapshot> | null {
-  if (!projectId) return null
+  if (typeof window === 'undefined' || !projectId) return null
 
-  const payload = readStoragePayload()
-  const entry = payload[projectId]
+  const entry = readStoragePayload()[projectId]
   if (!entry || typeof entry !== 'object') return null
 
   const record = entry as Record<string, unknown>
@@ -109,35 +168,45 @@ export function readApiExplorerAuthFromLocalStorage(
     partial.clientAuth = parseApiExplorerClientAuth(record.clientAuth)
   }
   if (record.serverAuth !== undefined) {
-    partial.serverAuth = parseApiExplorerServerAuth(record.serverAuth)
+    partial.serverAuth = {
+      ...parseApiExplorerServerAuth(record.serverAuth),
+      ...readKeys(projectId),
+    }
   }
 
-  if (
-    !partial.platform &&
-    !partial.clientAuth &&
-    !partial.serverAuth
-  ) {
+  if (!partial.platform && !partial.clientAuth && !partial.serverAuth) {
     return null
   }
 
   return partial
 }
 
-export function writeApiExplorerAuthToLocalStorage(
+export function writeApiExplorerAuthToStorage(
   projectId: string,
   snapshot: ApiExplorerProjectAuthSnapshot,
 ): void {
   if (typeof window === 'undefined' || !projectId) return
 
+  const { manualApiKey, ephemeralApiKey } = snapshot.serverAuth
+  keysByProject.set(projectId, { manualApiKey, ephemeralApiKey })
+
   try {
     const payload = readStoragePayload()
-    payload[projectId] = snapshot
-    localStorage.setItem(
-      API_EXPLORER_AUTH_LOCAL_STORAGE_KEY,
-      JSON.stringify(payload),
-    )
+    payload[projectId] = withoutKeys(snapshot)
+    writeStoragePayload(payload)
   } catch {
     /* private mode / quota */
+  }
+}
+
+export function clearApiExplorerAuthStorage(): void {
+  keysByProject.clear()
+  if (typeof window === 'undefined') return
+
+  try {
+    localStorage.removeItem(API_EXPLORER_AUTH_LOCAL_STORAGE_KEY)
+  } catch {
+    /* private mode */
   }
 }
 
@@ -145,7 +214,7 @@ export function resolveApiExplorerAuthSnapshot(
   projectId: string,
   fallbackPlatform: ApiExplorerProjectPlatform,
 ): ApiExplorerProjectAuthSnapshot {
-  const stored = readApiExplorerAuthFromLocalStorage(projectId)
+  const stored = readApiExplorerAuthFromStorage(projectId)
   return {
     platform: stored?.platform ?? fallbackPlatform,
     clientAuth: stored?.clientAuth ?? { ...DEFAULT_API_EXPLORER_CLIENT_AUTH },

@@ -138,7 +138,7 @@ export function View() {
   const canSubmit =
     form.name.trim().length > 0 &&
     (!needsResourceId || form.resourceId.trim().length > 0) &&
-    areFirewallConditionsComplete(conditions) &&
+    areFirewallConditionsComplete(conditions, form.resourceType) &&
     (form.action !== WafRuleAction.RateLimit ||
       (form.limit > 0 &&
         form.interval > 0 &&

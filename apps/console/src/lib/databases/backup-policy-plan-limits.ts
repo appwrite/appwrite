@@ -14,7 +14,7 @@
 
 const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER)
 
-function toPlanLimitNumber(
+export function toPlanLimitNumber(
   value: number | bigint | null | undefined,
 ): number {
   if (value == null) return 0
@@ -25,7 +25,11 @@ function toPlanLimitNumber(
     return Number(value)
   }
 
-  if (!Number.isFinite(value) || value <= 0 || value >= Number.MAX_SAFE_INTEGER) {
+  if (
+    !Number.isFinite(value) ||
+    value <= 0 ||
+    value >= Number.MAX_SAFE_INTEGER
+  ) {
     return 0
   }
 

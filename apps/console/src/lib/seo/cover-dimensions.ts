@@ -25,8 +25,10 @@ export function getCoverImageDimensions(
     }
   }
 
-  const value = (coverDimensions as Record<string, string>)[path]
-  if (!value) return undefined
+  const manifest = coverDimensions as Record<string, string>
+  if (!Object.hasOwn(manifest, path)) return undefined
+
+  const value = manifest[path]
 
   const [width, height] = value.split('x').map(Number)
   if (!Number.isFinite(width) || !Number.isFinite(height)) return undefined

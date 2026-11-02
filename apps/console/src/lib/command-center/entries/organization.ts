@@ -24,6 +24,7 @@ import {
   canAccessOrgSettingsMembers,
   canAccessOrgSettingsOverview,
   canCreateProject,
+  canCreateOrgApiKey,
   canInviteOrgMember,
   canShowOrgApiKeysSettings,
   canShowOrgBillingNav,
@@ -179,6 +180,11 @@ const ORG_CREATE: CommandEntry[] = [
     icon: Key,
     keywords: ['new', 'api', 'key', 'token', 'org'],
     available: (ctx) => canShowOrgApiKeysSettings(ctx.access, ctx.features),
+    disabled: (ctx) => !canCreateOrgApiKey(ctx.access, ctx.features),
+    disabledReason: (ctx) =>
+      canCreateOrgApiKey(ctx.access, ctx.features)
+        ? undefined
+        : "You don't have permission to create API keys.",
     to: (ctx) => `/organizations/${ctx.orgId}/settings/partners`,
   },
   {

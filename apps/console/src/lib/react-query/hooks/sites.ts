@@ -1339,7 +1339,7 @@ export function useCreateSite(projectId: string | null | undefined) {
       return await projectSdk.sites.create({
         ...params,
         siteId,
-      } as unknown)
+      } as Extract<Parameters<typeof projectSdk.sites.create>[0], object>)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

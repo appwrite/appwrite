@@ -12,6 +12,7 @@ import { jaPricingDictionary } from './pricing'
 import { jaVideosDictionary } from './videos'
 import { jaAlternativesDictionary } from './alternatives'
 import { jaEnterpriseDictionary } from './enterprise'
+import { jaSolutionsDictionary } from './solutions'
 import { jaCampaignsDictionary } from './campaigns'
 
 /**
@@ -21,6 +22,7 @@ import { jaCampaignsDictionary } from './campaigns'
 export const jaDictionary: Record<string, string> = {
   ...jaCampaignsDictionary,
   ...jaEnterpriseDictionary,
+  ...jaSolutionsDictionary,
   ...jaAlternativesDictionary,
   ...jaMarketingDictionary,
   ...jaProductPagesDictionary,

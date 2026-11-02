@@ -11,12 +11,13 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Create extends Action
 {
@@ -57,9 +58,9 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
-            ->param('buildId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Build unique ID.', true, ['dbForProject']) // added as optional param for backward compatibility
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('buildId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Build unique ID.', true, ['dbForProject']) // added as optional param for backward compatibility
             ->inject('response')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -116,7 +117,7 @@ class Create extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
 
         $destination = '';
         if ($hasSource) {
@@ -152,23 +153,47 @@ class Create extends Action
             $deployment = $deployments->createFromUpload($function, $deployment, $buildTimeout);
         } elseif ($installationId !== '') {
             $installation = $dbForPlatform->getDocument('installations', $installationId);
+
+            // Reconnecting git can delete or strand the installation older deployments were built
+            // through, so a function still connected to the repository redeploys through its own.
+            // Repository IDs are only unique within a provider, so its repository URL must match too.
+            $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
+            if ($providerRepositoryId !== '' && $providerRepositoryId === $function->getAttribute('providerRepositoryId', '')) {
+                $current = $dbForPlatform->getDocument('installations', $function->getAttribute('installationId', ''));
+                if (
+                    !$current->isEmpty()
+                    && $vcsFactory->fromProvider($current->getAttribute('provider', ''))->getRepositoryUrl($owner, $repository) === $deployment->getAttribute('providerRepositoryUrl', '')
+                ) {
+                    $installation = $current;
+                }
+            }
+
             if ($installation->isEmpty()) {
                 throw new Exception(Exception::INSTALLATION_NOT_FOUND);
             }
 
             $github = $vcsFactory->fromInstallation($installation);
 
+            $deployment->setAttributes([
+                'installationId' => $installation->getId(),
+                'installationInternalId' => $installation->getSequence(),
+            ]);
+
             $ref = $deployment->getAttribute('providerCommitHash') ?: $deployment->getAttribute('providerBranch');
-            $deployment = $deployments->createFromVcs(
-                $function,
-                $deployment,
-                $buildTimeout,
-                $github,
-                $owner,
-                $repository,
-                $ref,
-                $function->getAttribute('providerRootDirectory', ''),
-            );
+            try {
+                $deployment = $deployments->createFromVcs(
+                    $function,
+                    $deployment,
+                    $buildTimeout,
+                    $github,
+                    $owner,
+                    $repository,
+                    $ref,
+                    $function->getAttribute('providerRootDirectory', ''),
+                );
+            } catch (RepositoryNotFound) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
         } else {
             // Public template repo: providerBranch holds the resolved ref,
             // fetched commit-style since a branch-type clone breaks on tags.

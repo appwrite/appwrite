@@ -15,6 +15,8 @@ use Utopia\Http\Exception;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
 use Utopia\Validator\AnyOf;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -22,6 +24,8 @@ use Utopia\Validator\WhiteList;
 
 final class HttpTest extends TestCase
 {
+    private static bool $called = false;
+
     protected ?Http $http;
 
     protected ?Container $resources;
@@ -956,6 +960,39 @@ final class HttpTest extends TestCase
         $this->assertSame('generated: generated-value', $result);
     }
 
+    public static function markCalled(): string
+    {
+        self::$called = true;
+
+        return 'called';
+    }
+
+    public function testCallableArrayRequestParametersNotExecuted(): void
+    {
+        self::$called = false;
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/test-callable-array-param';
+
+        Http::get('/test-callable-array-param')
+            ->param('items', [], new ArrayList(new Text(200)), 'items param', true)
+            ->action(function (array $items) {
+                echo \json_encode($items);
+            });
+
+        $request = new FPMRequest();
+        $request::_setParams(['items' => [self::class, 'markCalled']]);
+
+        ob_start();
+        $this->http->execute($request, new Response());
+        $result = ob_get_contents();
+        ob_end_clean();
+
+        $request::_setParams(null);
+
+        $this->assertFalse(self::$called);
+        $this->assertSame(\json_encode([self::class, 'markCalled']), $result);
+    }
+
     public function testExplicitNullOptionalParamFallsBackToDefault(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -1024,6 +1061,106 @@ final class HttpTest extends TestCase
             });
 
         $this->assertSame(var_export('abc', true), $run('/items/abc', ['x' => null]));
+    }
+
+    /**
+     * @return array<string, array{0: mixed, 1: mixed}>
+     */
+    public static function looseBooleanProvider(): array
+    {
+        return [
+            'string false' => ['false', false],
+            'string true' => ['true', true],
+            'string zero' => ['0', false],
+            'string one' => ['1', true],
+            'int zero' => [0, false],
+            'int one' => [1, true],
+            'bool false' => [false, false],
+            'bool true' => [true, true],
+        ];
+    }
+
+    #[DataProvider('looseBooleanProvider')]
+    public function testLooseBooleanParamReachesTheActionAsBool(mixed $input, mixed $expected): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/items';
+
+        Http::get('/items')
+            ->param('total', true, new Boolean(true), 'total param', true)
+            ->param('enabled', null, new Nullable(new Boolean(true)), 'enabled param', true)
+            ->param('lazy', null, fn () => new Boolean(true), 'lazy param', true)
+            ->action(function (mixed $total, mixed $enabled, mixed $lazy) {
+                echo \var_export([$total, $enabled, $lazy], true);
+            });
+
+        $result = $this->dispatch(['total' => $input, 'enabled' => $input, 'lazy' => $input]);
+
+        $this->assertSame(\var_export([$expected, $expected, $expected], true), $result);
+    }
+
+    public function testBooleanStringStaysAStringForNonBooleanValidators(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/items/false';
+
+        Http::get('/items/:id')
+            ->param('id', '', new Text(10), 'id param')
+            ->param('name', '', new Text(10), 'name param', true)
+            ->action(function (mixed $id, mixed $name) {
+                echo \var_export([$id, $name], true);
+            });
+
+        $result = $this->dispatch(['name' => 'true']);
+
+        $this->assertSame(\var_export(['false', 'true'], true), $result);
+    }
+
+    public function testBooleanStringStaysAStringWhenValidationIsSkipped(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/items';
+
+        Http::get('/items')
+            ->param('total', true, new Boolean(true), 'total param', true, skipValidation: true)
+            ->action(function (mixed $total) {
+                echo \var_export($total, true);
+            });
+
+        $this->assertSame(\var_export('false', true), $this->dispatch(['total' => 'false']));
+    }
+
+    public function testOmittedBooleanParamKeepsItsDefault(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/items';
+
+        Http::get('/items')
+            ->param('total', true, new Boolean(true), 'total param', true)
+            ->action(function (mixed $total) {
+                echo \var_export($total, true);
+            });
+
+        $this->assertSame('true', $this->dispatch([]));
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     */
+    private function dispatch(array $params): string
+    {
+        $http = $this->http ?? throw new \LogicException('Http is not initialised');
+
+        $request = new FPMRequest();
+        $request::_setParams($params);
+
+        \ob_start();
+        $http->execute($request, new Response());
+        $result = (string) \ob_get_clean();
+
+        $request::_setParams(null);
+
+        return $result;
     }
 
     public function testCanInjectResourceAndParamWithSameName(): void

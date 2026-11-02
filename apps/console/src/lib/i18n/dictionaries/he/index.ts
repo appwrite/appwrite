@@ -12,6 +12,7 @@ import { hePricingDictionary } from './pricing'
 import { heVideosDictionary } from './videos'
 import { heAlternativesDictionary } from './alternatives'
 import { heEnterpriseDictionary } from './enterprise'
+import { heSolutionsDictionary } from './solutions'
 import { heCampaignsDictionary } from './campaigns'
 
 /**
@@ -21,6 +22,7 @@ import { heCampaignsDictionary } from './campaigns'
 export const heDictionary: Record<string, string> = {
   ...heCampaignsDictionary,
   ...heEnterpriseDictionary,
+  ...heSolutionsDictionary,
   ...heAlternativesDictionary,
   ...heMarketingDictionary,
   ...heProductPagesDictionary,

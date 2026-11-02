@@ -41,7 +41,7 @@ $client = (new Client())
 $users = new Users($client);
 
 $token = $users->createToken('<USER_ID>');
-$secret = $token['secret'];
+$secret = $token->secret;
 ```
 
 ```python
@@ -75,7 +75,7 @@ client = Client.new
 users = Users.new(client)
 
 token = users.create_token(user_id: '<USER_ID>')
-secret = token['secret']
+secret = token.secret
 ```
 
 ```deno
@@ -239,7 +239,7 @@ let session = try await account.createSession(
 import io.appwrite.Client
 import io.appwrite.services.Account
 
-val client = Client()
+val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>");
 

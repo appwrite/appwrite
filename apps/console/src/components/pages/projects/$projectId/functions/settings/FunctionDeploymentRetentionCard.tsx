@@ -50,6 +50,7 @@ export function FunctionDeploymentRetentionCard({
 
   return (
     <DeploymentRetentionCard
+      projectId={projectId}
       deploymentRetention={getDeploymentRetention(func)}
       onUpdate={(deploymentRetention) =>
         updateFunctionMutation.mutate(deploymentRetention)

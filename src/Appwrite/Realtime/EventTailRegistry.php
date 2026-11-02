@@ -13,7 +13,7 @@ use Utopia\WebSocket\Server;
 class EventTailRegistry
 {
     /** @var array<int, array<string, array<string, array{
-     *   role:string,
+     *   roles:array<int,string>,
      *   filters:array<string,mixed>,
      *   tokens:float,
      *   lastRefill:float,
@@ -70,13 +70,13 @@ class EventTailRegistry
      * its filter without leaving a stale entry behind. Entries are dropped only by
      * remove()/removeConnection() (i.e. unsubscribe or disconnect), matching the tree.
      *
-     * @param array<string,mixed> $filters result of RuntimeQuery::compile()
-     * @param string $role the team role this tail was authorized with
+     * @param array<string,mixed> $filters result of RuntimeQuery::prepare()
+     * @param array<int,string> $roles the roles any of which authorized this tail
      */
-    public function add(int $connId, string $subId, string $projectId, array $filters, float $now, string $role = ''): void
+    public function add(int $connId, string $subId, string $projectId, array $filters, float $now, array $roles = []): void
     {
         $this->entries[$connId][$subId][$projectId] = [
-            'role'       => $role,
+            'roles'      => $roles,
             'filters'    => $filters,
             'tokens'     => (float) $this->rate,
             'lastRefill' => $now,
@@ -116,7 +116,7 @@ class EventTailRegistry
     }
 
     /**
-     * Drop any tail whose authorizing team role the connection no longer holds. Called
+     * Drop any tail none of whose authorizing roles the connection still holds. Called
      * from the permissions-changed path (which already recomputes a connection's roles
      * and rebuilds its tree) so a membership revocation or project transfer stops the
      * tail mid-connection instead of streaming until disconnect.
@@ -127,9 +127,30 @@ class EventTailRegistry
     {
         foreach (($this->entries[$connId] ?? []) as $subId => $byProject) {
             foreach ($byProject as $projectId => $entry) {
-                $role = $entry['role'];
-                if ($role !== '' && !\in_array($role, $roles, true)) {
+                if (!empty($entry['roles']) && empty(\array_intersect($entry['roles'], $roles))) {
                     $this->detachEntry($connId, (string) $subId, (string) $projectId);
+                }
+            }
+        }
+    }
+
+    /**
+     * Re-authorize every tail of a project against the roles that may read it now, and
+     * keep those roles for later revalidation. Called when the project's own permissions
+     * change, such as on a transfer to another team, which the viewer's roles never show.
+     *
+     * @param array<int,string> $readRoles the project's current read roles
+     * @param callable(int): array<int,string> $connectionRoles the current roles of a connection
+     */
+    public function reauthorizeProject(string $projectId, array $readRoles, callable $connectionRoles): void
+    {
+        foreach (($this->projectIndex[$projectId] ?? []) as $connId => $subs) {
+            $authorized = !empty(\array_intersect($readRoles, $connectionRoles($connId)));
+            foreach (\array_keys($subs) as $subId) {
+                if ($authorized) {
+                    $this->entries[$connId][$subId][$projectId]['roles'] = $readRoles;
+                } else {
+                    $this->detachEntry($connId, (string) $subId, $projectId);
                 }
             }
         }

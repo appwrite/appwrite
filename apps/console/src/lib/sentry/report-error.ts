@@ -1,8 +1,6 @@
-import * as Sentry from '@sentry/tanstackstart-react'
 import { canTrackAnalytics } from '@/lib/cookie-consent/consent-state'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { isLocalDevelopmentRuntime } from '@/lib/sentry/environment'
-import { initSentryClient } from '@/lib/sentry/init-client'
 import { shouldSkipSentryError } from '@/lib/sentry/skip-error'
 
 export { shouldSkipSentryError } from '@/lib/sentry/skip-error'
@@ -134,7 +132,6 @@ export function captureExceptionWithContext(
 ): string | undefined {
   if (!isSentryReportingEnabled()) return undefined
   if (shouldSkipSentryError(error)) return undefined
-  if (!initSentryClient()) return undefined
 
   const dedupeKey =
     error !== null && typeof error === 'object' ? error : toReportableError(error)
@@ -142,34 +139,37 @@ export function captureExceptionWithContext(
   reportedErrors.add(dedupeKey)
 
   const reportable = toReportableError(error)
+  const extra = {
+    ...additionalContext,
+    timestamp: new Date().toISOString(),
+  }
+  const tags = {
+    ...(additionalContext?.source && {
+      error_source: additionalContext.source,
+    }),
+    ...(additionalContext?.projectId && {
+      project_id: additionalContext.projectId,
+    }),
+    ...(additionalContext?.orgId && { org_id: additionalContext.orgId }),
+    ...(additionalContext?.functionId && {
+      function_id: additionalContext.functionId,
+    }),
+    ...(additionalContext?.bucketId && {
+      bucket_id: additionalContext.bucketId,
+    }),
+    ...(additionalContext?.databaseId && {
+      database_id: additionalContext.databaseId,
+    }),
+    ...(additionalContext?.siteId && { site_id: additionalContext.siteId }),
+  }
 
-  return (
-    Sentry.captureException(reportable, {
-      extra: {
-        ...additionalContext,
-        timestamp: new Date().toISOString(),
-      },
-      tags: {
-        ...(additionalContext?.source && {
-          error_source: additionalContext.source,
-        }),
-        ...(additionalContext?.projectId && {
-          project_id: additionalContext.projectId,
-        }),
-        ...(additionalContext?.orgId && { org_id: additionalContext.orgId }),
-        ...(additionalContext?.functionId && {
-          function_id: additionalContext.functionId,
-        }),
-        ...(additionalContext?.bucketId && {
-          bucket_id: additionalContext.bucketId,
-        }),
-        ...(additionalContext?.databaseId && {
-          database_id: additionalContext.databaseId,
-        }),
-        ...(additionalContext?.siteId && { site_id: additionalContext.siteId }),
-      },
-    }) ?? Sentry.lastEventId()
-  )
+  void import('@/lib/sentry/init-client').then(({ withSentryClient }) => {
+    withSentryClient((Sentry) => {
+      Sentry.captureException(reportable, { extra, tags })
+    })
+  })
+
+  return undefined
 }
 
 /**

@@ -378,7 +378,7 @@ page = documents_db.list_documents(
 )
 ```
 ```server-deno
-import { Client, Query, DocumentsDB } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Query, DocumentsDB } from "npm:node-appwrite";
 
 const client = new Client()
   .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')

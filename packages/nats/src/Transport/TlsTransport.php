@@ -6,6 +6,7 @@ namespace Utopia\NATS\Transport;
 
 use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
+use Utopia\NATS\Exception\TlsException;
 
 final class TlsTransport implements Transport
 {
@@ -19,12 +20,13 @@ final class TlsTransport implements Transport
 
     public function connect(string $host, int $port, float $timeout): void
     {
-        $address = "tls://{$host}:{$port}";
+        $address = "tcp://{$host}:{$port}";
         $errno = 0;
         $errstr = '';
 
         $context = stream_context_create(['ssl' => $this->buildSslOptions()]);
 
+        // Connect TCP first so a refused connection is told apart from a failed handshake.
         $stream = @stream_socket_client(
             $address,
             $errno,
@@ -35,13 +37,20 @@ final class TlsTransport implements Transport
         );
 
         if ($stream === false) {
-            throw new ConnectionException("Failed to connect to {$address}: [{$errno}] {$errstr}");
+            throw new ConnectionException("Failed to connect to tls://{$host}:{$port}: [{$errno}] {$errstr}");
         }
 
         stream_set_blocking($stream, true);
         $seconds = (int) $timeout;
         $microseconds = (int) (($timeout - $seconds) * 1_000_000);
         stream_set_timeout($stream, $seconds, $microseconds);
+
+        error_clear_last();
+        if (@stream_socket_enable_crypto($stream, true, STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT) !== true) {
+            $reason = error_get_last()['message'] ?? 'no reason given';
+            fclose($stream);
+            throw new TlsException("TLS handshake with {$host}:{$port} failed: {$reason}");
+        }
 
         $this->stream = $stream;
     }

@@ -3,8 +3,7 @@
 > [!IMPORTANT]
 > This repository is a read-only mirror of [`packages/balancer`](https://github.com/appwrite/appwrite/tree/main/packages/balancer) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
-[![Build Status](https://github.com/utopia-php/balancer/actions/workflows/tester.yml/badge.svg)](https://github.com/utopia-php/balancer/actions/workflows/tester.yml)
-[![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/database.svg)](https://packagist.org/packages/utopia-php/balancer)
+[![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/balancer.svg)](https://packagist.org/packages/utopia-php/balancer)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
 Utopia Balancer library is simple and lite library for balancing choices between multiple options. This library is aiming to be as simple and easy to learn and use. This library is maintained by the [Appwrite team](https://appwrite.io).

@@ -22,6 +22,13 @@ class FastlyTls implements Provider
      */
     public const string CHALLENGE_MANAGED_DNS = 'managed-dns';
 
+    /**
+     * Seconds before a certificate expires by which Fastly should have issued
+     * its replacement. Fastly renews from about ten days before expiry, so a
+     * newest certificate this close to expiry means the renewal is stuck.
+     */
+    private const int RENEWAL_DEADLINE = 7 * 24 * 60 * 60;
+
     private readonly ClientInterface $client;
 
     public function __construct(
@@ -74,10 +81,15 @@ class FastlyTls implements Provider
             return Status::PROCESSING;
         }
 
+        // Fastly marks a subscription failed only days after its certificate
+        // expired, so a renewal stuck until this close to expiry is reported first.
+        $certificate = $this->newestCertificate($subscription);
+        $expiring = $certificate !== null && $certificate['expiry'] - time() <= self::RENEWAL_DEADLINE;
+
         // An issued certificate needs nothing from the domain owner, whatever
         // an authorization left over from an earlier order still says.
         if ($status === Status::ISSUED || $status === Status::UNKNOWN) {
-            return $status;
+            return $expiring && $status === Status::ISSUED ? Status::EXPIRING : $status;
         }
 
         // Fastly keeps the subscription `pending` while an authorization is
@@ -89,7 +101,7 @@ class FastlyTls implements Provider
                 return Status::PROCESSING;
             }
 
-            return $status;
+            return $expiring ? Status::EXPIRING : $status;
         }
 
         $status = $status === Status::FAILED ? Status::FAILED : Status::BLOCKED;
@@ -442,7 +454,10 @@ class FastlyTls implements Provider
             return true;
         }
 
-        $certificateId = $this->issuedCertificateId($subscription);
+        // The latest-expiring certificate, so a renewal activates the new one.
+        // Without an expiry to compare, the last reference is the newest.
+        $certificateId = $this->newestCertificate($subscription)['id']
+            ?? array_last($this->references($subscription['resource'], 'tls_certificates'));
         if ($certificateId === null) {
             return false;
         }
@@ -477,18 +492,20 @@ class FastlyTls implements Provider
     }
 
     /**
-     * The latest-expiring certificate, so a renewal activates the new one.
+     * The subscription's latest-expiring certificate. During a renewal the
+     * subscription references both the new certificate and the one it replaces.
      *
      * @param array{resource:array<string, mixed>,included:array<int, array<string, mixed>>} $subscription
+     * @return array{id:string,expiry:int}|null The certificate ID and its `not_after` as a Unix timestamp.
      */
-    private function issuedCertificateId(array $subscription): ?string
+    private function newestCertificate(array $subscription): ?array
     {
         $ids = $this->references($subscription['resource'], 'tls_certificates');
 
-        $bestId = null;
-        $bestExpiry = null;
+        $newest = null;
         foreach ($subscription['included'] as $included) {
-            if (($included['type'] ?? null) !== 'tls_certificate' || !\in_array($included['id'] ?? null, $ids, true)) {
+            $id = $included['id'] ?? null;
+            if (($included['type'] ?? null) !== 'tls_certificate' || !\is_string($id) || !\in_array($id, $ids, true)) {
                 continue;
             }
 
@@ -499,14 +516,12 @@ class FastlyTls implements Provider
                 continue;
             }
 
-            if ($bestExpiry === null || $expiry > $bestExpiry) {
-                $bestExpiry = $expiry;
-                $bestId = $included['id'];
+            if ($newest === null || $expiry > $newest['expiry']) {
+                $newest = ['id' => $id, 'expiry' => $expiry];
             }
         }
 
-        // Without an expiry to compare, the last reference is the newest.
-        return \is_string($bestId) ? $bestId : array_last($ids);
+        return $newest;
     }
 
     /**
@@ -638,45 +653,19 @@ class FastlyTls implements Provider
      */
     private function extractRenewDate(array $subscription): ?string
     {
-        $resource = $subscription['resource'];
-        $state = $this->mapStatus($resource['attributes']['state'] ?? '');
+        $state = $this->mapStatus($subscription['resource']['attributes']['state'] ?? '');
 
         if ($state !== Status::ISSUED && $state !== Status::RENEWING) {
             return null;
         }
 
-        $relationship = $resource['relationships']['tls_certificates']['data'] ?? [];
-        $certificateIds = [];
-        if (\is_array($relationship)) {
-            foreach ($relationship as $reference) {
-                if (\is_array($reference) && \is_string($reference['id'] ?? null)) {
-                    $certificateIds[] = $reference['id'];
-                }
-            }
-        }
-
-        $dates = [];
-        foreach ($subscription['included'] as $included) {
-            if (($included['type'] ?? null) !== 'tls_certificate') {
-                continue;
-            }
-            if (!\in_array($included['id'] ?? null, $certificateIds, true)) {
-                continue;
-            }
-            $notAfter = $included['attributes']['not_after'] ?? null;
-            if (\is_string($notAfter) && $notAfter !== '') {
-                $dates[] = $notAfter;
-            }
-        }
-
-        if ($dates === []) {
+        $certificate = $this->newestCertificate($subscription);
+        if ($certificate === null) {
             return null;
         }
 
-        usort($dates, static fn (string $left, string $right): int => strtotime($right) <=> strtotime($left));
-        $date = new \DateTimeImmutable($dates[0]);
-
-        return $date->modify('-30 days')->format('Y-m-d H:i:s.v');
+        // Check again once Fastly should have renewed the certificate
+        return new \DateTimeImmutable('@' . ($certificate['expiry'] - self::RENEWAL_DEADLINE))->format('Y-m-d H:i:s.v');
     }
 
     /**
