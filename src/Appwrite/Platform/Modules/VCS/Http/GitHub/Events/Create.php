@@ -219,9 +219,11 @@ class Create extends Action
      * Repositories with this provider repository id that are connected through the event's installation.
      *
      * @param array<Query> $queries
+     * @param ?int $limit Most rows to return; null returns every match. Reviews pass null, because each
+     *                    row is a separate project that asked for review and none may be skipped.
      * @return array<Document>
      */
-    private function findRepositories(string $providerRepositoryId, string $providerInstallationId, array $queries, Database $dbForPlatform, Authorization $authorization): array
+    private function findRepositories(string $providerRepositoryId, string $providerInstallationId, array $queries, Database $dbForPlatform, Authorization $authorization, ?int $limit = 100): array
     {
         $found = [];
         $cursor = null;
@@ -250,9 +252,9 @@ class Create extends Action
             }
 
             $cursor = \count($page) === 100 ? $page[\array_key_last($page)] : null;
-        } while ($cursor !== null && \count($found) < 100);
+        } while ($cursor !== null && ($limit === null || \count($found) < $limit));
 
-        return \array_slice($found, 0, 100);
+        return $limit === null ? $found : \array_slice($found, 0, $limit);
     }
 
     private function isProjectInCurrentRegion(Document $project): bool
@@ -455,7 +457,7 @@ class Create extends Action
         $pullNumber = (int) ($parsedPayload['pullRequestNumber'] ?? 0);
         $providerCommitHash = $parsedPayload['commitHash'] ?? '';
 
-        $repositories = $this->findRepositories($providerRepositoryId, $parsedPayload['installationId'] ?? '', [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization);
+        $repositories = $this->findRepositories($providerRepositoryId, $parsedPayload['installationId'] ?? '', [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization, null);
 
         foreach ($repositories as $repository) {
             try {
@@ -515,7 +517,7 @@ class Create extends Action
         }
 
         $providerRepositoryId = $parsedPayload['repositoryId'] ?? '';
-        $repositories = $this->findRepositories($providerRepositoryId, $parsedPayload['installationId'] ?? '', [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization);
+        $repositories = $this->findRepositories($providerRepositoryId, $parsedPayload['installationId'] ?? '', [Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS])], $dbForPlatform, $authorization, null);
         if (empty($repositories)) {
             return;
         }
