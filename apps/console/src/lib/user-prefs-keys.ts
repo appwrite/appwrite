@@ -131,6 +131,34 @@ export function clearDismissedBannerPrefs(
 }
 
 /**
+ * Distinct console visit days (local `YYYY-MM-DD` keys) feeding the GitHub
+ * star wizard trigger. Pruned to its rolling window on every write.
+ * Value: comma-separated day keys.
+ */
+export const USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS =
+  'console.githubStarVisitDays'
+
+export function parseGithubStarVisitDayPrefs(
+  prefs: UserPrefs | null | undefined,
+): string[] {
+  const raw = prefs?.[USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]
+  if (typeof raw === 'string') {
+    return raw ? raw.split(',').filter(Boolean) : []
+  }
+  return []
+}
+
+export function mergeGithubStarVisitDaysIntoPrefs(
+  prefs: UserPrefs | null | undefined,
+  days: readonly string[],
+): UserPrefs {
+  return {
+    ...(prefs ?? {}),
+    [USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]: days.join(','),
+  }
+}
+
+/**
  * When the user last opened the previews popover. Previews introduced
  * after it count as unseen. Value: ISO 8601 timestamp string.
  */
