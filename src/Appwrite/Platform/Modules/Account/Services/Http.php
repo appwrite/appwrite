@@ -35,6 +35,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirect\Get 
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Token\Create as CreateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Update as UpdateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2\Get as CreateOAuth2Token;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Create as CreatePasskeyToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Update as UpdatePasskeyToken;
 use Utopia\Platform\Service;
@@ -60,6 +61,7 @@ class Http extends Service
             ->addAction(GetOAuth2Callback::getName(), GetOAuth2Callback::class)
             ->addAction(CreateOAuth2Callback::getName(), CreateOAuth2Callback::class)
             ->addAction(GetOAuth2Redirect::getName(), GetOAuth2Redirect::class)
+            ->addAction(CreateOAuth2Token::getName(), CreateOAuth2Token::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
