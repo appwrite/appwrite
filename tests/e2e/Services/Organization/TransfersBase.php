@@ -502,6 +502,17 @@ trait TransfersBase
             $response = $this->callTransfers(Client::METHOD_DELETE, '/' . $transfer['body']['$id'], $member);
             $this->assertSame(401, $response['headers']['status-code'], $role);
             $this->assertSame(Exception::USER_UNAUTHORIZED, $response['body']['type']);
+
+            // Nor may they read the secret back, which would let them claim it elsewhere
+            $response = $this->callTransfers(Client::METHOD_GET, '', $member, ['projectId' => $projectId]);
+            $this->assertSame(200, $response['headers']['status-code'], $role);
+            $this->assertSame(1, $response['body']['total']);
+            $this->assertSame('', $response['body']['transfers'][0]['secret']);
+
+            $response = $this->callTransfers(Client::METHOD_GET, '/' . $transfer['body']['$id'], $member);
+            $this->assertSame(200, $response['headers']['status-code'], $role);
+            $this->assertSame($projectId, $response['body']['resourceId']);
+            $this->assertSame('', $response['body']['secret']);
         }
 
         // Nor may a member of the claiming organization claim it into it
