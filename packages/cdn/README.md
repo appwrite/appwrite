@@ -214,7 +214,7 @@ $renewRequired = $certificates->isRenewRequired('cdn.example.com', null);
 
 `getCertificateStatus()` returns a `Certificates\Status` constant. Fastly keeps a subscription `pending` while it waits for the domain owner to prove ownership, so the provider also reads the subscription's TLS authorizations: when one is `blocked`, or the subscription has `failed`, it throws `Exception\Certificate` instead of returning a status. The exception carries `getStatus()` (`Status::BLOCKED` or `Status::FAILED`), `getChallenges()` (the DNS records to create, as `Certificates\Challenge` values with a `type`, `recordType`, `recordName` and `values`) and `getWarnings()` (Fastly's own instructions, such as a record that conflicts with a challenge). `FastlyTls::CHALLENGE_MANAGED_DNS` is the `_acme-challenge` CNAME challenge, the one that proves ownership without pointing the domain itself at Fastly.
 
-Fastly renews certificates on its own, but marks a subscription `failed` only a week after its certificate expired. When the newest certificate expires within a week and Fastly has not replaced it, `getCertificateStatus()` returns `Status::EXPIRING`. Alert on it rather than issue again: Fastly accepts a retry only once the subscription has failed. `isRenewRequired()` is true only when issuing does something: no subscription or a failed one, or, for `Fastly`, a domain missing from domain management or attached to another service.
+Fastly renews certificates on its own, but marks a subscription `failed` only a week after its certificate expired. When the newest certificate expires within a week and Fastly has not replaced it, `getCertificateStatus()` returns `Status::EXPIRING`. Alert on it rather than issue again: Fastly accepts a retry only once the subscription has failed. `isRenewRequired()` is true only when issuing does something: no subscription or a failed one, or, for `Fastly`, a domain missing from domain management, attached to another service, or detached.
 
 ```php
 use Utopia\Cdn\Exception\Certificate as CertificateException;
@@ -239,6 +239,16 @@ $fastlyCertificates = new Fastly(
     serviceId: 'YOUR_SERVICE_ID',
 );
 ```
+
+A domain record whose `service_id` is empty is handled by what serves it:
+
+- A routing configuration serves it (`routing_configuration_id` is set): issuing, renewing and deleting leave it alone.
+- The configured service's active version holds it: it is a classic domain. Issuing and renewing leave it alone, and deleting removes it through a new service version.
+- Neither: the record is detached, and Fastly answers the hostname with its unknown-domain page while TLS still reports issued. `isRenewRequired()` returns true, and `issueCertificate()` issues TLS first and reassigns the record to the configured service only once the certificate is issued, as it does for a domain on another service. `deleteCertificate()` leaves it alone.
+
+Only the configured service's active version is read, through `GET /service/{id}/details`. A classic domain that another service in the account holds, with a record that names no service, therefore counts as detached, which is why deleting never touches a detached record.
+
+Fastly's `fqdn` filter is a partial match, so the provider reads the results page by page, following `meta.next_cursor` for up to 10 pages of 100, and fails rather than report a domain missing when the exact name has not turned up by then. When another request adds the domain between that lookup and the create, Fastly answers `400` with a detail saying the name has already been taken: the provider looks the domain up once more and carries on with that record, or fails naming the conflict when no record in the account matches.
 
 ### Cloudflare certificates
 

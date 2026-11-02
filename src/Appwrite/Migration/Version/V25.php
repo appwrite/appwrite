@@ -76,6 +76,12 @@ class V25 extends Migration
                         }
 
                         try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'prefs');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"prefs\" in collection {$id}: {$th->getMessage()}");
+                        }
+
+                        try {
                             $this->createIndexFromCollection($this->dbForProject, $id, '_key_accessedAt');
                         } catch (Throwable $th) {
                             Console::warning("Failed to create index \"_key_accessedAt\" from {$id}: {$th->getMessage()}");
@@ -411,8 +417,8 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.4.0 for custom user photos
-                    foreach (['photoId', 'photoSize'] as $attribute) {
+                    // Added in 2.4.0 for custom user photos, and in 2.7.0 for alert email opt-outs
+                    foreach (['photoId', 'photoSize', 'alertsUnsubscribed'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
                         } catch (Throwable $th) {
@@ -535,6 +541,12 @@ class V25 extends Migration
                     } finally {
                         $this->dbForProject->setTenant($tenant);
                     }
+                    break;
+
+                case 'monitors':
+                case 'monitorAlerts':
+                    // New in 2.7.0. Platform collections, so only the console project visits them.
+                    $this->createCollection($id);
                     break;
 
                 case 'pushLedger':

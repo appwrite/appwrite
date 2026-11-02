@@ -137,6 +137,13 @@ class Executor
             $version = 'v5';
         }
 
+        // Never forward a header that could split into extra lines on the runtime request
+        $headers = \array_filter(
+            $headers,
+            fn (mixed $value, mixed $key) => \strpbrk($key . (\is_scalar($value) ? (string) $value : ''), "\r\n\x00") === false,
+            ARRAY_FILTER_USE_BOTH
+        );
+
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,

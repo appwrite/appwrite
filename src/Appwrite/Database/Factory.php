@@ -129,7 +129,7 @@ class Factory implements Provisioner
             ->setCheckGrants(true);
 
         if ($database->getAdapter()->hasFeature(Schemaless::class)) {
-            $database->setSchemaless($databaseType === DOCUMENTSDB);
+            $database->setSchemaless($databaseType === DATABASE_TYPE_DOCUMENTSDB);
         }
 
         if ($preserveDates) {
@@ -144,8 +144,8 @@ class Factory implements Provisioner
 
         if ($databaseHost !== $projectDsn->getHost()) {
             $dbTypeSharedTables = match ($databaseType) {
-                DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
-                VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
+                DATABASE_TYPE_DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
+                DATABASE_TYPE_VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
                 default => [],
             };
 

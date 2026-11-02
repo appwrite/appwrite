@@ -3,13 +3,28 @@ import { useNavigate } from '@tanstack/react-router'
 import {
   keepPreviousData,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { FolderInput, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useOrganizations } from '@/lib/react-query/hooks'
+import { PERSONAL_ORG_NAME } from '@/lib/ensure-personal-org'
+import {
+  TRANSFER_DESTINATION_BLOCK_LABELS,
+  useOrganizations,
+  useTransferDestinations,
+} from '@/lib/react-query/hooks'
+import {
+  createOrganization,
+  organizationScopesQueryOptions,
+} from '@/lib/react-query/hooks/organizations'
+import {
+  getTransferOrganizations,
+  pickTransferOrganization,
+} from '@/lib/project-transfer'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { AuthFlowAccountSwitcher } from '@/components/global/auth/AuthFlowAccountSwitcher'
@@ -48,12 +63,46 @@ export function ClaimProjectTransfer({
   const [teamId, setTeamId] = useState('')
   const hasLink = transferId !== '' && secret !== ''
   const hasOrganizations = organizationsLoading || organizations.length > 0
+  const { features } = useConsoleProfile()
+  const destinations = useTransferDestinations(organizations)
 
-  useEffect(() => {
-    if (teamId === '' && organizations.length > 0) {
-      setTeamId(organizations[0].$id)
-    }
-  }, [organizations, teamId])
+  // The server only moves a project into an organization the user owns
+  const scopes = useQueries({
+    queries: organizations.map((organization) =>
+      organizationScopesQueryOptions(organization.$id),
+    ),
+  })
+  const rolesLoading = scopes.some((scope) => scope.isLoading)
+  const ownedIds = new Set(
+    getTransferOrganizations(
+      organizations.map((organization) => organization.$id),
+      Object.fromEntries(
+        organizations.map((organization, index) => [
+          organization.$id,
+          scopes[index]?.data?.roles,
+        ]),
+      ),
+    )
+      .filter((organization) => organization.eligible)
+      .map((organization) => organization.id),
+  )
+  // Owned, and not blocked by its role, billing or project limit
+  const transferOrganizations = destinations.map(({ organization, block }) => ({
+    id: organization.$id,
+    eligible: block === null && ownedIds.has(organization.$id),
+  }))
+  const destinationsChecking = destinations.some((check) => check.isChecking)
+  const eligibleIds = new Set(
+    transferOrganizations
+      .filter((organization) => organization.eligible)
+      .map((organization) => organization.id),
+  )
+  const hasEligible = eligibleIds.size > 0
+  const canCreateOrganization =
+    features.multiTenancy || organizations.length === 0
+  const selected = destinations.find(
+    (check) => check.organization.$id === teamId,
+  )
 
   // The preview runs as the selected organization, so it reports whether that organization may claim it
   const preview = useQuery({
@@ -86,6 +135,21 @@ export function ClaimProjectTransfer({
     },
   })
 
+  // Someone who signed up to claim a link may own no organization to receive it
+  const createOrganizationMutation = useMutation({
+    mutationFn: () => createOrganization({ name: PERSONAL_ORG_NAME }),
+    onSuccess: async (organization) => {
+      if (!('$id' in organization)) return
+      await queryClient.invalidateQueries({ queryKey: ['organizations'] })
+      setTeamId(organization.$id)
+    },
+    onError: (error) => {
+      toast.error(
+        getErrorMessage(error, t('Could not create the organization')),
+      )
+    },
+  })
+
   const recipientId = preview.data?.recipientId ?? ''
   const isRecipientMember = organizations.some(
     (organization) => organization.$id === recipientId,
@@ -93,18 +157,41 @@ export function ClaimProjectTransfer({
   const isReserved =
     recipientId !== '' && !organizationsLoading && !isRecipientMember
 
-  // Only one organization may claim it, so pick that one for the user
+  const pickedId = pickTransferOrganization(transferOrganizations, teamId)
+
   useEffect(() => {
-    if (recipientId !== '' && isRecipientMember && teamId !== recipientId) {
-      setTeamId(recipientId)
+    // Only one organization may claim it, so pick that one for the user
+    if (recipientId !== '') {
+      if (isRecipientMember && teamId !== recipientId) setTeamId(recipientId)
+      return
     }
-  }, [recipientId, isRecipientMember, teamId])
+    if (
+      !organizationsLoading &&
+      !rolesLoading &&
+      !destinationsChecking &&
+      pickedId !== teamId
+    ) {
+      setTeamId(pickedId)
+    }
+  }, [
+    recipientId,
+    isRecipientMember,
+    teamId,
+    pickedId,
+    organizationsLoading,
+    rolesLoading,
+    destinationsChecking,
+  ])
 
   const isAlreadyOwner = preview.data?.senderId === teamId
+  const isEligible = eligibleIds.has(teamId)
   const canClaim =
     preview.isSuccess &&
     !isAlreadyOwner &&
+    isEligible &&
     (recipientId === '' || teamId === recipientId) &&
+    selected?.block === null &&
+    !selected.isChecking &&
     !claimMutation.isPending
 
   const problem = preview.isError
@@ -116,7 +203,23 @@ export function ClaimProjectTransfer({
       ? t(
           'The project already belongs to this organization. Select a different one.',
         )
-      : null
+      : teamId !== '' && !ownedIds.has(teamId) && !rolesLoading
+        ? ownedIds.size > 0 || !canCreateOrganization
+          ? t('Only an owner of the organization can claim a project into it.')
+          : t(
+              'Only an owner of the organization can claim a project into it. Create an organization you own to receive it.',
+            )
+        : selected?.block === 'permission'
+          ? t("You don't have permission to add projects to this organization.")
+          : selected?.block === 'billing'
+            ? t(
+                'This organization has billing issues. Resolve them before it can receive projects.',
+              )
+            : selected?.block === 'projectLimit'
+              ? t(
+                  "This organization has reached its plan's project limit. Upgrade its plan to claim this project.",
+                )
+              : null
 
   const switchAccount = useAuthAccountSwitch()
   const goToDashboard = () => navigate({ to: '/' })
@@ -131,7 +234,7 @@ export function ClaimProjectTransfer({
         }
       >
         <AuthFlowNarrowCard>
-          {!hasLink || !hasOrganizations ? (
+          {!hasLink ? (
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <AuthFlowHeaderIcon
@@ -141,13 +244,9 @@ export function ClaimProjectTransfer({
                 <div className="space-y-1">
                   <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
                   <AuthFlowDescription>
-                    {!hasLink
-                      ? t(
-                          'This transfer link is incomplete. Ask the sender to share it again.',
-                        )
-                      : t(
-                          'You need an organization to claim this project. Create one, then open the link again.',
-                        )}
+                    {t(
+                      'This transfer link is incomplete. Ask the sender to share it again.',
+                    )}
                   </AuthFlowDescription>
                 </div>
               </div>
@@ -158,6 +257,40 @@ export function ClaimProjectTransfer({
               >
                 {t('Go to dashboard')}
               </Button>
+            </div>
+          ) : !hasOrganizations ? (
+            <div className="space-y-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <AuthFlowHeaderIcon icon={FolderInput} />
+                <div className="space-y-1">
+                  <AuthFlowTitle>{t('Claim project')}</AuthFlowTitle>
+                  <AuthFlowDescription>
+                    {t(
+                      'A project moves into one of your organizations. Create one to receive it.',
+                    )}
+                  </AuthFlowDescription>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="brandCta"
+                  className="w-full"
+                  disabled={createOrganizationMutation.isPending}
+                  onClick={() => createOrganizationMutation.mutate()}
+                >
+                  {features.billing
+                    ? t('Create a free organization')
+                    : t('Create organization')}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={createOrganizationMutation.isPending}
+                  onClick={goToDashboard}
+                >
+                  {t('Go to dashboard')}
+                </Button>
+              </div>
             </div>
           ) : isReserved ? (
             <div className="space-y-6">
@@ -251,14 +384,30 @@ export function ClaimProjectTransfer({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {organizations.map((organization) => (
-                      <SelectItem
-                        key={organization.$id}
-                        value={organization.$id}
-                      >
-                        {organization.name}
-                      </SelectItem>
-                    ))}
+                    {destinations.map(({ organization, block, isChecking }) => {
+                      const owned = ownedIds.has(organization.$id)
+                      const reason = isChecking
+                        ? t('Checking...')
+                        : block !== null
+                          ? t(TRANSFER_DESTINATION_BLOCK_LABELS[block])
+                          : owned
+                            ? null
+                            : t('Owner role required')
+                      return (
+                        <SelectItem
+                          key={organization.$id}
+                          value={organization.$id}
+                          disabled={reason !== null}
+                        >
+                          <span className="truncate">{organization.name}</span>
+                          {reason !== null && (
+                            <span className="ms-2 text-[12px] text-muted-foreground">
+                              {reason}
+                            </span>
+                          )}
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
                 {problem ? (
@@ -272,13 +421,32 @@ export function ClaimProjectTransfer({
 
               <div className="flex flex-col gap-2">
                 <Button
-                  variant="brandCta"
+                  variant={
+                    hasEligible || !canCreateOrganization
+                      ? 'brandCta'
+                      : 'outline'
+                  }
                   className="w-full"
                   disabled={!canClaim}
                   onClick={() => claimMutation.mutate()}
                 >
                   {t('Claim project')}
                 </Button>
+                {canCreateOrganization && (
+                  <Button
+                    variant={hasEligible ? 'outline' : 'brandCta'}
+                    className="w-full"
+                    disabled={
+                      createOrganizationMutation.isPending ||
+                      claimMutation.isPending
+                    }
+                    onClick={() => createOrganizationMutation.mutate()}
+                  >
+                    {features.billing
+                      ? t('Create a free organization')
+                      : t('Create organization')}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="w-full"

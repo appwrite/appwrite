@@ -261,6 +261,10 @@ class Response extends SwooleResponse
     public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
+    public const MODEL_MONITOR = 'monitor';
+    public const MODEL_MONITOR_LIST = 'monitorList';
+    public const MODEL_ALERT = 'alert';
+    public const MODEL_ALERT_LIST = 'alertList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';

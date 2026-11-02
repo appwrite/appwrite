@@ -1,0 +1,275 @@
+/**
+ * React Query hooks for monitors and the alerts they raise.
+ */
+
+import {
+  infiniteQueryOptions,
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { ID, Query } from '@appwrite.io/console'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  listOrganizationMonitors,
+  parseMonitor,
+  type Alert,
+  type AlertMetric,
+  type AlertResourceType,
+  type MonitorInput,
+  type ParsedMonitor,
+} from '@/lib/appwrite/monitors'
+import { fetchAlertSeries, hasSeries } from '@/lib/alerts/series'
+import { DEFAULT_STALE_TIME } from './constants'
+import { nextCursorAfter } from './cursor'
+
+/** The API caps a page at 100; the tabs list them all client-side like webhooks. */
+const PAGE_LIMIT = 100
+
+export async function fetchMonitors(projectId: string) {
+  if (!projectId) {
+    return { monitors: [] as ParsedMonitor[], total: 0 }
+  }
+  const response = await sdk.forProject(projectId).monitors.list({
+    queries: [Query.orderDesc('$createdAt'), Query.limit(PAGE_LIMIT)],
+  })
+  return {
+    monitors: (response.monitors ?? []).map(parseMonitor),
+    total: response.total ?? 0,
+  }
+}
+
+export async function fetchMonitor(
+  projectId: string,
+  monitorId: string,
+): Promise<ParsedMonitor> {
+  return parseMonitor(
+    await sdk.forProject(projectId).monitors.get({ monitorId }),
+  )
+}
+
+export function monitorsQueryOptions(projectId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['monitors', 'project', projectId],
+    queryFn: () => fetchMonitors(projectId!),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useMonitors(projectId: string | null | undefined) {
+  const { data, isLoading, error, refetch } = useQuery(
+    monitorsQueryOptions(projectId),
+  )
+  return {
+    monitors: data?.monitors ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+export async function fetchAlert(
+  projectId: string,
+  alertId: string,
+): Promise<Alert> {
+  return await sdk.forProject(projectId).alerts.get({ alertId })
+}
+
+/**
+ * Newest first, a cursor page at a time; `status` narrows to firing or
+ * resolved alerts.
+ */
+export function alertsInfiniteQueryOptions(
+  projectId: string | null | undefined,
+  filter: { status?: Alert['status']; monitorId?: string } = {},
+) {
+  return infiniteQueryOptions({
+    queryKey: ['alerts', 'project', projectId, filter],
+    queryFn: async ({ pageParam }) => {
+      const queries = [Query.orderDesc('$createdAt'), Query.limit(PAGE_LIMIT)]
+      if (filter.status) queries.push(Query.equal('status', [filter.status]))
+      if (filter.monitorId) {
+        queries.push(Query.equal('monitorId', [filter.monitorId]))
+      }
+      if (pageParam) queries.push(Query.cursorAfter(pageParam))
+      const response = await sdk.forProject(projectId!).alerts.list({
+        queries,
+        total: false,
+      })
+      return { alerts: response.alerts ?? [] }
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      nextCursorAfter(lastPage.alerts, PAGE_LIMIT),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
+/** The value a monitor compares, bucket by bucket, over its chart's range. */
+export function alertSeriesQueryOptions(
+  projectId: string,
+  monitor: {
+    metric: AlertMetric
+    resourceType: AlertResourceType
+    resourceId: string
+    window: number
+  },
+  range?: number,
+) {
+  const { metric, resourceType, resourceId, window } = monitor
+  return queryOptions({
+    queryKey: [
+      'alert-series',
+      projectId,
+      metric,
+      resourceType,
+      resourceId,
+      window,
+      range ?? null,
+    ],
+    queryFn: () =>
+      fetchAlertSeries(
+        projectId,
+        { metric, resourceType, resourceId, window },
+        Date.now(),
+        range,
+      ),
+    enabled:
+      !!projectId &&
+      hasSeries(metric) &&
+      (resourceType === 'project' || !!resourceId),
+    staleTime: 5 * 60 * 1000,
+    // Usage storage can answer 503 while ClickHouse is busy; a chart is worth a retry.
+    retry: 2,
+    refetchOnWindowFocus: false,
+  })
+}
+
+export function useCreateMonitor(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: MonitorInput) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return parseMonitor(
+        await sdk
+          .forProject(projectId)
+          .monitors.createUsageMonitor({ monitorId: ID.unique(), ...input }),
+      )
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['monitors', 'project', projectId],
+      })
+    },
+  })
+}
+
+/** Sends only the fields passed in `changes`. */
+export function useUpdateMonitor(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      monitorId,
+      changes,
+    }: {
+      monitorId: string
+      changes: Partial<MonitorInput>
+    }) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return parseMonitor(
+        await sdk
+          .forProject(projectId)
+          .monitors.updateUsageMonitor({ monitorId, ...changes }),
+      )
+    },
+    // Pausing and resuming flip at once in the list, and roll back if the update fails.
+    onMutate: async ({ monitorId, changes }) => {
+      if (changes.enabled === undefined) return undefined
+      const queryKey = monitorsQueryOptions(projectId).queryKey
+      await queryClient.cancelQueries({ queryKey })
+      const previous = queryClient.getQueryData(queryKey)
+      queryClient.setQueryData(queryKey, (current) =>
+        current
+          ? {
+              ...current,
+              monitors: current.monitors.map((monitor) =>
+                monitor.$id === monitorId
+                  ? { ...monitor, enabled: changes.enabled! }
+                  : monitor,
+              ),
+            }
+          : current,
+      )
+      return { previous }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          monitorsQueryOptions(projectId).queryKey,
+          context.previous,
+        )
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['monitors', 'project', projectId],
+      })
+    },
+  })
+}
+
+export function useDeleteMonitor(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (monitorId: string) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk.forProject(projectId).monitors.delete({ monitorId })
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['monitors', 'project', projectId],
+        }),
+        // Deleting a monitor resolves its open alert.
+        queryClient.invalidateQueries({
+          queryKey: ['alerts', 'project', projectId],
+        }),
+      ])
+    },
+  })
+}
+
+/** Budget monitors an organization's budget settings keep, highest threshold first. */
+export function organizationBudgetMonitorsQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['monitors', 'organization', organizationId, 'budget'],
+    queryFn: async () => {
+      const response = await listOrganizationMonitors(sdk.forConsole.client, {
+        organizationId: organizationId!,
+        queries: [Query.equal('type', ['budget']), Query.limit(25)],
+      })
+      return (response.monitors ?? [])
+        .map(parseMonitor)
+        .filter((monitor) => monitor.type === 'budget')
+        .sort((a, b) => b.threshold - a.threshold)
+    },
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}

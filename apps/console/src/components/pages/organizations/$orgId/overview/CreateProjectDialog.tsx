@@ -21,6 +21,7 @@ import {
   useOrganizationPlan,
   useOrganizationById,
   useOrganizationAddonPrice,
+  useLocale,
   PROJECT_NAME_MAX_LENGTH,
 } from '@/lib/react-query/hooks'
 import { ADDON_KEY_PREMIUM_GEO_DB } from '@/lib/billing/addons'
@@ -40,8 +41,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  useVisitorCountryCode,
+  useVisitorCountryResolutionComplete,
+} from '@/hooks/use-visitor-country'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
+import { suggestProjectRegion } from '@/lib/project-region-suggestion'
+import { getUserTimeZone } from '@/lib/timezones'
 
 interface CreateProjectDialogProps {
   open: boolean
@@ -92,6 +99,9 @@ export function CreateProjectDialog({
     isLoading: regionsLoading,
     error: regionsError,
   } = useRegions(open && supportsMultiRegion)
+  const visitorCountryCode = useVisitorCountryCode()
+  const visitorCountryReady = useVisitorCountryResolutionComplete()
+  const { data: locale } = useLocale()
 
   // Check if a region is coming soon (disabled/inactive)
   const isRegionComingSoon = (region: unknown): boolean => {
@@ -117,18 +127,31 @@ export function CreateProjectDialog({
     return [...available, ...inactive]
   }, [regions])
 
-  // Set default region when regions load
+  // Suggest a region from the visitor's country once regions are loaded.
+  // Wait for country resolution so we do not paint Frankfurt and then swap.
   useEffect(() => {
-    if (availableRegions.length > 0 && !selectedRegion) {
-      // Prefer Frankfurt (fra) or first available region
-      const defaultRegion =
-        availableRegions.find((r: unknown) => r.$id === 'fra') ||
-        availableRegions[0]
-      if (defaultRegion) {
-        setSelectedRegion(defaultRegion.$id)
-      }
+    if (!open || selectedRegion || availableRegions.length === 0) return
+    if (!visitorCountryCode && !visitorCountryReady) return
+
+    const suggested = suggestProjectRegion({
+      countryCode: visitorCountryCode,
+      continentCode: locale?.continentCode,
+      timeZone: getUserTimeZone(),
+      availableRegionIds: availableRegions.map(
+        (region: { $id?: string }) => region.$id ?? '',
+      ),
+    })
+    if (suggested) {
+      setSelectedRegion(suggested)
     }
-  }, [availableRegions, selectedRegion])
+  }, [
+    availableRegions,
+    locale?.continentCode,
+    open,
+    selectedRegion,
+    visitorCountryCode,
+    visitorCountryReady,
+  ])
 
   const additionalProjectCharge = useMemo(() => {
     if (!features.billing || !organizationPlan) return null

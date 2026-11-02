@@ -59,8 +59,7 @@ import {
   Package,
   FileText,
   AlertTriangle,
-  Radio,
-  ListTree,
+  Joystick,
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -75,6 +74,9 @@ import { OnboardingCard } from './OnboardingCard'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { HalloweenScene } from '@/components/global/shared/HalloweenScene'
+import { Cobweb } from '@/components/global/shared/HalloweenCobwebs'
+import { useHalloween } from '@/hooks/use-halloween'
 import { McpNavIconWithStatus } from '@/components/global/shared/McpNavIconWithStatus'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
@@ -106,7 +108,7 @@ interface SidebarCopy {
     apps: string
     agents: string
     apiKeys: string
-    explorer: string
+    playground: string
     auth: string
     databases: string
     storage: string
@@ -116,7 +118,6 @@ interface SidebarCopy {
     sites: string
     distribution: string
     activity: string
-    realtime: string
     logs: string
     usage: string
     analytics: string
@@ -170,10 +171,10 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           path: `/projects/${projectId}/api-keys`,
         },
         {
-          id: 'explorer',
-          label: sidebarCopy.items.explorer,
-          icon: ListTree,
-          path: `/projects/${projectId}/explorer`,
+          id: 'playground',
+          label: sidebarCopy.items.playground,
+          icon: Joystick,
+          path: `/projects/${projectId}/playground`,
         },
       ],
     },
@@ -244,12 +245,6 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           label: sidebarCopy.items.analytics,
           icon: ANALYTICS_PRODUCT_ICON,
           path: `/projects/${projectId}/analytics`,
-        },
-        {
-          id: 'realtime',
-          label: sidebarCopy.items.realtime,
-          icon: Radio,
-          path: `/projects/${projectId}/realtime`,
         },
         {
           id: 'activity',
@@ -392,6 +387,7 @@ export function ConsoleSidebar({
     !features.orgRoles ||
     (!scopesLoading && canShowProjectSettings(access, features))
   const showGetStarted = canShowGetStartedSection(access, features)
+  const showHalloweenScene = useHalloween()
   const showAgentNav = canShowAgentMcpConnectCta(access, features)
   const { data: consents } = useAccountConsents({
     enabled: showAgentNav && !!account,
@@ -613,14 +609,23 @@ export function ConsoleSidebar({
       >
         <aside
           className={cn(
-            'console-sidebar flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
+            'console-sidebar relative flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
+          {showHalloweenScene && (
+            <Cobweb
+              size={collapsed ? 56 : 80}
+              className="pointer-events-none absolute start-0 top-0 text-foreground rtl:-scale-x-100"
+            />
+          )}
           {/* Main Navigation */}
           <nav
             ref={navRef}
-            className="overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4"
+            className={cn(
+              'overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4',
+              showHalloweenScene && 'relative z-10 flex flex-col [&>*]:shrink-0',
+            )}
             onKeyDown={handleKeyDown}
             role="navigation"
             aria-label={sidebarCopy.accessibility.mainNavigation}
@@ -640,6 +645,8 @@ export function ConsoleSidebar({
             )}
 
             {visibleCategories.map((category) => renderCategory(category))}
+
+            {showHalloweenScene && <HalloweenScene compact={collapsed} />}
           </nav>
 
           {/* Settings */}

@@ -1908,6 +1908,7 @@ export function ChangePlanWizardFullscreen() {
                 hasFreeOrgs={hasFreeOrgs}
                 isCreateMode={isCreateMode}
                 variant="inline"
+                orgId={orgId}
               />
             ) : (
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
