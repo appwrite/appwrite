@@ -24,22 +24,22 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Teams
-        $this->addAction(CreateTeam::getName(), CreateTeam::class);
-        $this->addAction(GetTeam::getName(), GetTeam::class);
-        $this->addAction(ListTeams::getName(), ListTeams::class);
-        $this->addAction(DeleteTeam::getName(), DeleteTeam::class);
-        $this->addAction(UpdateTeamName::getName(), UpdateTeamName::class);
+        $this->addAction('createTeam', CreateTeam::class);
+        $this->addAction('getTeam', GetTeam::class);
+        $this->addAction('listTeams', ListTeams::class);
+        $this->addAction('deleteTeam', DeleteTeam::class);
+        $this->addAction('updateTeamName', UpdateTeamName::class);
 
         // Preferences
-        $this->addAction(GetPreferences::getName(), GetPreferences::class);
-        $this->addAction(UpdatePreferences::getName(), UpdatePreferences::class);
+        $this->addAction('getTeamPreferences', GetPreferences::class);
+        $this->addAction('updateTeamPreferences', UpdatePreferences::class);
 
         // Memberships
-        $this->addAction(CreateMembership::getName(), CreateMembership::class);
-        $this->addAction(GetMembership::getName(), GetMembership::class);
-        $this->addAction(ListMemberships::getName(), ListMemberships::class);
-        $this->addAction(UpdateMembership::getName(), UpdateMembership::class);
-        $this->addAction(DeleteMembership::getName(), DeleteMembership::class);
-        $this->addAction(UpdateMembershipStatus::getName(), UpdateMembershipStatus::class);
+        $this->addAction('createTeamMembership', CreateMembership::class);
+        $this->addAction('getTeamMembership', GetMembership::class);
+        $this->addAction('listTeamMemberships', ListMemberships::class);
+        $this->addAction('updateTeamMembership', UpdateMembership::class);
+        $this->addAction('deleteTeamMembership', DeleteMembership::class);
+        $this->addAction('updateTeamMembershipStatus', UpdateMembershipStatus::class);
     }
 }

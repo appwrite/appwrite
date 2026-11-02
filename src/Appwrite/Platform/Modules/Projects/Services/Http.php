@@ -23,21 +23,21 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(Init::getName(), Init::class);
+        $this->addAction('init', Init::class);
 
-        $this->addAction(CreateProject::getName(), CreateProject::class);
-        $this->addAction(UpdateProject::getName(), UpdateProject::class);
-        $this->addAction(ListProjects::getName(), ListProjects::class);
-        $this->addAction(UpdateProjectTeam::getName(), UpdateProjectTeam::class);
-        $this->addAction(UpdateProjectOAuth2::getName(), UpdateProjectOAuth2::class);
-        $this->addAction(UpdateProjectMockNumbers::getName(), UpdateProjectMockNumbers::class);
-        $this->addAction(DeleteProjectEmailTemplate::getName(), DeleteProjectEmailTemplate::class);
+        $this->addAction('createProject', CreateProject::class);
+        $this->addAction('updateProject', UpdateProject::class);
+        $this->addAction('listProjects', ListProjects::class);
+        $this->addAction('updateProjectTeam', UpdateProjectTeam::class);
+        $this->addAction('updateProjectOAuth2', UpdateProjectOAuth2::class);
+        $this->addAction('updateProjectMockNumbers', UpdateProjectMockNumbers::class);
+        $this->addAction('deleteProjectEmailTemplate', DeleteProjectEmailTemplate::class);
 
-        $this->addAction(CreateSchedule::getName(), CreateSchedule::class);
-        $this->addAction(GetSchedule::getName(), GetSchedule::class);
-        $this->addAction(ListSchedules::getName(), ListSchedules::class);
+        $this->addAction('createSchedule', CreateSchedule::class);
+        $this->addAction('getSchedule', GetSchedule::class);
+        $this->addAction('listSchedules', ListSchedules::class);
 
-        $this->addAction(ListStages::getName(), ListStages::class);
-        $this->addAction(UpdateStages::getName(), UpdateStages::class);
+        $this->addAction('listStages', ListStages::class);
+        $this->addAction('updateStage', UpdateStages::class);
     }
 }

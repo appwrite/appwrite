@@ -98,133 +98,133 @@ class TablesDB extends Base
 
     private function registerDatabaseActions(Service $service): void
     {
-        $service->addAction(CreateTablesDatabase::getName(), CreateTablesDatabase::class);
-        $service->addAction(GetTablesDatabase::getName(), GetTablesDatabase::class);
-        $service->addAction(UpdateTablesDatabase::getName(), UpdateTablesDatabase::class);
-        $service->addAction(DeleteTablesDatabase::getName(), DeleteTablesDatabase::class);
-        $service->addAction(ListTablesDatabase::getName(), ListTablesDatabase::class);
+        $service->addAction('createTablesDatabase', CreateTablesDatabase::class);
+        $service->addAction('getTablesDatabase', GetTablesDatabase::class);
+        $service->addAction('updateTablesDatabase', UpdateTablesDatabase::class);
+        $service->addAction('deleteTablesDatabase', DeleteTablesDatabase::class);
+        $service->addAction('listTablesDatabases', ListTablesDatabase::class);
     }
 
     private function registerTableActions(Service $service): void
     {
-        $service->addAction(CreateTable::getName(), CreateTable::class);
-        $service->addAction(GetTable::getName(), GetTable::class);
-        $service->addAction(UpdateTable::getName(), UpdateTable::class);
-        $service->addAction(DeleteTable::getName(), DeleteTable::class);
-        $service->addAction(ListTables::getName(), ListTables::class);
+        $service->addAction('createTable', CreateTable::class);
+        $service->addAction('getTable', GetTable::class);
+        $service->addAction('updateTable', UpdateTable::class);
+        $service->addAction('deleteTable', DeleteTable::class);
+        $service->addAction('listTables', ListTables::class);
     }
 
     private function registerColumnActions(Service $service): void
     {
         // Column top level actions
-        $service->addAction(GetColumn::getName(), GetColumn::class);
-        $service->addAction(DeleteColumn::getName(), DeleteColumn::class);
-        $service->addAction(ListColumns::getName(), ListColumns::class);
+        $service->addAction('getColumn', GetColumn::class);
+        $service->addAction('deleteColumn', DeleteColumn::class);
+        $service->addAction('listColumns', ListColumns::class);
 
         // Column: Boolean
-        $service->addAction(CreateBoolean::getName(), CreateBoolean::class);
-        $service->addAction(UpdateBoolean::getName(), UpdateBoolean::class);
+        $service->addAction('createBooleanColumn', CreateBoolean::class);
+        $service->addAction('updateBooleanColumn', UpdateBoolean::class);
 
         // Column: Datetime
-        $service->addAction(CreateDatetime::getName(), CreateDatetime::class);
-        $service->addAction(UpdateDatetime::getName(), UpdateDatetime::class);
+        $service->addAction('createDatetimeColumn', CreateDatetime::class);
+        $service->addAction('updateDatetimeColumn', UpdateDatetime::class);
 
         // Column: Email
-        $service->addAction(CreateEmail::getName(), CreateEmail::class);
-        $service->addAction(UpdateEmail::getName(), UpdateEmail::class);
+        $service->addAction('createEmailColumn', CreateEmail::class);
+        $service->addAction('updateEmailColumn', UpdateEmail::class);
 
         // Column: Enum
-        $service->addAction(CreateEnum::getName(), CreateEnum::class);
-        $service->addAction(UpdateEnum::getName(), UpdateEnum::class);
+        $service->addAction('createEnumColumn', CreateEnum::class);
+        $service->addAction('updateEnumColumn', UpdateEnum::class);
 
         // Column: Float
-        $service->addAction(CreateFloat::getName(), CreateFloat::class);
-        $service->addAction(UpdateFloat::getName(), UpdateFloat::class);
+        $service->addAction('createFloatColumn', CreateFloat::class);
+        $service->addAction('updateFloatColumn', UpdateFloat::class);
 
         // Column: Integer
-        $service->addAction(CreateInteger::getName(), CreateInteger::class);
-        $service->addAction(UpdateInteger::getName(), UpdateInteger::class);
+        $service->addAction('createIntegerColumn', CreateInteger::class);
+        $service->addAction('updateIntegerColumn', UpdateInteger::class);
 
         // Column: BigInt
-        $service->addAction(CreateBigInt::getName(), CreateBigInt::class);
-        $service->addAction(UpdateBigInt::getName(), UpdateBigInt::class);
+        $service->addAction('createBigIntColumn', CreateBigInt::class);
+        $service->addAction('updateBigIntColumn', UpdateBigInt::class);
 
         // Column: IP
-        $service->addAction(CreateIP::getName(), CreateIP::class);
-        $service->addAction(UpdateIP::getName(), UpdateIP::class);
+        $service->addAction('createIpColumn', CreateIP::class);
+        $service->addAction('updateIpColumn', UpdateIP::class);
 
         // Column: Line
-        $service->addAction(CreateLine::getName(), CreateLine::class);
-        $service->addAction(UpdateLine::getName(), UpdateLine::class);
+        $service->addAction('createLineColumn', CreateLine::class);
+        $service->addAction('updateLineColumn', UpdateLine::class);
 
         // Column: Point
-        $service->addAction(CreatePoint::getName(), CreatePoint::class);
-        $service->addAction(UpdatePoint::getName(), UpdatePoint::class);
+        $service->addAction('createPointColumn', CreatePoint::class);
+        $service->addAction('updatePointColumn', UpdatePoint::class);
 
         // Column: Polygon
-        $service->addAction(CreatePolygon::getName(), CreatePolygon::class);
-        $service->addAction(UpdatePolygon::getName(), UpdatePolygon::class);
+        $service->addAction('createPolygonColumn', CreatePolygon::class);
+        $service->addAction('updatePolygonColumn', UpdatePolygon::class);
 
         // Column: Relationship
-        $service->addAction(CreateRelationship::getName(), CreateRelationship::class);
-        $service->addAction(UpdateRelationship::getName(), UpdateRelationship::class);
+        $service->addAction('createRelationshipColumn', CreateRelationship::class);
+        $service->addAction('updateRelationshipColumn', UpdateRelationship::class);
 
         // Column: String
-        $service->addAction(CreateString::getName(), CreateString::class);
-        $service->addAction(UpdateString::getName(), UpdateString::class);
+        $service->addAction('createStringColumn', CreateString::class);
+        $service->addAction('updateStringColumn', UpdateString::class);
 
         // Column: URL
-        $service->addAction(CreateURL::getName(), CreateURL::class);
-        $service->addAction(UpdateURL::getName(), UpdateURL::class);
+        $service->addAction('createUrlColumn', CreateURL::class);
+        $service->addAction('updateUrlColumn', UpdateURL::class);
 
         // Column: Varchar
-        $service->addAction(CreateVarchar::getName(), CreateVarchar::class);
-        $service->addAction(UpdateVarchar::getName(), UpdateVarchar::class);
+        $service->addAction('createVarcharColumn', CreateVarchar::class);
+        $service->addAction('updateVarcharColumn', UpdateVarchar::class);
 
         // Column: Text
-        $service->addAction(CreateText::getName(), CreateText::class);
-        $service->addAction(UpdateText::getName(), UpdateText::class);
+        $service->addAction('createTextColumn', CreateText::class);
+        $service->addAction('updateTextColumn', UpdateText::class);
 
         // Column: Mediumtext
-        $service->addAction(CreateMediumtext::getName(), CreateMediumtext::class);
-        $service->addAction(UpdateMediumtext::getName(), UpdateMediumtext::class);
+        $service->addAction('createMediumtextColumn', CreateMediumtext::class);
+        $service->addAction('updateMediumtextColumn', UpdateMediumtext::class);
 
         // Column: Longtext
-        $service->addAction(CreateLongtext::getName(), CreateLongtext::class);
-        $service->addAction(UpdateLongtext::getName(), UpdateLongtext::class);
+        $service->addAction('createLongtextColumn', CreateLongtext::class);
+        $service->addAction('updateLongtextColumn', UpdateLongtext::class);
     }
 
     private function registerIndexActions(Service $service): void
     {
-        $service->addAction(CreateColumnIndex::getName(), CreateColumnIndex::class);
-        $service->addAction(GetColumnIndex::getName(), GetColumnIndex::class);
-        $service->addAction(DeleteColumnIndex::getName(), DeleteColumnIndex::class);
-        $service->addAction(ListColumnIndexes::getName(), ListColumnIndexes::class);
+        $service->addAction('createColumnIndex', CreateColumnIndex::class);
+        $service->addAction('getColumnIndex', GetColumnIndex::class);
+        $service->addAction('deleteColumnIndex', DeleteColumnIndex::class);
+        $service->addAction('listColumnIndexes', ListColumnIndexes::class);
     }
 
     private function registerRowActions(Service $service): void
     {
-        $service->addAction(CreateRow::getName(), CreateRow::class);
-        $service->addAction(GetRow::getName(), GetRow::class);
-        $service->addAction(UpdateRow::getName(), UpdateRow::class);
-        $service->addAction(UpdateRows::getName(), UpdateRows::class);
-        $service->addAction(UpsertRow::getName(), UpsertRow::class);
-        $service->addAction(UpsertRows::getName(), UpsertRows::class);
-        $service->addAction(DeleteRow::getName(), DeleteRow::class);
-        $service->addAction(DeleteRows::getName(), DeleteRows::class);
-        $service->addAction(ListRows::getName(), ListRows::class);
-        $service->addAction(CreateRowsQuery::getName(), CreateRowsQuery::class);
-        $service->addAction(IncrementRowColumn::getName(), IncrementRowColumn::class);
-        $service->addAction(DecrementRowColumn::getName(), DecrementRowColumn::class);
+        $service->addAction('createRow', CreateRow::class);
+        $service->addAction('getRow', GetRow::class);
+        $service->addAction('updateRow', UpdateRow::class);
+        $service->addAction('updateRows', UpdateRows::class);
+        $service->addAction('upsertRow', UpsertRow::class);
+        $service->addAction('upsertRows', UpsertRows::class);
+        $service->addAction('deleteRow', DeleteRow::class);
+        $service->addAction('deleteRows', DeleteRows::class);
+        $service->addAction('listRows', ListRows::class);
+        $service->addAction('createRowsQuery', CreateRowsQuery::class);
+        $service->addAction('incrementRowColumn', IncrementRowColumn::class);
+        $service->addAction('decrementRowColumn', DecrementRowColumn::class);
     }
 
     private function registerTransactionActions(Service $service): void
     {
-        $service->addAction(CreateTransaction::getName(), CreateTransaction::class);
-        $service->addAction(GetTransaction::getName(), GetTransaction::class);
-        $service->addAction(UpdateTransaction::getName(), UpdateTransaction::class);
-        $service->addAction(DeleteTransaction::getName(), DeleteTransaction::class);
-        $service->addAction(ListTransactions::getName(), ListTransactions::class);
-        $service->addAction(CreateOperations::getName(), CreateOperations::class);
+        $service->addAction('createTransaction', CreateTransaction::class);
+        $service->addAction('getTransaction', GetTransaction::class);
+        $service->addAction('updateTransaction', UpdateTransaction::class);
+        $service->addAction('deleteTransaction', DeleteTransaction::class);
+        $service->addAction('listTransactions', ListTransactions::class);
+        $service->addAction('createOperations', CreateOperations::class);
     }
 }

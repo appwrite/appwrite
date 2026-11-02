@@ -15,10 +15,10 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(Init::getName(), Init::class);
-        $this->addAction(GetQuery::getName(), GetQuery::class);
-        $this->addAction(CreateMutation::getName(), CreateMutation::class);
-        $this->addAction(CreateQuery::getName(), CreateQuery::class);
-        $this->addAction(Shutdown::getName(), Shutdown::class);
+        $this->addAction('init', Init::class);
+        $this->addAction('get', GetQuery::class);
+        $this->addAction('createMutation', CreateMutation::class);
+        $this->addAction('create', CreateQuery::class);
+        $this->addAction('shutdown', Shutdown::class);
     }
 }
