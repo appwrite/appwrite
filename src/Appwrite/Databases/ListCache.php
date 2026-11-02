@@ -9,8 +9,10 @@ use Utopia\Console;
 /**
  * A collection's cached list responses, held in one cache hash, and a version every purge changes.
  *
- * A list read takes the version before it queries and saves its result only while the version is unchanged, so a
- * read that ran while a purge happened is not cached.
+ * A list read takes the version before it queries, and both reads and writes a field named after it, so a read
+ * that ran while a purge happened is never served: its rows land in a field of a version no later read looks up.
+ * Naming the field after the version is what makes this safe without an atomic compare-and-set, as the version
+ * comparison and the write of the rows are separate cache operations a purge can interleave with.
  */
 readonly class ListCache
 {
@@ -53,7 +55,25 @@ readonly class ListCache
     }
 
     /**
-     * Save fields of a list read unless a purge changed the version since it was taken.
+     * The value of a field of a list read cached under the given version, or false when it is not cached.
+     *
+     * A version a read could not take reads nothing, as nothing is ever saved under one.
+     */
+    public function load(string $field, int $ttl, ?string $version): mixed
+    {
+        if ($version === null) {
+            return false;
+        }
+
+        try {
+            return $this->cache->load($this->key, $ttl, $this->getField($field, $version));
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Save fields of a list read under the version it was taken under, unless a purge already changed it.
      *
      * @param array<string, mixed> $fields
      */
@@ -63,8 +83,13 @@ readonly class ListCache
             return;
         }
 
+        $versioned = [];
+        foreach ($fields as $field => $value) {
+            $versioned[$this->getField($field, $version)] = $value;
+        }
+
         try {
-            $this->cache->saveMany($this->key, $fields);
+            $this->cache->saveMany($this->key, $versioned);
         } catch (\Throwable) {
         }
     }
@@ -108,5 +133,17 @@ readonly class ListCache
     private function getVersionKey(): string
     {
         return $this->key . ':version';
+    }
+
+    /**
+     * The hash field one variation of a list read is cached under while $version is the collection's version.
+     *
+     * A purge changes the version and removes the hash, so a field of a superseded version is both empty and
+     * unreachable: a save that lands after the purge that should have stopped it ages out instead of serving
+     * rows the purge revoked.
+     */
+    private function getField(string $field, string $version): string
+    {
+        return $version . ':' . $field;
     }
 }
