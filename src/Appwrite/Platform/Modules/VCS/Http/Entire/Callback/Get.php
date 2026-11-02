@@ -102,7 +102,7 @@ class Get extends Action
         // authenticates Entire, and the state the Appwrite Console session
         // that started the flow -- without it anyone could attach an
         // installation to an arbitrary projectId.
-        $receiptState = \strval($receiptClaims['state'] ?? '');
+        $receiptState = \is_string($receiptClaims['state'] ?? null) ? $receiptClaims['state'] : '';
         if (!empty($receiptState) && !empty($state) && !\hash_equals($receiptState, $state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt state does not match the state parameter.');
         }
