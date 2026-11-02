@@ -127,13 +127,15 @@ final class APNSTest extends TestCase
         // The tag collapses a later push onto this one on the device.
         $this->assertContains('apns-collapse-id: alert:1', $stub->capturedHeaders);
 
-        $stub->capturedHeaders = [];
-        $stub->send(new Push(
+        // APNs refuses a collapse ID over 64 bytes, so a longer tag is left out.
+        $long = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+        $long->send(new Push(
             to: ['token'],
             title: 'Title',
             tag: \str_repeat('a', 65),
         ));
-        $this->assertSame([], \array_values(\array_filter($stub->capturedHeaders, fn (string $header): bool => \str_starts_with($header, 'apns-collapse-id'))));
+        $this->assertContains('apns-push-type: alert', $long->capturedHeaders);
+        $this->assertNotContains('apns-collapse-id: ' . \str_repeat('a', 65), $long->capturedHeaders);
     }
 
     public function testResultsMapToTheTokenSent(): void
