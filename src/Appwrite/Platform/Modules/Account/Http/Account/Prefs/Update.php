@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Assoc;
 
 class Update extends Action
 {
@@ -43,6 +44,12 @@ class Update extends Action
                     )
                 ],
                 contentType: ContentType::JSON
-            ));
+            ))
+            ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.', example: '{"language":"en","timezone":"UTC","darkTheme":true}')
+            ->inject('requestTimestamp')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('queueForEvents');
     }
 }
