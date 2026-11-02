@@ -60,8 +60,6 @@ import {
   Package,
   FileText,
   AlertTriangle,
-  Radio,
-  ListTree,
   GitPullRequest,
   Joystick,
   type LucideIcon,

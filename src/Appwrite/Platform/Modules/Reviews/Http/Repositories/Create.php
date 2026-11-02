@@ -50,7 +50,7 @@ class Create extends Action
                 group: 'repositories',
                 name: 'createRepository',
                 description: <<<EOT
-                Turn on code review for a GitHub repository connected through one of the project's installations. From then on, its pull requests are reviewed when they are opened or updated. A repository can be reviewed by one project only.
+                Turn on code review for a GitHub repository connected through one of the project's installations. From then on, its pull requests are reviewed when they are opened or updated. Each project turns on review for a repository once; several projects may review the same repository.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
