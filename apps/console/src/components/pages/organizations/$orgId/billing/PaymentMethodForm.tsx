@@ -33,6 +33,7 @@ import {
   useSetPaymentMethodProvider,
   useSetOrganizationDefaultPaymentMethod,
   useSetOrganizationBackupPaymentMethod,
+  useDeletePaymentMethod,
   usePaymentMethods,
   useLocale,
 } from '@/lib/react-query/hooks'
@@ -171,6 +172,7 @@ export function PaymentMethodForm({
   const setDefaultPaymentMethodMutation =
     useSetOrganizationDefaultPaymentMethod()
   const setBackupPaymentMethodMutation = useSetOrganizationBackupPaymentMethod()
+  const deletePaymentMethodMutation = useDeletePaymentMethod()
   const { paymentMethods: allPaymentMethods } = usePaymentMethods({
     enabled: open,
   })
@@ -694,6 +696,9 @@ export function PaymentMethodForm({
                     ...ids,
                     paymentMethodId,
                   ])
+                  // Unlinked, so this only removes the Appwrite row. Without
+                  // it every later open lands back on this recovery step.
+                  deletePaymentMethodMutation.mutate({ paymentMethodId })
                 }
               }}
               disabled={isLoading}
