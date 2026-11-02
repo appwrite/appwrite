@@ -44,6 +44,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Phone\Update as Upda
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Token\Create as CreateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Update as UpdateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
+use Appwrite\Platform\Modules\Account\Http\Account\Status\Update as UpdateStatus;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Email\Create as CreateEmailToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\MagicURL\Create as CreateMagicURLToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2\Get as CreateOAuth2Token;
@@ -86,6 +87,7 @@ class Http extends Service
             ->addAction(UpdateEmail::getName(), UpdateEmail::class)
             ->addAction(UpdatePhone::getName(), UpdatePhone::class)
             ->addAction(UpdatePrefs::getName(), UpdatePrefs::class)
+            ->addAction(UpdateStatus::getName(), UpdateStatus::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
