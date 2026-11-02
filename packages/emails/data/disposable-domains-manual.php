@@ -25,4 +25,13 @@ return [
     'oceanicwavel.com',
     'rushvera.com',
     'slotforgelab.com',
+    'arcadehearth.com',
+    'auroracovia.com',
+    'guidemaxima.com',
+    'imagesthere.com',
+    'inovel26.com',
+    'nexushint.com',
+    'pointnexus.org',
+    'rainsase.com',
+    'roomsranked.com',
 ];
