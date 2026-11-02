@@ -22,6 +22,19 @@ readonly class Unsubscribe
         return 'type:' . $type;
     }
 
+    /**
+     * The footer cells after Terms and Privacy that link to the recipient's unsubscribe page, or
+     * nothing for mail without one, so the base template's `{{unsubscribeLink}}` is always filled.
+     */
+    public static function link(string $url): string
+    {
+        if ($url === '') {
+            return '';
+        }
+
+        return '<td style="color: #e8e9f0"><div style="margin: 0 8px">|</div></td><td><a href="' . \htmlspecialchars($url) . '">Unsubscribe</a></td>';
+    }
+
     private const string PURPOSE = 'alerts_unsubscribe';
 
     public function __construct(

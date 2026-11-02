@@ -432,10 +432,40 @@ final class NotificationsTest extends TestCase
         $this->assertSame('Hello Legacy & Co', $message->getSubject());
         $this->assertStringContainsString('<h1>Hello Legacy &amp; Co</h1>', $message->getContent());
         $this->assertStringContainsString('Body Legacy &amp; Co', $message->getContent());
+        // Mail without an unsubscribe page keeps the footer it had.
+        $this->assertStringNotContainsString('Unsubscribe', $message->getContent());
+        $this->assertStringNotContainsString('{{unsubscribeLink}}', $message->getContent());
         $this->assertSame('sender@example.test', $message->getFromEmail());
         $this->assertSame('Custom Sender', $message->getFromName());
         $this->assertSame('reply@example.test', $message->getReplyToEmail());
         $this->assertSame('Custom Reply', $message->getReplyToName());
+    }
+
+    public function testAlertEmailCarriesItsUnsubscribeLinkInTheFooter(): void
+    {
+        $spy = new SpyEmailAdapter();
+        $this->registry->set('smtp', static fn () => new Pool(new Stack(), 'smtp', 1, static fn () => $spy, 1.0));
+
+        $previousSmtpHost = \getenv('_APP_SMTP_HOST');
+        \putenv('_APP_SMTP_HOST=spy.smtp.test');
+
+        try {
+            (new Notifications())->action($this->buildMessage([
+                'project' => ['$id' => 'project-x'],
+                'recipient' => 'owner@example.test',
+                'name' => 'Owner',
+                'subject' => 'Alert',
+                'body' => 'Body',
+                'bodyTemplate' => __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
+                'variables' => ['unsubscribeUrl' => 'https://console.example/auth/alerts/unsubscribe?token=one&x=1'],
+            ]), $this->project, $this->registry, $this->database, $this->platform, $this->clientForWebhooks, $this->publicHostname);
+        } finally {
+            \putenv($previousSmtpHost === false ? '_APP_SMTP_HOST' : '_APP_SMTP_HOST=' . $previousSmtpHost);
+        }
+
+        $content = (string) $spy->captured?->getContent();
+        $this->assertMatchesRegularExpression('#>Privacy</a></td>\\s*<td[^>]*><div[^>]*>\\|</div></td><td><a href="https://console\\.example/auth/alerts/unsubscribe\\?token=one&amp;x=1">Unsubscribe</a></td>#', $content);
+        $this->assertStringNotContainsString('{{unsubscribeLink}}', $content);
     }
 
     public function testLegacyMailPayloadThrowsWhenSmtpIsNotConfigured(): void
