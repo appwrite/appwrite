@@ -180,7 +180,9 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame('Firing: ' . $name, $push['title']);
         $this->assertStringContainsString('Outbound bandwidth reached', (string) $push['body']);
         $this->assertSame('high', $push['priority']);
-        $this->assertArrayNotHasKey('critical', $push);
+        // The monitor is critical, so its firing rings with the critical sound.
+        $this->assertTrue($push['critical']);
+        $this->assertSame('siren.caf', $push['sound']);
         $this->assertSame('alert', $push['data']['type']);
         $this->assertSame($firing['alertId'], $push['data']['alertId']);
         $this->assertSame($monitorId, $push['data']['monitorId']);
@@ -216,6 +218,7 @@ final class EvaluationCustomServerTest extends Scope
         // The resolved push replaces the firing one, by its tag.
         $push = $this->waitForPush($device['token'], 'alert:' . $firing['alertId'], 'resolved');
         $this->assertSame('Resolved: ' . $name, $push['title']);
+        $this->assertArrayNotHasKey('critical', $push);
 
         $this->assertEventually(function () use ($name) {
             $this->assertSame(['firing' => 1, 'resolved' => 1], $this->teamNotifications($name));
