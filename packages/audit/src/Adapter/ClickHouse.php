@@ -438,6 +438,7 @@ class ClickHouse extends SQL
             Attribute::string(key: 'deviceName'),
             Attribute::string(key: 'deviceBrand'),
             Attribute::string(key: 'deviceModel'),
+            Attribute::string(key: 'reason'),
         ];
     }
 
@@ -658,7 +659,8 @@ class ClickHouse extends SQL
     /**
      * Setup ClickHouse table structure.
      *
-     * Creates the database and table if they don't exist.
+     * Creates the database and table if they don't exist, and adds the
+     * columns an existing table lacks.
      * Uses schema definitions from the base SQL adapter.
      *
      * @throws Exception
@@ -728,6 +730,8 @@ class ClickHouse extends SQL
 
         $this->query($table->createIfNotExists()->query);
 
+        $this->addMissingColumns($escapedDatabaseAndTable, $tableName);
+
         // Apply retention as a separate, idempotent ALTER. CREATE TABLE IF NOT
         // EXISTS won't add a TTL to a table that already exists, and MODIFY TTL
         // is a no-op when the TTL already matches, so setup() stays re-runnable.
@@ -757,6 +761,32 @@ class ClickHouse extends SQL
         }
     }
 
+    /**
+     * Add the columns of getAttributes() that a table created by an older
+     * version lacks. CREATE TABLE IF NOT EXISTS leaves an existing table as
+     * it is, while every insert and select names each column, so a new column
+     * has to reach existing tables before it is written. Rows written before
+     * read an added optional column as NULL.
+     */
+    private function addMissingColumns(string $escapedDatabaseAndTable, string $tableName): void
+    {
+        $result = $this->query(
+            'SELECT name FROM system.columns WHERE database = {database:String} AND table = {table:String} FORMAT TabSeparated',
+            ['database' => $this->database, 'table' => $tableName],
+        );
+        $existing = \array_flip(\explode("\n", \trim($result)));
+
+        $adds = [];
+        foreach ($this->getAttributes() as $attribute) {
+            if (! isset($existing[$attribute->key])) {
+                $adds[] = 'ADD COLUMN IF NOT EXISTS ' . $this->getColumnDefinition($attribute->key);
+            }
+        }
+
+        if ($adds !== []) {
+            $this->query("ALTER TABLE {$escapedDatabaseAndTable} " . \implode(', ', $adds));
+        }
+    }
 
     /**
      * Get column names from attributes.

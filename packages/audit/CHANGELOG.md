@@ -17,6 +17,14 @@ All notable changes to `utopia-php/audit` are documented in this file.
 - `SQL::getAttribute()` declares `?Attribute` and returns `null` for an unknown
   ID, instead of an untyped array or `null`.
 
+### Added
+
+- `reason` optional ClickHouse column, read with `Log::getReason()`: why the
+  actor took the action.
+- `ClickHouse::setup()` adds the columns an existing table lacks with
+  `ADD COLUMN IF NOT EXISTS`, so a column added to `getAttributes()` reaches
+  tables created by an earlier version. Rows written before read it as NULL.
+
 ### Changed
 
 - `Utopia\Audit\Query`'s legacy `TYPE_*` constants take their values from
