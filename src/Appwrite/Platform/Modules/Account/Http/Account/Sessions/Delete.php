@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -60,7 +61,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->label('abuse-limit', 100)
+            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 100)])
             ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Session ID. Use the string \'current\' to delete the current device session.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('request')

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -58,9 +59,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'userId:{userId}, url:{url}')
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts('userId:{userId}, url:{url}', 10, seconds: 60)])
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->inject('response')
             ->inject('project')

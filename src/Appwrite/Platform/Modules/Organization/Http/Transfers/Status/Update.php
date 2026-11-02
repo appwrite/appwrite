@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Transfers\Status;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Organization\Http\Transfers\Action;
@@ -37,8 +38,7 @@ class Update extends Action
             ->label('scope', 'projects.write')
             ->label('audits.event', 'transfer.update')
             ->label('audits.resource', 'project/{response.$id}')
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'ip:{ip},url:{url}')
+            ->label('abuse', [Limit::attempts('ip:{ip},url:{url}', 10)])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'transfers',

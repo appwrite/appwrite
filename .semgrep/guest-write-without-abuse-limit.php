@@ -23,7 +23,7 @@ class GuestWriteFixture
             ->setHttpPath('/v1/things')
             ->groups(['api'])
             ->label('scope', 'documents.write')
-            ->label('abuse-limit', 60)
+            ->label('abuse', [Limit::attempts('ip:{ip},url:{url}', 60)])
             ->callback($this->action(...));
     }
 

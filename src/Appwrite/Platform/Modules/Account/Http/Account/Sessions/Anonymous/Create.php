@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Anonymous;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -64,8 +65,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 50)
-            ->label('abuse-key', 'ip:{ip}')
+            ->label('abuse', [Limit::attempts('ip:{ip}', 50)])
             ->inject('request')
             ->inject('response')
             ->inject('locale')

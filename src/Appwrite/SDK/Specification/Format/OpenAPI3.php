@@ -2,6 +2,7 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Validator\Hash\Argon2;
 use Appwrite\Auth\Validator\Hash\Bcrypt;
 use Appwrite\Auth\Validator\Hash\PHPass;
@@ -325,6 +326,9 @@ class OpenAPI3 extends Format
 
             $descContents = $this->getDescriptionContents($desc);
 
+            /** @var list<Limit> $limits */
+            $limits = $route->getLabel('abuse', []);
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $namespace . ucfirst($methodName),
@@ -335,9 +339,13 @@ class OpenAPI3 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
-                    'rate-limit' => $route->getLabel('abuse-limit', 0),
-                    'rate-time' => $route->getLabel('abuse-time', 3600),
-                    'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
+                    'rate-limit' => $limits[0]->limit ?? 0,
+                    'rate-time' => $limits[0]->seconds ?? 3600,
+                    'rate-key' => match (\count($limits)) {
+                        0 => 'url:{url},ip:{ip}',
+                        1 => $limits[0]->key,
+                        default => \array_map(fn (Limit $limit): string => $limit->key, $limits),
+                    },
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $sdk->isPackaging(),

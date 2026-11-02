@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\MagicURL;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Key;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -73,8 +74,10 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->label('abuse-limit', 60)
-            ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+            ->label('abuse', [
+                Limit::attempts('url:{url},email:{param-email}', 60),
+                Limit::attempts('url:{url},ip:{ip}', 60),
+            ])
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -42,9 +43,7 @@ class Delete extends Base
             ->label('audits.resource', 'user/{user.$id}')
             ->label('audits.userId', '{user.$id}')
             ->label('usage.resource', 'user/{user.$id}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'avatars',
                 group: null,

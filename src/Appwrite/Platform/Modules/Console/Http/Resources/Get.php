@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Resources;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -53,9 +54,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->label('abuse-limit', 120)
-            ->label('abuse-key', 'userId:{userId}, url:{url}')
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts('userId:{userId}, url:{url}', 120, seconds: 60)])
             ->param('value', '', new Text(256), 'Resource value.')
             ->param('type', '', new WhiteList(['rules']), 'Resource type.', enum: new Enum(name: 'ConsoleResourceType'))
             ->inject('response')

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -44,9 +45,7 @@ class Create extends Action
         ->label('usage.metric', 'tokens.{scope}.requests.create')
         ->label('usage.params', ['resourceId:{request.resourceId}', 'resourceType:{request.resourceType}'])
         ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
-        ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-        ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-        ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+        ->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
         ->label('sdk', new Method(
             namespace: 'tokens',
             group: 'files',

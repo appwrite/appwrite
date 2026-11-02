@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Transactions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Delete as TransactionsDelete;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -27,9 +28,7 @@ class Delete extends TransactionsDelete
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'vectorsDB',
                 group: 'transactions',

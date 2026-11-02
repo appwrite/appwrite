@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\Auth\Passkey\Challenges;
 use Appwrite\Extend\Exception;
@@ -52,8 +53,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 10)])
             ->inject('request')
             ->inject('response')
             ->inject('project')

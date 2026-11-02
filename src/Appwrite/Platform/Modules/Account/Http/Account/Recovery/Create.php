@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Recovery;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -65,8 +66,10 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+            ->label('abuse', [
+                Limit::attempts('url:{url},email:{param-email}', 10),
+                Limit::attempts('url:{url},ip:{ip}', 10),
+            ])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])
             ->inject('request')

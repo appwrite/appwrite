@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Abuse\Failures as AbuseFailures;
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
@@ -597,53 +599,39 @@ Http::init()
     ->inject('timelimit')
     ->inject('authorization')
     ->inject('params')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
+    ->inject('abuseFailures')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams, AbuseFailures $abuseFailures) {
         $response->setUser($user);
         $request->setUser($user);
+
+        // A retired label would otherwise be ignored, leaving the route with no limit at all.
+        foreach (['abuse-key', 'abuse-limit', 'abuse-time', 'abuse-reset'] as $retired) {
+            if ($route->getLabel($retired, null) !== null) {
+                throw new \LogicException("Route {$route->getPath()} declares the retired '{$retired}' label. Declare ->label('abuse', [Limit::attempts(...)]) instead.");
+            }
+        }
 
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
             && ! $user->isKey($roles)
             && ! $user->isPrivileged($roles);
 
-        $abuseLimit = $route->getLabel('abuse-limit', 0);
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
-        if (\in_array($project->getId(), $increasedLimitProjects, true)) {
-            $abuseLimit *= 100;
-        }
+        $multiplier = \in_array($project->getId(), $increasedLimitProjects, true) ? 100 : 1;
 
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        /** @var list<Limit> $limits */
+        $limits = $route->getLabel('abuse', []);
+        $params = $limits === [] ? [] : Limit::params($route, $request, $project, $user, $pathParams);
         $closestLimit = null;
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $isRateLimited = false;
-            $checking = false;
+        foreach ($limits as $limit) {
+            $max = $limit->limit * $multiplier;
 
             try {
-                $params = [
-                    '{projectId}' => (string) $project->getId(),
-                    '{userId}' => (string) $user->getId(),
-                    '{userAgent}' => (string) $request->getUserAgent(''),
-                    '{ip}' => (string) $request->getIP(),
-                    '{url}' => $route->getPath(),
-                    '{method}' => (string) $request->getMethod(),
-                    '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
-                ];
-
-                // Path params are not part of the request input, and the query must not override them.
-                foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
-                    if (! empty($value)) {
-                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
-                        // Sign in matches emails case-insensitively, so the limit must too
-                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
-                    }
-                }
-
-                $checking = true;
-                $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
+                $isRateLimited = $timelimit($limit->key, $max, $limit->seconds, function (TimeLimit $timeLimit) use ($limit, $params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);
-                    $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
+                    // A failure limit is counted by the error hook once the request has failed; here it is only read.
+                    $result = $shouldCheckAbuse && ! $limit->failures ? $timeLimit->check() : $timeLimit->peek();
                     if ($result->limit && ($result->remaining < $closestLimit || is_null($closestLimit))) {
                         $closestLimit = $result->remaining;
                         $response->addHeader('X-RateLimit-Limit', (string) $result->limit)
@@ -654,11 +642,7 @@ Http::init()
                     return $shouldCheckAbuse && $result->limited;
                 });
             } catch (\Throwable $th) {
-                // Only a limiter outage fails open; a request that breaks the key is refused.
-                if (! $checking) {
-                    throw $th;
-                }
-
+                // A limiter outage fails open.
                 \error_log((string) $th);
 
                 continue;
@@ -666,6 +650,10 @@ Http::init()
 
             if ($isRateLimited) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+
+            if ($shouldCheckAbuse && $limit->failures) {
+                $abuseFailures->add($limit, $params, $max);
             }
         }
     });
@@ -1006,39 +994,32 @@ Http::shutdown()
     ->inject('timelimit')
     ->inject('params')
     ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, array $pathParams) {
-        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-        $abuseResetCode = $route->getLabel('abuse-reset', []);
-        $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
-
-        if (! $abuseEnabled || \count($abuseResetCode) === 0 || ! \in_array($response->getStatusCode(), $abuseResetCode)) {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
             return;
         }
 
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        /** @var list<Limit> $limits */
+        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => \in_array($response->getStatusCode(), $limit->resetOn, true));
+        if ($limits === []) {
+            return;
+        }
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $params = [
-                '{projectId}' => (string) $project->getId(),
-                '{userId}' => (string) $user->getId(),
-                '{userAgent}' => (string) $request->getUserAgent(''),
-                '{ip}' => (string) $request->getIP(),
-                '{url}' => $route->getPath(),
-                '{method}' => (string) $request->getMethod(),
-                '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
-            ];
+        $params = Limit::params($route, $request, $project, $user, $pathParams);
+        foreach ($limits as $limit) {
+            $timelimit($limit->key, $limit->limit, $limit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->withParams($params)->reset());
+        }
+    });
 
-            foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
-                if (! empty($value)) {
-                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
-                    // Sign in matches emails case-insensitively, so the limit must too
-                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
-                }
-            }
-
-            $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params): void {
-                $timeLimit->withParams($params)->reset();
-            });
+Http::error()
+    ->groups(['api'])
+    ->inject('error')
+    ->inject('timelimit')
+    ->inject('abuseFailures')
+    ->action(function (Throwable $error, callable $timelimit, AbuseFailures $abuseFailures) {
+        // Client errors are the failures a failure limit counts; a 429 is the limit itself answering.
+        $code = $error->getCode();
+        if ($error instanceof AppwriteException && $code >= 400 && $code < 500 && $code !== 429) {
+            $abuseFailures->count($timelimit);
         }
     });
 

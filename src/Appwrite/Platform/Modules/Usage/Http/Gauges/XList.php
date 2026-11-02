@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Usage\Http\Gauges;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Usage\Http\Action;
 use Appwrite\SDK\AuthType;
@@ -75,9 +76,7 @@ class XList extends Action
             ->desc('List usage gauges')
             ->groups(['api', 'usage'])
             ->label('scope', 'usage.read')
-            ->label('abuse-limit', 60)
-            ->label('abuse-time', 60)
-            ->label('abuse-key', 'projectId:{project.$id}')
+            ->label('abuse', [Limit::attempts('projectId:{project.$id}', 60, seconds: 60)])
             ->label('sdk', new Method(
                 namespace: 'usage',
                 group: 'gauges',

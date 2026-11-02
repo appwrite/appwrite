@@ -727,27 +727,34 @@ final class AbuseTest extends Scope
         ];
         $ip = '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff));
 
+        $spray = function (int $from, int $to) use ($headers, $ip): void {
+            // A new email every attempt, so the per-email limit never applies.
+            for ($i = $from; $i < $to; $i++) {
+                $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
+                    'email' => 'spray.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                    'password' => 'wrong-password',
+                ]);
+                $this->assertSame(401, $response['headers']['status-code'], 'Failure ' . ($i + 1) . ' is within the limit');
+            }
+        };
+
         $this->startCountingInOneWindow(3600);
+        $spray(0, 50);
+
+        // Logging in to an account of one's own between guesses must not buy more guesses.
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
             'email' => $email,
             'password' => $password,
         ]);
         $this->assertSame(201, $response['headers']['status-code']);
 
-        // A new email every attempt, so the per-email limit never applies.
-        for ($i = 0; $i < 100; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
-                'email' => 'spray.' . \bin2hex(\random_bytes(8)) . '@example.com',
-                'password' => 'wrong-password',
-            ]);
-            $this->assertSame(401, $response['headers']['status-code'], 'Failure ' . ($i + 1) . ' is within the limit');
-        }
+        $spray(50, 100);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
             'email' => $email,
             'password' => $password,
         ]);
-        $this->assertSame(429, $response['headers']['status-code'], 'An IP over its failures is refused even with the right password, and the earlier success did not reset the count');
+        $this->assertSame(429, $response['headers']['status-code'], 'An IP over its failures is refused, even with the right password');
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers('2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':1'), [
             'email' => $email,

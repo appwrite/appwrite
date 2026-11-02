@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\Email;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\OTPToken;
 use Appwrite\Detector\Detector;
@@ -74,8 +75,10 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+            ->label('abuse', [
+                Limit::attempts('url:{url},email:{param-email}', 10),
+                Limit::attempts('url:{url},ip:{ip}', 10),
+            ])
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)

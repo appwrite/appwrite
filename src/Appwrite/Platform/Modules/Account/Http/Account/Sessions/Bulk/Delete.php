@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -59,7 +60,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->label('abuse-limit', 100)
+            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 100)])
             ->param('current', true, new Boolean(), 'Delete the current session too. Use false to sign out of every other session while staying signed in on this one.', true)
             ->inject('request')
             ->inject('response')

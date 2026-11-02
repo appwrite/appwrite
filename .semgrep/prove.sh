@@ -260,7 +260,7 @@ class Create extends Action
             ->setHttpPath('/v1/things')
             ->groups(['api', 'things'])
             ->label('scope', 'documents.write')
-            ->label('abuse-limit', 60)
+            ->label('abuse', [Limit::attempts('ip:{ip},url:{url}', 60)])
             ->param('url', '', new PublicURL(), 'Public page.')
             ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'Redirect.', true, ['redirectValidator'])
             ->param('headers', [], new Assoc(), 'Filtered against ALLOWED_HEADERS.', true)
