@@ -7,8 +7,9 @@ use Ahc\Jwt\JWT;
 /**
  * The signed token an alert email's unsubscribe link and header carry: whose
  * emails stop, and the monitor that sent them with its type, which the link
- * needs once the monitor is deleted. It expires, and is refused when
- * altered, signed with another key or issued for something else.
+ * needs once the monitor is deleted. It is signed with the first secret and
+ * verified against any of them. It expires, and is refused when altered,
+ * signed with another key or issued for something else.
  */
 readonly class Unsubscribe
 {
@@ -37,8 +38,11 @@ readonly class Unsubscribe
 
     private const string PURPOSE = 'alerts_unsubscribe';
 
+    /**
+     * @param list<string> $secrets
+     */
     public function __construct(
-        private string $secret,
+        private array $secrets,
         private int $ttl = ALERT_UNSUBSCRIBE_TTL,
     ) {
     }
@@ -48,7 +52,7 @@ readonly class Unsubscribe
      */
     public function token(string $userId, string $monitorId, string $type, ?int $now = null): string
     {
-        return $this->jwt($now)->encode([
+        return $this->jwt($this->secrets[0] ?? '', $now)->encode([
             'userId' => $userId,
             'monitorId' => $monitorId,
             'type' => $type,
@@ -63,10 +67,17 @@ readonly class Unsubscribe
      */
     public function verify(string $token, ?int $now = null): array
     {
-        try {
-            $claims = $this->jwt($now)->decode($token);
-        } catch (\Throwable $error) {
-            throw new \InvalidArgumentException('Invalid unsubscribe token.', previous: $error);
+        $claims = null;
+        foreach ($this->secrets as $secret) {
+            try {
+                $claims = $this->jwt($secret, $now)->decode($token);
+                break;
+            } catch (\Throwable $error) {
+            }
+        }
+
+        if ($claims === null) {
+            throw new \InvalidArgumentException('Invalid unsubscribe token.', previous: $error ?? null);
         }
 
         if (
@@ -81,8 +92,8 @@ readonly class Unsubscribe
         return ['userId' => $claims['userId'], 'monitorId' => $claims['monitorId'], 'type' => $claims['type']];
     }
 
-    private function jwt(?int $now): JWT
+    private function jwt(string $secret, ?int $now): JWT
     {
-        return (new JWT($this->secret, 'HS256', $this->ttl, 0))->setTestTimestamp($now);
+        return (new JWT($secret, 'HS256', $this->ttl, 0))->setTestTimestamp($now);
     }
 }

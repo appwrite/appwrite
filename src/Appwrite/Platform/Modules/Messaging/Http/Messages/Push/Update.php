@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Messaging\Http\Messages\Push;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -320,7 +321,7 @@ class Update extends Action
             $scheduleTime = $scheduledAt ?? $currentScheduledAt;
             $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
+            $encoder = new JWT(EncryptionKey::current(), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
                 'bucketId' => $pushData['image']['bucketId'],

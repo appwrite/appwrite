@@ -363,13 +363,13 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
         [$head, $claims, $signature] = \explode('.', $token);
         $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['monitorId' => $other] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
         foreach ([
             'tampered' => $forged,
             'expired' => $unsubscribe->token($root['$id'], $monitorId, 'usage', \time() - ALERT_UNSUBSCRIBE_TTL - 60),
-            'another secret' => (new Unsubscribe('another-secret'))->token($root['$id'], $monitorId, 'usage'),
+            'another secret' => (new Unsubscribe(['another-secret']))->token($root['$id'], $monitorId, 'usage'),
             'missing' => '',
         ] as $case => $invalid) {
             foreach ([Client::METHOD_GET, Client::METHOD_POST] as $method) {
@@ -449,7 +449,7 @@ final class EvaluationCustomServerTest extends Scope
     {
         $root = $this->getRoot()['$id'];
         $monitorId = $this->createPausedMonitor('Deleted later ' . \uniqid());
-        $token = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root, $monitorId, 'usage');
+        $token = (new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]))->token($root, $monitorId, 'usage');
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token, 'all')['headers']['status-code']);
 
         $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $this->headers())['headers']['status-code']);
@@ -472,7 +472,7 @@ final class EvaluationCustomServerTest extends Scope
     public function testConcurrentUnsubscribesAllHold(): void
     {
         $root = $this->getRoot()['$id'];
-        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
         $scopes = \array_map(fn (int $i) => 'concurrent' . $i . \uniqid(), \range(1, 12));
 
         /**

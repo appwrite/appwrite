@@ -117,6 +117,33 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_OPENSSL_KEY_V2',
+                'description' => 'The next server secret key, used once `_APP_OPENSSL_KEY_CURRENT` is set to 2. Rotate by adding the next version, making it current, then raising `_APP_OPENSSL_KEY_OLDEST`. Keep every version that still encrypts stored data or files.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_CURRENT',
+                'description' => 'Version of `_APP_OPENSSL_KEY_V{version}` that signs new tokens and encrypts new data. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_OLDEST',
+                'description' => 'Oldest key version still accepted when verifying tokens and signatures, such as JWTs and ephemeral API keys. Every configured version from this one up is accepted. Raise it to retire a key. Stored data keeps decrypting with the version it records. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_NOTIFICATIONS_TRACKING_SECRET',
                 'description' => 'Secret key used to sign notification logo tracking tokens. This must be the same value for API containers and notification workers. Change it from the default value before running in production.',
                 'introduction' => '1.9.0',
@@ -434,7 +461,7 @@ return [
             [
                 'name' => '_APP_LOGGING_FORMAT',
                 'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
-                'introduction' => '1.9.6',
+                'introduction' => '2.7.0',
                 'default' => 'pretty',
                 'required' => false,
                 'question' => '',

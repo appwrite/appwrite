@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirect;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
@@ -244,8 +245,8 @@ class Get extends Base
         $nonces = \array_filter(\explode(',', $request->getCookie('a_oauth2_' . $project->getId())));
         $stateNonce = \is_string($state['nonce'] ?? null) ? $state['nonce'] : '';
         $stateBinding = \is_string($state['binding'] ?? null) ? $state['binding'] : '';
-        $binding = \hash_hmac('sha256', $stateNonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
-        $bound = \hash_equals($binding, $stateBinding) || ($stateBinding === '' && $user->isEmpty());
+        $bound = \array_any(EncryptionKey::accepted(), fn (string $key) => \hash_equals(\hash_hmac('sha256', $stateNonce . ':' . $user->getId(), $key), $stateBinding))
+            || ($stateBinding === '' && $user->isEmpty());
         if (!\array_any($nonces, fn (string $held) => \hash_equals($held, $stateNonce)) || !$bound) {
             if (empty($state['token'])) {
                 $failureRedirect(Exception::USER_OAUTH2_STATE_INVALID);
@@ -785,7 +786,7 @@ class Get extends Base
             ;
 
             // Wrap secret in a JWT that also carries the provider name
-            $jwtEncoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 60, 0);
+            $jwtEncoder = new JWT(EncryptionKey::current(), 'HS256', 60, 0);
             $query['secret'] = $jwtEncoder->encode([
                 'secret' => $secret,
                 'provider' => $provider,
