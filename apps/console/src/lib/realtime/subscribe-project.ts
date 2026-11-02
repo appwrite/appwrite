@@ -5,9 +5,9 @@
  * via the shared console hub, and the project's regional API host via
  * {@link ./regional-console-hub.ts} when that URL differs from the base. Events from
  * either socket are handled the same way. Events of a context not on screen (another
- * project, or the project itself while the Console is in one of its environments)
- * are dropped; the rest invalidate React Query cache. Migration and dedicated
- * database updates merge into cache instead of invalidating on every tick.
+ * project, the project itself while the Console is in one of its environments, or
+ * another environment) are dropped; the rest invalidate React Query cache. Migration
+ * and dedicated database updates merge into cache instead of invalidating on every tick.
  */
 
 import type { QueryClient } from '@tanstack/react-query'
@@ -15,7 +15,7 @@ import type { RealtimeResponseEvent } from '@appwrite.io/console'
 import { refetchProjectTableRelatedQueries } from '@/lib/react-query/hooks/databases'
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
 import { registerConsoleRealtimeListener } from './console-hub'
-import { realtimeEventSource } from './event-source'
+import { isRealtimeContextPing, realtimeEventSource } from './event-source'
 import { registerRegionalConsoleRealtimeListener } from './regional-console-hub'
 import {
   handleDedicatedDatabaseRealtimeEvents,
@@ -322,8 +322,8 @@ function handleRealtimeEvent(
   const source = realtimeEventSource(projectId, channels)
   if (source === 'other') return
 
-  // Project-scoped events need the event confirmed as this project's. Inside an
-  // environment no event can be (see realtimeEventSource in ./event-source).
+  // Project-scoped events need the event confirmed as this context's: the
+  // project's own, or the environment's while the Console is in one.
   const isForThisProject = source === 'current'
 
   // Console-level events (sites, functions deployments/executions)
@@ -345,7 +345,7 @@ function handleRealtimeEvent(
       ['site', 'project', projectId],
       // Deployments can be copied into an environment with their IDs: merge
       // only a payload known to be this context's, and refetch otherwise.
-      source === 'current',
+      isForThisProject,
     )
   }
   if (hasEvent(events, REALTIME_EVENTS.SITES_EXECUTIONS_ANY)) {
@@ -371,7 +371,7 @@ function handleRealtimeEvent(
       events,
       payload,
       ['function', 'project', projectId],
-      source === 'current',
+      isForThisProject,
     )
   }
   if (hasEvent(events, REALTIME_EVENTS.FUNCTIONS_EXECUTIONS_ANY)) {
@@ -491,7 +491,7 @@ function handleRealtimeEvent(
     }
   }
 
-  if (events.includes(`projects.${projectId}.ping`)) {
+  if (isRealtimeContextPing(projectId, events, channels)) {
     queryClient.invalidateQueries({ queryKey: ['project', projectId] })
   }
 

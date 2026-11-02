@@ -3,7 +3,10 @@ import {
   registerActiveEnvironmentChange,
   setActiveEnvironment,
 } from '@/lib/active-environment'
-import { realtimeEventSource } from '@/lib/realtime/event-source'
+import {
+  isRealtimeContextPing,
+  realtimeEventSource,
+} from '@/lib/realtime/event-source'
 
 beforeEach(() => {
   const store = new Map<string, string>()
@@ -29,11 +32,29 @@ describe('realtime event source', () => {
     )
   })
 
-  test('in the project, events of another project or environment are other', () => {
-    // An environment's events name its internal project ID
-    expect(realtimeEventSource('app', ['console', 'projects.6a1f0c2b9d'])).toBe(
+  test('in the project, events of another project are other', () => {
+    expect(realtimeEventSource('app', ['console', 'projects.other'])).toBe(
       'other',
     )
+  })
+
+  test('in the project, events of its environments are other', () => {
+    expect(
+      realtimeEventSource('app', [
+        'console',
+        'projects.app.environments.staging',
+      ]),
+    ).toBe('other')
+  })
+
+  test('inside an environment, its own events are current', () => {
+    setActiveEnvironment('app', 'staging')
+    expect(
+      realtimeEventSource('app', [
+        'console',
+        'projects.app.environments.staging',
+      ]),
+    ).toBe('current')
   })
 
   test('inside an environment, the project’s own events are other', () => {
@@ -43,11 +64,17 @@ describe('realtime event source', () => {
     )
   })
 
-  test('inside an environment, events naming another project ID may be its own', () => {
+  test('inside an environment, events of another environment are other', () => {
     setActiveEnvironment('app', 'staging')
-    expect(realtimeEventSource('app', ['console', 'projects.6a1f0c2b9d'])).toBe(
-      'unknown',
-    )
+    expect(
+      realtimeEventSource('app', ['console', 'projects.app.environments.qa']),
+    ).toBe('other')
+    expect(
+      realtimeEventSource('app', [
+        'console',
+        'projects.other.environments.staging',
+      ]),
+    ).toBe('other')
   })
 
   test('events naming no project are unknown', () => {
@@ -60,5 +87,49 @@ describe('realtime event source', () => {
     expect(realtimeEventSource('app', ['console', 'projects.app2'])).toBe(
       'other',
     )
+  })
+})
+
+describe('realtime context ping', () => {
+  test('in the project, its ping counts', () => {
+    expect(
+      isRealtimeContextPing(
+        'app',
+        ['projects.app.ping'],
+        ['console', 'projects.app'],
+      ),
+    ).toBe(true)
+  })
+
+  test('inside an environment, its ping counts though the event names its internal ID', () => {
+    setActiveEnvironment('app', 'staging')
+    expect(
+      isRealtimeContextPing(
+        'app',
+        ['projects.6a1f0c2b9d.ping'],
+        ['console', 'projects.app.environments.staging'],
+      ),
+    ).toBe(true)
+  })
+
+  test('inside an environment, the project’s ping does not count', () => {
+    setActiveEnvironment('app', 'staging')
+    expect(
+      isRealtimeContextPing(
+        'app',
+        ['projects.app.ping'],
+        ['console', 'projects.app'],
+      ),
+    ).toBe(false)
+  })
+
+  test('another event of the context is not a ping', () => {
+    expect(
+      isRealtimeContextPing(
+        'app',
+        ['projects.app.update'],
+        ['console', 'projects.app'],
+      ),
+    ).toBe(false)
   })
 })
