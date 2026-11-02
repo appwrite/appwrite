@@ -60,6 +60,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\OTP\Creat
 use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\OTP\Update as UpdateEmailVerificationOTP;
 use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\Update as UpdateEmailVerification;
 use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Phone\Create as CreatePhoneVerification;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Phone\Update as UpdatePhoneVerification;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -104,6 +105,7 @@ class Http extends Service
             ->addAction(CreateEmailVerification::getName(), CreateEmailVerification::class)
             ->addAction(UpdateEmailVerification::getName(), UpdateEmailVerification::class)
             ->addAction(CreatePhoneVerification::getName(), CreatePhoneVerification::class)
+            ->addAction(UpdatePhoneVerification::getName(), UpdatePhoneVerification::class)
             ->addAction(CreateEmailVerificationOTP::getName(), CreateEmailVerificationOTP::class)
             ->addAction(UpdateEmailVerificationOTP::getName(), UpdateEmailVerificationOTP::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
