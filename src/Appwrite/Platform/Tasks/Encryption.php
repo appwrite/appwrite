@@ -98,7 +98,7 @@ class Encryption extends Action
                     continue; // Schemaless and vector collections have no encrypted columns
                 }
 
-                $dbForDatabase = $databaseFactory->tenant($database, $project, preserveDates: true);
+                $dbForDatabase = $databaseFactory->tenant($databaseFactory->overlayLiveDedicatedDsn($database, $project), $project, preserveDates: true);
 
                 foreach ($dbForProject->cursor('database_' . $database->getSequence(), batchSize: $batch) as $table) {
                     $count += $this->collection($dbForDatabase, 'database_' . $database->getSequence() . '_collection_' . $table->getSequence(), $version, $commit, $batch);
