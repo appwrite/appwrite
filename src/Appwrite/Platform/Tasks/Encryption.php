@@ -156,11 +156,17 @@ class Encryption extends Action
                     continue;
                 }
 
-                $document = $database->getDocument($collection, $raw->getId());
-                $update = new Document(\array_combine($stale, \array_map(fn (string $key) => $document->getAttribute($key), $stale)));
+                // Locked from read to write, so a client update in between is not overwritten
+                // with the value read here. Writing through the encrypt filter stores the current version.
+                $database->withTransaction(function () use ($database, $collection, $raw, $stale) {
+                    $document = $database->getDocument($collection, $raw->getId(), forUpdate: true);
+                    if ($document->isEmpty()) {
+                        return;
+                    }
 
-                // Writing through the encrypt filter stores the current version
-                $database->withPreserveDates(true, fn () => $database->updateDocument($collection, $raw->getId(), $update));
+                    $update = new Document(\array_combine($stale, \array_map(fn (string $key) => $document->getAttribute($key), $stale)));
+                    $database->withPreserveDates(true, fn () => $database->updateDocument($collection, $raw->getId(), $update));
+                });
             }
 
             $cursor = \end($documents) ?: null;
