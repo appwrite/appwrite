@@ -34,6 +34,7 @@ use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -85,7 +86,7 @@ $container->set('register', fn () => $register);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
-$container->set('console', fn () => new Document(Config::getParam('console')), []);
+$container->set('console', fn () => new Project(Config::getParam('console')), []);
 
 $container->set('platform', fn () => Config::getParam('platform', []), []);
 
