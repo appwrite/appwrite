@@ -20,6 +20,7 @@ use Appwrite\Platform\Modules\Console\Http\Scopes\Organization\XList as ListOrga
 use Appwrite\Platform\Modules\Console\Http\Scopes\Project\XList as ListKeyScopes;
 use Appwrite\Platform\Modules\Console\Http\Templates\Email\Get as GetEmailTemplate;
 use Appwrite\Platform\Modules\Console\Http\Variables\Get as GetVariables;
+use Appwrite\Platform\Modules\Console\Http\Versions\Get as GetVersions;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -38,6 +39,7 @@ class Http extends Service
         $this->addAction(ListKeyScopes::getName(), ListKeyScopes::class);
         $this->addAction(ListOrganizationScopes::getName(), ListOrganizationScopes::class);
         $this->addAction(GetResourceAvailability::getName(), GetResourceAvailability::class);
+        $this->addAction(GetVersions::getName(), GetVersions::class);
 
         // Alert email unsubscribe links, which carry a signed token instead of a session
         $this->addAction(GetAlertsUnsubscribe::getName(), GetAlertsUnsubscribe::class);

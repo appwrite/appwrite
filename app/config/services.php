@@ -6,7 +6,7 @@ return [
         'name' => 'Home',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'web/home.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
