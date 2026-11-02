@@ -776,6 +776,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Upgrade: 'שדרוג',
   'Open activity details': 'פתיחת פרטי פעילות',
   'View event': 'הצגת אירוע',
+  Reason: 'סיבה',
   Deleted: 'נמחק',
   Executed: 'הורץ',
   Uploaded: 'הועלה',

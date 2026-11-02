@@ -12,6 +12,7 @@ import {
   formatActivityEventJson,
   getActivityCountryCode,
   getActivityCountryDisplayName,
+  getActivityReason,
   hasHumanEmail,
   userTypeBadge,
 } from '@/components/pages/projects/$projectId/activity/activity-utils'
@@ -239,6 +240,8 @@ export function ActivityLogDrawer({
     .filter(Boolean)
     .join(' · ')
 
+  const reason = getActivityReason(event)
+
   const countryNameLine =
     getActivityCountryDisplayName(event, countryLookups) ?? ''
 
@@ -345,6 +348,14 @@ export function ActivityLogDrawer({
                   </div>
                 </div>
               </div>
+
+              {reason && (
+                <DetailSection title={t('Reason')}>
+                  <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed text-foreground">
+                    {reason}
+                  </p>
+                </DetailSection>
+              )}
 
               <DetailSection title={t('Actor')}>
                 <div className="grid gap-4 sm:grid-cols-2">

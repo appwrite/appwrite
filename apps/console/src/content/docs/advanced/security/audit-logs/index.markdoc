@@ -46,7 +46,27 @@ Each entry describes an event.
 ---
 - Date
 - The date and time of the event.
+---
+- Reason
+- Why the request was made, when the client sent one. See [Record a reason](#reason).
 {% /table %}
+
+# Record a reason {% #reason %}
+
+Send the `X-Appwrite-Reason` header with an API request to record why it was made.
+The reason appears in the **Reason** column of the **Activity** tab, next to the event it explains,
+so you can review changes made by AI agents, scripts, and teammates later.
+
+```http
+DELETE /v1/functions/checkout-legacy HTTP/1.1
+X-Appwrite-Project: <PROJECT_ID>
+X-Appwrite-Key: <API_KEY>
+X-Appwrite-Reason: Moved to SSR endpoint /api/checkout in storefront site
+```
+
+A reason is plain text of up to 256 characters. Clients that can only send ASCII header values, such as browsers,
+can percent-encode it with `encodeURIComponent`. A request with a longer or malformed reason
+fails with `general_argument_invalid` before it runs.
 
 # Retention {% #retention %}
 
