@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, mock, test } from 'bun:test'
+import { Client, Organizations } from '@appwrite.io/console'
 import { QueryClient } from '@tanstack/react-query'
 import * as actualSdk from '@/lib/appwrite/sdk'
 import {
@@ -432,60 +433,63 @@ describe('budget alert recipients', () => {
     expect(changedBudgetRecipients(current, [])).toBeNull()
   })
 
-  test('sends notify only when recipients are given', async () => {
-    const generated: Record<string, unknown>[] = []
-    const raw: { method: string; path: string; payload: unknown }[] = []
+  test('sends notify on the wire only when recipients are given', async () => {
+    // The real client and generated service, recorded at fetch: what reaches
+    // the API is what the generated `updateBudget` would have serialized.
+    const client = new Client()
+      .setEndpoint('https://example.test/v1')
+      .setProject('console')
+    const sent: { method: string; path: string; body: unknown }[] = []
+    const realFetch = globalThis.fetch
+    globalThis.fetch = (async (
+      input: RequestInfo | URL,
+      init?: RequestInit,
+    ) => {
+      sent.push({
+        method: String(init?.method).toLowerCase(),
+        path: new URL(String(input)).pathname,
+        body: JSON.parse(String(init?.body ?? '{}')),
+      })
+      return new Response('{}', {
+        headers: { 'content-type': 'application/json' },
+      })
+    }) as typeof fetch
     mock.module('@/lib/appwrite/sdk', () => ({
       ...actualSdk,
       sdk: {
-        forConsole: {
-          organizations: {
-            updateBudget: async (params: Record<string, unknown>) => {
-              generated.push(params)
-              return {}
-            },
-          },
-          client: {
-            config: { endpoint: 'https://example.test/v1', project: 'console' },
-            call: async (
-              method: string,
-              uri: URL,
-              _: unknown,
-              payload: unknown,
-            ) => {
-              raw.push({ method, path: uri.pathname, payload })
-              return {}
-            },
-          },
-        },
+        forConsole: { client, organizations: new Organizations(client) },
       },
     }))
     const { updateOrganizationBudget } = await import(
       '@/lib/react-query/hooks/organizations'
     )
 
-    await updateOrganizationBudget({
-      organizationId: 'org',
-      budget: 100,
-      alerts: [50],
-    })
-    expect(generated).toEqual([
-      { organizationId: 'org', budget: 100, alerts: [50] },
-    ])
-    expect(raw).toHaveLength(0)
+    try {
+      await updateOrganizationBudget({
+        organizationId: 'org',
+        budget: 100,
+        alerts: [50],
+      })
+      await updateOrganizationBudget({
+        organizationId: 'org',
+        budget: 100,
+        alerts: [50],
+        notify: ['owner'],
+      })
+    } finally {
+      globalThis.fetch = realFetch
+    }
 
-    await updateOrganizationBudget({
-      organizationId: 'org',
-      budget: 100,
-      alerts: [50],
-      notify: ['owner'],
-    })
-    expect(generated).toHaveLength(1)
-    expect(raw).toEqual([
+    expect(sent).toEqual([
       {
         method: 'patch',
         path: '/v1/organizations/org/budget',
-        payload: { budget: 100, alerts: [50], notify: ['owner'] },
+        body: { budget: 100, alerts: [50] },
+      },
+      {
+        method: 'patch',
+        path: '/v1/organizations/org/budget',
+        body: { budget: 100, alerts: [50], notify: ['owner'] },
       },
     ])
   })
