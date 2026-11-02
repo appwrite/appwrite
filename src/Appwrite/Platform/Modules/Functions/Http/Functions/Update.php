@@ -80,19 +80,19 @@ class Update extends Base
             ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
             ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true, enum: new Enum(name: 'Runtime'))
-            ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
-            ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
-            ->param('schedule', '', new Cron(), 'Schedule CRON syntax. Cannot be combined with interval.', true)
-            ->param('timeout', 15, new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
-            ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
-            ->param('logging', true, new Boolean(), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
-            ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
-            ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
-            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('execute', null, new Nullable(new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
+            ->param('events', null, new Nullable(new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
+            ->param('schedule', null, new Nullable(new Cron()), 'Schedule CRON syntax. Cannot be combined with interval.', true)
+            ->param('timeout', null, new Nullable(new Range(1, (int) System::getEnv('_APP_FUNCTIONS_TIMEOUT', 900))), 'Maximum execution time in seconds.', true)
+            ->param('enabled', null, new Nullable(new Boolean()), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
+            ->param('logging', null, new Nullable(new Boolean()), 'When disabled, executions will exclude logs and errors, and will be slightly faster.', true)
+            ->param('entrypoint', null, new Nullable(new Text(1028, 0)), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
+            ->param('commands', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
+            ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API Key auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', null, new Nullable(new Boolean()), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Directory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -109,7 +109,7 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
             )), 'Runtime specification for the function executions.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
+            ->param('deploymentRetention', null, new Nullable(new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION)), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the function.', true)
             ->inject('request')
@@ -135,25 +135,25 @@ class Update extends Base
         string $functionId,
         string $name,
         string $runtime,
-        array $execute,
-        array $events,
-        string $schedule,
-        int $timeout,
-        bool $enabled,
-        bool $logging,
-        string $entrypoint,
-        string $commands,
-        array $scopes,
+        ?array $execute,
+        ?array $events,
+        ?string $schedule,
+        ?int $timeout,
+        ?bool $enabled,
+        ?bool $logging,
+        ?string $entrypoint,
+        ?string $commands,
+        ?array $scopes,
         string $installationId,
         ?string $providerRepositoryId,
         string $providerBranch,
-        bool $providerSilentMode,
+        ?bool $providerSilentMode,
         string $providerRootDirectory,
         ?array $providerBranches,
         ?array $providerPaths,
         ?string $buildSpecification,
         ?string $runtimeSpecification,
-        int $deploymentRetention,
+        ?int $deploymentRetention,
         ?int $interval,
         ?string $description,
         Request $request,
@@ -180,6 +180,8 @@ class Update extends Base
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
+        $scopes ??= $function->getAttribute('scopes', []);
+
         // Scopes the function already has stay; only new ones need the key to hold them
         if ($apiKey !== null && !$apiKey->mayGrant(\array_diff($scopes, $function->getAttribute('scopes', [])))) {
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
@@ -195,27 +197,33 @@ class Update extends Base
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
         }
 
-        if ($schedule !== '' && !empty($interval)) {
+        if (!empty($schedule) && !empty($interval)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval", not both.');
         }
 
         // Clients that predate interval omit it, so keep the stored one unless a cron replaces it.
-        $interval ??= $schedule === '' ? $function->getAttribute('interval', 0) : 0;
+        $interval ??= empty($schedule) ? $function->getAttribute('interval', 0) : 0;
+        $schedule ??= $interval === 0 ? $function->getAttribute('schedule', '') : '';
 
         if (empty($runtime)) {
             $runtime = $function->getAttribute('runtime');
         }
 
+        $execute ??= $function->getAttribute('execute', []);
+        $events ??= $function->getAttribute('events', []);
+        $timeout ??= $function->getAttribute('timeout', 15);
+        $enabled ??= $function->getAttribute('enabled', true);
+        $logging ??= $function->getAttribute('logging', true);
+        $entrypoint ??= $function->getAttribute('entrypoint', '');
+        $commands ??= $function->getAttribute('commands', '');
+        $providerSilentMode ??= $function->getAttribute('providerSilentMode', false);
+        $deploymentRetention ??= $function->getAttribute('deploymentRetention', 0);
         $description ??= $function->getAttribute('description', '');
         $buildSpecification ??= $function->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
         $runtimeSpecification ??= $function->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
 
         $repositoryId = $function->getAttribute('repositoryId', '');
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
-
-        if (empty($entrypoint)) {
-            $entrypoint = $function->getAttribute('entrypoint', '');
-        }
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
