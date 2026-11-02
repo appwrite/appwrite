@@ -39,12 +39,12 @@ import {
   measureOpenAiAdsRegistrationCompleted,
 } from '@/lib/openai-ads'
 import {
-  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 
 const searchSchema = z.object({
   redirect: z

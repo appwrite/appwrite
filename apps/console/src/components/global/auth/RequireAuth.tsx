@@ -17,10 +17,8 @@ import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
 import { isInitSurfaceEnabled } from '@/lib/init/init-surface'
 import { matchesMarketingPagePath } from '@/lib/marketing/is-marketing-page-path'
-import {
-  isValidRelativeRedirect,
-  requiresConsoleEmailVerification,
-} from '@/lib/post-auth-navigation'
+import { requiresConsoleEmailVerification } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 import {
   maybeMeasureOpenAiAdsRegistrationAfterAuth,
   syncOpenAiAdsUser,

@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useT } from '@/lib/i18n/translate'
-import { isValidRelativeRedirect } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 import { fetchOrganizations } from '@/lib/react-query/hooks/organizations'
 
 export type SitesAuthPreviewStatus = 'checking' | 'denied' | 'error' | 'invalid'
