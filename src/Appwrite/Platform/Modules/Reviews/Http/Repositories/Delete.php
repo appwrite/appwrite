@@ -14,6 +14,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 /**
  * Turns code review off for a repository. Its past reviews stay in the project.
@@ -51,7 +52,9 @@ class Delete extends Action
                         model: Response::MODEL_NONE,
                     )
                 ],
-                contentType: ContentType::NONE
+                contentType: ContentType::NONE,
+                // Hidden until code review is generally available; preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
             ))
             ->param('repositoryId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Repository ID.', false, ['dbForPlatform'])
             ->inject('response')

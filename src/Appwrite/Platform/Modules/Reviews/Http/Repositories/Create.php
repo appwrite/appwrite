@@ -59,6 +59,8 @@ class Create extends Action
                         model: Response::MODEL_REVIEW_REPOSITORY,
                     )
                 ],
+                // Hidden until code review is generally available; preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
             ))
             ->param('installationId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Appwrite installation ID the repository is connected through.', false, ['dbForPlatform'])
             ->param('providerRepositoryId', '', new Text(20), 'GitHub repository ID.')

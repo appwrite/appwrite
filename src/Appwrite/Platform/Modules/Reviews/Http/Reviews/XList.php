@@ -16,6 +16,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
 /**
@@ -52,6 +53,8 @@ class XList extends Action
                         model: Response::MODEL_REVIEW_LIST,
                     )
                 ],
+                // Hidden until code review is generally available; preview SDK builds show it.
+                hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') !== 'enabled',
             ))
             ->param('queries', [], new Reviews(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Reviews::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
