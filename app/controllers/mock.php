@@ -17,7 +17,6 @@ use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
-use Utopia\Http\Route;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -543,32 +542,4 @@ Http::get('/v1/mock/github/callback')
         $response->json([
             'installationId' => $installation->getId(),
         ]);
-    });
-
-Http::shutdown()
-    ->groups(['mock'])
-    ->inject('response')
-    ->inject('route')
-    ->action(function (Response $response, Route $route) {
-
-        $result = [];
-        $path   = APP_STORAGE_CACHE . '/tests.json';
-        $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
-        $methods = $route->getMethods();
-
-        if (!\is_array($tests)) {
-            throw new Exception(Exception::GENERAL_MOCK, 'Failed to read results', 500);
-        }
-
-        foreach ($methods as $method) {
-            $result[$method . ':' . $route->getPath()] = true;
-        }
-
-        $tests = \array_merge($tests, $result);
-
-        if (!\file_put_contents($path, \json_encode($tests), LOCK_EX)) {
-            throw new Exception(Exception::GENERAL_MOCK, 'Failed to save results', 500);
-        }
-
-        $response->dynamic(new Document(['result' => \implode(',', $methods) . ':' . $route->getPath() . ':passed']), Response::MODEL_MOCK);
     });
