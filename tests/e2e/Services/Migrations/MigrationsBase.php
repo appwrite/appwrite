@@ -1027,6 +1027,156 @@ trait MigrationsBase
         }, 60_000, 1_000);
     }
 
+    public function testCSVExportRetryByKeyRequiresRowReadScope(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Export Retry Scopes',
+        ]);
+
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+            'collectionId' => Id::unique(),
+            'name' => 'Export Retry Scopes',
+        ]);
+
+        $this->assertSame(201, $collection['headers']['status-code']);
+
+        // A collection with no rows gives the export nothing to write, so the worker fails it
+        $export = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'documents.read']),
+        ], [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+            'filename' => 'export-retry-scopes',
+            'notify' => false,
+        ]);
+
+        $this->assertSame(202, $export['headers']['status-code']);
+        $this->assertContains('documents.read', $export['body']['options']['scopes']);
+
+        $migrationId = $export['body']['$id'];
+
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertSame('failed', $response['body']['status']);
+        }, 60_000, 1_000);
+
+        /**
+         * Test for FAILURE
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write']),
+        ]);
+
+        $this->assertSame(401, $retry['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $retry['body']['type']);
+
+        $migration = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+        $this->assertSame('failed', $migration['body']['status'], 'A rejected retry must not re-run the export');
+
+        /**
+         * Test for SUCCESS
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'rows.read']),
+        ]);
+
+        $this->assertSame(204, $retry['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $headers);
+    }
+
+    public function testCSVImportRetryByKeyRequiresRowWriteScope(): void
+    {
+        [$databaseId, $tableId, $bucketId, $fileId] = $this->prepareCsvImportFixture('retry-scopes');
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $body = [
+            'fileId' => $fileId,
+            'bucketId' => $bucketId,
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
+        ];
+
+        $import = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'rows.write', 'files.read']),
+        ], $body);
+
+        $this->assertSame(202, $import['headers']['status-code']);
+        $this->assertContains('rows.write', $import['body']['options']['scopes']);
+
+        $this->assertEventually(function () use ($import, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $import['body']['$id'], $headers);
+
+            $this->assertSame('completed', $response['body']['status']);
+        }, 60_000, 1_000);
+
+        // Re-importing the same rows fails on their duplicate ids
+        $duplicate = $this->client->call(Client::METHOD_POST, '/migrations/csv/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'rows.write', 'files.read']),
+        ], $body);
+
+        $this->assertSame(202, $duplicate['headers']['status-code']);
+
+        $migrationId = $duplicate['body']['$id'];
+
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertSame('failed', $response['body']['status']);
+        }, 60_000, 1_000);
+
+        /**
+         * Test for FAILURE
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write']),
+        ]);
+
+        $this->assertSame(401, $retry['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $retry['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'rows.write']),
+        ]);
+
+        $this->assertSame(204, $retry['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $headers);
+    }
+
     public function testAppwriteMigrationRejectsApiKeyBroaderThanGrant(): void
     {
         $migration = $this->client->call(Client::METHOD_POST, '/migrations/appwrite', [

@@ -13,6 +13,9 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
+use Utopia\Migration\Destinations\CSV as DestinationCSV;
+use Utopia\Migration\Destinations\JSON as DestinationJSON;
+use Utopia\Migration\Resource;
 
 class Update extends Action
 {
@@ -79,11 +82,13 @@ class Update extends Action
             throw new Exception(Exception::MIGRATION_IN_PROGRESS, 'Migration not failed yet');
         }
 
-        // A retry runs with no more than the retrying caller holds; a session keeps the recorded grant.
-        // Only a key-created grant was checked against the resources, so others are checked here.
+        // A retry re-runs the migration's reads and writes, so the retrying key is checked against
+        // them again, whatever the migration was created with. A recorded grant caps it further,
+        // and a session keeps the recorded grant.
+        [$resources, $required] = $this->requirements($migration);
         $options = $migration->getAttribute('options', []);
         $recorded = $options['scopes'] ?? null;
-        $grant = $this->authorize($request, \is_array($recorded) ? [] : $migration->getAttribute('resources', []));
+        $grant = $this->authorize($request, $resources, $required);
 
         if ($grant !== null) {
             $options['scopes'] = \is_array($recorded) ? \array_values(\array_intersect($recorded, $grant)) : $grant;
@@ -104,5 +109,36 @@ class Update extends Action
         ));
 
         $response->noContent();
+    }
+
+    /**
+     * What the retrying key must hold to re-run the migration, mirroring the route that created
+     * it: the family row read scope for an export, the family row write scope for a file import,
+     * and the write scopes of every imported resource for anything else.
+     *
+     * @return array{array<string>, array<array<string>>} resources, then further required scopes
+     */
+    private function requirements(Document $migration): array
+    {
+        $files = [DestinationCSV::getName(), DestinationJSON::getName()];
+        $family = $migration->getAttribute('parentResourceType', Resource::TYPE_DATABASE);
+
+        if (\in_array($migration->getAttribute('destination'), $files, true)) {
+            return [[], [match ($family) {
+                Resource::TYPE_DATABASE_DOCUMENTSDB => ['documentsdb.documents.read'],
+                Resource::TYPE_DATABASE_VECTORSDB => ['vectorsdb.documents.read'],
+                default => ['rows.read', 'documents.read'],
+            }]];
+        }
+
+        if (\in_array($migration->getAttribute('source'), $files, true)) {
+            return [[], [match ($family) {
+                Resource::TYPE_DATABASE_DOCUMENTSDB => ['documentsdb.documents.write'],
+                Resource::TYPE_DATABASE_VECTORSDB => ['vectorsdb.documents.write'],
+                default => ['rows.write', 'documents.write'],
+            }]];
+        }
+
+        return [$migration->getAttribute('resources', []), []];
     }
 }
