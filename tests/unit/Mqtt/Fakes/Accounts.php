@@ -27,6 +27,9 @@ final class Accounts
     /** @var (\Closure(string, string): void)|null runs after the status was read, as a block landing mid-CONNECT would */
     public ?\Closure $whileAuthenticating = null;
 
+    /** @var (\Closure(array<string, mixed>): void)|null runs before the check answers, as another event landing while its read yields would */
+    public ?\Closure $whileAuthorizing = null;
+
     /** @return array<string, int|string> */
     public function authenticate(string $projectId, string $authMethod, string $credential): array
     {
@@ -55,6 +58,10 @@ final class Accounts
     public function authorize(array $identity): bool
     {
         $this->authorizations++;
+
+        if ($this->whileAuthorizing !== null) {
+            ($this->whileAuthorizing)($identity);
+        }
 
         if ($this->unavailable) {
             throw new \RuntimeException('The database is unavailable.');
