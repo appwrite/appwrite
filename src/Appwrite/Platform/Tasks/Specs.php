@@ -166,6 +166,12 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Environment' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Environment',
+                    'description' => 'The ID of the project environment to act in, alongside the project ID. Used with Appwrite Cloud projects that have environments.',
+                    'in' => 'header',
+                ],
                 'Session' => [
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Session',
@@ -237,6 +243,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Environment' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Environment',
+                    'description' => 'The ID of the project environment to act in, alongside the project ID. Used with Appwrite Cloud projects that have environments.',
                     'in' => 'header',
                 ],
                 'Session' => [
@@ -316,6 +328,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Environment' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Environment',
+                    'description' => 'The ID of the project environment to act in, alongside the project ID. Used with Appwrite Cloud projects that have environments.',
                     'in' => 'header',
                 ],
                 'Mode' => [
