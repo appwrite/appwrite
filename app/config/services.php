@@ -34,7 +34,7 @@ return [
         'name' => 'Account',
         'subtitle' => 'The Account service allows you to authenticate and manage a user account.',
         'description' => '/docs/services/account.md',
-        'controller' => 'api/account.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/account',
