@@ -27,6 +27,9 @@ export function BlogFeaturedSection({ post, authors }: BlogFeaturedSectionProps)
             to="/blog/post/$slug"
             params={{ slug: post.slug }}
             className="block overflow-hidden rounded-xl transition-transform duration-300 group-hover:scale-[1.02]"
+            // Same target as the title link beside it; keep it out of the tab order.
+            tabIndex={-1}
+            aria-hidden="true"
           >
             <BlogCover
               title={post.title}

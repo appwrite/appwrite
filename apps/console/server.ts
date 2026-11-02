@@ -19,6 +19,8 @@
  * ASSET_PRELOAD_MAX_SIZE (number)
  *   - Maximum file size in bytes to preload into memory
  *   - Files larger than this will be served on-demand from disk
+ *   - Larger files matching the include patterns keep only their gzipped
+ *     copy in memory and are still served immutable
  *   - Default: 1048576 (1MB)
  *   - Example: ASSET_PRELOAD_MAX_SIZE=1048576 (1MB)
  *
@@ -480,6 +482,40 @@ function createResponseHandler(
 }
 
 /**
+ * Response handler for hashed assets over the preload limit (e.g. the main JS
+ * chunk). Only the gzipped bytes are kept in memory; the raw file streams from
+ * disk for clients that don't accept gzip.
+ */
+function createLargeAssetHandler(
+  filepath: string,
+  type: string,
+  gz: Uint8Array | undefined,
+  etag: string | undefined,
+): (req: Request) => Response {
+  return (req: Request) => {
+    const headers: Record<string, string> = {
+      'Content-Type': type,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    }
+
+    if (etag) {
+      if (req.headers.get('if-none-match') === etag) {
+        return new Response(null, { status: 304, headers: { ETag: etag } })
+      }
+      headers.ETag = etag
+    }
+
+    if (gz && req.headers.get('accept-encoding')?.includes('gzip')) {
+      headers['Content-Encoding'] = 'gzip'
+      headers['Content-Length'] = String(gz.byteLength)
+      return new Response(new Uint8Array(gz), { status: 200, headers })
+    }
+
+    return new Response(Bun.file(filepath), { status: 200, headers })
+  }
+}
+
+/**
  * Create composite glob pattern from include patterns
  */
 /**
@@ -552,7 +588,7 @@ async function initializeStaticRoutes(
           continue
         }
         if (isEmptyModuleAsset) {
-          log.warn(
+          log.warning(
             `Serving empty build asset ${route} (${file.size} bytes). Prefer fixing the empty chunk in the bundle.`,
           )
         }
@@ -584,6 +620,20 @@ async function initializeStaticRoutes(
 
           loaded.push({ ...metadata, size: bytes.byteLength })
           totalPreloadedBytes += bytes.byteLength
+        } else if (matchesPattern) {
+          // Too large to preload, but still a hashed JS/CSS/font asset. Serving
+          // it raw from disk sent the 8MB main chunk uncompressed with a 1h TTL.
+          const bytes = new Uint8Array(await file.arrayBuffer())
+          const gz = compressDataIfAppropriate(bytes, metadata.type)
+          const etag = ENABLE_ETAG ? computeEtag(bytes) : undefined
+          routes[route] = createLargeAssetHandler(
+            filepath,
+            metadata.type,
+            gz,
+            etag,
+          )
+
+          skipped.push(metadata)
         } else {
           // Serve large or filtered files on-demand. HTML documents get the
           // runtime config stamped in (prerendered pages would otherwise carry

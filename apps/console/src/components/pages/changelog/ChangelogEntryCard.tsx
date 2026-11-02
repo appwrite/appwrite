@@ -23,6 +23,9 @@ export function ChangelogEntryCard({ entry }: ChangelogEntryCardProps) {
           to="/changelog/entry/$entry"
           params={{ entry: entry.slug }}
           className="block overflow-hidden rounded-xl border border-border bg-card/40"
+          // Same target as the title link below; keep it out of the tab order.
+          tabIndex={-1}
+          aria-hidden="true"
         >
           <img
             src={entry.cover}

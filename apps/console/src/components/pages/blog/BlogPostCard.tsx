@@ -26,7 +26,14 @@ export function BlogPostCard({
 
   return (
     <article className={cn('group flex h-full flex-col', className)}>
-      <Link to="/blog/post/$slug" params={{ slug: post.slug }} className="block">
+      {/* Same target as the title link below; keep it out of the tab order. */}
+      <Link
+        to="/blog/post/$slug"
+        params={{ slug: post.slug }}
+        className="block"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
         <BlogCover title={post.title} cover={post.cover} />
       </Link>
 

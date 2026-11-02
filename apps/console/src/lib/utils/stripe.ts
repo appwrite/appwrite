@@ -4,7 +4,10 @@
  * Handles Stripe.js initialization and theme configuration
  */
 
-import { loadStripe, type Stripe } from '@stripe/stripe-js'
+// The package root injects js.stripe.com on import (on every page, since this
+// module is in the main bundle). The pure entry only loads it when called.
+import { loadStripe } from '@stripe/stripe-js/pure'
+import type { Stripe } from '@stripe/stripe-js'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 
 let stripePromise: Promise<Stripe | null> | null = null
