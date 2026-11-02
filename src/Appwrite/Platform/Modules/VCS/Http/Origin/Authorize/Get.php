@@ -9,8 +9,10 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\State;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -74,6 +76,7 @@ class Get extends Action
             ->inject('response')
             ->inject('project')
             ->inject('platform')
+            ->inject('user')
             ->inject('vcsConfigured')
             ->inject('vcsFactory')
             ->callback($this->action(...));
@@ -85,6 +88,7 @@ class Get extends Action
         Response $response,
         Document $project,
         array $platform,
+        User $user,
         callable $vcsConfigured,
         VcsFactory $vcsFactory,
     ) {
@@ -92,21 +96,19 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'This endpoint is not implemented on this server. Please configure VCS (Version Control System) variables in .env file.');
         }
 
-        $projectId = $project->getId();
-
         $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
         if (empty($signingKey)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
 
-        // The callback is public and Origin performs no token exchange, so the
-        // state carries an HMAC binding the redirect targets to this project.
-        $state = [
-            'projectId' => $projectId,
-            'success' => $success,
-            'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), $signingKey),
-        ];
+        // The callback is public and Origin performs no token exchange, so it
+        // verifies this signature and that the console user who started the
+        // flow is the one finishing it.
+        $state = (string) \json_encode(State::create($project->getId(), $user->getId(), $success, $failure)->sign($signingKey));
+
+        if (\strlen($state) > APP_LIMIT_VCS_STATE) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');
+        }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $callback = $protocol . '://' . ($platform['consoleHostname'] ?? '') . '/v1/vcs/origin/callback';
@@ -117,7 +119,7 @@ class Get extends Action
             System::getEnv('_APP_VCS_ORIGIN_CLIENT_ID', ''),
             self::SCOPES,
             $callback,
-            \json_encode($state) ?: ''
+            $state
         );
 
         $response

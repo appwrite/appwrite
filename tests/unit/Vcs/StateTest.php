@@ -26,6 +26,61 @@ final class StateTest extends TestCase
         $this->assertFalse($verified->isExpired());
     }
 
+    public function testVerifiesEncodedState(): void
+    {
+        // Entire expects an opaque state token, so the signed state travels base64url-encoded
+        $state = State::create('project', 'user', 'https://console.test/success', 'https://console.test/failure');
+        $encoded = $state->encode(self::KEY);
+
+        $this->assertStringNotContainsString('{', $encoded);
+
+        $verified = State::verify($encoded, self::KEY);
+
+        $this->assertInstanceOf(State::class, $verified);
+        $this->assertSame('project', $verified->projectId);
+        $this->assertSame('user', $verified->userId);
+        $this->assertSame('https://console.test/success', $verified->success);
+        $this->assertSame($state->nonce, $verified->nonce);
+    }
+
+    public function testRejectsEncodedOtherKey(): void
+    {
+        $encoded = State::create('project', 'user', '', '')->encode(self::KEY);
+
+        $this->assertNull(State::verify($encoded, 'other-key'));
+    }
+
+    /**
+     * @return \Iterator<string, array{bool}>
+     */
+    public static function encodings(): \Iterator
+    {
+        yield 'json' => [false];
+        yield 'base64url' => [true];
+    }
+
+    /**
+     * A state signed over the project and the two redirect URLs alone is bound
+     * to no console user, carries no expiry and no nonce, so whoever holds it
+     * could complete someone else's installation.
+     */
+    #[DataProvider('encodings')]
+    public function testRejectsUnboundState(bool $encode): void
+    {
+        $unbound = (string) \json_encode([
+            'projectId' => 'project',
+            'success' => 'https://console.test/success',
+            'failure' => 'https://console.test/failure',
+            'signature' => \hash_hmac('sha256', (string) \json_encode(['project', 'https://console.test/success', 'https://console.test/failure']), self::KEY),
+        ]);
+
+        if ($encode) {
+            $unbound = \rtrim(\strtr(\base64_encode($unbound), '+/', '-_'), '=');
+        }
+
+        $this->assertNull(State::verify($unbound, self::KEY));
+    }
+
     public function testCreatesUniqueNonces(): void
     {
         $first = State::create('project', 'user', '', '');

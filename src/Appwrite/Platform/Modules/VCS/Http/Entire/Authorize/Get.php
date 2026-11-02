@@ -9,8 +9,10 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\State;
 use Utopia\Database\Document;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -57,6 +59,7 @@ class Get extends Action
             ->inject('response')
             ->inject('project')
             ->inject('platform')
+            ->inject('user')
             ->inject('vcsConfigured')
             ->inject('vcsFactory')
             ->callback($this->action(...));
@@ -68,6 +71,7 @@ class Get extends Action
         Response $response,
         Document $project,
         array $platform,
+        User $user,
         callable $vcsConfigured,
         VcsFactory $vcsFactory,
     ) {
@@ -75,26 +79,18 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'This endpoint is not implemented on this server. Please configure VCS (Version Control System) variables in .env file.');
         }
 
-        $projectId = $project->getId();
-
         $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
         if (empty($signingKey)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
         }
 
-        // The callback is public and Entire performs no token exchange, so the
-        // state carries an HMAC binding the redirect targets to this project.
-        $state = [
-            'projectId' => $projectId,
-            'success' => $success,
-            'failure' => $failure,
-            'signature' => \hash_hmac('sha256', \json_encode([$projectId, $success, $failure]), $signingKey),
-        ];
-
-        // Entire expects an opaque state token, so the signed JSON travels
-        // base64url-encoded and the callback decodes it. The callback takes
+        // The callback is public and Entire performs no token exchange, so it
+        // verifies this signature and that the console user who started the
+        // flow is the one finishing it. Entire expects an opaque state token,
+        // so the signed state travels base64url-encoded; the callback takes
         // the encoded state, so that is what has to fit its limit.
-        $state = \rtrim(\strtr(\base64_encode(\json_encode($state, JSON_UNESCAPED_SLASHES) ?: ''), '+/', '-_'), '=');
+        $state = State::create($project->getId(), $user->getId(), $success, $failure)->encode($signingKey);
+
         if (\strlen($state) > APP_LIMIT_VCS_STATE) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Redirect URLs are too long to complete the installation. Please use shorter success and failure URLs.');
         }
