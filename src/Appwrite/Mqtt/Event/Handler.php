@@ -21,18 +21,40 @@ class Handler
 
     public function handle(mixed $redis, string $channel, string $payload): void
     {
-        $event = \json_decode($payload, true);
-        if (!\is_array($event)) {
-            return;
+        $action = 'unknown';
+
+        // Never throws: an exception reaching phpredis leaves it reading without calling back again.
+        try {
+            $event = \json_decode($payload, true);
+            if (!\is_array($event)) {
+                return;
+            }
+
+            $projectId = (string) ($event['project'] ?? '');
+            $action = match ($event['action'] ?? '') {
+                Mqtt::ACTION_REVOKE => Mqtt::ACTION_REVOKE,
+                Mqtt::ACTION_UNSUBSCRIBE => Mqtt::ACTION_UNSUBSCRIBE,
+                default => 'deliver',
+            };
+
+            match ($action) {
+                Mqtt::ACTION_REVOKE => $this->revoke($projectId, $event),
+                Mqtt::ACTION_UNSUBSCRIBE => $this->unsubscribe($projectId, $event),
+                default => $this->deliver($projectId, $event),
+            };
+        } catch (\Throwable $error) {
+            try {
+                $this->mqtt->messagesFailed->add(1, ['action' => $action]);
+
+                $span = Span::init('mqtt.event');
+                $span->set('mqtt.action', $action);
+                $span->set('mqtt.is_broker', true);
+                $span->setError($error);
+                $span->finish();
+            } catch (\Throwable) {
+                // Reporting the failure must not throw past the guard.
+            }
         }
-
-        $projectId = (string) ($event['project'] ?? '');
-
-        match ($event['action'] ?? '') {
-            Mqtt::ACTION_REVOKE => $this->revoke($projectId, $event),
-            Mqtt::ACTION_UNSUBSCRIBE => $this->unsubscribe($projectId, $event),
-            default => $this->deliver($projectId, $event),
-        };
     }
 
     /**

@@ -16,6 +16,7 @@ use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Tests\Unit\Mqtt\Fakes\RecordingExporter;
 use Tests\Unit\Mqtt\Fakes\RecordingRedis;
+use Tests\Unit\Mqtt\Fakes\UnavailableTelemetry;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -98,7 +99,7 @@ final class HandlerTest extends TestCase
      * Build the broker and its event handler. While $blocking is set, the authorizer and the first
      * database touch park on the gate, as a read on a half-open connection would.
      */
-    private function boot(): void
+    private function boot(?NoTelemetry $telemetry = null): void
     {
         $this->accounts = new Accounts();
         $this->gate = new Channel(1);
@@ -150,7 +151,7 @@ final class HandlerTest extends TestCase
         });
         $container->set('getProjectDB', fn (): \Closure => fn (Document $project): Database => $this->database);
 
-        $mqtt = new Mqtt(new NoTelemetry(), new NullPubSub());
+        $mqtt = new Mqtt($telemetry ?? new NoTelemetry(), new NullPubSub());
         $this->handler = new Handler(
             $container,
             $mqtt,
@@ -228,6 +229,24 @@ final class HandlerTest extends TestCase
         while (!$done() && \microtime(true) < $deadline) {
             Coroutine::sleep(0.01);
         }
+    }
+
+    #[RunInSeparateProcess]
+    public function testNeverThrowsWhenAnEventFails(): void
+    {
+        // An exception escaping handle() reaches phpredis, which keeps reading but never calls back again.
+        run(function (): void {
+            $telemetry = new UnavailableTelemetry();
+            $this->boot($telemetry);
+
+            $this->eventHandler->handle(null, 'mqtt', $this->deliverEvent('nobody', 'hello'));
+
+            $this->assertSame([[1, ['action' => 'deliver']]], $telemetry->failed->added);
+            $spans = $this->spans->of('mqtt.event');
+            $this->assertCount(1, $spans);
+            $this->assertSame('deliver', $spans[0]->get('mqtt.action'));
+            $this->assertSame('telemetry unavailable', $spans[0]->getError()?->getMessage());
+        });
     }
 
     #[RunInSeparateProcess]
