@@ -3,7 +3,6 @@
 global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Config\Config;
@@ -14,27 +13,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
-use Utopia\Locale\Locale;
 use Utopia\System\System;
-
-Http::get('/v1/mock/tests/locale')
-    ->desc('Mock locale translation key')
-    ->groups(['mock'])
-    ->label('scope', 'public')
-    ->label('docs', false)
-    ->label('mock', true)
-    ->inject('locale')
-    ->inject('localeCodes')
-    ->inject('request')
-    ->inject('response')
-    ->action(function (Locale $locale, array $localeCodes, Request $request, Response $response) {
-        $localeParam = (string) $request->getParam('locale', $request->getHeaderLine('x-appwrite-locale', ''));
-        if (\in_array($localeParam, $localeCodes)) {
-            $locale->setDefault($localeParam);
-        }
-
-        $response->send($locale->getText('mock'));
-    });
 
 Http::get('/v1/mock/tests/avatars/favicon-page')
     ->desc('HTML page with a PNG favicon link for avatar favicon tests')

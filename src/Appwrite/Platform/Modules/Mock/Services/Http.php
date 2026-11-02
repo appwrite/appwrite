@@ -14,6 +14,7 @@ use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\General\OAuth2\Token\Get as G
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\General\OAuth2\User\Get as GetOAuth2User;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\General\OAuth2\User\NoEmail\Get as GetOAuth2UserNoEmail;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\General\OAuth2\User\Unverified\Get as GetOAuth2UserUnverified;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Locale\Get as GetLocale;
 use Appwrite\Platform\Modules\Mock\Http\Shutdown;
 use Utopia\Platform\Service;
 
@@ -24,6 +25,7 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         $this->addAction(GetOAuth2::getName(), GetOAuth2::class);
+        $this->addAction(GetLocale::getName(), GetLocale::class);
         $this->addAction(GetOAuth2Token::getName(), GetOAuth2Token::class);
         $this->addAction(GetOAuth2Photo::getName(), GetOAuth2Photo::class);
         $this->addAction(GetOAuth2PhotoRefreshed::getName(), GetOAuth2PhotoRefreshed::class);
