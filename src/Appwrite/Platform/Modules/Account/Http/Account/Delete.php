@@ -42,6 +42,16 @@ class Delete extends Action
                     )
                 ],
                 contentType: ContentType::NONE
-            ));
+            ))
+            ->inject('targetUser')
+            ->inject('project')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('publisherForDeletes')
+            ->inject('authorization')
+            ->inject('mqtt')
+            ->inject('queueForRealtime')
+            ->inject('usage');
     }
 }
