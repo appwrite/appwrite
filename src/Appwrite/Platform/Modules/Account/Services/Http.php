@@ -31,6 +31,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as Cr
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Create as CreateOAuth2Callback;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Get as GetOAuth2Callback;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Get as CreateOAuth2Session;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirect\Get as GetOAuth2Redirect;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Token\Create as CreateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Update as UpdateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
@@ -58,6 +59,7 @@ class Http extends Service
             ->addAction(CreateOAuth2Session::getName(), CreateOAuth2Session::class)
             ->addAction(GetOAuth2Callback::getName(), GetOAuth2Callback::class)
             ->addAction(CreateOAuth2Callback::getName(), CreateOAuth2Callback::class)
+            ->addAction(GetOAuth2Redirect::getName(), GetOAuth2Redirect::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
