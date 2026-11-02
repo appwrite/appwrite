@@ -57,6 +57,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Update as Upda
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Phone\Create as CreatePhoneToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\Create as CreateEmailVerification;
 use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\OTP\Create as CreateEmailVerificationOTP;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\OTP\Update as UpdateEmailVerificationOTP;
 use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\Update as UpdateEmailVerification;
 use Utopia\Platform\Service;
 
@@ -102,6 +103,7 @@ class Http extends Service
             ->addAction(CreateEmailVerification::getName(), CreateEmailVerification::class)
             ->addAction(UpdateEmailVerification::getName(), UpdateEmailVerification::class)
             ->addAction(CreateEmailVerificationOTP::getName(), CreateEmailVerificationOTP::class)
+            ->addAction(UpdateEmailVerificationOTP::getName(), UpdateEmailVerificationOTP::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
