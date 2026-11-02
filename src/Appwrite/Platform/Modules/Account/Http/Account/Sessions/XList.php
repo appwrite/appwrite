@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 
 class XList extends Action
 {
@@ -40,6 +41,11 @@ class XList extends Action
                     )
                 ],
                 contentType: ContentType::JSON,
-            ));
+            ))
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->inject('response')
+            ->inject('targetUser')
+            ->inject('locale')
+            ->inject('session');
     }
 }
