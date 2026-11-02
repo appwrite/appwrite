@@ -14,8 +14,8 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         $this
-            ->addAction(ListNotifications::getName(), ListNotifications::class)
-            ->addAction(UpdateNotification::getName(), UpdateNotification::class)
-            ->addAction(GetAppwriteLogo::getName(), GetAppwriteLogo::class);
+            ->addAction('listNotifications', ListNotifications::class)
+            ->addAction('updateNotification', UpdateNotification::class)
+            ->addAction('getNotificationLogo', GetAppwriteLogo::class);
     }
 }

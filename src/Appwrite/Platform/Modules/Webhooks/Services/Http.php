@@ -18,14 +18,14 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Hooks
-        $this->addAction(Init::getName(), Init::class);
+        $this->addAction('init', Init::class);
 
         // Webhooks
-        $this->addAction(CreateWebhook::getName(), CreateWebhook::class);
-        $this->addAction(ListWebhooks::getName(), ListWebhooks::class);
-        $this->addAction(GetWebhook::getName(), GetWebhook::class);
-        $this->addAction(DeleteWebhook::getName(), DeleteWebhook::class);
-        $this->addAction(UpdateWebhook::getName(), UpdateWebhook::class);
-        $this->addAction(UpdateWebhookSecret::getName(), UpdateWebhookSecret::class);
+        $this->addAction('createWebhook', CreateWebhook::class);
+        $this->addAction('listWebhooks', ListWebhooks::class);
+        $this->addAction('getWebhook', GetWebhook::class);
+        $this->addAction('deleteWebhook', DeleteWebhook::class);
+        $this->addAction('updateWebhook', UpdateWebhook::class);
+        $this->addAction('updateWebhookSecret', UpdateWebhookSecret::class);
     }
 }

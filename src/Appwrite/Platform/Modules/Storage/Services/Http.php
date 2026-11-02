@@ -25,21 +25,21 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Buckets
-        $this->addAction(CreateBucket::getName(), CreateBucket::class);
-        $this->addAction(GetBucket::getName(), GetBucket::class);
-        $this->addAction(ListBuckets::getName(), ListBuckets::class);
-        $this->addAction(UpdateBucket::getName(), UpdateBucket::class);
-        $this->addAction(DeleteBucket::getName(), DeleteBucket::class);
+        $this->addAction('createBucket', CreateBucket::class);
+        $this->addAction('getBucket', GetBucket::class);
+        $this->addAction('listBuckets', ListBuckets::class);
+        $this->addAction('updateBucket', UpdateBucket::class);
+        $this->addAction('deleteBucket', DeleteBucket::class);
 
         // Files
-        $this->addAction(CreateFile::getName(), CreateFile::class);
-        $this->addAction(GetFile::getName(), GetFile::class);
-        $this->addAction(ListFiles::getName(), ListFiles::class);
-        $this->addAction(UpdateFile::getName(), UpdateFile::class);
-        $this->addAction(DeleteFile::getName(), DeleteFile::class);
-        $this->addAction(GetFilePreview::getName(), GetFilePreview::class);
-        $this->addAction(GetFileDownload::getName(), GetFileDownload::class);
-        $this->addAction(GetFileView::getName(), GetFileView::class);
-        $this->addAction(GetFileForPush::getName(), GetFileForPush::class);
+        $this->addAction('createFile', CreateFile::class);
+        $this->addAction('getFile', GetFile::class);
+        $this->addAction('listFiles', ListFiles::class);
+        $this->addAction('updateFile', UpdateFile::class);
+        $this->addAction('deleteFile', DeleteFile::class);
+        $this->addAction('getFilePreview', GetFilePreview::class);
+        $this->addAction('getFileDownload', GetFileDownload::class);
+        $this->addAction('getFileView', GetFileView::class);
+        $this->addAction('getFileForPush', GetFileForPush::class);
     }
 }
