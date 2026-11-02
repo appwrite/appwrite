@@ -236,7 +236,10 @@ class Action extends AppwriteAction
      * Scoped by the collection schema (attributes + indexes), its permissions
      * and documentSecurity, the caller's authorization roles, the exact query
      * set, and the field type — so users with different permissions never
-     * share entries and permission changes take effect immediately.
+     * share entries and schema or collection permission changes take effect
+     * immediately. A document permission change leaves the field identical, so
+     * it takes effect through the collection's ListCache version instead, which
+     * every purge changes and every read saves its fields under.
      *
      * @param Document $collection Collection document (for schema and permissions hash)
      * @param array<mixed> $roles Caller authorization roles

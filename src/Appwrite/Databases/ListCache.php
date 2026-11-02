@@ -9,14 +9,16 @@ use Utopia\Console;
 /**
  * A collection's cached list responses, held in one cache hash, and a version every purge changes.
  *
- * A list read takes the version before it queries and saves its result only while the version is unchanged, so a
- * read that ran while a purge happened is not cached.
+ * A list read takes the version before it queries and both reads and writes its fields under that version, so a
+ * read that ran while a purge happened is stored where no later read looks, however its write and that purge
+ * interleave.
  */
 readonly class ListCache
 {
     /**
-     * Seconds a version is read back for. It only has to stay the same across one list request: a version that
-     * expires between its two reads reads as changed, and a purge after it expired writes a new one.
+     * Seconds a version is read back for, and the lifetime of the hash a list read is written to. A version only
+     * has to stay the same across one list request: a version that expires between its two reads reads as changed,
+     * and a purge after it expired writes a new one.
      */
     private const int VERSION_TTL = 86400;
 
@@ -39,7 +41,7 @@ readonly class ListCache
     }
 
     /**
-     * The version to save a list read under, taken before its query, or null when the cache cannot tell.
+     * The version to read and save a list read under, taken before its query, or null when the cache cannot tell.
      */
     public function getVersion(): ?string
     {
@@ -53,18 +55,45 @@ readonly class ListCache
     }
 
     /**
-     * Save fields of a list read unless a purge changed the version since it was taken.
+     * A field of a list response saved under the given version, or null when it is not cached. A read without a
+     * version has nothing it may read, as it cannot tell which purges a cached field predates.
+     */
+    public function load(string $field, int $ttl, ?string $version): mixed
+    {
+        if ($version === null) {
+            return null;
+        }
+
+        try {
+            $value = $this->cache->load($this->key, $ttl, $this->getField($field, $version));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $value === false ? null : $value;
+    }
+
+    /**
+     * Save fields of a list read under the version it took.
+     *
+     * A purge changes the version, so fields written under one taken before it are read by nobody, and the next
+     * purge drops them with the rest of the hash.
      *
      * @param array<string, mixed> $fields
      */
     public function save(array $fields, ?string $version): void
     {
-        if ($version === null || $this->getVersion() !== $version) {
+        if ($version === null) {
             return;
         }
 
+        $versioned = [];
+        foreach ($fields as $field => $value) {
+            $versioned[$this->getField($field, $version)] = $value;
+        }
+
         try {
-            $this->cache->saveMany($this->key, $fields);
+            $this->cache->saveMany($this->key, $versioned, ttl: self::VERSION_TTL);
         } catch (\Throwable) {
         }
     }
@@ -74,7 +103,7 @@ readonly class ListCache
      *
      * A purge that fails before the write refuses it, so nothing is stored while a response cached before it
      * survives. The purge after the write clears a response cached while it ran; it is best-effort, as the write is
-     * already stored.
+     * already stored, and a read still to write its fields has already taken the version it saves them under.
      *
      * @template T
      * @param array<ListCache> $caches
@@ -103,6 +132,11 @@ readonly class ListCache
         }
 
         return $result;
+    }
+
+    private function getField(string $field, string $version): string
+    {
+        return $field . ':' . $version;
     }
 
     private function getVersionKey(): string
