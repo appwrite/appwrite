@@ -8,6 +8,8 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
 class Delete extends Action
@@ -43,6 +45,14 @@ class Delete extends Action
                     )
                 ],
                 contentType: ContentType::NONE
-            ));
+            ))
+            ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Target ID.', false, ['dbForProject'])
+            ->inject('queueForEvents')
+            ->inject('publisherForDeletes')
+            ->inject('user')
+            ->inject('request')
+            ->inject('response')
+            ->inject('dbForProject')
+            ->inject('authorization');
     }
 }
