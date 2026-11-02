@@ -147,7 +147,7 @@ abstract class Adapter
      * @param  array<string, mixed>  $attributes
      * @return array<string, mixed>
      */
-    private function telemetryAttributes(Message $message, array $attributes = []): array
+    protected function telemetryAttributes(Message $message, array $attributes = []): array
     {
         if ($message->getOrigin() !== null) {
             $attributes['origin'] = $message->getOrigin();

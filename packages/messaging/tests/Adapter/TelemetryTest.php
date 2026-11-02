@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Utopia\Messaging\Tests\Adapter;
 
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
+use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
@@ -103,6 +105,34 @@ final class TelemetryTest extends Base
         ], $telemetry->records);
     }
 
+    public function testRecordsEmailTemplate(): void
+    {
+        $telemetry = new RecordingTelemetry();
+        $adapter = new TelemetryEmailAdapter('success');
+        $adapter->setTelemetry($telemetry);
+
+        $adapter->send($this->email()->setOrigin('internal')->setTemplate('alert'));
+        $adapter->send($this->email());
+
+        $this->assertSame([
+            ['amount' => 1, 'attributes' => ['result' => 'success', 'origin' => 'internal', 'type' => 'email', 'provider' => 'test', 'template' => 'alert']],
+            ['amount' => 1, 'attributes' => ['result' => 'success', 'type' => 'email', 'provider' => 'test']],
+        ], $telemetry->records);
+    }
+
+    public function testRecordsEmailTemplateOnFailure(): void
+    {
+        $telemetry = new RecordingTelemetry();
+        $adapter = new TelemetryEmailAdapter('failure');
+        $adapter->setTelemetry($telemetry);
+
+        $adapter->send($this->email()->setTemplate('verification'));
+
+        $this->assertSame([
+            ['amount' => 1, 'attributes' => ['result' => 'failure', 'type' => 'email', 'provider' => 'test', 'template' => 'verification']],
+        ], $telemetry->records);
+    }
+
     public function testDefaultTelemetryDoesNothing(): void
     {
         $adapter = new TelemetryAdapter([
@@ -116,6 +146,49 @@ final class TelemetryTest extends Base
         $response = $adapter->send(new SMS(['+1'], 'Hello'));
 
         $this->assertSame(1, $response['deliveredTo']);
+    }
+
+    private function email(): Email
+    {
+        return new Email(
+            to: ['john@appwrite.io'],
+            subject: 'Hello',
+            content: 'Hello',
+            fromName: 'Appwrite',
+            fromEmail: 'team@appwrite.io',
+        );
+    }
+}
+
+class TelemetryEmailAdapter extends EmailAdapter
+{
+    public function __construct(private readonly string $status)
+    {
+        parent::__construct();
+    }
+
+    public function getName(): string
+    {
+        return 'Test';
+    }
+
+    public function getMaxMessagesPerRequest(): int
+    {
+        return 1;
+    }
+
+    /**
+     * @return array{deliveredTo: int, type: string, results: array<array<string, mixed>>}
+     */
+    protected function process(Email $message): array
+    {
+        return [
+            'deliveredTo' => $this->status === 'success' ? 1 : 0,
+            'type' => 'email',
+            'results' => [
+                ['recipient' => 'john@appwrite.io', 'status' => $this->status, 'error' => ''],
+            ],
+        ];
     }
 }
 
