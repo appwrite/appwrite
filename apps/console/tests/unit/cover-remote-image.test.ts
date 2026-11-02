@@ -62,7 +62,14 @@ describe('isPublicCoverImageAddress', () => {
     '::ffff:127.0.0.1',
     '::ffff:7f00:1',
     '64:ff9b::7f00:1',
+    '100::1',
+    '2001::1',
+    '2001:20::1',
     '2001:db8::1',
+    '2002::1',
+    '3fff::1',
+    '4000::1',
+    'e000::1',
     'fc00::1',
     'fd00::1',
     'fe80::1',
@@ -77,6 +84,7 @@ describe('isPublicCoverImageAddress', () => {
     '93.184.216.34',
     '172.32.0.1',
     '2606:2800:220:1:248:1893:25c8:1946',
+    '2a00:1450:4001:80f::200e',
   ])('allows %s', (address) => {
     expect(isPublicCoverImageAddress(address)).toBe(true)
   })

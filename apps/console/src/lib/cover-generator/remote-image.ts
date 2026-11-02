@@ -151,13 +151,9 @@ function isPublicIpv4(octets: number[]): boolean {
 function isPublicIpv6(groups: number[]): boolean {
   const [first, second] = groups
 
-  if (groups.every((group) => group === 0)) return false // unspecified
-  if (groups.slice(0, 7).every((group) => group === 0) && groups[7] === 1) {
-    return false // loopback
-  }
-
   // IPv4-mapped (::ffff:a.b.c.d) and IPv4-compatible (::a.b.c.d) addresses
-  // reach the embedded IPv4 destination, so classify that instead.
+  // reach the embedded IPv4 destination, so classify that instead. `::` and
+  // `::1` land here too, as 0.0.0.0 and 0.0.0.1.
   if (
     groups.slice(0, 5).every((group) => group === 0) &&
     (groups[5] === 0xffff || groups[5] === 0)
@@ -170,13 +166,17 @@ function isPublicIpv6(groups: number[]): boolean {
     ])
   }
 
-  if (first === 0x0064 && second === 0xff9b) return false // NAT64
+  // Only global unicast is routable on the public internet. Allowing that one
+  // block and subtracting its special-use ranges rejects by default: NAT64,
+  // unique local, link-local, multicast and every unassigned or reserved
+  // prefix (`0100::/64`, `4000::/3`, …) all fall outside it.
+  if ((first & 0xe000) !== 0x2000) return false
+
   if (first === 0x2001 && second === 0x0000) return false // Teredo
+  if (first === 0x2001 && (second & 0xfff0) === 0x0020) return false // ORCHIDv2
   if (first === 0x2001 && second === 0x0db8) return false // documentation
   if (first === 0x2002) return false // 6to4
-  if ((first & 0xfe00) === 0xfc00) return false // unique local
-  if ((first & 0xffc0) === 0xfe80) return false // link-local
-  if ((first & 0xff00) === 0xff00) return false // multicast
+  if (first === 0x3fff && (second & 0xf000) === 0) return false // documentation
 
   return true
 }
