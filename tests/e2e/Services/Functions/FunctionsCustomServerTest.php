@@ -689,6 +689,66 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(201, $variable['headers']['status-code']);
     }
 
+    public function testUpdateFunctionPreservesOmittedSettings(): void
+    {
+        $function = $this->createFunction([
+            'functionId' => Id::unique(),
+            'name' => 'Function Settings Test',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'timeout' => 45,
+            'enabled' => false,
+            'logging' => false,
+            'deploymentRetention' => 7,
+            'commands' => 'npm install',
+            'events' => ['users.*.create'],
+            'schedule' => '0 0 1 1 *',
+            'execute' => ['any'],
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'] ?? '';
+        $this->assertEquals(45, $function['body']['timeout']);
+        $this->assertFalse($function['body']['enabled']);
+        $this->assertFalse($function['body']['logging']);
+        $this->assertEquals(7, $function['body']['deploymentRetention']);
+        $this->assertEquals('npm install', $function['body']['commands']);
+        $this->assertEquals(['users.*.create'], $function['body']['events']);
+        $this->assertEquals('0 0 1 1 *', $function['body']['schedule']);
+        $this->assertEquals(['any'], $function['body']['execute']);
+
+        // Perform a partial PUT update omitting those fields
+        $updated = $this->updateFunction($functionId, [
+            'name' => 'Function Settings Updated',
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals('Function Settings Updated', $updated['body']['name']);
+        $this->assertEquals(45, $updated['body']['timeout']);
+        $this->assertFalse($updated['body']['enabled']);
+        $this->assertFalse($updated['body']['logging']);
+        $this->assertEquals(7, $updated['body']['deploymentRetention']);
+        $this->assertEquals('npm install', $updated['body']['commands']);
+        $this->assertEquals(['users.*.create'], $updated['body']['events']);
+        $this->assertEquals('0 0 1 1 *', $updated['body']['schedule']);
+        $this->assertEquals(['any'], $updated['body']['execute']);
+
+        // Assert values are preserved in the database
+        $fetched = $this->getFunction($functionId);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals('Function Settings Updated', $fetched['body']['name']);
+        $this->assertEquals(45, $fetched['body']['timeout']);
+        $this->assertFalse($fetched['body']['enabled']);
+        $this->assertFalse($fetched['body']['logging']);
+        $this->assertEquals(7, $fetched['body']['deploymentRetention']);
+        $this->assertEquals('npm install', $fetched['body']['commands']);
+        $this->assertEquals(['users.*.create'], $fetched['body']['events']);
+        $this->assertEquals('0 0 1 1 *', $fetched['body']['schedule']);
+        $this->assertEquals(['any'], $fetched['body']['execute']);
+
+        $this->deleteFunction($functionId);
+    }
+
     public function testUpdateVariableDescription(): void
     {
         $settings = [
