@@ -116,6 +116,21 @@ final class HandlerTest extends TestCase
         $this->assertSame([], $this->arrivalDelay->recorded);
     }
 
+    public function testSkipsTransferOfProjectWithoutConnectionsOnThisPod(): void
+    {
+        // Console events reach the console region only; a project hosted elsewhere has no connections or database here.
+        $event = \json_decode($this->payload(\date(DATE_ATOM)), true);
+        $event['project'] = 'console';
+        $event['permissionsChanged'] = true;
+        $event['data']['events'] = ['projects.remote.update.team'];
+        $event['data']['channels'] = ['console', 'projects.remote'];
+
+        $outcome = $this->handler->handle(null, 'realtime', \json_encode($event));
+
+        $this->assertSame('no_subscriber', $outcome['result']);
+        $this->assertSame([], $this->failed->added);
+    }
+
     public function testDropsPayloadThatIsNotAnEvent(): void
     {
         $outcome = $this->handler->handle(null, 'realtime', 'not json');

@@ -386,6 +386,11 @@ class Handler
             return [];
         }
 
+        // Console events reach only the console region; a project hosted elsewhere has no connections or database here.
+        if (empty($this->realtime->getProjectConnections($projectId))) {
+            return [];
+        }
+
         // Set on timeout or failure so a late check leaves state alone.
         $abandoned = false;
 
