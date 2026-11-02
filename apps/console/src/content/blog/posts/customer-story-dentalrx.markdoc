@@ -26,7 +26,7 @@ faqs:
 
 From the outside, most medical apps look simple: a search bar, a few lists, a printable report. Nickolas Steel knows the hard part sits underneath, in the drug database.
 
-Nickolas is a clinically trained pharmacist with more than ten years of hospital experience. Their day job is in hospital informatics, where they manage the drug database and the backend engineering around it.
+Nickolas is a clinically trained pharmacist with more than ten years of hospital experience. His day job is in hospital informatics, where he manages the regional drug database and the backend engineering around it.
 
 > "The front end is easy enough. The hard part is all the database and compliance."
 
@@ -34,9 +34,9 @@ Nickolas put that expertise behind [DentalRx](https://dentalrx.ca/dental-app), a
 
 # The challenge
 
-Nickolas grew up close to dentistry. A parent is a dental hygienist, and other relatives work in the field. With a pharmacy background on top of that, the idea was straightforward: dentists treat patients on all kinds of medications, and they should understand a drug before they prescribe it or treat someone who takes it.
+Nickolas grew up close to dentistry. A parent is a dental hygienist, and other relatives work in the field. With a pharmacy background on top of that, the idea was straightforward: help dentists prescribe safely and effectively, so they can help more patients in their practice.
 
-Building that reference is a database problem first. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**, the core record each drug starts from. Brand names, generic names, and drug classes are separate tables attached to that concept. A single drug ends up as a web of relationships, and that web differs from country to country. Canada and the United States regulate and classify drugs differently, and the same drug is often sold under different brand names.
+Building that reference is a database problem first. Most drug databases, including the hospital systems Nickolas manages, are organized around a **drug concept**, the core record each drug starts from. Brand names, generic names, and drug classes are separate tables attached to that concept. A single drug ends up as a web of relationships, and that web differs from country to country. Canada and the United States regulate and classify some drugs differently, and the same drug is often sold under different brand names.
 
 > "Postgres is the gold standard of how drug databases are set up."
 
@@ -56,7 +56,7 @@ DentalRx is free. Nickolas treats it as a contribution to the dental and healthc
 
 ![DentalRx search result for amoxicillin with drug class, dental drug interactions, and dental pearls](/images/blog/customer-story-dentalrx/drug-search.avif "contain")
 
-**Treatment guidelines** cover common dental conditions, from dry socket to odontogenic infections. Each one has a quick chairside summary and a detailed view with references. Dental students use them the most, since experienced dentists rarely need to look them up.
+**Treatment guidelines** cover common dental conditions, from dry socket treatment to odontogenic infections. Each one has a quick chairside summary and a detailed view with references. Dental students use them the most, since experienced dentists rarely need to look them up.
 
 ![DentalRx treatment guideline for odontogenic infections and abscess in the chairside view](/images/blog/customer-story-dentalrx/guidelines.avif "contain")
 
@@ -80,7 +80,7 @@ The **iOS and Android apps** carry the same tools, with the clinic dashboard, se
 
 All of those tools draw on the same drug database. In the original stack, that database lived in Firebase, whose document model didn't fit the data.
 
-Fixing that started with the app. DentalRx was built in FlutterFlow, which can export a project's code, and with today's AI coding tools, Nickolas could take full ownership of that Flutter codebase. Once the app was in their hands, the backend could change too, and Nickolas went looking for something more mature than Firebase.
+Fixing that started with the app. DentalRx was built in FlutterFlow, which can export a project's code, and with today's AI coding tools, Nickolas could take full ownership of that Flutter codebase. Once the app was in his hands, the backend could change too, and Nickolas went looking for something more mature than Firebase.
 
 Appwrite's [migration path from Firebase](/docs/advanced/migrations/firebase) is what first caught the team's attention. Its open-source foundation made the decision easy, and the team never evaluated other Postgres providers like Supabase or Neon.
 
@@ -115,7 +115,7 @@ Beyond the database, DentalRx uses almost every Appwrite product. The only one i
 - **[Appwrite Sites](/docs/products/sites)** to host the Flutter web app as a static build, while the same Flutter codebase ships to the App Store and Google Play
 - **[Appwrite Firewall](/docs/products/firewall)** for traffic rules, which the team has started setting up from the Console's built-in presets for OTP abuse protection, regional compliance, and scraping prevention
 
-Domains are the last piece. DentalRx still manages most of its domains on Cloudflare, and Nickolas wants to bring them into Appwrite so the entire stack lives in one place. That matters for how they work: once everything is in Appwrite, an AI agent can make changes across the whole stack through the [Appwrite CLI](/docs/tooling/command-line/installation).
+Domains are the last piece. DentalRx still manages most of its domains on Cloudflare, and Nickolas wants to bring them into Appwrite so the entire stack lives in one place. That matters for how he works: once everything is in Appwrite, an AI agent can make changes across the whole stack through the [Appwrite CLI](/docs/tooling/command-line/installation).
 
 > "I can literally just point the agent to the CLI and be like, hey, make these changes, go ahead and do what you're scoped to do, and it'll just do it. Then I can just keep my work to the terminal or keep my work to the IDE."
 
@@ -125,7 +125,7 @@ DentalRx has passed **6,000 lifetime users**, a mix of dental students, dental p
 
 The biggest feature on the roadmap is prescriptions, which is temporarily switched off while it's rebuilt on the new Postgres backend. On top of each drug concept, the team is attaching the same building blocks hospitals use for prescribing. The data is ready. What remains is a clinical review of every entry and working through the legal requirements of prescribing.
 
-Along the way, Nickolas has become one of Appwrite's most vocal advocates, calling it a hidden gem, recommending it to every developer they know, and moving a dental practice they work with onto it as well. For a small team, the reason comes down to speed.
+Along the way, Nickolas has become one of Appwrite's most vocal advocates, calling it a hidden gem, recommending it to every developer he knows, and moving a dental tech startup he works with onto it as well. For a small team, the reason comes down to speed.
 
 > "We're a small team, so every extra SaaS or layer of infrastructure slows down how fast we can ship. With Appwrite, everything we need is already there, so there's nothing between building something and shipping it. If you're bootstrapping your project, or building your startup, that's a huge win."
 
