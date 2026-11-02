@@ -30,6 +30,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Phone\Update as UpdatePhone;
 use Appwrite\Platform\Modules\Account\Http\Account\Prefs\Get as GetPrefs;
 use Appwrite\Platform\Modules\Account\Http\Account\Prefs\Update as UpdatePrefs;
 use Appwrite\Platform\Modules\Account\Http\Account\Recovery\Create as CreateRecovery;
+use Appwrite\Platform\Modules\Account\Http\Account\Recovery\OTP\Create as CreateRecoveryOTP;
 use Appwrite\Platform\Modules\Account\Http\Account\Recovery\Update as UpdateRecovery;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Anonymous\Create as CreateAnonymousSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Bulk\Delete as DeleteSessions;
@@ -92,6 +93,7 @@ class Http extends Service
             ->addAction(UpdateStatus::getName(), UpdateStatus::class)
             ->addAction(CreateRecovery::getName(), CreateRecovery::class)
             ->addAction(UpdateRecovery::getName(), UpdateRecovery::class)
+            ->addAction(CreateRecoveryOTP::getName(), CreateRecoveryOTP::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
