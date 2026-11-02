@@ -2,14 +2,21 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email;
 
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -79,6 +86,53 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('proofForToken')
-            ->inject('authorization');
+            ->inject('authorization')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $userId,
+        string $secret,
+        Response $response,
+        User $user,
+        Database $dbForProject,
+        Event $queueForEvents,
+        ProofsToken $proofForToken,
+        Authorization $authorization,
+    ): void {
+        /** @var User $profile */
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION, $secret, $proofForToken);
+
+        if (!$verifiedToken) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $profile = $dbForProject->updateDocument('users', $profile->getId(), new Document(['emailVerification' => true]));
+
+        $user->setAttributes($profile->getArrayCopy());
+
+        $verification = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+
+        /**
+         * We act like we're updating and validating
+         *  the verification token but actually we don't need it anymore.
+         */
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        $queueForEvents
+            ->setParam('userId', $userId)
+            ->setParam('tokenId', $verification->getId())
+            ->setPayload($response->showSensitive(fn () => $response->output($verification, Response::MODEL_TOKEN)), sensitive: ['secret']);
+
+        $response->dynamic($verification, Response::MODEL_TOKEN);
     }
 }
