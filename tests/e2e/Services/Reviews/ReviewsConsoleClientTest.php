@@ -21,14 +21,14 @@ final class ReviewsConsoleClientTest extends Scope
 
     private static array $cachedInstallationId = [];
 
-    protected function setupInstallation(): string
+    protected function setupInstallation(?string $projectId = null): string
     {
         // Same gate as the VCSGitHub suite: without the GitHub App there is no installation to use.
         if (System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY') === 'disabled') {
             $this->markTestSkipped('VCS is not enabled.');
         }
 
-        $projectId = $this->getProject()['$id'];
+        $projectId ??= $this->getProject()['$id'];
 
         if (!empty(self::$cachedInstallationId[$projectId])) {
             return self::$cachedInstallationId[$projectId];
@@ -304,6 +304,78 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame(0, $repositories['body']['total']);
     }
 
+    public function testSeveralProjectsReviewOneRepository(): void
+    {
+        $installationId = $this->setupInstallation();
+        $otherProjectId = $this->getProject(true)['$id'];
+        $otherInstallationId = $this->setupInstallation($otherProjectId);
+        $pullRequest = \random_int(1000, 9_999_999);
+        $head = \str_repeat('d', 40);
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // Both projects turn code review on for the same repository
+        $repository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $repository['headers']['status-code']);
+
+        $otherRepository = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders($otherProjectId), [
+            'installationId' => $otherInstallationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(201, $otherRepository['headers']['status-code']);
+        $this->assertNotSame($repository['body']['$id'], $otherRepository['body']['$id']);
+
+        // Each project lists only its own
+        $repositories = $this->client->call(Client::METHOD_GET, '/reviews/repositories', $this->projectHeaders($otherProjectId));
+        $this->assertSame(1, $repositories['body']['total']);
+        $this->assertSame($otherRepository['body']['$id'], $repositories['body']['repositories'][0]['$id']);
+
+        // One pull request queues a review in each project
+        $this->sendPullRequestEvent('opened', $pullRequest, $head);
+
+        $reviews = $this->listReviews($pullRequest);
+        $this->assertSame(1, $reviews['body']['total']);
+        $this->assertSame($repository['body']['$id'], $reviews['body']['reviews'][0]['repositoryId']);
+
+        $otherReviews = $this->listReviews($pullRequest, [], $otherProjectId);
+        $this->assertSame(1, $otherReviews['body']['total']);
+        $this->assertSame($otherRepository['body']['$id'], $otherReviews['body']['reviews'][0]['repositoryId']);
+
+        // Turning it off in one project leaves the other reviewing
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $otherRepository['body']['$id'], $this->projectHeaders($otherProjectId));
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $nextPullRequest = $pullRequest + 1;
+        $this->sendPullRequestEvent('opened', $nextPullRequest, $head);
+        $this->assertSame(1, $this->listReviews($nextPullRequest)['body']['total']);
+        $this->assertSame(0, $this->listReviews($nextPullRequest, [], $otherProjectId)['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+
+        // A project still turns code review on for a repository only once
+        $duplicate = $this->client->call(Client::METHOD_POST, '/reviews/repositories', $this->projectHeaders(), [
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+        ]);
+        $this->assertSame(409, $duplicate['headers']['status-code']);
+        $this->assertSame('review_repository_already_exists', $duplicate['body']['type']);
+
+        // A project cannot read the other project's repository
+        $other = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repository['body']['$id'] . '/pulls/' . $pullRequest . '/reviews', [
+            'projectId' => $otherProjectId,
+        ]);
+        $this->assertSame(404, $other['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repository['body']['$id'], $this->projectHeaders());
+    }
+
     public function testCommentChat(): void
     {
         $projectId = $this->getProject()['$id'];
@@ -574,11 +646,11 @@ final class ReviewsConsoleClientTest extends Scope
         $this->client->call(Client::METHOD_DELETE, '/reviews/repositories/' . $repository['body']['$id'], $this->projectHeaders());
     }
 
-    private function projectHeaders(): array
+    private function projectHeaders(?string $projectId = null): array
     {
         return \array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId ?? $this->getProject()['$id'],
         ], $this->getHeaders());
     }
 
@@ -593,9 +665,9 @@ final class ReviewsConsoleClientTest extends Scope
         ], $body);
     }
 
-    private function listReviews(int $pullRequest, array $queries = []): array
+    private function listReviews(int $pullRequest, array $queries = [], ?string $projectId = null): array
     {
-        $reviews = $this->client->call(Client::METHOD_GET, '/reviews', $this->projectHeaders(), [
+        $reviews = $this->client->call(Client::METHOD_GET, '/reviews', $this->projectHeaders($projectId), [
             'queries' => [
                 Query::equal('providerPullRequestId', [(string) $pullRequest])->toString(),
                 ...$queries,

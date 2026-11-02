@@ -82,8 +82,9 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Code review supports GitHub repositories only.');
         }
 
-        // One project reviews a repository, so a pull request is never reviewed twice.
+        // Several projects may review the same repository, each once.
         $existing = $authorization->skip(fn () => $dbForPlatform->findOne('repositories', [
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::equal('providerRepositoryId', [$providerRepositoryId]),
             Query::equal('resourceType', [RESOURCE_TYPE_REVIEWS]),
         ]));
@@ -104,11 +105,11 @@ class Create extends Action
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
-        // The id is derived from the GitHub repository, so two concurrent creates collide on it
-        // instead of both passing the check above.
+        // The id is derived from the project and the GitHub repository, so two concurrent creates
+        // in one project collide on it instead of both passing the check above.
         try {
             $repository = $authorization->skip(fn () => $dbForPlatform->createDocument('repositories', new Document([
-                '$id' => Id::custom('reviews-' . $providerRepositoryId),
+                '$id' => Id::custom('reviews-' . $project->getSequence() . '-' . $providerRepositoryId),
                 '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getSequence(),
