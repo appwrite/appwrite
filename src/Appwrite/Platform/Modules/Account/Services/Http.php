@@ -23,6 +23,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Update as UpdatePass
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification\Update as UpdatePasskeyVerification;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\XList as ListPasskeys;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Bulk\Delete as DeleteSessions;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Delete as DeleteSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Get as GetSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
@@ -42,6 +43,7 @@ class Http extends Service
             ->addAction(ListSessions::getName(), ListSessions::class)
             ->addAction(DeleteSessions::getName(), DeleteSessions::class)
             ->addAction(GetSession::getName(), GetSession::class)
+            ->addAction(DeleteSession::getName(), DeleteSession::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
