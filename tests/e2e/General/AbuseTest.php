@@ -756,6 +756,22 @@ final class AbuseTest extends Scope
         ]);
         $this->assertSame(429, $response['headers']['status-code'], 'An IP over its failures is refused, even with the right password');
 
+        // Refused requests are not failed attempts: an IP over its cap must not spend another account's quota.
+        $victim = 'victim.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($ip), [
+                'email' => $victim,
+                'password' => 'wrong-password',
+            ]);
+            $this->assertSame(429, $response['headers']['status-code']);
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers('2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':2'), [
+            'email' => $victim,
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(401, $response['headers']['status-code'], 'The refused attempts left the account its own quota');
+
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers('2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':1'), [
             'email' => $email,
             'password' => $password,

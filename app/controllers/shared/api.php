@@ -621,6 +621,7 @@ Http::init()
         $limits = $route->getLabel('abuse', []);
         $params = $limits === [] ? [] : Limit::params($route, $request, $project, $user, $pathParams);
         $closestLimit = null;
+        $reserved = [];
 
         foreach ($limits as $limit) {
             $max = $limit->limit * $multiplier;
@@ -647,7 +648,21 @@ Http::init()
             }
 
             if ($isRateLimited) {
+                // A refused request is not a failed attempt. Without this, an IP over its cap would keep spending
+                // the per-account quota of every account it tries, locking those accounts out from everywhere.
+                foreach ($reserved as $hit) {
+                    try {
+                        $timelimit($hit->key, $hit->limit, $hit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->withParams($params)->release());
+                    } catch (\Throwable $th) {
+                        \error_log((string) $th);
+                    }
+                }
+
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+
+            if ($shouldCheckAbuse && $limit->failures) {
+                $reserved[] = $limit;
             }
         }
     });
