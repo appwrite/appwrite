@@ -139,7 +139,7 @@ if (!function_exists('getConsoleDB')) {
         /** @var Group $pools */
         $pools = $register->get('pools');
 
-        return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, getCache(), new Authorization()))->platform(metadata: [
+        return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, getCache(), new Authorization()))->platform(APP_DATABASE_TIMEOUT_MILLISECONDS_API, metadata: [
             'host' => \gethostname(),
             'project' => '_console',
         ]);
@@ -169,7 +169,7 @@ if (!function_exists('getProjectDB')) {
             return getConsoleDB();
         }
 
-        return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, getCache(), new Authorization()))->project($project, metadata: [
+        return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, getCache(), new Authorization()))->project($project, APP_DATABASE_TIMEOUT_MILLISECONDS_API, metadata: [
             'host' => \gethostname(),
             'project' => $project->getId(),
         ]);
@@ -347,9 +347,6 @@ $statsDocument = null;
 // deployment's job. `_APP_WORKERS_NUM` still overrides.
 $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
-// Clamped: a non-positive Channel::pop() timeout waits forever or not at all.
-$permissionTimeout = \max(0.1, (float) System::getEnv('_APP_REALTIME_PERMISSION_TIMEOUT', '5'));
-
 $adapter = new SwooleAdapter(port: System::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
@@ -440,7 +437,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $permissionTimeout) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -620,7 +617,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         workerAttributes: $workerTelemetryAttributes,
         unauthorized: $unauthorized,
         unauthorizedPayload: $unauthorizedPayloadJson,
-        timeout: $permissionTimeout,
+        // As long as an API request lets a query run, so verification gives up only after the query would.
+        timeout: APP_DATABASE_TIMEOUT_MILLISECONDS_API / 1000,
         workerId: $workerId,
         traceProjectId: System::getEnv('_APP_TRACE_PROJECT_ID', ''),
     );
