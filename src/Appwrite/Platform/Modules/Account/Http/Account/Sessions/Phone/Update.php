@@ -2,6 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Phone;
 
+use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
+use Appwrite\Geo\Geo;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Account\Base;
 use Appwrite\SDK\AuthType;
@@ -9,9 +13,18 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Proofs\Code as ProofsCode;
+use Utopia\Auth\Proofs\Token as ProofsToken;
+use Utopia\Auth\Store;
+use Utopia\Bus\Bus;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Locale\Locale;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
 
@@ -75,6 +88,32 @@ class Update extends Base
             ->inject('cookieDomain')
             ->inject('authorization')
             ->inject('mqtt')
-            ->inject('queueForRealtime');
+            ->inject('queueForRealtime')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $userId,
+        string $secret,
+        Request $request,
+        Response $response,
+        User $user,
+        Database $dbForProject,
+        Document $project,
+        array $platform,
+        Locale $locale,
+        Geo $geo,
+        Event $queueForEvents,
+        Bus $bus,
+        Store $store,
+        ProofsToken $proofForToken,
+        ProofsCode $proofForCode,
+        bool $domainVerification,
+        ?string $cookieDomain,
+        Authorization $authorization,
+        Mqtt $mqtt,
+        Realtime $queueForRealtime,
+    ): void {
+        $this->createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geo, $queueForEvents, $bus, $store, $proofForToken, $proofForCode, $domainVerification, $cookieDomain, $authorization, $mqtt, $queueForRealtime);
     }
 }
