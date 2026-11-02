@@ -41,6 +41,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Tokens\MagicURL\Create as Cre
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2\Get as CreateOAuth2Token;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Create as CreatePasskeyToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Update as UpdatePasskeyToken;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Phone\Create as CreatePhoneToken;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -68,6 +69,7 @@ class Http extends Service
             ->addAction(CreateMagicURLToken::getName(), CreateMagicURLToken::class)
             ->addAction(CreateEmailToken::getName(), CreateEmailToken::class)
             ->addAction(UpdateMagicURLSession::getName(), UpdateMagicURLSession::class)
+            ->addAction(CreatePhoneToken::getName(), CreatePhoneToken::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
