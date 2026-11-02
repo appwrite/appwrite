@@ -1884,6 +1884,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_REVIEWS_ORGANIZATIONS',
+                'description' => 'Comma-separated organization (team) IDs whose projects may use code reviews, for a release limited to a few organizations. Projects of other organizations cannot enroll repositories, and their enrolled repositories queue no reviews or answers. Empty allows every project.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_REVIEWS_MODEL',
                 'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-4.5`. Required when reviews are enabled.',
                 'introduction' => '2.7.0',
