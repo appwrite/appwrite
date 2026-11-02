@@ -9,8 +9,11 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
 
 class Update extends Base
 {
@@ -53,6 +56,25 @@ class Update extends Base
             ))
             ->label('abuse-limit', 10)
             ->label('abuse-key', ['ip:{ip},userId:{param-userId}', 'projectId:{projectId},url:{url},userId:{param-userId}'])
-            ->label('abuse-reset', [201]);
+            ->label('abuse-reset', [201])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('secret', '', new Text(256), 'Valid verification token.')
+            ->inject('request')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('project')
+            ->inject('platform')
+            ->inject('locale')
+            ->inject('geo')
+            ->inject('queueForEvents')
+            ->inject('bus')
+            ->inject('store')
+            ->inject('proofForCode')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
+            ->inject('authorization')
+            ->inject('mqtt')
+            ->inject('queueForRealtime');
     }
 }
