@@ -47,6 +47,20 @@ class Create extends Action
                 contentType: ContentType::JSON
             ))
             ->label('abuse-limit', 50)
-            ->label('abuse-key', 'ip:{ip}');
+            ->label('abuse-key', 'ip:{ip}')
+            ->inject('request')
+            ->inject('response')
+            ->inject('locale')
+            ->inject('user')
+            ->inject('project')
+            ->inject('dbForProject')
+            ->inject('geo')
+            ->inject('queueForEvents')
+            ->inject('store')
+            ->inject('proofForPassword')
+            ->inject('proofForToken')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
+            ->inject('authorization');
     }
 }
