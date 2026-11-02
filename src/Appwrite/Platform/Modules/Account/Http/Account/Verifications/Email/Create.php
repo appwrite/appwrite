@@ -68,6 +68,18 @@ class Create extends Action
                 )
             ])
             ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{userId}');
+            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator']) // TODO add built-in confirm page
+            ->inject('request')
+            ->inject('response')
+            ->inject('project')
+            ->inject('platform')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('locale')
+            ->inject('queueForEvents')
+            ->inject('publisherForMails')
+            ->inject('proofForToken')
+            ->inject('authorization');
     }
 }
