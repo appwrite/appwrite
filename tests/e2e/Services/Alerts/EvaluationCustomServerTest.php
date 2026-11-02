@@ -307,14 +307,14 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        // Every alert email carries one-click unsubscribe headers and one quiet link on its reason line.
+        // Every alert email carries one-click unsubscribe headers and an Unsubscribe link in its footer.
         $this->waitForStatus($monitorId, 'firing');
         $email = $this->getLastEmailByAddress($root['email'], function (array $email) use ($name) {
             $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
         $this->assertSame('List-Unsubscribe=One-Click', $email['headers']['list-unsubscribe-post'] ?? null);
         $this->assertSame(1, \preg_match('#<(https?://[^>]+/v1/console/alerts/unsubscribe\?[^>]+)>#', (string) ($email['headers']['list-unsubscribe'] ?? ''), $header));
-        $this->assertMatchesRegularExpression('#as an owner of [^<]+\. <a [^>]*href="[^"]*/auth/alerts/unsubscribe\?token=[^"]+"[^>]*>Unsubscribe</a>#', (string) $email['html']);
+        $this->assertMatchesRegularExpression('#>Privacy</a></td>\s*<td[^>]*><div[^>]*>\|</div></td><td><a href="[^"]*/auth/alerts/unsubscribe\?token=[^"]+">Unsubscribe</a></td>#', (string) $email['html']);
         $this->assertStringNotContainsString('Stop all usage alert emails', (string) $email['html']);
         $this->assertStringContainsString('Pause this monitor', (string) $email['html']);
         \parse_str((string) \parse_url(\html_entity_decode($header[1]), PHP_URL_QUERY), $query);

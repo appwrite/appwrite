@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
@@ -286,6 +287,7 @@ class Notifications extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
         if (!empty($preview)) {

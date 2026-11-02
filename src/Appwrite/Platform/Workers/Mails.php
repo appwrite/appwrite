@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Breaker;
 use Appwrite\SMTP\Refusal;
@@ -147,6 +148,7 @@ class Mails extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
 
