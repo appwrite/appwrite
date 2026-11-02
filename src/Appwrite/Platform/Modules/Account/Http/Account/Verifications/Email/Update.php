@@ -9,7 +9,10 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Text;
 
 class Update extends Action
 {
@@ -68,6 +71,14 @@ class Update extends Action
                 )
             ])
             ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{param-userId}');
+            ->label('abuse-key', 'url:{url},userId:{param-userId}')
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
+            ->param('secret', '', new Text(256), 'Valid verification token.')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('queueForEvents')
+            ->inject('proofForToken')
+            ->inject('authorization');
     }
 }
