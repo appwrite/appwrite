@@ -254,7 +254,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
         });
     });
 
-    // As long as an API request lets a query run, so verification gives up only after the query would.
+    // At least as long as an API request lets one query run, so a single slow query is never cut short by the wait.
     $eventHandler = new EventHandler($server, $handler, $mqtt, APP_DATABASE_TIMEOUT_MILLISECONDS_API / 1000);
 
     go(function () use ($register, $eventHandler): void {
