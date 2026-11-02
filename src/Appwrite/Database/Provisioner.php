@@ -13,4 +13,13 @@ use Utopia\Database\Document;
 interface Provisioner
 {
     public function provisioning(Document $project): Database;
+
+    public function tenant(
+        Document $databaseDocument,
+        Document $project,
+        int $timeout = 0,
+        int $maxQueryValues = 0,
+        array $metadata = [],
+        bool $preserveDates = false,
+    ): Database;
 }

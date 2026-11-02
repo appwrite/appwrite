@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
-use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Database\Provisioner;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
@@ -46,7 +46,7 @@ class Encryption extends Action
     /**
      * @param callable(Document): Database $getProjectDB
      */
-    public function action(bool|string $commit, string $after, int|string $batch, Database $dbForPlatform, callable $getProjectDB, DatabaseFactory $databaseFactory): void
+    public function action(bool|string $commit, string $after, int|string $batch, Database $dbForPlatform, callable $getProjectDB, Provisioner $databaseFactory): void
     {
         $commit = \strval($commit) === 'true' || $commit === true;
         $batch = (int) $batch;
