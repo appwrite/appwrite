@@ -147,6 +147,9 @@ class Mails extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        // Footer link after Terms | Privacy, for mail that carries its own unsubscribe page.
+        $unsubscribeUrl = (string) ($variables['unsubscribeUrl'] ?? '');
+        $bodyTemplate->setParam('{{unsubscribeLink}}', $unsubscribeUrl === '' ? '' : '<td style="color: #e8e9f0"><div style="margin: 0 8px">|</div></td><td><a href="' . \htmlspecialchars($unsubscribeUrl) . '">Unsubscribe</a></td>', escapeHtml: false);
 
         $previewWhitespace = '';
 

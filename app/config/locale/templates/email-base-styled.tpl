@@ -258,6 +258,7 @@
                         <div style="margin: 0 8px">|</div>
                     </td>
                     <td><a href="{{privacy}}">Privacy</a></td>
+                    {{unsubscribeLink}}
                 </tr>
             </table>
             <p style="text-align: center" align="center">
