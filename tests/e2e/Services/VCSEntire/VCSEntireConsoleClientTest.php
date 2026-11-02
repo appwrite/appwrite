@@ -8,6 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\System\System;
 
 /**
  * Entire has no self-hostable instance and registers plugins out of band, so
@@ -91,6 +92,89 @@ final class VCSEntireConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('location', $response['headers']);
+    }
+
+    public function testCreateInstallationCancelledWithUnboundState(): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        // A state signed over the project and the two redirect URLs alone is
+        // bound to no console user, carries no expiry and no nonce, so whoever
+        // holds it could complete someone else's installation
+        $projectId = $this->getProject()['$id'];
+        $failure = 'http://localhost/console/project-' . $projectId . '/failure';
+        $unbound = $this->encodeStateHelper([
+            'projectId' => $projectId,
+            'success' => $failure,
+            'failure' => $failure,
+            'signature' => \hash_hmac('sha256', (string) \json_encode([$projectId, $failure, $failure]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+        ]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/entire/callback', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'error' => 'access_denied',
+            'state' => $unbound,
+        ], true, false);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('location', $response['headers']);
+    }
+
+    public function testCreateInstallationCancelledWithBoundState(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        // A cancel on Entire carries no receipt, so the state's signature is
+        // all that may be trusted to pick the redirect back to the console
+        $projectId = $this->getProject()['$id'];
+        $failure = 'http://localhost/console/project-' . $projectId . '/failure';
+
+        $response = $this->client->call(Client::METHOD_GET, '/vcs/entire/callback', \array_merge([
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'error' => 'access_denied',
+            'state' => $this->encodeStateHelper($this->boundStateHelper($projectId, $failure)),
+        ], true, false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($failure . '?error=', (string) $response['headers']['location']);
+        $this->assertStringContainsString('not approved on Entire', \urldecode((string) $response['headers']['location']));
+    }
+
+    /**
+     * A state the Authorize action would have signed: bound to the console
+     * user, with an expiry and a nonce.
+     *
+     * @return array<string, string|int>
+     */
+    private function boundStateHelper(string $projectId, string $redirect): array
+    {
+        $userId = $this->getRoot()['$id'];
+        $expire = \time() + 600;
+        $nonce = \bin2hex(\random_bytes(16));
+
+        return [
+            'projectId' => $projectId,
+            'userId' => $userId,
+            'success' => $redirect,
+            'failure' => $redirect,
+            'expire' => $expire,
+            'nonce' => $nonce,
+            'signature' => \hash_hmac('sha256', (string) \json_encode([$projectId, $userId, $redirect, $redirect, $expire, $nonce]), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+        ];
+    }
+
+    /**
+     * Entire expects an opaque state token, so the signed state travels base64url-encoded.
+     *
+     * @param array<string, string|int> $state
+     */
+    private function encodeStateHelper(array $state): string
+    {
+        return \rtrim(\strtr(\base64_encode((string) \json_encode($state, JSON_UNESCAPED_SLASHES)), '+/', '-_'), '=');
     }
 
     public function testCreateEventWithoutToken(): void

@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Modules\VCS\Http\Entire\Callback;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Appwrite\Vcs\State;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -42,6 +44,7 @@ class Get extends Action
             ->param('error', '', new Text(256, 0), 'Entire error code, when the installation was not approved.', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('user')
             ->inject('authorization')
             ->inject('platform')
             ->inject('vcsFactory')
@@ -54,17 +57,24 @@ class Get extends Action
         string $error,
         Response $response,
         Database $dbForPlatform,
+        User $user,
         Authorization $authorization,
         array $platform,
         VcsFactory $vcsFactory,
     ) {
+        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        if (empty($signingKey)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        }
+
         // A customer who cancels on Entire comes back with an error and the
         // state instead of a receipt. Nothing else authenticates that request,
         // so the state must carry this server's signature before its failure
-        // URL is trusted as a redirect.
+        // URL is trusted as a redirect. Nothing is granted on this path, so it
+        // asks for no more than that signature.
         if (!empty($error) && empty($receipt)) {
-            $cancelled = $this->verifiedState($state);
-            $this->failure($response, \strval($cancelled['failure'] ?? ''), $error === 'access_denied' ? 'The installation was not approved on Entire.' : 'Entire refused the installation: ' . $error);
+            $cancelled = $this->verifiedState($state, $signingKey);
+            $this->failure($response, $cancelled->failure, $error === 'access_denied' ? 'The installation was not approved on Entire.' : 'Entire refused the installation: ' . $error);
             return;
         }
 
@@ -86,17 +96,46 @@ class Get extends Action
 
         $providerInstallationId = \strval($receiptClaims['installation_id'] ?? '');
 
-        // Entire echoes the state given to the install URL as a receipt claim;
-        // accept a query parameter carrying the same value as a fallback. The
-        // receipt authenticates Entire, and the state's signature the Appwrite
-        // Console that started the flow -- without it anyone could attach an
+        // Entire echoes the state given to the install URL as a receipt claim,
+        // so the claim is the authoritative one; a query parameter may only
+        // carry the same value, never a different one. The receipt
+        // authenticates Entire, and the state the Appwrite Console session
+        // that started the flow -- without it anyone could attach an
         // installation to an arbitrary projectId.
-        $state = $this->verifiedState(!empty($state) ? $state : \strval($receiptClaims['state'] ?? ''));
-        $projectId = $state['projectId'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
+        $receiptState = \is_string($receiptClaims['state'] ?? null) ? $receiptClaims['state'] : '';
+        if (!empty($receiptState) && !empty($state) && !\hash_equals($receiptState, $state)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt state does not match the state parameter.');
+        }
 
-        // Receipts are single-use: one replayed within its five-minute life
-        // must not attach the installation again
+        $state = $this->verifiedState(!empty($receiptState) ? $receiptState : $state, $signingKey);
+
+        $projectId = $state->projectId;
+        $settings = ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings";
+        $redirectSuccess = $state->success ?: $settings;
+        $redirectFailure = $state->failure ?: $settings;
+
+        if ($state->isExpired()) {
+            $this->failure($response, $redirectFailure, 'The installation request has expired. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        if ($user->isEmpty() || $user->getId() !== $state->userId) {
+            $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Receipts are single-use too: one replayed within its five-minute
+        // life must not attach the installation again
         $receiptId = \strval($receiptClaims['jti'] ?? '');
         if (!empty($receiptId)) {
             try {
@@ -115,15 +154,6 @@ class Get extends Action
             $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
             return;
         }
-
-        $defaultState = [
-            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-        ];
-
-        $state = \array_merge($defaultState, \array_filter($state));
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
 
         if (empty($providerInstallationId)) {
             $this->failure($response, $redirectFailure, 'Entire installation ID is missing.');
@@ -178,43 +208,22 @@ class Get extends Action
     }
 
     /**
-     * The state the Authorize action signed, decoded. Throws when it is
-     * missing, or was not signed by this server with the current key.
-     *
-     * @return array<string, mixed>
+     * The state the Authorize action signed. Throws when it is missing, or was
+     * not signed by this server with the current key.
      */
-    private function verifiedState(string $state): array
+    private function verifiedState(string $state, string $signingKey): State
     {
         if (empty($state)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
-        if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
-        }
+        $verified = State::verify($state, $signingKey);
 
-        $decoded = \json_decode($this->decodeState($state), true);
-        $decoded = \is_array($decoded) ? $decoded : [];
-
-        $signature = \hash_hmac('sha256', \json_encode([$decoded['projectId'] ?? '', $decoded['success'] ?? '', $decoded['failure'] ?? '']), $signingKey);
-        if (!\hash_equals($signature, \is_string($decoded['signature'] ?? null) ? $decoded['signature'] : '')) {
+        if ($verified === null) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        return $decoded;
-    }
-
-    /**
-     * The signed JSON the Authorize action put in the state. It travels
-     * base64url-encoded, since Entire expects an opaque state token; a state
-     * that is not base64url is taken as the JSON itself.
-     */
-    private function decodeState(string $state): string
-    {
-        $decoded = \base64_decode(\strtr($state, '-_', '+/'), true);
-
-        return $decoded !== false && \str_starts_with($decoded, '{') ? $decoded : $state;
+        return $verified;
     }
 
     /**
