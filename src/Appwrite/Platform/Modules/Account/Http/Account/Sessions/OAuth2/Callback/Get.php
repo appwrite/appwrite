@@ -3,8 +3,11 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback;
 
 use Appwrite\Platform\Action;
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -35,6 +38,37 @@ class Get extends Action
             ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
             ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
             ->inject('request')
-            ->inject('response');
+            ->inject('response')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $projectId,
+        string $provider,
+        string $code,
+        string $state,
+        string $error,
+        string $error_description,
+        Request $request,
+        Response $response,
+    ): void {
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $port = $request->getPort();
+        $callbackBase = $protocol . '://' . $request->getHostname();
+        if ($protocol === 'https' && $port !== '443') {
+            $callbackBase .= ':' . $port;
+        } elseif ($protocol === 'http' && $port !== '80') {
+            $callbackBase .= ':' . $port;
+        }
+
+        $params = $request->getParams();
+        $params['project'] = $projectId;
+        unset($params['projectId']);
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($callbackBase . '/v1/account/sessions/oauth2/' . $provider . '/redirect?'
+                . \http_build_query($params));
     }
 }
