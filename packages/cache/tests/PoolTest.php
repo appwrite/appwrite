@@ -40,13 +40,11 @@ final class PoolTest extends Base
         parent::testCaseSensitivity();
     }
 
-    public function testLeaseFallbackForNonLeasableAdapter(): void
+    public function testUnsupportedAdaptersCannotPerformConditionalFills(): void
     {
-        // The pool holds Filesystem adapters, which are not Leasable. The Pool
-        // adapter must degrade gracefully (no "Call to undefined method" fatal):
-        // getGeneration() returns '0' and saveWithLease() falls back to save().
-        $this->assertSame('0', self::$cache->getGeneration('lease:fallback'));
-        $this->assertNotFalse(self::$cache->saveWithLease('lease:fallback', 'value', 'lease:fallback', '0'));
-        $this->assertSame('value', self::$cache->load('lease:fallback', 60, 'lease:fallback'));
+        $this->assertFalse(self::$cache->supportsVersioning());
+        $this->assertSame('', self::$cache->getLease('lease:fallback'));
+        $this->assertFalse(self::$cache->saveWithLease('lease:fallback', 'value', '', ''));
+        $this->assertFalse(self::$cache->load('lease:fallback', 60));
     }
 }

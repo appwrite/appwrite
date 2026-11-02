@@ -3333,6 +3333,21 @@ export function RowsSpreadsheet({
     [apiColumns],
   )
 
+  // A saved layout can still name a renamed or deleted column, and selecting it
+  // fails the whole list. Must match the rows route loader's filter (one query key).
+  const rowsSelectAttrKeys = useMemo(() => {
+    const availableColumnKeys = new Set(
+      apiColumns
+        .map((column) => column as { key?: unknown; status?: unknown })
+        .filter((c) => c.status === undefined || c.status === 'available')
+        .map((c) => c.key),
+    )
+    return (
+      rowsListSelectAttrKeys?.filter((key) => availableColumnKeys.has(key)) ??
+      null
+    )
+  }, [apiColumns, rowsListSelectAttrKeys])
+
   const {
     total: rowsTotal,
     isLoading: rowsLoading,
@@ -3351,7 +3366,7 @@ export function RowsSpreadsheet({
     sortOrder,
     sortBy,
     effectiveFilterQueries,
-    rowsListSelectAttrKeys,
+    rowsSelectAttrKeys,
     relationshipKeys,
   )
 
@@ -3374,7 +3389,7 @@ export function RowsSpreadsheet({
     displayedSortOrder,
     displayedSortBy,
     effectiveDisplayedFilterQueries,
-    rowsListSelectAttrKeys,
+    rowsSelectAttrKeys,
     relationshipKeys,
   )
 

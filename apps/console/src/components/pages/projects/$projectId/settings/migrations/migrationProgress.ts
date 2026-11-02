@@ -126,23 +126,54 @@ export type MigrationResourceBreakdownItem = {
   tone: 'waiting' | 'processing' | 'success' | 'error'
 }
 
+/**
+ * Singular and plural labels for the resource types a migration reports, where
+ * the type's key does not read as a word on its own (`smtp`, `auth-methods`,
+ * `project-labels`) or pluralizes badly (`index`, `policies`). Wrapped in t()
+ * where they render.
+ */
+const RESOURCE_TYPE_LABELS: Record<string, readonly [string, string]> = {
+  database: ['Database', 'Databases'],
+  documentsdb: ['DocumentsDB', 'DocumentsDB'],
+  vectorsdb: ['VectorsDB', 'VectorsDB'],
+  table: ['Table', 'Tables'],
+  collection: ['Collection', 'Collections'],
+  column: ['Column', 'Columns'],
+  attribute: ['Attribute', 'Attributes'],
+  index: ['Index', 'Indexes'],
+  row: ['Row', 'Rows'],
+  document: ['Document', 'Documents'],
+  bucket: ['Bucket', 'Buckets'],
+  file: ['File', 'Files'],
+  user: ['User', 'Users'],
+  team: ['Team', 'Teams'],
+  membership: ['Membership', 'Memberships'],
+  'auth-methods': ['Auth settings', 'Auth settings'],
+  policies: ['Security policies', 'Security policies'],
+  'oauth2-provider': ['OAuth2 provider', 'OAuth2 providers'],
+  function: ['Function', 'Functions'],
+  'environment-variable': ['Function variable', 'Function variables'],
+  deployment: ['Deployment', 'Deployments'],
+  site: ['Site', 'Sites'],
+  'site-variable': ['Site variable', 'Site variables'],
+  'site-deployment': ['Site deployment', 'Site deployments'],
+  provider: ['Messaging provider', 'Messaging providers'],
+  topic: ['Topic', 'Topics'],
+  subscriber: ['Subscriber', 'Subscribers'],
+  platform: ['Platform', 'Platforms'],
+  smtp: ['SMTP settings', 'SMTP settings'],
+  'project-variable': ['Project variable', 'Project variables'],
+  'project-protocols': ['Protocols', 'Protocols'],
+  'project-labels': ['Labels', 'Labels'],
+  'project-services': ['Services', 'Services'],
+  'project-email-template': ['Email template', 'Email templates'],
+}
+
 function resourceTypeLabel(key: string, total: number): string {
+  const known = RESOURCE_TYPE_LABELS[key.toLowerCase()]
+  if (known) return total === 1 ? known[0] : known[1]
   const singular = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()
-  if (total === 1) return singular
-  // Avoid awkward "Indexs" / "Database" plurals for common restore types
-  const plurals: Record<string, string> = {
-    database: 'Databases',
-    table: 'Tables',
-    column: 'Columns',
-    row: 'Rows',
-    index: 'Indexes',
-    collection: 'Collections',
-    document: 'Documents',
-    attribute: 'Attributes',
-    vectorsdb: 'VectorsDB',
-    documentsdb: 'DocumentsDB',
-  }
-  return plurals[key.toLowerCase()] ?? `${singular}s`
+  return total === 1 ? singular : `${singular}s`
 }
 
 /**

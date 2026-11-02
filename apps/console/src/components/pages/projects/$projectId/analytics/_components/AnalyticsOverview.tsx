@@ -38,7 +38,6 @@ import {
   overviewChartPanelErrorClass,
 } from '../../overview/chart-panel'
 import {
-  ANALYTICS_PAGEVIEW_EVENT,
   analyticsStatsQueryOptions,
   useAnalyticsEventMetrics,
   useAnalyticsStats,
@@ -96,8 +95,8 @@ type AggregateMetric = Exclude<AnalyticsChartMetric, SeriesMetric>
  * The tabs at the top of the overview: the seven metrics that matter most for
  * a website (scroll depth stays in the exports). Every tab drives the chart,
  * from one of two sources:
- * - `series`: the API's interval series (visitors, visits; pageviews via the
- *   pageview event), one request for the whole chart.
+ * - `series`: the API's interval series (visitors, visits, pageviews), one
+ *   request for the whole chart.
  * - `aggregate`: rates and durations only exist on the flat aggregate, so the
  *   chart reads it per bucket window (see `buildBucketWindows`).
  */
@@ -125,11 +124,10 @@ const OVERVIEW_METRICS: {
 function bucketValue(
   metric: SeriesMetric,
   base: AnalyticsChartPoint | undefined,
-  pageviews: AnalyticsChartPoint | undefined,
 ): number | undefined {
   if (metric === 'visitors') return base?.visitors
   if (metric === 'visits') return base?.sessions
-  return pageviews?.events
+  return base?.pageviews
 }
 
 function axisFormatter(
@@ -420,40 +418,6 @@ export function AnalyticsOverview({
     [previousSeriesData, comparisonRange, interval],
   )
 
-  // Pageviews per bucket = the series filtered to the pageview event. Only
-  // fetched when it's needed: Pageviews is plotted, or the flat aggregate
-  // can't give the total (page / event filter active).
-  const needsPageviews = activeMetric.key === 'pageviews' || statsUnsupported
-  const { data: pageviewSeriesData, error: pageviewError } =
-    useAnalyticsEventMetrics(
-      projectId,
-      needsPageviews ? propertyId : null,
-      ANALYTICS_PAGEVIEW_EVENT,
-      range,
-      interval,
-      filters,
-    )
-  const { data: comparisonPageviewData } = useAnalyticsEventMetrics(
-    projectId,
-    needsPageviews && isComparing ? propertyId : null,
-    ANALYTICS_PAGEVIEW_EVENT,
-    compareRange,
-    interval,
-    filters,
-  )
-  const pageviewPoints = useMemo(
-    () =>
-      buildAnalyticsChartPoints(pageviewSeriesData?.points ?? [], range, interval),
-    [pageviewSeriesData, range, interval],
-  )
-  const previousPageviewPoints = useMemo(
-    () =>
-      isComparing && comparisonPageviewData && comparisonRange
-        ? buildAnalyticsChartPoints(comparisonPageviewData.points, comparisonRange, interval)
-        : [],
-    [isComparing, comparisonPageviewData, comparisonRange, interval],
-  )
-
   // ── Aggregate-backed metrics: one flat read per bucket window ──
   // Only fetched while one of those metrics is plotted. Each window reuses
   // the stats query options, so windows are cached and refreshed like the
@@ -508,15 +472,12 @@ export function AnalyticsOverview({
   const hasSeries =
     activeMetric.source === 'aggregate'
       ? windowsSettled
-      : (activeMetric.key === 'pageviews' ? pageviewSeriesData : seriesData) !==
-        undefined
+      : seriesData !== undefined
   const comparisonReady =
     !isComparing ||
     (activeMetric.source === 'aggregate'
       ? comparisonWindowsSettled
-      : activeMetric.key === 'pageviews'
-        ? comparisonPageviewData !== undefined
-        : previousSeriesData !== undefined)
+      : previousSeriesData !== undefined)
   // First paint waits for the current series and, when compare is on (the
   // default), the comparison series too. Otherwise the dashed previous-period
   // line lands from cache first, then the area remounts onto the full series.
@@ -528,7 +489,7 @@ export function AnalyticsOverview({
   const loadError =
     activeMetric.source === 'aggregate'
       ? (windowsError ?? statsError)
-      : (statsError ?? (activeMetric.key === 'pageviews' ? pageviewError : seriesError))
+      : (statsError ?? seriesError)
   const showError = !!loadError && !hasSeries
   const showSkeleton = !showError && !revealed
   const showComparisonLine = isComparing && comparisonReady && !showSkeleton
@@ -543,8 +504,7 @@ export function AnalyticsOverview({
     activeMetric.source === 'aggregate'
       ? windowValues(chartPoints.length, windows, windowData, metricKey as AggregateMetric)
       : chartPoints.map(
-          (point, index) =>
-            bucketValue(metricKey as SeriesMetric, point, pageviewPoints[index]) ?? 0,
+          (point) => bucketValue(metricKey as SeriesMetric, point) ?? 0,
         )
   const previousValues: (number | null)[] = !showComparisonLine
     ? []
@@ -556,9 +516,7 @@ export function AnalyticsOverview({
           metricKey as AggregateMetric,
         )
       : previousPoints.map(
-          (point, index) =>
-            bucketValue(metricKey as SeriesMetric, point, previousPageviewPoints[index]) ??
-            null,
+          (point) => bucketValue(metricKey as SeriesMetric, point) ?? null,
         )
   const chartData = chartPoints.map((point, index) => ({
     ...point,
@@ -573,20 +531,20 @@ export function AnalyticsOverview({
   // deduplicates visitors / visits across the whole window (summing a daily
   // series would count a returning visitor once per day). Summed buckets are
   // only a fallback while the aggregate loads, or when a filter rules it out.
-  const sum = (points: AnalyticsChartPoint[], key: 'visitors' | 'sessions' | 'events') =>
-    points.reduce((total, point) => total + point[key], 0)
+  const sum = (
+    points: AnalyticsChartPoint[],
+    key: 'visitors' | 'sessions' | 'pageviews',
+  ) => points.reduce((total, point) => total + point[key], 0)
   const metricTotal = (
     key: AnalyticsChartMetric,
     aggregate: Models.AnalyticsMetric | undefined,
     base: AnalyticsChartPoint[],
-    pageviews: AnalyticsChartPoint[],
     hasBase: boolean,
-    hasPageviews: boolean,
   ): number | undefined => {
     if (aggregate) return aggregate[key] ?? 0
     if (key === 'visitors') return hasBase ? sum(base, 'visitors') : undefined
     if (key === 'visits') return hasBase ? sum(base, 'sessions') : undefined
-    if (key === 'pageviews') return hasPageviews ? sum(pageviews, 'events') : undefined
+    if (key === 'pageviews') return hasBase ? sum(base, 'pageviews') : undefined
     return undefined // bounce rate / duration only exist on the aggregate
   }
 
@@ -625,18 +583,14 @@ export function AnalyticsOverview({
       metric.key,
       stats,
       chartPoints,
-      pageviewPoints,
       seriesData !== undefined,
-      pageviewSeriesData !== undefined,
     )
     const previous = isComparing
       ? metricTotal(
           metric.key,
           previousStats,
           previousPoints,
-          previousPageviewPoints,
           previousSeriesData !== undefined,
-          comparisonPageviewData !== undefined,
         )
       : undefined
     // Aggregate-only metrics can't be shown with a page / event filter; say

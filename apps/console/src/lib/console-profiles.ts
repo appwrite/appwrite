@@ -75,8 +75,10 @@ export type ConsoleProfileFeatures = {
   reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
-  /** Project transfers through the Organization API (transfer card with a claim link), in place of the direct organization move. */
+  /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
   projectTransfers: boolean
+  /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
+  alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -146,6 +148,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   reviews: 'Review',
   projectEnvironments: 'Project environments',
   projectTransfers: 'Project transfers',
+  alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -202,6 +205,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       reviews: true,
       projectEnvironments: false,
       projectTransfers: false,
+      alerts: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -247,6 +251,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       reviews: true,
       projectEnvironments: false,
       projectTransfers: false,
+      alerts: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

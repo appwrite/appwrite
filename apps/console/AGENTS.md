@@ -503,6 +503,7 @@ Checklist (in this order):
 - **Service avatars**: Always neutral (`bg-muted text-muted-foreground`), never colored
 - **Button icon spacing**: Use `mr-1.5` or `gap-1.5`, not `mr-2` or larger
 - **Date tooltips**: Always include when showing dates for timezone clarity
+- **Wizard headers are title-only**: Never pass a description, subtitle, or helper line to `WizardLayout`. The header is the title (and close/back). Put explanation in the page body, on a field, or omit it.
 
 ### Date and time (Appwrite datetimes)
 

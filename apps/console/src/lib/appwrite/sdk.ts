@@ -9,6 +9,7 @@ import {
   Account,
   Activities,
   Affiliates,
+  Alerts,
   Analytics,
   Apps,
   Avatars,
@@ -22,6 +23,7 @@ import {
   Manager,
   Messaging,
   Migrations,
+  Monitors,
   Oauth2,
   Project,
   Project as ProjectApi,
@@ -52,6 +54,7 @@ import {
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
 import { Reviews } from '@/lib/appwrite/reviews'
+import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -224,6 +227,8 @@ function createConsoleSdkRaw(client: Client) {
     client,
     account: new Account(client),
     affiliates: new Affiliates(client),
+    alerts: new Alerts(client),
+    monitors: new Monitors(client),
     apps: new Apps(client),
     oauth2: new Oauth2(client),
     avatars: new Avatars(client),
@@ -271,6 +276,7 @@ function createConsoleSdkRaw(client: Client) {
     usage: new Usage(client),
     webhooks: new Webhooks(client),
     notifications: new Notifications(client),
+    zero: new Zero(client),
   }
 }
 
@@ -556,6 +562,8 @@ const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
   activities: new Activities(clientProject),
+  alerts: new Alerts(clientProject),
+  monitors: new Monitors(clientProject),
   analytics: new Analytics(clientProject),
   apps: new Apps(clientProject),
   avatars: new Avatars(clientProject),

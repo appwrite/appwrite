@@ -8,7 +8,7 @@ readtime: 3
 
 
 Appwrite Functions can be executed in several ways.
-Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events and scheduled executions.
+Executions can be invoked through the Appwrite SDK and visiting its REST endpoint. Functions can also be triggered by events, schedules, and incoming email.
 Here are all the different ways to consume your Appwrite Functions.
 
 # Execution modes {% #execution-modes %}
@@ -1143,6 +1143,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 {% /tabsitem %}
 {% /tabs %}
+
+# Email {% #email %}
+
+On Appwrite Cloud, after you turn on the [email trigger](/docs/products/functions/email) of a function, the function executes when an email arrives at its [built-in address](/docs/products/functions/email#built-in-address) or at an address on a [custom domain](/docs/products/functions/email#custom-domain) that you connect.
+The execution receives the email and its attachments in a `multipart/form-data` request body, and the `x-appwrite-trigger` header is `email`.
+Appwrite executes the function while the sending mail server waits, and accepts the email after the function finishes.
+
+{% arrow_link href="/docs/products/functions/email" %}
+Learn about email triggers
+{% /arrow_link %}
 
 # Permissions {% #permission %}
 

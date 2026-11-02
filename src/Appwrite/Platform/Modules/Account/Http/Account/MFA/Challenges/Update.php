@@ -147,8 +147,10 @@ class Update extends Action
             return false;
         };
 
+        $step = $type === Type::TOTP ? Challenge\TOTP::step($user, $otp) : null;
+
         $success = (match ($type) {
-            Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
+            Type::TOTP => $step !== null,
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
@@ -161,8 +163,13 @@ class Update extends Action
         }
 
         // Claim the challenge under the user row lock an address change takes, which deletes challenges sent to the old address
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $challengeId) {
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $challengeId, $step) {
             $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+
+            // A TOTP code is single-use: spend its step so no other challenge or session can redeem it again
+            if ($step !== null && !Challenge\TOTP::spend($dbForProject, $user, $step)) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
 
             if (!$dbForProject->deleteDocument('challenges', $challengeId)) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);

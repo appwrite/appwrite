@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
     <head>
+        <meta charset="utf-8">
         <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
         <meta name="color-scheme" content="light dark">
         <meta name="supported-color-schemes" content="light dark">
@@ -24,7 +25,7 @@
                     border-color: {{accentColor}} !important;
                 }
                 h1, h2, h3 {
-                    color: #373b4d !important;
+                    color: #19191c !important;
                 }
                 h4 {
                     color: #4f5769 !important;
@@ -94,7 +95,7 @@
                 font-size: 22px;
                 margin-bottom: 0px;
                 margin-top: 0px;
-                color: #373b4d;
+                color: #19191c;
             }
             h2 {
                 font-size: 20px;
