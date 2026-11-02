@@ -49,6 +49,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Token\Create as Crea
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Update as UpdateSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
 use Appwrite\Platform\Modules\Account\Http\Account\Status\Update as UpdateStatus;
+use Appwrite\Platform\Modules\Account\Http\Account\Targets\Push\Create as CreatePushTarget;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Email\Create as CreateEmailToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\MagicURL\Create as CreateMagicURLToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2\Get as CreateOAuth2Token;
@@ -106,6 +107,7 @@ class Http extends Service
             ->addAction(UpdateEmailVerification::getName(), UpdateEmailVerification::class)
             ->addAction(CreatePhoneVerification::getName(), CreatePhoneVerification::class)
             ->addAction(UpdatePhoneVerification::getName(), UpdatePhoneVerification::class)
+            ->addAction(CreatePushTarget::getName(), CreatePushTarget::class)
             ->addAction(CreateEmailVerificationOTP::getName(), CreateEmailVerificationOTP::class)
             ->addAction(UpdateEmailVerificationOTP::getName(), UpdateEmailVerificationOTP::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
