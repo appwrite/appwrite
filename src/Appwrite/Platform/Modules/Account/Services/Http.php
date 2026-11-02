@@ -55,6 +55,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2\Get as CreateOA
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Create as CreatePasskeyToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Update as UpdatePasskeyToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Phone\Create as CreatePhoneToken;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\Create as CreateEmailVerification;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -96,6 +97,7 @@ class Http extends Service
             ->addAction(UpdateRecovery::getName(), UpdateRecovery::class)
             ->addAction(CreateRecoveryOTP::getName(), CreateRecoveryOTP::class)
             ->addAction(UpdateRecoveryOTP::getName(), UpdateRecoveryOTP::class)
+            ->addAction(CreateEmailVerification::getName(), CreateEmailVerification::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
