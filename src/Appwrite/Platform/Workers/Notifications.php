@@ -551,9 +551,9 @@ class Notifications extends Action
             'type' => $payload['type'] ?? 'info',
             'channel' => $channel,
             'projectId' => $project->getId(),
-            // The console project has no sequence; its records are filed under 0 rather than failing to save,
-            // which would retry the message and send the email again.
-            'projectInternalId' => $project->getSequence() ?: '0',
+            // The console project is not stored, so its sequence is empty or, where an edition sets one, its ID;
+            // its records are filed under 0 rather than failing to save, which would retry and send the email again.
+            'projectInternalId' => $project->getId() === 'console' ? '0' : $project->getSequence(),
             'resourceType' => $recipient['resourceType'],
             'resourceId' => $recipient['resourceId'],
             'resourceInternalId' => $recipient['resourceInternalId'],
