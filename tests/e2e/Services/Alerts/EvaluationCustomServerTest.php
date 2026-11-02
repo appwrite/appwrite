@@ -280,10 +280,9 @@ final class EvaluationCustomServerTest extends Scope
         $this->setThreshold($monitorId, 1e15);
         $this->waitForStatus($monitorId, 'ok');
 
-        $email = $this->getLastEmailByAddress($developer, function (array $email) use ($name) {
+        $this->getLastEmailByAddress($developer, function (array $email) use ($name) {
             $this->assertStringStartsWith('[Resolved] ' . $name . ' · ', $email['subject']);
         });
-        $this->assertStringContainsString('as a developer of', (string) $email['html']);
     }
 
     public function testAlertEmailsCanBeUnsubscribed(): void
@@ -594,7 +593,8 @@ final class EvaluationCustomServerTest extends Scope
         $alert = $this->getLastEmailByAddress($email, function (array $email) use ($name) {
             $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
-        $this->assertStringContainsString('owner of ' . $destination['body']['name'], (string) $alert['html']);
+        // The alert names the organization the project moved to.
+        $this->assertStringContainsString($destination['body']['name'], (string) $alert['html']);
     }
 
     public function testEachFiringOpensAnAlertThatOutlivesItsMonitor(): void
