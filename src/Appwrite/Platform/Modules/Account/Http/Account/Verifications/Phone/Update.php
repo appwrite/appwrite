@@ -2,13 +2,20 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Verifications\Phone;
 
+use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Text;
@@ -57,6 +64,56 @@ class Update extends Action
             ->inject('dbForProject')
             ->inject('queueForEvents')
             ->inject('proofForCode')
-            ->inject('authorization');
+            ->inject('authorization')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $userId,
+        string $secret,
+        Response $response,
+        User $user,
+        Database $dbForProject,
+        Event $queueForEvents,
+        ProofsCode $proofForCode,
+        Authorization $authorization,
+    ): void {
+        /** @var User  $profile */
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
+
+        if ($profile->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_PHONE, $secret, $proofForCode);
+
+        if (!$verifiedToken) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $authorization->addRole(Role::user($profile->getId())->toString());
+
+        $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
+
+        // Claim the token under the user row lock a phone change takes, which deletes tokens sent to the old number
+        $profile = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $verifiedToken) {
+            $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+
+            if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+
+            return $dbForProject->updateDocument('users', $profile->getId(), new Document(['phoneVerification' => true]));
+        });
+
+        $user->setAttributes($profile->getArrayCopy());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('tokenId', $verificationDocument->getId())
+        ;
+
+        $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     }
 }
