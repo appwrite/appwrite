@@ -7,8 +7,12 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 
 class Create extends Action
 {
@@ -46,6 +50,22 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse-limit', 10)
-            ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}']);
+            ->label('abuse-key', ['url:{url},email:{param-email}', 'url:{url},ip:{ip}'])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars. If the email address has never been used, a new account is created using the provided userId. Otherwise, if the email address is already attached to an account, the user ID is ignored.', false, ['dbForProject'])
+            ->param('email', '', new EmailValidator(), 'User email.')
+            ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
+            ->inject('request')
+            ->inject('response')
+            ->inject('project')
+            ->inject('platform')
+            ->inject('dbForProject')
+            ->inject('locale')
+            ->inject('queueForEvents')
+            ->inject('publisherForMails')
+            ->inject('plan')
+            ->inject('proofForPassword')
+            ->inject('proofForCode')
+            ->inject('authorization')
+            ->inject('apiKey');
     }
 }
