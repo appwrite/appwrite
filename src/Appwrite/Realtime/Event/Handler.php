@@ -386,8 +386,8 @@ class Handler
             return [];
         }
 
-        // Console events reach only the console region; a project hosted elsewhere has no connections or database here.
-        if (empty($this->realtime->getProjectConnections($projectId))) {
+        // Console events reach only the console region, which may hold no connections or tails for the project.
+        if (empty($this->realtime->getProjectConnections($projectId)) && !$this->eventTailRegistry->isTailed($projectId)) {
             return [];
         }
 
@@ -445,7 +445,8 @@ class Handler
         $closing = [];
         $consoleDatabase = \getConsoleDB();
         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-        $database = \getProjectDB($project);
+        // Resolved only for a connection that needs it: tails need none, and a project from another region has no pool here.
+        $database = null;
         $invalidatedAt = $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
         // Each impersonator is read once per event, however many connections it holds.
         $impersonators = [];
@@ -477,7 +478,7 @@ class Handler
                 $impersonatorId = (string) ($impersonator['userId'] ?? '');
                 $impersonatorSessionId = $impersonator['sessionId'] ?? null;
                 /** @var User $user */
-                $user = $impersonators[$impersonatorId] ??= $database->getDocument('users', $impersonatorId);
+                $user = $impersonators[$impersonatorId] ??= ($database ??= \getProjectDB($project))->getDocument('users', $impersonatorId);
 
                 if (
                     $user->isEmpty()
@@ -496,7 +497,7 @@ class Handler
             }
 
             /** @var User $user */
-            $user = $database->getDocument('users', $userId);
+            $user = ($database ??= \getProjectDB($project))->getDocument('users', $userId);
 
             if (
                 $user->isEmpty()
