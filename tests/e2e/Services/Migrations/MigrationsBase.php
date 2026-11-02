@@ -1021,10 +1021,94 @@ trait MigrationsBase
         $this->assertEventually(function () use ($migrationId, $headers) {
             $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
 
+            $this->assertSame('failed', $response['body']['status']);
             $this->assertIsArray($response['body']['options']['scopes']);
             $this->assertContains('users.write', $response['body']['options']['scopes']);
             $this->assertNotContains('teams.write', $response['body']['options']['scopes']);
         }, 60_000, 1_000);
+
+        // A recorded grant is no substitute for the retrying key's own scopes
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write']),
+        ]);
+
+        $this->assertSame(401, $retry['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $retry['body']['type']);
+    }
+
+    public function testCSVExportRetryByKeyRequiresRowReadScope(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
+            'databaseId' => Id::unique(),
+            'name' => 'Retry Export Database',
+        ]);
+
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
+            'collectionId' => Id::unique(),
+            'name' => 'Retry Export Collection',
+            'permissions' => [],
+        ]);
+
+        $this->assertSame(201, $collection['headers']['status-code']);
+
+        // An export with no rows to write fails, which is what a retry needs
+        $export = $this->client->call(Client::METHOD_POST, '/migrations/csv/exports', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'documents.read']),
+        ], [
+            'databaseId' => $databaseId,
+            'collectionId' => $collection['body']['$id'],
+            'filename' => 'retry-export',
+            'notify' => false,
+        ]);
+
+        $this->assertSame(202, $export['headers']['status-code']);
+        $this->assertContains('documents.read', $export['body']['options']['scopes']);
+
+        $migrationId = $export['body']['$id'];
+
+        $this->assertEventually(function () use ($migrationId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, $headers);
+
+            $this->assertSame('failed', $response['body']['status']);
+        }, 60_000, 1_000);
+
+        /**
+         * Test for FAILURE
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write']),
+        ]);
+
+        $this->assertSame(401, $retry['headers']['status-code']);
+        $this->assertSame('general_unauthorized_scope', $retry['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $retry = $this->client->call(Client::METHOD_PATCH, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.write', 'rows.read']),
+        ]);
+
+        $this->assertSame(204, $retry['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, $headers);
     }
 
     public function testAppwriteMigrationRejectsApiKeyBroaderThanGrant(): void
