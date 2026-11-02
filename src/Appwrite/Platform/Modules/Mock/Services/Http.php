@@ -2,6 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Mock\Services;
 
+use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\BadIcon\Get as GetBadIcon;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\FaviconPage\Get as GetFaviconPage;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\FaviconPage\Truncated\Get as GetFaviconPageTruncated;
+use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\TruncatedIcon\Get as GetTruncatedIcon;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\General\OAuth2\Failure\Get as GetOAuth2Failure;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\General\OAuth2\Get as GetOAuth2;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\General\OAuth2\IdToken\Get as GetOAuth2IdToken;
@@ -28,6 +32,10 @@ class Http extends Service
         $this->addAction(GetLocale::getName(), GetLocale::class);
         $this->addAction(GetOAuth2Token::getName(), GetOAuth2Token::class);
         $this->addAction(GetOAuth2Photo::getName(), GetOAuth2Photo::class);
+        $this->addAction(GetFaviconPage::getName(), GetFaviconPage::class);
+        $this->addAction(GetBadIcon::getName(), GetBadIcon::class);
+        $this->addAction(GetFaviconPageTruncated::getName(), GetFaviconPageTruncated::class);
+        $this->addAction(GetTruncatedIcon::getName(), GetTruncatedIcon::class);
         $this->addAction(GetOAuth2PhotoRefreshed::getName(), GetOAuth2PhotoRefreshed::class);
         $this->addAction(GetOAuth2User::getName(), GetOAuth2User::class);
         $this->addAction(GetOAuth2UserUnverified::getName(), GetOAuth2UserUnverified::class);
