@@ -126,6 +126,14 @@ final class APNSTest extends TestCase
         $this->assertContains('apns-priority: 10', $stub->capturedHeaders);
         // The tag collapses a later push onto this one on the device.
         $this->assertContains('apns-collapse-id: alert:1', $stub->capturedHeaders);
+
+        $stub->capturedHeaders = [];
+        $stub->send(new Push(
+            to: ['token'],
+            title: 'Title',
+            tag: \str_repeat('a', 65),
+        ));
+        $this->assertSame([], \array_values(\array_filter($stub->capturedHeaders, fn (string $header): bool => \str_starts_with($header, 'apns-collapse-id'))));
     }
 
     public function testResultsMapToTheTokenSent(): void

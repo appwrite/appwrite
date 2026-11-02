@@ -294,10 +294,16 @@ final class EvaluationCustomServerTest extends Scope
         $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', $first['headers'])['headers']['status-code']);
         $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/account/targets/' . $removed['targetId'] . '/push', $removed['headers'])['headers']['status-code']);
         $this->assertEventually(function () use ($first, $removed) {
-            $this->inCoroutine(function () use ($first, $removed): void {
-                $this->assertTrue($this->platform()->getDocument('targets', $first['targetId'])->isEmpty());
-                $this->assertTrue($this->platform()->getDocument('targets', $removed['targetId'])->isEmpty());
+            // Read in the coroutine, asserted outside it, so a miss is retried rather than fatal.
+            $left = [];
+            $this->inCoroutine(function () use ($first, $removed, &$left): void {
+                foreach ([$first, $removed] as $device) {
+                    if (!$this->platform()->getDocument('targets', $device['targetId'])->isEmpty()) {
+                        $left[] = $device['targetId'];
+                    }
+                }
             });
+            $this->assertSame([], $left);
         }, 60_000, 1_000);
 
         $this->deliverPushes($monitorId, $members, 20, $at->modify('+1 day'));
