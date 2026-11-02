@@ -16,11 +16,8 @@ function yearLabel(date: string): string {
 
 export function GitHubStarsGrowthChart({
   data,
-  className,
 }: {
   data: GitHubStarHistoryPoint[]
-  /** Overrides the chart area size (default `h-[7.25rem]`). */
-  className?: string
 }) {
   const t = useT()
   const gradientId = useId().replace(/:/g, '')
@@ -32,7 +29,7 @@ export function GitHubStarsGrowthChart({
   return (
     <div className="overflow-hidden rounded-lg border border-border/80 bg-muted/30">
       <div
-        className={cn('h-[7.25rem] w-full', FORCE_LTR_CLASS, className)}
+        className={cn('h-[7.25rem] w-full', FORCE_LTR_CLASS)}
         role="img"
         aria-label={chartLabel}
       >

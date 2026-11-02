@@ -1411,5 +1411,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Appwrite is open source and built in the open. A GitHub star helps more developers discover Appwrite and grows the community behind it.':
     'Appwrite הוא קוד פתוח שנבנה בשקיפות מלאה. כוכב ב-GitHub עוזר ליותר מפתחים לגלות את Appwrite ומצמיח את הקהילה שמאחוריו.',
   'No thanks': 'לא תודה',
-  "Either way, we won't ask again.": 'כך או כך, לא נשאל שוב.',
+  'One-time ask, promise. May your builds be ever green.':
+    'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
 }

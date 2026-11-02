@@ -1,0 +1,95 @@
+/* GitHub star wizard backdrop: brand-tinted glows and twinkling stars. */
+
+.star-wizard-glow {
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--chart-brand) 20%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+.star-wizard-glow-accent {
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, #7c67fe 16%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+@keyframes star-wizard-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.65);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.star-wizard-star {
+  animation: star-wizard-twinkle var(--star-wizard-duration, 3.6s) ease-in-out
+    infinite;
+  animation-delay: var(--star-wizard-delay, 0s);
+}
+
+.star-wizard-star--brand {
+  background: var(--chart-brand);
+  box-shadow: 0 0 6px 1px
+    color-mix(in srgb, var(--chart-brand) 60%, transparent);
+}
+
+.star-wizard-star--accent {
+  background: #7c67fe;
+  box-shadow: 0 0 6px 1px rgb(124 103 254 / 0.55);
+}
+
+.star-wizard-star--neutral {
+  background: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+/* A streak that fires toward the bottom-left, then rests until the next loop. */
+@keyframes star-wizard-shoot {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) rotate(-24deg);
+  }
+  5% {
+    opacity: 0.9;
+  }
+  16% {
+    opacity: 0;
+    transform: translate3d(-340px, 150px, 0) rotate(-24deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-340px, 150px, 0) rotate(-24deg);
+  }
+}
+
+.star-wizard-shooting-star {
+  width: 72px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to left,
+    transparent,
+    color-mix(in srgb, var(--chart-brand) 85%, white)
+  );
+  opacity: 0;
+  animation: star-wizard-shoot 9s ease-out infinite;
+  animation-delay: 2.5s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-wizard-star {
+    animation: none;
+    opacity: 0.5;
+    transform: none;
+  }
+
+  .star-wizard-shooting-star {
+    display: none;
+  }
+}

@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { Star, X } from 'lucide-react'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { AnimatedCounter } from '@/components/global/shared/AnimatedCounter'
-import { GitHubStarsGrowthChart } from '@/components/pages/marketing/GitHubStarsGrowthChart'
 import { Button } from '@/components/ui/button'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { GitHubBrandIcon } from '@/lib/community/GitHubBrandIcon'
@@ -19,26 +18,130 @@ import {
 } from '@/lib/marketing/social-stats'
 import { formatCompactCount } from '@/lib/usage/format-metric'
 import { cn } from '@/lib/utils'
+import { StarsChart } from './StarsChart'
+import './star-wizard.css'
 
 const GITHUB_REPO_LABEL = 'appwrite/appwrite'
+const GITHUB_REPO_API = 'https://api.github.com/repos/appwrite/appwrite'
 const STAR_COUNT_ANIMATION_MS = 1800
 
-/** Deterministic decorative star field (stable positions, staggered pulse). */
+/**
+ * Deterministic decorative star field: stable positions, staggered twinkle,
+ * most stars neutral with a few in the brand pink and purple.
+ */
 const STAR_FIELD = [
-  { top: '8%', left: '12%', size: 3, delayMs: 0 },
-  { top: '16%', left: '78%', size: 2, delayMs: 600 },
-  { top: '24%', left: '32%', size: 2, delayMs: 1500 },
-  { top: '12%', left: '55%', size: 3, delayMs: 900 },
-  { top: '34%', left: '88%', size: 3, delayMs: 300 },
-  { top: '42%', left: '6%', size: 2, delayMs: 1200 },
-  { top: '58%', left: '14%', size: 3, delayMs: 1800 },
-  { top: '52%', left: '92%', size: 2, delayMs: 700 },
-  { top: '72%', left: '9%', size: 2, delayMs: 400 },
-  { top: '78%', left: '84%', size: 3, delayMs: 1000 },
-  { top: '88%', left: '28%', size: 2, delayMs: 1600 },
-  { top: '84%', left: '64%', size: 3, delayMs: 200 },
-  { top: '28%', left: '68%', size: 2, delayMs: 2000 },
-  { top: '64%', left: '76%', size: 2, delayMs: 1300 },
+  {
+    top: '8%',
+    left: '12%',
+    size: 3,
+    delayMs: 0,
+    durationMs: 3400,
+    tone: 'brand',
+  },
+  {
+    top: '16%',
+    left: '78%',
+    size: 2,
+    delayMs: 600,
+    durationMs: 4200,
+    tone: 'neutral',
+  },
+  {
+    top: '24%',
+    left: '32%',
+    size: 2,
+    delayMs: 1500,
+    durationMs: 3000,
+    tone: 'neutral',
+  },
+  {
+    top: '12%',
+    left: '55%',
+    size: 3,
+    delayMs: 900,
+    durationMs: 3800,
+    tone: 'accent',
+  },
+  {
+    top: '34%',
+    left: '88%',
+    size: 3,
+    delayMs: 300,
+    durationMs: 3200,
+    tone: 'brand',
+  },
+  {
+    top: '42%',
+    left: '6%',
+    size: 2,
+    delayMs: 1200,
+    durationMs: 4600,
+    tone: 'neutral',
+  },
+  {
+    top: '58%',
+    left: '14%',
+    size: 3,
+    delayMs: 1800,
+    durationMs: 3600,
+    tone: 'brand',
+  },
+  {
+    top: '52%',
+    left: '92%',
+    size: 2,
+    delayMs: 700,
+    durationMs: 2800,
+    tone: 'accent',
+  },
+  {
+    top: '72%',
+    left: '9%',
+    size: 2,
+    delayMs: 400,
+    durationMs: 4000,
+    tone: 'neutral',
+  },
+  {
+    top: '78%',
+    left: '84%',
+    size: 3,
+    delayMs: 1000,
+    durationMs: 3400,
+    tone: 'brand',
+  },
+  {
+    top: '88%',
+    left: '28%',
+    size: 2,
+    delayMs: 1600,
+    durationMs: 3100,
+    tone: 'neutral',
+  },
+  {
+    top: '84%',
+    left: '64%',
+    size: 3,
+    delayMs: 200,
+    durationMs: 4400,
+    tone: 'accent',
+  },
+  {
+    top: '28%',
+    left: '68%',
+    size: 2,
+    delayMs: 2000,
+    durationMs: 3700,
+    tone: 'neutral',
+  },
+  {
+    top: '64%',
+    left: '76%',
+    size: 2,
+    delayMs: 1300,
+    durationMs: 2900,
+    tone: 'brand',
+  },
 ] as const
 
 export type GithubStarWizardContentProps = {
@@ -70,12 +173,31 @@ export function GithubStarWizardContent({
   const skipButtonRef = useRef<HTMLButtonElement | null>(null)
   const [starCount, setStarCount] = useState(0)
 
-  // Count up from zero once the takeover is on screen.
+  // Count up from zero once the takeover is on screen, then settle on the
+  // live GitHub count when the API answers; otherwise keep the build-time one.
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setStarCount(GITHUB_STARS_COUNT)
     })
-    return () => window.cancelAnimationFrame(frame)
+    const controller = new AbortController()
+    void fetch(GITHUB_REPO_API, {
+      signal: controller.signal,
+      headers: { Accept: 'application/vnd.github+json' },
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((repo: { stargazers_count?: unknown } | null) => {
+        const live = repo?.stargazers_count
+        if (typeof live === 'number' && Number.isFinite(live) && live > 0) {
+          setStarCount(Math.round(live))
+        }
+      })
+      .catch(() => {
+        // Offline or rate limited: the generated count stays on screen.
+      })
+    return () => {
+      window.cancelAnimationFrame(frame)
+      controller.abort()
+    }
   }, [])
 
   const chartData = GITHUB_STARS_HISTORY.filter(
@@ -106,21 +228,30 @@ export function GithubStarWizardContent({
             className="pointer-events-none absolute inset-0 overflow-hidden"
             aria-hidden
           >
-            <div className="absolute left-1/2 top-[-22%] h-[55%] w-[85%] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+            <div className="star-wizard-glow absolute left-1/2 top-[-22%] h-[55%] w-[85%] -translate-x-1/2 rounded-full blur-2xl" />
+            <div className="star-wizard-glow-accent absolute bottom-[-18%] left-[-12%] h-[45%] w-[55%] rounded-full blur-2xl" />
             {STAR_FIELD.map((star, index) => (
               <span
                 key={index}
-                className="absolute animate-pulse rounded-full bg-foreground/25"
-                style={{
-                  top: star.top,
-                  left: star.left,
-                  width: star.size,
-                  height: star.size,
-                  animationDelay: `${star.delayMs}ms`,
-                  animationDuration: '3.5s',
-                }}
+                className={cn(
+                  'star-wizard-star absolute rounded-full',
+                  star.tone === 'brand' && 'star-wizard-star--brand',
+                  star.tone === 'accent' && 'star-wizard-star--accent',
+                  star.tone === 'neutral' && 'star-wizard-star--neutral',
+                )}
+                style={
+                  {
+                    top: star.top,
+                    left: star.left,
+                    width: star.size,
+                    height: star.size,
+                    '--star-wizard-delay': `${star.delayMs}ms`,
+                    '--star-wizard-duration': `${star.durationMs}ms`,
+                  } as CSSProperties
+                }
               />
             ))}
+            <span className="star-wizard-shooting-star absolute right-[6%] top-[14%]" />
           </div>
 
           <div className="relative z-10 flex shrink-0 items-center justify-between px-5 py-4 sm:px-8">
@@ -200,7 +331,9 @@ export function GithubStarWizardContent({
               </div>
 
               {chartData.length >= 2 ? (
-                <GitHubStarsGrowthChart data={chartData} className="h-40" />
+                <div className="rounded-xl border border-border bg-card/50 p-4 pb-2 backdrop-blur-sm">
+                  <StarsChart data={chartData} />
+                </div>
               ) : null}
 
               <div className="grid grid-cols-3 gap-2.5">
@@ -242,7 +375,7 @@ export function GithubStarWizardContent({
                   </Button>
                 </div>
                 <p className="text-[11px] text-muted-foreground/70">
-                  {t("Either way, we won't ask again.")}
+                  {t('One-time ask, promise. May your builds be ever green.')}
                 </p>
               </div>
             </div>

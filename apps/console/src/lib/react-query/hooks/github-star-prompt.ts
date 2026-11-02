@@ -70,8 +70,7 @@ export function useGithubStarPrompt(
   useEffect(() => {
     if (!account || !trackVisits || dismissed) return
 
-    const dayKey = getLocalDayKey()
-    const guardKey = `${accountId ?? 'unknown'}:${dayKey}`
+    const guardKey = `${accountId ?? 'unknown'}:${todayKey}`
     if (recordedDayGuardRef.current === guardKey) return
     recordedDayGuardRef.current = guardKey
 
@@ -80,7 +79,7 @@ export function useGithubStarPrompt(
       accountRef.current?.prefs ??
       {}) as UserPrefs
     const currentDays = parseGithubStarVisitDayPrefs(currentPrefs)
-    const nextDays = withRecordedGithubStarVisit(currentDays, dayKey)
+    const nextDays = withRecordedGithubStarVisit(currentDays, todayKey)
     if (nextDays.join(',') === currentDays.join(',')) return
 
     void updateAccountPrefs(
@@ -96,7 +95,7 @@ export function useGithubStarPrompt(
       .catch((error) => {
         console.error('[github-star-prompt] failed to record visit day', error)
       })
-  }, [account, accountId, dismissed, queryClient, trackVisits])
+  }, [account, accountId, dismissed, queryClient, todayKey, trackVisits])
 
   // Hold off while the community-support wizard is due so two fullscreen
   // prompts never compete for the same session.
