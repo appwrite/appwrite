@@ -2,13 +2,21 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Recovery\OTP;
 
+use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\AllOf;
+use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 class Update extends Action
 {
@@ -46,6 +54,21 @@ class Update extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{param-userId}');
+            ->label('abuse-key', 'url:{url},userId:{param-userId}')
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
+            ->param('secret', '', new Text(256), 'Valid recovery OTP code.')
+            ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('project')
+            ->inject('queueForEvents')
+            ->inject('hooks')
+            ->inject('proofForPassword')
+            ->inject('proofForCode')
+            ->inject('authorization')
+            ->inject('pwnedPasswords')
+            ->inject('mqtt')
+            ->inject('queueForRealtime');
     }
 }
