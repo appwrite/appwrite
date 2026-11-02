@@ -13,10 +13,20 @@ function getCoverPublicAssetRoots(): string[] {
   return [join(cwd, 'public'), join(cwd, 'dist/client')]
 }
 
-async function fetchCoverPublicAssetBuffer(
-  relativePath: string,
-): Promise<Buffer | null> {
+/**
+ * Asset paths come from unauthenticated cover requests, so a `..` segment would
+ * read files outside the bundled asset roots.
+ */
+function normalizeCoverPublicAssetPath(relativePath: string): string | null {
   const normalized = relativePath.replace(/^\/+/, '')
+  if (!normalized) return null
+  if (normalized.split('/').some((segment) => segment === '..')) return null
+  return normalized
+}
+
+async function fetchCoverPublicAssetBuffer(
+  normalized: string,
+): Promise<Buffer | null> {
   const url = resolveSiteAssetUrl(`/${normalized}`, getCoverRenderSiteOrigin())
 
   try {
@@ -31,7 +41,9 @@ async function fetchCoverPublicAssetBuffer(
 export async function readCoverPublicAssetBuffer(
   relativePath: string,
 ): Promise<Buffer | null> {
-  const normalized = relativePath.replace(/^\/+/, '')
+  const normalized = normalizeCoverPublicAssetPath(relativePath)
+  if (!normalized) return null
+
   for (const root of getCoverPublicAssetRoots()) {
     const filepath = join(root, normalized)
     try {
@@ -42,7 +54,7 @@ export async function readCoverPublicAssetBuffer(
     }
   }
 
-  return fetchCoverPublicAssetBuffer(relativePath)
+  return fetchCoverPublicAssetBuffer(normalized)
 }
 
 export async function readCoverPublicAssetDataUri(
