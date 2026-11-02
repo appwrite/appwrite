@@ -68,19 +68,21 @@ class Handler
      */
     public function handle(mixed $redis, string $channel, string $payload): array
     {
-        $this->eventsReceived->add(1);
-        $this->delivered = 0;
-        $this->enter('decode');
-        $event = \json_decode($payload, true);
-        if (!\is_array($event)) {
-            $this->eventsDropped->add(1, ['reason' => 'invalid_payload']);
-            $this->enter('idle');
-
-            return ['project' => '', 'event' => '', 'result' => 'invalid_payload', 'receivers' => 0, 'error' => null];
-        }
-
+        $event = null;
         $error = null;
+
+        // Never throws: an exception reaching phpredis leaves it reading without calling back again.
         try {
+            $this->delivered = 0;
+            $this->enter('decode');
+            $this->eventsReceived->add(1);
+            $event = \json_decode($payload, true);
+            if (!\is_array($event)) {
+                $this->eventsDropped->add(1, ['reason' => 'invalid_payload']);
+
+                return ['project' => '', 'event' => '', 'result' => 'invalid_payload', 'receivers' => 0, 'error' => null];
+            }
+
             $this->enter('arrival');
             $this->recordArrival($event);
 
@@ -106,8 +108,12 @@ class Handler
             $this->enter('tail');
             $this->tail($event);
         } catch (\Throwable $th) {
-            $this->eventsFailed->add(1, ['stage' => $this->stage]);
             $error = $th;
+            try {
+                $this->eventsFailed->add(1, ['stage' => $this->stage]);
+            } catch (\Throwable) {
+                // Counting the failure must not throw past the guard.
+            }
         } finally {
             $this->enter('idle');
         }

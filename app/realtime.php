@@ -645,24 +645,29 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
 
             $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($eventHandler): void {
-                $arrivedAt = \microtime(true);
-                // Not made current: most events are never logged, so their span is just dropped.
-                $span = new Span('realtime.event');
+                // Nothing may escape: with an exception pending, phpredis keeps reading but never calls back again.
+                try {
+                    $arrivedAt = \microtime(true);
+                    // Not made current: most events are never logged, so their span is just dropped.
+                    $span = new Span('realtime.event');
 
-                $outcome = $eventHandler->handle($redis, $channel, $payload);
-                $resolvedAt = \microtime(true);
+                    $outcome = $eventHandler->handle($redis, $channel, $payload);
+                    $resolvedAt = \microtime(true);
 
-                $span
-                    ->set('project.id', $outcome['project'])
-                    ->set('realtime.event.name', $outcome['event'])
-                    ->set('realtime.result', $outcome['result'])
-                    ->set('realtime.receivers', $outcome['receivers'])
-                    ->set('realtime.arrived_at', $arrivedAt)
-                    ->set('realtime.resolved_at', $resolvedAt);
+                    $span
+                        ->set('project.id', $outcome['project'])
+                        ->set('realtime.event.name', $outcome['event'])
+                        ->set('realtime.result', $outcome['result'])
+                        ->set('realtime.receivers', $outcome['receivers'])
+                        ->set('realtime.arrived_at', $arrivedAt)
+                        ->set('realtime.resolved_at', $resolvedAt);
 
-                // Logging every event would flood the logs.
-                if ($eventHandler->shouldLog($outcome, $resolvedAt - $arrivedAt)) {
-                    $span->finish(error: $outcome['error']);
+                    // Logging every event would flood the logs.
+                    if ($eventHandler->shouldLog($outcome, $resolvedAt - $arrivedAt)) {
+                        $span->finish(error: $outcome['error']);
+                    }
+                } catch (\Throwable $th) {
+                    Console::error('Realtime event error: ' . $th->getMessage());
                 }
             });
         } catch (Throwable $th) {
