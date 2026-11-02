@@ -60,7 +60,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 100)])
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 100)])
             ->param('current', true, new Boolean(), 'Delete the current session too. Use false to sign out of every other session while staying signed in on this one.', true)
             ->inject('request')
             ->inject('response')

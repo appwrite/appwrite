@@ -67,8 +67,8 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse', [
-                Limit::attempts('url:{url},email:{param-email}', 10),
-                Limit::attempts('url:{url},ip:{ip}', 10),
+                Limit::attempts(['url', 'param.email'], 10),
+                Limit::attempts(['url', 'ip'], 10),
             ])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['redirectValidator'])

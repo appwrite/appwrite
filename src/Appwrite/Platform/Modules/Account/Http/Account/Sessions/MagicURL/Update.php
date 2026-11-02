@@ -70,9 +70,9 @@ class Update extends Base
                 ),
             ))
             ->label('abuse', [
-                Limit::failures('ip:{ip},userId:{param-userId}', 10),
-                Limit::failures('projectId:{projectId},url:{url},userId:{param-userId}', 10),
-                Limit::failures('projectId:{projectId},url:{url},ip:{ip}', 100),
+                Limit::failures(['ip', 'param.userId'], 10),
+                Limit::failures(['projectId', 'url', 'param.userId'], 10),
+                Limit::failures(['projectId', 'url', 'ip'], 100),
             ])
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid verification token.')

@@ -45,7 +45,7 @@ class Create extends Action
         ->label('usage.metric', 'tokens.{scope}.requests.create')
         ->label('usage.params', ['resourceId:{request.resourceId}', 'resourceType:{request.resourceType}'])
         ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
-        ->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
+        ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
         ->label('sdk', new Method(
             namespace: 'tokens',
             group: 'files',

@@ -96,7 +96,7 @@ class Create extends Action
                     contentType: ContentType::JSON
                 )
             ])
-            ->label('abuse', [Limit::attempts('url:{url},userId:{userId}', 10)])
+            ->label('abuse', [Limit::attempts(['url', 'userId'], 10)])
             ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE, Type::CUSTOM]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`, `' . Type::CUSTOM . '`.', enum: new Enum(name: 'AuthenticationFactor'))
             ->inject('response')
             ->inject('dbForProject')

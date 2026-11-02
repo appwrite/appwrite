@@ -419,12 +419,12 @@ const explainers = {
         if (route && !inApi) {
             return {
                 issue: `Guests can call this ${route.method || ''} route (scope ${code(scope)}), and it sits outside the ${code('api')} group, so no abuse limit can apply.`,
-                fix: `If it only forwards to a limited route, no change is needed beyond confirming that in review. Otherwise add it to ${code("->groups(['api', …])")} and set ${code("->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT)])")}.`,
+                fix: `If it only forwards to a limited route, no change is needed beyond confirming that in review. Otherwise add it to ${code("->groups(['api', …])")} and set ${code("->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT)])")}.`,
             };
         }
         return {
             issue: `Guests can call this ${route?.method || ''} route (scope ${code(scope)}), and it has no ${code('abuse')} label, so the shared api hook does not rate-limit it.`,
-            fix: `Add ${code("->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT)])")} to this route (the house default), or narrow the scope.`,
+            fix: `Add ${code("->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT)])")} to this route (the house default), or narrow the scope.`,
         };
     },
     'weak-secret-env-default': (f) => {

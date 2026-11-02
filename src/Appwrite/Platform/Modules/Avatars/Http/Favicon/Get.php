@@ -47,7 +47,7 @@ class Get extends Action
             ->desc('Get favicon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
-            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 60, seconds: 60)])
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 60, seconds: 60)])
             ->label('cache', true)
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(

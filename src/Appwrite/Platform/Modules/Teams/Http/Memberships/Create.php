@@ -77,7 +77,7 @@ class Create extends Action
                     ),
                 ]
             ))
-            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 10)])
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)

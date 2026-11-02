@@ -51,7 +51,7 @@ class Create extends Base
                     'query' => ['default' => [], 'validator' => new JSON(), 'description' => 'The query or queries to execute.', 'optional' => false, 'example' => '{"query":"mutation { accountUpdateName(name: \"Walter\") { name } }"}'],
                 ],
             ))
-            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 60, seconds: 60)])
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 60, seconds: 60)])
             ->inject('request')
             ->inject('response')
             ->inject('schema')

@@ -71,8 +71,8 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse', [
-                Limit::attempts('url:{url},email:{param-email}', 10),
-                Limit::attempts('url:{url},ip:{ip}', 10),
+                Limit::attempts(['url', 'param.email'], 10),
+                Limit::attempts(['url', 'ip'], 10),
             ])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)

@@ -328,6 +328,13 @@ class OpenAPI3 extends Format
 
             /** @var list<Limit> $limits */
             $limits = $route->getLabel('abuse', []);
+            // The spec has always described a key as `name:{placeholder}` pairs.
+            $rateKey = fn (Limit $limit): string => \implode(',', \array_map(
+                fn (string $part): string => \str_starts_with($part, 'param.')
+                    ? \substr($part, 6) . ':{param-' . \substr($part, 6) . '}'
+                    : $part . ':{' . $part . '}',
+                $limit->by,
+            ));
 
             $temp = [
                 'summary' => $route->getDesc(),
@@ -343,8 +350,8 @@ class OpenAPI3 extends Format
                     'rate-time' => $limits[0]->seconds ?? 3600,
                     'rate-key' => match (\count($limits)) {
                         0 => 'url:{url},ip:{ip}',
-                        1 => $limits[0]->key,
-                        default => \array_map(fn (Limit $limit): string => $limit->key, $limits),
+                        1 => $rateKey($limits[0]),
+                        default => \array_map($rateKey, $limits),
                     },
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,

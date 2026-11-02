@@ -68,7 +68,7 @@ class Get extends Base
             ->label('audits.event', 'session.create')
             ->label('audits.resource', 'user/{user.$id}')
             ->label('audits.userId', '{user.$id}')
-            ->label('abuse', [Limit::attempts('ip:{ip}', 50)])
+            ->label('abuse', [Limit::attempts(['ip'], 50)])
             ->label('docs', false)
             ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)

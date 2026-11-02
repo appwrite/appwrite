@@ -51,7 +51,7 @@ abstract class Base extends Action
             ->groups(['api'])
             ->label('scope', 'public')
             ->label('docs', false)
-            ->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url}', 60)])
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url'], 60)])
             ->param('token', '', new Text(2048, 0), 'Unsubscribe token from the alert email.', true)
             ->param('scope', self::SCOPE_MONITOR, new WhiteList([self::SCOPE_MONITOR, self::SCOPE_ALL], true), 'What to stop or resume: this monitor\'s emails, or every alert email of its type.', true)
             ->inject('request')

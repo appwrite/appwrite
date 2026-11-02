@@ -61,7 +61,7 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 100)])
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 100)])
             ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Session ID. Use the string \'current\' to delete the current device session.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('request')

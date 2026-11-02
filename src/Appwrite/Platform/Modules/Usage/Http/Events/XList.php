@@ -102,7 +102,7 @@ class XList extends Action
             ->desc('List usage events')
             ->groups(['api', 'usage'])
             ->label('scope', 'usage.read')
-            ->label('abuse', [Limit::attempts('projectId:{project.$id}', 60, seconds: 60)])
+            ->label('abuse', [Limit::attempts(['projectId', 'url'], 60, seconds: 60)])
             ->label('sdk', new Method(
                 namespace: 'usage',
                 group: 'events',

@@ -53,7 +53,7 @@ class Update extends Action
             ->label('audits.event', 'membership.update')
             ->label('audits.resource', 'team/{request.teamId}')
             ->label('audits.userId', '{request.userId}')
-            ->label('abuse', [Limit::attempts('ip:{ip},url:{url}', 10)])
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'teams',
                 group: 'memberships',

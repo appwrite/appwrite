@@ -56,7 +56,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 10)])
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('sessionId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Session ID. Use the string \'current\' to update the current device session.', true, ['dbForProject'])
             ->inject('response')
             ->inject('user')

@@ -39,7 +39,7 @@ class Delete extends Action
             ->label('resourceType', RESOURCE_TYPE_REPORTS)
             ->label('audits.event', 'report.delete')
             ->label('audits.resource', 'report/{request.reportId}')
-            ->label('abuse', [Limit::attempts('projectId:{projectId},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
+            ->label('abuse', [Limit::attempts(['projectId', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'advisor',
                 group: 'reports',

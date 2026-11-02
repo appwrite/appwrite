@@ -70,7 +70,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->label('abuse', [Limit::attempts('url:{url},userId:{param-userId}', 10)])
+            ->label('abuse', [Limit::attempts(['url', 'param.userId'], 10)])
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid recovery OTP code.')
             ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordFormat(new AllOf([new PasswordStrength($project->getAttribute('auths', [])['passwordStrength'] ?? []), new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, denyList: $project->getAttribute('auths', [])['passwordDictionaryDenyList'] ?? [])], Validator::TYPE_STRING)), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])

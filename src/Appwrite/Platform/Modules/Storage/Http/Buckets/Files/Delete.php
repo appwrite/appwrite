@@ -45,7 +45,7 @@ class Delete extends Action
             ->label('audits.event', 'file.delete')
             ->label('audits.resource', 'file/{request.fileId}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
-            ->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',

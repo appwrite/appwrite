@@ -53,7 +53,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse', [Limit::attempts('url:{url},ip:{ip}', 10)])
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->inject('request')
             ->inject('response')
             ->inject('project')

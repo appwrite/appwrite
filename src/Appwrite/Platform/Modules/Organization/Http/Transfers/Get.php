@@ -33,7 +33,7 @@ class Get extends Action
             ->desc('Get project transfer')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.read')
-            ->label('abuse', [Limit::attempts('ip:{ip},url:{url}', 10)])
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'transfers',

@@ -38,7 +38,7 @@ class Update extends Action
             ->label('scope', 'projects.write')
             ->label('audits.event', 'transfer.update')
             ->label('audits.resource', 'project/{response.$id}')
-            ->label('abuse', [Limit::attempts('ip:{ip},url:{url}', 10)])
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'transfers',

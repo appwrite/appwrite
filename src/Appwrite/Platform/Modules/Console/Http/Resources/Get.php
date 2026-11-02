@@ -54,7 +54,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->label('abuse', [Limit::attempts('userId:{userId}, url:{url}', 120, seconds: 60)])
+            ->label('abuse', [Limit::attempts(['userId', 'url'], 120, seconds: 60)])
             ->param('value', '', new Text(256), 'Resource value.')
             ->param('type', '', new WhiteList(['rules']), 'Resource type.', enum: new Enum(name: 'ConsoleResourceType'))
             ->inject('response')

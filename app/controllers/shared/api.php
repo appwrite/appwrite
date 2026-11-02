@@ -619,7 +619,7 @@ Http::init()
 
         /** @var list<Limit> $limits */
         $limits = $route->getLabel('abuse', []);
-        $params = $limits === [] ? [] : Limit::params($route, $request, $project, $user, $pathParams);
+        $values = $limits === [] ? [] : Limit::values($route, $request, $project, $user, $pathParams);
         $closestLimit = null;
         $reserved = [];
 
@@ -627,8 +627,7 @@ Http::init()
             $max = $limit->limit * $multiplier;
 
             try {
-                $isRateLimited = $timelimit($limit->key, $max, $limit->seconds, function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
-                    $timeLimit = $timeLimit->withParams($params);
+                $isRateLimited = $timelimit($limit->key($values), $max, $limit->seconds, function (TimeLimit $timeLimit) use ($response, $shouldCheckAbuse, &$closestLimit): bool {
                     // A failure limit's hit is reserved here too, atomically, and given back if the request succeeds.
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
                     if ($result->limit && ($result->remaining < $closestLimit || is_null($closestLimit))) {
@@ -652,7 +651,7 @@ Http::init()
                 // the per-account quota of every account it tries, locking those accounts out from everywhere.
                 foreach ($reserved as $hit) {
                     try {
-                        $timelimit($hit->key, $hit->limit, $hit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->withParams($params)->release());
+                        $timelimit($hit->key($values), $hit->limit, $hit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->release());
                     } catch (\Throwable $th) {
                         \error_log((string) $th);
                     }
@@ -1016,10 +1015,10 @@ Http::shutdown()
             return;
         }
 
-        $params = Limit::params($route, $request, $project, $user, $pathParams);
+        $values = Limit::values($route, $request, $project, $user, $pathParams);
         foreach ($limits as $limit) {
             try {
-                $timelimit($limit->key, $limit->limit, $limit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->withParams($params)->release());
+                $timelimit($limit->key($values), $limit->limit, $limit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->release());
             } catch (\Throwable $th) {
                 // The response is already decided; a limiter outage must not turn it into a 500.
                 \error_log((string) $th);

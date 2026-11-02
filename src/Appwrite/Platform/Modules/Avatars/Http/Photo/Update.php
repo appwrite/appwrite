@@ -54,7 +54,7 @@ class Update extends Base
             ->label('audits.resource', 'user/{user.$id}')
             ->label('audits.userId', '{user.$id}')
             ->label('usage.resource', 'user/{user.$id}')
-            ->label('abuse', [Limit::attempts('ip:{ip},method:{method},url:{url},userId:{userId}', APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'avatars',
                 group: null,

@@ -76,8 +76,8 @@ class Create extends Action
                 contentType: ContentType::JSON
             ))
             ->label('abuse', [
-                Limit::failures('projectId:{projectId},url:{url},email:{param-email}', 10),
-                Limit::failures('projectId:{projectId},url:{url},ip:{ip}', 100),
+                Limit::failures(['projectId', 'url', 'param.email'], 10),
+                Limit::failures(['projectId', 'url', 'ip'], 100),
             ])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')

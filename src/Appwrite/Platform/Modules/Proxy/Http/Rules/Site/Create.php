@@ -63,7 +63,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->label('abuse', [Limit::attempts('userId:{userId}, url:{url}', 10, seconds: 60)])
+            ->label('abuse', [Limit::attempts(['userId', 'url'], 10, seconds: 60)])
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of site to be executed.', false, ['dbForProject'])
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
