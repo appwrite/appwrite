@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
-use Appwrite\Auth\EncryptionKey;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
@@ -510,7 +509,7 @@ class Create extends Action
                     if (empty($data)) {
                         $data = (string) $deviceForFiles->read($path);
                     }
-                    $key = EncryptionKey::current();
+                    $key = System::getEnv('_APP_OPENSSL_KEY_V1');
                     $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                     $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
                 }
@@ -529,7 +528,7 @@ class Create extends Action
                 $openSSLIV = null;
 
                 if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
-                    $openSSLVersion = EncryptionKey::version();
+                    $openSSLVersion = '1';
                     $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
                     $openSSLTag = \bin2hex($tag);
                     $openSSLIV = \bin2hex($iv);

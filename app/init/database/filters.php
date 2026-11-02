@@ -1,12 +1,12 @@
 <?php
 
-use Appwrite\Auth\EncryptionKey;
 use Appwrite\Network\Platform;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Query\Schema\ColumnType;
+use Utopia\System\System;
 
 Database::addFilter(
     'casting',
@@ -282,8 +282,7 @@ Database::addFilter(
 Database::addFilter(
     'encrypt',
     function (mixed $value) {
-        $version = EncryptionKey::version();
-        $key = EncryptionKey::get($version);
+        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
@@ -292,7 +291,7 @@ Database::addFilter(
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
-            'version' => $version,
+            'version' => '1',
         ], JSON_UNESCAPED_SLASHES);
     },
     function (mixed $value) {
@@ -300,7 +299,7 @@ Database::addFilter(
             return;
         }
         $value = json_decode($value, true);
-        $key = EncryptionKey::get((string) $value['version']);
+        $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }

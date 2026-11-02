@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
-use Appwrite\Platform\Tasks\Encryption;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
@@ -32,7 +31,6 @@ class Tasks extends Service
         $this->type = Service::TYPE_TASK;
         $this
             ->addAction('doctor', Doctor::class)
-            ->addAction('encryption', Encryption::class)
             ->addAction('install', Install::class)
             ->addAction('interval', Interval::class)
             ->addAction('maintenance', Maintenance::class)
