@@ -406,6 +406,7 @@ final class DeletesTest extends TestCase
             deviceForSites: $this->createStub(Device::class),
             deviceForBuilds: $this->createStub(Device::class),
             telemetry: new NoTelemetry(),
+            mqtt: $this->mqtt(),
             certificates: $this->createStub(Certificates::class),
             executor: $this->createStub(Executor::class),
             executionRetention: DateTime::format(new \DateTime('-14 days')),

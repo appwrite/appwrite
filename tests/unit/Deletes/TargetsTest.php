@@ -87,11 +87,11 @@ final class TargetsTest extends TestCase
         return [$target, $subscriber];
     }
 
-    private function createTopic(): Document
+    private function createTopic(string $id = 'topic-1'): Document
     {
         return $this->database->createDocument('topics', new Document([
-            '$id' => 'topic-1',
-            'name' => 'Topic 1',
+            '$id' => $id,
+            'name' => $id,
             // Matches the subscriber rows seeded below, so the unrelated pushTotal
             // decrement this path also does doesn't hit its floor and log noise.
             'pushTotal' => 2,
@@ -160,6 +160,56 @@ final class TargetsTest extends TestCase
         Targets::delete($this->database, Query::equal('$sequence', [$targetA->getSequence(), $targetB->getSequence()]), $this->mqtt(), 'project-1');
 
         $this->assertCount(1, $this->pubsub->published);
+    }
+
+    public function testAnotherPairsRemainingRowDoesNotBlockARevokeInTheSameSweep(): void
+    {
+        $topicA = $this->createTopic('topic-a');
+        $topicB = $this->createTopic('topic-b');
+        [$targetA] = $this->subscribe($topicA, 'user-1', 'push-a');
+        [$targetB] = $this->subscribe($topicB, 'user-2', 'push-b');
+        // Kept: user-1 stays on topic-b, which the users × topics lookup also matches,
+        // though neither revoked pair is user-1 on topic-b.
+        $this->subscribe($topicB, 'user-1', 'push-c');
+
+        Targets::delete($this->database, Query::equal('$sequence', [$targetA->getSequence(), $targetB->getSequence()]), $this->mqtt(), 'project-1');
+
+        $revoked = \array_map(function (array $published) {
+            $event = \json_decode($published['message'], true);
+            return $event['userId'] . ':' . $event['topic'];
+        }, $this->pubsub->published);
+        \sort($revoked);
+
+        $this->assertSame(['user-1:topic-a', 'user-2:topic-b'], $revoked);
+    }
+
+    public function testRemainingRowOnALaterPageStillBlocksTheRevoke(): void
+    {
+        $topicA = $this->createTopic('topic-a');
+        $topicB = $this->createTopic('topic-b');
+        [$targetA] = $this->subscribe($topicA, 'user-1', 'push-a');
+        [$targetB] = $this->subscribe($topicB, 'user-2', 'push-b');
+
+        // A full page of rows the users × topics lookup matches but no revoked pair owns,
+        // so the row that decides user-1's revoke is only reached on the next page.
+        $this->database->createDocuments('subscribers', \array_map(fn (int $i) => new Document([
+            '$id' => 'filler-' . $i,
+            'targetId' => 'filler-target-' . $i,
+            'targetInternalId' => 'filler-target-' . $i,
+            'userId' => 'user-1',
+            'userInternalId' => 'user-1',
+            'topicId' => $topicB->getId(),
+            'topicInternalId' => $topicB->getSequence(),
+            'providerType' => MESSAGE_TYPE_PUSH,
+        ]), \range(1, Database::BATCH_SIZE)));
+        $this->subscribe($topicA, 'user-1', 'push-kept');
+
+        Targets::delete($this->database, Query::equal('$sequence', [$targetA->getSequence(), $targetB->getSequence()]), $this->mqtt(), 'project-1');
+
+        $this->assertCount(1, $this->pubsub->published, 'user-1 keeps a row for topic-a on the second page, so only user-2 is revoked.');
+        $event = \json_decode($this->pubsub->published[0]['message'], true);
+        $this->assertSame('user-2', $event['userId']);
+        $this->assertSame('topic-b', $event['topic']);
     }
 
     public function testWithoutAnMqttAdapterDeletionStillSucceeds(): void

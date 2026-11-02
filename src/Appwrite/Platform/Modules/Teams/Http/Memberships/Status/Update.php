@@ -164,7 +164,7 @@ class Update extends Action
         }
 
         $claimed = null;
-        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, &$session, &$claimed) {
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $project, $membership, $team, $targetUser, $hasSession, $secret, $proofForToken, $mqtt, &$session, &$claimed) {
             $claimed = null; // A retried attempt starts over
             // Lock the user first, as an address change does, so a voided invite cannot slip through
             /** @var User $user */

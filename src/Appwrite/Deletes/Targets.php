@@ -16,8 +16,8 @@ class Targets
     {
         // Keyed by userId:topicInternalId and collected across every target this query matches
         // (a target+topic pair is unique, but the same user can hold several targets subscribed
-        // to the same topic), so a bulk sweep costs one existence check per topic a user is
-        // actually revoked from, not one per deleted subscriber row.
+        // to the same topic), so a bulk sweep checks what remains in one query per chunk of
+        // user/topic pairs, not one per deleted subscriber row.
         $toRevoke = [];
 
         $database->deleteDocuments(
@@ -98,6 +98,10 @@ class Targets
     }
 
     /**
+     * Drop each user's live MQTT subscription once they hold no other subscriber row for the topic,
+     * matching the subscribe gate (membership is per user, not per target). Mirrors the explicit
+     * subscriber-delete endpoint's own notification, which this cleanup path otherwise lacks.
+     *
      * @param array<string, array{0: string, 1: string, 2: string}> $toRevoke
      */
     private static function revokeCollected(Database $database, ?Mqtt $mqtt, ?string $projectId, array $toRevoke): void
@@ -106,31 +110,61 @@ class Targets
             return;
         }
 
-        foreach ($toRevoke as [$userId, $topicInternalId, $topicId]) {
-            self::revokeIfNoLongerSubscribed($database, $mqtt, $projectId, $userId, $topicInternalId, $topicId);
+        foreach (\array_chunk($toRevoke, APP_LIMIT_ARRAY_PARAMS_SIZE, true) as $chunk) {
+            $remaining = self::findRemaining($database, $chunk);
+
+            foreach ($chunk as $key => [$userId, , $topicId]) {
+                if (isset($remaining[$key])) {
+                    continue;
+                }
+
+                try {
+                    $mqtt->revokeTopic($projectId, $userId, $topicId);
+                } catch (\Throwable $error) {
+                    Console::error('Failed to unsubscribe MQTT connection: ' . $error->getMessage());
+                }
+            }
         }
     }
 
     /**
-     * Drop the user's live MQTT subscription once they hold no other subscriber row for the topic,
-     * matching the subscribe gate (membership is per user, not per target). Mirrors the explicit
-     * subscriber-delete endpoint's own notification, which this cleanup path otherwise lacks.
+     * Which of the chunk's user/topic pairs still hold a subscriber row, in one paged query per chunk
+     * rather than one lookup per pair. The users × topics filter can match pairs outside the chunk,
+     * so rows are keyed the same way as the chunk and only its own keys are read back.
+     *
+     * @param array<string, array{0: string, 1: string, 2: string}> $chunk
+     * @return array<string, true>
      */
-    private static function revokeIfNoLongerSubscribed(Database $database, Mqtt $mqtt, string $projectId, string $userId, string $topicInternalId, string $topicId): void
+    private static function findRemaining(Database $database, array $chunk): array
     {
-        $stillSubscribed = $database->skipFilters(fn () => $database->findOne('subscribers', [
-            Query::equal('topicInternalId', [$topicInternalId]),
-            Query::equal('userId', [$userId]),
-        ]), APP_TOPICS_SUBQUERIES);
+        $userIds = \array_values(\array_unique(\array_column($chunk, 0)));
+        $topicInternalIds = \array_values(\array_unique(\array_column($chunk, 1)));
 
-        if (!$stillSubscribed->isEmpty()) {
-            return;
-        }
+        $remaining = [];
+        $cursor = null;
 
-        try {
-            $mqtt->revokeTopic($projectId, $userId, $topicId);
-        } catch (\Throwable $error) {
-            Console::error('Failed to unsubscribe MQTT connection: ' . $error->getMessage());
-        }
+        do {
+            $queries = [
+                Query::equal('userId', $userIds),
+                Query::equal('topicInternalId', $topicInternalIds),
+                Query::select(['$sequence', 'userId', 'topicInternalId']),
+                Query::orderAsc('$sequence'),
+                Query::limit(Database::BATCH_SIZE),
+            ];
+
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $subscribers = $database->skipFilters(fn () => $database->find('subscribers', $queries), APP_TOPICS_SUBQUERIES);
+
+            foreach ($subscribers as $subscriber) {
+                $remaining[$subscriber->getAttribute('userId') . ':' . $subscriber->getAttribute('topicInternalId')] = true;
+            }
+
+            $cursor = \end($subscribers) ?: null;
+        } while (\count($subscribers) === Database::BATCH_SIZE);
+
+        return $remaining;
     }
 }
