@@ -137,9 +137,12 @@ export function PaymentMethodForm({
   // Recovery: SetupIntent already succeeded but Appwrite link never landed.
   // Card form is skipped; cardholder name must be collected on the confirm step.
   const [isRecovery, setIsRecovery] = useState(false)
-  // Set when the user abandons the recovery step to enter a different card;
-  // init then creates a fresh payment method instead of reusing the stuck one.
-  const [skipIncomplete, setSkipIncomplete] = useState(false)
+  // Recovery methods the user abandoned to enter a different card. Skipped by
+  // id so a re-init (theme change) reuses the replacement instead of creating
+  // another payment method.
+  const [skippedPaymentMethodIds, setSkippedPaymentMethodIds] = useState<
+    string[]
+  >([])
   const [isStripeLoading, setIsStripeLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
@@ -205,12 +208,12 @@ export function PaymentMethodForm({
 
         // Read the list once - depending on it in effect deps would re-init the
         // form every time the query invalidates.
-        const existingIncomplete = skipIncomplete
-          ? undefined
-          : allPaymentMethods?.find(
-              (method: Models.PaymentMethod) =>
-                method.clientSecret && !method.providerMethodId,
-            )
+        const existingIncomplete = allPaymentMethods?.find(
+          (method: Models.PaymentMethod) =>
+            method.clientSecret &&
+            !method.providerMethodId &&
+            !skippedPaymentMethodIds.includes(method.$id),
+        )
 
         let paymentMethod: Models.PaymentMethod
         let secret: string
@@ -334,7 +337,13 @@ export function PaymentMethodForm({
     // mutation object to keep the Stripe form from reloading when the list
     // refetches.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, hasStripePublicKey, stripePublishableKey, theme, skipIncomplete])
+  }, [
+    open,
+    hasStripePublicKey,
+    stripePublishableKey,
+    theme,
+    skippedPaymentMethodIds,
+  ])
 
   // Reset internal state when the enclosing surface closes. Also abort any
   // in-flight submit so its continuation doesn't fire setError / toast /
@@ -348,7 +357,7 @@ export function PaymentMethodForm({
       setShowConfirmStep(false)
       setRequiresState(false)
       setIsRecovery(false)
-      setSkipIncomplete(false)
+      setSkippedPaymentMethodIds([])
       setError(null)
       setPaymentMethodId(null)
       setClientSecret(null)
@@ -680,7 +689,12 @@ export function PaymentMethodForm({
                 setProviderMethodId(null)
                 setAddedCardPreview(null)
                 setError(null)
-                setSkipIncomplete(true)
+                if (paymentMethodId) {
+                  setSkippedPaymentMethodIds((ids) => [
+                    ...ids,
+                    paymentMethodId,
+                  ])
+                }
               }}
               disabled={isLoading}
             >
