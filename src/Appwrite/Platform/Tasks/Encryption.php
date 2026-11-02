@@ -151,25 +151,24 @@ class Encryption extends Action
                     continue;
                 }
 
-                $count++;
-
                 if (!$commit) {
+                    $count++;
                     continue;
                 }
 
                 // Locked from read to write, so a client update in between is not overwritten
                 // with the value read here. Writing through the encrypt filter stores the current version.
-                $database->withTransaction(function () use ($database, $collection, $raw, $stale) {
+                $written = $database->withTransaction(function () use ($database, $collection, $raw, $stale): bool {
                     $locked = $database->skipFilters(fn () => $database->getDocument($collection, $raw->getId(), forUpdate: true));
                     if ($locked->isEmpty()) {
-                        return;
+                        return false;
                     }
 
                     // A value whose key is gone would decrypt to false and be re-encrypted as garbage
                     foreach ($stale as $key) {
                         if (!$this->decrypts($locked->getAttribute($key))) {
                             Console::warning('  ' . $collection . '/' . $raw->getId() . ': ' . $key . ' does not decrypt with its recorded key version, skipped');
-                            return;
+                            return false;
                         }
                     }
 
@@ -177,7 +176,13 @@ class Encryption extends Action
 
                     $update = new Document(\array_combine($stale, \array_map(fn (string $key) => $document->getAttribute($key), $stale)));
                     $database->withPreserveDates(true, fn () => $database->updateDocument($collection, $raw->getId(), $update));
+
+                    return true;
                 });
+
+                if ($written) {
+                    $count++;
+                }
             }
 
             $cursor = \end($documents) ?: null;
