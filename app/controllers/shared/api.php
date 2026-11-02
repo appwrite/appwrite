@@ -723,6 +723,15 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
         $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
+
+        // Why the caller made this request, shown next to it in Activity. Percent-encoded values are
+        // decoded so clients that cannot send non-ASCII header bytes (browsers, Node) can still send any language.
+        $reason = \trim(\rawurldecode($request->getHeaderLine('x-appwrite-reason', '')));
+        if (! \mb_check_encoding($reason, 'UTF-8') || \mb_strlen($reason) > APP_LIMIT_AUDIT_REASON_LENGTH) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Reason header value: send UTF-8 text of at most ' . APP_LIMIT_AUDIT_REASON_LENGTH . ' characters.');
+        }
+        $auditContext->reason = $reason;
+
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;

@@ -31,6 +31,7 @@ return [
         'X-Appwrite-Impersonate-User-Id',
         'X-Appwrite-Impersonate-User-Email',
         'X-Appwrite-Impersonate-User-Phone',
+        'X-Appwrite-Reason',
         // SDK generator
         'X-SDK-Version',
         'X-SDK-Name',
