@@ -11,12 +11,12 @@
     <tr>
         <td style="padding: 16px 20px; width: 50%; border-right: 1px solid #e8e9f0;">
             <div style="color: #6c6c75; font-size: 12px; line-height: 18px;">{{valueLabel}}</div>
-            <div style="margin-top: 4px; color: {{valueColor}}; font-size: 22px; font-weight: 600; line-height: 30px; white-space: nowrap;">{{value}}</div>
+            <div style="margin-top: 4px; color: {{valueColor}}; font-size: 22px; font-weight: 500; line-height: 30px; white-space: nowrap;">{{value}}</div>
             <div style="color: #6c6c75; font-size: 13px; line-height: 20px;">{{valueNote}}</div>
         </td>
         <td style="padding: 16px 20px; width: 50%;">
             <div style="color: #6c6c75; font-size: 12px; line-height: 18px;">{{thresholdLabel}}</div>
-            <div style="margin-top: 4px; color: #19191c; font-size: 22px; font-weight: 600; line-height: 30px; white-space: nowrap;">{{threshold}}</div>
+            <div style="margin-top: 4px; color: #19191c; font-size: 22px; font-weight: 500; line-height: 30px; white-space: nowrap;">{{threshold}}</div>
             <div style="color: #6c6c75; font-size: 13px; line-height: 20px;">{{thresholdNote}}</div>
         </td>
     </tr>
