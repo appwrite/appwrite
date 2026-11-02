@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Mock\Services;
 
 use Appwrite\Platform\Modules\Mock\Http\Mock\APIKey\Unprefixed\Create as CreateAPIKeyUnprefixed;
+use Appwrite\Platform\Modules\Mock\Http\Mock\GitHub\Callback\Get as GetGitHubCallback;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\BadIcon\Get as GetBadIcon;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\FaviconPage\Get as GetFaviconPage;
 use Appwrite\Platform\Modules\Mock\Http\Mock\Tests\Avatars\FaviconPage\Truncated\Get as GetFaviconPageTruncated;
@@ -47,6 +48,7 @@ class Http extends Service
         $this->addAction(GetOAuth2Success::getName(), GetOAuth2Success::class);
         $this->addAction(GetOAuth2Failure::getName(), GetOAuth2Failure::class);
         $this->addAction(CreateAPIKeyUnprefixed::getName(), CreateAPIKeyUnprefixed::class);
+        $this->addAction(GetGitHubCallback::getName(), GetGitHubCallback::class);
         $this->addAction(Shutdown::getName(), Shutdown::class);
     }
 }
