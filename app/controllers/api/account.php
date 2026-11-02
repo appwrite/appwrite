@@ -243,7 +243,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     // gets a session, and a failed insert rolls the claim back so the token can be retried. The user row lock
     // orders this against an address change, which deletes the token and resets the verification it proves
     $claimed = false;
-    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed) {
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user, $verification, $project, &$claimed, $mqtt) {
         $claimed = false; // A retried attempt starts over
         /** @var User $locked */
         $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
@@ -258,7 +258,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $guarded = $locked->getMinimumFactors() > 1;
         if ($verification !== null && !$locked->getAttribute($verification, false) && !$guarded) {
             $proven = $verification === 'phoneVerification' ? MESSAGE_TYPE_SMS : MESSAGE_TYPE_EMAIL;
-            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven));
+            $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, $proven, $mqtt));
             $claimed = true;
         }
 
@@ -2027,7 +2027,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
                     if (!$user->getAttribute('emailVerification', false)) {
-                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+                        $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, mqtt: $mqtt));
                         $dbForProject->purgeCachedDocument('users', $user->getId());
 
                         try {
@@ -4713,7 +4713,7 @@ Http::put('/v1/account/recovery')
         $sessions = $profile->getAttribute('sessions', []);
 
         $claimed = false;
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed, $mqtt) {
             $claimed = false; // A retried attempt starts over
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
@@ -4726,7 +4726,7 @@ Http::put('/v1/account/recovery')
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             $guarded = $locked->getMinimumFactors() > 1;
             if (!$locked->getAttribute('emailVerification', false) && !$guarded) {
-                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project, mqtt: $mqtt));
                 $claimed = true;
             }
 
@@ -5160,7 +5160,7 @@ Http::put('/v1/account/recovery/otp')
         $sessions = $profile->getAttribute('sessions', []);
 
         $claimed = false;
-        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed) {
+        $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed, $mqtt) {
             $claimed = false; // A retried attempt starts over
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
@@ -5173,7 +5173,7 @@ Http::put('/v1/account/recovery/otp')
             $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             $guarded = $locked->getMinimumFactors() > 1;
             if (!$locked->getAttribute('emailVerification', false) && !$guarded) {
-                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project));
+                $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project, mqtt: $mqtt));
                 $claimed = true;
             }
 
