@@ -32,6 +32,10 @@ import {
   type Monitor,
 } from '@/lib/appwrite/monitors'
 import {
+  budgetRecipients,
+  changedBudgetRecipients,
+} from '@/lib/appwrite/organization-budget'
+import {
   emptyRuleForm,
   monitorInputFromForm,
   ruleFormFromMonitor,
@@ -404,5 +408,85 @@ describe('alert email unsubscribe page', () => {
     )
     expect(isOptionalAuthPage('/auth/alerts/unsubscribe')).toBe(true)
     expect(isSelfHostedAllowedPath('/auth/alerts/unsubscribe')).toBe(true)
+  })
+})
+
+describe('budget alert recipients', () => {
+  afterAll(() => {
+    mock.module('@/lib/appwrite/sdk', () => actualSdk)
+  })
+
+  test('reads recipients only from editions that return them', () => {
+    expect(budgetRecipients({ budgetNotify: ['owner', 'billing'] })).toEqual([
+      'owner',
+      'billing',
+    ])
+    expect(budgetRecipients({ budgetAlerts: [50] })).toBeNull()
+    expect(budgetRecipients(null)).toBeNull()
+  })
+
+  test('sends a change only when it differs and keeps someone emailed', () => {
+    const current = ['owner', 'billing']
+    expect(changedBudgetRecipients(current, ['owner'])).toEqual(['owner'])
+    expect(changedBudgetRecipients(current, ['billing', 'owner'])).toBeNull()
+    expect(changedBudgetRecipients(current, [])).toBeNull()
+  })
+
+  test('sends notify only when recipients are given', async () => {
+    const generated: Record<string, unknown>[] = []
+    const raw: { method: string; path: string; payload: unknown }[] = []
+    mock.module('@/lib/appwrite/sdk', () => ({
+      ...actualSdk,
+      sdk: {
+        forConsole: {
+          organizations: {
+            updateBudget: async (params: Record<string, unknown>) => {
+              generated.push(params)
+              return {}
+            },
+          },
+          client: {
+            config: { endpoint: 'https://example.test/v1', project: 'console' },
+            call: async (
+              method: string,
+              uri: URL,
+              _: unknown,
+              payload: unknown,
+            ) => {
+              raw.push({ method, path: uri.pathname, payload })
+              return {}
+            },
+          },
+        },
+      },
+    }))
+    const { updateOrganizationBudget } = await import(
+      '@/lib/react-query/hooks/organizations'
+    )
+
+    await updateOrganizationBudget({
+      organizationId: 'org',
+      budget: 100,
+      alerts: [50],
+    })
+    expect(generated).toEqual([
+      { organizationId: 'org', budget: 100, alerts: [50] },
+    ])
+    expect(raw).toHaveLength(0)
+
+    await updateOrganizationBudget({
+      organizationId: 'org',
+      budget: 100,
+      alerts: [50],
+      notify: ['owner'],
+    })
+    expect(generated).toHaveLength(1)
+    expect(raw).toEqual([
+      {
+        method: 'patch',
+        path: '/v1/organizations/org/budget',
+        payload: { budget: 100, alerts: [50], notify: ['owner'] },
+      },
+    ])
   })
 })
