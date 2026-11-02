@@ -143,7 +143,7 @@
     "use-sync-external-store": "^1.6.0",
   },
   "packages": {
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@d124e83a39c93f44f01fb326b311063c22659100", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }, "sha512-NmfffLA9JFUZgfwziTHGMXd/p1cV6cyp8x4kDgHJ9trFUvBfZaPtWI/uDKp6cZ4+QAojmrIvjYZipr+TtMU7UA=="],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@d124e83a39c93f44f01fb326b311063c22659100", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }, "sha512-hSNDQWm1NoC0LoVxXUSJFvvcQ+QMF2Bf+onManv5bpGblC9N259IdfLb9/FbAhiN37nvhsxpNYs6XPBb2WRu1Q=="],
 
     "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#83b9f17", {}, "appwrite-specs-83b9f17", "sha512-Uxi18BjNkSM99trhzJeV3CX93ETm7Wajh2PsiMBwtoBkqWEOwEotCOMYpTzBpSp1Akth4Ckz7lIqCS9N+XYabg=="],
 
