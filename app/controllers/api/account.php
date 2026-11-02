@@ -70,7 +70,6 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
 use Utopia\Validator\AllOf;
-use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\Validator;
@@ -322,44 +321,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
-
-Http::patch('/v1/account/prefs')
-    ->desc('Update preferences')
-    ->groups(['api', 'account'])
-    ->label('event', 'users.[userId].update.prefs')
-    ->label('scope', 'account')
-    ->label('audits.event', 'user.update')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'account',
-        name: 'updatePrefs',
-        description: '/docs/references/account/update-prefs.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_USER,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
-    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.', example: '{"language":"en","timezone":"UTC","darkTheme":true}')
-    ->inject('requestTimestamp')
-    ->inject('response')
-    ->inject('user')
-    ->inject('dbForProject')
-    ->inject('queueForEvents')
-    ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
-
-        $user->setAttribute('prefs', $prefs);
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
-
-        $queueForEvents->setParam('userId', $user->getId());
-
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
-    });
 
 Http::patch('/v1/account/status')
     ->desc('Update status')
