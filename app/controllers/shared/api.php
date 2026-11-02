@@ -153,9 +153,9 @@ Http::init()
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
-            // Set role and scopes from API key
+            // Set role and scopes from API key. Every key also holds 'public', which guests already have, so endpoints open to anyone stay open to keys.
             $role = $apiKey->getRole();
-            $scopes = $apiKey->getScopes();
+            $scopes = [...$apiKey->getScopes(), 'public'];
 
             // Handle special key role case
             if ($apiKey->getRole() === User::ROLE_KEYS) {
