@@ -94,13 +94,15 @@ export function GithubStarPromptProvider() {
     if (!open) return
     if (trackedOpenRef.current) return
     trackedOpenRef.current = true
-    track('Wizard Opened', { surface: SURFACE, preview })
+    // `surface` is a protected session dimension (route-derived, spread last
+    // in trackEvent), so the wizard segments on its own `prompt` prop.
+    track('Wizard Opened', { prompt: SURFACE, preview })
   }, [open, preview, track])
 
   if (!open) return null
 
   const close = (option: 'star' | 'skip') => {
-    track('Wizard Option Selected', { surface: SURFACE, option, preview })
+    track('Wizard Option Selected', { prompt: SURFACE, option, preview })
     if (preview) {
       setPreviewEnabled(GITHUB_STAR_WIZARD_BANNER_ID, false)
       return

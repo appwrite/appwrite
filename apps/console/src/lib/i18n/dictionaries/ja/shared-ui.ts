@@ -1372,8 +1372,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Spooky zone': '恐怖ゾーン',
   // GitHub star wizard
   'Enjoying Appwrite?': 'Appwriteを楽しんでいますか？',
-  'Appwrite is open source and built in the open. A GitHub star helps more developers discover Appwrite and grows the community behind it.':
-    'Appwriteはオープンソースであり、オープンに開発されています。GitHubのスターは、より多くの開発者がAppwriteを見つけるきっかけとなり、支えるコミュニティの成長につながります。',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwriteはオープンソースで、オープンに開発されています。スターを付けると、より多くの開発者がAppwriteを見つけやすくなります。',
   'No thanks': 'いいえ、結構です',
   'One-time ask, promise. May your builds be ever green.':
     'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',

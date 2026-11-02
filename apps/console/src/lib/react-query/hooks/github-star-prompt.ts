@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import {
+  commitConsoleAccountToCaches,
   getConsoleAccountFromCache,
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
@@ -26,7 +27,7 @@ import {
 } from '@/lib/console-banners/github-star-wizard'
 import {
   getLocalDayKey,
-  shouldShowCommunitySupportPrompt,
+  isCommunitySupportPromptEngaged,
   type CommunitySupportActionId,
 } from '@/lib/community/support-prompt'
 
@@ -53,9 +54,12 @@ export function useGithubStarPrompt(
 
   /** One visit write per account+calendar day (prevents re-entry storms). */
   const recordedDayGuardRef = useRef<string | null>(null)
+  /** In-flight visit write, so dismissal can wait it out (see `dismiss`). */
+  const visitWriteRef = useRef<Promise<void>>(Promise.resolve())
 
   useEffect(() => {
     recordedDayGuardRef.current = null
+    visitWriteRef.current = Promise.resolve()
   }, [accountId])
 
   const prefs = account?.prefs as UserPrefs | undefined
@@ -82,10 +86,19 @@ export function useGithubStarPrompt(
     const nextDays = withRecordedGithubStarVisit(currentDays, todayKey)
     if (nextDays.join(',') === currentDays.join(',')) return
 
-    void updateAccountPrefs(
-      mergeGithubStarVisitDaysIntoPrefs(currentPrefs, nextDays),
-      'github-star-prompt',
-    )
+    const merged = mergeGithubStarVisitDaysIntoPrefs(currentPrefs, nextDays)
+    // Commit optimistically so pref writers queued in this same render (the
+    // community-support hook, banner dismissals) read a cache that already
+    // carries today's visit; force the API write past the now-empty diff.
+    if (isAccountUser(cached)) {
+      commitConsoleAccountToCaches(queryClient, {
+        ...cached,
+        prefs: merged,
+      } as Models.User)
+    }
+    visitWriteRef.current = updateAccountPrefs(merged, 'github-star-prompt', {
+      force: true,
+    })
       .then((updatedAccount) => {
         if (!updatedAccount) return
         syncConsoleAccountAfterMutation(queryClient, {
@@ -97,11 +110,13 @@ export function useGithubStarPrompt(
       })
   }, [account, accountId, dismissed, queryClient, todayKey, trackVisits])
 
-  // Hold off while the community-support wizard is due so two fullscreen
-  // prompts never compete for the same session.
-  const communitySupportDue = useMemo(() => {
+  // Stay out of the way while the community-support wizard is due, open, or
+  // was shown within its hold-off window: opening stamps `lastShownAt` (which
+  // flips its "due" check false mid-impression), so "due" alone would let
+  // both fullscreen takeovers stack or chain in one session.
+  const communitySupportEngaged = useMemo(() => {
     const communitySupport = parseCommunitySupportPrefs(prefs)
-    return shouldShowCommunitySupportPrompt({
+    return isCommunitySupportPromptEngaged({
       ...communitySupport,
       actionId:
         (communitySupport.actionId as CommunitySupportActionId | null) ?? null,
@@ -114,13 +129,17 @@ export function useGithubStarPrompt(
   const shouldShow =
     !dismissed &&
     scheduled &&
-    !communitySupportDue &&
+    !communitySupportEngaged &&
     isGithubStarWizardEligible(visitDays, todayKey)
 
   const dismissBanner = useDismissConsoleBanner()
   const { mutate: dismissBannerMutate } = dismissBanner
   const dismiss = useCallback(() => {
-    dismissBannerMutate(GITHUB_STAR_WIZARD_BANNER_ID)
+    // Wait out an in-flight visit write so its full-prefs payload cannot land
+    // after the dismissal and resurrect the wizard.
+    void visitWriteRef.current
+      .catch(() => undefined)
+      .then(() => dismissBannerMutate(GITHUB_STAR_WIZARD_BANNER_ID))
   }, [dismissBannerMutate])
 
   return {

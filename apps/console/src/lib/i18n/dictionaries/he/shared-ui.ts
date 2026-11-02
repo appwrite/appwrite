@@ -1408,8 +1408,8 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Spooky zone': 'אזור מפחיד',
   // GitHub star wizard
   'Enjoying Appwrite?': 'נהנים מ-Appwrite?',
-  'Appwrite is open source and built in the open. A GitHub star helps more developers discover Appwrite and grows the community behind it.':
-    'Appwrite הוא קוד פתוח שנבנה בשקיפות מלאה. כוכב ב-GitHub עוזר ליותר מפתחים לגלות את Appwrite ומצמיח את הקהילה שמאחוריו.',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwrite הוא קוד פתוח שנבנה בשקיפות מלאה. כוכב עוזר ליותר מפתחים לגלות אותו.',
   'No thanks': 'לא תודה',
   'One-time ask, promise. May your builds be ever green.':
     'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',

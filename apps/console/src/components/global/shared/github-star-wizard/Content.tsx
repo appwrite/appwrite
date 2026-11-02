@@ -25,17 +25,31 @@ const GITHUB_REPO_LABEL = 'appwrite/appwrite'
 const GITHUB_REPO_API = 'https://api.github.com/repos/appwrite/appwrite'
 const STAR_COUNT_ANIMATION_MS = 1800
 
+type StarTone = 'brand' | 'accent' | 'neutral'
+
+type FieldStar = {
+  top: string
+  left: string
+  size: number
+  delayMs: number
+  twinkleMs: number
+  floatMs: number
+  tone: StarTone
+}
+
 /**
- * Deterministic decorative star field: stable positions, staggered twinkle,
- * most stars neutral with a few in the brand pink and purple.
+ * Deterministic decorative star field: stable positions, each star twinkling
+ * and drifting at its own rhythm, most neutral with brand pink and purple
+ * accents sprinkled through.
  */
-const STAR_FIELD = [
+const STAR_FIELD: readonly FieldStar[] = [
   {
     top: '8%',
     left: '12%',
     size: 3,
     delayMs: 0,
-    durationMs: 3400,
+    twinkleMs: 3400,
+    floatMs: 9000,
     tone: 'brand',
   },
   {
@@ -43,7 +57,8 @@ const STAR_FIELD = [
     left: '78%',
     size: 2,
     delayMs: 600,
-    durationMs: 4200,
+    twinkleMs: 4200,
+    floatMs: 12000,
     tone: 'neutral',
   },
   {
@@ -51,7 +66,8 @@ const STAR_FIELD = [
     left: '32%',
     size: 2,
     delayMs: 1500,
-    durationMs: 3000,
+    twinkleMs: 3000,
+    floatMs: 10000,
     tone: 'neutral',
   },
   {
@@ -59,7 +75,8 @@ const STAR_FIELD = [
     left: '55%',
     size: 3,
     delayMs: 900,
-    durationMs: 3800,
+    twinkleMs: 3800,
+    floatMs: 13000,
     tone: 'accent',
   },
   {
@@ -67,7 +84,8 @@ const STAR_FIELD = [
     left: '88%',
     size: 3,
     delayMs: 300,
-    durationMs: 3200,
+    twinkleMs: 3200,
+    floatMs: 8600,
     tone: 'brand',
   },
   {
@@ -75,7 +93,8 @@ const STAR_FIELD = [
     left: '6%',
     size: 2,
     delayMs: 1200,
-    durationMs: 4600,
+    twinkleMs: 4600,
+    floatMs: 11200,
     tone: 'neutral',
   },
   {
@@ -83,7 +102,8 @@ const STAR_FIELD = [
     left: '14%',
     size: 3,
     delayMs: 1800,
-    durationMs: 3600,
+    twinkleMs: 3600,
+    floatMs: 9600,
     tone: 'brand',
   },
   {
@@ -91,7 +111,8 @@ const STAR_FIELD = [
     left: '92%',
     size: 2,
     delayMs: 700,
-    durationMs: 2800,
+    twinkleMs: 2800,
+    floatMs: 12600,
     tone: 'accent',
   },
   {
@@ -99,7 +120,8 @@ const STAR_FIELD = [
     left: '9%',
     size: 2,
     delayMs: 400,
-    durationMs: 4000,
+    twinkleMs: 4000,
+    floatMs: 10400,
     tone: 'neutral',
   },
   {
@@ -107,7 +129,8 @@ const STAR_FIELD = [
     left: '84%',
     size: 3,
     delayMs: 1000,
-    durationMs: 3400,
+    twinkleMs: 3400,
+    floatMs: 8800,
     tone: 'brand',
   },
   {
@@ -115,7 +138,8 @@ const STAR_FIELD = [
     left: '28%',
     size: 2,
     delayMs: 1600,
-    durationMs: 3100,
+    twinkleMs: 3100,
+    floatMs: 11800,
     tone: 'neutral',
   },
   {
@@ -123,7 +147,8 @@ const STAR_FIELD = [
     left: '64%',
     size: 3,
     delayMs: 200,
-    durationMs: 4400,
+    twinkleMs: 4400,
+    floatMs: 9400,
     tone: 'accent',
   },
   {
@@ -131,7 +156,8 @@ const STAR_FIELD = [
     left: '68%',
     size: 2,
     delayMs: 2000,
-    durationMs: 3700,
+    twinkleMs: 3700,
+    floatMs: 12200,
     tone: 'neutral',
   },
   {
@@ -139,9 +165,89 @@ const STAR_FIELD = [
     left: '76%',
     size: 2,
     delayMs: 1300,
-    durationMs: 2900,
+    twinkleMs: 2900,
+    floatMs: 10800,
     tone: 'brand',
   },
+  {
+    top: '6%',
+    left: '36%',
+    size: 1.5,
+    delayMs: 2300,
+    twinkleMs: 5200,
+    floatMs: 14000,
+    tone: 'neutral',
+  },
+  {
+    top: '20%',
+    left: '5%',
+    size: 1.5,
+    delayMs: 800,
+    twinkleMs: 4800,
+    floatMs: 13400,
+    tone: 'neutral',
+  },
+  {
+    top: '38%',
+    left: '46%',
+    size: 1.5,
+    delayMs: 1700,
+    twinkleMs: 5600,
+    floatMs: 15000,
+    tone: 'neutral',
+  },
+  {
+    top: '48%',
+    left: '70%',
+    size: 1.5,
+    delayMs: 500,
+    twinkleMs: 5000,
+    floatMs: 14400,
+    tone: 'neutral',
+  },
+  {
+    top: '68%',
+    left: '42%',
+    size: 1.5,
+    delayMs: 2600,
+    twinkleMs: 5400,
+    floatMs: 13800,
+    tone: 'neutral',
+  },
+  {
+    top: '92%',
+    left: '48%',
+    size: 2,
+    delayMs: 1100,
+    twinkleMs: 4300,
+    floatMs: 11400,
+    tone: 'accent',
+  },
+  {
+    top: '82%',
+    left: '16%',
+    size: 1.5,
+    delayMs: 2100,
+    twinkleMs: 5100,
+    floatMs: 14800,
+    tone: 'neutral',
+  },
+  {
+    top: '44%',
+    left: '96%',
+    size: 1.5,
+    delayMs: 1400,
+    twinkleMs: 4700,
+    floatMs: 13200,
+    tone: 'neutral',
+  },
+]
+
+/** Three streaks on long, offset loops so the sky stays quietly busy. */
+const SHOOTING_STARS = [
+  { top: '14%', right: '6%', delayMs: 2500, durationMs: 9000 },
+  { top: '36%', right: '18%', delayMs: 7800, durationMs: 13000 },
+  { top: '8%', right: '42%', delayMs: 13400, durationMs: 17000 },
 ] as const
 
 export type GithubStarWizardContentProps = {
@@ -172,6 +278,9 @@ export function GithubStarWizardContent({
   const t = useT()
   const skipButtonRef = useRef<HTMLButtonElement | null>(null)
   const [starCount, setStarCount] = useState(0)
+  const [forkStat, setForkStat] = useState<string>(
+    MARKETING_SOCIAL_STATS.github.forks,
+  )
 
   // Count up from zero once the takeover is on screen, then settle on the
   // live GitHub count when the API answers; otherwise keep the build-time one.
@@ -185,12 +294,24 @@ export function GithubStarWizardContent({
       headers: { Accept: 'application/vnd.github+json' },
     })
       .then((response) => (response.ok ? response.json() : null))
-      .then((repo: { stargazers_count?: unknown } | null) => {
-        const live = repo?.stargazers_count
-        if (typeof live === 'number' && Number.isFinite(live) && live > 0) {
-          setStarCount(Math.round(live))
-        }
-      })
+      .then(
+        (
+          repo: { stargazers_count?: unknown; forks_count?: unknown } | null,
+        ) => {
+          const live = repo?.stargazers_count
+          if (typeof live === 'number' && Number.isFinite(live) && live > 0) {
+            setStarCount(Math.round(live))
+          }
+          const forks = repo?.forks_count
+          if (
+            typeof forks === 'number' &&
+            Number.isFinite(forks) &&
+            forks > 0
+          ) {
+            setForkStat(`${formatCompactCount(Math.round(forks))}+`)
+          }
+        },
+      )
       .catch(() => {
         // Offline or rate limited: the generated count stays on screen.
       })
@@ -207,8 +328,9 @@ export function GithubStarWizardContent({
   const { github } = MARKETING_SOCIAL_STATS
 
   return (
-    // Non-modal so the permanent-dismiss handlers below stay the only way out.
-    <DialogPrimitive.Root modal={false} open>
+    // Modal: the takeover covers the whole console, so trap focus and hide
+    // the background from assistive tech while it is up.
+    <DialogPrimitive.Root open>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Content
           onInteractOutside={(event) => event.preventDefault()}
@@ -228,8 +350,9 @@ export function GithubStarWizardContent({
             className="pointer-events-none absolute inset-0 overflow-hidden"
             aria-hidden
           >
-            <div className="star-wizard-glow absolute left-1/2 top-[-22%] h-[55%] w-[85%] -translate-x-1/2 rounded-full blur-2xl" />
-            <div className="star-wizard-glow-accent absolute bottom-[-18%] left-[-12%] h-[45%] w-[55%] rounded-full blur-2xl" />
+            <div className="star-wizard-nebula star-wizard-nebula--pink" />
+            <div className="star-wizard-nebula star-wizard-nebula--purple" />
+            <div className="star-wizard-nebula star-wizard-nebula--blend" />
             {STAR_FIELD.map((star, index) => (
               <span
                 key={index}
@@ -246,12 +369,26 @@ export function GithubStarWizardContent({
                     width: star.size,
                     height: star.size,
                     '--star-wizard-delay': `${star.delayMs}ms`,
-                    '--star-wizard-duration': `${star.durationMs}ms`,
+                    '--star-wizard-duration': `${star.twinkleMs}ms`,
+                    '--star-wizard-float': `${star.floatMs}ms`,
                   } as CSSProperties
                 }
               />
             ))}
-            <span className="star-wizard-shooting-star absolute right-[6%] top-[14%]" />
+            {SHOOTING_STARS.map((streak, index) => (
+              <span
+                key={index}
+                className="star-wizard-shooting-star absolute"
+                style={
+                  {
+                    top: streak.top,
+                    right: streak.right,
+                    '--star-wizard-shoot-delay': `${streak.delayMs}ms`,
+                    '--star-wizard-shoot-duration': `${streak.durationMs}ms`,
+                  } as CSSProperties
+                }
+              />
+            ))}
           </div>
 
           <div className="relative z-10 flex shrink-0 items-center justify-between px-5 py-4 sm:px-8">
@@ -289,15 +426,19 @@ export function GithubStarWizardContent({
                 </DialogPrimitive.Title>
                 <DialogPrimitive.Description className="mx-auto max-w-md text-[14px] leading-relaxed text-muted-foreground">
                   {t(
-                    'Appwrite is open source and built in the open. A GitHub star helps more developers discover Appwrite and grows the community behind it.',
+                    'Appwrite is open source and built in the open. A star helps more developers discover it.',
                   )}
                 </DialogPrimitive.Description>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="relative space-y-1.5">
+                <span
+                  className="star-wizard-halo absolute left-1/2 top-1/2 h-[220%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                  aria-hidden
+                />
                 <div
                   className={cn(
-                    'flex items-center justify-center gap-2.5',
+                    'relative flex items-center justify-center gap-2.5',
                     FORCE_LTR_CLASS,
                   )}
                 >
@@ -311,7 +452,7 @@ export function GithubStarWizardContent({
                     className="font-aeonik-pro text-[52px] leading-none tabular-nums tracking-tight text-foreground sm:text-[64px]"
                   />
                 </div>
-                <p className="text-[13px] text-muted-foreground">
+                <p className="relative text-[13px] text-muted-foreground">
                   {t('stars')}
                   {yearlyGrowth ? (
                     <>
@@ -341,7 +482,7 @@ export function GithubStarWizardContent({
                   value={github.contributors}
                   label={t('Contributors')}
                 />
-                <StatTile value={github.forks} label={t('Forks')} />
+                <StatTile value={forkStat} label={t('Forks')} />
                 <StatTile value={github.commits} label={t('Commits')} />
               </div>
 

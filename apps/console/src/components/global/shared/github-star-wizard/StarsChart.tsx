@@ -16,6 +16,7 @@ import { formatLocalizedDate } from '@/lib/i18n/date-format'
 import { useT } from '@/lib/i18n/translate'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import type { GitHubStarHistoryPoint } from '@/lib/marketing/github-stars-history'
+import { CHART_ANIMATION_DISABLED } from '@/lib/usage/chart-animation'
 import {
   USAGE_CHART_MARGIN,
   USAGE_CHART_RESPONSIVE_CONTAINER_PROPS,
@@ -115,6 +116,7 @@ export function StarsChart({ data }: { data: GitHubStarHistoryPoint[] }) {
             stroke={CHART_COLOR}
             strokeWidth={2}
             fill={`url(#${gradientId})`}
+            {...CHART_ANIMATION_DISABLED}
             activeDot={{
               r: 3.5,
               fill: CHART_COLOR,

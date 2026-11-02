@@ -1,48 +1,130 @@
-/* GitHub star wizard backdrop: brand-tinted glows and twinkling stars. */
+/*
+ * GitHub star wizard backdrop: slowly drifting brand nebulas, a star field
+ * that twinkles and floats at individual rhythms, recurring shooting stars,
+ * and a breathing halo behind the counter. Transform/opacity only, and
+ * everything stills under prefers-reduced-motion.
+ */
 
-.star-wizard-glow {
-  background: radial-gradient(
-    ellipse at center,
-    color-mix(in srgb, var(--chart-brand) 20%, transparent) 0%,
-    transparent 70%
-  );
+.star-wizard-nebula {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(72px);
+  will-change: transform;
 }
 
-.star-wizard-glow-accent {
+.star-wizard-nebula--pink {
+  top: -24%;
+  left: 8%;
+  width: 84%;
+  height: 56%;
   background: radial-gradient(
     ellipse at center,
-    color-mix(in srgb, #7c67fe 16%, transparent) 0%,
+    color-mix(in srgb, var(--chart-brand) 24%, transparent) 0%,
+    transparent 68%
+  );
+  animation: star-wizard-drift-a 26s ease-in-out infinite alternate;
+}
+
+.star-wizard-nebula--purple {
+  bottom: -22%;
+  left: -14%;
+  width: 56%;
+  height: 52%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, #7c67fe 20%, transparent) 0%,
+    transparent 68%
+  );
+  animation: star-wizard-drift-b 32s ease-in-out infinite alternate;
+}
+
+.star-wizard-nebula--blend {
+  top: 28%;
+  right: -18%;
+  width: 48%;
+  height: 48%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(
+        in srgb,
+        color-mix(in srgb, var(--chart-brand) 55%, #7c67fe) 16%,
+        transparent
+      )
+      0%,
     transparent 70%
   );
+  animation: star-wizard-drift-c 38s ease-in-out infinite alternate;
+}
+
+@keyframes star-wizard-drift-a {
+  from {
+    transform: translate3d(-5%, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(5%, 9%, 0) scale(1.14);
+  }
+}
+
+@keyframes star-wizard-drift-b {
+  from {
+    transform: translate3d(0, 5%, 0) scale(1.08);
+  }
+  to {
+    transform: translate3d(12%, -6%, 0) scale(0.94);
+  }
+}
+
+@keyframes star-wizard-drift-c {
+  from {
+    transform: translate3d(0, -5%, 0) scale(0.95);
+  }
+  to {
+    transform: translate3d(-10%, 7%, 0) scale(1.12);
+  }
+}
+
+/*
+ * Twinkle animates opacity while the float animates transform, so the two
+ * loops layer on one element without fighting over a property.
+ */
+.star-wizard-star {
+  animation:
+    star-wizard-twinkle var(--star-wizard-duration, 3.6s) ease-in-out infinite,
+    star-wizard-float var(--star-wizard-float, 11s) ease-in-out infinite
+      alternate;
+  animation-delay:
+    var(--star-wizard-delay, 0s), calc(var(--star-wizard-delay, 0s) * 1.7);
+  will-change: transform, opacity;
 }
 
 @keyframes star-wizard-twinkle {
   0%,
   100% {
-    opacity: 0.15;
-    transform: scale(0.65);
+    opacity: 0.12;
   }
   50% {
     opacity: 1;
-    transform: scale(1.2);
   }
 }
 
-.star-wizard-star {
-  animation: star-wizard-twinkle var(--star-wizard-duration, 3.6s) ease-in-out
-    infinite;
-  animation-delay: var(--star-wizard-delay, 0s);
+@keyframes star-wizard-float {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.85);
+  }
+  to {
+    transform: translate3d(7px, -16px, 0) scale(1.2);
+  }
 }
 
 .star-wizard-star--brand {
   background: var(--chart-brand);
-  box-shadow: 0 0 6px 1px
-    color-mix(in srgb, var(--chart-brand) 60%, transparent);
+  box-shadow: 0 0 8px 1.5px
+    color-mix(in srgb, var(--chart-brand) 65%, transparent);
 }
 
 .star-wizard-star--accent {
   background: #7c67fe;
-  box-shadow: 0 0 6px 1px rgb(124 103 254 / 0.55);
+  box-shadow: 0 0 8px 1.5px rgb(124 103 254 / 0.6);
 }
 
 .star-wizard-star--neutral {
@@ -55,21 +137,21 @@
     opacity: 0;
     transform: translate3d(0, 0, 0) rotate(-24deg);
   }
-  5% {
-    opacity: 0.9;
+  4% {
+    opacity: 0.95;
   }
-  16% {
+  13% {
     opacity: 0;
-    transform: translate3d(-340px, 150px, 0) rotate(-24deg);
+    transform: translate3d(-420px, 187px, 0) rotate(-24deg);
   }
   100% {
     opacity: 0;
-    transform: translate3d(-340px, 150px, 0) rotate(-24deg);
+    transform: translate3d(-420px, 187px, 0) rotate(-24deg);
   }
 }
 
 .star-wizard-shooting-star {
-  width: 72px;
+  width: 88px;
   height: 2px;
   border-radius: 9999px;
   background: linear-gradient(
@@ -78,15 +160,44 @@
     color-mix(in srgb, var(--chart-brand) 85%, white)
   );
   opacity: 0;
-  animation: star-wizard-shoot 9s ease-out infinite;
-  animation-delay: 2.5s;
+  animation: star-wizard-shoot var(--star-wizard-shoot-duration, 9s) ease-out
+    infinite;
+  animation-delay: var(--star-wizard-shoot-delay, 2.5s);
+  will-change: transform, opacity;
+}
+
+/* Soft brand glow breathing behind the star counter. */
+.star-wizard-halo {
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--chart-brand) 16%, transparent) 0%,
+    transparent 70%
+  );
+  animation: star-wizard-breathe 6s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes star-wizard-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.12);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .star-wizard-nebula,
+  .star-wizard-halo {
+    animation: none;
+  }
+
   .star-wizard-star {
     animation: none;
     opacity: 0.5;
-    transform: none;
   }
 
   .star-wizard-shooting-star {

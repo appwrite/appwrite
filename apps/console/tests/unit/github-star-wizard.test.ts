@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test'
 import {
+  COMMUNITY_SUPPORT_PROMPT_HOLD_OFF_MS,
+  COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
+  isCommunitySupportPromptEngaged,
+} from '@/lib/community/support-prompt'
+import {
   GITHUB_STAR_WIZARD_VISIT_THRESHOLD,
   GITHUB_STAR_WIZARD_VISIT_WINDOW_DAYS,
   isGithubStarWizardEligible,
@@ -110,5 +115,58 @@ describe('GitHub star wizard visit tracking', () => {
     ])
     expect(parseGithubStarVisitDayPrefs(undefined)).toEqual([])
     expect(parseGithubStarVisitDayPrefs({})).toEqual([])
+  })
+})
+
+describe('community-support deferral', () => {
+  const baseState = {
+    uniqueDayCount: 0,
+    lastActiveDay: null,
+    shownCount: 0,
+    lastShownAt: null,
+    actionTakenAt: null,
+    actionId: null,
+  }
+  const now = new Date('2026-11-02T12:00:00.000Z')
+
+  test('engaged while the community wizard is due', () => {
+    expect(
+      isCommunitySupportPromptEngaged(
+        {
+          ...baseState,
+          uniqueDayCount: COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
+        },
+        now,
+      ),
+    ).toBe(true)
+  })
+
+  test('engaged while a fresh lastShownAt stamp is inside the hold-off', () => {
+    // Opening (and skipping) stamp lastShownAt, flipping "due" false while
+    // the wizard is still on screen; the hold-off covers that gap.
+    const state = {
+      ...baseState,
+      uniqueDayCount: COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
+      shownCount: 1,
+      lastShownAt: new Date(now.getTime() - 60 * 1000).toISOString(),
+    }
+    expect(isCommunitySupportPromptEngaged(state, now)).toBe(true)
+  })
+
+  test('disengaged once the stamp ages past the hold-off', () => {
+    const state = {
+      ...baseState,
+      uniqueDayCount: COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
+      shownCount: 1,
+      actionTakenAt: now.toISOString(),
+      lastShownAt: new Date(
+        now.getTime() - COMMUNITY_SUPPORT_PROMPT_HOLD_OFF_MS - 60 * 1000,
+      ).toISOString(),
+    }
+    expect(isCommunitySupportPromptEngaged(state, now)).toBe(false)
+  })
+
+  test('disengaged for a user who never saw the community wizard', () => {
+    expect(isCommunitySupportPromptEngaged(baseState, now)).toBe(false)
   })
 })
