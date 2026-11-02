@@ -4247,7 +4247,7 @@ final class RealtimeCustomClientTest extends Scope
     /**
      * Create a confirmed-capable user with a session, for membership realtime tests.
      *
-     * @return array{$id: string, email: string, cookie: string}
+     * @return array{'$id': string, email: string, cookie: string}
      */
     private function createRealtimeUser(string $name): array
     {
