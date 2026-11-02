@@ -17,7 +17,7 @@ const usd = (amount: number) =>
 /**
  * The organization's budget alerts as the monitors that send them: their
  * status and the spend they last read. The budget settings above own their
- * thresholds, and they reach the organization's owners like every alert.
+ * thresholds and the roles they reach.
  */
 export function BudgetMonitors({ orgId }: { orgId?: string }) {
   const t = useT()

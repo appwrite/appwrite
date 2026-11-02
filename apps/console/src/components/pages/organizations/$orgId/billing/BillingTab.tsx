@@ -302,7 +302,12 @@ export function BillingTab() {
           title: 'Billing alerts',
           keywords: ['alerts', 'threshold', 'notification', 'usage', 'email'],
         },
-        node: <BillingAlertsSection orgId={orgId} />,
+        node: (
+          <BillingAlertsSection
+            orgId={orgId}
+            recipientsEnabled={alertsEnabled}
+          />
+        ),
       },
       ...(alertsEnabled
         ? [
