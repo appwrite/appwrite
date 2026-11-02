@@ -436,7 +436,7 @@ class Create extends Action
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
                 if (!$user->getAttribute('emailVerification', false)) {
-                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project));
+                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, mqtt: $mqtt));
                     $dbForProject->purgeCachedDocument('users', $user->getId());
 
                     try {
