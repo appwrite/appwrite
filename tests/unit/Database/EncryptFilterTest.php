@@ -12,6 +12,7 @@ use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Validator\Authorization;
 
 /**
@@ -87,6 +88,16 @@ final class EncryptFilterTest extends TestCase
 
         \putenv('_APP_OPENSSL_KEY_V1');
         $this->assertSame('plain', $this->read('secret'), 'A re-encrypted value no longer needs the old key');
+    }
+
+    public function testRefusesToEncryptWithoutCurrentKey(): void
+    {
+        \putenv('_APP_OPENSSL_KEY_CURRENT=2');
+
+        $this->expectException(DatabaseException::class);
+        $this->expectExceptionMessage('_APP_OPENSSL_KEY_V2 is not configured');
+
+        $this->database->createDocument('secrets', new Document(['$id' => 'secret', 'value' => 'plain']));
     }
 
     private function read(string $id): mixed

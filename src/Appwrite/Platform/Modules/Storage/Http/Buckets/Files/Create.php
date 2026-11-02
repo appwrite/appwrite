@@ -511,6 +511,9 @@ class Create extends Action
                         $data = (string) $deviceForFiles->read($path);
                     }
                     $key = EncryptionKey::current();
+                    if ($key === '') {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Encryption key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
+                    }
                     $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                     $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
                 }

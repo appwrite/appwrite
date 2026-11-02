@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -159,10 +160,20 @@ class Encryption extends Action
                 // Locked from read to write, so a client update in between is not overwritten
                 // with the value read here. Writing through the encrypt filter stores the current version.
                 $database->withTransaction(function () use ($database, $collection, $raw, $stale) {
-                    $document = $database->getDocument($collection, $raw->getId(), forUpdate: true);
-                    if ($document->isEmpty()) {
+                    $locked = $database->skipFilters(fn () => $database->getDocument($collection, $raw->getId(), forUpdate: true));
+                    if ($locked->isEmpty()) {
                         return;
                     }
+
+                    // A value whose key is gone would decrypt to false and be re-encrypted as garbage
+                    foreach ($stale as $key) {
+                        if (!$this->decrypts($locked->getAttribute($key))) {
+                            Console::warning('  ' . $collection . '/' . $raw->getId() . ': ' . $key . ' does not decrypt with its recorded key version, skipped');
+                            return;
+                        }
+                    }
+
+                    $document = $database->getDocument($collection, $raw->getId(), forUpdate: true);
 
                     $update = new Document(\array_combine($stale, \array_map(fn (string $key) => $document->getAttribute($key), $stale)));
                     $database->withPreserveDates(true, fn () => $database->updateDocument($collection, $raw->getId(), $update));
@@ -188,12 +199,56 @@ class Encryption extends Action
             return \array_any($value, fn (mixed $item) => $this->isStale($item, $version));
         }
 
+        $envelope = $this->envelope($value);
+
+        return $envelope !== null && (string) $envelope['version'] !== $version;
+    }
+
+    /**
+     * Whether a raw value, and every item of an array value, decrypts with the key of its recorded version.
+     */
+    private function decrypts(mixed $value): bool
+    {
+        if (\is_array($value)) {
+            return \array_all($value, fn (mixed $item) => $this->decrypts($item));
+        }
+
+        $envelope = $this->envelope($value);
+        if ($envelope === null) {
+            return true; // Not ciphertext, nothing to lose
+        }
+
+        $key = EncryptionKey::get((string) $envelope['version']);
+
+        return $key !== '' && OpenSSL::decrypt($envelope['data'], $envelope['method'], $key, 0, \hex2bin($envelope['iv']), \hex2bin($envelope['tag'])) !== false;
+    }
+
+    /**
+     * The encrypt filter's envelope a raw value holds, or null when it is not one.
+     *
+     * @return array{data: string, method: string, iv: string, tag: string, version: string|int}|null
+     */
+    private function envelope(mixed $value): ?array
+    {
         if (!\is_string($value)) {
-            return false;
+            return null;
         }
 
         $envelope = \json_decode($value, true);
+        if (!\is_array($envelope)) {
+            return null;
+        }
 
-        return \is_array($envelope) && isset($envelope['version']) && (string) $envelope['version'] !== $version;
+        foreach (['data', 'method', 'iv', 'tag'] as $field) {
+            if (!\is_string($envelope[$field] ?? null)) {
+                return null;
+            }
+        }
+
+        if (!\is_string($envelope['version'] ?? null) && !\is_int($envelope['version'] ?? null)) {
+            return null;
+        }
+
+        return $envelope;
     }
 }

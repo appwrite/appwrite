@@ -284,6 +284,9 @@ Database::addFilter(
     function (mixed $value) {
         $version = EncryptionKey::version();
         $key = EncryptionKey::get($version);
+        if ($key === '') {
+            throw new \RuntimeException('_APP_OPENSSL_KEY_V' . $version . ' is not configured, refusing to encrypt.');
+        }
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
