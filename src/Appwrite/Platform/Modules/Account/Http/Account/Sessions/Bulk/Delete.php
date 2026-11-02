@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 
 class Delete extends Action
 {
@@ -44,6 +45,21 @@ class Delete extends Action
                 ],
                 contentType: ContentType::NONE
             ))
-            ->label('abuse-limit', 100);
+            ->label('abuse-limit', 100)
+            ->param('current', true, new Boolean(), 'Delete the current session too. Use false to sign out of every other session while staying signed in on this one.', true)
+            ->inject('request')
+            ->inject('response')
+            ->inject('user')
+            ->inject('dbForProject')
+            ->inject('locale')
+            ->inject('queueForEvents')
+            ->inject('publisherForDeletes')
+            ->inject('store')
+            ->inject('proofForToken')
+            ->inject('domainVerification')
+            ->inject('cookieDomain')
+            ->inject('session')
+            ->inject('project')
+            ->inject('mqtt');
     }
 }
