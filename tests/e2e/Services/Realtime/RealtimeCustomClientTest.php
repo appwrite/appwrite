@@ -4141,6 +4141,146 @@ final class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    /**
+     * A membership event is addressed to the whole team, while the payload it carries is the
+     * HTTP response rendered for the writing caller — here an API key, which sees the new
+     * member's real id, name and email. The project's membership privacy policy must be
+     * applied to the broadcast too, or a teammate learns what the read endpoints hide.
+     */
+    public function testChannelMembershipsPrivacy(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $adminHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $privacy = $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $adminHeaders, [
+            'userId' => false,
+            'userEmail' => false,
+            'userPhone' => false,
+            'userName' => false,
+            'userMFA' => false,
+            'userAccessedAt' => false,
+        ]);
+        $this->assertEquals(200, $privacy['headers']['status-code']);
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $adminHeaders, [
+            'teamId' => Id::unique(),
+            'name' => 'Realtime Privacy Team ' . uniqid(),
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // The teammate who listens: an ordinary confirmed member with no elevated scope
+        $teammate = $this->createRealtimeUser('Realtime Teammate');
+        $client = $this->getWebsocket(['memberships'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $teammate['cookie'],
+        ]);
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        $teammateMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $teammate['$id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $teammateMembership['headers']['status-code']);
+
+        // Their connection re-resolves its roles on their own membership event, so it holds team:{teamId} from here on
+        $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships." . $teammateMembership['body']['$id'] . '.create', $message['data']['events'] ?? [], true)
+        );
+
+        $member = $this->createRealtimeUser('Realtime Private Member');
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', $adminHeaders, [
+            'userId' => $member['$id'],
+            'roles' => ['member'],
+        ]);
+        $this->assertEquals(201, $membership['headers']['status-code']);
+        $membershipId = $membership['body']['$id'];
+
+        // The API key writing the membership sees the member's details, the team must not
+        $this->assertEquals($member['$id'], $membership['body']['userId']);
+        $this->assertEquals('Realtime Private Member', $membership['body']['userName']);
+        $this->assertEquals($member['email'], $membership['body']['userEmail']);
+
+        $createEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.create", $message['data']['events'] ?? [], true)
+        );
+
+        $payload = $createEvent['data']['payload'];
+        $this->assertArrayNotHasKey('userId', $payload);
+        $this->assertArrayNotHasKey('userName', $payload);
+        $this->assertArrayNotHasKey('userEmail', $payload);
+        $this->assertArrayNotHasKey('userPhone', $payload);
+        $this->assertArrayNotHasKey('mfa', $payload);
+        $this->assertEquals($membershipId, $payload['$id']);
+        $this->assertEquals($teamId, $payload['teamId']);
+        $this->assertEquals(['member'], $payload['roles']);
+
+        $roles = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, $adminHeaders, [
+            'roles' => ['member', 'editor'],
+        ]);
+        $this->assertEquals(200, $roles['headers']['status-code']);
+
+        $updateEvent = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'event'
+                && \in_array("teams.{$teamId}.memberships.{$membershipId}.update", $message['data']['events'] ?? [], true)
+        );
+
+        $payload = $updateEvent['data']['payload'];
+        $this->assertArrayNotHasKey('userId', $payload);
+        $this->assertArrayNotHasKey('userName', $payload);
+        $this->assertArrayNotHasKey('userEmail', $payload);
+        $this->assertEquals(['member', 'editor'], $payload['roles']);
+
+        $client->close();
+    }
+
+    /**
+     * Create a confirmed-capable user with a session, for membership realtime tests.
+     *
+     * @return array{$id: string, email: string, cookie: string}
+     */
+    private function createRealtimeUser(string $name): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+
+        $user = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => $name,
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        return [
+            '$id' => $user['body']['$id'],
+            'email' => $email,
+            'cookie' => $session['cookies']['a_session_' . $projectId],
+        ];
+    }
+
     public function testChannelsTablesDB()
     {
         $user = $this->getUser();
