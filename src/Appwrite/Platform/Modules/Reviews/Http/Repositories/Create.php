@@ -86,12 +86,6 @@ class Create extends Action
             throw new Exception(Exception::GENERAL_SERVICE_DISABLED, 'Reviews are disabled on this instance. Set _APP_REVIEWS_SECRET and run the review service to enable them.');
         }
 
-        // A limited release names the organizations that may use reviews; empty allows every project.
-        $organizations = \array_filter(\array_map(\trim(...), \explode(',', System::getEnv('_APP_REVIEWS_ORGANIZATIONS', ''))));
-        if (!empty($organizations) && !\in_array($project->getAttribute('teamId', ''), $organizations, true)) {
-            throw new Exception(Exception::GENERAL_SERVICE_DISABLED, 'Code review is not available for this project yet.');
-        }
-
         // GitHub repository ids are numeric, and this one becomes part of the row's id.
         if (!\ctype_digit($providerRepositoryId)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "providerRepositoryId" must be a numeric GitHub repository ID.');
