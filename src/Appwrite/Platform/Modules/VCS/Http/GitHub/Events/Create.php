@@ -257,17 +257,6 @@ class Create extends Action
         return $limit === null ? $found : \array_slice($found, 0, $limit);
     }
 
-    /**
-     * Whether the project's organization may use code reviews. A limited release lists the
-     * organizations in `_APP_REVIEWS_ORGANIZATIONS`; empty allows every project.
-     */
-    private function hasReviews(Document $project): bool
-    {
-        $organizations = \array_filter(\array_map(\trim(...), \explode(',', System::getEnv('_APP_REVIEWS_ORGANIZATIONS', ''))));
-
-        return empty($organizations) || \in_array($project->getAttribute('teamId', ''), $organizations, true);
-    }
-
     private function isProjectInCurrentRegion(Document $project): bool
     {
         try {
@@ -473,7 +462,7 @@ class Create extends Action
         foreach ($repositories as $repository) {
             try {
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
-                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project) || !$this->hasReviews($project)) {
+                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
                     continue;
                 }
 
@@ -539,7 +528,7 @@ class Create extends Action
         foreach ($repositories as $repository) {
             try {
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $repository->getAttribute('projectId', '')));
-                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project) || !$this->hasReviews($project)) {
+                if ($project->isEmpty() || !$this->isProjectInCurrentRegion($project)) {
                     continue;
                 }
 
