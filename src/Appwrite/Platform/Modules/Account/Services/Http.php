@@ -23,6 +23,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Get as GetPasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Update as UpdatePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification\Update as UpdatePasskeyVerification;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\XList as ListPasskeys;
+use Appwrite\Platform\Modules\Account\Http\Account\Prefs\Get as GetPrefs;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Anonymous\Create as CreateAnonymousSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Bulk\Delete as DeleteSessions;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Delete as DeleteSession;
@@ -74,6 +75,7 @@ class Http extends Service
             ->addAction(UpdatePhoneSession::getName(), UpdatePhoneSession::class)
             ->addAction(CreatePhoneToken::getName(), CreatePhoneToken::class)
             ->addAction(CreateJWT::getName(), CreateJWT::class)
+            ->addAction(GetPrefs::getName(), GetPrefs::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)

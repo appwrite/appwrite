@@ -323,33 +323,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
-Http::get('/v1/account/prefs')
-    ->desc('Get account preferences')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('sdk', new Method(
-        namespace: 'account',
-        group: 'account',
-        name: 'getPrefs',
-        description: '/docs/references/account/get-prefs.md',
-        auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PREFERENCES,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
-    ->inject('response')
-    ->inject('targetUser')
-    ->action(function (Response $response, Document $targetUser) {
-
-        $prefs = $targetUser->getAttribute('prefs', []);
-
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
-    });
-
 Http::patch('/v1/account/name')
     ->desc('Update name')
     ->groups(['api', 'account'])
