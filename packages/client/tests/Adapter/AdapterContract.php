@@ -1093,6 +1093,22 @@ abstract class AdapterContract extends TestCase
         });
     }
 
+    public function testItSendsContentLengthForPostWithEmptyBody(): void
+    {
+        Http::serve(function (int $port): void {
+            $request = new Request\Factory()->createRequest(
+                Method::POST,
+                'http://127.0.0.1:' . $port . '/echo-content-length',
+            );
+            $client = $this->createAdapter();
+
+            $response = $this->send($client, $request);
+
+            $this->assertSame(200, $response->getStatusCode());
+            $this->assertSame('0', (string) $response->getBody());
+        });
+    }
+
     public function testItAdvertisesCompressionAndTransparentlyDecodesResponses(): void
     {
         Http::serve(function (int $port): void {
