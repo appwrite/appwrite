@@ -80,17 +80,19 @@ abstract readonly class TimeLimit extends Adapter
     }
 
     /**
-     * Give back the hit a check() recorded, for a request that turned out not to count. Reserving with
-     * check() and releasing afterwards keeps the limit atomic under concurrent requests, where reading
-     * on arrival and counting afterwards lets a burst all pass the read before any of them counts.
+     * Give back the hit recorded by the check() that returned $hit, for a request that turned out not to
+     * count. Reserving with check() and releasing afterwards keeps the limit atomic under concurrent requests,
+     * where reading on arrival and counting afterwards lets a burst all pass the read before any of them counts.
+     * The hit is taken back from the window it was recorded in, so a request that outlives its window never
+     * releases a hit another request reserved in the next one.
      */
-    final public function release(): void
+    final public function release(Result $hit): void
     {
-        if ($this->limit === 0) {
+        if ($this->limit === 0 || $hit->limited) {
             return;
         }
 
-        $this->unhit($this->key(), $this->window($this->now()));
+        $this->unhit($this->key(), $hit->reset - $this->seconds);
     }
 
     private function result(int $used, int $window): Result

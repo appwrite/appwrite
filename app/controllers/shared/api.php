@@ -626,11 +626,13 @@ Http::init()
 
         foreach ($limits as $limit) {
             $max = $limit->limit * $multiplier;
+            $hit = null;
 
             try {
-                $isRateLimited = $timelimit($limit->key, $max, $limit->seconds, function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
+                $isRateLimited = $timelimit($limit->key, $max, $limit->seconds, function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit, &$hit): bool {
                     $timeLimit = $timeLimit->withParams($params);
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
+                    $hit = $result;
                     if ($result->limit && ($result->remaining < $closestLimit || is_null($closestLimit))) {
                         $closestLimit = $result->remaining;
                         $response->addHeader('X-RateLimit-Limit', (string) $result->limit)
@@ -652,8 +654,8 @@ Http::init()
             }
 
             // Reserved now, atomically; given back unless the request fails.
-            if ($shouldCheckAbuse && $limit->failures) {
-                $abuseFailures->reserve($limit, $params, $max);
+            if ($shouldCheckAbuse && $limit->failures && $hit !== null) {
+                $abuseFailures->reserve($limit, $params, $max, $hit);
             }
         }
     });
