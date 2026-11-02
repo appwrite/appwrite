@@ -22,6 +22,10 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  type BudgetUpdate,
+  updateBudgetRecipients,
+} from '@/lib/appwrite/organization-budget'
 import { readMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 import {
   isStartPlanEligibleCountry,
@@ -974,12 +978,16 @@ export async function deleteOrganization(organizationId: string) {
  * @param params - Budget update parameters
  * @returns Updated organization
  */
-export async function updateOrganizationBudget(params: {
-  organizationId: string
-  budget?: number
-  alerts?: number[]
-}) {
-  return await sdk.forConsole.organizations.updateBudget(params)
+export async function updateOrganizationBudget(params: BudgetUpdate) {
+  const { notify, ...budget } = params
+  // Only a change of recipients sends `notify`: editions without them reject it.
+  if (notify !== undefined) {
+    return await updateBudgetRecipients(sdk.forConsole.client, {
+      ...budget,
+      notify,
+    })
+  }
+  return await sdk.forConsole.organizations.updateBudget(budget)
 }
 
 /**

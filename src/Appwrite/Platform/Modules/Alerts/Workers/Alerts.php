@@ -10,6 +10,7 @@ use Appwrite\Alert\Schedules;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Unsubscribe;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -455,7 +456,7 @@ class Alerts extends Action
         $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
         $consoleUrl = (string) ($platform['consoleUrl'] ?? '');
         $endpoint = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https') . '://' . ($platform['apiHostname'] ?? System::getEnv('_APP_DOMAIN', 'localhost')) . '/v1';
-        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $unsubscribe = new Unsubscribe([EncryptionKey::current()]);
         $type = (string) $monitor->getAttribute('type');
         $typeConfig = Config::getParam('alerts', [])['types'][$type] ?? [];
         // Every email of a type is stopped at once only where the type allows it.
@@ -482,7 +483,7 @@ class Alerts extends Action
             'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . $monitor->getId(),
         ];
 
-        foreach ($members as [$user, $role]) {
+        foreach ($members as [$user]) {
             $resource = [
                 'resourceType' => RESOURCE_TYPE_USERS,
                 'resourceId' => $user->getId(),
@@ -501,11 +502,7 @@ class Alerts extends Action
             }
 
             $token = $unsubscribe->token($user->getId(), $monitor->getId(), $type);
-            $email = new Email(
-                ...$notice,
-                reason: 'You\'re receiving this as ' . (\in_array(\strtolower($role[0] ?? ''), ['a', 'e', 'i', 'o', 'u'], true) ? 'an ' : 'a ') . $role . ' of ' . $teamName . '.',
-                unsubscribeUrl: $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($token),
-            );
+            $email = new Email(...$notice, timeZone: $this->timeZone($user));
 
             $this->publish($publisherForNotifications, new NotificationMessage(
                 project: $project,
@@ -526,6 +523,7 @@ class Alerts extends Action
                     'terms' => $platform['termsUrl'] ?? APP_EMAIL_TERMS_URL,
                     'privacy' => $platform['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
                     'platform' => $platform['platformName'] ?? APP_NAME,
+                    'unsubscribeUrl' => $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($token),
                 ],
                 // One-click unsubscribe (RFC 8058) from this monitor's emails.
                 headers: [
@@ -552,6 +550,24 @@ class Alerts extends Action
         return (string) $dbForProject->getAuthorization()->skip(
             fn () => $dbForProject->getDocument($collection, (string) $monitor->getAttribute('resourceId'))->getAttribute('name', '')
         );
+    }
+
+    /**
+     * Where the recipient last signed in from, so the email says when the alert changed in their own time:
+     * the time zone geolocated for their most recent session, or none when no session has one.
+     */
+    protected function timeZone(Document $user): ?\DateTimeZone
+    {
+        $sessions = $user->getAttribute('sessions', []);
+        \usort($sessions, fn (Document $a, Document $b) => \strcmp((string) $b->getCreatedAt(), (string) $a->getCreatedAt()));
+        foreach ($sessions as $session) {
+            $name = (string) $session->getAttribute('timeZone', '');
+            if ($name !== '' && \in_array($name, \DateTimeZone::listIdentifiers(), true)) {
+                return new \DateTimeZone($name);
+            }
+        }
+
+        return null;
     }
 
     /**

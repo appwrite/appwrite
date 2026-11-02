@@ -14,14 +14,14 @@ final class UnsubscribeTest extends TestCase
 
     public function testTokenNamesTheUserAndTheMonitor(): void
     {
-        $unsubscribe = new Unsubscribe(self::SECRET);
+        $unsubscribe = new Unsubscribe([self::SECRET]);
 
         $this->assertSame(['userId' => 'ana', 'monitorId' => 'egress', 'type' => 'usage'], $unsubscribe->verify($unsubscribe->token('ana', 'egress', 'usage')));
     }
 
     public function testTokenExpires(): void
     {
-        $unsubscribe = new Unsubscribe(self::SECRET, ttl: 3600);
+        $unsubscribe = new Unsubscribe([self::SECRET], ttl: 3600);
         $now = 1_800_000_000;
         $token = $unsubscribe->token('ana', 'egress', 'usage', $now);
 
@@ -33,14 +33,14 @@ final class UnsubscribeTest extends TestCase
 
     public static function forged(): \Iterator
     {
-        $token = (new Unsubscribe(self::SECRET))->token('ana', 'egress', 'usage');
+        $token = (new Unsubscribe([self::SECRET]))->token('ana', 'egress', 'usage');
         [$header, $payload, $signature] = \explode('.', $token);
         $claims = \json_decode((string) \base64_decode(\strtr($payload, '-_', '+/')), true);
         $encode = fn (array $claims): string => \rtrim(\strtr(\base64_encode((string) \json_encode($claims)), '+/', '-_'), '=');
 
         yield 'another user' => [$header . '.' . $encode(['userId' => 'ben'] + $claims) . '.' . $signature];
         yield 'another monitor' => [$header . '.' . $encode(['monitorId' => 'storage'] + $claims) . '.' . $signature];
-        yield 'another secret' => [(new Unsubscribe('another-secret'))->token('ana', 'egress', 'usage')];
+        yield 'another secret' => [(new Unsubscribe(['another-secret']))->token('ana', 'egress', 'usage')];
         yield 'not a token' => ['not-a-token'];
         yield 'empty' => [''];
     }
@@ -50,7 +50,7 @@ final class UnsubscribeTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        (new Unsubscribe(self::SECRET))->verify($token);
+        (new Unsubscribe([self::SECRET]))->verify($token);
     }
 
     public function testRefusesATokenSignedForSomethingElse(): void
@@ -59,6 +59,6 @@ final class UnsubscribeTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
 
-        (new Unsubscribe(self::SECRET))->verify($other);
+        (new Unsubscribe([self::SECRET]))->verify($other);
     }
 }

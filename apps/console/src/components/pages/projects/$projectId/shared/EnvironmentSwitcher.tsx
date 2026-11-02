@@ -95,21 +95,29 @@ function EnvironmentDot({
   )
 }
 
-/** The row contents every option shares; the handle column stays so dots line up. */
+/**
+ * The row contents every option shares. The handle column is there only while
+ * the list can be reordered, on every row so the dots line up; with one
+ * environment or none there is nothing to reorder and the rows start at the dot.
+ */
 function EnvironmentRow({
   option,
   isActive,
+  reorderable,
   handle,
 }: {
   option: ProjectEnvironmentOption
   isActive: boolean
+  reorderable: boolean
   handle?: React.ReactNode
 }) {
   return (
     <>
-      <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-        {handle}
-      </span>
+      {reorderable && (
+        <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+          {handle}
+        </span>
+      )}
       <span className="flex h-4 w-4 shrink-0 items-center justify-center">
         <EnvironmentDot environment={option} />
       </span>
@@ -134,6 +142,7 @@ function EnvironmentRow({
 function SortableEnvironmentItem({
   option,
   isActive,
+  reorderable,
   canReorder,
   someoneDragging,
   onSelect,
@@ -141,6 +150,7 @@ function SortableEnvironmentItem({
 }: {
   option: ProjectEnvironmentOption
   isActive: boolean
+  reorderable: boolean
   canReorder: boolean
   someoneDragging: boolean
   onSelect: () => void
@@ -184,6 +194,7 @@ function SortableEnvironmentItem({
         <EnvironmentRow
           option={option}
           isActive={isActive}
+          reorderable={reorderable}
           handle={
             canReorder ? (
               <button
@@ -302,12 +313,12 @@ export function EnvironmentSwitcher({
       }
     : production
 
-  // The update replaces the whole prefs object, so nothing is saved over
-  // prefs that never loaded; one environment has nothing to be ordered against
+  // One environment has nothing to be ordered against, so the rows only make
+  // room for a handle from the second one on. The update replaces the whole
+  // prefs object, so nothing is saved over prefs that never loaded.
+  const reorderable = environmentOptions.length > 1
   const canReorder =
-    prefs !== null &&
-    environmentOptions.length > 1 &&
-    !updatePrefsMutation.isPending
+    reorderable && prefs !== null && !updatePrefsMutation.isPending
 
   // An environment is a working context on the project's own routes, not a URL:
   // the switcher sets it and opens the project root in it. Production is the
@@ -443,6 +454,7 @@ export function EnvironmentSwitcher({
             <EnvironmentRow
               option={production}
               isActive={production.id === selected.id}
+              reorderable={reorderable}
             />
           </DropdownMenuItem>
           <DndContext
@@ -461,6 +473,7 @@ export function EnvironmentSwitcher({
                   key={option.id}
                   option={option}
                   isActive={option.id === selected.id}
+                  reorderable={reorderable}
                   canReorder={canReorder}
                   someoneDragging={dragging}
                   onSelect={() => openEnvironment(option.id)}

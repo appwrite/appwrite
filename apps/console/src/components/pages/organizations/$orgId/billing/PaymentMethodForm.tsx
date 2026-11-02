@@ -33,6 +33,7 @@ import {
   useSetPaymentMethodProvider,
   useSetOrganizationDefaultPaymentMethod,
   useSetOrganizationBackupPaymentMethod,
+  useDeletePaymentMethod,
   usePaymentMethods,
   useLocale,
 } from '@/lib/react-query/hooks'
@@ -137,6 +138,12 @@ export function PaymentMethodForm({
   // Recovery: SetupIntent already succeeded but Appwrite link never landed.
   // Card form is skipped; cardholder name must be collected on the confirm step.
   const [isRecovery, setIsRecovery] = useState(false)
+  // Recovery methods the user abandoned to enter a different card. Skipped by
+  // id so a re-init (theme change) reuses the replacement instead of creating
+  // another payment method.
+  const [skippedPaymentMethodIds, setSkippedPaymentMethodIds] = useState<
+    string[]
+  >([])
   const [isStripeLoading, setIsStripeLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null)
@@ -165,6 +172,7 @@ export function PaymentMethodForm({
   const setDefaultPaymentMethodMutation =
     useSetOrganizationDefaultPaymentMethod()
   const setBackupPaymentMethodMutation = useSetOrganizationBackupPaymentMethod()
+  const deletePaymentMethodMutation = useDeletePaymentMethod()
   const { paymentMethods: allPaymentMethods } = usePaymentMethods({
     enabled: open,
   })
@@ -204,7 +212,9 @@ export function PaymentMethodForm({
         // form every time the query invalidates.
         const existingIncomplete = allPaymentMethods?.find(
           (method: Models.PaymentMethod) =>
-            method.clientSecret && !method.providerMethodId,
+            method.clientSecret &&
+            !method.providerMethodId &&
+            !skippedPaymentMethodIds.includes(method.$id),
         )
 
         let paymentMethod: Models.PaymentMethod
@@ -329,7 +339,13 @@ export function PaymentMethodForm({
     // mutation object to keep the Stripe form from reloading when the list
     // refetches.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, hasStripePublicKey, stripePublishableKey, theme])
+  }, [
+    open,
+    hasStripePublicKey,
+    stripePublishableKey,
+    theme,
+    skippedPaymentMethodIds,
+  ])
 
   // Reset internal state when the enclosing surface closes. Also abort any
   // in-flight submit so its continuation doesn't fire setError / toast /
@@ -343,6 +359,7 @@ export function PaymentMethodForm({
       setShowConfirmStep(false)
       setRequiresState(false)
       setIsRecovery(false)
+      setSkippedPaymentMethodIds([])
       setError(null)
       setPaymentMethodId(null)
       setClientSecret(null)
@@ -660,6 +677,44 @@ export function PaymentMethodForm({
                 {t('A card was entered in a previous attempt. Complete the details below to finish adding it.')}
               </p>
             </div>
+          )}
+
+          {isRecovery && (
+            <Button
+              type="button"
+              variant="link"
+              className="text-[13px]"
+              onClick={() => {
+                setShowConfirmStep(false)
+                setIsRecovery(false)
+                setRequiresState(false)
+                setProviderMethodId(null)
+                setAddedCardPreview(null)
+                setError(null)
+                if (paymentMethodId) {
+                  setSkippedPaymentMethodIds((ids) => [
+                    ...ids,
+                    paymentMethodId,
+                  ])
+                  // Unlinked, so this only removes the Appwrite row. Without
+                  // it every later open lands back on this recovery step.
+                  deletePaymentMethodMutation.mutate(
+                    { paymentMethodId },
+                    {
+                      onError: (err) =>
+                        toast.error(
+                          err instanceof Error
+                            ? err.message
+                            : t('Failed to delete payment method'),
+                        ),
+                    },
+                  )
+                }
+              }}
+              disabled={isLoading}
+            >
+              {t('Use a different card')}
+            </Button>
           )}
 
           {/* Card form is skipped on the recovery path, so ask for the

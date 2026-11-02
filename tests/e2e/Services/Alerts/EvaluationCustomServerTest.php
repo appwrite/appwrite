@@ -280,10 +280,9 @@ final class EvaluationCustomServerTest extends Scope
         $this->setThreshold($monitorId, 1e15);
         $this->waitForStatus($monitorId, 'ok');
 
-        $email = $this->getLastEmailByAddress($developer, function (array $email) use ($name) {
+        $this->getLastEmailByAddress($developer, function (array $email) use ($name) {
             $this->assertStringStartsWith('[Resolved] ' . $name . ' · ', $email['subject']);
         });
-        $this->assertStringContainsString('as a developer of', (string) $email['html']);
     }
 
     public function testAlertEmailsCanBeUnsubscribed(): void
@@ -307,14 +306,14 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        // Every alert email carries one-click unsubscribe headers and one quiet link on its reason line.
+        // Every alert email carries one-click unsubscribe headers and an Unsubscribe link in its footer.
         $this->waitForStatus($monitorId, 'firing');
         $email = $this->getLastEmailByAddress($root['email'], function (array $email) use ($name) {
             $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
         $this->assertSame('List-Unsubscribe=One-Click', $email['headers']['list-unsubscribe-post'] ?? null);
         $this->assertSame(1, \preg_match('#<(https?://[^>]+/v1/console/alerts/unsubscribe\?[^>]+)>#', (string) ($email['headers']['list-unsubscribe'] ?? ''), $header));
-        $this->assertMatchesRegularExpression('#as an owner of [^<]+\. <a [^>]*href="[^"]*/auth/alerts/unsubscribe\?token=[^"]+"[^>]*>Unsubscribe</a>#', (string) $email['html']);
+        $this->assertMatchesRegularExpression('#>Privacy</a></td>\s*<td[^>]*><div[^>]*>\|</div></td><td><a href="[^"]*/auth/alerts/unsubscribe\?token=[^"]+">Unsubscribe</a></td>#', (string) $email['html']);
         $this->assertStringNotContainsString('Stop all usage alert emails', (string) $email['html']);
         $this->assertStringContainsString('Pause this monitor', (string) $email['html']);
         \parse_str((string) \parse_url(\html_entity_decode($header[1]), PHP_URL_QUERY), $query);
@@ -363,13 +362,13 @@ final class EvaluationCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
-        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
         [$head, $claims, $signature] = \explode('.', $token);
         $forged = $head . '.' . \rtrim(\strtr(\base64_encode((string) \json_encode(['monitorId' => $other] + (array) \json_decode((string) \base64_decode(\strtr($claims, '-_', '+/')), true))), '+/', '-_'), '=') . '.' . $signature;
         foreach ([
             'tampered' => $forged,
             'expired' => $unsubscribe->token($root['$id'], $monitorId, 'usage', \time() - ALERT_UNSUBSCRIBE_TTL - 60),
-            'another secret' => (new Unsubscribe('another-secret'))->token($root['$id'], $monitorId, 'usage'),
+            'another secret' => (new Unsubscribe(['another-secret']))->token($root['$id'], $monitorId, 'usage'),
             'missing' => '',
         ] as $case => $invalid) {
             foreach ([Client::METHOD_GET, Client::METHOD_POST] as $method) {
@@ -449,7 +448,7 @@ final class EvaluationCustomServerTest extends Scope
     {
         $root = $this->getRoot()['$id'];
         $monitorId = $this->createPausedMonitor('Deleted later ' . \uniqid());
-        $token = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->token($root, $monitorId, 'usage');
+        $token = (new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]))->token($root, $monitorId, 'usage');
         $this->assertSame(204, $this->unsubscribe(Client::METHOD_POST, $token, 'all')['headers']['status-code']);
 
         $this->assertSame(204, $this->client->call(Client::METHOD_DELETE, '/monitors/' . $monitorId, $this->headers())['headers']['status-code']);
@@ -472,7 +471,7 @@ final class EvaluationCustomServerTest extends Scope
     public function testConcurrentUnsubscribesAllHold(): void
     {
         $root = $this->getRoot()['$id'];
-        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $unsubscribe = new Unsubscribe([System::getEnv('_APP_OPENSSL_KEY_V1')]);
         $scopes = \array_map(fn (int $i) => 'concurrent' . $i . \uniqid(), \range(1, 12));
 
         /**
@@ -594,7 +593,8 @@ final class EvaluationCustomServerTest extends Scope
         $alert = $this->getLastEmailByAddress($email, function (array $email) use ($name) {
             $this->assertStringStartsWith('[Firing] ' . $name . ' · ', $email['subject']);
         });
-        $this->assertStringContainsString('owner of ' . $destination['body']['name'], (string) $alert['html']);
+        // The alert names the organization the project moved to.
+        $this->assertStringContainsString($destination['body']['name'], (string) $alert['html']);
     }
 
     public function testEachFiringOpensAnAlertThatOutlivesItsMonitor(): void

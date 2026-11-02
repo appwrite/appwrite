@@ -47,51 +47,51 @@ class VectorsDB extends Base
 
     private function registerDatabaseActions(Service $service): void
     {
-        $service->addAction(CreateVectorDatabase::getName(), CreateVectorDatabase::class);
-        $service->addAction(GetVectorDatabase::getName(), GetVectorDatabase::class);
-        $service->addAction(UpdateVectorDatabase::getName(), UpdateVectorDatabase::class);
-        $service->addAction(DeleteVectorDatabase::getName(), DeleteVectorDatabase::class);
-        $service->addAction(ListVectorDatabases::getName(), ListVectorDatabases::class);
+        $service->addAction('createVectorsDBDatabase', CreateVectorDatabase::class);
+        $service->addAction('getVectorsDBDatabase', GetVectorDatabase::class);
+        $service->addAction('updateVectorsDBDatabase', UpdateVectorDatabase::class);
+        $service->addAction('deleteVectorsDBDatabase', DeleteVectorDatabase::class);
+        $service->addAction('listVectorsDBDatabases', ListVectorDatabases::class);
     }
 
     private function registerCollectionActions(Service $service): void
     {
-        $service->addAction(CreateCollection::getName(), CreateCollection::class);
-        $service->addAction(GetCollection::getName(), GetCollection::class);
-        $service->addAction(UpdateCollection::getName(), UpdateCollection::class);
-        $service->addAction(DeleteCollection::getName(), DeleteCollection::class);
-        $service->addAction(ListCollections::getName(), ListCollections::class);
+        $service->addAction('createVectorsDBCollection', CreateCollection::class);
+        $service->addAction('getVectorsDBCollection', GetCollection::class);
+        $service->addAction('updateVectorsDBCollection', UpdateCollection::class);
+        $service->addAction('deleteVectorsDBCollection', DeleteCollection::class);
+        $service->addAction('listVectorsDBCollections', ListCollections::class);
     }
 
     private function registerIndexActions(Service $service): void
     {
-        $service->addAction(CreateIndex::getName(), CreateIndex::class);
-        $service->addAction(GetIndex::getName(), GetIndex::class);
-        $service->addAction(DeleteIndex::getName(), DeleteIndex::class);
-        $service->addAction(ListIndexes::getName(), ListIndexes::class);
+        $service->addAction('createVectorsDBIndex', CreateIndex::class);
+        $service->addAction('getVectorsDBIndex', GetIndex::class);
+        $service->addAction('deleteVectorsDBIndex', DeleteIndex::class);
+        $service->addAction('listVectorsDBIndexes', ListIndexes::class);
     }
 
     private function registerDocumentActions(Service $service): void
     {
-        $service->addAction(CreateDocument::getName(), CreateDocument::class);
-        $service->addAction(UpdateDocument::getName(), UpdateDocument::class);
-        $service->addAction(UpsertDocument::getName(), UpsertDocument::class);
-        $service->addAction(GetDocument::getName(), GetDocument::class);
-        $service->addAction(ListDocuments::getName(), ListDocuments::class);
-        $service->addAction(CreateDocumentsQuery::getName(), CreateDocumentsQuery::class);
-        $service->addAction(DeleteDocument::getName(), DeleteDocument::class);
-        $service->addAction(UpdateDocuments::getName(), UpdateDocuments::class);
-        $service->addAction(UpsertDocuments::getName(), UpsertDocuments::class);
-        $service->addAction(DeleteDocuments::getName(), DeleteDocuments::class);
+        $service->addAction('createVectorsDBDocument', CreateDocument::class);
+        $service->addAction('updateVectorsDBDocument', UpdateDocument::class);
+        $service->addAction('upsertVectorsDBDocument', UpsertDocument::class);
+        $service->addAction('getVectorsDBDocument', GetDocument::class);
+        $service->addAction('listVectorsDBDocuments', ListDocuments::class);
+        $service->addAction('createVectorsDBDocumentsQuery', CreateDocumentsQuery::class);
+        $service->addAction('deleteVectorsDBDocument', DeleteDocument::class);
+        $service->addAction('updateVectorsDBDocuments', UpdateDocuments::class);
+        $service->addAction('upsertVectorsDBDocuments', UpsertDocuments::class);
+        $service->addAction('deleteVectorsDBDocuments', DeleteDocuments::class);
     }
 
     private function registerTransactionActions(Service $service): void
     {
-        $service->addAction(CreateTransaction::getName(), CreateTransaction::class);
-        $service->addAction(GetTransaction::getName(), GetTransaction::class);
-        $service->addAction(UpdateTransaction::getName(), UpdateTransaction::class);
-        $service->addAction(DeleteTransaction::getName(), DeleteTransaction::class);
-        $service->addAction(ListTransactions::getName(), ListTransactions::class);
-        $service->addAction(CreateOperations::getName(), CreateOperations::class);
+        $service->addAction('createVectorsDBTransaction', CreateTransaction::class);
+        $service->addAction('getVectorsDBTransaction', GetTransaction::class);
+        $service->addAction('updateVectorsDBTransaction', UpdateTransaction::class);
+        $service->addAction('deleteVectorsDBTransaction', DeleteTransaction::class);
+        $service->addAction('listVectorsDBTransactions', ListTransactions::class);
+        $service->addAction('createVectorsDBOperations', CreateOperations::class);
     }
 }

@@ -71,7 +71,7 @@ export type ConsoleProfileFeatures = {
   projectEnvironments: boolean
   /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
   projectTransfers: boolean
-  /** Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
+  /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
   alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean

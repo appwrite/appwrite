@@ -32,6 +32,10 @@ import {
   type Monitor,
 } from '@/lib/appwrite/monitors'
 import {
+  budgetRecipients,
+  changedBudgetRecipients,
+} from '@/lib/appwrite/organization-budget'
+import {
   emptyRuleForm,
   monitorInputFromForm,
   ruleFormFromMonitor,
@@ -404,5 +408,23 @@ describe('alert email unsubscribe page', () => {
     )
     expect(isOptionalAuthPage('/auth/alerts/unsubscribe')).toBe(true)
     expect(isSelfHostedAllowedPath('/auth/alerts/unsubscribe')).toBe(true)
+  })
+})
+
+describe('budget alert recipients', () => {
+  test('reads recipients only from editions that return them', () => {
+    expect(budgetRecipients({ budgetNotify: ['owner', 'billing'] })).toEqual([
+      'owner',
+      'billing',
+    ])
+    expect(budgetRecipients({ budgetAlerts: [50] })).toBeNull()
+    expect(budgetRecipients(null)).toBeNull()
+  })
+
+  test('sends a change only when it differs and keeps someone emailed', () => {
+    const current = ['owner', 'billing']
+    expect(changedBudgetRecipients(current, ['owner'])).toEqual(['owner'])
+    expect(changedBudgetRecipients(current, ['billing', 'owner'])).toBeNull()
+    expect(changedBudgetRecipients(current, [])).toBeNull()
   })
 })

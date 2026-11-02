@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe;
 
 use Appwrite\Alert\Unsubscribe;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -13,7 +14,6 @@ use Utopia\Database\Operator;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -102,7 +102,7 @@ abstract class Base extends Action
         $token = $token !== '' ? $token : (string) $request->getQuery('token', '');
 
         try {
-            ['userId' => $userId, 'monitorId' => $monitorId, 'type' => $type] = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->verify($token);
+            ['userId' => $userId, 'monitorId' => $monitorId, 'type' => $type] = (new Unsubscribe(EncryptionKey::accepted()))->verify($token);
         } catch (\InvalidArgumentException) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }

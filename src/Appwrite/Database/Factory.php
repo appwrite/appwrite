@@ -105,6 +105,16 @@ class Factory implements Provisioner
         );
     }
 
+    public function overlayLiveDedicatedDsn(
+        Document $databaseDocument,
+        Document $project,
+        int $timeout = 0,
+        int $maxQueryValues = 0,
+        bool $cache = true,
+    ): Document {
+        return $databaseDocument;
+    }
+
     /**
      * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
      * the schema is theirs, so dropping one would silently discard data they sent.

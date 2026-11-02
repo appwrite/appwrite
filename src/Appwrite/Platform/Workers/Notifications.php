@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
@@ -286,6 +287,7 @@ class Notifications extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
         if (!empty($preview)) {
@@ -549,7 +551,7 @@ class Notifications extends Action
             'type' => $payload['type'] ?? 'info',
             'channel' => $channel,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
+            'projectInternalId' => self::internalId($project),
             'resourceType' => $recipient['resourceType'],
             'resourceId' => $recipient['resourceId'],
             'resourceInternalId' => $recipient['resourceInternalId'],
@@ -705,6 +707,16 @@ class Notifications extends Action
     }
 
     /**
+     * The project a notification row is filed under, and the tracking token must match. The console project is
+     * not stored, so its sequence is empty or its ID ('console'), which the BIGINT column refuses: a record that
+     * fails after the email went out retries the message and sends the email again. It is filed under 0.
+     */
+    private static function internalId(Document $project): string
+    {
+        return $project->getId() === 'console' ? '0' : (string) $project->getSequence();
+    }
+
+    /**
      * Splice a visible tracking logo before the last `</body>` tag (or
      * append at the end if the body has no closing tag). The logo URL
      * carries a signed JWT identifying the notification recipient, which the
@@ -719,7 +731,7 @@ class Notifications extends Action
                 'channel' => $channel,
                 'recipientHash' => $recipientHash,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
+                'projectInternalId' => self::internalId($project),
                 'purpose' => 'notification_track',
             ]);
 
