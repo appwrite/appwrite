@@ -1,10 +1,8 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
-use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use GraphQL\Error\DebugFlag;
@@ -19,30 +17,9 @@ use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Http;
 use Utopia\System\System;
 use Utopia\Validator\JSON;
-
-Http::init()
-    ->groups(['graphql'])
-    ->inject('project')
-    ->inject('user')
-    ->inject('request')
-    ->inject('response')
-    ->inject('authorization')
-    ->action(function (Document $project, User $user, Request $request, Response $response, Authorization $authorization) {
-        $response->setUser($user);
-        $request->setUser($user);
-
-        if (
-            array_key_exists('graphql', $project->getAttribute('apis', []))
-            && !$project->getAttribute('apis', [])['graphql']
-            && !($user->isPrivileged($authorization->getRoles()) || $user->isKey($authorization->getRoles()))
-        ) {
-            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
-        }
-    });
 
 /**
  * Execute a GraphQL request
