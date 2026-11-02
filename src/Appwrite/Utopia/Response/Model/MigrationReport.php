@@ -23,6 +23,12 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
+            ->addRule(Resource::TYPE_MEMBERSHIP, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of memberships to be migrated.',
+                'default' => 0,
+                'example' => 20,
+            ])
             ->addRule(Resource::TYPE_DATABASE, [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of databases to be migrated.',

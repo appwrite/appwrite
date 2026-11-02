@@ -171,9 +171,6 @@ export function AddDomainWizard() {
     try {
       const updated = await verifyMutation.mutateAsync(rule.$id)
       if (updated.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
         toast.success(t('Domain verified'))
         navigate({
           to: '/projects/$projectId/functions/$functionId/domains',
@@ -185,9 +182,6 @@ export function AddDomainWizard() {
       ) {
         setVerificationError(dnsPendingVerificationError(t))
       } else {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
         toast.success(t('Verification in progress'))
         navigate({
           to: '/projects/$projectId/functions/$functionId/domains',

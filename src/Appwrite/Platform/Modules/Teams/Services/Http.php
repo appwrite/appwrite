@@ -24,22 +24,22 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Teams
-        $this->addAction(CreateTeam::getName(), new CreateTeam());
-        $this->addAction(GetTeam::getName(), new GetTeam());
-        $this->addAction(ListTeams::getName(), new ListTeams());
-        $this->addAction(DeleteTeam::getName(), new DeleteTeam());
-        $this->addAction(UpdateTeamName::getName(), new UpdateTeamName());
+        $this->addAction(CreateTeam::getName(), CreateTeam::class);
+        $this->addAction(GetTeam::getName(), GetTeam::class);
+        $this->addAction(ListTeams::getName(), ListTeams::class);
+        $this->addAction(DeleteTeam::getName(), DeleteTeam::class);
+        $this->addAction(UpdateTeamName::getName(), UpdateTeamName::class);
 
         // Preferences
-        $this->addAction(GetPreferences::getName(), new GetPreferences());
-        $this->addAction(UpdatePreferences::getName(), new UpdatePreferences());
+        $this->addAction(GetPreferences::getName(), GetPreferences::class);
+        $this->addAction(UpdatePreferences::getName(), UpdatePreferences::class);
 
         // Memberships
-        $this->addAction(CreateMembership::getName(), new CreateMembership());
-        $this->addAction(GetMembership::getName(), new GetMembership());
-        $this->addAction(ListMemberships::getName(), new ListMemberships());
-        $this->addAction(UpdateMembership::getName(), new UpdateMembership());
-        $this->addAction(DeleteMembership::getName(), new DeleteMembership());
-        $this->addAction(UpdateMembershipStatus::getName(), new UpdateMembershipStatus());
+        $this->addAction(CreateMembership::getName(), CreateMembership::class);
+        $this->addAction(GetMembership::getName(), GetMembership::class);
+        $this->addAction(ListMemberships::getName(), ListMemberships::class);
+        $this->addAction(UpdateMembership::getName(), UpdateMembership::class);
+        $this->addAction(DeleteMembership::getName(), DeleteMembership::class);
+        $this->addAction(UpdateMembershipStatus::getName(), UpdateMembershipStatus::class);
     }
 }

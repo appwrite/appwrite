@@ -34,17 +34,33 @@ export type ConsoleBannerDefinition = {
 export const PRODUCT_HUNT_BANNER_ID = 'product-hunt-2026-09-16'
 export const POSTGRES_PROMO_BANNER_ID = 'postgres-promo-2026'
 export const START_PROMO_BANNER_ID = 'start-promo-india-2026-09'
+export const START_EXPANSION_PROMO_BANNER_ID = 'start-promo-expansion-2026-10'
 export const INIT_RECAP_PROMO_BANNER_ID = 'init-recap-promo-2026-09'
 export const NATIVE_OAUTH_PROMO_BANNER_ID = 'native-oauth-promo-2026-09'
 export const FIREWALL_PROMO_BANNER_ID = 'firewall-promo-2026-09'
 export const FIREWALL_SPIDER_PROMO_BANNER_ID = 'firewall-spider-promo-2026-10'
 
-/** Appwrite Start regional promo (IN, NP, NG, PK), inclusive UTC. */
+/** Appwrite Start regional promo for the launch countries (IN, NP, NG, PK), inclusive UTC. */
 export const START_PROMO_BANNER_START_MS = Date.UTC(2026, 8, 21, 0, 0, 0, 0)
 export const START_PROMO_BANNER_END_MS = Date.UTC(
   2026,
   10,
   29,
+  23,
+  59,
+  59,
+  999,
+)
+
+/**
+ * Appwrite Start in 15 more countries: fourteen days from 31 Oct 2026
+ * (inclusive, UTC). Each country gets its own copy and landmark.
+ */
+export const START_EXPANSION_PROMO_BANNER_START_MS = Date.UTC(2026, 9, 31, 0, 0, 0, 0)
+export const START_EXPANSION_PROMO_BANNER_END_MS = Date.UTC(
+  2026,
+  10,
+  13,
   23,
   59,
   59,
@@ -180,6 +196,16 @@ export const CONSOLE_BANNERS: readonly ConsoleBannerDefinition[] = [
     placement: 'header',
     startMs: START_PROMO_BANNER_START_MS,
     endMs: START_PROMO_BANNER_END_MS,
+    cloudOnly: true,
+    event: 'start-promo-banner-learn-more',
+  },
+  {
+    id: START_EXPANSION_PROMO_BANNER_ID,
+    title: 'Appwrite Start in 15 more countries',
+    scope: 'console',
+    placement: 'header',
+    startMs: START_EXPANSION_PROMO_BANNER_START_MS,
+    endMs: START_EXPANSION_PROMO_BANNER_END_MS,
     cloudOnly: true,
     event: 'start-promo-banner-learn-more',
   },

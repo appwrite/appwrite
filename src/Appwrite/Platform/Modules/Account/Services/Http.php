@@ -2,6 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Account\Services;
 
+use Appwrite\Platform\Modules\Account\Http\Account\Create as CreateAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Delete as DeleteAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Email\Update as UpdateEmail;
+use Appwrite\Platform\Modules\Account\Http\Account\Get as GetAccount;
+use Appwrite\Platform\Modules\Account\Http\Account\Identities\Delete as DeleteIdentity;
+use Appwrite\Platform\Modules\Account\Http\Account\Identities\XList as ListIdentities;
+use Appwrite\Platform\Modules\Account\Http\Account\JWTs\Create as CreateJWT;
 use Appwrite\Platform\Modules\Account\Http\Account\Memberships\XList as ListMemberships;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Create as CreateAuthenticator;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Authenticators\Delete as DeleteAuthenticator;
@@ -13,15 +20,52 @@ use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Create as C
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Get as GetRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\RecoveryCodes\Update as UpdateRecoveryCodes;
 use Appwrite\Platform\Modules\Account\Http\Account\MFA\Update as UpdateMfa;
+use Appwrite\Platform\Modules\Account\Http\Account\Name\Update as UpdateName;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Create as CreatePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Delete as DeletePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Get as GetPasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Update as UpdatePasskey;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification\Update as UpdatePasskeyVerification;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\XList as ListPasskeys;
+use Appwrite\Platform\Modules\Account\Http\Account\Password\Update as UpdatePassword;
+use Appwrite\Platform\Modules\Account\Http\Account\Phone\Update as UpdatePhone;
+use Appwrite\Platform\Modules\Account\Http\Account\Prefs\Get as GetPrefs;
+use Appwrite\Platform\Modules\Account\Http\Account\Prefs\Update as UpdatePrefs;
+use Appwrite\Platform\Modules\Account\Http\Account\Recovery\Create as CreateRecovery;
+use Appwrite\Platform\Modules\Account\Http\Account\Recovery\OTP\Create as CreateRecoveryOTP;
+use Appwrite\Platform\Modules\Account\Http\Account\Recovery\OTP\Update as UpdateRecoveryOTP;
+use Appwrite\Platform\Modules\Account\Http\Account\Recovery\Update as UpdateRecovery;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Anonymous\Create as CreateAnonymousSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Bulk\Delete as DeleteSessions;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Delete as DeleteSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email\Create as CreateEmailPasswordSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Get as GetSession;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\MagicURL\Update as UpdateMagicURLSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Create as CreateOAuth2Callback;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Callback\Get as GetOAuth2Callback;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Get as CreateOAuth2Session;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirect\Get as GetOAuth2Redirect;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Phone\Update as UpdatePhoneSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Token\Create as CreateSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\Update as UpdateSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
+use Appwrite\Platform\Modules\Account\Http\Account\Status\Update as UpdateStatus;
+use Appwrite\Platform\Modules\Account\Http\Account\Targets\Push\Create as CreatePushTarget;
+use Appwrite\Platform\Modules\Account\Http\Account\Targets\Push\Delete as DeletePushTarget;
+use Appwrite\Platform\Modules\Account\Http\Account\Targets\Push\Update as UpdatePushTarget;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Email\Create as CreateEmailToken;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\MagicURL\Create as CreateMagicURLToken;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2\Get as CreateOAuth2Token;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Create as CreatePasskeyToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Update as UpdatePasskeyToken;
+use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Phone\Create as CreatePhoneToken;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\Create as CreateEmailVerification;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\OTP\Create as CreateEmailVerificationOTP;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\OTP\Update as UpdateEmailVerificationOTP;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\Update as UpdateEmailVerification;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Phone\Create as CreatePhoneVerification;
+use Appwrite\Platform\Modules\Account\Http\Account\Verifications\Phone\Update as UpdatePhoneVerification;
 use Utopia\Platform\Service;
 
 class Http extends Service
@@ -30,25 +74,69 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
         $this
-            ->addAction(UpdateMfa::getName(), new UpdateMfa())
-            ->addAction(ListFactors::getName(), new ListFactors())
-            ->addAction(CreateAuthenticator::getName(), new CreateAuthenticator())
-            ->addAction(UpdateAuthenticator::getName(), new UpdateAuthenticator())
-            ->addAction(DeleteAuthenticator::getName(), new DeleteAuthenticator())
-            ->addAction(CreateRecoveryCodes::getName(), new CreateRecoveryCodes())
-            ->addAction(UpdateRecoveryCodes::getName(), new UpdateRecoveryCodes())
-            ->addAction(GetRecoveryCodes::getName(), new GetRecoveryCodes())
-            ->addAction(CreateChallenge::getName(), new CreateChallenge())
-            ->addAction(UpdateChallenge::getName(), new UpdateChallenge())
-            ->addAction(CreateIdTokenSession::getName(), new CreateIdTokenSession())
-            ->addAction(CreatePasskey::getName(), new CreatePasskey())
-            ->addAction(UpdatePasskeyVerification::getName(), new UpdatePasskeyVerification())
-            ->addAction(ListPasskeys::getName(), new ListPasskeys())
-            ->addAction(GetPasskey::getName(), new GetPasskey())
-            ->addAction(DeletePasskey::getName(), new DeletePasskey())
-            ->addAction(UpdatePasskey::getName(), new UpdatePasskey())
-            ->addAction(ListMemberships::getName(), new ListMemberships())
-            ->addAction(CreatePasskeyToken::getName(), new CreatePasskeyToken())
-            ->addAction(UpdatePasskeyToken::getName(), new UpdatePasskeyToken());
+            ->addAction(CreateAccount::getName(), CreateAccount::class)
+            ->addAction(GetAccount::getName(), GetAccount::class)
+            ->addAction(DeleteAccount::getName(), DeleteAccount::class)
+            ->addAction(ListSessions::getName(), ListSessions::class)
+            ->addAction(DeleteSessions::getName(), DeleteSessions::class)
+            ->addAction(GetSession::getName(), GetSession::class)
+            ->addAction(DeleteSession::getName(), DeleteSession::class)
+            ->addAction(UpdateSession::getName(), UpdateSession::class)
+            ->addAction(CreateEmailPasswordSession::getName(), CreateEmailPasswordSession::class)
+            ->addAction(CreateAnonymousSession::getName(), CreateAnonymousSession::class)
+            ->addAction(CreateSession::getName(), CreateSession::class)
+            ->addAction(CreateOAuth2Session::getName(), CreateOAuth2Session::class)
+            ->addAction(GetOAuth2Callback::getName(), GetOAuth2Callback::class)
+            ->addAction(CreateOAuth2Callback::getName(), CreateOAuth2Callback::class)
+            ->addAction(GetOAuth2Redirect::getName(), GetOAuth2Redirect::class)
+            ->addAction(CreateOAuth2Token::getName(), CreateOAuth2Token::class)
+            ->addAction(CreateMagicURLToken::getName(), CreateMagicURLToken::class)
+            ->addAction(CreateEmailToken::getName(), CreateEmailToken::class)
+            ->addAction(UpdateMagicURLSession::getName(), UpdateMagicURLSession::class)
+            ->addAction(UpdatePhoneSession::getName(), UpdatePhoneSession::class)
+            ->addAction(CreatePhoneToken::getName(), CreatePhoneToken::class)
+            ->addAction(CreateJWT::getName(), CreateJWT::class)
+            ->addAction(GetPrefs::getName(), GetPrefs::class)
+            ->addAction(UpdateName::getName(), UpdateName::class)
+            ->addAction(UpdatePassword::getName(), UpdatePassword::class)
+            ->addAction(UpdateEmail::getName(), UpdateEmail::class)
+            ->addAction(UpdatePhone::getName(), UpdatePhone::class)
+            ->addAction(UpdatePrefs::getName(), UpdatePrefs::class)
+            ->addAction(UpdateStatus::getName(), UpdateStatus::class)
+            ->addAction(CreateRecovery::getName(), CreateRecovery::class)
+            ->addAction(UpdateRecovery::getName(), UpdateRecovery::class)
+            ->addAction(CreateRecoveryOTP::getName(), CreateRecoveryOTP::class)
+            ->addAction(UpdateRecoveryOTP::getName(), UpdateRecoveryOTP::class)
+            ->addAction(CreateEmailVerification::getName(), CreateEmailVerification::class)
+            ->addAction(UpdateEmailVerification::getName(), UpdateEmailVerification::class)
+            ->addAction(CreatePhoneVerification::getName(), CreatePhoneVerification::class)
+            ->addAction(UpdatePhoneVerification::getName(), UpdatePhoneVerification::class)
+            ->addAction(CreatePushTarget::getName(), CreatePushTarget::class)
+            ->addAction(UpdatePushTarget::getName(), UpdatePushTarget::class)
+            ->addAction(DeletePushTarget::getName(), DeletePushTarget::class)
+            ->addAction(ListIdentities::getName(), ListIdentities::class)
+            ->addAction(DeleteIdentity::getName(), DeleteIdentity::class)
+            ->addAction(CreateEmailVerificationOTP::getName(), CreateEmailVerificationOTP::class)
+            ->addAction(UpdateEmailVerificationOTP::getName(), UpdateEmailVerificationOTP::class)
+            ->addAction(UpdateMfa::getName(), UpdateMfa::class)
+            ->addAction(ListFactors::getName(), ListFactors::class)
+            ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
+            ->addAction(UpdateAuthenticator::getName(), UpdateAuthenticator::class)
+            ->addAction(DeleteAuthenticator::getName(), DeleteAuthenticator::class)
+            ->addAction(CreateRecoveryCodes::getName(), CreateRecoveryCodes::class)
+            ->addAction(UpdateRecoveryCodes::getName(), UpdateRecoveryCodes::class)
+            ->addAction(GetRecoveryCodes::getName(), GetRecoveryCodes::class)
+            ->addAction(CreateChallenge::getName(), CreateChallenge::class)
+            ->addAction(UpdateChallenge::getName(), UpdateChallenge::class)
+            ->addAction(CreateIdTokenSession::getName(), CreateIdTokenSession::class)
+            ->addAction(CreatePasskey::getName(), CreatePasskey::class)
+            ->addAction(UpdatePasskeyVerification::getName(), UpdatePasskeyVerification::class)
+            ->addAction(ListPasskeys::getName(), ListPasskeys::class)
+            ->addAction(GetPasskey::getName(), GetPasskey::class)
+            ->addAction(DeletePasskey::getName(), DeletePasskey::class)
+            ->addAction(UpdatePasskey::getName(), UpdatePasskey::class)
+            ->addAction(ListMemberships::getName(), ListMemberships::class)
+            ->addAction(CreatePasskeyToken::getName(), CreatePasskeyToken::class)
+            ->addAction(UpdatePasskeyToken::getName(), UpdatePasskeyToken::class);
     }
 }

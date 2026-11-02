@@ -18,13 +18,13 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(View::getName(), new View());
-        $this->addAction(Status::getName(), new Status());
-        $this->addAction(Validate::getName(), new Validate());
-        $this->addAction(Complete::getName(), new Complete());
-        $this->addAction(Shutdown::getName(), new Shutdown());
-        $this->addAction(Reset::getName(), new Reset());
-        $this->addAction(Install::getName(), new Install());
-        $this->addAction(CertificateGet::getName(), new CertificateGet());
+        $this->addAction(View::getName(), View::class);
+        $this->addAction(Status::getName(), Status::class);
+        $this->addAction(Validate::getName(), Validate::class);
+        $this->addAction(Complete::getName(), Complete::class);
+        $this->addAction(Shutdown::getName(), Shutdown::class);
+        $this->addAction(Reset::getName(), Reset::class);
+        $this->addAction(Install::getName(), Install::class);
+        $this->addAction(CertificateGet::getName(), CertificateGet::class);
     }
 }

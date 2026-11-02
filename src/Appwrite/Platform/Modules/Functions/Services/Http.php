@@ -40,48 +40,48 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Functions
-        $this->addAction(CreateFunction::getName(), new CreateFunction());
-        $this->addAction(GetFunction::getName(), new GetFunction());
-        $this->addAction(UpdateFunction::getName(), new UpdateFunction());
-        $this->addAction(ListFunctions::getName(), new ListFunctions());
-        $this->addAction(DeleteFunction::getName(), new DeleteFunction());
+        $this->addAction(CreateFunction::getName(), CreateFunction::class);
+        $this->addAction(GetFunction::getName(), GetFunction::class);
+        $this->addAction(UpdateFunction::getName(), UpdateFunction::class);
+        $this->addAction(ListFunctions::getName(), ListFunctions::class);
+        $this->addAction(DeleteFunction::getName(), DeleteFunction::class);
 
         // Runtimes
-        $this->addAction(ListRuntimes::getName(), new ListRuntimes());
+        $this->addAction(ListRuntimes::getName(), ListRuntimes::class);
 
         // Specifications
-        $this->addAction(ListSpecifications::getName(), new ListSpecifications());
+        $this->addAction(ListSpecifications::getName(), ListSpecifications::class);
 
         // Deployments
-        $this->addAction(CreateDeployment::getName(), new CreateDeployment());
-        $this->addAction(GetDeployment::getName(), new GetDeployment());
-        $this->addAction(UpdateFunctionDeployment::getName(), new UpdateFunctionDeployment());
-        $this->addAction(ListDeployments::getName(), new ListDeployments());
-        $this->addAction(DeleteDeployment::getName(), new DeleteDeployment());
-        $this->addAction(CreateTemplateDeployment::getName(), new CreateTemplateDeployment());
-        $this->addAction(CreateVcsDeployment::getName(), new CreateVcsDeployment());
-        $this->addAction(DownloadDeployment::getName(), new DownloadDeployment());
-        $this->addAction(CreateDuplicateDeployment::getName(), new CreateDuplicateDeployment());
-        $this->addAction(UpdateDeploymentStatus::getName(), new UpdateDeploymentStatus());
+        $this->addAction(CreateDeployment::getName(), CreateDeployment::class);
+        $this->addAction(GetDeployment::getName(), GetDeployment::class);
+        $this->addAction(UpdateFunctionDeployment::getName(), UpdateFunctionDeployment::class);
+        $this->addAction(ListDeployments::getName(), ListDeployments::class);
+        $this->addAction(DeleteDeployment::getName(), DeleteDeployment::class);
+        $this->addAction(CreateTemplateDeployment::getName(), CreateTemplateDeployment::class);
+        $this->addAction(CreateVcsDeployment::getName(), CreateVcsDeployment::class);
+        $this->addAction(DownloadDeployment::getName(), DownloadDeployment::class);
+        $this->addAction(CreateDuplicateDeployment::getName(), CreateDuplicateDeployment::class);
+        $this->addAction(UpdateDeploymentStatus::getName(), UpdateDeploymentStatus::class);
 
         // Jobs (open-runtimes jobs-service build backend)
-        $this->addAction(CreateJobEvent::getName(), new CreateJobEvent());
+        $this->addAction(CreateJobEvent::getName(), CreateJobEvent::class);
 
         // Executions
-        $this->addAction(CreateExecution::getName(), new CreateExecution());
-        $this->addAction(GetExecution::getName(), new GetExecution());
-        $this->addAction(ListExecutions::getName(), new ListExecutions());
-        $this->addAction(DeleteExecution::getName(), new DeleteExecution());
+        $this->addAction(CreateExecution::getName(), CreateExecution::class);
+        $this->addAction(GetExecution::getName(), GetExecution::class);
+        $this->addAction(ListExecutions::getName(), ListExecutions::class);
+        $this->addAction(DeleteExecution::getName(), DeleteExecution::class);
 
         // Variables
-        $this->addAction(CreateVariable::getName(), new CreateVariable());
-        $this->addAction(GetVariable::getName(), new GetVariable());
-        $this->addAction(ListVariables::getName(), new ListVariables());
-        $this->addAction(UpdateVariable::getName(), new UpdateVariable());
-        $this->addAction(DeleteVariable::getName(), new DeleteVariable());
+        $this->addAction(CreateVariable::getName(), CreateVariable::class);
+        $this->addAction(GetVariable::getName(), GetVariable::class);
+        $this->addAction(ListVariables::getName(), ListVariables::class);
+        $this->addAction(UpdateVariable::getName(), UpdateVariable::class);
+        $this->addAction(DeleteVariable::getName(), DeleteVariable::class);
 
         // Templates
-        $this->addAction(GetTemplate::getName(), new GetTemplate());
-        $this->addAction(ListTemplates::getName(), new ListTemplates());
+        $this->addAction(GetTemplate::getName(), GetTemplate::class);
+        $this->addAction(ListTemplates::getName(), ListTemplates::class);
     }
 }

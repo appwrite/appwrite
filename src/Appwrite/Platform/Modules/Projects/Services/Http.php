@@ -2,8 +2,12 @@
 
 namespace Appwrite\Platform\Modules\Projects\Services;
 
+use Appwrite\Platform\Modules\Projects\Http\Init;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Auth\MockNumbers\Update as UpdateProjectMockNumbers;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Create as CreateProject;
+use Appwrite\Platform\Modules\Projects\Http\Projects\OAuth2\Update as UpdateProjectOAuth2;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Templates\Email\Delete as DeleteProjectEmailTemplate;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\XList as ListProjects;
 use Appwrite\Platform\Modules\Projects\Http\Schedules\Create as CreateSchedule;
@@ -18,16 +22,22 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
-        $this->addAction(CreateProject::getName(), new CreateProject());
-        $this->addAction(UpdateProject::getName(), new UpdateProject());
-        $this->addAction(ListProjects::getName(), new ListProjects());
-        $this->addAction(UpdateProjectTeam::getName(), new UpdateProjectTeam());
 
-        $this->addAction(CreateSchedule::getName(), new CreateSchedule());
-        $this->addAction(GetSchedule::getName(), new GetSchedule());
-        $this->addAction(ListSchedules::getName(), new ListSchedules());
+        $this->addAction(Init::getName(), Init::class);
 
-        $this->addAction(ListStages::getName(), new ListStages());
-        $this->addAction(UpdateStages::getName(), new UpdateStages());
+        $this->addAction(CreateProject::getName(), CreateProject::class);
+        $this->addAction(UpdateProject::getName(), UpdateProject::class);
+        $this->addAction(ListProjects::getName(), ListProjects::class);
+        $this->addAction(UpdateProjectTeam::getName(), UpdateProjectTeam::class);
+        $this->addAction(UpdateProjectOAuth2::getName(), UpdateProjectOAuth2::class);
+        $this->addAction(UpdateProjectMockNumbers::getName(), UpdateProjectMockNumbers::class);
+        $this->addAction(DeleteProjectEmailTemplate::getName(), DeleteProjectEmailTemplate::class);
+
+        $this->addAction(CreateSchedule::getName(), CreateSchedule::class);
+        $this->addAction(GetSchedule::getName(), GetSchedule::class);
+        $this->addAction(ListSchedules::getName(), ListSchedules::class);
+
+        $this->addAction(ListStages::getName(), ListStages::class);
+        $this->addAction(UpdateStages::getName(), UpdateStages::class);
     }
 }

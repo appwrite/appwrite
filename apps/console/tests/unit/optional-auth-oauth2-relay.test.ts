@@ -25,3 +25,13 @@ describe('native OAuth2 relay auth redirects', () => {
     expect(shouldRedirectToConsoleMfa('/sign-in')).toBe(true)
   })
 })
+
+describe('transfer link auth redirects', () => {
+  test('keeps a guest on the transfer page so it can offer sign-up', () => {
+    expect(shouldRedirectGuestToSignIn('/transfer')).toBe(false)
+  })
+
+  test('still sends the transfer page to MFA mid sign-in', () => {
+    expect(shouldRedirectToConsoleMfa('/transfer')).toBe(true)
+  })
+})

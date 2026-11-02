@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Event\Message;
 
 use Appwrite\Event\Message\Maintenance;
+use Appwrite\Maintenance\Cohort;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Queue\PermanentFailure;
@@ -20,6 +21,21 @@ final class MaintenanceTest extends TestCase
         $this->assertSame([1, 'project', 'east'], [$resumed->pass, $resumed->cursor, $resumed->region]);
     }
 
+    public function testCohortSurvivesTheQueue(): void
+    {
+        $message = new Maintenance(slot: 3, slots: 12, due: 1772420400, period: 3600, region: 'east', cohort: Cohort::Active);
+
+        $this->assertSame(Cohort::Active, Maintenance::fromArray($message->toArray())->cohort);
+    }
+
+    public function testPayloadWithoutACohortIsInactive(): void
+    {
+        $payload = (new Maintenance(slot: 3, slots: 2016, due: 1772420400, period: 604800, region: 'east', cohort: Cohort::Active))->toArray();
+        unset($payload['cohort']);
+
+        $this->assertSame(Cohort::Inactive, Maintenance::fromArray($payload)->cohort);
+    }
+
     /**
      * @return \Iterator<string, array{array<string, mixed>}>
      */
@@ -32,6 +48,7 @@ final class MaintenanceTest extends TestCase
         yield 'no period' => [\array_diff_key($payload, ['period' => true])];
         yield 'negative period' => [['period' => -1] + $payload];
         yield 'no region' => [\array_diff_key($payload, ['region' => true])];
+        yield 'unknown cohort' => [['cohort' => 'dormant'] + $payload];
     }
 
     /**

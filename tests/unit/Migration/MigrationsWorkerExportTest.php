@@ -361,7 +361,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 throw new \RuntimeException('Artifact unavailable');
             }
 
-            protected function generateAPIKey(Document $project): string
+            protected function generateAPIKey(Document $project, Document $migration): string
             {
                 return 'api-key';
             }

@@ -14,6 +14,6 @@ class Embeddings extends Base
 
     private function registerEmbeddingActions(Service $service): void
     {
-        $service->addAction(CreateTextEmbeddings::getName(), new CreateTextEmbeddings());
+        $service->addAction(CreateTextEmbeddings::getName(), CreateTextEmbeddings::class);
     }
 }

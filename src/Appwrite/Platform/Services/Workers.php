@@ -20,16 +20,16 @@ class Workers extends Service
     {
         $this->type = Service::TYPE_WORKER;
         $this
-            ->addAction(Certificates::getName(), new Certificates())
-            ->addAction(Deletes::getName(), new Deletes())
-            ->addAction(Executions::getName(), new Executions())
-            ->addAction(Functions::getName(), new Functions())
-            ->addAction(Mails::getName(), new Mails())
-            ->addAction(Maintenance::getName(), new Maintenance())
-            ->addAction(Messaging::getName(), new Messaging())
-            ->addAction(Notifications::getName(), new Notifications())
-            ->addAction(Webhooks::getName(), new Webhooks())
-            ->addAction(Migrations::getName(), new Migrations())
+            ->addAction(Certificates::getName(), Certificates::class)
+            ->addAction(Deletes::getName(), Deletes::class)
+            ->addAction(Executions::getName(), Executions::class)
+            ->addAction(Functions::getName(), Functions::class)
+            ->addAction(Mails::getName(), Mails::class)
+            ->addAction(Maintenance::getName(), Maintenance::class)
+            ->addAction(Messaging::getName(), Messaging::class)
+            ->addAction(Notifications::getName(), Notifications::class)
+            ->addAction(Webhooks::getName(), Webhooks::class)
+            ->addAction(Migrations::getName(), Migrations::class)
         ;
     }
 }
