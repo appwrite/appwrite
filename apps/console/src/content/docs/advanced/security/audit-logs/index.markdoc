@@ -64,9 +64,12 @@ X-Appwrite-Key: <API_KEY>
 X-Appwrite-Reason: Moved to SSR endpoint /api/checkout in storefront site
 ```
 
-A reason is plain text of up to 256 characters. Clients that can only send ASCII header values, such as browsers,
-can percent-encode it with `encodeURIComponent`. A request with a longer or malformed reason
-fails with `general_argument_invalid` before it runs.
+A reason is one line of text of up to 256 characters. The header value is percent-decoded, so send it
+encoded with `encodeURIComponent` (or your language's equivalent). That covers any language, and a literal `%` as `%25`.
+Plain ASCII text without `%` can be sent as it is.
+
+A request fails with `general_argument_invalid` before it runs when its reason is longer, isn't valid UTF-8,
+or contains control characters such as line breaks, tabs or terminal escapes, or Unicode bidirectional override characters.
 
 # Retention {% #retention %}
 

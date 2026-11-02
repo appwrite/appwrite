@@ -35,6 +35,13 @@ final class ReasonTest extends Scope
         $team = $this->createTeam('Longest', \str_repeat('a', APP_LIMIT_AUDIT_REASON_LENGTH));
         $this->assertSame(201, $team['headers']['status-code']);
 
+        // A % that starts no escape stays as it is; an encoded one decodes to %.
+        $team = $this->createTeam('Discount', '50% off');
+        $this->assertSame(201, $team['headers']['status-code']);
+
+        $team = $this->createTeam('Limits', \rawurlencode('Raise the limit to 100%'));
+        $this->assertSame(201, $team['headers']['status-code']);
+
         /**
          * Test for FAILURE
          */
@@ -47,6 +54,13 @@ final class ReasonTest extends Scope
         $team = $this->createTeam($name, '%FF%FE');
         $this->assertSame(400, $team['headers']['status-code']);
         $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $team['body']['type']);
+
+        // One line, with no control characters that could forge a second line or reorder the text.
+        foreach (["first\nsecond", "red \e[31malert", "safe\u{202E}txt.exe"] as $reason) {
+            $team = $this->createTeam($name, \rawurlencode($reason));
+            $this->assertSame(400, $team['headers']['status-code']);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $team['body']['type']);
+        }
 
         // A rejected reason stops the request before it runs.
         $teams = $this->client->call(Client::METHOD_GET, '/teams', \array_merge([

@@ -11,6 +11,7 @@ use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Validator\Reason;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
@@ -724,11 +725,12 @@ Http::init()
         $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
         $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
 
-        // Why the caller made this request, shown next to it in Activity. Percent-encoded values are
-        // decoded so clients that cannot send non-ASCII header bytes (browsers, Node) can still send any language.
+        // Why the caller made this request, shown next to it in Activity. Always percent-decoded, like a W3C Baggage value,
+        // so clients that cannot send non-ASCII header bytes (browsers, Node) can send any language; a literal % goes as %25.
         $reason = \trim(\rawurldecode($request->getHeaderLine('x-appwrite-reason', '')));
-        if (! \mb_check_encoding($reason, 'UTF-8') || \mb_strlen($reason) > APP_LIMIT_AUDIT_REASON_LENGTH) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Reason header value: send UTF-8 text of at most ' . APP_LIMIT_AUDIT_REASON_LENGTH . ' characters.');
+        $reasonValidator = new Reason(APP_LIMIT_AUDIT_REASON_LENGTH);
+        if (! $reasonValidator->isValid($reason)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Reason header value: ' . $reasonValidator->getDescription() . ' Percent-encode it with encodeURIComponent.');
         }
         $auditContext->reason = $reason;
 
