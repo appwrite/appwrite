@@ -628,10 +628,9 @@ Http::init()
             $max = $limit->limit * $multiplier;
 
             try {
-                $isRateLimited = $timelimit($limit->key, $max, $limit->seconds, function (TimeLimit $timeLimit) use ($limit, $params, $response, $shouldCheckAbuse, &$closestLimit): bool {
+                $isRateLimited = $timelimit($limit->key, $max, $limit->seconds, function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
                     $timeLimit = $timeLimit->withParams($params);
-                    // A failure limit is counted by the error hook once the request has failed; here it is only read.
-                    $result = $shouldCheckAbuse && ! $limit->failures ? $timeLimit->check() : $timeLimit->peek();
+                    $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
                     if ($result->limit && ($result->remaining < $closestLimit || is_null($closestLimit))) {
                         $closestLimit = $result->remaining;
                         $response->addHeader('X-RateLimit-Limit', (string) $result->limit)
@@ -652,8 +651,9 @@ Http::init()
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
             }
 
+            // Reserved now, atomically; given back unless the request fails.
             if ($shouldCheckAbuse && $limit->failures) {
-                $abuseFailures->add($limit, $params, $max);
+                $abuseFailures->reserve($limit, $params, $max);
             }
         }
     });
@@ -993,7 +993,11 @@ Http::shutdown()
     ->inject('user')
     ->inject('timelimit')
     ->inject('params')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, array $pathParams) {
+    ->inject('abuseFailures')
+    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, array $pathParams, AbuseFailures $abuseFailures) {
+        // The request did not fail, so it gives back the hits it reserved on failure limits.
+        $abuseFailures->release($timelimit);
+
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
             return;
         }
@@ -1016,10 +1020,11 @@ Http::error()
     ->inject('timelimit')
     ->inject('abuseFailures')
     ->action(function (Throwable $error, callable $timelimit, AbuseFailures $abuseFailures) {
-        // Client errors are the failures a failure limit counts; a 429 is the limit itself answering.
+        // Client errors are the failures a failure limit counts and keep their reserved hits. A server error, or a
+        // 429 from another limit, says nothing about the client's attempt, so those give the hits back.
         $code = $error->getCode();
-        if ($error instanceof AppwriteException && $code >= 400 && $code < 500 && $code !== 429) {
-            $abuseFailures->count($timelimit);
+        if (! $error instanceof AppwriteException || $code < 400 || $code >= 500 || $code === 429) {
+            $abuseFailures->release($timelimit);
         }
     });
 

@@ -55,7 +55,8 @@ final readonly class Limit
 
     /**
      * Only requests that end in a client error (4xx other than 429) count, and nothing resets the count.
-     * A busy shared IP is not punished for its successes, and a success cannot buy more guesses.
+     * A busy shared IP is not punished for its successes, and a success cannot buy more guesses. Each request
+     * reserves its hit on arrival and gives it back unless it fails, so concurrent requests cannot overshoot.
      */
     public static function failures(string $key, int $limit, int $seconds = 3600): self
     {
