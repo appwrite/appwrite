@@ -13,6 +13,9 @@ use Utopia\Messaging\Adapter\Email\Resend;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SES;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Push\Mock as PushMock;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Fast2SMS;
 use Utopia\Messaging\Adapter\SMS\GEOSMS;
@@ -33,8 +36,9 @@ use Utopia\Telemetry\Adapter as Telemetry;
  * by _APP_SMS_PROVIDER. Both reach the same adapter, so the DSN becomes a provider document
  * and takes the same path.
  *
- * Push is absent on purpose: its Appwrite provider needs the message and the project
- * database, so a provider document alone does not describe it.
+ * A project's push providers are absent on purpose: the Appwrite provider needs the message
+ * and the project database, so a provider document alone does not describe it. The platform's
+ * own push, which alerts console users' devices, is described by _APP_NOTIFICATIONS_PUSH_APNS.
  */
 class Provider
 {
@@ -194,6 +198,38 @@ class Provider
             $geosms->setLocal($callingCode, $adapter);
         }
         return $geosms;
+    }
+
+    /**
+     * The adapter console notifications push through, from `_APP_NOTIFICATIONS_PUSH_APNS`:
+     * `apns://[KEY_ID]:[TEAM_ID]@[BUNDLE_ID]?sandbox=true` with the .p8 auth key in
+     * `_APP_NOTIFICATIONS_PUSH_APNS_KEY`, or `mock://[HOST]:[PORT]/[PATH]` to post every push to a
+     * request catcher. Unset disables push.
+     */
+    public function internalPush(): ?PushAdapter
+    {
+        $value = System::getEnv('_APP_NOTIFICATIONS_PUSH_APNS', '');
+        if ($value === '') {
+            return null;
+        }
+
+        $dsn = new DSN($value);
+
+        $adapter = match ($dsn->getScheme()) {
+            'apns' => new APNS(
+                authKey: System::getEnv('_APP_NOTIFICATIONS_PUSH_APNS_KEY', ''),
+                authKeyId: (string) $dsn->getUser(),
+                teamId: (string) $dsn->getPassword(),
+                bundleId: $dsn->getHost(),
+                sandbox: $dsn->getParam('sandbox') === 'true',
+            ),
+            'mock' => (new PushMock())->setEndpoint('http://' . $dsn->getHost() . ($dsn->getPort() ? ':' . $dsn->getPort() : '') . '/' . $dsn->getPath()),
+            default => throw new \InvalidArgumentException('Unsupported push adapter: ' . $dsn->getScheme()),
+        };
+
+        $adapter->setTelemetry($this->telemetry);
+
+        return $adapter;
     }
 
     private function fromDSN(DSN $dsn): Document
