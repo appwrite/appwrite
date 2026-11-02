@@ -2,13 +2,20 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Targets\Push;
 
+use Appwrite\Event\Event;
+use Appwrite\Event\Message\Delete as DeleteMessage;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 
@@ -53,6 +60,45 @@ class Delete extends Action
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization');
+            ->inject('authorization')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $targetId,
+        Event $queueForEvents,
+        DeletePublisher $publisherForDeletes,
+        Document $user,
+        Request $request,
+        Response $response,
+        Database $dbForProject,
+        Authorization $authorization,
+    ): void {
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getSequence() !== $target->getAttribute('userInternalId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('targets', $target->getId());
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            project: $queueForEvents->getProject(),
+            type: DELETE_TYPE_TARGET,
+            document: $target,
+        ));
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId())
+            ->setPayload($response->output($target, Response::MODEL_TARGET));
+
+        $response->noContent();
     }
 }
