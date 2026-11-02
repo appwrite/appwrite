@@ -37,6 +37,15 @@ abstract class Base extends Action
     protected const OAUTH_DEFAULT_SUCCESS = '/auth/oauth2/success';
     protected const OAUTH_DEFAULT_FAILURE = '/auth/oauth2/failure';
 
+    /**
+     * Lock key shared by every check and write of one identity email in a project.
+     * The address is hashed so it never reaches Redis keys or telemetry.
+     */
+    public static function identityEmailLockKey(Document $project, string $email): string
+    {
+        return 'lock:' . $project->getSequence() . ':identities:email:' . \hash('sha256', \mb_strtolower($email));
+    }
+
     protected function createSession(string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Geo $geo, Event $queueForEvents, Bus $bus, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, bool $domainVerification, ?string $cookieDomain, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime): void
     {
         // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)

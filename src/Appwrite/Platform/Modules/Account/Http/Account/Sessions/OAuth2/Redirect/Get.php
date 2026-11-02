@@ -11,6 +11,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
+use Appwrite\Locking\Lock;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\OpenSSL\OpenSSL;
@@ -95,6 +96,7 @@ class Get extends Base
             ->inject('clientForOAuth2')
             ->inject('mqtt')
             ->inject('queueForRealtime')
+            ->inject('lock')
             ->callback($this->action(...));
     }
 
@@ -124,6 +126,7 @@ class Get extends Base
         Client $clientForOAuth2,
         Mqtt $mqtt,
         Realtime $queueForRealtime,
+        Lock $lock,
     ): void {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
@@ -470,10 +473,13 @@ class Get extends Base
 
             // If user is not found, check if there is an identity with the same email
             if ($user->isEmpty() && !empty($providerEmail)) {
-                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                ]);
-                if (!$identityWithMatchingEmail->isEmpty()) {
+                $adopt = function () use ($dbForProject, $providerEmail, $isVerified, $user, $failureRedirect): void {
+                    $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                        Query::equal('providerEmail', [$providerEmail]),
+                    ]);
+                    if ($identityWithMatchingEmail->isEmpty()) {
+                        return;
+                    }
                     if (!$isVerified) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
@@ -486,6 +492,11 @@ class Get extends Base
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
+                };
+                if ($isVerified) {
+                    $this->lockIdentityEmail($lock, $project, $providerEmail, $adopt, $failureRedirect);
+                } else {
+                    $adopt();
                 }
             }
 
@@ -689,49 +700,57 @@ class Get extends Base
         if ($identity->isEmpty()) {
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
+            $photo = $oauth2->getUserPhoto($accessToken);
 
-            if (!empty($providerEmail)) {
-                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                    Query::notEqual('userInternalId', $user->getSequence()),
-                ]);
-                if (!empty($identitiesWithMatchingEmail)) {
-                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
-                    /** Return a generic bad request to prevent exposing existing accounts */
+            $link = function () use ($dbForProject, $authorization, $user, $userId, $provider, $oauth2ID, $providerEmail, $isVerified, $accessToken, $refreshToken, $accessTokenExpiry, $photo, $newUser, $newTarget, $failureRedirect): void {
+                if (!empty($providerEmail)) {
+                    $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+                        Query::equal('providerEmail', [$providerEmail]),
+                        Query::notEqual('userInternalId', $user->getSequence()),
+                    ]);
+                    if (!empty($identitiesWithMatchingEmail)) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                        /** Return a generic bad request to prevent exposing existing accounts */
+                    }
                 }
-            }
 
-            try {
-                $dbForProject->createDocument('identities', new Document([
-                    '$id' => Id::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::any()),
-                        Permission::update(Role::user($userId)),
-                        Permission::delete(Role::user($userId)),
-                    ],
-                    'userInternalId' => $user->getSequence(),
-                    'userId' => $userId,
-                    'provider' => $provider,
-                    'providerUid' => $oauth2ID,
-                    // Identity email lookups adopt users, so only store an attested address
-                    'providerEmail' => $isVerified ? $providerEmail : '',
-                    'providerAccessToken' => $accessToken,
-                    'providerRefreshToken' => $refreshToken,
-                    'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
-                    'photo' => $oauth2->getUserPhoto($accessToken),
-                ]));
-            } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
-                if ($newUser !== null) {
-                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
-                        if ($newTarget !== null) {
-                            $dbForProject->deleteDocument('targets', $newTarget->getId());
-                        }
-                        $dbForProject->deleteDocument('users', $newUser->getId());
-                    });
+                try {
+                    $dbForProject->createDocument('identities', new Document([
+                        '$id' => Id::unique(),
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($userId)),
+                            Permission::delete(Role::user($userId)),
+                        ],
+                        'userInternalId' => $user->getSequence(),
+                        'userId' => $userId,
+                        'provider' => $provider,
+                        'providerUid' => $oauth2ID,
+                        // Identity email lookups adopt users, so only store an attested address
+                        'providerEmail' => $isVerified ? $providerEmail : '',
+                        'providerAccessToken' => $accessToken,
+                        'providerRefreshToken' => $refreshToken,
+                        'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
+                        'photo' => $photo,
+                    ]));
+                } catch (Duplicate) {
+                    // The (provider, providerUid) unique index guards the same identity being connected to two users.
+                    // A request that lost the race must not leave behind the user it just created.
+                    if ($newUser !== null) {
+                        $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+                            if ($newTarget !== null) {
+                                $dbForProject->deleteDocument('targets', $newTarget->getId());
+                            }
+                            $dbForProject->deleteDocument('users', $newUser->getId());
+                        });
+                    }
+                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+            };
+            if ($isVerified && !empty($providerEmail)) {
+                $this->lockIdentityEmail($lock, $project, $providerEmail, $link, $failureRedirect);
+            } else {
+                $link();
             }
         } else {
             $changes = [
@@ -744,20 +763,27 @@ class Get extends Base
 
             // Store an email only once the provider attests it, and never one another user's identity holds.
             // A different address drops the stored one; a missing email or an unverified repeat keeps it.
-            if ($isVerified && !empty($providerEmail)) {
-                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                    Query::notEqual('userInternalId', $user->getSequence()),
-                ]);
-                if ($identityWithMatchingEmail->isEmpty()) {
-                    $changes['providerEmail'] = $providerEmail;
+            $refresh = function () use ($dbForProject, $user, $identity, $providerEmail, $isVerified, $changes): void {
+                if ($isVerified && !empty($providerEmail)) {
+                    $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                        Query::equal('providerEmail', [$providerEmail]),
+                        Query::notEqual('userInternalId', $user->getSequence()),
+                    ]);
+                    if ($identityWithMatchingEmail->isEmpty()) {
+                        $changes['providerEmail'] = $providerEmail;
+                    }
                 }
-            }
-            if (!isset($changes['providerEmail']) && !empty($providerEmail) && $providerEmail !== $identity->getAttribute('providerEmail', '')) {
-                $changes['providerEmail'] = '';
-            }
+                if (!isset($changes['providerEmail']) && !empty($providerEmail) && $providerEmail !== $identity->getAttribute('providerEmail', '')) {
+                    $changes['providerEmail'] = '';
+                }
 
-            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
+                $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
+            };
+            if ($isVerified && !empty($providerEmail)) {
+                $this->lockIdentityEmail($lock, $project, $providerEmail, $refresh, $failureRedirect);
+            } else {
+                $refresh();
+            }
         }
 
         if (empty($user->getAttribute('name'))) {
@@ -918,5 +944,25 @@ class Get extends Base
             ->addHeader('Pragma', 'no-cache')
             ->redirect($state['success'])
         ;
+    }
+
+    /**
+     * Serialize identity email checks and writes for one address in this project.
+     * Locking fails open when unavailable; the duplicate checks inside $fn stay as the backstop.
+     */
+    private function lockIdentityEmail(Lock $lock, Document $project, string $email, \Closure $fn, \Closure $failureRedirect): void
+    {
+        try {
+            $lock->withKey(
+                self::identityEmailLockKey($project, $email),
+                $fn,
+                target: 'identities',
+            );
+        } catch (Exception $e) {
+            if ($e->getType() !== Exception::GENERAL_RESOURCE_LOCKED) {
+                throw $e;
+            }
+            $failureRedirect(Exception::GENERAL_RESOURCE_LOCKED);
+        }
     }
 }
