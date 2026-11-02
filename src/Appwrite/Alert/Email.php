@@ -26,7 +26,7 @@ readonly class Email
      * @param ?\DateTimeImmutable $since when the rule started firing, for how long a resolved rule fired
      * @param int $cooldown seconds before the rule can email again while it keeps firing
      * @param string $pauseUrl where the "Pause this monitor" link goes; none when empty
-     * @param string $unsubscribeUrl where the "Unsubscribe" link after the reason goes; none when empty
+     * @param ?\DateTimeZone $timeZone the recipient's, for the time the alert changed; UTC when unknown
      */
     public function __construct(
         public Status $status,
@@ -40,13 +40,12 @@ readonly class Email
         public \DateTimeImmutable $changedAt,
         public array $details,
         public string $url,
-        public string $reason,
         public Wording $wording = new Wording(),
         public string $location = '',
         public ?\DateTimeImmutable $since = null,
         public int $cooldown = 0,
         public string $pauseUrl = '',
-        public string $unsubscribeUrl = '',
+        public ?\DateTimeZone $timeZone = null,
     ) {
     }
 
@@ -100,7 +99,7 @@ readonly class Email
             $this->window === null ? 'Compared with the latest reading' : 'Summed over ' . $this->duration(),
         );
 
-        $rows = ['Monitor' => $this->rule, ...$this->details];
+        $rows = $this->wording->monitor ? ['Monitor' => $this->rule, ...$this->details] : $this->details;
         if ($this->firing() && $this->wording->status === null) {
             $rows['Next email'] = $this->cooldown > 0
                 ? 'On recovery, or in ' . self::length($this->cooldown) . ' if still firing'
@@ -109,11 +108,10 @@ readonly class Email
 
         return Template::fromFile($templatePath)
             ->setParam('{{location}}', $this->location === '' ? '' : '<p style="margin: 4px 0 0; color: #6c6c75; font-size: 14px; line-height: 20px;">' . \htmlspecialchars($this->location) . '</p>', escapeHtml: false)
-            ->setParam('{{statusLabel}}', $this->wording->status ?? ($this->firing() ? 'Firing' : 'Resolved'))
-            ->setParam('{{statusBackground}}', $tone['background'])
-            ->setParam('{{statusColor}}', $tone['color'])
-            ->setParam('{{statusBorder}}', $tone['border'])
-            ->setParam('{{changedAt}}', $this->changedAt->setTimezone(new \DateTimeZone('UTC'))->format('M j, Y, H:i') . ' UTC')
+            ->setParam('{{statusPill}}', $this->pill($tone), escapeHtml: false)
+            // Without the pill the date reads as the heading's byline, so it sits right under it.
+            ->setParam('{{statusSpacing}}', $this->pill($tone) === '' ? '-12px' : '16px')
+            ->setParam('{{changedAt}}', $this->changedAt->setTimezone($this->timeZone ?? new \DateTimeZone('UTC'))->format('M j, Y, H:i T'))
             ->setParam('{{callout}}', $this->callout(), escapeHtml: false)
             ->setParam('{{valueLabel}}', $value->label)
             ->setParam('{{value}}', $value->value)
@@ -127,8 +125,6 @@ readonly class Email
             ->setParam('{{url}}', $this->url)
             ->setParam('{{action}}', $this->wording->action ?? 'View alert')
             ->setParam('{{link}}', $this->link(), escapeHtml: false)
-            ->setParam('{{reason}}', $this->reason)
-            ->setParam('{{unsubscribe}}', $this->unsubscribe(), escapeHtml: false)
             ->render(minify: false);
     }
 
@@ -179,13 +175,28 @@ readonly class Email
         return new Figure($label, $this->value->format(), $ratio === null ? \ucfirst($this->comparator->phrase()) . ' the threshold' : "{$ratio} the threshold");
     }
 
+    /**
+     * The status pill before the date; a wording whose status is empty leaves it out.
+     *
+     * @param array{background: string, color: string, border: string} $tone
+     */
+    private function pill(array $tone): string
+    {
+        $label = $this->wording->status ?? ($this->firing() ? 'Firing' : 'Resolved');
+        if ($label === '') {
+            return '';
+        }
+
+        return '<td style="padding: 3px 10px; border-radius: 999px; border: 1px solid ' . $tone['border'] . '; background-color: ' . $tone['background'] . '; color: ' . $tone['color'] . '; font-size: 12px; font-weight: 600; line-height: 18px; white-space: nowrap;">&#9679;&nbsp;' . \htmlspecialchars($label) . '</td><td style="width: 10px;"></td>';
+    }
+
     private function callout(): string
     {
         if ($this->wording->callout === null) {
             return '';
         }
 
-        return '<p style="margin: 20px 0 0; padding: 10px 12px; border: 1px solid #fedf89; border-radius: 10px; background-color: #fffaeb; color: #4a2a06; font-size: 14px; line-height: 20px;">'
+        return '<p style="margin: 32px 0 12px; color: #414146; font-size: 14px; line-height: 20px;">'
             . \htmlspecialchars($this->wording->callout) . '</p>';
     }
 
@@ -236,18 +247,6 @@ readonly class Email
         }
 
         return '<td style="padding-left: 16px; vertical-align: middle;"><a rel="noopener" target="_blank" href="' . \htmlspecialchars($url) . '" style="color: #19191c; font-size: 14px; text-decoration: underline;">' . \htmlspecialchars($label) . '</a></td>';
-    }
-
-    /**
-     * A quiet link after the reason, to the page where the recipient stops these emails.
-     */
-    private function unsubscribe(): string
-    {
-        if ($this->unsubscribeUrl === '') {
-            return '';
-        }
-
-        return ' <a rel="noopener" target="_blank" href="' . \htmlspecialchars($this->unsubscribeUrl) . '" style="color: #6c6c75; text-decoration: underline; white-space: nowrap;">Unsubscribe</a>';
     }
 
     /**

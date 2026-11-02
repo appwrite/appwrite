@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Action;
@@ -146,7 +147,7 @@ class Get extends Base
             'failure' => $failure,
             'token' => true,
             'nonce' => $nonce,
-            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), EncryptionKey::current()),
             'state' => $state,
         ], $scopes);
 

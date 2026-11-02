@@ -81,7 +81,6 @@ final class ComparatorTest extends TestCase
             changedAt: new \DateTimeImmutable('2026-10-29T11:54:00+00:00'),
             details: [],
             url: 'https://console.example/projects/storefront/usage/alerts?alert=egress',
-            reason: '',
         );
 
         $firing = $email(Status::Firing, 3600);
@@ -98,10 +97,9 @@ final class ComparatorTest extends TestCase
         $this->assertSame('Outbound bandwidth reached 548.73 KB, 110× the 5 KB threshold.', $email(Status::Firing, null)->summary());
     }
 
-    public function testEmailOffersUnsubscribeOnItsReasonLine(): void
+    public function testEmailKeepsItsActionsAndLeavesUnsubscribeToTheFooter(): void
     {
-        $template = __DIR__ . '/../../../app/config/locale/templates/email-alert.tpl';
-        $email = fn (string $unsubscribeUrl) => new Email(
+        $html = (new Email(
             status: Status::Firing,
             rule: 'Egress spike',
             metric: 'Outbound bandwidth',
@@ -113,22 +111,32 @@ final class ComparatorTest extends TestCase
             changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
             details: [],
             url: 'https://console.example/alerts',
-            reason: 'You\'re receiving this as an owner of Acme.',
             pauseUrl: 'https://console.example/monitors?monitor=egress',
-            unsubscribeUrl: $unsubscribeUrl,
-        );
+        ))->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl');
 
-        $html = $email('https://console.example/auth/alerts/unsubscribe?token=one&x=1')->render($template);
-        $this->assertMatchesRegularExpression('#You&\#039;re receiving this as an owner of Acme\. <a [^>]*href="https://console\.example/auth/alerts/unsubscribe\?token=one&amp;x=1"[^>]*>Unsubscribe</a></p>#', $html);
-        // Narrow mail clients would otherwise break the word across lines.
-        $this->assertMatchesRegularExpression('#<a [^>]*style="[^"]*white-space: nowrap;[^"]*"[^>]*>Unsubscribe</a>#', $html);
-        $this->assertSame(1, \substr_count($html, 'Unsubscribe'));
-        // Pausing stays with the alert's own actions.
+        // Pausing stays with the alert's own actions; the base template's footer carries Unsubscribe.
         $this->assertStringContainsString('>Pause this monitor</a>', $html);
-
-        $html = $email('')->render($template);
         $this->assertStringNotContainsString('Unsubscribe', $html);
-        $this->assertStringNotContainsString('{{unsubscribe}}', $html);
+        $this->assertStringNotContainsString('{{', $html);
+        $this->assertStringContainsString('&#9679;&nbsp;Firing</td>', $html);
+        $this->assertStringContainsString('Oct 29, 2026, 12:00 UTC', $html);
+
+        // In the recipient's own time when their sign-in located them.
+        $local = (new Email(
+            status: Status::Firing,
+            rule: 'Egress spike',
+            metric: 'Outbound bandwidth',
+            place: 'Storefront',
+            value: new Quantity(6_000, 'bytes'),
+            comparator: Comparator::GreaterThan,
+            threshold: new Quantity(5_000, 'bytes'),
+            window: 3600,
+            changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
+            details: [],
+            url: 'https://console.example/alerts',
+            timeZone: new \DateTimeZone('Asia/Kolkata'),
+        ))->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl');
+        $this->assertStringContainsString('Oct 29, 2026, 17:30 IST', $local);
     }
 
     public function testEmailWordingReplacesTheGeneratedCopy(): void
@@ -145,7 +153,6 @@ final class ComparatorTest extends TestCase
             changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
             details: [],
             url: 'https://console.example/organizations/acme/billing',
-            reason: '',
             wording: new Wording(subject: 'You have reached the budget cap', action: 'Update budget cap'),
         );
 
@@ -154,6 +161,27 @@ final class ComparatorTest extends TestCase
         $this->assertSame('Budget used is at or above 100%', $email->heading());
         $this->assertStringContainsString('>Update budget cap</a>', $email->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
         $this->assertStringNotContainsString('View alert', $email->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl'));
+
+        $quiet = new Email(
+            status: Status::Firing,
+            rule: 'Budget 75% used',
+            metric: 'Budget used',
+            place: 'Acme',
+            value: new Quantity(80, 'percent'),
+            comparator: Comparator::GreaterThanEqual,
+            threshold: new Quantity(75, 'percent'),
+            window: null,
+            changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
+            details: [],
+            url: 'https://console.example/organizations/acme/billing',
+            wording: new Wording(status: '', monitor: false),
+        );
+        $html = $quiet->render(__DIR__ . '/../../../app/config/locale/templates/email-alert.tpl');
+        // An empty status leaves the pill out and keeps the date.
+        $this->assertStringNotContainsString('&#9679;', $html);
+        $this->assertStringContainsString('Oct 29, 2026, 12:00 UTC', $html);
+        $this->assertStringNotContainsString('{{statusPill}}', $html);
+        $this->assertStringNotContainsString('>Monitor</td>', $html);
 
         $worded = new Email(
             status: Status::Firing,
@@ -167,7 +195,6 @@ final class ComparatorTest extends TestCase
             changedAt: new \DateTimeImmutable('2026-10-29T12:00:00+00:00'),
             details: [],
             url: 'https://console.example/organizations/acme/billing',
-            reason: '',
             wording: new Wording(heading: 'You have reached your budget cap', summary: 'Projects in Acme are now limited.'),
         );
         $this->assertSame('You have reached your budget cap', $worded->heading());
@@ -192,7 +219,6 @@ final class ComparatorTest extends TestCase
             changedAt: new \DateTimeImmutable('2026-10-29T11:59:00+00:00'),
             details: [],
             url: 'https://console.example/projects/storefront/usage/alerts?alert=egress',
-            reason: '',
             location: 'Storefront · Acme · Frankfurt',
             since: new \DateTimeImmutable('2026-10-29T09:45:00+00:00'),
             cooldown: 3600,
