@@ -1,12 +1,21 @@
-import { afterEach, describe, expect, test } from 'bun:test'
-import {
-  loadCoverImageBuffer,
-  resolveCoverImageHref,
-} from '@/lib/cover-generator/brand-background'
-import {
-  isBlockedCoverImageAddress,
-  resolveCoverRemoteImageUrl,
-} from '@/lib/cover-generator/remote-image'
+import { afterEach, describe, expect, mock, test } from 'bun:test'
+
+let resolvedAddresses: string[] = []
+
+mock.module('node:dns/promises', () => ({
+  lookup: async () =>
+    resolvedAddresses.map((address) => ({
+      address,
+      family: address.includes(':') ? 6 : 4,
+    })),
+}))
+
+const { loadCoverImageBuffer, resolveCoverImageHref } = await import(
+  '@/lib/cover-generator/brand-background'
+)
+const { isBlockedCoverImageAddress, resolveCoverRemoteImageUrl } = await import(
+  '@/lib/cover-generator/remote-image'
+)
 
 const originalFetch = globalThis.fetch
 
@@ -14,17 +23,26 @@ type FetchCall = {
   url: string
   redirect?: RequestRedirect
   signal?: AbortSignal | null
+  host?: string
+  servername?: string
 }
 
+type StubRequestInit = RequestInit & { tls?: { servername?: string } }
+
 function stubFetch(
-  handler: (url: string, init?: RequestInit) => Response,
+  handler: (url: string, init?: StubRequestInit) => Response,
 ): FetchCall[] {
   const calls: FetchCall[] = []
-  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+  globalThis.fetch = (async (
+    input: RequestInfo | URL,
+    init?: StubRequestInit,
+  ) => {
     calls.push({
       url: String(input),
       redirect: init?.redirect,
       signal: init?.signal,
+      host: new Headers(init?.headers).get('host') ?? undefined,
+      servername: init?.tls?.servername,
     })
     return handler(String(input), init)
   }) as typeof globalThis.fetch
@@ -39,6 +57,7 @@ function pngResponse(): Response {
 
 afterEach(() => {
   globalThis.fetch = originalFetch
+  resolvedAddresses = []
 })
 
 describe('resolveCoverRemoteImageUrl', () => {
@@ -78,6 +97,10 @@ describe('isBlockedCoverImageAddress', () => {
       '192.168.1.1',
       '169.254.169.254',
       '100.64.0.1',
+      '192.0.0.8',
+      '192.0.2.1',
+      '198.51.100.1',
+      '203.0.113.1',
       '224.0.0.1',
       '255.255.255.255',
       '::',
@@ -195,6 +218,29 @@ describe('loadCoverImageBuffer', () => {
     expect(
       await loadCoverImageBuffer('https://93.184.216.34/logo.png'),
     ).toBeNull()
+  })
+
+  test('refuses a hostname that resolves to a private address', async () => {
+    resolvedAddresses = ['93.184.216.34', '10.0.0.5']
+    const calls = stubFetch(() => pngResponse())
+
+    expect(
+      await loadCoverImageBuffer('https://images.example.com/a.png'),
+    ).toBeNull()
+    expect(calls).toHaveLength(0)
+  })
+
+  test('requests the checked address, keeping the original authority', async () => {
+    resolvedAddresses = ['93.184.216.34']
+    const calls = stubFetch(() => pngResponse())
+
+    expect(
+      await loadCoverImageBuffer('https://images.example.com/a.png'),
+    ).not.toBeNull()
+    expect(calls).toHaveLength(1)
+    expect(calls[0].url).toBe('https://93.184.216.34/a.png')
+    expect(calls[0].host).toBe('images.example.com')
+    expect(calls[0].servername).toBe('images.example.com')
   })
 
   test('still decodes data uris without any request', async () => {

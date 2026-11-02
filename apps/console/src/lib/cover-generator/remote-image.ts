@@ -33,6 +33,11 @@ const BLOCKED_HOST_SUFFIXES = [
 
 const REDIRECT_STATUSES = [301, 302, 303, 307, 308]
 
+/** Bun accepts TLS options on fetch; the DOM lib types this file uses do not. */
+type CoverRemoteImageRequestInit = RequestInit & {
+  tls?: { servername?: string }
+}
+
 function unbracket(hostname: string): string {
   const host = hostname.trim().toLowerCase()
   if (host.startsWith('[') && host.endsWith(']')) return host.slice(1, -1)
@@ -40,18 +45,19 @@ function unbracket(hostname: string): string {
 }
 
 function isBlockedIPv4(address: string): boolean {
-  const [a, b] = address.split('.').map(Number)
+  const [a, b, c] = address.split('.').map(Number)
   if (a === 0) return true // "this network"
   if (a === 10) return true // private
   if (a === 127) return true // loopback
   if (a === 100 && b >= 64 && b <= 127) return true // carrier-grade NAT
   if (a === 169 && b === 254) return true // link-local, incl. instance metadata
   if (a === 172 && b >= 16 && b <= 31) return true // private
-  if (a === 192 && b === 0) return true // IETF protocol assignments, documentation
+  if (a === 192 && b === 0 && c === 0) return true // IETF protocol assignments
+  if (a === 192 && b === 0 && c === 2) return true // documentation
   if (a === 192 && b === 168) return true // private
   if (a === 198 && (b === 18 || b === 19)) return true // benchmarking
-  if (a === 198 && b === 51) return true // documentation
-  if (a === 203 && b === 0) return true // documentation
+  if (a === 198 && b === 51 && c === 100) return true // documentation
+  if (a === 203 && b === 0 && c === 113) return true // documentation
   if (a >= 224) return true // multicast, reserved, broadcast
   return false
 }
@@ -234,9 +240,20 @@ async function readCoverRemoteImageBody(
 }
 
 /**
+ * Request the checked address itself, keeping the original authority for the
+ * `Host` header and for TLS, so a name that resolves again to a private address
+ * between the check and the connection cannot redirect us inward.
+ */
+function pinToAddress(url: URL, address: string): URL {
+  const pinned = new URL(url)
+  pinned.hostname = isIPv6(address) ? `[${address}]` : address
+  return pinned
+}
+
+/**
  * Fetch a remote cover image, re-checking the destination on every redirect hop.
- * DNS is resolved up front to keep the request off internal addresses; the
- * connection itself resolves again, so this is a guard, not an IP pin.
+ * A failed pinned request is not retried unpinned: no image beats an unguarded
+ * one.
  */
 export async function fetchCoverRemoteImageBuffer(
   source: string,
@@ -250,16 +267,31 @@ export async function fetchCoverRemoteImageBuffer(
       return null
     }
 
-    let response: Response
-    try {
-      response = await fetch(url, {
-        redirect: 'manual',
-        signal: AbortSignal.timeout(COVER_REMOTE_IMAGE_TIMEOUT_MS),
-        headers: { Accept: COVER_REMOTE_IMAGE_TYPES.join(', ') },
-      })
-    } catch {
-      return null
+    // One deadline for the hop, so trying each checked address cannot stretch
+    // the time a caller holds a render worker open.
+    const signal = AbortSignal.timeout(COVER_REMOTE_IMAGE_TIMEOUT_MS)
+    let response: Response | null = null
+
+    const init: CoverRemoteImageRequestInit = {
+      redirect: 'manual',
+      signal,
+      headers: {
+        Accept: COVER_REMOTE_IMAGE_TYPES.join(', '),
+        Host: url.host,
+      },
+      tls: { servername: url.hostname },
     }
+
+    for (const address of addresses) {
+      try {
+        response = await fetch(pinToAddress(url, address), init)
+        break
+      } catch {
+        response = null
+      }
+    }
+
+    if (!response) return null
 
     if (!REDIRECT_STATUSES.includes(response.status)) {
       return readCoverRemoteImageBody(response)
