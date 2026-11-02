@@ -600,8 +600,9 @@ class Nats implements Synchronous, Consumer, Bounded
     /**
      * A number of seconds as a DSN writes one, or null when it is anything else.
      *
-     * is_numeric() alone admits surrounding whitespace, a leading `+` and `1e999`,
-     * which casts to INF; each is a value the operator did not write as a plain number.
+     * is_numeric() alone admits surrounding whitespace, a leading `+`, `1e999`, which
+     * casts to INF, and `1e-999`, which casts to 0.0 and would then read as the
+     * keep-forever zero; each is a value the operator did not write as a plain number.
      */
     private static function seconds(string $value): ?float
     {
@@ -610,8 +611,17 @@ class Nats implements Synchronous, Consumer, Bounded
         }
 
         $seconds = (float) $value;
+        if (!\is_finite($seconds)) {
+            return null;
+        }
 
-        return \is_finite($seconds) ? $seconds : null;
+        // Zero only when it is written as one: anything left after the zeros and the
+        // point is a non-zero value that underflowed.
+        if ($seconds === 0.0 && \trim($value, '0.') !== '') {
+            return null;
+        }
+
+        return $seconds;
     }
 
     /**

@@ -101,7 +101,9 @@ final class NatsBrokerDsnTest extends TestCase
 
     public function testAZeroDeadMaxAgeKeepsDeadLettersForever(): void
     {
-        $this->assertNull(Nats::dsnArguments(new DSN('nats://host:4222?deadMaxAge=0'))['deadMaxAge']);
+        foreach (['0', '0.0', '.0', '00'] as $zero) {
+            $this->assertNull(Nats::dsnArguments(new DSN("nats://host:4222?deadMaxAge={$zero}"))['deadMaxAge'], "deadMaxAge={$zero}");
+        }
     }
 
     public function testANegativeDeadMaxAgeIsRefusedRatherThanKeptForever(): void
@@ -139,6 +141,7 @@ final class NatsBrokerDsnTest extends TestCase
         yield 'a signed number of seconds' => ['nats://host:4222?ackWait=%2B10'];
         yield 'an infinite number of seconds' => ['nats://host:4222?maxAge=1e999'];
         yield 'an infinite step in the schedule' => ['nats://host:4222?backoff=30,1e999'];
+        yield 'a positive age that underflows to zero' => ['nats://host:4222?deadMaxAge=1e-999'];
         yield 'another scheme' => ['redis://host:6379?replicas=3'];
     }
 
