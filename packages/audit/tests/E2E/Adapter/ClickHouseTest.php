@@ -760,6 +760,49 @@ final class ClickHouseTest extends TestCase
     }
 
     /**
+     * The reason an actor gave must round-trip through a real write/read cycle,
+     * and read as null on a log written without one.
+     */
+    public function testReasonRoundTrip(): void
+    {
+        $actorId = 'reason-actor-' . uniqid('', true);
+        $time = \Utopia\Database\DateTime::formatTz(\Utopia\Database\DateTime::now()) ?? '';
+
+        $batchEvents = $this->applyRequiredAttributesToBatch([
+            [
+                'actorId' => $actorId,
+                'event' => 'reason.given',
+                'resource' => 'document/reason-1',
+                'userAgent' => 'RoundTrip/1.0',
+                'ip' => '8.8.8.8',
+                'data' => [],
+                'time' => $time,
+                'reason' => 'Tým podpory — replaced by the sessions table',
+            ],
+            [
+                'actorId' => $actorId,
+                'event' => 'reason.missing',
+                'resource' => 'document/reason-2',
+                'userAgent' => 'RoundTrip/1.0',
+                'ip' => '8.8.8.8',
+                'data' => [],
+                'time' => $time,
+            ],
+        ]);
+        $this->assertTrue($this->audit->logBatch($batchEvents));
+
+        $logs = $this->audit->getLogsByUser($actorId);
+        $this->assertCount(2, $logs, 'reason round-trip logs were not persisted');
+
+        $byEvent = [];
+        foreach ($logs as $log) {
+            $byEvent[$log->getEvent()] = $log;
+        }
+        $this->assertSame('Tým podpory — replaced by the sessions table', $byEvent['reason.given']->getReason());
+        $this->assertNull($byEvent['reason.missing']->getReason());
+    }
+
+    /**
      * Test that ClickHouse adapter has all required indexes
      */
     public function testClickHouseAdapterIndexes(): void
@@ -1416,10 +1459,31 @@ final class ClickHouseTest extends TestCase
 
         $table = $namespace . '_audits';
 
+        $http = function (string $sql, array $params = []) use ($host, $port, $username, $password, $secure, $database): string {
+            $scheme = $secure ? 'https' : 'http';
+            $url = "{$scheme}://{$host}:{$port}/?database=" . rawurlencode($database)
+                . '&user=' . rawurlencode($username)
+                . '&password=' . rawurlencode($password);
+            /** @var array<string, string> $params */
+            foreach ($params as $key => $value) {
+                $url .= '&param_' . rawurlencode($key) . '=' . rawurlencode($value);
+            }
+            $ctx = stream_context_create(['http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: text/plain\r\n",
+                'content' => $sql,
+                'timeout' => 15,
+                'ignore_errors' => true,
+            ]]);
+            $out = @file_get_contents($url, false, $ctx);
+
+            return $out === false ? '' : trim($out);
+        };
+
         try {
             new Audit($adapter)->setup();
 
-            $sortingKey = $this->http(
+            $sortingKey = $http(
                 'SELECT sorting_key FROM system.tables WHERE database = {db:String} AND name = {tbl:String}',
                 ['db' => $database, 'tbl' => $table],
             );
@@ -1431,69 +1495,7 @@ final class ClickHouseTest extends TestCase
         } finally {
             $escDb = '`' . str_replace('`', '``', $database) . '`';
             $escTbl = '`' . str_replace('`', '``', $table) . '`';
-            $this->http("DROP TABLE IF EXISTS {$escDb}.{$escTbl}");
+            $http("DROP TABLE IF EXISTS {$escDb}.{$escTbl}");
         }
-    }
-
-    public function testSetupAddsTheReasonColumnToAnOlderTable(): void
-    {
-        $database = getenv('CLICKHOUSE_DATABASE') ?: 'default';
-        $namespace = 'reason_' . uniqid();
-        $adapter = new ClickHouse(
-            host: getenv('CLICKHOUSE_HOST') ?: 'localhost',
-            username: getenv('CLICKHOUSE_USER') ?: 'default',
-            password: getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
-            port: (int) (getenv('CLICKHOUSE_PORT') ?: 18123),
-            secure: filter_var(getenv('CLICKHOUSE_SECURE') ?: false, FILTER_VALIDATE_BOOLEAN),
-        );
-        $adapter->setDatabase($database);
-        $adapter->setNamespace($namespace);
-        $table = '`' . str_replace('`', '``', $database) . '`.`' . $namespace . '_audits`';
-
-        try {
-            // A table from before the column existed.
-            $adapter->setup();
-            $this->http("ALTER TABLE {$table} DROP COLUMN reason");
-            $audit = new Audit($adapter);
-            $audit->setup();
-
-            $audit->log('u1', 'delete', 'doc/1', 'agent', '127.0.0.1', [
-                ...$this->getRequiredAttributes(),
-                'reason' => 'Replaced by the sessions table',
-            ]);
-            $logs = $audit->find([Query::limit(1)]);
-
-            $this->assertCount(1, $logs);
-            $this->assertSame('Replaced by the sessions table', $logs[0]->getReason());
-        } finally {
-            $this->http("DROP TABLE IF EXISTS {$table}");
-        }
-    }
-
-    /**
-     * Run SQL on the test ClickHouse outside the adapter.
-     *
-     * @param array<string, string> $params
-     */
-    private function http(string $sql, array $params = []): string
-    {
-        $secure = filter_var(getenv('CLICKHOUSE_SECURE') ?: false, FILTER_VALIDATE_BOOLEAN);
-        $url = ($secure ? 'https' : 'http') . '://' . (getenv('CLICKHOUSE_HOST') ?: 'localhost') . ':' . (int) (getenv('CLICKHOUSE_PORT') ?: 18123)
-            . '/?database=' . rawurlencode(getenv('CLICKHOUSE_DATABASE') ?: 'default')
-            . '&user=' . rawurlencode(getenv('CLICKHOUSE_USER') ?: 'default')
-            . '&password=' . rawurlencode(getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse');
-        foreach ($params as $key => $value) {
-            $url .= '&param_' . rawurlencode($key) . '=' . rawurlencode($value);
-        }
-        $ctx = stream_context_create(['http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: text/plain\r\n",
-            'content' => $sql,
-            'timeout' => 15,
-            'ignore_errors' => true,
-        ]]);
-        $out = @file_get_contents($url, false, $ctx);
-
-        return $out === false ? '' : trim($out);
     }
 }

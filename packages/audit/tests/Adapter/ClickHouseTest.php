@@ -6,7 +6,6 @@ namespace Utopia\Audit\Tests\Adapter;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\RequestInterface;
 use Utopia\Audit\Adapter\ClickHouse;
 use Utopia\Audit\Adapter\Database;
 use Utopia\Audit\Query;
@@ -167,64 +166,9 @@ final class ClickHouseTest extends TestCase
 
     private function sentQuery(): string
     {
-        return $this->queryOf($this->client->last());
-    }
+        $request = $this->client->last();
 
-    private function queryOf(RequestInterface $request): string
-    {
         return $this->fields($request->getHeaderLine('Content-Type'), (string) $request->getBody())['query'];
-    }
-
-    /**
-     * Queue the answers setup() reads: the database, the table, the columns the table has, and the TTL.
-     *
-     * @param list<string> $columns
-     */
-    private function respondToSetup(array $columns, bool $alter): void
-    {
-        $this->client->respond(200)->respond(200)->respond(200, \implode("\n", $columns) . "\n");
-        if ($alter) {
-            $this->client->respond(200);
-        }
-        $this->client->respond(200);
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function columns(): array
-    {
-        return ['id', ...\array_map(static fn (Attribute $attribute): string => $attribute->key, $this->adapter->getAttributes())];
-    }
-
-    public function testSetupAddsTheColumnsAnOlderTableLacks(): void
-    {
-        $this->respondToSetup(\array_values(\array_diff($this->columns(), ['reason', 'deviceModel'])), alter: true);
-
-        $this->adapter->setup();
-
-        $this->assertCount(5, $this->client->requests);
-        $this->assertSame(
-            'SELECT name FROM system.columns WHERE database = {database:String} AND table = {table:String} FORMAT TabSeparated',
-            $this->queryOf($this->client->requests[2]),
-        );
-        $this->assertSame(
-            'ALTER TABLE `default`.`audits` ADD COLUMN IF NOT EXISTS deviceModel Nullable(String), ADD COLUMN IF NOT EXISTS reason Nullable(String)',
-            $this->queryOf($this->client->requests[3]),
-        );
-        $this->assertSame('ALTER TABLE `default`.`audits` REMOVE TTL', $this->queryOf($this->client->requests[4]));
-    }
-
-    public function testSetupLeavesACurrentTableAsItIs(): void
-    {
-        $this->respondToSetup($this->columns(), alter: false);
-
-        $this->adapter->setup();
-
-        $this->assertCount(4, $this->client->requests);
-        foreach ($this->client->requests as $request) {
-            $this->assertStringNotContainsString('ADD COLUMN', $this->queryOf($request));
-        }
     }
 
     public function testBatchInsertWritesTheReason(): void

@@ -20,10 +20,13 @@ All notable changes to `utopia-php/audit` are documented in this file.
 ### Added
 
 - `reason` optional ClickHouse column, read with `Log::getReason()`: why the
-  actor took the action.
-- `ClickHouse::setup()` adds the columns an existing table lacks with
-  `ADD COLUMN IF NOT EXISTS`, so a column added to `getAttributes()` reaches
-  tables created by an earlier version. Rows written before read it as NULL.
+  actor took the action. Stored as `Nullable(String)`; `createBatch()` never
+  throws when a caller omits it. Newly created tables include the column via
+  `setup()`. `setup()` only issues `CREATE TABLE IF NOT EXISTS`, so **existing**
+  tables do not gain the column automatically — apply it with an
+  `ALTER TABLE ... ADD COLUMN IF NOT EXISTS reason Nullable(String)` migration
+  before deploying, on every table the adapter writes (including tables set
+  with `setTable()`), since inserts and selects name every column.
 
 ### Changed
 
