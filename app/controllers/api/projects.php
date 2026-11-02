@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
@@ -8,42 +7,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Http;
 use Utopia\System\System;
-use Utopia\Validator\ArrayList;
 use Utopia\Validator\WhiteList;
-
-// Backwards compatibility
-Http::patch('/v1/projects/:projectId/auth/mock-numbers')
-    ->desc('Update the mock numbers for the project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->param('projectId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Project unique ID.', false, ['dbForPlatform'])
-    ->param('numbers', '', new ArrayList(new MockNumber(), 10), 'An array of mock numbers and their corresponding verification codes (OTPs). Each number should be a valid E.164 formatted phone number. Maximum of 10 numbers are allowed.')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, array $numbers, Response $response, Database $dbForPlatform) {
-
-        $uniqueNumbers = [];
-        foreach ($numbers as $number) {
-            if (isset($uniqueNumbers[$number['phone']])) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Duplicate phone numbers are not allowed.');
-            }
-            $uniqueNumbers[$number['phone']] = $number['otp'];
-        }
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $auths = $project->getAttribute('auths', []);
-
-        $auths['mockNumbers'] = $numbers;
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
 
 // Backwards compatibility
 Http::delete('/v1/projects/:projectId/templates/email')
