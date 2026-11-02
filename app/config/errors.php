@@ -1674,7 +1674,7 @@ return [
     ],
     Exception::REVIEW_REPOSITORY_ALREADY_EXISTS => [
         'name' => Exception::REVIEW_REPOSITORY_ALREADY_EXISTS,
-        'description' => 'Code review is already on for this repository, in this project or another one. A repository is reviewed by one project only.',
+        'description' => 'Code review is already on for this repository in this project.',
         'code' => 409,
     ],
 ];
