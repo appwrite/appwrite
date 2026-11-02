@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Projects\Services;
 
+use Appwrite\Platform\Modules\Projects\Http\Init;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Create as CreateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
 use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
@@ -18,6 +19,9 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
+
+        $this->addAction(Init::getName(), Init::class);
+
         $this->addAction(CreateProject::getName(), CreateProject::class);
         $this->addAction(UpdateProject::getName(), UpdateProject::class);
         $this->addAction(ListProjects::getName(), ListProjects::class);

@@ -15,15 +15,6 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-Http::init()
-    ->groups(['projects'])
-    ->inject('project')
-    ->action(function (Document $project) {
-        if ($project->getId() !== 'console') {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
-        }
-    });
-
 // Backwards compatibility
 Http::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update project OAuth2')
