@@ -23,6 +23,7 @@ use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Update as UpdatePass
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\Verification\Update as UpdatePasskeyVerification;
 use Appwrite\Platform\Modules\Account\Http\Account\Passkeys\XList as ListPasskeys;
 use Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken\Create as CreateIdTokenSession;
+use Appwrite\Platform\Modules\Account\Http\Account\Sessions\XList as ListSessions;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Create as CreatePasskeyToken;
 use Appwrite\Platform\Modules\Account\Http\Account\Tokens\Passkey\Update as UpdatePasskeyToken;
 use Utopia\Platform\Service;
@@ -36,6 +37,7 @@ class Http extends Service
             ->addAction(CreateAccount::getName(), CreateAccount::class)
             ->addAction(GetAccount::getName(), GetAccount::class)
             ->addAction(DeleteAccount::getName(), DeleteAccount::class)
+            ->addAction(ListSessions::getName(), ListSessions::class)
             ->addAction(UpdateMfa::getName(), UpdateMfa::class)
             ->addAction(ListFactors::getName(), ListFactors::class)
             ->addAction(CreateAuthenticator::getName(), CreateAuthenticator::class)
