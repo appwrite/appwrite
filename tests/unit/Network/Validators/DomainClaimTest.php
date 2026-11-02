@@ -57,6 +57,21 @@ final class DomainClaimTest extends TestCase
         $this->assertTrue($validator->isValid('app.example.com'));
     }
 
+    public function testUnrelatedRecords(): void
+    {
+        // A wildcard CNAME on the domain sends the lookup to Appwrite's own target, whose
+        // TXT records are not claims: appwrite.network carries site verification tokens.
+        CannedDNS::$answers = ['_appwrite.app.example.com' => [
+            'v=spf1 include:_spf.google.com -all',
+            'google-site-verification=Q5G75Dl_jrXj0tv408j8JjNT4nVWlQeZBloksCnshSA',
+            'gridinsoft-verify=ir4sbh7f1k1x1aqi8deqqxsuxyijg9ps8f8vf0696u4gphnt0qza2cvtmnh6nx1b',
+        ]];
+
+        $validator = new DomainClaim('project1', ['8.8.8.8'], CannedDNS::class);
+
+        $this->assertTrue($validator->isValid('app.example.com'));
+    }
+
     public function testClaimOnAnotherHostname(): void
     {
         // A claim one label up says nothing about this hostname

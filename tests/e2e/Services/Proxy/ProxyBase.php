@@ -984,6 +984,20 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
     }
 
+    public function testRuleVerificationIgnoresNonClaimRecords(): void
+    {
+        // The fixture zone points this hostname at Appwrite and answers _appwrite.<domain>
+        // with a site verification record, which claims the hostname for no project.
+        $domain = \uniqid($this->getSide() . '-') . '.unclaimed.webapp.com';
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('verifying', $rule['body']['status']);
+        $this->assertEmpty($rule['body']['logs']);
+
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
     public function testUpdateRuleVerificationWithSameDataUpdatesTimestamp(): void
     {
         $domain = \uniqid() . '-timestamp-test.webapp.com';

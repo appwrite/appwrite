@@ -2,6 +2,7 @@
 
 namespace Appwrite\Network\Validator;
 
+use Utopia\Database\Validator\UID;
 use Utopia\DNS\Message\Record;
 use Utopia\Validator\Validator;
 
@@ -15,7 +16,7 @@ use Utopia\Validator\Validator;
  * proves ownership of a custom email domain.
  *
  * A domain with no such record stays valid for any project, keeping the DNS-target-only
- * onboarding flow working.
+ * onboarding flow working, and only a record shaped like a project ID counts as a claim.
  */
 class DomainClaim extends Validator
 {
@@ -68,7 +69,11 @@ class DomainClaim extends Validator
             return true;
         }
 
-        $claims = \array_filter(\array_map('\trim', $validator->records), fn (string $claim): bool => $claim !== '');
+        // Only a project ID is a claim. A wildcard CNAME on the domain sends this lookup to
+        // the Appwrite target the domain points at, and the records there (site verification
+        // tokens, SPF) say nothing about who owns the domain.
+        $uid = new UID();
+        $claims = \array_filter(\array_map('\trim', $validator->records), fn (string $claim): bool => $uid->isValid($claim));
 
         // No claim published, so the domain is free for the project that configured its DNS
         if ($claims === []) {
