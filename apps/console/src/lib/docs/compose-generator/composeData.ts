@@ -239,6 +239,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_STREAMING
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -2255,7 +2256,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:1.1.2
+    image: openruntimes/executor:1.3.0
     restart: unless-stopped
     networks:
       - appwrite

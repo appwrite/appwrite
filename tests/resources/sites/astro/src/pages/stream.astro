@@ -1,0 +1,18 @@
+---
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+Astro.response.status = Number(Astro.url.searchParams.get('code') ?? 200);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astro Stream</title>
+</head>
+<body>
+  <p>first</p>
+  {wait(2000).then(() => 'second')}
+  {wait(4000).then(() => 'third')}
+</body>
+</html>
