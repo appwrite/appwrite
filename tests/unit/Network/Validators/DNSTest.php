@@ -28,6 +28,16 @@ final class DNSTest extends TestCase
         $this->assertSame('string', $validator->getType());
     }
 
+    public function testNoResolverValidatesNothing(): void
+    {
+        // A fan-out over zero resolvers queries nothing, so it has proven nothing.
+        // Reporting success there would verify every domain it is ever asked about.
+        $validator = new DNS('appwrite.io', Record::TYPE_CNAME, []);
+
+        $this->assertFalse($validator->isValid('appwrite.io'));
+        $this->assertNotEmpty($validator->getDescription());
+    }
+
     public function testValidationFailure(): void
     {
         $validator = new DNS('invalid-target.example.com', Record::TYPE_CNAME, ['8.8.8.8', '1.1.1.1']);

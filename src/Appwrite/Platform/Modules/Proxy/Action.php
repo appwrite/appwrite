@@ -358,7 +358,7 @@ class Action extends PlatformAction
     {
         $servers = \array_map('trim', \explode(',', System::getEnv('_APP_DNS', '8.8.8.8')));
 
-        return \array_filter($servers, fn ($server) => !empty($server));
+        return \array_values(\array_filter($servers, fn ($server) => !empty($server)));
     }
 
     protected function isAppwriteOwned(string $domain): bool
