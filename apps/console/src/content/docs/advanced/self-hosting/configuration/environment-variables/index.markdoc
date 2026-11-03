@@ -29,6 +29,9 @@ docker compose exec appwrite vars
 | `_APP_OPTIONS_FORCE_HTTPS` | Deprecated since 1.7.0. Allows you to force HTTPS connection to your API. This feature redirects any HTTP call to HTTPS and adds the `Strict-Transport-Security` header to all HTTP responses. By default, set to `enabled`. To disable, set to `disabled`. This feature will work only when your ports are set to default 80 and 443. |
 | `_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS` | Deprecated since 1.7.0. Allows you to force HTTPS connection to function domains. This feature redirects any HTTP call to HTTPS and adds the `Strict-Transport-Security` header to all HTTP responses. By default, set to `enabled`. To disable, set to `disabled`. This feature will work only when your ports are set to default 80 and 443. |
 | `_APP_OPENSSL_KEY_V1` | This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to **keep it a secret and have a backup for it**. |
+| `_APP_OPENSSL_KEY_V2` | **version >= 2.7.0** The next server secret key, used once `_APP_OPENSSL_KEY_CURRENT` is set to `2`. Rotate by adding the next version, making it current, re-encrypting stored data with the `encryption` task, then raising `_APP_OPENSSL_KEY_OLDEST`. Keep every version that still encrypts stored data or files. Recreate the containers with `docker compose up -d` after each change. |
+| `_APP_OPENSSL_KEY_CURRENT` | **version >= 2.7.0** Version of `_APP_OPENSSL_KEY_V{version}` that signs new tokens and encrypts new data. The default value is `1`. |
+| `_APP_OPENSSL_KEY_OLDEST` | **version >= 2.7.0** Oldest key version still accepted when verifying tokens and signatures, such as JWTs and ephemeral API keys. Every configured version from this one up is accepted. Raise it to retire a key. Stored data keeps decrypting with the version it records. The default value is `1`. |
 | `_APP_DOMAIN` | Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is 'localhost'. |
 | `_APP_DOMAIN_TARGET` | Deprecated since 1.7.0. A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite `_APP_DOMAIN` variable. The default value is 'localhost'. |
 | `_APP_DOMAIN_TARGET_CNAME` | **version >= 1.7.0** A domain that can be used as DNS CNAME record to point to instance of Appwrite server. The default value is 'localhost'. |
@@ -54,6 +57,9 @@ docker compose exec appwrite vars
 | `_APP_USAGE_DATABASE_INTERVAL` |  **(version >= 1.0.0)** Deprecated since 1.1.0 uses `_APP_USAGE_AGGREGATION_INTERVAL` instead. |
 | `_APP_WORKER_PER_CORE` |  **(version >= 0.13.0)** Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance. |
 | `_APP_MEMORY_LIMIT` | **version >= 2.6.2** PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP `memory_limit` value, such as `2G`, or `-1` for no limit. Raise it when a Realtime container holds thousands of connections. The default value is `512M`. |
+| `_APP_LIMIT_REALTIME_SUBSCRIPTIONS` | **version >= 2.7.0** Maximum number of subscriptions one realtime connection can hold. Raising it lets one connection use more of the realtime server memory. The default value is `100`. |
+| `_APP_LIMIT_REALTIME_CHANNELS` | **version >= 2.7.0** Maximum number of channels one realtime connection can subscribe to, counted across all of its subscriptions. The default value is `100`. |
+| `_APP_LIMIT_REALTIME_QUERIES` | **version >= 2.7.0** Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in `and`/`or`. The default value is `100`. |
 | `_APP_WORKER_MAX_COROUTINES` | Maximum number of jobs a queue worker processes concurrently. In the combined [worker topology](/docs/advanced/self-hosting/configuration/topologies), this sets the size of the coroutine pool shared by all queues. In the separate topology, it overrides the concurrency limit of the worker it is set on. The databases worker always processes one job at a time regardless of this setting. |
 
 # Redis {% #redis %}
@@ -87,6 +93,7 @@ Appwrite supports MariaDB and MongoDB as database backends. The database is sele
 | `_APP_DB_SCHEMA`       | Database name. Default value is: `appwrite`.                                                     |
 | `_APP_DB_USER`         | Database server user name. Default value is: `user`.                                             |
 | `_APP_DB_PASS`         | Database server user password. Default value is: `password`.                                     |
+| `_APP_DB_MAX_CONNECTIONS` | **version >= 2.7.0** Maximum number of connections the bundled PostgreSQL server accepts. Every API worker and worker coroutine holds its own connections, so raise it on hosts with many cores and lower it on small hosts. The default value is `500`. |
 | `_APP_DB_ROOT_PASS`    | Database server root password. Default value is: `rootsecretpassword`.                           |
 
 # SMTP {% #smtp %}
@@ -143,6 +150,7 @@ If running in production, it might be easier to use a 3rd party SMTP server as i
 | **Name**                      | **Description** |
 |-------------------------------|-----------------|
 | `_APP_DOMAIN_FUNCTIONS` | A domain to use for function preview URLs. The default value is 'functions.localhost'. Setting to empty turns off function preview URLs. |
+| `_APP_DOMAIN_FUNCTIONS_FALLBACK` | **version >= 2.7.0** Comma-separated list of additional domains that serve function preview URLs, such as a previous value of `_APP_DOMAIN_FUNCTIONS`. Rules cannot claim these domains. Empty by default. |
 | `_APP_DOMAIN_SITES` | **version >= 1.7.0** The domain to use for site preview URLs. The default value is 'sites.localhost'. Setting to empty turns off site URLs. |
 | `_APP_COMPUTE_SIZE_LIMIT`     | **version >= 1.7.0** The maximum size of a function and site deployments in bytes. The default value is 30MB. |
 | `_APP_COMPUTE_BUILD_SIZE_LIMIT` | **version >= 1.7.0** The maximum size of a built function or site deployment in bytes. The default value is 2,000,000,000 (2GB), and the maximum value is 4,294,967,295 (4.2GB). Replaces `_APP_FUNCTIONS_BUILD_SIZE_LIMIT`, which is deprecated. |
