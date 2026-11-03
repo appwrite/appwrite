@@ -29,8 +29,8 @@ import { fetchRepositories } from './vcs'
 /** Reviews are fanned out by the review service, so poll while one is running. */
 const REVIEW_POLL_INTERVAL = 5 * 1000
 
-/** A review's trace is a few hundred steps at most; load it in one page. */
-export const REVIEW_EVENTS_LIMIT = 500
+/** Steps loaded per request; a long trace takes several. */
+const REVIEW_EVENTS_PAGE_SIZE = 500
 
 /** A project reviews a handful of repositories; load them in one page. */
 export const REVIEW_REPOSITORIES_LIMIT = 100
@@ -81,6 +81,31 @@ export async function fetchReview(
     throw new Error('Project ID and Review ID are required')
   }
   return await sdk.forProject(projectId).reviews.get({ reviewId })
+}
+
+/**
+ * Query function to fetch a review's whole trace, oldest step first, a page at
+ * a time so a long review is not cut short.
+ */
+export async function fetchReviewEvents(
+  projectId: string,
+  reviewId: string,
+): Promise<ReviewEventList> {
+  const events: ReviewEventList['events'] = []
+  for (;;) {
+    const last = events.at(-1)
+    const page = await sdk.forProject(projectId).reviews.listEvents({
+      reviewId,
+      queries: [
+        Query.limit(REVIEW_EVENTS_PAGE_SIZE),
+        ...(last ? [Query.cursorAfter(last.$id)] : []),
+      ],
+    })
+    events.push(...page.events)
+    if (page.events.length < REVIEW_EVENTS_PAGE_SIZE) {
+      return { total: events.length, events }
+    }
+  }
 }
 
 /**
@@ -155,11 +180,7 @@ export function reviewEventsQueryOptions(
 ) {
   return queryOptions({
     queryKey: ['review-events', 'project', projectId, reviewId],
-    queryFn: (): Promise<ReviewEventList> =>
-      sdk.forProject(projectId!).reviews.listEvents({
-        reviewId: reviewId!,
-        queries: [Query.limit(REVIEW_EVENTS_LIMIT)],
-      }),
+    queryFn: () => fetchReviewEvents(projectId!, reviewId!),
     enabled: !!projectId && !!reviewId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
