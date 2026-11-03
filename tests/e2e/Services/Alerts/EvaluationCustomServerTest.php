@@ -2080,7 +2080,7 @@ final class EvaluationCustomServerTest extends Scope
     {
         $pushes = [];
         // The .env points APNs and FCM at separate mock paths, so each push says which service carried it.
-        foreach ([PushService::APNS->value => '/mock-push', PushService::FCM->value => '/mock-push-fcm'] as $service => $path) {
+        foreach ([PushService::APNS->value => '/mock-push', PushService::FCM->value => '/mock-fcm'] as $service => $path) {
             foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [] as $request) {
                 $push = \json_decode($request['data'] ?? '{}', true) ?: [];
                 if (\in_array($token, $push['to'] ?? [], true) && ($push['tag'] ?? $push['data']['tag'] ?? null) === $tag) {
