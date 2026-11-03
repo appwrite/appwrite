@@ -19,6 +19,7 @@ use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -34,6 +35,7 @@ use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -55,6 +57,7 @@ use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -85,7 +88,7 @@ $container->set('register', fn () => $register);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
-$container->set('console', fn () => new Document(Config::getParam('console')), []);
+$container->set('console', fn () => new Project(Config::getParam('console')), []);
 
 $container->set('platform', fn () => Config::getParam('platform', []), []);
 
@@ -204,6 +207,15 @@ $container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname 
     }
 }, ['telemetry', 'publicHostname']);
 
+$container->set('adapterForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): ?PushAdapter {
+    try {
+        return (new MessagingProvider($telemetry, $publicHostname))->internalPush();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_NOTIFICATIONS_PUSH_APNS: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry', 'publicHostname']);
+
 $container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
@@ -316,6 +328,11 @@ $container->set('publisherForBuilds', fn (Publisher $publisher) => new BuildPubl
 $container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForReviews', fn (Publisher $publisher) => new ReviewPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_REVIEWS_QUEUE_NAME', Event::REVIEWS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForDatabase', fn (Publisher $publisher) => new DatabasePublisher(

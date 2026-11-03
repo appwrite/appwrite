@@ -776,6 +776,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Upgrade: 'שדרוג',
   'Open activity details': 'פתיחת פרטי פעילות',
   'View event': 'הצגת אירוע',
+  Reason: 'סיבה',
   Deleted: 'נמחק',
   Executed: 'הורץ',
   Uploaded: 'הועלה',
@@ -3337,6 +3338,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to update environment order': 'עדכון סדר הסביבות נכשל',
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
+  'Environment ID': 'מזהה סביבה',
+  'An environment with this ID already exists in this project.':
+    'סביבה עם המזהה הזה כבר קיימת בפרויקט.',
+  'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
+    'השתמשו באותיות קטנות, ספרות ומקפים, והתחילו באות או בספרה.',
+  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.':
+    'מה שהאפליקציות שלכם מעבירות כסביבה לצד מזהה הפרויקט, אז בחרו משהו שנוח להקליד: staging, preview, qa.',
+  'Connect to this environment': 'התחברות לסביבה הזו',
+  'Same endpoint and project ID as production. The environment ID is what tells them apart.':
+    'אותו endpoint ואותו מזהה פרויקט כמו בפרודקשן. מזהה הסביבה הוא מה שמבדיל ביניהם.',
   'Changes here do not affect production.':
     'שינויים כאן לא משפיעים על פרודקשן.',
   'Name the environment and choose where it starts.':
@@ -3802,6 +3813,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project webhooks and functions can also listen to its alert events.':
     'גם Webhooks ופונקציות של הפרויקט יכולים להאזין לאירועי ההתראות שלו.',
   'Nobody, only its events': 'אף אחד, רק האירועים שלו',
+  Critical: 'קריטי',
+  "Rings on your phone even when it's on silent or in Do Not Disturb.":
+    "מצלצל בטלפון גם כשהוא במצב שקט או ב'נא לא להפריע'.",
+  'Critical. Rings on phones even on silent.':
+    'קריטי. מצלצל בטלפונים גם במצב שקט.',
+  'Rings on phones even on silent': 'מצלצל בטלפונים גם במצב שקט',
   'Notifies nobody': 'לא מתריע לאף אחד',
   'Notifies nobody. Its alerts only fire their events.':
     'לא מתריע לאף אחד. ההתראות שלו רק מפעילות את האירועים שלהן.',

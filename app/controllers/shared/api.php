@@ -11,6 +11,7 @@ use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Validator\Reason;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
@@ -153,9 +154,9 @@ Http::init()
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
             }
 
-            // Set role and scopes from API key
+            // Set role and scopes from API key. Every key also holds 'public', which guests already have, so endpoints open to anyone stay open to keys.
             $role = $apiKey->getRole();
-            $scopes = $apiKey->getScopes();
+            $scopes = [...$apiKey->getScopes(), 'public'];
 
             // Handle special key role case
             if ($apiKey->getRole() === User::ROLE_KEYS) {
@@ -723,6 +724,17 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
         $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
+
+        // Why the caller made this request, shown next to it in Activity. Always percent-decoded, like a W3C Baggage value,
+        // so clients that cannot send non-ASCII header bytes (browsers, Node) can send any language; a literal % goes as %25.
+        // Validated before trimming, so an encoded line break or NUL at either end is refused rather than dropped.
+        $reason = \rawurldecode($request->getHeaderLine('x-appwrite-reason', ''));
+        $reasonValidator = new Reason(APP_LIMIT_AUDIT_REASON_LENGTH);
+        if (! $reasonValidator->isValid($reason)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Reason header value: ' . $reasonValidator->getDescription() . ' Percent-encode it with encodeURIComponent.');
+        }
+        $auditContext->reason = \trim($reason);
+
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;

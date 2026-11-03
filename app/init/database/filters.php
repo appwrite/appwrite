@@ -1,12 +1,12 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Network\Platform;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Query\Schema\ColumnType;
-use Utopia\System\System;
 
 Database::addFilter(
     'casting',
@@ -282,7 +282,11 @@ Database::addFilter(
 Database::addFilter(
     'encrypt',
     function (mixed $value) {
-        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
+        $version = EncryptionKey::version();
+        $key = EncryptionKey::get($version);
+        if ($key === '') {
+            throw new \RuntimeException('_APP_OPENSSL_KEY_V' . $version . ' is not configured, refusing to encrypt.');
+        }
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
@@ -291,7 +295,7 @@ Database::addFilter(
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
-            'version' => '1',
+            'version' => $version,
         ], JSON_UNESCAPED_SLASHES);
     },
     function (mixed $value) {
@@ -299,7 +303,7 @@ Database::addFilter(
             return;
         }
         $value = json_decode($value, true);
-        $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $key = EncryptionKey::get((string) $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }

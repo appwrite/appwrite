@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Message\Screenshot;
 use Appwrite\Event\Realtime;
@@ -120,6 +121,8 @@ class Screenshots extends Action
                 Query::equal("projectInternalId", [$project->getSequence()]),
                 Query::equal("type", ["deployment"]),
                 Query::equal('deploymentInternalId', [$deployment->getSequence()]),
+                // A custom domain is the project's own server, which would receive the key.
+                Query::equal('owner', ['Appwrite']),
                 Query::orderAsc('$sequence'),
             ]);
 
@@ -273,9 +276,11 @@ class Screenshots extends Action
      */
     protected function getHeaders(Document $project, Document $rule): array
     {
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', 900, 0);
         $apiKey = $jwt->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'hostname' => $rule->getAttribute('domain'),
             'deploymentId' => $rule->getAttribute('deploymentId'),
             'hostnameOverride' => true,
@@ -291,13 +296,13 @@ class Screenshots extends Action
                 str_replace(['{resourceType}'], [RESOURCE_TYPE_SITES], METRIC_RESOURCE_TYPE_EXECUTIONS_MB_SECONDS),
             ],
             'bannerDisabled' => true,
-            'projectCheckDisabled' => true,
             'previewAuthDisabled' => true,
             'deploymentStatusIgnored' => true,
             'runtimeEphemeral' => true,
         ]);
 
         return [
+            'x-appwrite-project' => $project->getId(),
             'x-appwrite-hostname' => $rule->getAttribute('domain'),
             'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
         ];

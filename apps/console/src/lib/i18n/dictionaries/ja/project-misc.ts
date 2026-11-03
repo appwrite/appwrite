@@ -511,6 +511,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '1 day': '1 日',
   'Open activity details': 'アクティビティの詳細を開く',
   'View event': 'イベントを表示',
+  Reason: '理由',
   'Logged in': 'ログイン',
   'Logged out': 'ログアウト',
   'Project key': 'プロジェクトキー',
@@ -3406,6 +3407,16 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to update environment order': '環境の順序を更新できませんでした',
   'Project environment': 'プロジェクト環境',
   'Switch to production': '本番に切り替え',
+  'Environment ID': '環境 ID',
+  'An environment with this ID already exists in this project.':
+    'この ID の環境はこのプロジェクトに既に存在します。',
+  'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
+    '英小文字、数字、ハイフンを使い、先頭は英字か数字にしてください。',
+  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.':
+    'アプリがプロジェクト ID と一緒に環境として渡す値です。staging、preview、qa のように入力しやすいものを選んでください。',
+  'Connect to this environment': 'この環境に接続',
+  'Same endpoint and project ID as production. The environment ID is what tells them apart.':
+    'エンドポイントとプロジェクト ID は本番と同じです。環境 ID で区別します。',
   'Changes here do not affect production.':
     'ここでの変更は本番に影響しません。',
   'Name the environment and choose where it starts.':
@@ -3878,6 +3889,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project webhooks and functions can also listen to its alert events.':
     'プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
   'Nobody, only its events': 'なし（イベントのみ）',
+  Critical: '重要',
+  "Rings on your phone even when it's on silent or in Do Not Disturb.":
+    'スマートフォンがサイレントやおやすみモードでも鳴ります。',
+  'Critical. Rings on phones even on silent.':
+    '重要。サイレントでもスマートフォンが鳴ります。',
+  'Rings on phones even on silent': 'サイレントでもスマートフォンが鳴ります',
   'Notifies nobody': '通知先なし',
   'Notifies nobody. Its alerts only fire their events.':
     '通知先はありません。アラートはイベントのみを発生させます。',

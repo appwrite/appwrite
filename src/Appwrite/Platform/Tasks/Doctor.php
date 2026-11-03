@@ -85,7 +85,7 @@ class Doctor extends Action
             Console::log('🟢 AAAA record target is valid (' . System::getEnv('_APP_DOMAIN_TARGET_AAAA') . ')');
         }
 
-        if (EncryptionKey::isInsecure(System::getEnv('_APP_OPENSSL_KEY_V1'))) {
+        if (EncryptionKey::isInsecure(EncryptionKey::current())) {
             Console::log('🔴 Not using a unique secret key for encryption');
         } else {
             Console::log('🟢 Using a unique secret key for encryption');

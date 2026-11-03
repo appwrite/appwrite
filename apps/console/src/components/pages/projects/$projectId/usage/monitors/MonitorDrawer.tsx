@@ -418,6 +418,16 @@ export function MonitorDrawer({
                     </span>
                   )}
                 </dd>
+                {monitor.critical && (
+                  <>
+                    <dt className="border-t border-border py-2 text-muted-foreground">
+                      {t('Critical')}
+                    </dt>
+                    <dd className="m-0 min-w-0 border-t border-border py-2 text-foreground">
+                      {t('Rings on phones even on silent')}
+                    </dd>
+                  </>
+                )}
               </dl>
             </div>
           )

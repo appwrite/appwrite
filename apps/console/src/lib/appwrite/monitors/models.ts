@@ -77,5 +77,7 @@ export type MonitorInput = {
   cooldown?: number
   /** Organization roles emailed and notified in the console; none relies on the alert events alone. */
   notify?: string[]
+  /** Push alerts ring through silent and Do Not Disturb on devices that allow critical alerts. */
+  critical?: boolean
   enabled?: boolean
 }

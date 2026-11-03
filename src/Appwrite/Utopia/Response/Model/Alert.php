@@ -70,6 +70,12 @@ class Alert extends Model
                 'example' => ['{"method":"greaterThan","attribute":"network.outbound","values":[5000000]}'],
                 'array' => true,
             ])
+            ->addRule('critical', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether the monitor was critical when the alert fired.',
+                'default' => false,
+                'example' => false,
+            ])
             ->addRule('metric', [
                 'type' => self::TYPE_ENUM,
                 'description' => 'Metric the alert fired on.',

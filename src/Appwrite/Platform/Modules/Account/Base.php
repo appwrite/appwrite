@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
@@ -30,7 +31,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Locale\Locale;
-use Utopia\System\System;
 
 abstract class Base extends Action
 {
@@ -42,8 +42,7 @@ abstract class Base extends Action
         // Attempt to decode secret as a JWT (used by OAuth2 token flow to carry provider info)
         $oauthProvider = null;
         try {
-            $jwtDecoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 60, 0);
-            $payload = $jwtDecoder->decode($secret);
+            $payload = EncryptionKey::decode($secret, maxAge: 60);
 
             if (empty($payload['provider'])) {
                 throw new Exception(Exception::USER_INVALID_TOKEN);
