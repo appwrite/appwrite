@@ -11,7 +11,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
-use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
@@ -77,16 +76,15 @@ class Create extends CreateDocumentAction
             ->param('model', AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, new WhiteList([AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, AppwriteAdapter::MODEL_ALL_MINILM]), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
             ->inject('response')
             ->inject('project')
-            ->inject('embeddingAgent')
+            ->inject('embedder')
             ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, AppwriteAdapter $embedder, Context $usage): void
     {
-        $adapter = $embeddingAgent->getAdapter();
-        $adapter->setModel($model);
-        $dimension = $adapter->getEmbeddingDimension();
+        $embedder = $embedder->withModel($model);
+        $dimension = $embedder->getDimension();
 
         $results = [];
         $totalDuration = 0;
@@ -95,20 +93,12 @@ class Create extends CreateDocumentAction
 
         foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $batch) {
             try {
-                $embedResult = $embeddingAgent->bulkEmbed($batch);
-                $totalDuration += $embedResult['totalDuration'] ?? 0;
-                $totalTokens += $embedResult['tokensProcessed'] ?? 0;
+                $embeddings = $embedder->embed($batch);
+                $totalDuration += $embeddings->duration ?? 0;
+                $totalTokens += $embeddings->tokens ?? 0;
 
-                foreach ($embedResult['embeddings'] as $embedding) {
-                    $results[] = $this->embeddingResult($model, $dimension, $embedding);
-                }
-
-                // Partial success: backend returned fewer embeddings than inputs.
-                // Fill the gap with error results so the response stays 1:1 with texts.
-                $missing = \count($batch) - \count($embedResult['embeddings']);
-                for ($i = 0; $i < $missing; $i++) {
-                    $totalErrors++;
-                    $results[] = $this->embeddingResult($model, $dimension, [], 'Error while generating embedding');
+                foreach ($embeddings->vectors as $vector) {
+                    $results[] = $this->embeddingResult($model, $dimension, $vector);
                 }
             } catch (\Exception $e) {
                 $totalErrors += \count($batch);
