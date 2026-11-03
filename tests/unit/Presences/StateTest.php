@@ -10,9 +10,11 @@ use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Tests\Unit\Presences\Mock\ConflictingMemory;
+use Tests\Unit\Presences\Mock\FailingDeleteMemory;
 use Tests\Unit\Presences\Mock\RecordingRealtime;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
@@ -27,6 +29,10 @@ final class StateTest extends TestCase
 {
     private const string USER_INTERNAL_ID = '42';
 
+    private const string BOOTED_AT = '2026-01-01 00:00:00.000';
+
+    private const string BEFORE_BOOT = '2025-12-31 23:00:00.000';
+
     private Database $database;
 
     private ConflictingMemory $adapter;
@@ -36,34 +42,7 @@ final class StateTest extends TestCase
     protected function setUp(): void
     {
         $this->adapter = new ConflictingMemory();
-
-        $authorization = new Authorization();
-        $authorization->addRole(Role::any()->toString());
-
-        $this->database = new Database($this->adapter, new Cache(new NoCache()));
-        $this->database
-            ->setAuthorization($authorization)
-            ->setDatabase('presences')
-            ->setNamespace('presences_' . \uniqid());
-
-        $this->database->create();
-        $this->database->createCollection(Collection::create(
-            id: State::COLLECTION_ID,
-            attributes: [
-                Attribute::string(key: 'userInternalId', size: 255, required: true),
-                Attribute::string(key: 'userId', size: 255),
-                Attribute::integer(key: 'connections', default: 0, signed: false),
-                Attribute::string(key: 'status', size: 255),
-                Attribute::string(key: 'source', size: 255),
-                Attribute::string(key: 'hostname', size: 255),
-            ],
-            permissions: [
-                Permission::create(Role::any()),
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-            ],
-            documentSecurity: false,
-        ));
+        $this->database = $this->presenceDatabase($this->adapter);
     }
 
     public function testCreatesPresenceAndReportsCreation(): void
@@ -195,6 +174,7 @@ final class StateTest extends TestCase
         $this->presence('orphan-2', 'realtime', 'host-a');
         $this->presence('other-host', 'realtime', 'host-b');
         $this->presence('other-source', 'http', 'host-a');
+        $this->presence('after-boot', 'realtime', 'host-a', '2026-01-01 00:00:01.000');
 
         $publisher = new MockPublisher();
         $queueForRealtime = new RecordingRealtime();
@@ -203,12 +183,13 @@ final class StateTest extends TestCase
             $this->database,
             new Document(['$id' => 'project-1', '$sequence' => '1']),
             'host-a',
+            self::BOOTED_AT,
             new UsagePublisher($publisher, new Queue('usage')),
             $queueForRealtime,
         );
 
         $this->assertSame(2, $deleted);
-        $this->assertSame(['other-host', 'other-source'], $this->userIds());
+        $this->assertSame(['after-boot', 'other-host', 'other-source'], $this->userIds());
 
         $usage = $publisher->getEvents('usage');
         $this->assertCount(1, $usage);
@@ -222,6 +203,46 @@ final class StateTest extends TestCase
         $this->assertArrayNotHasKey('connections', $queueForRealtime->triggered[0]['payload']);
     }
 
+    public function testDeleteForHostReportsPresencesDeletedBeforeAFailure(): void
+    {
+        // The first batch is deleted, the second fails.
+        $this->database = $this->presenceDatabase(new FailingDeleteMemory(failFromCall: 2));
+        $this->database->setPreserveDates(true);
+        $this->database->createDocuments(State::COLLECTION_ID, \array_map(
+            static fn (int $i): Document => new Document([
+                '$id' => 'orphan-' . $i,
+                '$createdAt' => self::BEFORE_BOOT,
+                '$updatedAt' => self::BEFORE_BOOT,
+                'userInternalId' => (string) $i,
+                'userId' => 'orphan-' . $i,
+                'source' => 'realtime',
+                'hostname' => 'host-a',
+            ]),
+            \range(1, Database::BATCH_SIZE + 1),
+        ));
+        $this->database->setPreserveDates(false);
+
+        $publisher = new MockPublisher();
+        $queueForRealtime = new RecordingRealtime();
+
+        try {
+            (new State())->deleteForHost(
+                $this->database,
+                new Document(['$id' => 'project-1', '$sequence' => '1']),
+                'host-a',
+                self::BOOTED_AT,
+                new UsagePublisher($publisher, new Queue('usage')),
+                $queueForRealtime,
+            );
+            $this->fail('The failed bulk delete must be rethrown.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Bulk delete failed', $e->getMessage());
+        }
+
+        $this->assertSame(-Database::BATCH_SIZE, $publisher->getEvents('usage')[0]['metrics'][0]['value']);
+        $this->assertCount(Database::BATCH_SIZE, $queueForRealtime->triggered);
+    }
+
     public function testDeleteForHostWithNothingToDeleteHasNoSideEffects(): void
     {
         $this->presence('other-host', 'realtime', 'host-b');
@@ -233,6 +254,7 @@ final class StateTest extends TestCase
             $this->database,
             new Document(['$id' => 'project-1', '$sequence' => '1']),
             'host-a',
+            self::BOOTED_AT,
             new UsagePublisher($publisher, new Queue('usage')),
             $queueForRealtime,
         );
@@ -251,11 +273,43 @@ final class StateTest extends TestCase
             $this->database,
             new Document(['$id' => 'project-1', '$sequence' => '1']),
             'host-a',
+            self::BOOTED_AT,
             new UsagePublisher(new MockPublisher(), new Queue('usage')),
             new RecordingRealtime(),
         );
 
         $this->assertSame(0, $deleted);
+    }
+
+    public function testDeleteForHostInProjectsSkipsFailingProjects(): void
+    {
+        $this->presence('orphan-1', 'realtime', 'host-a');
+
+        $result = $this->deleteInProjects($this->platform('broken', 'project-1'), \microtime(true) + 30);
+
+        $this->assertSame(['deleted' => 1, 'projects' => 2, 'failed' => 1, 'outcome' => 'done'], $result);
+        $this->assertSame([], $this->userIds());
+    }
+
+    public function testDeleteForHostInProjectsStopsAtDeadline(): void
+    {
+        $this->presence('orphan-1', 'realtime', 'host-a');
+
+        $result = $this->deleteInProjects($this->platform('project-1'), \microtime(true) - 1);
+
+        $this->assertSame('timeout', $result['outcome']);
+        $this->assertSame(['orphan-1'], $this->userIds());
+    }
+
+    public function testDeleteForHostInProjectsFailsWhenPlatformNeverReady(): void
+    {
+        $platform = $this->platform();
+        $platform->deleteCollection('projects');
+
+        $result = $this->deleteInProjects($platform, \microtime(true) + 0.05);
+
+        $this->assertSame('failed', $result['outcome']);
+        $this->assertSame(0, $result['deleted']);
     }
 
     public function testSetPermissionsDefaultsForUser(): void
@@ -340,17 +394,98 @@ final class StateTest extends TestCase
         );
     }
 
-    private function presence(string $userId, string $source, string $hostname): void
+    private function presenceDatabase(Memory $adapter): Database
     {
-        $this->database->createDocument(State::COLLECTION_ID, new Document([
-            '$id' => $userId,
-            'userInternalId' => self::USER_INTERNAL_ID,
-            'userId' => $userId,
-            'connections' => 1,
-            'status' => 'online',
-            'source' => $source,
-            'hostname' => $hostname,
-        ]));
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
+
+        $database = new Database($adapter, new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('presences')
+            ->setNamespace('presences_' . \uniqid());
+
+        $database->create();
+        $database->createCollection(Collection::create(
+            id: State::COLLECTION_ID,
+            attributes: [
+                Attribute::string(key: 'userInternalId', size: 255, required: true),
+                Attribute::string(key: 'userId', size: 255),
+                Attribute::integer(key: 'connections', default: 0, signed: false),
+                Attribute::string(key: 'status', size: 255),
+                Attribute::string(key: 'source', size: 255),
+                Attribute::string(key: 'hostname', size: 255),
+            ],
+            permissions: [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+            documentSecurity: false,
+        ));
+
+        return $database;
+    }
+
+    private function presence(string $userId, string $source, string $hostname, string $updatedAt = self::BEFORE_BOOT): void
+    {
+        $this->database->setPreserveDates(true);
+        try {
+            $this->database->createDocument(State::COLLECTION_ID, new Document([
+                '$id' => $userId,
+                '$createdAt' => $updatedAt,
+                '$updatedAt' => $updatedAt,
+                'userInternalId' => self::USER_INTERNAL_ID,
+                'userId' => $userId,
+                'connections' => 1,
+                'status' => 'online',
+                'source' => $source,
+                'hostname' => $hostname,
+            ]));
+        } finally {
+            $this->database->setPreserveDates(false);
+        }
+    }
+
+    private function platform(string ...$projectIds): Database
+    {
+        $platform = new Database(new Memory(), new Cache(new NoCache()));
+        $platform
+            ->setAuthorization(new Authorization())
+            ->setDatabase('platform')
+            ->setNamespace('platform_' . \uniqid());
+        $platform->create();
+        $platform->createCollection(Collection::create(
+            id: 'projects',
+            attributes: [Attribute::string(key: 'name', size: 255)],
+        ));
+
+        $platform->getAuthorization()->skip(function () use ($platform, $projectIds): void {
+            foreach ($projectIds as $projectId) {
+                $platform->createDocument('projects', new Document(['$id' => $projectId, 'name' => $projectId]));
+            }
+        });
+
+        return $platform;
+    }
+
+    /**
+     * @return array{deleted: int, projects: int, failed: int, outcome: string}
+     */
+    private function deleteInProjects(Database $platform, float $deadline, int $retrySeconds = 0): array
+    {
+        return (new State())->deleteForHostInProjects(
+            $platform,
+            fn (Document $project): Database => $project->getId() === 'broken'
+                ? throw new \RuntimeException('Project database unreachable')
+                : $this->database,
+            'host-a',
+            self::BOOTED_AT,
+            $deadline,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+            $retrySeconds,
+        );
     }
 
     /**

@@ -414,55 +414,120 @@ class State
     }
 
     /**
+     * Runs {@see deleteForHost} on every project until done or `$deadline` (unix seconds).
+     * Retries while the platform database is not ready; a failing project is recorded on the
+     * current span and skipped.
+     *
+     * @param callable(Document): Database $getProjectDB
+     * @return array{deleted: int, projects: int, failed: int, outcome: 'done'|'timeout'|'failed'}
+     */
+    public function deleteForHostInProjects(
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        string $hostname,
+        string $before,
+        float $deadline,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+        int $retrySeconds = DATABASE_RECONNECT_SLEEP,
+    ): array {
+        $deleted = 0;
+        $projects = 0;
+        $failed = 0;
+        $error = null;
+
+        while (\microtime(true) < $deadline) {
+            $projects = 0;
+            $failed = 0;
+
+            try {
+                $finished = $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $getProjectDB, $hostname, $before, $deadline, $publisherForUsage, $queueForRealtime, &$deleted, &$projects, &$failed): bool {
+                    foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $project) {
+                        if (\microtime(true) >= $deadline) {
+                            return false;
+                        }
+
+                        $projects++;
+                        try {
+                            $deleted += $this->deleteForHost($getProjectDB($project), $project, $hostname, $before, $publisherForUsage, $queueForRealtime);
+                        } catch (Throwable $th) {
+                            $failed++;
+                            Span::current()?->setError($th)->set('project.id', $project->getId());
+                        }
+                    }
+
+                    return true;
+                });
+
+                return ['deleted' => $deleted, 'projects' => $projects, 'failed' => $failed, 'outcome' => $finished ? 'done' : 'timeout'];
+            } catch (Throwable $th) {
+                // Platform database or schema not ready yet.
+                $error = $th;
+                \sleep($retrySeconds);
+            }
+        }
+
+        if ($error !== null) {
+            Span::current()?->setError($error);
+        }
+
+        return ['deleted' => $deleted, 'projects' => $projects, 'failed' => $failed, 'outcome' => $error === null ? 'timeout' : 'failed'];
+    }
+
+    /**
      * Deletes the realtime presences a host holds in one project, such as those a crashed
      * realtime server left online. Purges the list cache, decrements usage and emits a delete
-     * event per presence, like a socket closing. Returns how many were deleted.
+     * event per presence, like a socket closing. Only rows untouched since `$before` go, so a
+     * socket served meanwhile keeps its presence. Returns how many were deleted.
      */
     public function deleteForHost(
         Database $dbForProject,
         Document $project,
         string $hostname,
+        string $before,
         UsagePublisher $publisherForUsage,
         QueueRealtime $queueForRealtime,
     ): int {
         /** @var array<Document> $presences */
         $presences = [];
-        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $hostname, &$presences): void {
-            if ($dbForProject->findCollection(self::COLLECTION_ID) === null) {
-                return;
+        try {
+            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $hostname, $before, &$presences): void {
+                if ($dbForProject->findCollection(self::COLLECTION_ID) === null) {
+                    return;
+                }
+
+                $dbForProject->deleteDocuments(
+                    self::COLLECTION_ID,
+                    [
+                        Query::equal('source', ['realtime']),
+                        Query::equal('hostname', [$hostname]),
+                        Query::lessThan('$updatedAt', $before),
+                    ],
+                    onNext: function (Document $presence) use (&$presences): void {
+                        $presences[] = $presence;
+                    },
+                );
+            });
+        } finally {
+            // Batches deleted before a failure are gone too, so report them either way.
+            if (!empty($presences)) {
+                $this->purgeListCache($dbForProject);
+                $this->triggerUsage($publisherForUsage, $project, -\count($presences));
+
+                foreach ($presences as $presence) {
+                    foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                        $presence->removeAttribute($attribute);
+                    }
+
+                    $queueForRealtime
+                        ->reset()
+                        ->setProject($project)
+                        ->setEvent('presences.[presenceId].delete')
+                        ->setParam('presenceId', $presence->getId())
+                        ->setPayload($presence->getArrayCopy())
+                        ->trigger();
+                }
             }
-
-            $dbForProject->deleteDocuments(
-                self::COLLECTION_ID,
-                [
-                    Query::equal('source', ['realtime']),
-                    Query::equal('hostname', [$hostname]),
-                ],
-                onNext: function (Document $presence) use (&$presences): void {
-                    $presences[] = $presence;
-                },
-            );
-        });
-
-        if (empty($presences)) {
-            return 0;
-        }
-
-        $this->purgeListCache($dbForProject);
-        $this->triggerUsage($publisherForUsage, $project, -\count($presences));
-
-        foreach ($presences as $presence) {
-            foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
-                $presence->removeAttribute($attribute);
-            }
-
-            $queueForRealtime
-                ->reset()
-                ->setProject($project)
-                ->setEvent('presences.[presenceId].delete')
-                ->setParam('presenceId', $presence->getId())
-                ->setPayload($presence->getArrayCopy())
-                ->trigger();
         }
 
         return \count($presences);
