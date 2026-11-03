@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Presences;
 
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Presences\State;
 use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Event\MockPublisher;
 use Tests\Unit\Presences\Mock\ConflictingMemory;
+use Tests\Unit\Presences\Mock\RecordingRealtime;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Attribute;
@@ -18,6 +21,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Queue;
 
 final class StateTest extends TestCase
 {
@@ -50,6 +54,8 @@ final class StateTest extends TestCase
                 Attribute::string(key: 'userId', size: 255),
                 Attribute::integer(key: 'connections', default: 0, signed: false),
                 Attribute::string(key: 'status', size: 255),
+                Attribute::string(key: 'source', size: 255),
+                Attribute::string(key: 'hostname', size: 255),
             ],
             permissions: [
                 Permission::create(Role::any()),
@@ -183,6 +189,73 @@ final class StateTest extends TestCase
         $this->assertSame(1, $live->getAttribute('connections'));
     }
 
+    public function testDeleteForHostRemovesOnlyThisHostsRealtimePresences(): void
+    {
+        $this->presence('orphan-1', 'realtime', 'host-a');
+        $this->presence('orphan-2', 'realtime', 'host-a');
+        $this->presence('other-host', 'realtime', 'host-b');
+        $this->presence('other-source', 'http', 'host-a');
+
+        $publisher = new MockPublisher();
+        $queueForRealtime = new RecordingRealtime();
+
+        $deleted = (new State())->deleteForHost(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            new UsagePublisher($publisher, new Queue('usage')),
+            $queueForRealtime,
+        );
+
+        $this->assertSame(2, $deleted);
+        $this->assertSame(['other-host', 'other-source'], $this->userIds());
+
+        $usage = $publisher->getEvents('usage');
+        $this->assertCount(1, $usage);
+        $this->assertSame([['key' => METRIC_USERS_PRESENCE, 'value' => -2]], $usage[0]['metrics']);
+
+        $this->assertSame(['presences.[presenceId].delete', 'presences.[presenceId].delete'], \array_column($queueForRealtime->triggered, 'event'));
+        $this->assertEqualsCanonicalizing(['orphan-1', 'orphan-2'], \array_column($queueForRealtime->triggered, 'presenceId'));
+        $this->assertArrayNotHasKey('hostname', $queueForRealtime->triggered[0]['payload']);
+        $this->assertArrayNotHasKey('connections', $queueForRealtime->triggered[0]['payload']);
+    }
+
+    public function testDeleteForHostWithNothingToDeleteHasNoSideEffects(): void
+    {
+        $this->presence('other-host', 'realtime', 'host-b');
+
+        $publisher = new MockPublisher();
+        $queueForRealtime = new RecordingRealtime();
+
+        $deleted = (new State())->deleteForHost(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            new UsagePublisher($publisher, new Queue('usage')),
+            $queueForRealtime,
+        );
+
+        $this->assertSame(0, $deleted);
+        $this->assertSame(['other-host'], $this->userIds());
+        $this->assertNull($publisher->getEvents('usage'));
+        $this->assertSame([], $queueForRealtime->triggered);
+    }
+
+    public function testDeleteForHostSkipsProjectWithoutPresences(): void
+    {
+        $this->database->deleteCollection(State::COLLECTION_ID);
+
+        $deleted = (new State())->deleteForHost(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+        );
+
+        $this->assertSame(0, $deleted);
+    }
+
     public function testSetPermissionsDefaultsForUser(): void
     {
         $userId = 'user123';
@@ -263,6 +336,33 @@ final class StateTest extends TestCase
             $userId,
             $sequence,
         );
+    }
+
+    private function presence(string $userId, string $source, string $hostname): void
+    {
+        $this->database->createDocument(State::COLLECTION_ID, new Document([
+            '$id' => $userId,
+            'userInternalId' => self::USER_INTERNAL_ID,
+            'userId' => $userId,
+            'connections' => 1,
+            'status' => 'online',
+            'source' => $source,
+            'hostname' => $hostname,
+        ]));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function userIds(): array
+    {
+        $userIds = \array_map(
+            static fn (Document $presence): string => $presence->getAttribute('userId'),
+            $this->database->find(State::COLLECTION_ID),
+        );
+        \sort($userIds);
+
+        return $userIds;
     }
 
     /**
