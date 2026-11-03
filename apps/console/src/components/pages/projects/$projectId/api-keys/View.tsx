@@ -99,8 +99,10 @@ export function View({ initialData }: ViewProps = {}) {
   const scopeCatalog = scopeCatalogQuery.data
   // Loaded or failed. The drawer waits for it, so its scopes never change while it is open.
   const scopeCatalogSettled = !prefill?.scopes || !scopeCatalogQuery.isPending
+  // Without the catalog none of the link's scopes are checked, so none apply;
+  // the scope picker shows the load error instead.
   const prefillScopes = useMemo(() => {
-    if (!prefill?.scopes || !scopeCatalog) return prefill?.scopes
+    if (!prefill?.scopes || !scopeCatalog) return undefined
     const known = new Set(scopeCatalog.scopes.map((scope) => scope.$id))
     return prefill.scopes.filter((scope) => known.has(scope))
   }, [prefill, scopeCatalog])

@@ -97,7 +97,8 @@ function corsHeaders(route: Route): Record<string, string> {
 /**
  * Every `/v1` call, on any region host, is answered here; the app itself is
  * served live. `canWriteKeys` decides whether the member's scopes include
- * `keys.write`, and `catalogDelayMs` holds back the scope catalog. Returns the
+ * `keys.write`, `catalogDelayMs` holds back the scope catalog, and
+ * `catalogFails` answers it with a server error. Returns the
  * `POST /v1/project/keys` requests.
  */
 async function mockAppwriteApi(
@@ -105,7 +106,8 @@ async function mockAppwriteApi(
   {
     canWriteKeys,
     catalogDelayMs = 0,
-  }: { canWriteKeys: boolean; catalogDelayMs?: number },
+    catalogFails = false,
+  }: { canWriteKeys: boolean; catalogDelayMs?: number; catalogFails?: boolean },
 ): Promise<Request[]> {
   const creates: Request[] = []
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -147,6 +149,13 @@ async function mockAppwriteApi(
     }
     if (apiPath === '/console/scopes/project') {
       await new Promise((resolve) => setTimeout(resolve, catalogDelayMs))
+      if (catalogFails)
+        return json(500, {
+          message: 'Server error',
+          code: 500,
+          type: 'general_unknown',
+          version: '1.0',
+        })
       return json(200, SCOPE_CATALOG)
     }
 
@@ -254,6 +263,26 @@ test.describe('prefilled API key link (mocked API)', () => {
     await expect(page).toHaveURL(
       new RegExp(`/projects/${PROJECT_ID}/api-keys$`),
     )
+  })
+
+  test('applies only the name when the scope catalog fails to load', async ({
+    page,
+  }) => {
+    const creates = await mockAppwriteApi(page, {
+      canWriteKeys: true,
+      catalogFails: true,
+    })
+    await page.goto(PREFILL_PATH, { waitUntil: 'domcontentloaded' })
+
+    const drawer = page.getByRole('dialog')
+    await expect(
+      drawer.getByRole('heading', { name: 'Create API key' }),
+    ).toBeVisible({ timeout: 30_000 })
+    await expect(drawer.locator('#name')).toHaveValue('Acme server')
+
+    await drawer.getByRole('button', { name: 'Create API key' }).click()
+    await expect.poll(() => creates.length).toBe(1)
+    expect(creates[0].postDataJSON().scopes ?? []).toEqual([])
   })
 
   test('explains instead of opening the drawer without keys.write', async ({
