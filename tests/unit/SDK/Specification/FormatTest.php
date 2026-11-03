@@ -17,6 +17,7 @@ use Appwrite\SDK\Specification\Format\OpenAPI3;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\VcsRepositories;
+use Appwrite\Utopia\Database\Validator\RoutePermissions;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\AlgoArgon2;
 use Appwrite\Utopia\Response\Model\AlgoBcrypt;
@@ -60,6 +61,7 @@ use Appwrite\Utopia\Response\Model\Webhook;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Validator\Key;
+use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -1555,6 +1557,36 @@ final class FormatTest extends TestCase
         foreach (['queries', 'repositoryQueries', 'deepQueries'] as $name) {
             $this->assertSame('array', $schemas[$name]['type'], "{$name} must serialise as an array");
             $this->assertSame(['type' => 'string'], $schemas[$name]['items'], "{$name} must hold query strings");
+        }
+    }
+
+    public function testPermissionValidatorsEmitArrayOfStrings(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        // RoutePermissions judges the column half itself, but it is the same list of
+        // permission strings on the wire, so it must emit exactly what its parent does.
+        $route = (new Route('POST', '/v1/tests/permissions'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('permissions', null, new Permissions(), 'Permissions.', true)
+            ->param('routePermissions', null, new RoutePermissions(), 'Route permissions.', true);
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+
+        $properties = $openApi['paths']['/tests/permissions']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        foreach (['permissions', 'routePermissions'] as $name) {
+            $this->assertSame('array', $properties[$name]['type'], "{$name} must serialise as an array");
+            $this->assertSame(['type' => 'string'], $properties[$name]['items'], "{$name} must hold permission strings");
         }
     }
 
