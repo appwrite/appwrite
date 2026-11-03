@@ -72,4 +72,8 @@ export const heReviewsDictionary: Record<string, string> = {
   'repositories already on': 'מאגרים כבר פעילים',
   'repositories failed': 'מאגרים נכשלו',
   'Some repositories could not be added': 'לא ניתן היה להוסיף חלק מהמאגרים',
+  'Counting repositories...': 'סופר מאגרים...',
+  'Turn on code review for every repository in the installation?':
+    'להפעיל סקירת קוד לכל המאגרים בהתקנה?',
+  'Add all': 'הוספת הכל',
 }

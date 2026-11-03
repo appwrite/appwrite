@@ -73,11 +73,13 @@ export function AddRepository({
 
   const [installationId, setInstallationId] = useState<string>('')
   const [search, setSearch] = useState('')
+  const [confirmingAll, setConfirmingAll] = useState(false)
   const debouncedSearch = useDebouncedValue(search, 300)
 
   useEffect(() => {
     if (!open) {
       setSearch('')
+      setConfirmingAll(false)
       return
     }
     if (!installationId && installations[0]) {
@@ -96,6 +98,16 @@ export function AddRepository({
     )
   const repositories: Models.ProviderRepository[] =
     repositoriesData?.runtimeProviderRepositories ?? []
+
+  // The total ignores the search, so "Add all" can say how many it adds.
+  const { data: allRepositoriesData } = useRepositories(
+    confirmingAll ? projectId : null,
+    installationId || null,
+    VCSDetectionType.Runtime,
+    0,
+    1,
+  )
+  const allTotal = allRepositoriesData?.total
 
   const createMutation = useCreateReviewRepository(projectId)
   const createAllMutation = useCreateAllReviewRepositories(projectId)
@@ -121,6 +133,7 @@ export function AddRepository({
   }
 
   const handleAddAll = () => {
+    setConfirmingAll(false)
     createAllMutation.mutate(
       { installationId, enrolledIds },
       {
@@ -277,21 +290,42 @@ export function AddRepository({
             </div>
           )}
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('Cancel')}
-          </Button>
-          {installations.length > 0 && (
-            <Button disabled={!installationId || busy} onClick={handleAddAll}>
-              {createAllMutation.isPending && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
-              {createAllMutation.isPending
-                ? t('Adding repositories...')
-                : t('Add all repositories')}
+        {confirmingAll ? (
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[13px] text-muted-foreground">
+              {allTotal === undefined
+                ? t('Counting repositories...')
+                : `${t('Turn on code review for every repository in the installation?')} (${allTotal})`}
+            </p>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => setConfirmingAll(false)}>
+                {t('Back')}
+              </Button>
+              <Button disabled={allTotal === undefined} onClick={handleAddAll}>
+                {t('Add all')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              {t('Cancel')}
             </Button>
-          )}
-        </div>
+            {installations.length > 0 && (
+              <Button
+                disabled={!installationId || busy}
+                onClick={() => setConfirmingAll(true)}
+              >
+                {createAllMutation.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {createAllMutation.isPending
+                  ? t('Adding repositories...')
+                  : t('Add all repositories')}
+              </Button>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   )

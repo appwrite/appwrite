@@ -74,4 +74,8 @@ export const jaReviewsDictionary: Record<string, string> = {
   'repositories failed': '件のリポジトリが失敗',
   'Some repositories could not be added':
     '一部のリポジトリを追加できませんでした',
+  'Counting repositories...': 'リポジトリを数えています...',
+  'Turn on code review for every repository in the installation?':
+    'インストール内のすべてのリポジトリでコードレビューを有効にしますか？',
+  'Add all': 'すべて追加',
 }
