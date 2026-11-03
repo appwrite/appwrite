@@ -108,6 +108,24 @@ class Update extends CollectionAction
         $enabled ??= $collection->getAttribute('enabled', true);
         $description ??= $collection->getAttribute('description', '');
 
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $update = fn () => $dbForDatabases->updateCollection(
+            'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+            new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity),
+        );
+
+        // The collection first, the metadata row second, as in the Databases update. The
+        // collection is where the permissions are judged -- a column that does not exist is
+        // refused there, before anything is written -- so a refusal leaves nothing behind.
+        // Written the other way round, the row would already report a grant the collection
+        // never accepted, and the next update would replay it onto the table.
+        //
+        // Scoped only when one of them names a column, so the library's refusal stays the
+        // backstop for a request that never asked for the feature.
+        $columnPermissions === []
+            ? $update()
+            : $dbForDatabases->withColumnPermissions($update);
+
         $updated = $dbForProject->updateDocument(
             'database_' . $database->getSequence(),
             $collectionId,
@@ -121,18 +139,6 @@ class Update extends CollectionAction
                 ->setAttribute('description', $description)
                 ->setAttribute('search', \implode(' ', [$collectionId, $name ?? $collection->getAttribute('name'), $description]))
         );
-
-        $dbForDatabases = $getDatabasesDB($database, $collection);
-        $update = fn () => $dbForDatabases->updateCollection(
-            'database_' . $database->getSequence() . '_collection_' . $updated->getSequence(),
-            new CollectionUpdate(permissions: $permissions, documentSecurity: $documentSecurity),
-        );
-
-        // Scoped only when one of them names a column, so the library's refusal stays the
-        // backstop for a request that never asked for the feature.
-        $columnPermissions === []
-            ? $update()
-            : $dbForDatabases->withColumnPermissions($update);
 
         $queueForEvents
             ->setContext('database', $database)
