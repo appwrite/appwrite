@@ -458,6 +458,7 @@ final class NotificationsTest extends TestCase
                 'project' => ['$id' => 'project-x'],
                 'recipient' => 'owner@example.test',
                 'name' => 'Owner',
+                'template' => MAIL_TEMPLATE_ALERT,
                 'subject' => 'Alert',
                 'body' => 'Body',
                 'bodyTemplate' => __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',
