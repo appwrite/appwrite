@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
   BellOff,
+  BellRing,
   ChevronRight,
   Copy,
   FileJson,
@@ -471,6 +472,23 @@ export function Monitors({
                         state === 'paused' && 'opacity-50',
                       )}
                     />
+                    {monitor.critical && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            tabIndex={0}
+                            aria-label={t('Critical')}
+                            onClick={(event) => event.stopPropagation()}
+                            className="hidden shrink-0 text-muted-foreground lg:inline-flex"
+                          >
+                            <BellRing className="h-3.5 w-3.5" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t('Critical. Rings on phones even on silent.')}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     {monitor.notify.length === 0 && (
                       <Tooltip>
                         <TooltipTrigger asChild>

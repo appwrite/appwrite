@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   bucketsQueryOptions,
   databasesQueryOptions,
@@ -60,6 +61,7 @@ export type RuleForm = {
   window: number
   cooldown: number
   notify: string[]
+  critical: boolean
 }
 
 const RESOURCE_PICKER_LIMIT = 100
@@ -76,6 +78,7 @@ export function emptyRuleForm(): RuleForm {
     window: 3600,
     cooldown: 3600,
     notify: ['owner'],
+    critical: false,
   }
 }
 
@@ -97,6 +100,7 @@ export function ruleFormFromMonitor(rule: ParsedMonitor): RuleForm {
     window: rule.window,
     cooldown: rule.cooldown,
     notify: rule.notify,
+    critical: rule.critical,
   }
 }
 
@@ -169,6 +173,7 @@ export function monitorInputFromForm(
     window: metricDefinition(form.metric).counter ? form.window : undefined,
     cooldown: form.cooldown,
     notify: form.notify,
+    critical: form.critical,
   }
 }
 
@@ -646,6 +651,27 @@ export function RuleFields({
                 'Project webhooks and functions can also listen to its alert events.',
               )}
         </p>
+        <div className="mt-4 flex items-start justify-between gap-4 rounded-xl border border-border p-4">
+          <div>
+            <Label
+              htmlFor="alert-critical"
+              className="text-[13px] font-semibold"
+            >
+              {t('Critical')}
+            </Label>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">
+              {t(
+                "Rings on your phone even when it's on silent or in Do Not Disturb.",
+              )}
+            </p>
+          </div>
+          <Switch
+            id="alert-critical"
+            checked={form.critical}
+            onCheckedChange={(critical) => onChange({ critical })}
+            disabled={disabled}
+          />
+        </div>
       </section>
 
       <section className="border-t border-border pt-4">

@@ -3889,6 +3889,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Project webhooks and functions can also listen to its alert events.':
     'プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
   'Nobody, only its events': 'なし（イベントのみ）',
+  Critical: '重要',
+  "Rings on your phone even when it's on silent or in Do Not Disturb.":
+    'スマートフォンがサイレントやおやすみモードでも鳴ります。',
+  'Critical. Rings on phones even on silent.':
+    '重要。サイレントでもスマートフォンが鳴ります。',
+  'Rings on phones even on silent': 'サイレントでもスマートフォンが鳴ります',
   'Notifies nobody': '通知先なし',
   'Notifies nobody. Its alerts only fire their events.':
     '通知先はありません。アラートはイベントのみを発生させます。',
