@@ -21,12 +21,14 @@ FROM appwrite/base:2.0.0 AS ffmpeg
 
 # Same pin as utopia-php/video (docs/design.md, Dockerfile ARG FFMPEG_VERSION).
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
+# GnuTLS gives ffmpeg its https protocol: the videos worker reads S3 sources over
+# a presigned URL, and without a TLS library ffmpeg has no https at all.
 ARG FFMPEG_VERSION=8.1.2
 
 RUN apk add --no-cache \
         build-base nasm pkgconf curl xz \
         x264-dev x265-dev libvpx-dev opus-dev lame-dev zlib-dev \
-        libtheora-dev libvorbis-dev \
+        libtheora-dev libvorbis-dev gnutls-dev \
     && curl -fsSL "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz" | tar -xJ -C /tmp \
     && cd "/tmp/ffmpeg-${FFMPEG_VERSION}" \
     && ./configure \
@@ -39,6 +41,7 @@ RUN apk add --no-cache \
         --enable-libmp3lame \
         --enable-libtheora \
         --enable-libvorbis \
+        --enable-gnutls \
         --disable-debug \
         --disable-doc \
         --disable-ffplay \
@@ -72,6 +75,7 @@ RUN apk add --no-cache \
         lame-libs \
         libtheora \
         libvorbis \
+        gnutls \
         libstdc++ \
     && rm -rf /var/cache/apk/*
 
