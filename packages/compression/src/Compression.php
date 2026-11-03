@@ -129,7 +129,8 @@ abstract class Compression
             ];
         }, $encodings);
 
-        $encodings = array_filter($encodings, fn (array $encoding): bool => isset($supported[$encoding['encoding']]) && $supported[$encoding['encoding']]);
+        // q=0 means the client refuses that encoding
+        $encodings = array_filter($encodings, fn (array $encoding): bool => $encoding['quality'] > 0 && isset($supported[$encoding['encoding']]) && $supported[$encoding['encoding']]);
 
         if ($encodings === []) {
             return null;
