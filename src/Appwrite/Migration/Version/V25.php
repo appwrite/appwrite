@@ -620,13 +620,10 @@ class V25 extends Migration
 
                 case 'certificates':
                     // The certificate's expiry and its provider's renewal state, shown on proxy rules.
+                    // Attributes that exist are skipped; any other failure propagates, since without
+                    // them the worker silently drops both on every write.
                     if ($collectionType === 'console') {
-                        $attributes = ['expireDate', 'status'];
-                        try {
-                            $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
-                        } catch (Throwable $th) {
-                            Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
-                        }
+                        $this->createAttributesFromCollection($this->dbForProject, $id, ['expireDate', 'status']);
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
