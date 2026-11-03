@@ -73,11 +73,11 @@ use Utopia\Agents\Adapters\Perplexity;
 use Utopia\Agents\Adapters\XAI;
 
 new OpenAI($key, 'gpt-5-mini');
-new Anthropic($key, 'claude-sonnet-4-5');
+new Anthropic($key, 'claude-sonnet-5-5');
 new Gemini($key, 'gemini-2.5-flash');
 new Deepseek($key, 'deepseek-chat');
 new XAI($key, 'grok-4');
-new OpenRouter($key, 'anthropic/claude-sonnet-4.5', referer: 'https://example.com', title: 'My App');
+new OpenRouter($key, 'anthropic/claude-sonnet-5.5', referer: 'https://example.com', title: 'My App');
 new Perplexity($key, 'sonar');
 
 // Any OpenAI-compatible server
@@ -149,7 +149,7 @@ $result->output; // ['name' => 'PHP', 'year' => 1995, 'tags' => [...], 'license'
 
 `Schema::object()` marks every property required and forbids extra properties, which strict modes expect; use `Schema::nullable()` for optional values. `Schema::fromArray()` wraps any JSON Schema. Output that is not valid JSON or does not match the schema throws `Exception\Output`, which carries the raw text and the list of violations.
 
-OpenAI and compatible providers use native JSON Schema output, Gemini `responseJsonSchema`, and Anthropic a forced `json` tool whose input is returned as the text.
+OpenAI and compatible providers use native JSON Schema output, Gemini `responseJsonSchema`, and Anthropic its JSON schema output format (Claude 4.5 and later; older models get a forced `json` tool whose input is returned as the text).
 
 ### Streaming
 
@@ -193,12 +193,12 @@ use Utopia\Agents\Effort;
 
 $agent
     ->setMaxTokens(2048)
-    ->setTemperature(0.2)
+    ->setTemperature(0.2)        // sampling is left out for models that reject it, such as Claude 4.7 and later
     ->setTopP(0.9)
     ->setTopK(40)
     ->setStop(['END'])
     ->setSeed(42)
-    ->setEffort(Effort::High)    // reasoning effort, or a thinking budget on Anthropic and Gemini
+    ->setEffort(Effort::High)    // reasoning effort, or a thinking budget on Gemini and Claude before 4.6
     ->setOptions([               // raw provider parameters, keyed by adapter name
         'anthropic' => ['metadata' => ['user_id' => 'user-1']],
         'openai' => ['service_tier' => 'flex'],
@@ -216,7 +216,7 @@ use Utopia\Agents\Adapters\Anthropic;
 use Utopia\Agents\Message;
 use Utopia\Agents\Request;
 
-$model = new Anthropic(getenv('ANTHROPIC_API_KEY'), 'claude-haiku-4-5');
+$model = new Anthropic(getenv('ANTHROPIC_API_KEY'), 'claude-haiku-5-5');
 $response = $model->generate(new Request([Message::user('Hi')], maxTokens: 100));
 $response->parts;   // list of Part
 $response->finish;  // FinishReason

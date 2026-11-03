@@ -14,6 +14,6 @@ class AnthropicTest extends Base
 
     protected function model(string $key): Model
     {
-        return new Anthropic($key, getenv('LLM_MODEL_ANTHROPIC') ?: 'claude-haiku-4-5');
+        return new Anthropic($key, getenv('LLM_MODEL_ANTHROPIC') ?: 'claude-haiku-5-5');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Utopia\Agents\Tests\Adapters;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Agents\Adapters\Anthropic;
 use Utopia\Agents\Effort;
@@ -27,9 +28,9 @@ use Utopia\Agents\ToolChoice;
 
 class AnthropicTest extends TestCase
 {
-    private function adapter(Client $client): Anthropic
+    private function adapter(Client $client, string $model = 'claude-test'): Anthropic
     {
-        return (new Anthropic('secret', 'claude-test', client: $client))->setRetries(1, 0);
+        return (new Anthropic('secret', $model, client: $client))->setRetries(1, 0);
     }
 
     /**
@@ -71,7 +72,7 @@ class AnthropicTest extends TestCase
         $client = $this->client($this->message([[['type' => 'text', 'text' => ''], [['type' => 'text_delta', 'text' => 'ok']]]], 'end_turn'));
         $tool = new Tool('weather', 'Weather for a city', Schema::object(['city' => Schema::string()]));
 
-        $this->adapter($client)->generate(new Request(
+        $this->adapter($client, 'claude-sonnet-4-6')->generate(new Request(
             messages: [
                 Message::system('Be brief'),
                 Message::user([new Text('Look'), new Image('png', 'image/png'), new File(url: 'https://x.io/a.pdf')]),
@@ -92,7 +93,7 @@ class AnthropicTest extends TestCase
         $this->assertSame('2023-06-01', $request->getHeaderLine('anthropic-version'));
 
         $payload = $client->lastPayload();
-        $this->assertSame('claude-test', $payload['model']);
+        $this->assertSame('claude-sonnet-4-6', $payload['model']);
         $this->assertSame(4096, $payload['max_tokens']);
         $this->assertSame(0.3, $payload['temperature']);
         $this->assertSame(5, $payload['top_k']);
@@ -121,25 +122,86 @@ class AnthropicTest extends TestCase
         $this->assertStringContainsString('"input":{}', (string) $request->getBody());
     }
 
-    public function testEffortEnablesThinkingWithRoomForAnswer(): void
+    public function testEffortUsesAdaptiveThinkingOnCurrentModels(): void
     {
         $client = $this->client($this->message([], 'end_turn'));
 
-        $this->adapter($client)->generate(new Request([Message::user('Hi')], maxTokens: 1000, effort: Effort::Medium));
+        $this->adapter($client, 'claude-opus-5-5')->generate(new Request([Message::user('Hi')], maxTokens: 1000, effort: Effort::Medium));
+
+        $payload = $client->lastPayload();
+        $this->assertSame(['type' => 'adaptive'], $payload['thinking']);
+        $this->assertSame(['effort' => 'medium'], $payload['output_config']);
+        $this->assertSame(1000, $payload['max_tokens']);
+    }
+
+    public function testXHighEffortIsHighBeforeClaude47(): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+
+        $this->adapter($client, 'claude-opus-4-6')->generate(new Request([Message::user('Hi')], effort: Effort::XHigh));
+
+        $this->assertSame('high', $client->payload('output_config', 'effort'));
+    }
+
+    public function testEffortIsAThinkingBudgetBeforeClaude46(): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+
+        $this->adapter($client, 'claude-haiku-4-5-20251001')->generate(new Request([Message::user('Hi')], maxTokens: 1000, effort: Effort::Medium));
 
         $payload = $client->lastPayload();
         $this->assertSame(['type' => 'enabled', 'budget_tokens' => 8192], $payload['thinking']);
         $this->assertSame(8192 + 4096, $payload['max_tokens']);
+        $this->assertNull($client->payload('output_config'));
     }
 
-    public function testNoEffortLeavesThinkingOff(): void
+    public function testNoEffortLeavesThinkingOffBeforeClaude5(): void
     {
         $client = $this->client($this->message([], 'end_turn'));
 
-        $this->adapter($client)->generate(new Request([Message::user('Hi')], schema: Schema::object([]), effort: Effort::None));
+        $this->adapter($client, 'claude-opus-4-8')->generate(new Request([Message::user('Hi')], effort: Effort::None));
 
         $this->assertNull($client->payload('thinking'));
-        $this->assertSame(['type' => 'tool', 'name' => 'json'], $client->payload('tool_choice'));
+        $this->assertNull($client->payload('output_config'));
+    }
+
+    public function testNoEffortAsksForTheLowestEffortFromClaude5(): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+
+        $this->adapter($client, 'claude-haiku-5-5')->generate(new Request([Message::user('Hi')], effort: Effort::None));
+
+        $this->assertNull($client->payload('thinking'));
+        $this->assertSame(['effort' => 'low'], $client->payload('output_config'));
+    }
+
+    /**
+     * @return array<string, array{0: string, 1: bool}>
+     */
+    public static function samplingModels(): array
+    {
+        return [
+            'claude 3.5' => ['claude-3-5-haiku-latest', true],
+            'claude 4 dated' => ['claude-sonnet-4-20250514', true],
+            'claude 4.6' => ['claude-sonnet-4-6', true],
+            'claude 4.7' => ['claude-opus-4-7', false],
+            'claude 5.5' => ['claude-sonnet-5-5', false],
+            'fable' => ['claude-fable-5-1', false],
+            'no version' => ['claude-test', false],
+        ];
+    }
+
+    #[DataProvider('samplingModels')]
+    public function testSamplingIsSentOnlyToModelsThatAcceptIt(string $model, bool $sent): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+
+        $this->adapter($client, $model)->generate(new Request([Message::user('Hi')], temperature: 0.0, topP: 0.9, topK: 5));
+
+        $payload = $client->lastPayload();
+        $this->assertSame($sent, \array_key_exists('temperature', $payload));
+        $this->assertSame($sent, \array_key_exists('top_p', $payload));
+        $this->assertSame($sent, \array_key_exists('top_k', $payload));
     }
 
     public function testStreamsThinkingTextAndToolUse(): void
@@ -176,7 +238,24 @@ class AnthropicTest extends TestCase
         $this->assertSame(42, $response->usage->output);
     }
 
-    public function testStructuredOutputUsesForcedJsonTool(): void
+    public function testStructuredOutputUsesTheJsonSchemaFormat(): void
+    {
+        $client = $this->client($this->message([
+            [['type' => 'text', 'text' => ''], [['type' => 'text_delta', 'text' => '{"name":"Ada"}']]],
+        ], 'end_turn'));
+        $schema = Schema::object(['name' => Schema::string()]);
+        $tool = new Tool('weather', 'Weather for a city', Schema::object(['city' => Schema::string()]));
+
+        $response = $this->adapter($client, 'claude-opus-5-5')->generate(new Request([Message::user('Hi')], tools: [$tool], schema: $schema, effort: Effort::None));
+
+        $payload = $client->lastPayload();
+        $this->assertSame(['format' => ['type' => 'json_schema', 'schema' => $schema->toArray()], 'effort' => 'low'], $payload['output_config']);
+        $this->assertArrayNotHasKey('tool_choice', $payload, 'current models reject a forced tool');
+        $this->assertSame(['weather'], array_column($payload['tools'], 'name'));
+        $this->assertSame('{"name":"Ada"}', $response->text());
+    }
+
+    public function testStructuredOutputUsesForcedJsonToolBeforeClaude45(): void
     {
         $client = $this->client($this->message([
             [['type' => 'tool_use', 'id' => 'toolu_1', 'name' => 'json', 'input' => []], [
@@ -187,7 +266,7 @@ class AnthropicTest extends TestCase
         $schema = Schema::object(['name' => Schema::string()]);
         $events = [];
 
-        $response = $this->adapter($client)->stream(new Request([Message::user('Hi')], schema: $schema), function (Event $event) use (&$events): void {
+        $response = $this->adapter($client, 'claude-3-5-haiku-latest')->stream(new Request([Message::user('Hi')], schema: $schema), function (Event $event) use (&$events): void {
             $events[] = $event;
         });
 

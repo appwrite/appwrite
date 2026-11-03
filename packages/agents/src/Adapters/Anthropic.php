@@ -34,9 +34,19 @@ use Utopia\Client\Psr18\StreamingClientInterface;
  * Anthropic Messages API.
  *
  * Marks the system prompt (or, without one, the last tool) as a prompt cache
- * breakpoint. Structured output goes through a "json" tool whose input is
- * returned, and streamed, as the response text. Effort turns on extended
- * thinking with a matching token budget.
+ * breakpoint. The request follows the model generation:
+ *
+ * - Structured output uses the API's JSON schema output format from Claude
+ *   4.5 on. Older models get a "json" tool whose input is returned, and
+ *   streamed, as the response text.
+ * - Effort maps to adaptive thinking and the API's effort setting from Claude
+ *   4.6 on, and to a thinking token budget before that. Effort::None leaves
+ *   thinking off where the model allows it; from Claude 5 on, where thinking
+ *   cannot always be turned off, it asks for the lowest effort instead.
+ * - Temperature, top_p and top_k are sent only up to Claude 4.6: later models
+ *   reject them.
+ *
+ * A model ID without a version, such as an alias, is treated as current.
  */
 class Anthropic extends Adapter implements Model
 {
@@ -220,13 +230,21 @@ class Anthropic extends Adapter implements Model
             $payload['system'] = [['type' => 'text', 'text' => $system, 'cache_control' => ['type' => 'ephemeral']]];
         }
 
+        $version = $this->version();
+        // Structured output through the API's own format, or through the json tool for models without it.
+        $native = $version === null || $version >= 4.5;
+
         $tools = array_map(fn (Tool $tool) => [
             'name' => $tool->name,
             'description' => $tool->description,
             'input_schema' => $tool->input->toArray(),
         ], $request->tools);
 
-        if ($request->schema !== null) {
+        if ($request->schema !== null && $native) {
+            $payload['output_config']['format'] = ['type' => 'json_schema', 'schema' => $request->schema->toArray()];
+        }
+
+        if ($request->schema !== null && ! $native) {
             $tools[] = [
                 'name' => static::OUTPUT,
                 'description' => 'Respond with a JSON object matching this schema. Call this tool to give your final answer.',
@@ -242,7 +260,7 @@ class Anthropic extends Adapter implements Model
         }
 
         $choice = $request->toolChoice;
-        if ($choice === null && $request->schema !== null && $request->tools === [] && ($request->effort === null || $request->effort === Effort::None)) {
+        if ($choice === null && $request->schema !== null && ! $native && $request->tools === [] && ($request->effort === null || $request->effort === Effort::None)) {
             $choice = ToolChoice::tool(static::OUTPUT);
         }
         if ($choice !== null) {
@@ -253,16 +271,31 @@ class Anthropic extends Adapter implements Model
             };
         }
 
-        if ($request->effort !== null && $request->effort !== Effort::None) {
-            $budget = $request->effort->budget();
-            $payload['thinking'] = ['type' => 'enabled', 'budget_tokens' => $budget];
-            $payload['max_tokens'] = max($payload['max_tokens'], $budget + static::MAX_TOKENS);
+        $effort = $request->effort;
+        if ($effort !== null && $version !== null && $version < 4.6) {
+            if ($effort !== Effort::None) {
+                $budget = $effort->budget();
+                $payload['thinking'] = ['type' => 'enabled', 'budget_tokens' => $budget];
+                $payload['max_tokens'] = max($payload['max_tokens'], $budget + static::MAX_TOKENS);
+            }
+        } elseif ($effort === Effort::None) {
+            // Before Claude 5 thinking is off unless asked for; from 5 on some models always think.
+            if ($version === null || $version >= 5) {
+                $payload['output_config']['effort'] = Effort::Low->value;
+            }
+        } elseif ($effort !== null) {
+            $payload['thinking'] = ['type' => 'adaptive'];
+            // xhigh arrived with Claude 4.7.
+            $payload['output_config']['effort'] = $effort === Effort::XHigh && $version !== null && $version < 4.7
+                ? Effort::High->value
+                : $effort->value;
         }
 
+        $sampling = $version !== null && $version < 4.7;
         $settings = [
-            'temperature' => $request->temperature,
-            'top_p' => $request->topP,
-            'top_k' => $request->topK,
+            'temperature' => $sampling ? $request->temperature : null,
+            'top_p' => $sampling ? $request->topP : null,
+            'top_k' => $sampling ? $request->topK : null,
             'stop_sequences' => $request->stop === [] ? null : $request->stop,
         ];
 
@@ -274,6 +307,24 @@ class Anthropic extends Adapter implements Model
         );
 
         return $merged;
+    }
+
+    /**
+     * The model's generation as major.minor, from IDs such as claude-opus-4-1-20250805,
+     * claude-sonnet-4-20250514, claude-3-5-haiku-latest or claude-haiku-5-5; null when
+     * the ID names none.
+     */
+    protected function version(): ?float
+    {
+        $numbers = array_values(array_filter(explode('-', $this->model), fn (string $part) => ctype_digit($part)));
+        if ($numbers === [] || \strlen($numbers[0]) > 2) {
+            return null;
+        }
+
+        // A date suffix is no minor version.
+        $minor = isset($numbers[1]) && \strlen($numbers[1]) <= 2 ? (int) $numbers[1] : 0;
+
+        return (int) $numbers[0] + $minor / 10;
     }
 
     /**
