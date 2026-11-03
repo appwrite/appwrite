@@ -4861,16 +4861,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.13.17",
+            "version": "5.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9"
+                "reference": "92ee10585c83dc83805b468784e71faa44316b44"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/be65dd140b1f01386a1a93307c2de2ec326ad4e9",
-                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/92ee10585c83dc83805b468784e71faa44316b44",
+                "reference": "92ee10585c83dc83805b468784e71faa44316b44",
                 "shasum": ""
             },
             "require": {
@@ -4886,7 +4886,8 @@
                 "brianium/paratest": "^7",
                 "phpunit/phpunit": "^11",
                 "rector/rector": "^2.4",
-                "squizlabs/php_codesniffer": "^4"
+                "squizlabs/php_codesniffer": "^4",
+                "utopia-php/client": "^0.6"
             },
             "type": "library",
             "autoload": {
@@ -4907,9 +4908,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.13.17"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.15.0"
             },
-            "time": "2026-10-24T11:32:35+00:00"
+            "time": "2026-11-03T14:36:04+00:00"
         },
         {
             "name": "brianium/paratest",
