@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Agents\Agent;
 use Utopia\Agents\Conversation;
 use Utopia\Agents\Event;
+use Utopia\Agents\Events\ToolResult as ToolResultEvent;
 use Utopia\Agents\FinishReason;
 use Utopia\Agents\Message;
 use Utopia\Agents\Parts\Text;
@@ -88,6 +89,36 @@ class ConversationTest extends TestCase
         $this->assertSame(1, $runs);
         $this->assertSame([Role::User, Role::Assistant, Role::Tool], array_map(fn (Message $message) => $message->role, $conversation->getMessages()));
         $this->assertSame('charged', $conversation->getMessages()[2]->toolResults()[0]->output);
+    }
+
+    public function testKeepsStepWhenListenerFailsOnToolResult(): void
+    {
+        $runs = 0;
+        $model = new Model([
+            new Response([new ToolCall('call_1', 'charge', [])], FinishReason::ToolCalls),
+            new Response([new Text('Paid.')], FinishReason::Stop),
+        ]);
+        $agent = (new Agent($model))->addTool(new Tool('charge', 'Charge the card', Schema::object([]), function () use (&$runs): string {
+            $runs++;
+
+            return 'charged';
+        }));
+        $conversation = new Conversation($agent);
+
+        try {
+            $conversation->send('Pay', function (Event $event): void {
+                if ($event instanceof ToolResultEvent) {
+                    throw new \RuntimeException('Listener failed');
+                }
+            });
+            $this->fail('Expected the listener failure');
+        } catch (\RuntimeException $error) {
+            $this->assertSame('Listener failed', $error->getMessage());
+        }
+
+        $this->assertSame(1, $runs);
+        $this->assertCount(1, $model->requests);
+        $this->assertSame([Role::User, Role::Assistant, Role::Tool], array_map(fn (Message $message) => $message->role, $conversation->getMessages()));
     }
 
     public function testStreamsWithListener(): void

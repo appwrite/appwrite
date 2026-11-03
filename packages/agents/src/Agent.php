@@ -145,11 +145,7 @@ class Agent
                     continue;
                 }
 
-                $result = $this->execute($tool, $call);
-                $results[] = $result;
-                if ($listener !== null) {
-                    $listener(new ToolResultEvent($result));
-                }
+                $results[] = $this->execute($tool, $call);
             }
 
             if ($results !== []) {
@@ -158,7 +154,14 @@ class Agent
 
             $step = new Step($response, $results);
             $steps[] = $step;
+
+            // Tool results are announced only once every tool of the step has
+            // run, directly before the step finishes, so nothing with side
+            // effects happens between a result event and StepFinish.
             if ($listener !== null) {
+                foreach ($results as $result) {
+                    $listener(new ToolResultEvent($result));
+                }
                 $listener(new StepFinish($step));
             }
 

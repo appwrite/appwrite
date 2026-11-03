@@ -3,6 +3,7 @@
 namespace Utopia\Agents;
 
 use Utopia\Agents\Events\StepFinish;
+use Utopia\Agents\Events\ToolResult;
 
 /**
  * A running conversation with an agent: keeps the message history and the
@@ -55,7 +56,10 @@ class Conversation
 
         // Record every step as it finishes, so a run that fails partway keeps
         // the tool calls it already executed and a retry does not repeat them.
-        $result = $this->agent->stream($this->messages, function (Event $event) use ($listener): void {
+        // A listener failure on a tool result is held until the step is
+        // recorded, since those tools have already run.
+        $failure = null;
+        $result = $this->agent->stream($this->messages, function (Event $event) use ($listener, &$failure): void {
             if ($event instanceof StepFinish) {
                 $this->add($event->step->response->message());
                 if ($event->step->results !== []) {
@@ -64,8 +68,25 @@ class Conversation
                 $this->usage = $this->usage->add($event->step->response->usage);
             }
 
-            if ($listener !== null) {
+            if ($failure !== null) {
+                if ($event instanceof StepFinish) {
+                    throw $failure;
+                }
+
+                return;
+            }
+
+            if ($listener === null) {
+                return;
+            }
+
+            try {
                 $listener($event);
+            } catch (\Throwable $error) {
+                if (! $event instanceof ToolResult) {
+                    throw $error;
+                }
+                $failure = $error;
             }
         });
 
