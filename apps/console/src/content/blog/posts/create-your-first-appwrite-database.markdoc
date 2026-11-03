@@ -23,6 +23,8 @@ An Appwrite database stores your app's data and serves it straight to your users
 
 In this guide, you create a TablesDB database with a `tasks` table, set it up so each user keeps their own tasks, and add and list tasks from your app. Everything here works on the Free plan.
 
+Building with an AI coding agent? Your agent can do every step in this guide through the Appwrite MCP server. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe what you want in the chat.
+
 You need an Appwrite project. If you don't have one yet, [create one in the Console](/sign-in).
 
 # Step 1: Create a TablesDB database {% #create-database %}
