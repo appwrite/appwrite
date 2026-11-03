@@ -272,6 +272,7 @@ class AnthropicTest extends TestCase
         $payload = $client->lastPayload();
         $this->assertSame(['format' => ['type' => 'json_schema', 'schema' => $schema->toArray()], 'effort' => 'low'], $payload['output_config']);
         $this->assertArrayNotHasKey('tool_choice', $payload, 'current models reject a forced tool');
+        $this->assertIsArray($payload['tools']);
         $this->assertSame(['weather'], array_column($payload['tools'], 'name'));
         $this->assertSame('{"name":"Ada"}', $response->text());
     }

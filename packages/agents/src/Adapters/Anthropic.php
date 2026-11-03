@@ -231,7 +231,9 @@ class Anthropic extends Adapter implements Model
         }
 
         // Structured output through the API's own format, or through the json tool for models without it.
+        $schema = $request->schema;
         $native = ! $this->before('4.5');
+        $output = [];
 
         $tools = array_map(fn (Tool $tool) => [
             'name' => $tool->name,
@@ -239,15 +241,15 @@ class Anthropic extends Adapter implements Model
             'input_schema' => $tool->input->toArray(),
         ], $request->tools);
 
-        if ($request->schema !== null && $native) {
-            $payload['output_config']['format'] = ['type' => 'json_schema', 'schema' => $request->schema->toArray()];
+        if ($schema !== null && $native) {
+            $output['format'] = ['type' => 'json_schema', 'schema' => $schema->toArray()];
         }
 
-        if ($request->schema !== null && ! $native) {
+        if ($schema !== null && ! $native) {
             $tools[] = [
                 'name' => static::OUTPUT,
                 'description' => 'Respond with a JSON object matching this schema. Call this tool to give your final answer.',
-                'input_schema' => $request->schema->toArray(),
+                'input_schema' => $schema->toArray(),
             ];
         }
 
@@ -259,7 +261,7 @@ class Anthropic extends Adapter implements Model
         }
 
         $choice = $request->toolChoice;
-        if ($choice === null && $request->schema !== null && ! $native && $request->tools === [] && ($request->effort === null || $request->effort === Effort::None)) {
+        if ($choice === null && $schema !== null && ! $native && $request->tools === [] && ($request->effort === null || $request->effort === Effort::None)) {
             $choice = ToolChoice::tool(static::OUTPUT);
         }
         if ($choice !== null) {
@@ -280,14 +282,18 @@ class Anthropic extends Adapter implements Model
         } elseif ($effort === Effort::None) {
             // Before Claude 5 thinking is off unless asked for; from 5 on some models always think.
             if (! $this->before('5')) {
-                $payload['output_config']['effort'] = Effort::Low->value;
+                $output['effort'] = Effort::Low->value;
             }
         } elseif ($effort !== null) {
             $payload['thinking'] = ['type' => 'adaptive'];
             // xhigh arrived with Claude 4.7.
-            $payload['output_config']['effort'] = $effort === Effort::XHigh && $this->before('4.7')
+            $output['effort'] = $effort === Effort::XHigh && $this->before('4.7')
                 ? Effort::High->value
                 : $effort->value;
+        }
+
+        if ($output !== []) {
+            $payload['output_config'] = $output;
         }
 
         $sampling = $this->before('4.7');
