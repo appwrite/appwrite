@@ -147,7 +147,7 @@ $result = $agent->generate('Describe the PHP language.');
 $result->output; // ['name' => 'PHP', 'year' => 1995, 'tags' => [...], 'license' => null]
 ```
 
-`Schema::object()` marks every property required and forbids extra properties, which strict modes expect; use `Schema::nullable()` for optional values. `Schema::fromArray()` wraps any JSON Schema. Output that is not valid JSON or does not match the schema throws `Exception\Output`, which carries the raw text and the list of violations.
+`Schema::object()` marks every property required and forbids extra properties, which strict modes expect; use `Schema::nullable()` for optional values. `Schema::fromArray()` wraps any JSON Schema. Output that is not valid JSON or does not match the schema throws `Exception\Output`, which carries the raw text, the list of violations and the run's `usage`.
 
 OpenAI and compatible providers use native JSON Schema output, Gemini `responseJsonSchema`, and Anthropic its JSON schema output format (Claude 4.5 and later; older models get a forced `json` tool whose input is returned as the text).
 
