@@ -226,9 +226,10 @@ class Agent
             }
             $json = trim($json);
 
-            // Drop a language tag such as "json" before the payload.
-            if ($json !== '' && ! \in_array($json[0], ['{', '['], true)) {
-                $end = strcspn($json, " \t\r\n{[");
+            // Drop a language tag such as "json" before the payload, unless
+            // the fence holds a bare JSON value such as true or 42.
+            $end = strcspn($json, " \t\r\n{[");
+            if ($end < \strlen($json) && ctype_alpha(substr($json, 0, $end)) && json_decode($json) === null) {
                 $json = trim(substr($json, $end));
             }
         }

@@ -94,6 +94,23 @@ class GeminiTest extends TestCase
         $this->assertSame(['thinkingBudget' => 1024, 'includeThoughts' => true], $client->payload('generationConfig', 'thinkingConfig'));
     }
 
+    public function testThinkingBudgetStaysWithinModelLimit(): void
+    {
+        $client = (new Client())
+            ->events([$this->chunk([['text' => 'ok']], 'STOP')])
+            ->events([$this->chunk([['text' => 'ok']], 'STOP')])
+            ->events([$this->chunk([['text' => 'ok']], 'STOP')]);
+
+        (new Gemini('k', 'gemini-2.5-flash', client: $client))->generate(new Request([Message::user('Hi')], effort: Effort::Max));
+        $this->assertSame(['thinkingBudget' => 24576, 'includeThoughts' => true], $client->payload('generationConfig', 'thinkingConfig'));
+
+        (new Gemini('k', 'gemini-2.5-pro', client: $client))->generate(new Request([Message::user('Hi')], effort: Effort::Max));
+        $this->assertSame(['thinkingBudget' => 32768, 'includeThoughts' => true], $client->payload('generationConfig', 'thinkingConfig'));
+
+        (new Gemini('k', 'gemini-2.5-flash', client: $client))->generate(new Request([Message::user('Hi')], effort: Effort::None));
+        $this->assertSame(['thinkingBudget' => 0, 'includeThoughts' => false], $client->payload('generationConfig', 'thinkingConfig'));
+    }
+
     public function testStreamsThoughtsTextAndFunctionCalls(): void
     {
         $client = (new Client())->events([

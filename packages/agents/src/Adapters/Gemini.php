@@ -227,7 +227,8 @@ class Gemini extends Adapter implements Model
         }
 
         if ($request->effort !== null) {
-            $budget = $request->effort->budget();
+            // Gemini caps the budget per model: 24576 on Flash, 32768 on Pro.
+            $budget = min($request->effort->budget(), str_contains($this->model, 'flash') ? 24576 : 32768);
             $config['thinkingConfig'] = ['thinkingBudget' => $budget, 'includeThoughts' => $budget > 0];
         }
 

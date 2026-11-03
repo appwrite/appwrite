@@ -202,6 +202,19 @@ class AgentTest extends TestCase
         }
     }
 
+    public function testStructuredOutputAcceptsFencedScalar(): void
+    {
+        foreach (["```\ntrue\n```", '```json true```', '```false```'] as $text) {
+            $model = new Model([$this->text($text)]);
+            $expected = ! str_contains($text, 'false');
+
+            $this->assertSame($expected, (new Agent($model))->setSchema(Schema::boolean())->generate('Ok?')->output, $text);
+        }
+
+        $model = new Model([$this->text("```\n42\n```")]);
+        $this->assertSame(42, (new Agent($model))->setSchema(Schema::integer())->generate('Count?')->output);
+    }
+
     public function testInvalidStructuredOutputThrows(): void
     {
         $model = new Model([$this->text('{"name":"Ada"}')]);
