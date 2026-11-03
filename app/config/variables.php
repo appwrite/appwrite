@@ -198,6 +198,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_FUNCTIONS_FALLBACK',
+                'description' => 'Comma-separated list of additional domains that serve function preview URLs, for example a previous value of _APP_DOMAIN_FUNCTIONS. Rules cannot claim these domains.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_SITES',
                 'description' => 'A domain to use for site preview URLs.',
                 'introduction' => '',
@@ -479,7 +488,7 @@ return [
             [
                 'name' => '_APP_LOGGING_FORMAT',
                 'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
-                'introduction' => '2.7.0',
+                'introduction' => '1.9.6',
                 'default' => 'pretty',
                 'required' => false,
                 'question' => '',
