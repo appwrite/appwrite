@@ -3,10 +3,10 @@ import type { VideoTimelineCue } from '@/lib/react-query/hooks/videos'
 import { cn } from '@/lib/utils'
 
 /**
- * Crops one frame from a timeline sprite sheet (WebVTT `#xywh` cue).
+ * Crops one frame from a timeline thumbnail sheet (WebVTT `#xywh` cue).
  * Pass `width` for a fixed size, or omit it to fill the container width.
  */
-export function TimelineSpriteThumb({
+export function TimelineThumbnail({
   cue,
   width,
   className,

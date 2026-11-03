@@ -258,7 +258,7 @@ export function View() {
           </p>
           <p className="mx-auto mt-3 text-[12px] leading-relaxed text-muted-foreground">
             {t(
-              'The console calls GET /videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.',
+              'The console calls GET /project/videos/profiles on your project API. A server error here usually means the Videos service failed to load or seed profiles for this project, not a problem with your browser.',
             )}
           </p>
           {apiError?.type || apiError?.code ? (
