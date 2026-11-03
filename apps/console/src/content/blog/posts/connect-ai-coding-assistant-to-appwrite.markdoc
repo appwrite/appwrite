@@ -41,7 +41,7 @@ You need an Appwrite project to connect to. If you don't have one yet, [create o
 claude plugin install appwrite@claude-plugins-official
 ```
 
-Then run `/mcp` in Claude Code, select the Appwrite server, and choose **Authenticate**.
+Then run `/reload-plugins` in Claude Code to load it, run `/mcp`, select the Appwrite server, and choose **Authenticate**.
 
 {% /tabsitem %}
 {% tabsitem #codex title="Codex" %}
@@ -70,16 +70,17 @@ npx skills add appwrite/skills
 # Step 2: Sign in to Appwrite {% #sign-in %}
 
 {% only_dark %}
-![Appwrite sign-in screen with Project access set to one project and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/consent-project-access.avif)
+![Appwrite sign-in screen with Project access and Organization access each set to one choice, and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/consent-project-access.avif)
 {% /only_dark %}
 {% only_light %}
-![Appwrite sign-in screen with Project access set to one project and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/consent-project-access.avif)
+![Appwrite sign-in screen with Project access and Organization access each set to one choice, and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/consent-project-access.avif)
 {% /only_light %}
 
 The first time your agent uses Appwrite, your browser opens the Appwrite sign-in.
 
 1. Under **Project access**, click **Change** and choose the project you're building.
-2. Click **Authorize**.
+2. Under **Organization access**, click **Change** and choose that project's organization.
+3. Click **Authorize**.
 
 Your agent is now connected. You can see every tool you've connected in the Console under **Account** > **Applications**.
 

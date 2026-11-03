@@ -23,15 +23,19 @@ Appwrite Sites hosts the web app your users open, and Appwrite Functions run you
 
 By the end of this guide, your web app runs on its own Appwrite domain, and your first function answers requests from the Console and from your app.
 
+{% info title="Building with an AI coding agent?" %}
+Your agent can create and deploy your site and function for you with the Appwrite plugin. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then ask it to deploy your app.
+{% /info %}
+
 You need an Appwrite project and a web app in a GitHub repository. If you don't have a project yet, [create one in the Console](/sign-in).
 
 # Step 1: Deploy your site from GitHub {% #deploy-site %}
 
 {% only_dark %}
-![Create site screen with Import repository on the left and site templates under Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/dark/site-create.avif)
+![Create site screen with Connect GitHub, Connect Entire, Connect GitLab and Connect Bitbucket under Import repository, and site templates under Clone template](/images/blog/deploy-your-first-appwrite-function-and-site/dark/site-create.avif)
 {% /only_dark %}
 {% only_light %}
-![Create site screen with Import repository on the left and site templates under Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/site-create.avif)
+![Create site screen with Connect GitHub, Connect Entire, Connect GitLab and Connect Bitbucket under Import repository, and site templates under Clone template](/images/blog/deploy-your-first-appwrite-function-and-site/site-create.avif)
 {% /only_light %}
 
 1. In the Console, open **Sites** and click **Create site**.

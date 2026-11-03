@@ -23,13 +23,6 @@ Appwrite Firewall checks every request to your project before it reaches your AP
 
 The Free plan includes two rules per project, and this guide uses both. By the end, sign-in has a limit of its own, the rest of your API has a broader one, and you can watch both at work in the Console.
 
-{% only_dark %}
-![Diagram: sign-in attempts count toward the Rate limit sign-in rule at priority 100, and every other request counts toward the Rate limit project API rule at priority 200](/images/blog/add-your-first-appwrite-firewall-rules/dark/priority-diagram.avif)
-{% /only_dark %}
-{% only_light %}
-![Diagram: sign-in attempts count toward the Rate limit sign-in rule at priority 100, and every other request counts toward the Rate limit project API rule at priority 200](/images/blog/add-your-first-appwrite-firewall-rules/priority-diagram.avif)
-{% /only_light %}
-
 You need an Appwrite project whose users sign in with an Appwrite client SDK, in the browser or in a mobile app. If you don't have a project yet, [create one in the Console](/sign-in).
 
 # Step 1: Open Firewall {% #open-firewall %}

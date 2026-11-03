@@ -23,6 +23,10 @@ Appwrite Messaging sends email, SMS and push notifications to your users through
 
 This guide starts with email. In a few minutes you'll have an email provider connected and your first email delivered to one of your users, all from the Console and without changing your app.
 
+{% info title="Building with an AI coding agent?" %}
+Your agent can do every step in this guide for you through the Appwrite MCP server. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe what you want in the chat.
+{% /info %}
+
 You need an Appwrite project and an account with an email service, such as Resend, SendGrid, Mailgun, Amazon SES or any SMTP server, with a domain you verified there. If you don't have a project yet, [create one in the Console](/sign-in).
 
 # Step 1: Add an email provider {% #add-provider %}
@@ -74,7 +78,7 @@ Every user who signs up with an email address can get email from Messaging. To t
 
 Go back to **Messaging** > **Messages**. Your email shows **Sent**, and **Delivered at** tells you when it went out.
 
-Open your user's inbox, and your first Appwrite email is there.
+**Sent** means your provider accepted the email. Check your inbox for your first Appwrite email.
 
 # Step 4: Send to a group {% #send-to-group %}
 

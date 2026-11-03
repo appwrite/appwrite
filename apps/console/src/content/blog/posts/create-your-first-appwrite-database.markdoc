@@ -23,7 +23,9 @@ An Appwrite database stores your app's data and serves it straight to your users
 
 In this guide, you create a TablesDB database with a `tasks` table, set it up so each user keeps their own tasks, and add and list tasks from your app. Everything here works on the Free plan.
 
-Building with an AI coding agent? Your agent can do every step in this guide through the Appwrite MCP server. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe what you want in the chat.
+{% info title="Building with an AI coding agent?" %}
+Your agent can do every step in this guide for you through the Appwrite MCP server. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe what you want in the chat.
+{% /info %}
 
 You need an Appwrite project. If you don't have one yet, [create one in the Console](/sign-in).
 
@@ -99,7 +101,7 @@ Now any signed-in user can add tasks. Each task belongs to the user who created 
 For data every visitor reads, like a product catalog, grant **Read** to **Any** instead. The [permissions guide](/docs/products/databases/tablesdb/permissions) covers teams and other roles.
 {% /info %}
 
-# Step 4: Add your first row {% #create-row %}
+# Step 4: Add a test row {% #create-row %}
 
 {% only_dark %}
 ![The Create row drawer for the Tasks table with title set to Write the first row and done left at False](/images/blog/create-your-first-appwrite-database/dark/create-row.avif)
@@ -110,7 +112,7 @@ For data every visitor reads, like a product catalog, grant **Read** to **Any** 
 
 In the table's **Rows** tab, click **Create row**. Enter a `title`, leave `done` as it is, and click **Create row**.
 
-The row appears in the **Rows** tab with its own `$id`, and `done` is `false` from the column default.
+The row appears in the **Rows** tab with its own `$id`, and `done` is `false` from the column default. Rows you add in the Console are handy for testing, and in the next step your app adds rows that belong to each signed-in user.
 
 # Step 5: Read and write rows from your app {% #connect-app %}
 

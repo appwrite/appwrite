@@ -23,6 +23,10 @@ Appwrite Storage holds the files your users upload, like profile photos, receipt
 
 In this guide, you'll create a bucket, let signed-in users upload to it, and show an uploaded image in your app. Each file is visible only to the user who uploaded it.
 
+{% info title="Building with an AI coding agent?" %}
+Your agent can do every step in this guide for you through the Appwrite MCP server. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe what you want in the chat.
+{% /info %}
+
 You need an Appwrite project and a web app where your users can sign in. If you don't have them yet, the [Web quick start](/docs/quick-starts/web) sets up both.
 
 # Step 1: Create a bucket {% #create-bucket %}
