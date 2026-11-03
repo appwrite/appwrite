@@ -238,9 +238,7 @@ final class BodyMultipartStreamTest extends TestCase
 
     public function testEnvelopeAbandonedMidRunIsNotComplete(): void
     {
-        $body = '';
-        $stream = new BodyMultipartStream('X', function (string $name, string $data) use (&$body): void {
-            $body .= $data;
+        $stream = new BodyMultipartStream('X', function (): void {
         });
 
         // What a runtime dying mid-body leaves behind: content forwarded, run never finished.
