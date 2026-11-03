@@ -359,8 +359,7 @@ abstract class Response
 
     /**
      * Set supported compression algorithms
-     */
-    /**
+     *
      * @param  array<mixed>  $compressionSupported
      */
     public function setCompressionSupported(array $compressionSupported): static
@@ -734,10 +733,6 @@ abstract class Response
             return false;
         }
 
-        if ($this->disablePayload) {
-            $body = '';
-        }
-
         // Headers wait for the first bytes, so a stream that never carries any stays unencoded
         if ($body === '' && !$end) {
             return true;
@@ -755,6 +750,15 @@ abstract class Response
 
             $this->size += $this->headersSize();
             $this->headersSent = true;
+        }
+
+        if ($this->disablePayload) {
+            if ($end) {
+                $this->sent = true;
+                $this->end();
+            }
+
+            return true;
         }
 
         $body = match (true) {
