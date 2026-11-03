@@ -24,6 +24,12 @@ Appwrite's REST APIs expect certain headers to be included with each request:
 
 ---
 
+- X-Appwrite-Environment: [ENVIRONMENT-ID]
+- optional
+- The ID of a [project environment](/docs/sdks#environments) to act in, on Appwrite Cloud. Send it with the ID of the project the environment belongs to in `X-Appwrite-Project`. URLs opened without headers, such as file previews, can pass it as the `environment` query parameter instead.
+
+---
+
 - Content-Type: application/json
 - required
 - Content type of the HTTP request. Typically set to `application/json`.

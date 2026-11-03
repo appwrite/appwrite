@@ -73,6 +73,14 @@ Every tool declares MCP tool annotations: a title, and whether it is read-only, 
 
 Every change the MCP server makes carries a reason. The model passes a one-line `reason` of up to 256 characters with each `appwrite_call_write_tool` call, such as `Remove the test users created while debugging sign-up`, and the server sends it with the request. The reason appears next to the change in the **Activity** tab of your project, so you can review what an agent changed and why. [Learn more about reasons](/docs/advanced/security/audit-logs#reason).
 
+## Project environments {% #environments %}
+
+The model can act in a [project environment](/docs/sdks#environments), such as `staging`, by passing `environment_id` together with `project_id`, the ID of the project the environment belongs to. When you ask `appwrite_get_context` about a project, it lists the project's environments, so you can ask for one by name:
+
+```
+List the users in the staging environment of my storefront project
+```
+
 # Events {% #events %}
 
 The MCP server supports [MCP Events](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415), an extension to the Model Context Protocol. An agent subscribes to an event in your project, and the server sends the agent each matching event as it happens, so the agent does not need to poll.
