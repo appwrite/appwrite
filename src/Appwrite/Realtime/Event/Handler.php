@@ -68,19 +68,21 @@ class Handler
      */
     public function handle(mixed $redis, string $channel, string $payload): array
     {
-        $this->eventsReceived->add(1);
-        $this->delivered = 0;
-        $this->enter('decode');
-        $event = \json_decode($payload, true);
-        if (!\is_array($event)) {
-            $this->eventsDropped->add(1, ['reason' => 'invalid_payload']);
-            $this->enter('idle');
-
-            return ['project' => '', 'event' => '', 'result' => 'invalid_payload', 'receivers' => 0, 'error' => null];
-        }
-
+        $event = null;
         $error = null;
+
+        // Never throws: an exception reaching phpredis leaves it reading without calling back again.
         try {
+            $this->delivered = 0;
+            $this->enter('decode');
+            $this->eventsReceived->add(1);
+            $event = \json_decode($payload, true);
+            if (!\is_array($event)) {
+                $this->eventsDropped->add(1, ['reason' => 'invalid_payload']);
+
+                return ['project' => '', 'event' => '', 'result' => 'invalid_payload', 'receivers' => 0, 'error' => null];
+            }
+
             $this->enter('arrival');
             $this->recordArrival($event);
 
@@ -106,8 +108,12 @@ class Handler
             $this->enter('tail');
             $this->tail($event);
         } catch (\Throwable $th) {
-            $this->eventsFailed->add(1, ['stage' => $this->stage]);
             $error = $th;
+            try {
+                $this->eventsFailed->add(1, ['stage' => $this->stage]);
+            } catch (\Throwable) {
+                // Counting the failure must not throw past the guard.
+            }
         } finally {
             $this->enter('idle');
         }
@@ -386,6 +392,11 @@ class Handler
             return [];
         }
 
+        // Console events reach only the console region, which may hold no connections or tails for the project.
+        if (empty($this->realtime->getProjectConnections($projectId)) && !$this->eventTailRegistry->isTailed($projectId)) {
+            return [];
+        }
+
         // Set on timeout or failure so a late check leaves state alone.
         $abandoned = false;
 
@@ -400,6 +411,9 @@ class Handler
             function () use ($projectId, &$abandoned): array {
                 // Fails closed: a reconnect re-authenticates with fresh roles.
                 $abandoned = true;
+
+                // No read roles detaches every tail; a fresh subscribe re-authorizes it.
+                $this->eventTailRegistry->reauthorizeProject($projectId, [], fn (int $connection): array => []);
 
                 $closing = [];
                 foreach ($this->realtime->getProjectConnections($projectId) as $connection) {
@@ -440,7 +454,8 @@ class Handler
         $closing = [];
         $consoleDatabase = \getConsoleDB();
         $project = $consoleDatabase->getAuthorization()->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
-        $database = \getProjectDB($project);
+        // Resolved only for a connection that needs it: tails need none, and a project from another region has no pool here.
+        $database = null;
         $invalidatedAt = $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null;
         // Each impersonator is read once per event, however many connections it holds.
         $impersonators = [];
@@ -472,7 +487,7 @@ class Handler
                 $impersonatorId = (string) ($impersonator['userId'] ?? '');
                 $impersonatorSessionId = $impersonator['sessionId'] ?? null;
                 /** @var User $user */
-                $user = $impersonators[$impersonatorId] ??= $database->getDocument('users', $impersonatorId);
+                $user = $impersonators[$impersonatorId] ??= ($database ??= \getProjectDB($project))->getDocument('users', $impersonatorId);
 
                 if (
                     $user->isEmpty()
@@ -491,7 +506,7 @@ class Handler
             }
 
             /** @var User $user */
-            $user = $database->getDocument('users', $userId);
+            $user = ($database ??= \getProjectDB($project))->getDocument('users', $userId);
 
             if (
                 $user->isEmpty()

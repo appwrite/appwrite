@@ -147,6 +147,8 @@ $admins = [
     'videos.play',
     'videos.read',
     'videos.write',
+    'reviews.read',
+    'reviews.write',
 ];
 
 return [

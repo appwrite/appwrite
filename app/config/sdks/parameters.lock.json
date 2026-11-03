@@ -2949,7 +2949,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "monitors.delete": [
             "monitorId"
@@ -2968,7 +2969,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "notifications.list": [
             "queries",
@@ -3719,6 +3721,24 @@
         ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -7236,7 +7256,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7255,7 +7276,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",
@@ -7934,6 +7956,24 @@
         ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",

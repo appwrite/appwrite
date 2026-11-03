@@ -22,6 +22,7 @@ trait StagesBase
 
         $ids = array_column($response['body']['stages'], 'id');
         $this->assertContains('tablesDB.create', $ids);
+        $this->assertContains('vectorsDB.create', $ids);
         $this->assertContains('storage.createBucket', $ids);
         $this->assertContains('functions.create', $ids);
         $this->assertContains('cli.install', $ids);
@@ -221,6 +222,23 @@ trait StagesBase
         $stage = $this->awaitStage($projectId, 'project.createVideoProfile', ONBOARDING_STATUS_COMPLETED);
         $this->assertSame(ACTOR_TYPE_KEY_PROJECT, $stage['actorType']);
         $this->assertSame('pending', $this->getStage($projectId, 'videos.create')['status']);
+    }
+
+    public function testCreateVectorsDBDatabaseCompletesStage(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/vectorsdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => Id::unique(),
+            'name' => 'Onboarding',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        $this->awaitStage($projectId, 'vectorsDB.create', ONBOARDING_STATUS_COMPLETED);
     }
 
     public function testCreateProjectKeyFromConsoleCompletesStageOnPathProject(): void

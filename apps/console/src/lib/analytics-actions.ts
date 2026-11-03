@@ -90,7 +90,8 @@ export const ANALYTICS_ACTIONS = {
   'alternative-migrate': 'Alternative Migrate Clicked',
   'alternative-compare-other': 'Alternative Compare Other Clicked',
   'secret-start-building': 'Secret Campaign Start Building Clicked',
-  'secret-sticky-start-building': 'Secret Campaign Sticky Start Building Clicked',
+  'secret-sticky-start-building':
+    'Secret Campaign Sticky Start Building Clicked',
   'secret-read-docs': 'Secret Campaign Read Docs Clicked',
   'secret-open-files': 'Secret Campaign Open Files Clicked',
   'secret-source': 'Secret Campaign Source Clicked',
@@ -128,11 +129,13 @@ export const ANALYTICS_ACTIONS = {
   'pricing-promo-start-free': 'Pricing Promo Start Free Clicked',
   'pricing-promo-start-start': 'Pricing Promo Start Start Clicked',
   'pricing-promo-start-pro': 'Pricing Promo Start Pro Clicked',
-  'pricing-promo-contact-enterprise': 'Pricing Promo Contact Enterprise Clicked',
+  'pricing-promo-contact-enterprise':
+    'Pricing Promo Contact Enterprise Clicked',
   'pricing-compare-start-free': 'Pricing Compare Start Free Clicked',
   'pricing-compare-start-start': 'Pricing Compare Start Start Clicked',
   'pricing-compare-start-pro': 'Pricing Compare Start Pro Clicked',
-  'pricing-compare-contact-enterprise': 'Pricing Compare Contact Enterprise Clicked',
+  'pricing-compare-contact-enterprise':
+    'Pricing Compare Contact Enterprise Clicked',
 
   // Docs CTAs
   'docs-get-started': 'Docs Get Started Clicked',
@@ -262,7 +265,8 @@ export const ANALYTICS_ACTIONS = {
   'postgres-promo-banner-try-now': 'PostgreSQL Promo Banner Try Now Clicked',
   'start-promo-banner-learn-more': 'Start Promo Banner Learn More Clicked',
   'product-hunt-banner-upvote': 'Product Hunt Banner Upvote Clicked',
-  'init-recap-promo-banner-view-recap': 'Init Recap Promo Banner View Recap Clicked',
+  'init-recap-promo-banner-view-recap':
+    'Init Recap Promo Banner View Recap Clicked',
   'native-oauth-promo-banner-open-settings':
     'Native OAuth Promo Banner Open Settings Clicked',
   'native-oauth-promo-banner-learn-more':
@@ -284,6 +288,8 @@ export const ANALYTICS_ACTIONS = {
   'firewall-spider-promo-modal-learn-more':
     'Firewall Spider Promo Modal Learn More Clicked',
   'firewall-spider-promo-sound': 'Firewall Spider Promo Sound Toggled',
+  'github-star-wizard-star': 'GitHub Star Wizard Star Clicked',
+  'github-star-wizard-skip': 'GitHub Star Wizard Skip Clicked',
   'create-table': 'Create Table Clicked',
   'create-row': 'Create Row Clicked',
   'create-bucket': 'Create Bucket Clicked',

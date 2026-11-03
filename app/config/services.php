@@ -6,7 +6,7 @@ return [
         'name' => 'Home',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'web/home.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -34,7 +34,7 @@ return [
         'name' => 'Account',
         'subtitle' => 'The Account service allows you to authenticate and manage a user account.',
         'description' => '/docs/services/account.md',
-        'controller' => 'api/account.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/account',
@@ -118,7 +118,7 @@ return [
         'name' => 'Projects',
         'subtitle' => 'The Project service allows you to manage all the projects in your Appwrite server.',
         'description' => '',
-        'controller' => 'api/projects.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => '',
@@ -201,6 +201,20 @@ return [
         'key' => 'webhooks',
         'name' => 'Webhooks',
         'subtitle' => 'The Webhooks service allows you to manage your project webhooks.',
+        'description' => '',
+        'controller' => '', // Uses modules
+        'sdk' => true,
+        'docs' => true,
+        'docsUrl' => '',
+        'tests' => false,
+        'optional' => false,
+        'icon' => '',
+        'platforms' => ['server', 'console'],
+    ],
+    'reviews' => [
+        'key' => 'reviews',
+        'name' => 'Reviews',
+        'subtitle' => 'The Reviews service allows you to manage AI code review for your GitHub repositories.',
         'description' => '',
         'controller' => '', // Uses modules
         'sdk' => true,
@@ -314,7 +328,7 @@ return [
         'name' => 'Mock',
         'subtitle' => '',
         'description' => '',
-        'controller' => 'mock.php',
+        'controller' => '', // Uses modules
         'sdk' => false,
         'docs' => false,
         'docsUrl' => '',
@@ -328,7 +342,7 @@ return [
         'name' => 'GraphQL',
         'subtitle' => 'The GraphQL API allows you to query and mutate your Appwrite server using GraphQL.',
         'description' => '/docs/services/graphql.md',
-        'controller' => 'api/graphql.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/graphql',

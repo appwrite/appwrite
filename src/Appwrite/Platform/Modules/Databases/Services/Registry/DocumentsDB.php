@@ -49,53 +49,53 @@ class DocumentsDB extends Base
 
     private function registerDatabaseActions(Service $service): void
     {
-        $service->addAction(CreateTablesDatabase::getName(), CreateTablesDatabase::class);
-        $service->addAction(GetTablesDatabase::getName(), GetTablesDatabase::class);
-        $service->addAction(UpdateTablesDatabase::getName(), UpdateTablesDatabase::class);
-        $service->addAction(DeleteTablesDatabase::getName(), DeleteTablesDatabase::class);
-        $service->addAction(ListTablesDatabase::getName(), ListTablesDatabase::class);
+        $service->addAction('createDocumentsDBDatabase', CreateTablesDatabase::class);
+        $service->addAction('getDocumentsDBDatabase', GetTablesDatabase::class);
+        $service->addAction('updateDocumentsDBDatabase', UpdateTablesDatabase::class);
+        $service->addAction('deleteDocumentsDBDatabase', DeleteTablesDatabase::class);
+        $service->addAction('listDocumentsDBDatabases', ListTablesDatabase::class);
     }
 
     private function registerTableActions(Service $service): void
     {
-        $service->addAction(CreateTable::getName(), CreateTable::class);
-        $service->addAction(GetTable::getName(), GetTable::class);
-        $service->addAction(UpdateTable::getName(), UpdateTable::class);
-        $service->addAction(DeleteTable::getName(), DeleteTable::class);
-        $service->addAction(ListTables::getName(), ListTables::class);
+        $service->addAction('createDocumentsDBCollection', CreateTable::class);
+        $service->addAction('getDocumentsDBCollection', GetTable::class);
+        $service->addAction('updateDocumentsDBCollection', UpdateTable::class);
+        $service->addAction('deleteDocumentsDBCollection', DeleteTable::class);
+        $service->addAction('listDocumentsDBCollections', ListTables::class);
     }
 
     private function registerIndexActions(Service $service): void
     {
-        $service->addAction(CreateColumnIndex::getName(), CreateColumnIndex::class);
-        $service->addAction(GetColumnIndex::getName(), GetColumnIndex::class);
-        $service->addAction(DeleteColumnIndex::getName(), DeleteColumnIndex::class);
-        $service->addAction(ListColumnIndexes::getName(), ListColumnIndexes::class);
+        $service->addAction('createDocumentsDBIndex', CreateColumnIndex::class);
+        $service->addAction('getDocumentsDBIndex', GetColumnIndex::class);
+        $service->addAction('deleteDocumentsDBIndex', DeleteColumnIndex::class);
+        $service->addAction('listDocumentsDBIndexes', ListColumnIndexes::class);
     }
 
     private function registerRowActions(Service $service): void
     {
-        $service->addAction(CreateRow::getName(), CreateRow::class);
-        $service->addAction(GetRow::getName(), GetRow::class);
-        $service->addAction(UpdateRow::getName(), UpdateRow::class);
-        $service->addAction(UpdateRows::getName(), UpdateRows::class);
-        $service->addAction(UpsertRow::getName(), UpsertRow::class);
-        $service->addAction(UpsertRows::getName(), UpsertRows::class);
-        $service->addAction(DeleteRow::getName(), DeleteRow::class);
-        $service->addAction(DeleteRows::getName(), DeleteRows::class);
-        $service->addAction(ListRows::getName(), ListRows::class);
-        $service->addAction(CreateDocumentsQuery::getName(), CreateDocumentsQuery::class);
-        $service->addAction(IncrementRowColumn::getName(), IncrementRowColumn::class);
-        $service->addAction(DecrementRowColumn::getName(), DecrementRowColumn::class);
+        $service->addAction('createDocumentsDBDocument', CreateRow::class);
+        $service->addAction('getDocumentsDBDocument', GetRow::class);
+        $service->addAction('updateDocumentsDBDocument', UpdateRow::class);
+        $service->addAction('updateDocumentsDBDocuments', UpdateRows::class);
+        $service->addAction('upsertDocumentsDBDocument', UpsertRow::class);
+        $service->addAction('upsertDocumentsDBDocuments', UpsertRows::class);
+        $service->addAction('deleteDocumentsDBDocument', DeleteRow::class);
+        $service->addAction('deleteDocumentsDBDocuments', DeleteRows::class);
+        $service->addAction('listDocumentsDBDocuments', ListRows::class);
+        $service->addAction('createDocumentsDBDocumentsQuery', CreateDocumentsQuery::class);
+        $service->addAction('incrementDocumentsDBDocumentAttribute', IncrementRowColumn::class);
+        $service->addAction('decrementDocumentsDBDocumentAttribute', DecrementRowColumn::class);
     }
 
     private function registerTransactionActions(Service $service): void
     {
-        $service->addAction(CreateTransaction::getName(), CreateTransaction::class);
-        $service->addAction(GetTransaction::getName(), GetTransaction::class);
-        $service->addAction(UpdateTransaction::getName(), UpdateTransaction::class);
-        $service->addAction(DeleteTransaction::getName(), DeleteTransaction::class);
-        $service->addAction(ListTransactions::getName(), ListTransactions::class);
-        $service->addAction(CreateOperations::getName(), CreateOperations::class);
+        $service->addAction('createDocumentsDBTransaction', CreateTransaction::class);
+        $service->addAction('getDocumentsDBTransaction', GetTransaction::class);
+        $service->addAction('updateDocumentsDBTransaction', UpdateTransaction::class);
+        $service->addAction('deleteDocumentsDBTransaction', DeleteTransaction::class);
+        $service->addAction('listDocumentsDBTransactions', ListTransactions::class);
+        $service->addAction('createDocumentsDBOperations', CreateOperations::class);
     }
 }

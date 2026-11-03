@@ -1777,4 +1777,26 @@ return [
         'description' => 'The requested second is outside the video duration range.',
         'code' => 400,
     ],
+
+    /** Reviews */
+    Exception::REVIEW_NOT_FOUND => [
+        'name' => Exception::REVIEW_NOT_FOUND,
+        'description' => 'Review with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_CHAT_NOT_FOUND => [
+        'name' => Exception::REVIEW_CHAT_NOT_FOUND,
+        'description' => 'No answer was queued for the requested comment on this repository and pull request.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_STATUS_INVALID => [
+        'name' => Exception::REVIEW_STATUS_INVALID,
+        'description' => 'The review has already ended and its status can no longer change.',
+        'code' => 409,
+    ],
+    Exception::REVIEW_REPOSITORY_ALREADY_EXISTS => [
+        'name' => Exception::REVIEW_REPOSITORY_ALREADY_EXISTS,
+        'description' => 'Code review is already on for this repository in this project.',
+        'code' => 409,
+    ],
 ];

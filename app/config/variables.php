@@ -117,6 +117,33 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_OPENSSL_KEY_V2',
+                'description' => 'The next server secret key, used once `_APP_OPENSSL_KEY_CURRENT` is set to 2. Rotate by adding the next version, making it current, re-encrypting stored data with the `encryption` task, then raising `_APP_OPENSSL_KEY_OLDEST`. Keep every version that still encrypts stored data or files.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_CURRENT',
+                'description' => 'Version of `_APP_OPENSSL_KEY_V{version}` that signs new tokens and encrypts new data. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_OLDEST',
+                'description' => 'Oldest key version still accepted when verifying tokens and signatures, such as JWTs and ephemeral API keys. Every configured version from this one up is accepted. Raise it to retire a key. Stored data keeps decrypting with the version it records. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_NOTIFICATIONS_TRACKING_SECRET',
                 'description' => 'Secret key used to sign notification logo tracking tokens. This must be the same value for API containers and notification workers. Change it from the default value before running in production.',
                 'introduction' => '1.9.0',
@@ -434,7 +461,7 @@ return [
             [
                 'name' => '_APP_LOGGING_FORMAT',
                 'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
-                'introduction' => '1.9.6',
+                'introduction' => '2.7.0',
                 'default' => 'pretty',
                 'required' => false,
                 'question' => '',
@@ -553,15 +580,6 @@ return [
                 'description' => 'Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in and/or. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
                 'introduction' => '2.7.0',
                 'default' => '100',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_REALTIME_PERMISSION_TIMEOUT',
-                'description' => 'Maximum number of seconds the realtime server waits for a permission-change event to be verified against the database. When verification fails or does not finish in time, the affected connections are closed unverified and event delivery moves on, so one stuck database connection cannot stall realtime delivery. Clients re-authenticate on reconnect. Minimum 0.1. Default value is: 5.',
-                'introduction' => '2.7.0',
-                'default' => '5',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1872,6 +1890,48 @@ return [
                 'name' => '_APP_VCS_WEBHOOK_URL',
                 'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
                 'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'Reviews',
+        'description' => 'AI code review for GitHub pull requests, run by the appwrite/hansi service. Optional: reviews stay off until `_APP_REVIEWS_SECRET` is set, and the installer adds the service only then. The service reads jobs from the Redis queue at `_APP_REDIS_HOST` and `_APP_REDIS_PORT`, with `_APP_REDIS_USER` and `_APP_REDIS_PASS`. It runs reviews read-only, without sandboxes. The GitHub App needs these repository permissions: Contents and Metadata (read), Pull requests, Issues and Checks (read and write). It must also subscribe to the "Pull request", "Issue comment" and "Pull request review comment" events. Comments that mention the app (`_APP_VCS_GITHUB_APP_NAME`) are answered, and "@app review" asks for a review.',
+        'variables' => [
+            [
+                'name' => '_APP_REVIEWS_SECRET',
+                'description' => 'Enables code reviews. The secret the code review service sends in the `X-Appwrite-Reviews-Secret` header to report results and request installation tokens. Leave it empty to keep reviews disabled: repositories cannot be enrolled, pull requests queue no reviews and the internal review routes reject every call. **Keep it a secret**.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_MODEL',
+                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-4.5`. Required when reviews are enabled.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_VERIFY_MODEL',
+                'description' => 'The model that double-checks findings before they are posted, as an AI Gateway model ID. Empty uses `_APP_REVIEWS_MODEL`.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_AI_GATEWAY_KEY',
+                'description' => 'API key for the Vercel AI Gateway, which serves the review models. **Keep it a secret**.',
+                'introduction' => '2.7.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
