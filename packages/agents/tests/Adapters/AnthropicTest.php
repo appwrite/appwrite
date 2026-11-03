@@ -143,6 +143,15 @@ class AnthropicTest extends TestCase
         $this->assertSame('high', $client->payload('output_config', 'effort'));
     }
 
+    public function testXHighEffortIsKeptFromClaude47(): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+
+        $this->adapter($client, 'claude-opus-4-7')->generate(new Request([Message::user('Hi')], effort: Effort::XHigh));
+
+        $this->assertSame('xhigh', $client->payload('output_config', 'effort'));
+    }
+
     public function testEffortIsAThinkingBudgetBeforeClaude46(): void
     {
         $client = $this->client($this->message([], 'end_turn'));
@@ -155,11 +164,23 @@ class AnthropicTest extends TestCase
         $this->assertNull($client->payload('output_config'));
     }
 
-    public function testNoEffortLeavesThinkingOffBeforeClaude5(): void
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function claude4Models(): array
+    {
+        return [
+            'claude 4.8' => ['claude-opus-4-8'],
+            'two-digit minor' => ['claude-opus-4-10'],
+        ];
+    }
+
+    #[DataProvider('claude4Models')]
+    public function testNoEffortLeavesThinkingOffBeforeClaude5(string $model): void
     {
         $client = $this->client($this->message([], 'end_turn'));
 
-        $this->adapter($client, 'claude-opus-4-8')->generate(new Request([Message::user('Hi')], effort: Effort::None));
+        $this->adapter($client, $model)->generate(new Request([Message::user('Hi')], effort: Effort::None));
 
         $this->assertNull($client->payload('thinking'));
         $this->assertNull($client->payload('output_config'));
@@ -253,6 +274,31 @@ class AnthropicTest extends TestCase
         $this->assertArrayNotHasKey('tool_choice', $payload, 'current models reject a forced tool');
         $this->assertSame(['weather'], array_column($payload['tools'], 'name'));
         $this->assertSame('{"name":"Ada"}', $response->text());
+    }
+
+    public function testStructuredOutputKeepsTheEffort(): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+        $schema = Schema::object(['name' => Schema::string()]);
+
+        $this->adapter($client, 'claude-opus-5-5')->generate(new Request([Message::user('Hi')], schema: $schema, effort: Effort::High));
+
+        $payload = $client->lastPayload();
+        $this->assertSame(['type' => 'adaptive'], $payload['thinking']);
+        $this->assertSame(['format' => ['type' => 'json_schema', 'schema' => $schema->toArray()], 'effort' => 'high'], $payload['output_config']);
+    }
+
+    public function testStructuredOutputWithoutEffortForcesTheJsonToolBeforeClaude46(): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+        $schema = Schema::object(['name' => Schema::string()]);
+
+        $this->adapter($client, 'claude-3-7-sonnet-latest')->generate(new Request([Message::user('Hi')], schema: $schema, effort: Effort::None));
+
+        $payload = $client->lastPayload();
+        $this->assertArrayNotHasKey('thinking', $payload);
+        $this->assertArrayNotHasKey('output_config', $payload);
+        $this->assertSame(['type' => 'tool', 'name' => 'json'], $payload['tool_choice']);
     }
 
     public function testStructuredOutputUsesForcedJsonToolBeforeClaude45(): void

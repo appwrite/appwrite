@@ -230,9 +230,8 @@ class Anthropic extends Adapter implements Model
             $payload['system'] = [['type' => 'text', 'text' => $system, 'cache_control' => ['type' => 'ephemeral']]];
         }
 
-        $version = $this->version();
         // Structured output through the API's own format, or through the json tool for models without it.
-        $native = $version === null || $version >= 4.5;
+        $native = ! $this->before('4.5');
 
         $tools = array_map(fn (Tool $tool) => [
             'name' => $tool->name,
@@ -272,7 +271,7 @@ class Anthropic extends Adapter implements Model
         }
 
         $effort = $request->effort;
-        if ($effort !== null && $version !== null && $version < 4.6) {
+        if ($effort !== null && $this->before('4.6')) {
             if ($effort !== Effort::None) {
                 $budget = $effort->budget();
                 $payload['thinking'] = ['type' => 'enabled', 'budget_tokens' => $budget];
@@ -280,18 +279,18 @@ class Anthropic extends Adapter implements Model
             }
         } elseif ($effort === Effort::None) {
             // Before Claude 5 thinking is off unless asked for; from 5 on some models always think.
-            if ($version === null || $version >= 5) {
+            if (! $this->before('5')) {
                 $payload['output_config']['effort'] = Effort::Low->value;
             }
         } elseif ($effort !== null) {
             $payload['thinking'] = ['type' => 'adaptive'];
             // xhigh arrived with Claude 4.7.
-            $payload['output_config']['effort'] = $effort === Effort::XHigh && $version !== null && $version < 4.7
+            $payload['output_config']['effort'] = $effort === Effort::XHigh && $this->before('4.7')
                 ? Effort::High->value
                 : $effort->value;
         }
 
-        $sampling = $version !== null && $version < 4.7;
+        $sampling = $this->before('4.7');
         $settings = [
             'temperature' => $sampling ? $request->temperature : null,
             'top_p' => $sampling ? $request->topP : null,
@@ -310,11 +309,22 @@ class Anthropic extends Adapter implements Model
     }
 
     /**
+     * Whether the model's generation is older than $version. A model ID that names no
+     * generation, such as an alias, is treated as current.
+     */
+    protected function before(string $version): bool
+    {
+        $model = $this->version();
+
+        return $model !== null && version_compare($model, $version, '<');
+    }
+
+    /**
      * The model's generation as major.minor, from IDs such as claude-opus-4-1-20250805,
      * claude-sonnet-4-20250514, claude-3-5-haiku-latest or claude-haiku-5-5; null when
      * the ID names none.
      */
-    protected function version(): ?float
+    protected function version(): ?string
     {
         $numbers = array_values(array_filter(explode('-', $this->model), fn (string $part) => ctype_digit($part)));
         if ($numbers === [] || \strlen($numbers[0]) > 2) {
@@ -324,7 +334,7 @@ class Anthropic extends Adapter implements Model
         // A date suffix is no minor version.
         $minor = isset($numbers[1]) && \strlen($numbers[1]) <= 2 ? (int) $numbers[1] : 0;
 
-        return (int) $numbers[0] + $minor / 10;
+        return (int) $numbers[0].'.'.$minor;
     }
 
     /**
