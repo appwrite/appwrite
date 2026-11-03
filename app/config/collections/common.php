@@ -221,6 +221,10 @@ return [
             // Decrease to 128 as in index length?
             Attribute::string(key: 'providerUid', size: 2048),
             Attribute::string(key: 'providerEmail', size: 320),
+            // Whether the provider attested the address above. An unverified
+            // providerEmail reserves nothing: it never claims the address and
+            // never adopts an account signing in with it from another provider.
+            Attribute::boolean(key: 'providerEmailVerification', default: false),
             Attribute::string(key: 'photo', size: 2048),
             Attribute::string(key: 'providerAccessToken', size: 16384, filters: ['encrypt']),
             Attribute::datetime(key: 'providerAccessTokenExpiry'),

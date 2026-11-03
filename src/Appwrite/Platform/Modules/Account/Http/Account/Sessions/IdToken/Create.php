@@ -200,6 +200,7 @@ class Create extends Action
             if (!empty($providerEmail)) {
                 $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
+                    Query::equal('providerEmailVerification', [true]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
@@ -254,7 +255,7 @@ class Create extends Action
             ? DateTime::addSeconds(new \DateTime(), $accessTokenExpiry)
             : null;
 
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $idToken, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
+        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $isVerified, $idToken, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
 
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
@@ -461,8 +462,12 @@ class Create extends Action
 
         // If user is not found, check if there is an identity with the same email
         if ($user->isEmpty() && !empty($providerEmail)) {
+            // Only an address the other provider verified can hand over its account.
+            // Without this a user who links a provider that returns someone else's
+            // unverified address pre-hijacks that person's future sign-in.
             $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$providerEmail]),
+                Query::equal('providerEmailVerification', [true]),
             ]);
             if (!$identityWithMatchingEmail->isEmpty()) {
                 if (!$isVerified) {
@@ -601,7 +606,7 @@ class Create extends Action
      * ID token, access token and photo. Guards against attaching an email
      * already bound to another user's identity.
      */
-    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $idToken, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
+    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $idToken, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
@@ -614,6 +619,7 @@ class Create extends Action
             if (!empty($providerEmail)) {
                 $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
+                    Query::equal('providerEmailVerification', [true]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!empty($identitiesWithMatchingEmail)) {
@@ -635,6 +641,7 @@ class Create extends Action
                     'provider' => $provider,
                     'providerUid' => $sub,
                     'providerEmail' => $providerEmail,
+                    'providerEmailVerification' => !empty($providerEmail) && $isVerified,
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => null,
                     'providerAccessTokenExpiry' => $accessTokenExpiresAt,
@@ -659,7 +666,12 @@ class Create extends Action
 
         // The token is verified and required, so it always supersedes the stored
         // one: its claims would otherwise go stale, and it expires within the hour.
-        $changes = ['providerIdToken' => $idToken];
+        $changes = [
+            'providerIdToken' => $idToken,
+            // The flag describes the stored address, which this flow never rewrites.
+            // A provider that moved the account to another address no longer attests it.
+            'providerEmailVerification' => $isVerified && !empty($providerEmail) && $identity->getAttribute('providerEmail') === $providerEmail,
+        ];
 
         // Native sign-in often carries no access token at all, so only overwrite
         // the stored credentials when the client actually supplied one.
