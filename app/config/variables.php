@@ -1605,6 +1605,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_COMPUTE_STREAMING',
+                'description' => 'Allows a site to send its response in chunks as the runtime produces it, so a progressively rendered page reaches the visitor before it has finished. By default, set to \'disabled\'. A streamed response is not compressed, so it reaches the visitor sooner but carries more bytes. Requires an executor that supports response format 0.12.0.',
+                'introduction' => '2.7.0',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_SCHEDULE_SPREAD',
                 'description' => 'Number of seconds over which scheduled executions sharing the same cron slot are spread, using a stable per-function offset, so they don\'t all start in the same second. Each function keeps a consistent slot within the window, preserving exact run intervals. The default value is 0 (disabled): every execution is enqueued at the exact cron time.',
                 'introduction' => '2.0.0',
@@ -1624,15 +1633,6 @@ return [
                 'description' => 'The maximum number of seconds allowed as a timeout value when creating a new site. The default value is 900 seconds. This is the global limit, timeout for individual functions are configured in the sites\'s settings or in appwrite.config.json.',
                 'introduction' => '1.7.0',
                 'default' => '900',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_COMPUTE_STREAMING',
-                'description' => 'Allows a site to send its response in chunks as the runtime produces it, so a progressively rendered page reaches the visitor before it has finished. By default, set to \'disabled\'. A streamed response is not compressed, so it reaches the visitor sooner but carries more bytes. Requires an executor that supports response format 0.12.0.',
-                'introduction' => '',
-                'default' => 'disabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
