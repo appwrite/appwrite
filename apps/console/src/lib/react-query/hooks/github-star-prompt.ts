@@ -27,6 +27,10 @@ import {
   withRecordedGithubStarVisit,
 } from '@/lib/console-banners/github-star-wizard'
 import {
+  isGuestConsoleBannerDismissed,
+  persistGuestConsoleBannerDismiss,
+} from '@/lib/console-banners/guest-dismissed-banners'
+import {
   getLocalDayKey,
   isCommunitySupportPromptEngaged,
   type CommunitySupportActionId,
@@ -66,10 +70,56 @@ export function useGithubStarPrompt(
   const prefs = account?.prefs as UserPrefs | undefined
   const todayKey = getLocalDayKey()
   const visitDays = useMemo(() => parseGithubStarVisitDayPrefs(prefs), [prefs])
-  const dismissed = isConsoleBannerDismissed(
+  const dismissedInPrefs = isConsoleBannerDismissed(
     prefs,
     GITHUB_STAR_WIZARD_BANNER_ID,
   )
+  // Dismissal is also kept on the device: another hook's full-prefs write
+  // that was already in flight can land after ours and drop it from prefs.
+  const dismissedOnDevice = isGuestConsoleBannerDismissed(
+    GITHUB_STAR_WIZARD_BANNER_ID,
+  )
+  const dismissed = dismissedInPrefs || dismissedOnDevice
+
+  /** Record the dismissal and drop the visit days in one prefs write. */
+  const writeDismissal = useCallback(async () => {
+    const cached = getConsoleAccountFromCache(queryClient)
+    const basePrefs = (cached?.prefs ??
+      accountRef.current?.prefs ??
+      {}) as UserPrefs
+    const updatedAccount = await updateAccountPrefs(
+      clearGithubStarVisitDaysFromPrefs(
+        mergeDismissedBannerPrefs(basePrefs, GITHUB_STAR_WIZARD_BANNER_ID),
+      ),
+      'dismiss-github-star-wizard',
+    )
+    if (!updatedAccount) return
+    syncConsoleAccountAfterMutation(queryClient, {
+      apiResult: updatedAccount,
+    })
+  }, [queryClient])
+
+  /** Once per account per mount, repair prefs a late stale write reverted. */
+  const repairedForAccountRef = useRef<string | null>(null)
+  const visitKeyStored = visitDays.length > 0
+  useEffect(() => {
+    if (!account || !trackVisits || !accountId) return
+    if (!dismissed) return
+    if (dismissedInPrefs && !visitKeyStored) return
+    if (repairedForAccountRef.current === accountId) return
+    repairedForAccountRef.current = accountId
+    void writeDismissal().catch((error) => {
+      console.error('[github-star-prompt] failed to repair dismissal', error)
+    })
+  }, [
+    account,
+    accountId,
+    dismissed,
+    dismissedInPrefs,
+    trackVisits,
+    visitKeyStored,
+    writeDismissal,
+  ])
 
   /** Record today's visit when needed; the list self-prunes to the window. */
   useEffect(() => {
@@ -134,31 +184,18 @@ export function useGithubStarPrompt(
     isGithubStarWizardEligible(visitDays, todayKey)
 
   const dismiss = useCallback(() => {
+    persistGuestConsoleBannerDismiss(GITHUB_STAR_WIZARD_BANNER_ID)
+    // Mark this mount repaired: the write below is the dismissal itself.
+    repairedForAccountRef.current = accountId ?? null
     // Wait out an in-flight visit write so its full-prefs payload cannot land
-    // after the dismissal and resurrect the wizard. One write then records
-    // the dismissal and drops the visit days, which nothing reads again.
+    // after the dismissal and resurrect the wizard.
     void visitWriteRef.current
       .catch(() => undefined)
-      .then(async () => {
-        const cached = getConsoleAccountFromCache(queryClient)
-        const basePrefs = (cached?.prefs ??
-          accountRef.current?.prefs ??
-          {}) as UserPrefs
-        const updatedAccount = await updateAccountPrefs(
-          clearGithubStarVisitDaysFromPrefs(
-            mergeDismissedBannerPrefs(basePrefs, GITHUB_STAR_WIZARD_BANNER_ID),
-          ),
-          'dismiss-github-star-wizard',
-        )
-        if (!updatedAccount) return
-        syncConsoleAccountAfterMutation(queryClient, {
-          apiResult: updatedAccount,
-        })
-      })
+      .then(writeDismissal)
       .catch((error) => {
         console.error('[github-star-prompt] failed to dismiss', error)
       })
-  }, [queryClient])
+  }, [accountId, writeDismissal])
 
   return {
     visitDays,

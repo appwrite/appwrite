@@ -87,8 +87,9 @@ export function GithubStarPromptProvider() {
   const open =
     !isScreenshotModeActive &&
     !closed &&
-    (preview ||
-      (isAuthenticated && !suppressed && !isImpersonating && shouldShow))
+    !suppressed &&
+    !isImpersonating &&
+    (preview || (isAuthenticated && shouldShow))
 
   useEffect(() => {
     if (!open) return
