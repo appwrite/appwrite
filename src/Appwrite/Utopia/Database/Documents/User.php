@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Database\Documents;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
@@ -295,7 +296,7 @@ class User extends Document
      * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
      * Persists the revocation in one transaction and mirrors it on `$user`.
      */
-    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL): void
+    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL, ?Mqtt $mqtt = null): void
     {
         $sequence = $user->getSequence();
         if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
@@ -330,7 +331,7 @@ class User extends Document
                 'phoneVerification' => false,
             ];
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven) {
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven, $mqtt) {
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),
@@ -347,7 +348,7 @@ class User extends Document
             Targets::delete($dbForProject, Query::and([
                 Query::equal('userInternalId', [$sequence]),
                 Query::notEqual('providerType', $proven),
-            ]));
+            ]), $mqtt, $project->getId());
 
             // Editions revoke the credentials they keep in their own collections
             (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);

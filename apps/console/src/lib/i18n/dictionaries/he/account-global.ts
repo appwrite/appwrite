@@ -1409,6 +1409,9 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הדפדפן יבקש מכם ליצור מפתח גישה במכשיר הזה או במנהל הסיסמאות שלכם.',
   'You will no longer be able to sign in with this passkey. This action cannot be undone.':
     'לא תוכלו עוד להתחבר עם מפתח הגישה הזה. לא ניתן לבטל פעולה זו.',
+  'Set up auto-pay': 'הגדרת תשלום אוטומטי',
+  'Auto-pay is set up': 'התשלום האוטומטי הוגדר',
+  'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
 
   // Zero projects
   'Build window ended': 'חלון הבנייה הסתיים',

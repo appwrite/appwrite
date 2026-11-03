@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
 use Appwrite\Event\Event;
@@ -509,7 +510,10 @@ class Create extends Action
                     if (empty($data)) {
                         $data = (string) $deviceForFiles->read($path);
                     }
-                    $key = System::getEnv('_APP_OPENSSL_KEY_V1');
+                    $key = EncryptionKey::current();
+                    if ($key === '') {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Encryption key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
+                    }
                     $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                     $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
                 }
@@ -528,7 +532,7 @@ class Create extends Action
                 $openSSLIV = null;
 
                 if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
-                    $openSSLVersion = '1';
+                    $openSSLVersion = EncryptionKey::version();
                     $openSSLCipher = OpenSSL::CIPHER_AES_128_GCM;
                     $openSSLTag = \bin2hex($tag);
                     $openSSLIV = \bin2hex($iv);

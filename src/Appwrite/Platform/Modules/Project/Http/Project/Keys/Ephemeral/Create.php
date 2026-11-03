@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys\Ephemeral;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
@@ -19,7 +20,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
@@ -100,7 +100,7 @@ class Create extends Base
 
         $keyId = Id::unique();
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', $duration, 0);
 
         $secret = $jwt->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,

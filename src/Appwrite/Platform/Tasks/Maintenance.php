@@ -45,6 +45,7 @@ class Maintenance extends Action
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
+        $alertsRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ALERTS', '7776000'); // 90 days
         $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
 
         $now = new \DateTime();
@@ -52,7 +53,7 @@ class Maintenance extends Action
         $next = new Grid($jobInitTime, $interval)->next($now);
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $alertsRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -67,6 +68,7 @@ class Maintenance extends Action
             $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer);
             $this->notifyDeleteCache($cacheRetention, $console, $publisherForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
+            $this->notifyDeleteAlerts($alertsRetention, $publisherForDeletes);
             $this->notifyDeleteCSVExports($publisherForDeletes);
         };
 
@@ -192,6 +194,14 @@ class Maintenance extends Action
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_SCHEDULES,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+        ));
+    }
+
+    private function notifyDeleteAlerts(int $retention, DeletePublisher $publisherForDeletes): void
+    {
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_ALERTS,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $retention),
         ));
     }
 }

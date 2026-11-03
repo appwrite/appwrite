@@ -27,6 +27,31 @@ class OpenAI extends Adapter
     ];
 
     /**
+     * GPT-6 Astra - Flagship GPT-6 model for demanding reasoning, coding, and professional work
+     */
+    public const MODEL_GPT_6_ASTRA = 'gpt-6-astra';
+
+    /**
+     * GPT-6.1 Sol - Balances speed, cost, and intelligence
+     */
+    public const MODEL_GPT_6_1_SOL = 'gpt-6.1-sol';
+
+    /**
+     * GPT-6.1 Terra - Fast and efficient model for visual reasoning, computer use, and natural writing
+     */
+    public const MODEL_GPT_6_1_TERRA = 'gpt-6.1-terra';
+
+    /**
+     * GPT-6 Sol - Previous balanced GPT-6 model
+     */
+    public const MODEL_GPT_6_SOL = 'gpt-6-sol';
+
+    /**
+     * GPT-6 Luna - Fastest and most cost-effective GPT-6 model for focused, high-volume tasks
+     */
+    public const MODEL_GPT_6_LUNA = 'gpt-6-luna';
+
+    /**
      * GPT-5 Nano - Small GPT-5 variant optimized for low latency and cost-sensitive workloads
      */
     public const MODEL_GPT_5_NANO = 'gpt-5-nano';
@@ -61,6 +86,18 @@ class OpenAI extends Adapter
      */
     public const MODEL_O3_MINI = 'o3-mini';
 
+    public const REASONING_EFFORT_NONE = 'none';
+
+    public const REASONING_EFFORT_LOW = 'low';
+
+    public const REASONING_EFFORT_MEDIUM = 'medium';
+
+    public const REASONING_EFFORT_HIGH = 'high';
+
+    public const REASONING_EFFORT_XHIGH = 'xhigh';
+
+    public const REASONING_EFFORT_MAX = 'max';
+
     /**
      * Default OpenAI API endpoint
      */
@@ -77,6 +114,11 @@ class OpenAI extends Adapter
     protected string $endpoint;
 
     protected int $timeout;
+
+    /**
+     * Sent as reasoning_effort when set; null leaves the model's default
+     */
+    protected ?string $reasoningEffort = null;
 
     protected bool $hasWarnedTemperatureOverride = false;
 
@@ -157,11 +199,16 @@ class OpenAI extends Adapter
             'model' => $this->model,
             'messages' => $formattedMessages,
         ];
-        $temperature = $this->temperature;
-        if ($this->usesDefaultTemperatureOnly()) {
-            $temperature = 1.0;
+        if ($this->reasoningEffort !== null) {
+            $payload['reasoning_effort'] = $this->reasoningEffort;
         }
-        $payload['temperature'] = $temperature;
+        if ($this->acceptsTemperature()) {
+            $temperature = $this->temperature;
+            if ($this->usesDefaultTemperatureOnly()) {
+                $temperature = 1.0;
+            }
+            $payload['temperature'] = $temperature;
+        }
 
         $schema = $agent->getSchema();
         if ($schema !== null) {
@@ -301,6 +348,11 @@ class OpenAI extends Adapter
     public function getModels(): array
     {
         return [
+            self::MODEL_GPT_6_ASTRA,
+            self::MODEL_GPT_6_1_SOL,
+            self::MODEL_GPT_6_1_TERRA,
+            self::MODEL_GPT_6_SOL,
+            self::MODEL_GPT_6_LUNA,
             self::MODEL_GPT_5_NANO,
             self::MODEL_GPT_4_5_PREVIEW,
             self::MODEL_GPT_4_1,
@@ -318,11 +370,34 @@ class OpenAI extends Adapter
     {
         $model = $this->normalizeModelForCompatibilityChecks();
 
-        return in_array($model, [
+        return $this->isGpt6() || in_array($model, [
             self::MODEL_GPT_5_NANO,
             self::MODEL_O4_MINI,
             self::MODEL_O3,
             self::MODEL_O3_MINI,
+        ], true);
+    }
+
+    /**
+     * GPT-6 models reject temperature unless reasoning is off, and their default effort is not none.
+     */
+    protected function acceptsTemperature(): bool
+    {
+        if (! $this->isGpt6()) {
+            return true;
+        }
+
+        return $this->reasoningEffort === self::REASONING_EFFORT_NONE;
+    }
+
+    protected function isGpt6(): bool
+    {
+        return in_array($this->normalizeModelForCompatibilityChecks(), [
+            self::MODEL_GPT_6_ASTRA,
+            self::MODEL_GPT_6_1_SOL,
+            self::MODEL_GPT_6_1_TERRA,
+            self::MODEL_GPT_6_SOL,
+            self::MODEL_GPT_6_LUNA,
         ], true);
     }
 
@@ -475,6 +550,21 @@ class OpenAI extends Adapter
         $this->temperature = $temperature;
 
         return $this;
+    }
+
+    /**
+     * Set reasoning effort, or null to use the model's default
+     */
+    public function setReasoningEffort(?string $reasoningEffort): self
+    {
+        $this->reasoningEffort = $reasoningEffort;
+
+        return $this;
+    }
+
+    public function getReasoningEffort(): ?string
+    {
+        return $this->reasoningEffort;
     }
 
     /**

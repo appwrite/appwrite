@@ -158,6 +158,7 @@ import { Route as ApiInitTicketEventSlugRouteImport } from './routes/_api/init/t
 import { Route as ApiResendApiKeysApiKeyIdRouteImport } from './routes/_api/resend/api-keys.$apiKeyId'
 import { Route as AuthAgentMcpCallbackRouteImport } from './routes/_auth/agent.mcp.callback'
 import { Route as AuthAssistantMcpCallbackRouteImport } from './routes/_auth/assistant.mcp.callback'
+import { Route as AuthAuthAlertsUnsubscribeRouteImport } from './routes/_auth/auth.alerts.unsubscribe'
 import { Route as AuthAuthOauth2FailureRouteImport } from './routes/_auth/auth.oauth2.failure'
 import { Route as AuthAuthOauth2SuccessRouteImport } from './routes/_auth/auth.oauth2.success'
 import { Route as MarketingBlogAuthorAuthorRouteImport } from './routes/_marketing/blog.author.$author'
@@ -264,6 +265,8 @@ import { Route as PublicProjectsProjectIdStorageBucketIdRouteImport } from './ro
 import { Route as PublicProjectsProjectIdStoresIndexRouteImport } from './routes/_public/projects.$projectId.stores.index'
 import { Route as PublicProjectsProjectIdUsageIndexRouteImport } from './routes/_public/projects.$projectId.usage.index'
 import { Route as PublicProjectsProjectIdUsageCategoryIdRouteImport } from './routes/_public/projects.$projectId.usage.$categoryId'
+import { Route as PublicProjectsProjectIdUsageAlertsRouteImport } from './routes/_public/projects.$projectId.usage.alerts'
+import { Route as PublicProjectsProjectIdUsageMonitorsRouteImport } from './routes/_public/projects.$projectId.usage.monitors'
 import { Route as PublicProjectsProjectIdVideosIndexRouteImport } from './routes/_public/projects.$projectId.videos.index'
 import { Route as PublicProjectsProjectIdVideosVideoIdRouteImport } from './routes/_public/projects.$projectId.videos.$videoId'
 import { Route as PublicProjectsProjectIdVideosProfilesRouteImport } from './routes/_public/projects.$projectId.videos.profiles'
@@ -1254,6 +1257,12 @@ const AuthAssistantMcpCallbackRoute =
     path: '/assistant/mcp/callback',
     getParentRoute: () => AuthRoute,
   } as any)
+const AuthAuthAlertsUnsubscribeRoute =
+  AuthAuthAlertsUnsubscribeRouteImport.update({
+    id: '/auth/alerts/unsubscribe',
+    path: '/auth/alerts/unsubscribe',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const AuthAuthOauth2FailureRoute = AuthAuthOauth2FailureRouteImport.update({
   id: '/auth/oauth2/failure',
   path: '/auth/oauth2/failure',
@@ -1884,6 +1893,18 @@ const PublicProjectsProjectIdUsageCategoryIdRoute =
   PublicProjectsProjectIdUsageCategoryIdRouteImport.update({
     id: '/$categoryId',
     path: '/$categoryId',
+    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
+  } as any)
+const PublicProjectsProjectIdUsageAlertsRoute =
+  PublicProjectsProjectIdUsageAlertsRouteImport.update({
+    id: '/alerts',
+    path: '/alerts',
+    getParentRoute: () => PublicProjectsProjectIdUsageRoute,
+  } as any)
+const PublicProjectsProjectIdUsageMonitorsRoute =
+  PublicProjectsProjectIdUsageMonitorsRouteImport.update({
+    id: '/monitors',
+    path: '/monitors',
     getParentRoute: () => PublicProjectsProjectIdUsageRoute,
   } as any)
 const PublicProjectsProjectIdVideosIndexRoute =
@@ -3540,6 +3561,7 @@ export interface FileRoutesByFullPath {
   '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
+  '/auth/alerts/unsubscribe': typeof AuthAuthAlertsUnsubscribeRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -3631,6 +3653,8 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  '/projects/$projectId/usage/alerts': typeof PublicProjectsProjectIdUsageAlertsRoute
+  '/projects/$projectId/usage/monitors': typeof PublicProjectsProjectIdUsageMonitorsRoute
   '/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdRouteWithChildren
   '/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
@@ -3998,6 +4022,7 @@ export interface FileRoutesByTo {
   '/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
+  '/auth/alerts/unsubscribe': typeof AuthAuthAlertsUnsubscribeRoute
   '/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -4061,6 +4086,8 @@ export interface FileRoutesByTo {
   '/projects/$projectId/settings/variables': typeof PublicProjectsProjectIdSettingsVariablesRoute
   '/projects/$projectId/settings/webhooks': typeof PublicProjectsProjectIdSettingsWebhooksRoute
   '/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  '/projects/$projectId/usage/alerts': typeof PublicProjectsProjectIdUsageAlertsRoute
+  '/projects/$projectId/usage/monitors': typeof PublicProjectsProjectIdUsageMonitorsRoute
   '/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
   '/docs/references/$version/models/$model': typeof DocsReferencesVersionModelsModelRoute
@@ -4424,6 +4451,7 @@ export interface FileRoutesById {
   '/_api/resend/api-keys/$apiKeyId': typeof ApiResendApiKeysApiKeyIdRoute
   '/_auth/agent/mcp/callback': typeof AuthAgentMcpCallbackRoute
   '/_auth/assistant/mcp/callback': typeof AuthAssistantMcpCallbackRoute
+  '/_auth/auth/alerts/unsubscribe': typeof AuthAuthAlertsUnsubscribeRoute
   '/_auth/auth/oauth2/failure': typeof AuthAuthOauth2FailureRoute
   '/_auth/auth/oauth2/success': typeof AuthAuthOauth2SuccessRoute
   '/_marketing/blog/author/$author': typeof MarketingBlogAuthorAuthorRoute
@@ -4515,6 +4543,8 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/sites/create': typeof PublicProjectsProjectIdSitesCreateRouteWithChildren
   '/_public/projects/$projectId/storage/$bucketId': typeof PublicProjectsProjectIdStorageBucketIdRouteWithChildren
   '/_public/projects/$projectId/usage/$categoryId': typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  '/_public/projects/$projectId/usage/alerts': typeof PublicProjectsProjectIdUsageAlertsRoute
+  '/_public/projects/$projectId/usage/monitors': typeof PublicProjectsProjectIdUsageMonitorsRoute
   '/_public/projects/$projectId/videos/$videoId': typeof PublicProjectsProjectIdVideosVideoIdRouteWithChildren
   '/_public/projects/$projectId/videos/profiles': typeof PublicProjectsProjectIdVideosProfilesRoute
   '/docs/references/$version/$platform/$service': typeof DocsReferencesVersionPlatformServiceRoute
@@ -4892,6 +4922,7 @@ export interface FileRouteTypes {
     | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
+    | '/auth/alerts/unsubscribe'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -4983,6 +5014,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/sites/create'
     | '/projects/$projectId/storage/$bucketId'
     | '/projects/$projectId/usage/$categoryId'
+    | '/projects/$projectId/usage/alerts'
+    | '/projects/$projectId/usage/monitors'
     | '/projects/$projectId/videos/$videoId'
     | '/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
@@ -5350,6 +5383,7 @@ export interface FileRouteTypes {
     | '/resend/api-keys/$apiKeyId'
     | '/agent/mcp/callback'
     | '/assistant/mcp/callback'
+    | '/auth/alerts/unsubscribe'
     | '/auth/oauth2/failure'
     | '/auth/oauth2/success'
     | '/blog/author/$author'
@@ -5413,6 +5447,8 @@ export interface FileRouteTypes {
     | '/projects/$projectId/settings/variables'
     | '/projects/$projectId/settings/webhooks'
     | '/projects/$projectId/usage/$categoryId'
+    | '/projects/$projectId/usage/alerts'
+    | '/projects/$projectId/usage/monitors'
     | '/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
     | '/docs/references/$version/models/$model'
@@ -5775,6 +5811,7 @@ export interface FileRouteTypes {
     | '/_api/resend/api-keys/$apiKeyId'
     | '/_auth/agent/mcp/callback'
     | '/_auth/assistant/mcp/callback'
+    | '/_auth/auth/alerts/unsubscribe'
     | '/_auth/auth/oauth2/failure'
     | '/_auth/auth/oauth2/success'
     | '/_marketing/blog/author/$author'
@@ -5866,6 +5903,8 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/sites/create'
     | '/_public/projects/$projectId/storage/$bucketId'
     | '/_public/projects/$projectId/usage/$categoryId'
+    | '/_public/projects/$projectId/usage/alerts'
+    | '/_public/projects/$projectId/usage/monitors'
     | '/_public/projects/$projectId/videos/$videoId'
     | '/_public/projects/$projectId/videos/profiles'
     | '/docs/references/$version/$platform/$service'
@@ -7188,6 +7227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAssistantMcpCallbackRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/auth/alerts/unsubscribe': {
+      id: '/_auth/auth/alerts/unsubscribe'
+      path: '/auth/alerts/unsubscribe'
+      fullPath: '/auth/alerts/unsubscribe'
+      preLoaderRoute: typeof AuthAuthAlertsUnsubscribeRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_auth/auth/oauth2/failure': {
       id: '/_auth/auth/oauth2/failure'
       path: '/auth/oauth2/failure'
@@ -7928,6 +7974,20 @@ declare module '@tanstack/react-router' {
       path: '/$categoryId'
       fullPath: '/projects/$projectId/usage/$categoryId'
       preLoaderRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageRoute
+    }
+    '/_public/projects/$projectId/usage/alerts': {
+      id: '/_public/projects/$projectId/usage/alerts'
+      path: '/alerts'
+      fullPath: '/projects/$projectId/usage/alerts'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageAlertsRouteImport
+      parentRoute: typeof PublicProjectsProjectIdUsageRoute
+    }
+    '/_public/projects/$projectId/usage/monitors': {
+      id: '/_public/projects/$projectId/usage/monitors'
+      path: '/monitors'
+      fullPath: '/projects/$projectId/usage/monitors'
+      preLoaderRoute: typeof PublicProjectsProjectIdUsageMonitorsRouteImport
       parentRoute: typeof PublicProjectsProjectIdUsageRoute
     }
     '/_public/projects/$projectId/videos/': {
@@ -9438,6 +9498,7 @@ interface AuthRouteChildren {
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
   AuthAgentMcpCallbackRoute: typeof AuthAgentMcpCallbackRoute
   AuthAssistantMcpCallbackRoute: typeof AuthAssistantMcpCallbackRoute
+  AuthAuthAlertsUnsubscribeRoute: typeof AuthAuthAlertsUnsubscribeRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
   AuthAuthOauth2SuccessRoute: typeof AuthAuthOauth2SuccessRoute
 }
@@ -9456,6 +9517,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
   AuthAgentMcpCallbackRoute: AuthAgentMcpCallbackRoute,
   AuthAssistantMcpCallbackRoute: AuthAssistantMcpCallbackRoute,
+  AuthAuthAlertsUnsubscribeRoute: AuthAuthAlertsUnsubscribeRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,
   AuthAuthOauth2SuccessRoute: AuthAuthOauth2SuccessRoute,
 }
@@ -10955,6 +11017,8 @@ const PublicProjectsProjectIdUsageCategoryIdRouteWithChildren =
 
 interface PublicProjectsProjectIdUsageRouteChildren {
   PublicProjectsProjectIdUsageCategoryIdRoute: typeof PublicProjectsProjectIdUsageCategoryIdRouteWithChildren
+  PublicProjectsProjectIdUsageAlertsRoute: typeof PublicProjectsProjectIdUsageAlertsRoute
+  PublicProjectsProjectIdUsageMonitorsRoute: typeof PublicProjectsProjectIdUsageMonitorsRoute
   PublicProjectsProjectIdUsageIndexRoute: typeof PublicProjectsProjectIdUsageIndexRoute
 }
 
@@ -10962,6 +11026,10 @@ const PublicProjectsProjectIdUsageRouteChildren: PublicProjectsProjectIdUsageRou
   {
     PublicProjectsProjectIdUsageCategoryIdRoute:
       PublicProjectsProjectIdUsageCategoryIdRouteWithChildren,
+    PublicProjectsProjectIdUsageAlertsRoute:
+      PublicProjectsProjectIdUsageAlertsRoute,
+    PublicProjectsProjectIdUsageMonitorsRoute:
+      PublicProjectsProjectIdUsageMonitorsRoute,
     PublicProjectsProjectIdUsageIndexRoute:
       PublicProjectsProjectIdUsageIndexRoute,
   }

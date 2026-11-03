@@ -64,7 +64,7 @@ require_once __DIR__ . '/init.php';
 try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
-        System::getEnv('_APP_OPENSSL_KEY_V1')
+        EncryptionKey::current()
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());
@@ -139,7 +139,7 @@ if (!function_exists('getConsoleDB')) {
         /** @var Group $pools */
         $pools = $register->get('pools');
 
-        return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, getCache(), new Authorization()))->platform(metadata: [
+        return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, getCache(), new Authorization()))->platform(APP_DATABASE_TIMEOUT_MILLISECONDS_API, metadata: [
             'host' => \gethostname(),
             'project' => '_console',
         ]);
@@ -169,7 +169,7 @@ if (!function_exists('getProjectDB')) {
             return getConsoleDB();
         }
 
-        return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, getCache(), new Authorization()))->project($project, metadata: [
+        return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, getCache(), new Authorization()))->project($project, APP_DATABASE_TIMEOUT_MILLISECONDS_API, metadata: [
             'host' => \gethostname(),
             'project' => $project->getId(),
         ]);
@@ -347,9 +347,6 @@ $statsDocument = null;
 // deployment's job. `_APP_WORKERS_NUM` still overrides.
 $workerNumber = intval(System::getEnv('_APP_WORKERS_NUM', 0)) ?: 1;
 
-// Clamped: a non-positive Channel::pop() timeout waits forever or not at all.
-$permissionTimeout = \max(0.1, (float) System::getEnv('_APP_REALTIME_PERMISSION_TIMEOUT', '5'));
-
 $adapter = new SwooleAdapter(port: System::getEnv('PORT', 80));
 $adapter
     ->setPackageMaxLength(64000) // Default maximum Package Size (64kb)
@@ -440,7 +437,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $permissionTimeout) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -620,7 +617,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         workerAttributes: $workerTelemetryAttributes,
         unauthorized: $unauthorized,
         unauthorizedPayload: $unauthorizedPayloadJson,
-        timeout: $permissionTimeout,
+        // As long as an API request lets a query run, so verification gives up only after the query would.
+        timeout: APP_DATABASE_TIMEOUT_MILLISECONDS_API / 1000,
         workerId: $workerId,
         traceProjectId: System::getEnv('_APP_TRACE_PROJECT_ID', ''),
     );
@@ -645,24 +643,29 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             }
 
             $pubsub->subscribe(['realtime'], function (mixed $redis, string $channel, string $payload) use ($eventHandler): void {
-                $arrivedAt = \microtime(true);
-                // Not made current: most events are never logged, so their span is just dropped.
-                $span = new Span('realtime.event');
+                // Nothing may escape: with an exception pending, phpredis keeps reading but never calls back again.
+                try {
+                    $arrivedAt = \microtime(true);
+                    // Not made current: most events are never logged, so their span is just dropped.
+                    $span = new Span('realtime.event');
 
-                $outcome = $eventHandler->handle($redis, $channel, $payload);
-                $resolvedAt = \microtime(true);
+                    $outcome = $eventHandler->handle($redis, $channel, $payload);
+                    $resolvedAt = \microtime(true);
 
-                $span
-                    ->set('project.id', $outcome['project'])
-                    ->set('realtime.event.name', $outcome['event'])
-                    ->set('realtime.result', $outcome['result'])
-                    ->set('realtime.receivers', $outcome['receivers'])
-                    ->set('realtime.arrived_at', $arrivedAt)
-                    ->set('realtime.resolved_at', $resolvedAt);
+                    $span
+                        ->set('project.id', $outcome['project'])
+                        ->set('realtime.event.name', $outcome['event'])
+                        ->set('realtime.result', $outcome['result'])
+                        ->set('realtime.receivers', $outcome['receivers'])
+                        ->set('realtime.arrived_at', $arrivedAt)
+                        ->set('realtime.resolved_at', $resolvedAt);
 
-                // Logging every event would flood the logs.
-                if ($eventHandler->shouldLog($outcome, $resolvedAt - $arrivedAt)) {
-                    $span->finish(error: $outcome['error']);
+                    // Logging every event would flood the logs.
+                    if ($eventHandler->shouldLog($outcome, $resolvedAt - $arrivedAt)) {
+                        $span->finish(error: $outcome['error']);
+                    }
+                } catch (\Throwable $th) {
+                    Console::error('Realtime event error: ' . $th->getMessage());
                 }
             });
         } catch (Throwable $th) {

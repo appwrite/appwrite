@@ -3707,4 +3707,197 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Backup policies and archives are managed on the project this environment belongs to.':
     'バックアップポリシーとアーカイブは、この環境が属するプロジェクトで管理します。',
   'Open the project': 'プロジェクトを開く',
+  // Alert rules
+  '5 minutes': '5 分',
+  '6 hours': '6 時間',
+  Cooldown: 'クールダウン',
+  'Database storage': 'データベースストレージ',
+  'Egress spike': '送信トラフィックの急増',
+  'Enter a threshold of 0 or more.': '0 以上のしきい値を入力してください。',
+  Firing: '発生中',
+  'Greater than': 'より大きい',
+  'Greater than or equal': '以上',
+  'Inbound bandwidth': '受信帯域幅',
+  'Know when usage crosses a line': '使用量がしきい値を超えたら把握する',
+  'Last value': '最新の値',
+  'Less than': 'より小さい',
+  'Less than or equal': '以下',
+  Metric: 'メトリクス',
+  OK: '正常',
+  'Outbound bandwidth': '送信帯域幅',
+  'Read IOPS': '読み取り IOPS',
+  'Select resource': 'リソースを選択',
+  'Select the resource to watch.': '監視するリソースを選択してください。',
+  'No data': 'データなし',
+  'No usage recorded to compare yet':
+    '比較できる使用量はまだ記録されていません',
+  'This project has no buckets yet.':
+    'このプロジェクトにはまだバケットがありません。',
+  'This project has no databases of this type yet.':
+    'このプロジェクトにはまだこの種類のデータベースがありません。',
+  'Execution GB-hours': '実行の GB 時間',
+  'Files, databases and deployments grow past 50 GB.':
+    'ファイル、データベース、デプロイの合計が 50 GB を超えたとき。',
+  'Messages failed': '失敗メッセージ',
+  'More than 10 webhook deliveries fail in an hour.':
+    '1 時間に Webhook の配信が 10 件を超えて失敗したとき。',
+  'SMS messages sent': '送信 SMS メッセージ',
+  'This project has no functions yet.':
+    'このプロジェクトにはまだ関数がありません。',
+  'This project has no sites yet.':
+    'このプロジェクトにはまだサイトがありません。',
+  'Webhook events failed': '失敗した Webhook イベント',
+  'Webhook events sent': '送信した Webhook イベント',
+  'Webhook failures': 'Webhook の失敗',
+  Window: '期間',
+  'Write IOPS': '書き込み IOPS',
+  'Get notified when a usage metric crosses a threshold, and again when it recovers.':
+    '使用量のメトリクスがしきい値を超えたとき、そして回復したときに通知を受け取ります。',
+  'Could not load resources.': 'リソースを読み込めませんでした。',
+  Comparator: '比較条件',
+  Console: 'コンソール',
+  'Could not load usage history.': '使用状況の履歴を読み込めませんでした。',
+  'Counted over the window and compared at every check.':
+    '期間内の合計をチェックごとに比較します。',
+  'Get notified when usage crosses a threshold, and again when it recovers.':
+    '使用量がしきい値を超えたときと、回復したときに通知を受け取ります。',
+  'Last checked': '最終チェック',
+  'Last fired': '最終発生',
+  Monitoring: 'モニタリング',
+  'More than a million database reads in an hour.':
+    '1 時間のデータベース読み取りが 100 万回を超えたとき。',
+  'No history is available for this metric yet.':
+    'このメトリクスの履歴はまだありません。',
+  'Not checked yet': '未チェック',
+  Notify: '通知',
+  'Outbound bandwidth above 10 GB in an hour.':
+    '1 時間の送信帯域幅が 10 GB を超えたとき。',
+  'Paused rules are not checked and never notify.':
+    '一時停止中のルールはチェックされず、通知も送信されません。',
+  'Project owners': 'プロジェクトのオーナー',
+  'Read surge': '読み取りの急増',
+  'Select a resource to see its history.':
+    '履歴を表示するリソースを選択してください。',
+  'The latest reading is compared at every check.':
+    'チェックごとに最新の値を比較します。',
+  'The whole project': 'プロジェクト全体',
+  Threshold: 'しきい値',
+  When: '条件',
+  'Would have fired once in the {range}.': '{range}に 1 回発生していました。',
+  'Would have fired {count} times in the {range}.':
+    '{range}に {count} 回発生していました。',
+  'Would not have fired in the {range}.': '{range}には発生していませんでした。',
+  is: 'が',
+  'last 12 hours': '過去 12 時間',
+  'last 24 hours': '過去 24 時間',
+  'last 30 days': '過去 30 日間',
+  'last 7 days': '過去 7 日間',
+  on: '対象',
+  'the whole project': 'プロジェクト全体',
+  within: '期間',
+  'Waiting for the first check': '最初のチェックを待っています',
+  peak: 'ピーク',
+  '{count} sent': '{count} 件送信',
+  ongoing: '継続中',
+  'Would not have fired in the {range}': '{range}には発火しなかったはずです',
+  'Would have fired {count}× in the {range}':
+    '{range}に {count} 回発火したはずです',
+  'History range': '履歴の範囲',
+  'Name, cooldown': '名前、クールダウン',
+  'Firing since': '発火開始',
+  Checked: 'チェック',
+  '{ratio} the {threshold} threshold': 'しきい値 {threshold} の {ratio}',
+  'Threshold {threshold}': 'しきい値 {threshold}',
+  Notifies: '通知先',
+  'at most once per {cooldown}': '{cooldown}に最大 1 回',
+  'Peak hour': 'ピーク時間',
+  'Suggested from your last 7 days of usage': '過去 7 日間の使用量からの提案',
+  'Sent when additional usage reaches each threshold. They follow the budget cap and alerts above.':
+    '追加使用量が各しきい値に達すると送信されます。上の予算上限とアラートに従います。',
+  'Cap reached': '上限に到達',
+  '{percent}% of {budget}': '{budget} の {percent}%',
+  'Managed by budget': '予算で管理',
+  'Last sent': '最終送信',
+  'A monitor raises an alert when its rules hold, and resolves it when usage recovers.':
+    'モニターはルールが成立するとアラートを発生させ、使用量が回復すると解決します。',
+  Alert: 'アラート',
+  'Alert not found': 'アラートが見つかりません',
+  'Budget monitors': '予算モニター',
+  'Checks run every few minutes, so this monitor is not being evaluated.':
+    'チェックは数分ごとに実行されるため、このモニターは評価されていません。',
+  'Create monitor': 'モニターを作成',
+  'Delete monitor': 'モニターを削除',
+  'Every time a monitor fired: when, how far over its threshold, and when it recovered.':
+    'モニターが発生したすべての記録: 発生時刻、しきい値をどれだけ超えたか、回復した時刻。',
+  'Failed to create monitor': 'モニターを作成できませんでした',
+  'Failed to delete monitor': 'モニターを削除できませんでした',
+  'Failed to update monitor': 'モニターを更新できませんでした',
+  'Filter alerts': 'アラートを絞り込む',
+  'Filter monitors': 'モニターを絞り込む',
+  'Fired for': '発生期間',
+  'Firing for': '発生中の期間',
+  'Latest reading': '最新の値',
+  'Monitor has been created': 'モニターを作成しました',
+  'Monitor has been deleted': 'モニターを削除しました',
+  'Monitor has been paused': 'モニターを一時停止しました',
+  'Monitor has been resumed': 'モニターを再開しました',
+  'Monitor has been updated': 'モニターを更新しました',
+  'Monitor not found': 'モニターが見つかりません',
+  Monitors: 'モニター',
+  'Monitors watch your project usage and notify you when a metric crosses the threshold you set.':
+    'モニターはプロジェクトの使用量を監視し、メトリクスが設定したしきい値を超えると通知します。',
+  'No alerts yet': 'まだアラートはありません',
+  Ongoing: '継続中',
+  Peak: 'ピーク',
+  Resolved: '解決済み',
+  "Resolves when the monitor's rules stop holding.":
+    'モニターのルールが成立しなくなると解決します。',
+  'Search monitors...': 'モニターを検索...',
+  'Started firing': '発生開始',
+  'Still firing': '発生中',
+  'View monitor': 'モニターを表示',
+  'View monitors': 'モニターを表示',
+  'Waiting for recovery': '回復待ち',
+  Watches: '監視対象',
+  "You don't have permission to manage monitors.":
+    'モニターを管理する権限がありません。',
+  'between two alerts from this monitor.':
+    '(このモニターからの 2 つのアラートの間隔)。',
+  'the threshold': 'しきい値',
+  '{count} notifications sent, one per cooldown':
+    '{count} 件の通知を送信 (クールダウンごとに 1 件)',
+  'Its alerts stay in the history.': 'アラートは履歴に残ります。',
+  'Send alerts to a webhook': 'アラートを Webhook に送信',
+  Owners: 'オーナー',
+  Editors: '編集者',
+  Analysts: 'アナリスト',
+  'Members with these roles get an email and a console notification when the monitor fires and again when it resolves.':
+    'これらのロールのメンバーには、モニターが発火したときと解決したときにメールとコンソール通知が届きます。',
+  'Nobody is emailed or notified. The alerts still fire their events for project webhooks and functions.':
+    '誰にもメールや通知は届きません。アラートはプロジェクトの Webhook や Functions 向けのイベントを引き続き発生させます。',
+  'Project webhooks and functions can also listen to its alert events.':
+    'プロジェクトの Webhook や Functions もアラートイベントを受け取れます。',
+  'Nobody, only its events': 'なし（イベントのみ）',
+  'Notifies nobody': '通知先なし',
+  'Notifies nobody. Its alerts only fire their events.':
+    '通知先はありません。アラートはイベントのみを発生させます。',
+  'Each monitor emails and notifies the organization roles it names. Every alert is also a project event your own systems can receive.':
+    '各モニターは指定した組織ロールにメールと通知を送ります。各アラートはプロジェクトのイベントでもあり、独自のシステムで受け取れます。',
+  'Unsubscribe from alert emails': 'アラートメールの配信停止',
+  'This monitor was deleted.': 'このモニターは削除されました。',
+  'Stop emails for this monitor': 'このモニターのメールを停止',
+  'Emails for this monitor are stopped.':
+    'このモニターのメールは停止されています。',
+  'Stop all usage alert emails': '使用量アラートのメールをすべて停止',
+  'Stop all alert emails of this kind': 'この種類のアラートメールをすべて停止',
+  'All usage alert emails are stopped.':
+    '使用量アラートのメールはすべて停止されています。',
+  'All alert emails of this kind are stopped.':
+    'この種類のアラートメールはすべて停止されています。',
+  'This link is invalid or has expired': 'このリンクは無効か、期限切れです',
+  'Open the Unsubscribe link in a more recent alert email.':
+    'より新しいアラートメールの配信停止リンクを開いてください。',
+  "You'll still see these alerts in console notifications.":
+    'これらのアラートは引き続きコンソール通知に表示されます。',
+  'Saving...': '保存中...',
 }

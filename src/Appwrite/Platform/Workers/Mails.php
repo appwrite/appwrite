@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Breaker;
 use Appwrite\SMTP\Refusal;
@@ -90,7 +91,7 @@ class Mails extends Action
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
-        $template = $payload['template'] ?? 'unknown';
+        $template = ($payload['template'] ?? '') ?: 'unknown';
         $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
 
         Span::add('mail.template', $template);
@@ -147,6 +148,7 @@ class Mails extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
 
@@ -253,7 +255,9 @@ class Mails extends Action
                 html: true,
                 headers: $payload['headers'] ?? [],
             );
-            $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+            $emailMessage
+                ->setOrigin(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setTemplate($template);
 
             // A pooled adapter belongs to this send alone; a project's own SMTP is
             // dialled for it, on the addresses just checked, and closed after.

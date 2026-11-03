@@ -17,6 +17,8 @@ class Email implements Message
 
     private ?string $origin = null;
 
+    private ?string $template = null;
+
     /**
      * @var array<array<string,string>>
      */
@@ -272,5 +274,22 @@ class Email implements Message
     public function getOrigin(): ?string
     {
         return $this->origin;
+    }
+
+    /**
+     * Name the template this email was rendered from, recorded as the `template`
+     * attribute of the send counter. Use a fixed identifier, never a subject or
+     * any other caller-provided text, so the attribute stays low-cardinality.
+     */
+    public function setTemplate(?string $template): self
+    {
+        $this->template = $template;
+
+        return $this;
+    }
+
+    public function getTemplate(): ?string
+    {
+        return $this->template;
     }
 }

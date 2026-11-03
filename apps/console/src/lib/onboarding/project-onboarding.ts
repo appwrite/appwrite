@@ -25,6 +25,7 @@ export const ONBOARDING_PLATFORM_SDK_KEYS = [
 export const ONBOARDING_DATABASE_SDK_KEYS = [
   'tablesDB.create',
   'documentsDB.create',
+  'vectorsDB.create',
   'databases.create',
 ] as const
 
@@ -34,6 +35,8 @@ export const ONBOARDING_DATABASE_SCHEMA_SDK_KEYS = [
   'tablesDB.createRow',
   'documentsDB.createCollection',
   'documentsDB.createDocument',
+  'vectorsDB.createCollection',
+  'vectorsDB.createDocument',
   'databases.createCollection',
   'databases.createDocument',
 ] as const
