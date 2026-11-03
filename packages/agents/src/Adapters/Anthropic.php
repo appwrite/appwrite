@@ -4,6 +4,7 @@ namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
+use Utopia\Agents\Effort;
 use Utopia\Agents\Event;
 use Utopia\Agents\Events\ReasoningDelta;
 use Utopia\Agents\Events\TextDelta;
@@ -241,7 +242,7 @@ class Anthropic extends Adapter implements Model
         }
 
         $choice = $request->toolChoice;
-        if ($choice === null && $request->schema !== null && $request->tools === [] && $request->effort === null) {
+        if ($choice === null && $request->schema !== null && $request->tools === [] && ($request->effort === null || $request->effort === Effort::None)) {
             $choice = ToolChoice::tool(static::OUTPUT);
         }
         if ($choice !== null) {
@@ -252,7 +253,7 @@ class Anthropic extends Adapter implements Model
             };
         }
 
-        if ($request->effort !== null) {
+        if ($request->effort !== null && $request->effort !== Effort::None) {
             $budget = $request->effort->budget();
             $payload['thinking'] = ['type' => 'enabled', 'budget_tokens' => $budget];
             $payload['max_tokens'] = max($payload['max_tokens'], $budget + static::MAX_TOKENS);

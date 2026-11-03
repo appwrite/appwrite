@@ -132,6 +132,16 @@ class AnthropicTest extends TestCase
         $this->assertSame(8192 + 4096, $payload['max_tokens']);
     }
 
+    public function testNoEffortLeavesThinkingOff(): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+
+        $this->adapter($client)->generate(new Request([Message::user('Hi')], schema: Schema::object([]), effort: Effort::None));
+
+        $this->assertNull($client->payload('thinking'));
+        $this->assertSame(['type' => 'tool', 'name' => 'json'], $client->payload('tool_choice'));
+    }
+
     public function testStreamsThinkingTextAndToolUse(): void
     {
         $client = $this->client($this->message([

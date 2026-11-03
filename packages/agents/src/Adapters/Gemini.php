@@ -227,7 +227,8 @@ class Gemini extends Adapter implements Model
         }
 
         if ($request->effort !== null) {
-            $config['thinkingConfig'] = ['thinkingBudget' => $request->effort->budget(), 'includeThoughts' => true];
+            $budget = $request->effort->budget();
+            $config['thinkingConfig'] = ['thinkingBudget' => $budget, 'includeThoughts' => $budget > 0];
         }
 
         $config = array_filter($config, fn ($value) => $value !== null);

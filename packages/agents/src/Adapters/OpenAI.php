@@ -4,6 +4,7 @@ namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
+use Utopia\Agents\Effort;
 use Utopia\Agents\Event;
 use Utopia\Agents\Events\ReasoningDelta;
 use Utopia\Agents\Events\TextDelta;
@@ -211,10 +212,11 @@ class OpenAI extends Adapter implements Model
             ];
         }
 
+        $sampling = $this->samples($request);
         $settings = [
             $this->tokens() => $request->maxTokens,
-            'temperature' => $request->temperature,
-            'top_p' => $request->topP,
+            'temperature' => $sampling ? $request->temperature : null,
+            'top_p' => $sampling ? $request->topP : null,
             'seed' => $request->seed,
             'stop' => $request->stop === [] ? null : $request->stop,
             'reasoning_effort' => $request->effort?->value,
@@ -225,6 +227,19 @@ class OpenAI extends Adapter implements Model
             array_filter($settings, fn ($value) => $value !== null),
             $request->options($this->getName()),
         );
+    }
+
+    /**
+     * Whether the model accepts temperature and top_p. GPT-6 models reject
+     * them unless reasoning is off, and reasoning is on by default.
+     */
+    protected function samples(Request $request): bool
+    {
+        if (! str_starts_with($this->model, 'gpt-6')) {
+            return true;
+        }
+
+        return $request->effort === Effort::None;
     }
 
     /**

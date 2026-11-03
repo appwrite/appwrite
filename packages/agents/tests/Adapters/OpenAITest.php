@@ -248,6 +248,23 @@ class OpenAITest extends TestCase
         $this->adapter(new Client())->generate(new Request([Message::user([new Text('a'), new File(url: 'https://x.io/a.pdf')])]));
     }
 
+    public function testGpt6DropsSamplingUnlessReasoningIsOff(): void
+    {
+        $client = (new Client())
+            ->events([$this->chunk(['content' => 'a'], 'stop')])
+            ->events([$this->chunk(['content' => 'b'], 'stop')]);
+        $adapter = (new OpenAI('secret', 'gpt-6.1-sol', client: $client))->setRetries(0);
+
+        $adapter->generate(new Request([Message::user('Hi')], temperature: 0.2, topP: 0.5, effort: Effort::XHigh));
+        $this->assertNull($client->payload('temperature'));
+        $this->assertNull($client->payload('top_p'));
+        $this->assertSame('xhigh', $client->payload('reasoning_effort'));
+
+        $adapter->generate(new Request([Message::user('Hi')], temperature: 0.2, effort: Effort::None));
+        $this->assertSame(0.2, $client->payload('temperature'));
+        $this->assertSame('none', $client->payload('reasoning_effort'));
+    }
+
     public function testCustomEndpoint(): void
     {
         $client = (new Client())->events([$this->chunk(['content' => 'ok'], 'stop')]);
