@@ -368,6 +368,8 @@ $server->error(function (Throwable $error): void {
  * onWorkerStart waits on I/O, and a worker coroutine cannot fork.
  */
 $booted = new Atomic(0);
+// Only ever waited on, never set: Atomic::wait() consumes a 1, so the gate itself is read with get().
+$bootSleep = new Atomic(0);
 // Nothing is served before this, so newer rows belong to live sockets, even past the timeout.
 $bootedAt = DateTime::now();
 
@@ -548,11 +550,11 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $booted) {
-    // Atomic::wait blocks the whole worker, so no event is handled before the gate opens.
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $booted, $bootSleep) {
+    // Atomic::wait blocks the whole worker (a hooked sleep would not), so no event is handled before the gate opens.
     $deadline = \microtime(true) + REALTIME_BOOT_TIMEOUT_SECONDS;
     while ($booted->get() === 0 && \microtime(true) < $deadline) {
-        $booted->wait(0.1);
+        $bootSleep->wait(0.1);
     }
     if ($booted->get() === 0) {
         $span = Span::init('realtime.worker.boot');
