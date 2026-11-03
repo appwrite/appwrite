@@ -691,12 +691,26 @@ class Get extends Base
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
 
+            // A request that fails here must not leave behind the user it just created.
+            $discardNewUser = function () use ($authorization, $dbForProject, $newUser, $newTarget): void {
+                if ($newUser === null) {
+                    return;
+                }
+                $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+                    if ($newTarget !== null) {
+                        $dbForProject->deleteDocument('targets', $newTarget->getId());
+                    }
+                    $dbForProject->deleteDocument('users', $newUser->getId());
+                });
+            };
+
             if (!empty($providerEmail)) {
                 $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!empty($identitiesWithMatchingEmail)) {
+                    $discardNewUser();
                     $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     /** Return a generic bad request to prevent exposing existing accounts */
                 }
@@ -723,15 +737,7 @@ class Get extends Base
                 ]));
             } catch (Duplicate) {
                 // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
-                if ($newUser !== null) {
-                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
-                        if ($newTarget !== null) {
-                            $dbForProject->deleteDocument('targets', $newTarget->getId());
-                        }
-                        $dbForProject->deleteDocument('users', $newUser->getId());
-                    });
-                }
+                $discardNewUser();
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
