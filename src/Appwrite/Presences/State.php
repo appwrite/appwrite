@@ -510,8 +510,8 @@ class State
             });
         } finally {
             // Batches deleted before a failure are gone too, so report them either way.
+            // Each step is guarded so one failure cannot silence the rest.
             if (!empty($presences)) {
-                $this->purgeListCache($dbForProject);
                 $this->triggerUsage($publisherForUsage, $project, -\count($presences));
 
                 foreach ($presences as $presence) {
@@ -519,13 +519,23 @@ class State
                         $presence->removeAttribute($attribute);
                     }
 
-                    $queueForRealtime
-                        ->reset()
-                        ->setProject($project)
-                        ->setEvent('presences.[presenceId].delete')
-                        ->setParam('presenceId', $presence->getId())
-                        ->setPayload($presence->getArrayCopy())
-                        ->trigger();
+                    try {
+                        $queueForRealtime
+                            ->reset()
+                            ->setProject($project)
+                            ->setEvent('presences.[presenceId].delete')
+                            ->setParam('presenceId', $presence->getId())
+                            ->setPayload($presence->getArrayCopy())
+                            ->trigger();
+                    } catch (Throwable $th) {
+                        Span::current()?->setError($th)->set('presence.id', $presence->getId());
+                    }
+                }
+
+                try {
+                    $this->purgeListCache($dbForProject);
+                } catch (Throwable $th) {
+                    Span::current()?->setError($th)->set('project.id', $project->getId());
                 }
             }
         }

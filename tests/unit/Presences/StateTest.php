@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Event\MockPublisher;
 use Tests\Unit\Presences\Mock\ConflictingMemory;
 use Tests\Unit\Presences\Mock\FailingDeleteMemory;
+use Tests\Unit\Presences\Mock\FailingRealtime;
 use Tests\Unit\Presences\Mock\RecordingRealtime;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
@@ -241,6 +242,28 @@ final class StateTest extends TestCase
 
         $this->assertSame(-Database::BATCH_SIZE, $publisher->getEvents('usage')[0]['metrics'][0]['value']);
         $this->assertCount(Database::BATCH_SIZE, $queueForRealtime->triggered);
+    }
+
+    public function testDeleteForHostKeepsAnnouncingAfterAFailedEvent(): void
+    {
+        $this->presence('orphan-1', 'realtime', 'host-a');
+        $this->presence('orphan-2', 'realtime', 'host-a');
+
+        $publisher = new MockPublisher();
+        $queueForRealtime = new FailingRealtime();
+
+        $deleted = (new State())->deleteForHost(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            self::BOOTED_AT,
+            new UsagePublisher($publisher, new Queue('usage')),
+            $queueForRealtime,
+        );
+
+        $this->assertSame(2, $deleted);
+        $this->assertCount(1, $queueForRealtime->triggered);
+        $this->assertSame(-2, $publisher->getEvents('usage')[0]['metrics'][0]['value']);
     }
 
     public function testDeleteForHostWithNothingToDeleteHasNoSideEffects(): void
