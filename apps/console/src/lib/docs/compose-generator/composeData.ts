@@ -239,6 +239,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_STREAMING
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
