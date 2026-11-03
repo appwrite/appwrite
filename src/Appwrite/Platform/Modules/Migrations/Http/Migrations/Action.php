@@ -122,9 +122,11 @@ abstract class Action extends PlatformAction
     }
 
     /**
-     * An export's download link streams the full collection, so a read that holds none of the data read
-     * scopes must not receive it: the creation gate is otherwise reached through links other callers left
-     * on export migrations. A console session carries no API key on the request and keeps the link.
+     * An export's download link streams the full collection, so a read that cannot read that collection's
+     * data must not receive it: the creation gate is otherwise reached through links other callers left on
+     * export migrations. The scope demanded is the one the family's creation gate demands, so a read grant
+     * for one database family does not expose another's dump. A console session carries no API key on the
+     * request and keeps the link.
      */
     protected function redactExportLink(Document $migration, Request $request): Document
     {
@@ -132,18 +134,24 @@ abstract class Action extends PlatformAction
             return $migration;
         }
 
-        $dataRead = ['documents.read', 'rows.read', 'documentsdb.documents.read', 'vectorsdb.documents.read'];
+        $options = $migration->getAttribute('options', []);
+
+        if (!isset($options['downloadUrl'])) {
+            return $migration;
+        }
+
+        $dataRead = match ($migration->getAttribute('parentResourceType')) {
+            Resource::TYPE_DATABASE_DOCUMENTSDB => ['documentsdb.documents.read'],
+            Resource::TYPE_DATABASE_VECTORSDB => ['vectorsdb.documents.read'],
+            default => ['rows.read', 'documents.read'],
+        };
 
         if (!empty(\array_intersect($dataRead, $request->getScopes()))) {
             return $migration;
         }
 
-        $options = $migration->getAttribute('options', []);
-
-        if (isset($options['downloadUrl'])) {
-            unset($options['downloadUrl']);
-            $migration->setAttribute('options', $options);
-        }
+        unset($options['downloadUrl']);
+        $migration->setAttribute('options', $options);
 
         return $migration;
     }

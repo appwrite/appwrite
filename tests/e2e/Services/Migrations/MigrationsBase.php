@@ -8261,6 +8261,53 @@ trait MigrationsBase
         $this->assertEquals(200, $dataReader['headers']['status-code']);
         $this->assertArrayHasKey('downloadUrl', (array) $dataReader['body']['options']);
 
+        // A read grant for another database family must not expose this family's dump: the gate
+        // demands the scope its own family's export creation demanded, not any data read scope.
+        $otherFamily = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'documentsdb.documents.read']),
+        ]);
+        $this->assertEquals(200, $otherFamily['headers']['status-code']);
+        $this->assertArrayNotHasKey('downloadUrl', (array) $otherFamily['body']['options']);
+
+        // The list endpoint redacts on the same rule as the single read.
+        $listAsMigrationsOnly = $this->client->call(Client::METHOD_GET, '/migrations', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read']),
+        ], [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertEquals(200, $listAsMigrationsOnly['headers']['status-code']);
+        $listed = null;
+        foreach ($listAsMigrationsOnly['body']['migrations'] as $candidate) {
+            if ($candidate['$id'] === $migrationId) {
+                $listed = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($listed);
+        $this->assertArrayNotHasKey('downloadUrl', (array) $listed['options']);
+
+        $listAsDataReader = $this->client->call(Client::METHOD_GET, '/migrations', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'documents.read', 'rows.read']),
+        ], [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertEquals(200, $listAsDataReader['headers']['status-code']);
+        $listedForReader = null;
+        foreach ($listAsDataReader['body']['migrations'] as $candidate) {
+            if ($candidate['$id'] === $migrationId) {
+                $listedForReader = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($listedForReader);
+        $this->assertArrayHasKey('downloadUrl', (array) $listedForReader['options']);
+
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'x-appwrite-project' => $this->getProject()['$id'],
