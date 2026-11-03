@@ -23,6 +23,12 @@ use Utopia\Validator\IP;
 
 class Action extends PlatformAction
 {
+    /**
+     * Prefix of the DNS name holding a domain's ownership proof, a TXT record
+     * naming the project the domain's owner assigned it to
+     */
+    public const string OWNERSHIP_PREFIX = '_appwrite.';
+
     public function __construct(protected string $dnsValidatorClass = ValidatorDNS::class)
     {
     }
@@ -32,7 +38,7 @@ class Action extends PlatformAction
         try {
             return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
         } catch (Duplicate) {
-            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization, $bus)) {
+            if (!$this->releaseDomain($rule, $dbForPlatform, $authorization, $bus)) {
                 throw new Exception(Exception::RULE_ALREADY_EXISTS);
             }
         }
@@ -51,7 +57,17 @@ class Action extends PlatformAction
         return $rule;
     }
 
-    private function deleteOrphanedRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): bool
+    /**
+     * Free a domain held by an existing rule, when the claiming rule is entitled to it
+     *
+     * A domain is freed when the rule holding it is orphaned, its project having
+     * been deleted, or when the domain's owner published an ownership proof for
+     * the claiming project. DNS is the only authority on whose domain it is.
+     *
+     * @param Document $rule Rule claiming the domain
+     * @return bool Whether the domain is free for the claiming rule
+     */
+    private function releaseDomain(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): bool
     {
         $existingRule = $authorization->skip(function () use ($rule, $dbForPlatform) {
             $existingRule = $dbForPlatform->findOne('rules', [
@@ -77,8 +93,13 @@ class Action extends PlatformAction
             return false;
         }
 
+        // A project that already holds the domain keeps its rule, proof or not
+        if ($projectId === $rule->getAttribute('projectId', '')) {
+            return false;
+        }
+
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-        if (!$project->isEmpty()) {
+        if (!$project->isEmpty() && $this->resolveOwnership($rule) !== true) {
             return false;
         }
 
@@ -164,9 +185,7 @@ class Action extends PlatformAction
     protected function verifyRule(Document $rule): void
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
-        $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
-        $servers = \array_map('trim', \explode(',', $dnsEnv));
-        $dnsServers = \array_filter($servers, fn ($server) => !empty($server));
+        $dnsServers = $this->dnsServers();
 
         $domain = new Domain($rule->getAttribute('domain', ''));
 
@@ -176,6 +195,13 @@ class Action extends PlatformAction
 
         if (!$domain->isKnown() || $domain->isTest()) {
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as domain ' . $domain->get() . ' does not resolve to a known public apex domain.');
+        }
+
+        // The targets checked below are identical for every project on the instance,
+        // so they only prove the domain reaches Appwrite, never whose domain it is.
+        // Only its owner can say that, with the ownership proof resolved here.
+        if ($this->resolveOwnership($rule) === false) {
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as domain ' . $domain->get() . ' is assigned to another project. Point its ' . self::OWNERSHIP_PREFIX . $domain->get() . ' TXT record at project ' . $rule->getAttribute('projectId', '') . ' to use it here.');
         }
 
         // Ensure CAA won't block certificate issuance
@@ -269,6 +295,46 @@ class Action extends PlatformAction
             Span::add('dns.domain', $domain->get());
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
         }
+    }
+
+    /**
+     * Resolve which project the owner of a rule's domain assigned the domain to
+     *
+     * Ownership lives in a TXT record at `_appwrite.<domain>` holding a project ID.
+     * It stays optional, so a domain pointed at Appwrite with nothing but a CNAME
+     * still onboards, but it is authoritative wherever it is published.
+     *
+     * @param Document $rule Rule claiming the domain
+     * @return bool|null True when the proof names the rule's own project, false when
+     *  it names another one, and null when the owner published no proof at all
+     */
+    protected function resolveOwnership(Document $rule): ?bool
+    {
+        $domain = $rule->getAttribute('domain', '');
+        $projectId = $rule->getAttribute('projectId', '');
+
+        if (empty($domain) || empty($projectId)) {
+            return null;
+        }
+
+        $dnsValidatorClass = $this->dnsValidatorClass;
+        $validator = new $dnsValidatorClass($projectId, Record::TYPE_TXT, $this->dnsServers());
+
+        if ($validator->isValid(self::OWNERSHIP_PREFIX . $domain)) {
+            return true;
+        }
+
+        return $validator->count > 0 ? false : null;
+    }
+
+    /**
+     * @return array<string> Resolvers every DNS check must agree on
+     */
+    private function dnsServers(): array
+    {
+        $servers = \array_map('trim', \explode(',', System::getEnv('_APP_DNS', '8.8.8.8')));
+
+        return \array_filter($servers, fn ($server) => !empty($server));
     }
 
     protected function isAppwriteOwned(string $domain): bool
