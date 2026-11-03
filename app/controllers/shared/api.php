@@ -1008,6 +1008,9 @@ Http::shutdown()
             return;
         }
 
+        // A release takes back a hit from the current window, never below zero. It can take back one this request
+        // did not reserve: when init failed open on a limiter outage, or when the window turned during the request.
+        // Either costs at most one extra failure, and carrying each reservation from init to here is not worth that.
         $values = Limit::values($route, $request, $project, $user, $pathParams);
         foreach ($limits as $limit) {
             try {

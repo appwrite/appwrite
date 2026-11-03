@@ -327,7 +327,9 @@ class OpenAPI3 extends Format
             $descContents = $this->getDescriptionContents($desc);
 
             /** @var list<Limit> $limits */
+            // The spec states one limit and window for all of its keys, so list only the limits that share the first one's.
             $limits = $route->getLabel('abuse', []);
+            $limits = \array_values(\array_filter($limits, fn (Limit $limit): bool => $limit->limit === $limits[0]->limit && $limit->seconds === $limits[0]->seconds));
             // The spec has always described a key as `name:{placeholder}` pairs.
             $rateKey = fn (Limit $limit): string => \implode(',', \array_map(
                 fn (string $part): string => \str_starts_with($part, 'param.')
