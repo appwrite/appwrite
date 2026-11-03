@@ -25,9 +25,11 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\WebSocket\Adapter\Swoole as SwooleAdapter;
+use Swoole\Atomic;
 use Swoole\Coroutine;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
+use Swoole\Process;
 use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
@@ -359,6 +361,73 @@ $server->error(function (Throwable $error): void {
     $span->finish(error: $error);
 });
 
+/**
+ * Boot gate: workers serve nothing until it opens. On self-hosted it opens once the presences a
+ * crashed run of this host left online are deleted, so no new presence can be caught by that.
+ * The cleanup runs in its own process: a worker would serve events while its own cleanup
+ * waited on I/O, and a worker coroutine cannot fork.
+ */
+$booted = new Atomic(0);
+
+if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+    $adapter->getNative()->addProcess(new Process(function () use ($booted, $container, $presenceState): void {
+        if ($booted->get() === 0) {
+            $started = \microtime(true);
+            $deadline = $started + REALTIME_BOOT_TIMEOUT_SECONDS;
+            $hostname = \gethostname();
+            $projects = 0;
+            $deleted = 0;
+            $finished = false;
+
+            while ($hostname !== false && !$finished && \microtime(true) < $deadline) {
+                try {
+                    /** @var UsagePublisher $publisherForUsage */
+                    $publisherForUsage = $container->get('publisherForUsage');
+                    $queueForRealtime = getQueueForRealtime();
+                    $dbForPlatform = getConsoleDB();
+
+                    $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $presenceState, $publisherForUsage, $queueForRealtime, $hostname, $deadline, &$projects, &$deleted): void {
+                        foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $project) {
+                            if (\microtime(true) >= $deadline) {
+                                return;
+                            }
+
+                            try {
+                                $deleted += $presenceState->deleteForHost(getProjectDB($project), $project, $hostname, $publisherForUsage, $queueForRealtime);
+                                $projects++;
+                            } catch (Throwable $th) {
+                                Console::warning('Failed to clear presences of project ' . $project->getId() . ': ' . $th->getMessage());
+                            }
+                        }
+                    });
+
+                    $finished = \microtime(true) < $deadline;
+                } catch (Throwable $th) {
+                    // Platform database or schema not ready yet.
+                    Console::warning('Presence cleanup waiting for the database: ' . $th->getMessage());
+                    \sleep(DATABASE_RECONNECT_SLEEP);
+                }
+            }
+
+            $summary = $deleted . ' presences of host ' . $hostname . ' in ' . $projects . ' projects, ' . \round(\microtime(true) - $started, 2) . 's';
+            if ($finished) {
+                Console::success('Cleared ' . $summary);
+            } else {
+                Console::warning('Presence cleanup stopped before finishing: cleared ' . $summary);
+            }
+
+            $booted->set(1);
+        }
+
+        // Swoole restarts a process that exits, so idle until shutdown.
+        while ($booted->get() === 1) {
+            \sleep(3600);
+        }
+    }, false, 0, true));
+} else {
+    $booted->set(1);
+}
+
 $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
@@ -437,7 +506,16 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $booted) {
+    // Atomic::wait blocks the whole worker, so no event is handled before the gate opens.
+    $deadline = \microtime(true) + REALTIME_BOOT_TIMEOUT_SECONDS;
+    while ($booted->get() === 0 && \microtime(true) < $deadline) {
+        $booted->wait(0.1);
+    }
+    if ($booted->get() === 0) {
+        Console::warning('Worker ' . $workerId . ' serving before the presence cleanup finished');
+    }
+
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
