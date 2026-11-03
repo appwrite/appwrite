@@ -413,6 +413,61 @@ class State
         }
     }
 
+    /**
+     * Deletes the realtime presences a host holds in one project, such as those a crashed
+     * realtime server left online. Purges the list cache, decrements usage and emits a delete
+     * event per presence, like a socket closing. Returns how many were deleted.
+     */
+    public function deleteForHost(
+        Database $dbForProject,
+        Document $project,
+        string $hostname,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+    ): int {
+        /** @var array<Document> $presences */
+        $presences = [];
+        $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $hostname, &$presences): void {
+            if ($dbForProject->findCollection(self::COLLECTION_ID) === null) {
+                return;
+            }
+
+            $dbForProject->deleteDocuments(
+                self::COLLECTION_ID,
+                [
+                    Query::equal('source', ['realtime']),
+                    Query::equal('hostname', [$hostname]),
+                ],
+                onNext: function (Document $presence) use (&$presences): void {
+                    $presences[] = $presence;
+                },
+            );
+        });
+
+        if (empty($presences)) {
+            return 0;
+        }
+
+        $this->purgeListCache($dbForProject);
+        $this->triggerUsage($publisherForUsage, $project, -\count($presences));
+
+        foreach ($presences as $presence) {
+            foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                $presence->removeAttribute($attribute);
+            }
+
+            $queueForRealtime
+                ->reset()
+                ->setProject($project)
+                ->setEvent('presences.[presenceId].delete')
+                ->setParam('presenceId', $presence->getId())
+                ->setPayload($presence->getArrayCopy())
+                ->trigger();
+        }
+
+        return \count($presences);
+    }
+
     private function checkPermissions(array $permissions, Authorization $authorization): void
     {
         foreach ([PermissionType::Create, PermissionType::Read, PermissionType::Update, PermissionType::Delete] as $type) {

@@ -212,7 +212,9 @@ final class StateTest extends TestCase
 
         $usage = $publisher->getEvents('usage');
         $this->assertCount(1, $usage);
-        $this->assertSame([['key' => METRIC_USERS_PRESENCE, 'value' => -2]], $usage[0]['metrics']);
+        $this->assertCount(1, $usage[0]['metrics']);
+        $this->assertSame(METRIC_USERS_PRESENCE, $usage[0]['metrics'][0]['key']);
+        $this->assertSame(-2, $usage[0]['metrics'][0]['value']);
 
         $this->assertSame(['presences.[presenceId].delete', 'presences.[presenceId].delete'], \array_column($queueForRealtime->triggered, 'event'));
         $this->assertEqualsCanonicalizing(['orphan-1', 'orphan-2'], \array_column($queueForRealtime->triggered, 'presenceId'));
