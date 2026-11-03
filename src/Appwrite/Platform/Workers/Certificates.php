@@ -20,6 +20,7 @@ use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
+use Utopia\Cdn\Exception\Certificate as CertificateException;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -46,6 +47,13 @@ class Certificates extends Action
      * again. Without a renew date, maintenance never selects it again.
      */
     private const PROVIDER_CHECK_INTERVAL = 60 * 60 * 24;
+
+    /**
+     * How long after a rule is created its certificate can wait on a DNS record
+     * only the domain owner can add before each check counts as a failed
+     * attempt. The interval verifies a new domain's DNS for as long.
+     */
+    private const DNS_RECORD_WAIT = 60 * 60 * 24 * 3;
 
     public static function getName(): string
     {
@@ -321,6 +329,9 @@ class Certificates extends Action
         // A renewal: the domain already serves a certificate that is still valid
         $renewing = $rule->getAttribute('status') === RULE_STATUS_VERIFIED;
 
+        // Set when the last check already reported the same wait, so there is nothing new to announce
+        $stillWaiting = false;
+
         try {
             $certificate->setAttribute('logs', $logs);
 
@@ -395,6 +406,18 @@ class Certificates extends Action
             ]);
         } catch (Throwable $e) {
             $date = \date('H:i:s');
+
+            // On a new rule, waiting for the domain owner's DNS record is not a failed attempt.
+            // The rule stays generating, so the interval keeps checking it.
+            if ($e instanceof CertificateException && $e->isBlocked() && \strtotime($rule->getCreatedAt() ?? '') > \time() - self::DNS_RECORD_WAIT) {
+                $waiting = "SSL certificate is waiting for a DNS record. {$e->getMessage()}";
+                $stillWaiting = \str_contains($rule->getAttribute('logs') ?? '', $waiting);
+                $logs .= "\033[90m[{$date}] \033[33m{$waiting} \033[0m\n";
+                Console::info('Certificate for ' . $domain->get() . ' is waiting for a DNS record');
+                $certificate->setAttribute('renewDate', DateTime::addSeconds(new \DateTime(), self::PROVIDER_CHECK_INTERVAL));
+                return;
+            }
+
             $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
             $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
 
@@ -425,10 +448,10 @@ class Certificates extends Action
             $certificate->setAttribute('logs', $logs);
             $this->upsertCertificate($rule, $certificate, $dbForPlatform);
 
-            // Update rule and emit events
+            // Update rule and emit events. A repeated wait still saves the rule, so the interval checks it again later.
             $rule->setAttribute('certificateId', $certificate->getId());
             $rule->setAttribute('logs', $logs);
-            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
+            $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus, events: !$stillWaiting);
         }
     }
 
@@ -476,6 +499,7 @@ class Certificates extends Action
      * @param Webhook $queueForWebhooks Webhook publisher for webhooks
      * @param FunctionPublisher $publisherForFunctions Function publisher for functions
      * @param Realtime $queueForRealtime Realtime publisher for realtime events
+     * @param bool $events False to only save the rule
      *
      * @return void
      */
@@ -486,13 +510,19 @@ class Certificates extends Action
         Webhook $queueForWebhooks,
         FunctionPublisher $publisherForFunctions,
         Realtime $queueForRealtime,
-        Bus $bus
+        Bus $bus,
+        bool $events = true
     ): void {
         $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
             'status' => $rule->getAttribute('status'),
             'certificateId' => $rule->getAttribute('certificateId'),
             'logs' => $rule->getAttribute('logs'),
         ]));
+
+        if (!$events) {
+            return;
+        }
+
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
         $projectId = (string) $rule->getAttribute('projectId', '');

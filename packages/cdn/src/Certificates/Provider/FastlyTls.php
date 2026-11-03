@@ -65,6 +65,8 @@ class FastlyTls implements Provider
     }
 
     /**
+     * The exception's message is shown to the domain owner, so it does not name Fastly.
+     *
      * @throws Certificate When Fastly waits on the domain owner to prove ownership, or has stopped trying.
      */
     public function getCertificateStatus(string $domain, ?string $domainType): string
@@ -324,24 +326,42 @@ class FastlyTls implements Provider
      */
     private function describe(string $domain, string $status, array $challenges, array $warnings): string
     {
-        $message = $status === Status::FAILED
-            ? "Fastly stopped trying to issue a certificate for {$domain}."
-            : "Fastly cannot issue a certificate for {$domain} until its ownership is verified.";
+        // The DNS challenge proves ownership without moving the domain's
+        // traffic, so when it is offered it is the one record to ask for.
+        $record = array_find($challenges, static fn (Challenge $challenge): bool => $challenge->type === self::CHALLENGE_MANAGED_DNS);
 
-        foreach ($warnings as $warning) {
-            $message .= ' ' . rtrim($warning, '.') . '.';
+        $sentences = [];
+        if ($status === Status::FAILED) {
+            $sentences[] = "The certificate provider stopped trying to issue a certificate for {$domain}.";
+        } elseif ($record === null) {
+            $sentences[] = "The certificate provider cannot issue a certificate for {$domain} until its ownership is verified.";
         }
 
-        if (\count($challenges) === 1) {
-            $message .= " Create a {$challenges[0]->recordType} record for {$challenges[0]->recordName} pointing to " . implode(' or ', $challenges[0]->values) . '.';
+        // A warning naming the DNS record restates it, except that a record
+        // already at that name has to be removed first
+        $conflict = false;
+        foreach ($warnings as $warning) {
+            if ($record !== null && stripos($warning, $record->recordName) !== false) {
+                $conflict = true;
+            } else {
+                $sentences[] = rtrim($warning, '.') . '.';
+            }
+        }
+
+        if ($record !== null) {
+            $sentences[] = ($conflict ? "Remove any other record named {$record->recordName}, then add" : 'Add')
+                . " a {$record->recordType} record named {$record->recordName} with the value " . implode(' or ', $record->values)
+                . ' to verify ownership, then ' . ($status === Status::FAILED ? 'retry.' : 'wait for the certificate to be issued.');
+        } elseif (\count($challenges) === 1) {
+            $sentences[] = "Create a {$challenges[0]->recordType} record for {$challenges[0]->recordName} pointing to " . implode(' or ', $challenges[0]->values) . '.';
         } elseif ($challenges !== []) {
-            $message .= ' Create one of these DNS records: ' . implode('; ', array_map(
+            $sentences[] = 'Create one of these DNS records: ' . implode('; ', array_map(
                 static fn (Challenge $challenge): string => "{$challenge->recordType} {$challenge->recordName} -> " . implode(' or ', $challenge->values),
                 $challenges,
             )) . '.';
         }
 
-        return $message;
+        return implode(' ', $sentences);
     }
 
     /**

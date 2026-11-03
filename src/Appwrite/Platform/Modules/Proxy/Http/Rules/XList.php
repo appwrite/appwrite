@@ -121,13 +121,6 @@ class XList extends Action
             }
 
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
-
-            // Rename 'created' status to 'unverified' for consistency.
-            // 'verifying' and 'verified' statuses stay as is.
-            // 'unverified' in the meaning of failed certificate generation stays as is.
-            if ($rule->getAttribute('status') === 'created') {
-                $rule->setAttribute('status', 'unverified');
-            }
         }
 
         $response->dynamic(new Document([

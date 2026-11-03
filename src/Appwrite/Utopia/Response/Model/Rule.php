@@ -110,11 +110,17 @@ class Rule extends Model
 
     /**
      * Rules without a deployment store an empty resource type, which is not a valid enum value.
+     * A rule whose DNS is not verified yet is stored as 'created' and reported as 'unverified',
+     * in responses and event payloads alike.
      */
     public function filter(Document $document): Document
     {
         if ($document->getAttribute('deploymentResourceType') === '') {
             $document->setAttribute('deploymentResourceType', null);
+        }
+
+        if ($document->getAttribute('status') === RULE_STATUS_CREATED) {
+            $document->setAttribute('status', 'unverified');
         }
 
         return $document;

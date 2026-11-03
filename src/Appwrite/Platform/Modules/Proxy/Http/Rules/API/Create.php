@@ -140,13 +140,6 @@ class Create extends Action
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 
-        // Rename 'created' status to 'unverified' for consistency.
-        // 'verifying' and 'verified' statuses stay as is.
-        // 'unverified' in the meaning of failed certificate generation stays as is.
-        if ($rule->getAttribute('status') === 'created') {
-            $rule->setAttribute('status', 'unverified');
-        }
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($rule, Response::MODEL_PROXY_RULE);
