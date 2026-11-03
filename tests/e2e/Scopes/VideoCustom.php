@@ -717,7 +717,8 @@ trait VideoCustom
     {
         $file ??= $this->getVideoFile();
         $payload = [
-            'bucketId' => $this->getVideoBucket()['$id'],
+            // A file uploaded to another bucket names it; the default fixtures do not.
+            'bucketId' => $file['bucketId'] ?? $this->getVideoBucket()['$id'],
             'fileId' => $file['$id'],
         ];
         if ($name !== '') {

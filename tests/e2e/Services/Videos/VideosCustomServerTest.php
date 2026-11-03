@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Videos;
 
 use Appwrite\Platform\Modules\Videos\Base;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
@@ -1011,6 +1012,72 @@ final class VideosCustomServerTest extends Scope
             \array_filter($progress, static fn (int $percent): bool => $percent > 0 && $percent < 100),
             'progress never moved between 0 and 100 while encoding: ' . \implode(',', \array_unique($progress))
         );
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function encodedSources(): array
+    {
+        return [
+            'encrypted' => ['none'],
+            'encrypted and zstd compressed' => ['zstd'],
+        ];
+    }
+
+    /**
+     * An encrypted (and optionally compressed) upload cannot be handed to ffmpeg
+     * as stored, in place or over a URL: the worker reads it from the device,
+     * decrypts and decompresses it into scratch, and encodes that. The upload is
+     * checked to really be encrypted first, or the test would prove nothing.
+     */
+    #[DataProvider('encodedSources')]
+    public function testAnEncryptedSourceIsDecryptedAndTranscoded(string $compression): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => 'unique()',
+            'name' => 'Encrypted videos (' . $compression . ')',
+            'fileSecurity' => false,
+            'encryption' => true,
+            'compression' => $compression,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $uploaded = $this->uploadVideoTo($bucketId);
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $uploaded['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertTrue($file['body']['encryption'], 'the source was stored unencrypted');
+        $this->assertSame($compression, $file['body']['compression']);
+
+        // The timeline job probes the source: a duration proves it was decoded.
+        $video = $this->createReadyVideo(['$id' => $uploaded['$id'], 'bucketId' => $bucketId]);
+        $videoId = $video['$id'];
+        $this->assertGreaterThan(0, (int) $video['duration']);
+        $this->assertGreaterThan(0, (int) $video['width']);
+
+        $renditionId = $this->createReadyRendition($videoId, 'hls');
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertStringContainsString($renditionId, (string) $master['body']);
+        $this->assertGreaterThanOrEqual(1, $this->assertHlsLadderPlayable((string) $master['body'])['variants']);
+
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch kept a decrypted source');
+        });
     }
 
     /**
