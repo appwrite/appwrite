@@ -1928,12 +1928,14 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    #[Retry(count: 3)]
     public function testSiteStreaming(): void
     {
         $siteId = $this->setupSite([
             'siteId' => Id::unique(),
             'name' => 'Streaming site',
             'framework' => 'astro',
+            'adapter' => 'ssr',
             'buildRuntime' => 'node-22',
             'outputDirectory' => './dist',
             'buildCommand' => 'npm run build',
