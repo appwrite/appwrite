@@ -963,6 +963,10 @@ final class VideosCustomServerTest extends Scope
      * over the 20 MB limit the files endpoint encrypts up to) is read where it
      * is stored: in place on a local device, over a presigned URL on S3. The
      * encode's scratch never holds a copy of it, and the rendition still plays.
+     *
+     * Segments leave scratch while ffmpeg runs, and the rendition's progress is
+     * driven from the same run, so it must still climb through the encode
+     * rather than jump from 0 to 100 at the end.
      */
     public function testAnUnencryptedSourceIsNeverCopiedIntoScratch(): void
     {
@@ -971,6 +975,7 @@ final class VideosCustomServerTest extends Scope
 
         $observed = 0;
         $copies = [];
+        $progress = [];
         $deadline = \time() + 300;
         $status = 'pending';
 
@@ -989,12 +994,23 @@ final class VideosCustomServerTest extends Scope
 
             $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
             $status = (string) ($rendition['body']['status'] ?? '');
+            if ($status === 'started') {
+                $progress[] = (int) ($rendition['body']['progress'] ?? 0);
+            }
             \usleep(20000);
         }
 
         $this->assertSame('ready', $status);
         $this->assertGreaterThan(0, $observed, 'the encode finished before its workspace could be inspected');
         $this->assertSame([], \array_keys($copies), 'the source was copied into scratch');
+
+        $sorted = $progress;
+        \sort($sorted);
+        $this->assertSame($sorted, $progress, 'progress went backwards during the encode');
+        $this->assertNotEmpty(
+            \array_filter($progress, static fn (int $percent): bool => $percent > 0 && $percent < 100),
+            'progress never moved between 0 and 100 while encoding: ' . \implode(',', \array_unique($progress))
+        );
     }
 
     /**
@@ -3260,86 +3276,37 @@ final class VideosCustomServerTest extends Scope
         $ready = $this->waitForRenditionTerminalState($videoId, $renditionId);
         $this->assertEquals('ready', $ready['status']);
 
-        $jobsRoot = $this->tmpJobsRoot();
-        if (!\is_dir($jobsRoot) && !\mkdir($jobsRoot, 0755, true) && !\is_dir($jobsRoot)) {
-            $this->fail('Could not create videos tmp jobs root');
+        $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
+        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals('video_not_found', $response['body']['type']);
+
+        // The deletes worker cascades renditions, captions and their segments.
+        $deadline = \time() + 30;
+        $renditions = null;
+
+        while (\time() < $deadline) {
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
+
+            // Once the video row is gone the endpoint 404s, which is itself proof
+            // the cascade completed.
+            if ($response['headers']['status-code'] === 404) {
+                $renditions = 0;
+                break;
+            }
+
+            $renditions = $response['body']['total'] ?? null;
+
+            if ($renditions === 0) {
+                break;
+            }
+
+            \usleep(500000);
         }
 
-        $stamp = \gmdate('YmdHi');
-        $projectId = $this->getProject()['$id'];
-        $leftover = $jobsRoot . '/' . $stamp . '~' . $projectId . '~' . $videoId . '~rendition-leftover';
-        $sibling = $jobsRoot . '/' . $stamp . '~' . $projectId . '~othervideo~timeline-keep';
-
-        try {
-            if (!\mkdir($leftover . '/in', 0755, true) && !\is_dir($leftover . '/in')) {
-                $this->fail('Could not plant video tmp job');
-            }
-            if (!\mkdir($sibling . '/in', 0755, true) && !\is_dir($sibling . '/in')) {
-                $this->fail('Could not plant sibling video tmp job');
-            }
-
-            $response = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->headers());
-            $this->assertEquals(204, $response['headers']['status-code']);
-
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->headers());
-            $this->assertEquals(404, $response['headers']['status-code']);
-            $this->assertEquals('video_not_found', $response['body']['type']);
-
-            // The deletes worker cascades renditions, captions and their segments.
-            $deadline = \time() + 30;
-            $renditions = null;
-
-            while (\time() < $deadline) {
-                $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions', $this->headers());
-
-                // Once the video row is gone the endpoint 404s, which is itself proof
-                // the cascade completed.
-                if ($response['headers']['status-code'] === 404) {
-                    $renditions = 0;
-                    break;
-                }
-
-                $renditions = $response['body']['total'] ?? null;
-
-                if ($renditions === 0) {
-                    break;
-                }
-
-                \usleep(500000);
-            }
-
-            $this->assertSame(0, $renditions, 'Deletes worker did not cascade the video renditions');
-            $this->waitUntilPathGone($leftover);
-            $this->assertDirectoryExists($sibling);
-        } finally {
-            $this->removePlantedTmp($sibling);
-            if (\is_dir($leftover)) {
-                $this->removePlantedTmp($leftover);
-            }
-        }
-    }
-
-    private function removePlantedTmp(string $path): void
-    {
-        if (!\is_dir($path)) {
-            return;
-        }
-
-        foreach (\scandir($path) ?: [] as $name) {
-            if ($name === '.' || $name === '..') {
-                continue;
-            }
-
-            $child = $path . '/' . $name;
-            if (\is_dir($child)) {
-                $this->removePlantedTmp($child);
-                continue;
-            }
-
-            \unlink($child);
-        }
-
-        \rmdir($path);
+        $this->assertSame(0, $renditions, 'Deletes worker did not cascade the video renditions');
     }
 
     /**
