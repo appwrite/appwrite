@@ -1930,7 +1930,7 @@ return [
             ],
             [
                 'name' => '_APP_REVIEWS_MODEL',
-                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-4.5`. Required when reviews are enabled.',
+                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-5.5`. Required when reviews are enabled.',
                 'introduction' => '2.7.0',
                 'default' => '',
                 'required' => false,
