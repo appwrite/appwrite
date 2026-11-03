@@ -87,7 +87,7 @@ class Embedder extends Adapter implements Contract
             if ($embedding === []) {
                 throw new Api('Embedding response has an empty or invalid vector', $this->getName());
             }
-            $index = \is_array($row) && \is_int($row['index'] ?? null) ? $row['index'] : $position;
+            $index = \is_int($row['index'] ?? null) ? $row['index'] : $position;
             $vectors[$index] = array_values(array_map(fn ($value) => \is_int($value) || \is_float($value) ? (float) $value : 0.0, $embedding));
         }
         ksort($vectors);

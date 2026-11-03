@@ -48,7 +48,7 @@ final readonly class Result
      */
     public function toolCalls(): array
     {
-        return array_values(array_merge(...array_map(fn (Step $step) => $step->toolCalls(), $this->steps)));
+        return array_merge(...array_map(fn (Step $step) => $step->toolCalls(), $this->steps));
     }
 
     /**
@@ -58,7 +58,7 @@ final readonly class Result
      */
     public function toolResults(): array
     {
-        return array_values(array_merge(...array_map(fn (Step $step) => $step->results, $this->steps)));
+        return array_merge(...array_map(fn (Step $step) => $step->results, $this->steps));
     }
 
     /**

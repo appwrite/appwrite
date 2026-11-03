@@ -83,7 +83,8 @@ class ConversationTest extends TestCase
         try {
             $conversation->send('Pay');
             $this->fail('Expected the second model call to fail');
-        } catch (\LogicException) {
+        } catch (\Throwable $error) {
+            $this->assertInstanceOf(\LogicException::class, $error);
         }
 
         $this->assertSame(1, $runs);

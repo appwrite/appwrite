@@ -266,11 +266,14 @@ class Anthropic extends Adapter implements Model
             'stop_sequences' => $request->stop === [] ? null : $request->stop,
         ];
 
-        return array_replace_recursive(
+        /** @var array<string, mixed> $merged */
+        $merged = array_replace_recursive(
             $payload,
             array_filter($settings, fn ($value) => $value !== null),
             $request->options($this->getName()),
         );
+
+        return $merged;
     }
 
     /**

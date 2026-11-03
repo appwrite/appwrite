@@ -26,9 +26,11 @@ class SchemaTest extends TestCase
         $this->assertSame(['city', 'days', 'unit', 'tags', 'note'], $definition['required']);
         $this->assertFalse($definition['additionalProperties']);
         $this->assertSame('Forecast request', $definition['description']);
-        $this->assertSame(['type' => 'string', 'description' => 'City name'], $definition['properties']['city']);
-        $this->assertSame(['type' => ['string', 'null']], $definition['properties']['note']);
-        $this->assertSame(['type' => 'string', 'enum' => ['celsius', 'fahrenheit']], $definition['properties']['unit']);
+        $properties = $definition['properties'];
+        $this->assertIsArray($properties);
+        $this->assertSame(['type' => 'string', 'description' => 'City name'], $properties['city']);
+        $this->assertSame(['type' => ['string', 'null']], $properties['note']);
+        $this->assertSame(['type' => 'string', 'enum' => ['celsius', 'fahrenheit']], $properties['unit']);
     }
 
     public function testEmptyObjectEncodesPropertiesAsObject(): void

@@ -222,11 +222,14 @@ class OpenAI extends Adapter implements Model
             'reasoning_effort' => $request->effort?->value,
         ];
 
-        return array_replace_recursive(
+        /** @var array<string, mixed> $merged */
+        $merged = array_replace_recursive(
             $payload,
             array_filter($settings, fn ($value) => $value !== null),
             $request->options($this->getName()),
         );
+
+        return $merged;
     }
 
     /**

@@ -237,7 +237,10 @@ class Gemini extends Adapter implements Model
             $payload['generationConfig'] = $config;
         }
 
-        return array_replace_recursive($payload, $request->options($this->getName()));
+        /** @var array<string, mixed> $merged */
+        $merged = array_replace_recursive($payload, $request->options($this->getName()));
+
+        return $merged;
     }
 
     /**

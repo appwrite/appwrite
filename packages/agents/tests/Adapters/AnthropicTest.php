@@ -33,7 +33,7 @@ class AnthropicTest extends TestCase
     }
 
     /**
-     * @param  list<array<string, mixed>>  $blocks  Each: [start block, list of deltas]
+     * @param  list<array{0: array<string, mixed>, 1: list<array<string, mixed>>}>  $blocks  Each: [start block, list of deltas]
      * @return list<array<string, mixed>>
      */
     private function message(array $blocks, string $stop): array
@@ -61,7 +61,7 @@ class AnthropicTest extends TestCase
      */
     private function client(array $events): Client
     {
-        $chunks = array_map(fn (array $event) => 'event: '.$event['type']."\ndata: ".json_encode($event)."\n\n", $events);
+        $chunks = array_map(fn (array $event) => 'event: '.(\is_string($event['type'] ?? null) ? $event['type'] : '')."\ndata: ".json_encode($event)."\n\n", $events);
 
         return (new Client())->queue(200, chunks: $chunks);
     }
@@ -100,7 +100,7 @@ class AnthropicTest extends TestCase
         $this->assertSame(['user_id' => 'u1'], $payload['metadata']);
         $this->assertSame([['type' => 'text', 'text' => 'Be brief', 'cache_control' => ['type' => 'ephemeral']]], $payload['system']);
         $this->assertSame(['type' => 'any'], $payload['tool_choice']);
-        $this->assertArrayNotHasKey('cache_control', $client->payload('tools', 0));
+        $this->assertNull($client->payload('tools', 0, 'cache_control'));
         $this->assertSame('weather', $client->payload('tools', 0, 'name'));
 
         $this->assertSame([
