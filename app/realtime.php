@@ -362,17 +362,17 @@ $server->error(function (Throwable $error): void {
 });
 
 /**
- * Boot gate: workers serve nothing until it opens. On self-hosted it opens once the presences a
- * crashed run of this host left online are deleted, so the cleanup can never catch a new one.
- * It runs in its own process: a worker serves events while its onWorkerStart waits on I/O, and
- * a worker coroutine cannot fork.
+ * Boot gate: workers serve nothing until it opens. On self-hosted it opens once the presences
+ * left online by realtime processes that are gone (this host's earlier runs, and hosts with no
+ * recent heartbeat) are deleted. It runs in its own process: a worker serves events while its
+ * onWorkerStart waits on I/O, and a worker coroutine cannot fork.
  */
 $booted = new Atomic(0);
 // Nothing is served before this, so newer rows belong to live sockets, even past the timeout.
 $bootedAt = DateTime::now();
 
 if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-    $adapter->getNative()->addProcess(new Process(function () use ($booted, $bootedAt, $container, $presenceState): void {
+    $adapter->getNative()->addProcess(new Process(function () use ($booted, $bootedAt, $container, $containerId, $presenceState): void {
         if ($booted->get() === 0) {
             $span = Span::init('realtime.presences.cleanup');
             $started = \microtime(true);
@@ -381,8 +381,23 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
 
             try {
                 if ($hostname !== false) {
-                    $result = $presenceState->deleteForHostInProjects(
-                        getConsoleDB(),
+                    $dbForPlatform = getConsoleDB();
+
+                    // Heartbeat before serving, so a peer booting meanwhile sees this host as live.
+                    try {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('realtime', new Document([
+                            '$id' => Id::unique(),
+                            '$permissions' => [],
+                            'container' => $containerId . '@' . $hostname,
+                            'timestamp' => DateTime::now(),
+                            'value' => '{}',
+                        ])));
+                    } catch (Throwable $th) {
+                        $span->setError($th);
+                    }
+
+                    $result = $presenceState->deleteOrphanedInProjects(
+                        $dbForPlatform,
                         getProjectDB(...),
                         $hostname,
                         $bootedAt,
@@ -432,7 +447,8 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
                     '$id' => Id::unique(),
                     '$collection' => Id::custom('realtime'),
                     '$permissions' => [],
-                    'container' => $containerId,
+                    // Names the host, so a booting peer can tell whose presences are orphaned.
+                    'container' => $containerId . '@' . \gethostname(),
                     'timestamp' => DateTime::now(),
                     'value' => '{}'
                 ]);
@@ -456,7 +472,8 @@ $server->onStart(function () use ($stats, $containerId, &$statsDocument) {
             foreach ($stats as $projectId => $value) {
                 $payload[$projectId] = $stats->get($projectId, 'connectionsTotal');
             }
-            if (empty($payload) || empty($statsDocument)) {
+            // Written even when idle: it is also this host's liveness heartbeat.
+            if (empty($statsDocument)) {
                 return;
             }
 
