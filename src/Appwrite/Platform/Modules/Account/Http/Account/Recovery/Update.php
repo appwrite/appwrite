@@ -175,6 +175,9 @@ class Update extends Action
                 $claimed = true;
             }
 
+            // Under the user lock, so a concurrent recovery request is either deleted here or lands after the reset
+            User::deleteRecoveryTokens($dbForProject, $profile);
+
             $updates = [
                 'password' => $newPassword,
                 'passwordHistory' => $history,
