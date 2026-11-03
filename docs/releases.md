@@ -38,7 +38,7 @@ Patches leave on a schedule so that "is this worth a release?" stops being a per
 Every release is tagged from its `X.Y.x` branch, never from `main`. The branch gives a stable target to test before tagging, and it is what nightly and backports follow.
 
 1. **Minor:** cut `X.Y.x` from `main`. **Patch:** reuse the existing `X.Y.x`. `bin/release prepare` does this.
-2. Open the prep PR against `X.Y.x`, with the [version bump](#version-bump), the [environment variable sync](#environment-variables) and, for a minor, the [migration library sync](#migration-library).
+2. Open the prep PR against `X.Y.x`, with the [version bump](#version-bump) and the [environment variable sync](#environment-variables). For a minor, the [migration sync](#migration-library) lands on `main` first, so `prepare` picks it up.
 3. Open a PR from `X.Y.x` into `main`. For a minor, `X.Y.x` starts at `main`, so this PR can only open once the prep PR has merged into `X.Y.x`. Run both [gates](#self-hosted-rc--final) locally against `X.Y.x` and record the results, with the exact commit SHA tested, in this PR, so it is the release's test record. Tag that SHA, then merge this PR after the release is published so the version bump and any release-only fixes land back on `main`.
 
 If a fix must reach the release while the prep PR is open, land it on `main` and move `X.Y.x` up to `main` (a plain push while `X.Y.x` has no commits of its own, a backport after that). Then merge `X.Y.x` into `release/X.Y.Z`. Do not rebase the prep branch: `release/*` can't be force-pushed.
@@ -87,13 +87,17 @@ Every `_APP_` variable a user can set needs a definition in [`app/config/variabl
 
 ## Migration library
 
-Projects move between installs and to Cloud through [`utopia-php/migration`](https://github.com/utopia-php/migration). It reads the source with sdk-for-php (`appwrite/appwrite`) and writes the destination through the same SDK or straight to the database, so a field that a release adds is dropped on migration until the library carries it.
+Projects move between installs and to Cloud through the migration package in [`packages/migration`](../packages/migration). It reads the source with sdk-for-php (`appwrite/appwrite`) and writes the destination through the same SDK or straight to the platform database, so a field that a release adds is dropped on migration until the package carries it, and it can only carry it once sdk-for-php has the method. sdk-for-php is generated from this repository's code, so release it from the release code rather than waiting for one that follows the release.
 
 For a minor, before the prep PR:
 
-1. In utopia-php/migration, bump `appwrite/appwrite` to the sdk-for-php release that covers this version, on the branch this repo's `utopia-php/migration` constraint resolves to (`2.0.x` for `^2.0`).
-2. Run its unit tests. `AppwriteSdkCoverageTest` fails for every SDK parameter or project setting that the Appwrite destination neither sends nor records as skipped. Carry each one through the resource, the Appwrite source and the Appwrite destination, or add it to the test's skip list with the reason.
-3. Release migration, then bump `utopia-php/migration` and `appwrite/appwrite` in this repo's prep PR. Cover each new field with an assertion in [`tests/e2e/Services/Migrations`](../tests/e2e/Services/Migrations).
+1. Run `bin/release prepare X.Y.Z` and keep `release/X.Y.Z` local.
+2. Generate sdk-for-php from that branch with the `release-sdk` skill in `appwrite-labs/cloud` (`server php --version=X.Y.x`), stopping before its push. Before its `specs` step, copy the branch's `src`, `app` and `packages` over `vendor/appwrite/server-ce`, so the spec reads `X.Y.Z` and the SDK sends `X-Appwrite-Response-Format: X.Y.Z`.
+3. Copy the generated SDK's `src` over `vendor/appwrite/appwrite/src` here and run the package's unit suite: `vendor/bin/phpunit -c packages/migration/phpunit.xml --bootstrap vendor/autoload.php --testsuite unit`. `AppwriteSdkCoverageTest` fails for every SDK parameter or project method that the Appwrite destination neither sends nor records as skipped. Carry each one through the resource, the Appwrite source and the Appwrite destination, or add it to the test's skip list with the reason. A new resource type adds a value to the `AppwriteMigrationResource` enum, so regenerate the SDK afterwards, from the branch with the change.
+4. Release the SDK (the rest of the skill), then open a PR on `main` with the migration change and `appwrite/appwrite` bumped in `composer.json` and `packages/migration/composer.json`. Cover each new field with an assertion in [`tests/e2e/Services/Migrations`](../tests/e2e/Services/Migrations).
+5. Once it merges, delete the local `release/X.Y.Z` and run `prepare` again.
+
+The source reads servers older than the release, so a response model field the release adds must hydrate when it is missing. The generated model fills a missing field from the spec's `default`, but an object default (`new \stdClass()`) never reaches the spec, so give a new nested-model rule `'required' => false` (2.7.0 did this for the project's `prefs`).
 
 A patch needs this only when a fix changes a field that migration carries.
 
