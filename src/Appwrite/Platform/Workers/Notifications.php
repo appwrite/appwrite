@@ -18,13 +18,17 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\UID;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
+use Utopia\Messaging\Messages\Push as PushMessage;
+use Utopia\Messaging\Priority;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Queue\PermanentFailure;
@@ -52,6 +56,8 @@ class Notifications extends Action
 
     private Telemetry $telemetry;
 
+    private ?PushAdapter $adapterForPush = null;
+
     public static function getName(): string
     {
         return 'notifications';
@@ -69,13 +75,15 @@ class Notifications extends Action
             ->inject('clientForWebhooks')
             ->inject('publicHostname')
             ->inject('telemetry')
+            ->inject('adapterForPush')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, Telemetry $telemetry): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, Telemetry $telemetry, ?PushAdapter $adapterForPush = null): void
     {
         $this->publicHostname = $publicHostname;
         $this->telemetry = $telemetry;
+        $this->adapterForPush = $adapterForPush;
 
         $payload = $message->getPayload();
 
@@ -209,6 +217,7 @@ class Notifications extends Action
             NOTIFICATION_TYPE_EMAIL => $this->dispatchEmail($recipient, $messageId, $payload, $project, $register, $dbForPlatform, $platform),
             NOTIFICATION_TYPE_CONSOLE => $this->dispatchConsole($recipient, $messageId, $payload, $project, $dbForPlatform),
             NOTIFICATION_TYPE_WEBHOOK => $this->dispatchWebhook($recipient, $payload, $clientForWebhooks),
+            NOTIFICATION_TYPE_PUSH => $this->dispatchPush($recipient, $messageId, $payload, $project, $dbForPlatform),
             default => throw new Exception('Unsupported notification channel: ' . $channel),
         };
     }
@@ -530,6 +539,129 @@ class Notifications extends Action
     }
 
     /**
+     * Pushes to every signed-in device of the console user the recipient names: their push
+     * targets on the console project that have not expired. The user's `beep` prefs mute
+     * organizations and projects and turn resolved pushes off for all of them. Each device's
+     * push is recorded before it is sent, so a redelivered message pushes nothing twice, even
+     * after a crash between the send and the record, while a new device still gets it.
+     * A critical monitor's firing goes out with APNs' critical sound. A token the push service
+     * reports expired marks its target expired.
+     *
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $recipient
+     */
+    protected function dispatchPush(array $recipient, string $messageId, array $payload, Document $project, Database $dbForPlatform): ?string
+    {
+        $adapter = $this->adapterForPush;
+        if ($adapter === null) {
+            Span::add('push.skipped', 'disabled');
+            return null;
+        }
+
+        $push = $payload['push'] ?? [];
+        $data = \array_map('strval', $push['data'] ?? []);
+        $status = $data['status'] ?? '';
+
+        $user = $dbForPlatform->getDocument('users', $recipient['address']);
+        $prefs = $user->getAttribute('prefs', []);
+        $prefs = $prefs instanceof Document ? $prefs->getArrayCopy() : (\is_array($prefs) ? $prefs : []);
+        $beep = \is_array($prefs['beep'] ?? null) ? $prefs['beep'] : [];
+        // Written by the user, so anything that is not a list of strings or a boolean reads as unset.
+        $muted = fn (string $key): array => \is_array($beep[$key] ?? null) ? \array_filter($beep[$key], 'is_string') : [];
+        if (
+            \in_array($data['organizationId'] ?? '', $muted('mutedOrganizationIds'), true)
+            || \in_array($data['projectId'] ?? '', $muted('mutedProjectIds'), true)
+            || ($status === 'resolved' && ($beep['resolved'] ?? true) === false)
+        ) {
+            Span::add('push.skipped', 'muted');
+            return null;
+        }
+
+        $targets = $dbForPlatform->find('targets', [
+            Query::equal('userId', [$recipient['address']]),
+            Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+            Query::equal('expired', [false]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]);
+        if ($targets === []) {
+            Span::add('push.skipped', 'no_targets');
+            return null;
+        }
+
+        // A device that was not granted Critical Alerts plays it as a normal push.
+        $critical = ($push['critical'] ?? false) === true && $status !== 'resolved';
+        $failures = [];
+
+        foreach ($targets as $target) {
+            $delivery = [...$recipient, 'address' => $target->getId()];
+
+            if ($messageId !== '') {
+                // Claimed before sending, so a worker that dies after the push service accepted it
+                // leaves the row behind and the redelivery skips this device. A send that fails
+                // releases the claim for the retry.
+                try {
+                    $dbForPlatform->createDocument('notifications', $this->alertDocument($messageId, $delivery, $payload, $project));
+                } catch (DuplicateException) {
+                    continue;
+                }
+            }
+
+            $message = new PushMessage(
+                to: [(string) $target->getAttribute('identifier')],
+                title: (string) ($push['title'] ?? ''),
+                body: (string) ($push['body'] ?? ''),
+                data: $data === [] ? null : $data,
+                sound: $critical ? 'siren.caf' : null,
+                tag: ($push['tag'] ?? '') === '' ? null : (string) $push['tag'],
+                critical: $critical ? true : null,
+                priority: Priority::HIGH,
+            );
+
+            try {
+                $result = $adapter->send($message);
+            } catch (Throwable $error) {
+                $failures[] = $target->getId() . ': ' . $error->getMessage();
+                $this->release($dbForPlatform, $messageId, $delivery);
+                continue;
+            }
+            $error = (string) ($result['results'][0]['error'] ?? '');
+
+            if (($result['deliveredTo'] ?? 0) > 0) {
+                continue;
+            }
+
+            if ($error === 'Expired device token') {
+                $dbForPlatform->updateDocument('targets', $target->getId(), new Document([
+                    'expired' => true,
+                ]));
+                continue;
+            }
+
+            $failures[] = $target->getId() . ': ' . ($error ?: 'Unknown error');
+            $this->release($dbForPlatform, $messageId, $delivery);
+        }
+
+        Span::add('push.targets', \count($targets));
+
+        if ($failures !== []) {
+            throw new Exception('Push delivery failed: ' . \implode(', ', $failures));
+        }
+
+        return null;
+    }
+
+    /**
+     * Removes the claim on a push the service did not accept, so the retry sends it.
+     *
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType: string, resourceId: string, resourceInternalId: string, parentResourceType: string, parentResourceId: string, parentResourceInternalId: string} $delivery
+     */
+    private function release(Database $dbForPlatform, string $messageId, array $delivery): void
+    {
+        if ($messageId !== '') {
+            $dbForPlatform->deleteDocument('notifications', self::buildAlertId($messageId, $delivery));
+        }
+    }
+
+    /**
      * Persist an alert row. Returns the alertId so callers can reference the row.
      *
      * Idempotent: on a duplicate composite-key violation the existing
@@ -538,6 +670,24 @@ class Notifications extends Action
      * @param array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string} $recipient
      */
     protected function persistAlert(Database $dbForPlatform, string $messageId, array $recipient, array $payload, Document $project): string
+    {
+        $document = $this->alertDocument($messageId, $recipient, $payload, $project);
+
+        try {
+            $dbForPlatform->createDocument('notifications', $document);
+            return $document->getId();
+        } catch (DuplicateException) {
+            $existing = $dbForPlatform->getDocument('notifications', $document->getId());
+            return $existing->isEmpty() ? $document->getId() : $existing->getId();
+        }
+    }
+
+    /**
+     * The ledger row recording that `$recipient` was sent the message.
+     *
+     * @param array{address: string, channel: string, signatureKey?: string, resourceType?: string, resourceId?: string, resourceInternalId?: string, parentResourceType?: string, parentResourceId?: string, parentResourceInternalId?: string} $recipient
+     */
+    private function alertDocument(string $messageId, array $recipient, array $payload, Document $project): Document
     {
         $recipient = $this->normalizeRecipient($recipient, $project);
 
@@ -557,7 +707,7 @@ class Notifications extends Action
             $body = self::renderText($payload['body'] ?? '', $params);
         }
 
-        $document = new Document([
+        return new Document([
             '$id' => $alertId,
             '$permissions' => $permissions,
             'messageId' => $messageId,
@@ -576,14 +726,6 @@ class Notifications extends Action
             'body' => $body,
             'read' => false,
         ]);
-
-        try {
-            $dbForPlatform->createDocument('notifications', $document);
-            return $alertId;
-        } catch (DuplicateException) {
-            $existing = $dbForPlatform->getDocument('notifications', $alertId);
-            return $existing->isEmpty() ? $alertId : $existing->getId();
-        }
     }
 
     /**

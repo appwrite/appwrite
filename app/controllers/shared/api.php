@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Event\Context\Audit as AuditContext;
@@ -11,6 +12,7 @@ use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Validator\Reason;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
@@ -606,43 +608,21 @@ Http::init()
             && ! $user->isKey($roles)
             && ! $user->isPrivileged($roles);
 
-        $abuseLimit = $route->getLabel('abuse-limit', 0);
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
-        if (\in_array($project->getId(), $increasedLimitProjects, true)) {
-            $abuseLimit *= 100;
-        }
+        $multiplier = \in_array($project->getId(), $increasedLimitProjects, true) ? 100 : 1;
 
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        /** @var list<Limit> $limits */
+        $limits = $route->getLabel('abuse', []);
+        $values = $limits === [] ? [] : Limit::values($route, $request, $project, $user, $pathParams);
         $closestLimit = null;
+        $reserved = [];
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $isRateLimited = false;
-            $checking = false;
+        foreach ($limits as $limit) {
+            $max = $limit->limit * $multiplier;
 
             try {
-                $params = [
-                    '{projectId}' => (string) $project->getId(),
-                    '{userId}' => (string) $user->getId(),
-                    '{userAgent}' => (string) $request->getUserAgent(''),
-                    '{ip}' => (string) $request->getIP(),
-                    '{url}' => $route->getPath(),
-                    '{method}' => (string) $request->getMethod(),
-                    '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
-                ];
-
-                // Path params are not part of the request input, and the query must not override them.
-                foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
-                    if (! empty($value)) {
-                        $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
-                        // Sign in matches emails case-insensitively, so the limit must too
-                        $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
-                    }
-                }
-
-                $checking = true;
-                $isRateLimited = $timelimit($abuseKey, $abuseLimit, $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params, $response, $shouldCheckAbuse, &$closestLimit): bool {
-                    $timeLimit = $timeLimit->withParams($params);
+                $isRateLimited = $timelimit($limit->key($values), $max, $limit->seconds, function (TimeLimit $timeLimit) use ($response, $shouldCheckAbuse, &$closestLimit): bool {
+                    // A failure limit's hit is reserved here too, atomically, and given back if the request succeeds.
                     $result = $shouldCheckAbuse ? $timeLimit->check() : $timeLimit->peek();
                     if ($result->limit && ($result->remaining < $closestLimit || is_null($closestLimit))) {
                         $closestLimit = $result->remaining;
@@ -654,18 +634,28 @@ Http::init()
                     return $shouldCheckAbuse && $result->limited;
                 });
             } catch (\Throwable $th) {
-                // Only a limiter outage fails open; a request that breaks the key is refused.
-                if (! $checking) {
-                    throw $th;
-                }
-
+                // A limiter outage fails open.
                 \error_log((string) $th);
 
                 continue;
             }
 
             if ($isRateLimited) {
+                // A refused request is not a failed attempt. Without this, an IP over its cap would keep spending
+                // the per-account quota of every account it tries, locking those accounts out from everywhere.
+                foreach ($reserved as $hit) {
+                    try {
+                        $timelimit($hit->key($values), $hit->limit, $hit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->release());
+                    } catch (\Throwable $th) {
+                        \error_log((string) $th);
+                    }
+                }
+
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+
+            if ($shouldCheckAbuse && $limit->failures) {
+                $reserved[] = $limit;
             }
         }
     });
@@ -723,6 +713,17 @@ Http::init()
         $auditContext->hostname = $request->getHostname();
         $auditContext->sdk = \strtolower($request->getHeaderLine('x-sdk-name', ''));
         $auditContext->sdkVersion = $request->getHeaderLine('x-sdk-version', '');
+
+        // Why the caller made this request, shown next to it in Activity. Always percent-decoded, like a W3C Baggage value,
+        // so clients that cannot send non-ASCII header bytes (browsers, Node) can send any language; a literal % goes as %25.
+        // Validated before trimming, so an encoded line break or NUL at either end is refused rather than dropped.
+        $reason = \rawurldecode($request->getHeaderLine('x-appwrite-reason', ''));
+        $reasonValidator = new Reason(APP_LIMIT_AUDIT_REASON_LENGTH);
+        if (! $reasonValidator->isValid($reason)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Reason header value: ' . $reasonValidator->getDescription() . ' Percent-encode it with encodeURIComponent.');
+        }
+        $auditContext->reason = \trim($reason);
+
         $auditContext->event = $route->getLabel('audits.event', '');
         $auditContext->project = $project;
         $auditContext->impersonatorUser = $impersonatorUser->isEmpty() ? null : $impersonatorUser;
@@ -1000,45 +1001,36 @@ Http::shutdown()
     ->groups(['api'])
     ->inject('route')
     ->inject('request')
-    ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('timelimit')
+    ->inject('authorization')
     ->inject('params')
-    ->action(function (Route $route, Request $request, Response $response, Document $project, User $user, callable $timelimit, array $pathParams) {
-        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
-        $abuseResetCode = $route->getLabel('abuse-reset', []);
-        $abuseResetCode = \is_array($abuseResetCode) ? $abuseResetCode : [$abuseResetCode];
-
-        if (! $abuseEnabled || \count($abuseResetCode) === 0 || ! \in_array($response->getStatusCode(), $abuseResetCode)) {
+    ->action(function (Route $route, Request $request, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
+        // Shutdown hooks run only when the request did not throw, so it is not a failure: give back the hits its
+        // failure limits reserved on arrival. A request that failed never gets here and keeps them.
+        $roles = $authorization->getRoles();
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled' || $user->isKey($roles) || $user->isPrivileged($roles)) {
             return;
         }
 
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $abuseKeyLabel = (! is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+        /** @var list<Limit> $limits */
+        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures);
+        if ($limits === []) {
+            return;
+        }
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $params = [
-                '{projectId}' => (string) $project->getId(),
-                '{userId}' => (string) $user->getId(),
-                '{userAgent}' => (string) $request->getUserAgent(''),
-                '{ip}' => (string) $request->getIP(),
-                '{url}' => $route->getPath(),
-                '{method}' => (string) $request->getMethod(),
-                '{chunkId}' => (string) $request->getContentRangeChunk(APP_LIMIT_UPLOAD_CHUNK_SIZE),
-            ];
-
-            foreach (\array_merge($request->getParams(), $pathParams) as $key => $value) {
-                if (! empty($value)) {
-                    $value = (\is_array($value) || \is_object($value)) ? (string) \json_encode($value) : (string) $value;
-                    // Sign in matches emails case-insensitively, so the limit must too
-                    $params['{param-' . $key . '}'] = $key === 'email' ? \strtolower($value) : $value;
-                }
+        // A release takes back a hit from the current window, never below zero. It can take back one this request
+        // did not reserve: when init failed open on a limiter outage, or when the window turned during the request.
+        // Either costs at most one extra failure, and carrying each reservation from init to here is not worth that.
+        $values = Limit::values($route, $request, $project, $user, $pathParams);
+        foreach ($limits as $limit) {
+            try {
+                $timelimit($limit->key($values), $limit->limit, $limit->seconds, fn (TimeLimit $timeLimit) => $timeLimit->release());
+            } catch (\Throwable $th) {
+                // The response is already decided; a limiter outage must not turn it into a 500.
+                \error_log((string) $th);
             }
-
-            $timelimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), function (TimeLimit $timeLimit) use ($params): void {
-                $timeLimit->withParams($params)->reset();
-            });
         }
     });
 

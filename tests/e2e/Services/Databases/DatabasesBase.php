@@ -7761,6 +7761,101 @@ trait DatabasesBase
         $this->assertEquals(2025, $upserted['body']['releaseYear']);
     }
 
+    public function testBulkWritesRequireKeyOrPrivilegedUser(): void
+    {
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $callerHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $schema = $this->getSupportForAttributes()
+            ? [$this->getSchemaResource() => [['key' => 'title', 'type' => ColumnType::String->value, 'size' => 64]]]
+            : [];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, array_merge([
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Bulk Writes',
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+                Permission::delete(Role::users()),
+            ],
+            $this->getSecurityParam() => false,
+        ], $schema));
+
+        $this->assertSame(201, $container['headers']['status-code'], $container['body']['message'] ?? '');
+        $containerId = $container['body']['$id'];
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $keyHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Original'],
+        ]);
+
+        $this->assertSame(201, $record['headers']['status-code'], $record['body']['message'] ?? '');
+        $recordId = $record['body']['$id'];
+
+        $writes = [
+            'bulk create' => [201, fn (): array => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                $this->getRecordResource() => [
+                    ['$id' => Id::unique(), 'title' => 'Created'],
+                ],
+            ])],
+            'bulk update' => [200, fn (): array => $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                'data' => [
+                    'title' => 'Updated',
+                    '$permissions' => [Permission::read(Role::any())],
+                ],
+            ])],
+            'bulk upsert' => [200, fn (): array => $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                $this->getRecordResource() => [
+                    ['$id' => $recordId, 'title' => 'Upserted', '$createdAt' => '2000-01-01T00:00:00.000+00:00'],
+                ],
+            ])],
+            'bulk delete' => [200, fn (): array => $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $containerId), $callerHeaders, [
+                'queries' => [Query::equal('$id', [$recordId])->toString()],
+            ])],
+        ];
+
+        if ($this->getSide() !== 'client') {
+            /**
+             * Test for SUCCESS
+             */
+            foreach ($writes as $write => [$status, $call]) {
+                $response = $call();
+                $this->assertSame($status, $response['headers']['status-code'], $write . ': ' . ($response['body']['message'] ?? ''));
+            }
+
+            return;
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ($writes as $write => [, $call]) {
+            $response = $call();
+            $this->assertSame(401, $response['headers']['status-code'], $write . ' must refuse a session');
+            $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $response['body']['type'], $write);
+        }
+
+        $unchanged = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $recordId), $keyHeaders);
+
+        $this->assertSame(200, $unchanged['headers']['status-code'], 'A refused bulk delete leaves the record in place');
+        $this->assertSame('Original', $unchanged['body']['title']);
+        $this->assertSame([], $unchanged['body']['$permissions'], 'A refused bulk update grants no permissions');
+        $this->assertSame($record['body']['$createdAt'], $unchanged['body']['$createdAt'], 'A refused bulk upsert keeps the original timestamp');
+
+        $listed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId), $keyHeaders);
+
+        $this->assertSame(200, $listed['headers']['status-code']);
+        $this->assertSame(1, $listed['body']['total'], 'A refused bulk create adds no records');
+    }
+
     public function testBulkOperators(): void
     {
         if (!$this->getSupportForOperators()) {

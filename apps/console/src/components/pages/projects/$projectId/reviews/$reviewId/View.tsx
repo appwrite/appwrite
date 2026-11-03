@@ -7,9 +7,10 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { MarkdownContent } from '@/components/global/shared/MarkdownContent'
 import type { Review, ReviewFinding } from '@/lib/appwrite/reviews'
-import { useReview } from '@/lib/react-query/hooks'
+import { isReviewRunning, useReview } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader } from '../../shared/ServiceHeader'
+import { Trace } from '../_components/Trace'
 import {
   FindingSeverityBadge,
   ReviewStatusBadge,
@@ -240,6 +241,12 @@ export function View({ initialReview }: ViewProps = {}) {
               )}
             </div>
           )}
+
+          <Trace
+            projectId={projectId}
+            reviewId={review.$id}
+            running={isReviewRunning(review)}
+          />
         </div>
       </div>
     </div>

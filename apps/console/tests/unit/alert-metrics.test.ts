@@ -117,12 +117,42 @@ describe('alert rule form', () => {
     const input = monitorInputFromForm(emptyRuleForm(), t)
     expect(Object.keys(input).sort()).toEqual([
       'cooldown',
+      'critical',
       'name',
       'notify',
       'rules',
       'window',
     ])
     expect(input.notify).toEqual(['owner'])
+    expect(input.critical).toBe(false)
+  })
+
+  test('keeps a critical monitor critical through the edit form', () => {
+    const input = monitorInputFromForm(
+      { ...emptyRuleForm(), critical: true },
+      t,
+    )
+    expect(input.critical).toBe(true)
+    const monitor = parseMonitor({
+      $id: 'm1',
+      $createdAt: '',
+      $updatedAt: '',
+      type: 'usage',
+      resourceType: 'project',
+      resourceId: '',
+      window: 3600,
+      cooldown: 3600,
+      enabled: true,
+      status: 'ok',
+      value: null,
+      evaluatedAt: null,
+      alertId: '',
+      triggeredAt: null,
+      ...input,
+    } as Monitor)
+    expect(monitorInputFromForm(ruleFormFromMonitor(monitor), t).critical).toBe(
+      true,
+    )
   })
 
   test('names an unnamed rule after its condition', () => {

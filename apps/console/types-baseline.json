@@ -278,7 +278,6 @@
     "TS2571: Object is of type 'unknown'.": 4
   },
   "src/components/pages/projects/$projectId/activity/ActivityLogDrawer.tsx": {
-    "TS2304: Cannot find name 'Globe'.": 1,
     "TS2339: Property 'clientCode' does not exist on type 'ActivityEvent'.": 3,
     "TS2339: Property 'clientEngine' does not exist on type 'ActivityEvent'.": 1,
     "TS2339: Property 'clientEngineVersion' does not exist on type 'ActivityEvent'.": 1,

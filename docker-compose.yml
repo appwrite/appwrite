@@ -137,6 +137,8 @@ services:
       - _APP_OPENSSL_KEY_CURRENT
       - _APP_OPENSSL_KEY_OLDEST
       - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_NOTIFICATIONS_PUSH_APNS
+      - _APP_NOTIFICATIONS_PUSH_APNS_KEY
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_URL
@@ -211,6 +213,7 @@ services:
       - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_STREAMING
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -290,7 +293,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.2.108-self-hosted
+    image: appwrite/new:1.2.138-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -621,6 +624,8 @@ services:
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_NOTIFICATIONS_PUSH_APNS
+      - _APP_NOTIFICATIONS_PUSH_APNS_KEY
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SMTP_HOST
@@ -1494,6 +1499,8 @@ services:
       - _APP_OPENSSL_KEY_CURRENT
       - _APP_OPENSSL_KEY_OLDEST
       - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_NOTIFICATIONS_PUSH_APNS
+      - _APP_NOTIFICATIONS_PUSH_APNS_KEY
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -1997,7 +2004,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:1.1.2
+    image: openruntimes/executor:1.3.0
     restart: unless-stopped
     networks:
       - appwrite

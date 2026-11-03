@@ -3792,16 +3792,21 @@ trait MigrationsBase
         ];
 
         $labels = ['vip' . \substr(Id::unique(), 0, 8), 'beta' . \substr(Id::unique(), 0, 8)];
+        $prefs = ['theme' => 'dark', 'limits' => ['seats' => 5]];
 
         // Set labels on source. The labels endpoint is PUT /project/labels — the
         // generic project update endpoint doesn't accept a labels param.
         $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceKeyHeaders, [
             'labels' => $labels,
         ]);
+        $this->client->call(Client::METHOD_PUT, '/project/prefs', $sourceKeyHeaders, [
+            'prefs' => $prefs,
+        ]);
 
         $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_PROJECT_LABELS,
+                Resource::TYPE_PROJECT_PREFERENCES,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -3809,7 +3814,9 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_PROJECT_LABELS], $result['resources']);
+        $this->assertEquals([Resource::TYPE_PROJECT_LABELS, Resource::TYPE_PROJECT_PREFERENCES], $result['resources']);
+        $this->assertSame(1, $result['statusCounters'][Resource::TYPE_PROJECT_PREFERENCES]['success']);
+        $this->assertSame(0, $result['statusCounters'][Resource::TYPE_PROJECT_PREFERENCES]['error']);
         $this->assertArrayHasKey(Resource::TYPE_PROJECT_LABELS, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['error']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['pending']);
@@ -3821,9 +3828,15 @@ trait MigrationsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEqualsCanonicalizing($labels, $response['body']['labels']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/project/prefs', $destinationKeyHeaders);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($prefs, $response['body']);
+
         // Restore both projects.
         $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceKeyHeaders, ['labels' => []]);
         $this->client->call(Client::METHOD_PUT, '/project/labels', $destinationKeyHeaders, ['labels' => []]);
+        $this->client->call(Client::METHOD_PUT, '/project/prefs', $sourceKeyHeaders, ['prefs' => new \stdClass()]);
+        $this->client->call(Client::METHOD_PUT, '/project/prefs', $destinationKeyHeaders, ['prefs' => new \stdClass()]);
     }
 
     public function testAppwriteMigrationServices(): void
