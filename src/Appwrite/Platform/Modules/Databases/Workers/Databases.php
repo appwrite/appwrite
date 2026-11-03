@@ -377,6 +377,20 @@ class Databases extends Action
             } catch (NotFound $e) {
                 Span::add('database.attribute.not_found', $e->getMessage());
 
+                // The column is already gone from the data plane, which is the state the
+                // success path above leaves behind, so its grants have to go the same way.
+                // A retry lands here after a first run that dropped the column but failed
+                // before this cleanup: leaving the grants would keep $permissions widened
+                // to a read that still authorizes listing and getting the table, and the
+                // next collection update would replay a grant naming a column that no
+                // longer exists, which the library refuses. Idempotent, so it costs
+                // nothing on the path where the column was never created.
+                $this->dropColumnGrant($dbForProject, $database, $collection, $key);
+
+                if ($type === ColumnType::Relationship->value && $options['twoWay'] && !$relatedCollection->isEmpty()) {
+                    $this->dropColumnGrant($dbForProject, $database, $relatedCollection, $options['twoWayKey']);
+                }
+
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
 
                 if (!$relatedAttribute->isEmpty()) {
