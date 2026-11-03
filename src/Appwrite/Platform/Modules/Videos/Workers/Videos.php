@@ -33,6 +33,8 @@ use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Counter;
@@ -57,6 +59,7 @@ use Utopia\Video\Representation;
 use Utopia\Video\Tile;
 use Utopia\Video\Track;
 use Utopia\Video\Variant;
+use Utopia\Video\Written;
 
 /**
  * Consumes the `videos` queue: thumbnail timelines, caption packaging and
@@ -717,6 +720,10 @@ class Videos extends Action
         $workspace = null;
         $startedAt = \microtime(true);
         $storageBytes = 0;
+        // Set once this run has written anything under the rendition's path, so
+        // a run that does not reach `ready` removes what it wrote (finally).
+        $path = null;
+        $wrote = false;
         $output = $videoMessage->output !== ''
             ? $videoMessage->output
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
@@ -880,6 +887,12 @@ class Videos extends Action
                 default => (new Hls())->segment(self::SEGMENT_DURATION)->manifests(false),
             };
 
+            $path = $deviceForVideos->getPath($video->getId())
+                . '/' . $rendition->getAttribute('name')
+                . '-' . $rendition->getId() . '/';
+            $local = new Local('/');
+            $shippedBytes = 0;
+
             $lastProgress = -1;
             $lastStatusCheck = 0.0;
             $phaseStart = \microtime(true);
@@ -891,6 +904,25 @@ class Videos extends Action
                     ->format($format)
                     ->add($representation)
                     ->output($target)
+                    // Each segment is uploaded and removed as soon as ffmpeg has
+                    // finished it, so scratch holds a few segments, not the whole
+                    // rendition. A failed write throws, which stops ffmpeg; the
+                    // objects already written are removed in finally.
+                    ->on(Packager::SEGMENT, function (mixed $written) use ($deviceForVideos, $local, $path, &$shippedBytes, &$wrote) {
+                        if (!$written instanceof Written) {
+                            return;
+                        }
+                        $wrote = true;
+                        $deviceForVideos->write(
+                            $path . $written->file,
+                            $local->read($written->path),
+                            \mime_content_type($written->path) ?: 'application/octet-stream'
+                        );
+                        $shippedBytes += $written->size;
+                        if (!@\unlink($written->path)) {
+                            Console::warning('Videos worker: failed to remove shipped segment ' . $written->path);
+                        }
+                    })
                     ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck, &$last, &$advancedAt, &$advancedTime) {
                         if (!$progress instanceof Progress) {
                             return;
@@ -958,8 +990,9 @@ class Videos extends Action
                 throw $th;
             }
             $this->phase($telemetry, VideoAction::Encode->value, 'encode', $phaseStart);
-            // pack() was the last reader; free the original before persist/upload.
-            if (\is_file($inPath) && !@\unlink($inPath)) {
+            // pack() was the last reader; free a copied or decoded source before
+            // persist/upload. A source read in place or over a URL is not ours.
+            if (\str_starts_with($inPath, $workspace['inDir']) && \is_file($inPath) && !@\unlink($inPath)) {
                 Console::warning('Videos worker: failed to remove source after encode: ' . $inPath);
             }
             if ($last !== null && $last->speed > 0) {
@@ -986,10 +1019,6 @@ class Videos extends Action
                 $status = (string) $current->getAttribute('status', '');
                 return;
             }
-
-            $path = $deviceForVideos->getPath($video->getId())
-                . '/' . $rendition->getAttribute('name')
-                . '-' . $rendition->getId() . '/';
 
             $stage = 'persist';
             $phaseStart = \microtime(true);
@@ -1048,15 +1077,15 @@ class Videos extends Action
 
             $stage = 'upload';
             $phaseStart = \microtime(true);
-            $storageBytes = $this->uploadFiles(
+            $wrote = true;
+            // Most segments were shipped during the encode and are gone from
+            // disk; this uploads what was left (init segments, the last of each
+            // sequence) and counts both towards the rendition's size.
+            $storageBytes = $shippedBytes + $this->uploadFiles(
                 $package->files(),
                 $path,
                 $deviceForVideos,
-                function (int $index) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, $path) {
-                    if ($index !== 0) {
-                        return;
-                    }
-
+                function () use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, $path) {
                     $current = $dbForProject->getDocument('videosRenditions', $rendition->getId());
                     if (
                         $current->isEmpty()
@@ -1228,6 +1257,18 @@ class Videos extends Action
                     );
                 } catch (\Throwable $th) {
                     Console::error('Failed to publish video usage: ' . $th->getMessage());
+                }
+            }
+
+            // Segments go up while ffmpeg runs, so an error, a halt or a failed
+            // upload can leave part of a rendition in storage. Only this run's
+            // claim leads here, and nothing serves the path until `ready`.
+            if ($wrote && $path !== null && $outcome !== 'ready') {
+                try {
+                    $deviceForVideos->delete($path, true);
+                } catch (\Throwable $th) {
+                    Console::warning('Videos worker: failed to remove partial rendition ' . $path . ': ' . $th->getMessage());
+                    Span::add('rendition.cleanup_failed', true);
                 }
             }
 
@@ -1861,7 +1902,7 @@ class Videos extends Action
         Span::add('source.size', (int) $file->getAttribute('sizeOriginal', 0));
         Span::add('source.encrypted', !empty($file->getAttribute('openSSLCipher')));
         Span::add('source.compression', (string) $file->getAttribute('algorithm', Compression::NONE));
-        $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
+        $inPath = $this->source($deviceForFiles, $file, $workspace['inDir']);
         $this->phase($telemetry, $action, 'download', $phaseStart);
 
         if ((int) $video->getAttribute('duration', 0) <= 0) {
@@ -1976,6 +2017,46 @@ class Videos extends Action
         }
 
         return $file;
+    }
+
+    /**
+     * Where ffmpeg reads a video source from, copying it only when it must.
+     *
+     * Encrypted or compressed uploads (never above APP_STORAGE_READ_BUFFER, the
+     * size the files endpoint stops encrypting and compressing at) are decoded
+     * into the workspace. Otherwise a local device's file is read where it is,
+     * and an S3 device's through a presigned URL that ffmpeg range-reads, so the
+     * workspace never holds a copy. The URL is a credential: it is kept off
+     * spans, logs and stored errors, and only `source.path` is recorded.
+     */
+    private function source(Device $deviceForFiles, Document $file, string $inDir): string
+    {
+        $fullPath = (string) $file->getAttribute('path', '');
+        $encoded = !empty($file->getAttribute('openSSLCipher'))
+            || $file->getAttribute('algorithm', Compression::NONE) !== Compression::NONE;
+        $device = $deviceForFiles instanceof TelemetryDevice ? $deviceForFiles->getDevice() : $deviceForFiles;
+
+        if ($encoded || (!$device instanceof Local && !$device instanceof S3)) {
+            Span::add('source.read', 'copy');
+            return $this->download($deviceForFiles, $file, $inDir);
+        }
+
+        if (!$deviceForFiles->exists($fullPath)) {
+            // The path is on the span as source.path.
+            throw new AppwriteException(AppwriteException::STORAGE_FILE_NOT_FOUND);
+        }
+
+        if ($device instanceof Local) {
+            Span::add('source.read', 'local');
+            return $fullPath;
+        }
+
+        // Valid for the longest encode the timeout allows, plus room for the
+        // probe and caption passes that run before it.
+        $expires = \min(604800, (int) System::getEnv('_APP_VIDEOS_ENCODE_TIMEOUT', '21600') + 3600);
+        Span::add('source.read', 'url');
+
+        return $device->getPresignedUrl($fullPath, $expires);
     }
 
     /**
@@ -2309,19 +2390,27 @@ class Videos extends Action
     /**
      * Upload packaged artifacts to the videos device.
      *
+     * Files no longer on disk were shipped during the encode and are skipped.
+     *
      * @param  list<string>  $files
-     * @param  callable(int):void|null  $onFile
+     * @param  callable():void|null  $onStart
      */
     private function uploadFiles(
         array $files,
         string $remoteDir,
         Device $deviceForVideos,
-        ?callable $onFile = null
+        ?callable $onStart = null
     ): int {
         $bytes = 0;
         $local = new Local('/');
 
-        foreach ($files as $index => $localPath) {
+        // Called once, before anything is written, so the stage is announced
+        // even when every file was already shipped during the encode.
+        if ($onStart !== null) {
+            $onStart();
+        }
+
+        foreach ($files as $localPath) {
             if (!\is_file($localPath)) {
                 continue;
             }
@@ -2335,10 +2424,6 @@ class Videos extends Action
                 $data,
                 \mime_content_type($localPath) ?: 'application/octet-stream'
             );
-
-            if ($onFile !== null) {
-                $onFile($index);
-            }
         }
 
         return $bytes;
@@ -2442,8 +2527,8 @@ class Videos extends Action
         $timedOut = \str_contains($runtime->getMessage(), 'timed out after');
         Span::add($prefix . '.exit_code', $runtime->getCode());
         Span::add($prefix . '.timed_out', $timedOut);
-        Span::add($prefix . '.command', \substr(\implode(' ', $runtime->command()), 0, 2048));
-        Span::add($prefix . '.stderr', \substr($runtime->output(), -4096));
+        Span::add($prefix . '.command', \substr($this->withoutSignatures(\implode(' ', $runtime->command())), 0, 2048));
+        Span::add($prefix . '.stderr', \substr($this->withoutSignatures($runtime->output()), -4096));
         $this->record(
             $telemetry->createCounter('worker.videos.ffmpeg.exit', null, 'Failed ffmpeg and ffprobe runs by purpose and exit code'),
             1,
@@ -2485,19 +2570,30 @@ class Videos extends Action
     }
 
     /**
-     * Drops absolute paths from a message; the source path is on the span already.
+     * Drops absolute paths and URLs from a message; the source path is on the
+     * span already, and a presigned source URL is a credential.
      */
     private function withoutPaths(string $text): string
     {
         $words = [];
         foreach (\explode(' ', \str_replace(["\r", "\n", "\t"], ' ', $text)) as $word) {
-            if ($word === '' || \str_starts_with(\ltrim($word, '"\'([:,'), '/')) {
+            $bare = \ltrim($word, '"\'([:,');
+            if ($word === '' || \str_starts_with($bare, '/') || \preg_match('#^https?://#i', $bare) === 1) {
                 continue;
             }
             $words[] = $word;
         }
 
         return \mb_substr(\implode(' ', $words), 0, 2048);
+    }
+
+    /**
+     * Cuts the query string off every URL in a command line or ffmpeg's output,
+     * so a presigned source never reaches a span with its signature.
+     */
+    private function withoutSignatures(string $text): string
+    {
+        return (string) \preg_replace('#(https?://[^\s?\'"]+)\?[^\s\'"]*#i', '$1', $text);
     }
 
     /**

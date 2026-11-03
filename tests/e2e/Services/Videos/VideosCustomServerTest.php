@@ -922,6 +922,9 @@ final class VideosCustomServerTest extends Scope
         // encode dies at its own probe, which quotes ffprobe's verdict.
         $this->assertStringStartsWith('The requested file is not a valid video or audio file (ffprobe:', (string) $body['error']);
         $this->assertStringNotContainsString('/storage', (string) $body['error']);
+        // On an S3 device ffprobe reads a presigned URL, which is a credential.
+        $this->assertStringNotContainsString('://', (string) $body['error']);
+        $this->assertStringNotContainsString('X-Amz-', (string) $body['error']);
 
         $this->assertEventually(function () use ($videoId) {
             $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a failed encode');
@@ -946,10 +949,100 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame('error', $body['timelineStatus'], 'Invalid source did not fail the timeline');
         $this->assertStringStartsWith('The requested file is not a valid video or audio file (ffprobe:', $body['timelineError']);
         $this->assertStringNotContainsString('/storage', (string) $body['timelineError']);
+        $this->assertStringNotContainsString('://', (string) $body['timelineError']);
+        $this->assertStringNotContainsString('X-Amz-', (string) $body['timelineError']);
         $this->assertSame(0, (int) $body['duration']);
 
         $this->assertEventually(function () use ($videoId) {
             $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a failed timeline');
+        });
+    }
+
+    /**
+     * A source that is neither encrypted nor compressed (the 23 MB fixture is
+     * over the 20 MB limit the files endpoint encrypts up to) is read where it
+     * is stored: in place on a local device, over a presigned URL on S3. The
+     * encode's scratch never holds a copy of it, and the rendition still plays.
+     */
+    public function testAnUnencryptedSourceIsNeverCopiedIntoScratch(): void
+    {
+        $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
+        $renditionId = $this->createRendition($videoId, 'hls');
+
+        $observed = 0;
+        $copies = [];
+        $deadline = \time() + 300;
+        $status = 'pending';
+
+        while (\time() < $deadline && !\in_array($status, ['ready', 'error', 'aborted'], true)) {
+            foreach ($this->videoTmpJobs($videoId) as $job) {
+                if (!\str_ends_with($job, '-' . $renditionId) || !\is_dir($job . '/in')) {
+                    continue;
+                }
+                $observed++;
+                foreach (\scandir($job . '/in') ?: [] as $name) {
+                    if ($name[0] !== '.') {
+                        $copies[$name] = true;
+                    }
+                }
+            }
+
+            $rendition = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/renditions/' . $renditionId, $this->headers());
+            $status = (string) ($rendition['body']['status'] ?? '');
+            \usleep(20000);
+        }
+
+        $this->assertSame('ready', $status);
+        $this->assertGreaterThan(0, $observed, 'the encode finished before its workspace could be inspected');
+        $this->assertSame([], \array_keys($copies), 'the source was copied into scratch');
+    }
+
+    /**
+     * Segments are uploaded while ffmpeg is still encoding and removed from
+     * scratch. Whatever went up then, every segment every playlist names must
+     * be served, the way a player walks the whole ladder.
+     */
+    public function testEverySegmentOfAShippedRenditionIsServed(): void
+    {
+        $videoId = $this->createReadyVideo($this->getLargeVideoFile())['$id'];
+        $renditionId = $this->createReadyRendition($videoId, 'hls');
+
+        $master = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/outputs/hls/master.m3u8', $this->headers());
+        $this->assertEquals(200, $master['headers']['status-code']);
+
+        $playlists = [];
+        foreach (\explode("\n", (string) $master['body']) as $raw) {
+            $line = \trim($raw);
+            $uri = \str_starts_with($line, '#EXT-X-MEDIA:') ? $this->attributeValue($line, 'URI') : $line;
+            if ($uri !== '' && !\str_starts_with($uri, '#') && \str_contains($uri, '/renditions/' . $renditionId . '/')) {
+                $playlists[$uri] = true;
+            }
+        }
+        $this->assertNotEmpty($playlists, 'the master names no playlist of this rendition');
+
+        $served = 0;
+        foreach (\array_keys($playlists) as $uri) {
+            $playlist = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($uri), $this->headers());
+            $this->assertEquals(200, $playlist['headers']['status-code'], 'Playlist unreachable: ' . $uri);
+
+            $listed = 0;
+            foreach (\explode("\n", (string) $playlist['body']) as $raw) {
+                $line = \trim($raw);
+                if ($line === '' || \str_starts_with($line, '#')) {
+                    continue;
+                }
+                $listed++;
+                $segment = $this->client->call(Client::METHOD_GET, $this->manifestRequestPath($line), $this->headers());
+                $this->assertEquals(200, $segment['headers']['status-code'], 'Segment unreachable: ' . $line);
+                $this->assertNotEmpty($segment['body'], 'Empty segment: ' . $line);
+                $served++;
+            }
+            $this->assertSame(\substr_count((string) $playlist['body'], '#EXTINF'), $listed, 'Playlist lists a segment without a duration: ' . $uri);
+        }
+
+        $this->assertGreaterThan(1, $served, 'a 4K fixture should cut into several segments');
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a shipped encode');
         });
     }
 
