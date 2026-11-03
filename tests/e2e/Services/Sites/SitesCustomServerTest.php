@@ -1951,31 +1951,40 @@ final class SitesCustomServerTest extends Scope
         $domain = $this->setupSiteDomain($siteId);
 
         // Note when each piece of the page reaches the visitor.
-        $body = '';
-        $arrivals = [];
-        $request = \curl_init('http://' . $domain . '/stream');
-        \curl_setopt_array($request, [
-            CURLOPT_HTTPHEADER => ['Accept-Encoding: identity'],
-            CURLOPT_TIMEOUT => 60,
-            CURLOPT_WRITEFUNCTION => function ($handle, string $chunk) use (&$body, &$arrivals): int {
-                $body .= $chunk;
-                foreach (['first', 'second', 'third'] as $text) {
-                    if (!isset($arrivals[$text]) && \str_contains($body, $text)) {
-                        $arrivals[$text] = \microtime(true);
+        $measure = function (string $path) use ($domain): array {
+            $body = '';
+            $arrivals = [];
+            $request = \curl_init('http://' . $domain . $path);
+            \curl_setopt_array($request, [
+                CURLOPT_HTTPHEADER => ['Accept-Encoding: identity'],
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_WRITEFUNCTION => function ($handle, string $chunk) use (&$body, &$arrivals): int {
+                    $body .= $chunk;
+                    foreach (['first', 'second', 'third'] as $text) {
+                        if (!isset($arrivals[$text]) && \str_contains($body, $text)) {
+                            $arrivals[$text] = \microtime(true);
+                        }
                     }
-                }
-                return \strlen($chunk);
-            },
-        ]);
-        \curl_exec($request);
-        $status = \curl_getinfo($request, CURLINFO_RESPONSE_CODE);
+                    return \strlen($chunk);
+                },
+            ]);
+            \curl_exec($request);
 
-        $this->assertEquals(200, $status);
+            return [\curl_getinfo($request, CURLINFO_RESPONSE_CODE), $arrivals];
+        };
 
         // The page renders over 4s; buffered, every piece would arrive together at the end.
+        [$status, $arrivals] = $measure('/stream');
+        $this->assertEquals(200, $status);
         $this->assertCount(3, $arrivals);
         $this->assertGreaterThan(1.5, $arrivals['second'] - $arrivals['first']);
         $this->assertGreaterThan(1.5, $arrivals['third'] - $arrivals['second']);
+
+        // An error status stays buffered, so the proxy can still replace it with an error page.
+        [$status, $arrivals] = $measure('/stream?status=500');
+        $this->assertEquals(500, $status);
+        $this->assertCount(3, $arrivals);
+        $this->assertLessThan(0.5, $arrivals['third'] - $arrivals['first']);
 
         $this->cleanupSite($siteId);
     }
