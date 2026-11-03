@@ -16,6 +16,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
@@ -102,7 +103,8 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        if (empty(Query::groupByType($queries)->orders)) {
+        $ordered = \array_filter($queries, fn (Query $query) => \in_array($query->getMethod(), [QueryMethod::OrderAsc, QueryMethod::OrderDesc, QueryMethod::OrderRandom], true));
+        if (empty($ordered)) {
             $queries[] = Query::orderAsc('time');
         }
 
