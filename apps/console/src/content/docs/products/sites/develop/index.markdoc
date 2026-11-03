@@ -45,6 +45,18 @@ Each request made to a path on an Appwrite Site has a set time limit, after whic
 
 The default timeout is set at `15 seconds` and the maximum value possible is `30 seconds`.
 
+# Streaming responses {% #streaming-responses %}
+
+On Appwrite Cloud, server-rendered sites stream their responses. Each chunk your site writes reaches the browser as soon as it is ready, so streamed HTML (such as React Suspense or deferred loaders), server-sent events, and other streamed bodies work without extra configuration. A stream still ends when the site's [timeout](#timeouts) is reached.
+
+On self-hosted Appwrite, set `_APP_COMPUTE_STREAMING` to `enabled` to turn streaming on.
+
+On Cloud, a connection that sends no data for 60 seconds is closed. If your stream can go quiet for that long, such as a server-sent events endpoint waiting for updates, send a heartbeat every 30 seconds or so. For server-sent events, a comment line works:
+
+```js
+const heartbeat = setInterval(() => controller.enqueue(new TextEncoder().encode(': ping\n\n')), 30_000);
+```
+
 # Resource limits {% #resource-limits %}
 
 Under **Settings** - **Resource limits**, you can set **build** and **runtime** specifications independently. The build spec applies while dependencies are installed and your site is built for deployment; the runtime spec applies when your site serves traffic, including server-side rendering (SSR). Both use the same CPU and memory tiers on Cloud.
