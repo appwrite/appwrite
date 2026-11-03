@@ -92,20 +92,29 @@ export function View({ initialData }: ViewProps = {}) {
   const noCreatePermission = !canCreateKey(access, features)
 
   // Prefilled links keep only scopes the server lists, so a typo never fails the create.
-  const { data: scopeCatalog } = useQuery({
+  const scopeCatalogQuery = useQuery({
     ...consoleProjectScopesQueryOptions(),
     enabled: !!prefill?.scopes,
   })
+  const scopeCatalog = scopeCatalogQuery.data
+  // Loaded or failed. The drawer waits for it, so its scopes never change while it is open.
+  const scopeCatalogSettled = !prefill?.scopes || !scopeCatalogQuery.isPending
   const prefillScopes = useMemo(() => {
     if (!prefill?.scopes || !scopeCatalog) return prefill?.scopes
     const known = new Set(scopeCatalog.scopes.map((scope) => scope.$id))
     return prefill.scopes.filter((scope) => known.has(scope))
   }, [prefill, scopeCatalog])
 
-  // Open the create drawer once for a prefilled link, after access is known.
+  // Open the create drawer once for a prefilled link, after access and the scope catalog are known.
   const prefillHandledRef = useRef(false)
   useEffect(() => {
-    if (!prefill || prefillHandledRef.current || !project || accessLoading) {
+    if (
+      !prefill ||
+      prefillHandledRef.current ||
+      !project ||
+      accessLoading ||
+      !scopeCatalogSettled
+    ) {
       return
     }
     prefillHandledRef.current = true
@@ -114,7 +123,14 @@ export function View({ initialData }: ViewProps = {}) {
       return
     }
     setCreateDrawerOpen(true)
-  }, [prefill, project, accessLoading, noCreatePermission, t])
+  }, [
+    prefill,
+    project,
+    accessLoading,
+    scopeCatalogSettled,
+    noCreatePermission,
+    t,
+  ])
 
   // Clear selection when search changes
   useEffect(() => {

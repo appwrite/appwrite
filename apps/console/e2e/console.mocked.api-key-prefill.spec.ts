@@ -97,11 +97,15 @@ function corsHeaders(route: Route): Record<string, string> {
 /**
  * Every `/v1` call, on any region host, is answered here; the app itself is
  * served live. `canWriteKeys` decides whether the member's scopes include
- * `keys.write`. Returns the `POST /v1/project/keys` requests.
+ * `keys.write`, and `catalogDelayMs` holds back the scope catalog. Returns the
+ * `POST /v1/project/keys` requests.
  */
 async function mockAppwriteApi(
   page: Page,
-  { canWriteKeys }: { canWriteKeys: boolean },
+  {
+    canWriteKeys,
+    catalogDelayMs = 0,
+  }: { canWriteKeys: boolean; catalogDelayMs?: number },
 ): Promise<Request[]> {
   const creates: Request[] = []
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
@@ -141,7 +145,10 @@ async function mockAppwriteApi(
       }
       return json(200, { total: 0, keys: [] })
     }
-    if (apiPath === '/console/scopes/project') return json(200, SCOPE_CATALOG)
+    if (apiPath === '/console/scopes/project') {
+      await new Promise((resolve) => setTimeout(resolve, catalogDelayMs))
+      return json(200, SCOPE_CATALOG)
+    }
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -223,7 +230,11 @@ test.describe('prefilled API key link (mocked API)', () => {
   test('opens the create drawer filled in and creates the key with it', async ({
     page,
   }) => {
-    const creates = await mockAppwriteApi(page, { canWriteKeys: true })
+    // A slow catalog must not let the drawer open with the unknown scope.
+    const creates = await mockAppwriteApi(page, {
+      canWriteKeys: true,
+      catalogDelayMs: 1500,
+    })
     await page.goto(PREFILL_PATH, { waitUntil: 'domcontentloaded' })
 
     const drawer = page.getByRole('dialog')
