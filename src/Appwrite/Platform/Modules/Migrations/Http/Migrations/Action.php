@@ -121,6 +121,33 @@ abstract class Action extends PlatformAction
         return \array_values($scopes);
     }
 
+    /**
+     * An export's download link streams the full collection, so a read that holds none of the data read
+     * scopes must not receive it: the creation gate is otherwise reached through links other callers left
+     * on export migrations. A console session carries no API key on the request and keeps the link.
+     */
+    protected function redactExportLink(Document $migration, Request $request): Document
+    {
+        if ($request->getHeaderLine('x-appwrite-key') === '') {
+            return $migration;
+        }
+
+        $dataRead = ['documents.read', 'rows.read', 'documentsdb.documents.read', 'vectorsdb.documents.read'];
+
+        if (!empty(\array_intersect($dataRead, $request->getScopes()))) {
+            return $migration;
+        }
+
+        $options = $migration->getAttribute('options', []);
+
+        if (isset($options['downloadUrl'])) {
+            unset($options['downloadUrl']);
+            $migration->setAttribute('options', $options);
+        }
+
+        return $migration;
+    }
+
     protected static function transferGroupForDatabaseType(string $databaseType): string
     {
         return match ($databaseType) {

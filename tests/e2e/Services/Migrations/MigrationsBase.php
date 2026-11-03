@@ -8241,6 +8241,26 @@ trait MigrationsBase
         $this->assertArrayHasKey('email', $decoded[0], 'JSON documents should contain email field');
         $this->assertStringContainsString('Test User', $decoded[0]['name'], 'JSON should contain test data');
 
+        // The download link streams the whole collection, so a key that cannot read the data must not
+        // receive it, even though the export already exists (it was created by the full project key above).
+        $migrationsOnly = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'migrations.write']),
+        ]);
+        $this->assertEquals(200, $migrationsOnly['headers']['status-code']);
+        $this->assertEquals('completed', $migrationsOnly['body']['status']);
+        $this->assertArrayNotHasKey('downloadUrl', (array) $migrationsOnly['body']['options']);
+
+        // A key that can read the collection's data still receives the link.
+        $dataReader = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'documents.read', 'rows.read']),
+        ]);
+        $this->assertEquals(200, $dataReader['headers']['status-code']);
+        $this->assertArrayHasKey('downloadUrl', (array) $dataReader['body']['options']);
+
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
             'x-appwrite-project' => $this->getProject()['$id'],
