@@ -40,6 +40,7 @@ import {
 import type { Models } from '@appwrite.io/console'
 import { maskCardNumber } from './utils'
 import { useT } from '@/lib/i18n/translate'
+import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 
 export interface PaymentMethodFormProps {
   /** Whether the enclosing surface (dialog or inline panel) is visible.
@@ -245,9 +246,36 @@ export function PaymentMethodForm({
         // because the backend link never landed), skip the card form and
         // show a confirm step so the user can enter a name and finish linking.
         // Only require US state when the user's locale country is US.
-        const { setupIntent: existingIntent } =
+        const { setupIntent: existingIntent, error: retrieveError } =
           await stripe.retrieveSetupIntent(secret)
         if (!mounted) return
+        // A canceled intent still mounts the Payment Element, but every confirm
+        // fails. Drop the row; the skip re-runs this effect, which creates a new one.
+        if (
+          existingIncomplete &&
+          (retrieveError ||
+            !existingIntent ||
+            ![
+              'requires_payment_method',
+              'requires_confirmation',
+              'requires_action',
+              'succeeded',
+            ].includes(existingIntent.status))
+        ) {
+          deletePaymentMethodMutation.mutate(
+            { paymentMethodId: existingIncomplete.$id },
+            {
+              onError: (err) =>
+                toast.error(
+                  err instanceof Error
+                    ? err.message
+                    : t('Failed to delete payment method'),
+                ),
+            },
+          )
+          setSkippedPaymentMethodIds((ids) => [...ids, existingIncomplete.$id])
+          return
+        }
         if (existingIntent?.status === 'succeeded') {
           const pm = existingIntent.payment_method
           const pmId = typeof pm === 'string' ? pm : (pm?.id ?? null)
@@ -428,8 +456,9 @@ export function PaymentMethodForm({
         let initialPmCard: StripePaymentMethod.Card | null = null
 
         if (finalIntent?.status !== 'succeeded') {
-          await elementsRef.current.submit()
+          const { error: submitError } = await elementsRef.current.submit()
           if (aborted()) return
+          if (submitError) throw new Error(submitError.message)
 
           const { setupIntent, error: stripeError } =
             await stripeRef.current.confirmSetup({
@@ -449,7 +478,16 @@ export function PaymentMethodForm({
             })
           if (aborted()) return
 
-          if (stripeError) throw new Error(stripeError.message)
+          if (stripeError) {
+            captureExceptionWithContext(new Error(stripeError.message), {
+              source: 'stripe-confirm-setup',
+              orgId: organizationId,
+              stripeCode: stripeError.code,
+              stripeDeclineCode: stripeError.decline_code,
+              stripeType: stripeError.type,
+            })
+            throw new Error(stripeError.message)
+          }
 
           // confirmSetup honours `expand: ['payment_method']`, so the initial
           // intent has the full card object. handleNextAction strips that
