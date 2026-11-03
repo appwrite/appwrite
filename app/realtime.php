@@ -363,60 +363,46 @@ $server->error(function (Throwable $error): void {
 
 /**
  * Boot gate: workers serve nothing until it opens. On self-hosted it opens once the presences a
- * crashed run of this host left online are deleted, so no new presence can be caught by that.
- * The cleanup runs in its own process: a worker would serve events while its own cleanup
- * waited on I/O, and a worker coroutine cannot fork.
+ * crashed run of this host left online are deleted, so the cleanup can never catch a new one.
+ * It runs in its own process: a worker serves events while its onWorkerStart waits on I/O, and
+ * a worker coroutine cannot fork.
  */
 $booted = new Atomic(0);
+// Nothing is served before this, so newer rows belong to live sockets, even past the timeout.
+$bootedAt = DateTime::now();
 
 if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-    $adapter->getNative()->addProcess(new Process(function () use ($booted, $container, $presenceState): void {
+    $adapter->getNative()->addProcess(new Process(function () use ($booted, $bootedAt, $container, $presenceState): void {
         if ($booted->get() === 0) {
+            $span = Span::init('realtime.presences.cleanup');
             $started = \microtime(true);
-            $deadline = $started + REALTIME_BOOT_TIMEOUT_SECONDS;
             $hostname = \gethostname();
-            $projects = 0;
-            $deleted = 0;
-            $finished = false;
+            Span::add('hostname', $hostname ?: null);
 
-            while ($hostname !== false && !$finished && \microtime(true) < $deadline) {
-                try {
-                    /** @var UsagePublisher $publisherForUsage */
-                    $publisherForUsage = $container->get('publisherForUsage');
-                    $queueForRealtime = getQueueForRealtime();
-                    $dbForPlatform = getConsoleDB();
-
-                    $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $presenceState, $publisherForUsage, $queueForRealtime, $hostname, $deadline, &$projects, &$deleted): void {
-                        foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $project) {
-                            if (\microtime(true) >= $deadline) {
-                                return;
-                            }
-
-                            try {
-                                $deleted += $presenceState->deleteForHost(getProjectDB($project), $project, $hostname, $publisherForUsage, $queueForRealtime);
-                                $projects++;
-                            } catch (Throwable $th) {
-                                Console::warning('Failed to clear presences of project ' . $project->getId() . ': ' . $th->getMessage());
-                            }
-                        }
-                    });
-
-                    $finished = \microtime(true) < $deadline;
-                } catch (Throwable $th) {
-                    // Platform database or schema not ready yet.
-                    Console::warning('Presence cleanup waiting for the database: ' . $th->getMessage());
-                    \sleep(DATABASE_RECONNECT_SLEEP);
+            try {
+                if ($hostname !== false) {
+                    $result = $presenceState->deleteForHostInProjects(
+                        getConsoleDB(),
+                        getProjectDB(...),
+                        $hostname,
+                        $bootedAt,
+                        $started + REALTIME_BOOT_TIMEOUT_SECONDS,
+                        $container->get('publisherForUsage'),
+                        getQueueForRealtime(),
+                    );
+                    Span::add('presences.deleted', $result['deleted']);
+                    Span::add('projects.scanned', $result['projects']);
+                    Span::add('projects.failed', $result['failed']);
+                    Span::add('outcome', $result['outcome']);
                 }
+            } catch (Throwable $th) {
+                Span::add('outcome', 'failed');
+                $span->setError($th);
+            } finally {
+                Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
+                $span->finish();
+                $booted->set(1);
             }
-
-            $summary = $deleted . ' presences of host ' . $hostname . ' in ' . $projects . ' projects, ' . \round(\microtime(true) - $started, 2) . 's';
-            if ($finished) {
-                Console::success('Cleared ' . $summary);
-            } else {
-                Console::warning('Presence cleanup stopped before finishing: cleared ' . $summary);
-            }
-
-            $booted->set(1);
         }
 
         // Swoole restarts a process that exits, so idle until shutdown.
@@ -513,7 +499,9 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         $booted->wait(0.1);
     }
     if ($booted->get() === 0) {
-        Console::warning('Worker ' . $workerId . ' serving before the presence cleanup finished');
+        $span = Span::init('realtime.worker.boot');
+        Span::add('worker.id', $workerId);
+        $span->finish(error: new \RuntimeException('Serving before the presence cleanup finished'));
     }
 
     Console::success('Worker ' . $workerId . ' started successfully');
