@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "074cceb2ac7d489bceff880b253c68fe",
+    "content-hash": "910160c960ca23fa21c63a30f0c100ef",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "32.1.0",
+            "version": "32.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6"
+                "reference": "58b5464354e7226517122cddcf519872a0f3fc62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/92e840031d688c933acfde19e5114ca6f5ca2bb6",
-                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/58b5464354e7226517122cddcf519872a0f3fc62",
+                "reference": "58b5464354e7226517122cddcf519872a0f3fc62",
                 "shasum": ""
             },
             "require": {
@@ -111,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/32.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.2.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-10-28T08:19:04+00:00"
+            "time": "2026-11-03T11:11:00+00:00"
         },
         {
             "name": "appwrite/php-clamav",
