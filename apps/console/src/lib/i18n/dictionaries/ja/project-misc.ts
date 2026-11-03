@@ -2397,9 +2397,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '新しいターゲットが選択されていないか、すべて既にサブスクライブ済みです',
   'No providers yet': 'プロバイダーがまだありません',
   'No subscribers found': 'サブスクライバーが見つかりません',
-  'No subscribers for this channel': 'このチャンネルにはサブスクライバーがいません',
+  'No subscribers for this channel':
+    'このチャンネルにはサブスクライバーがいません',
   'No subscribers yet': 'サブスクライバーがまだありません',
   'No targets for this channel': 'このチャンネルにはターゲットがありません',
+  device: 'デバイス',
+  devices: 'デバイス',
+  'email addresses': 'メールアドレス',
+  'phone numbers': '電話番号',
   'No targets': 'ターゲットがありません',
   'No targets have been selected for this message.':
     'このメッセージにターゲットが選択されていません。',

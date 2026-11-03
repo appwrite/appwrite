@@ -39,9 +39,9 @@ import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
-import { ID, MessagingProviderType } from '@appwrite.io/console'
+import { ID } from '@appwrite.io/console'
 import { MessagingTargetsModal } from '../../_components/MessagingTargetsModal'
-import { SendMessageMenu } from '../../_components/SendMessageMenu'
+import { TopicActionsMenu } from '../../_components/TopicActionsMenu'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -346,22 +346,8 @@ export function View({
         }
         tabs={tabs}
         activeTab={activeTab}
-        beforeCreateButtons={
-          <SendMessageMenu
-            projectId={projectId!}
-            topics={[topicResolved.$id]}
-            unavailable={{
-              [MessagingProviderType.Email]: topicResolved.emailTotal
-                ? undefined
-                : 'No subscribers for this channel',
-              [MessagingProviderType.Sms]: topicResolved.smsTotal
-                ? undefined
-                : 'No subscribers for this channel',
-              [MessagingProviderType.Push]: topicResolved.pushTotal
-                ? undefined
-                : 'No subscribers for this channel',
-            }}
-          />
+        titleRightContent={
+          <TopicActionsMenu projectId={projectId!} topic={topicResolved} />
         }
         searchPlaceholder={
           activeTab === 'subscribers' ? t('Search subscribers...') : undefined

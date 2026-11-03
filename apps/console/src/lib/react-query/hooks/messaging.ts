@@ -859,13 +859,14 @@ export function useCreateDraftMessage(projectId: string | null | undefined) {
       type: MessagingProviderType
       topics?: string[]
       users?: string[]
+      targets?: string[]
     }): Promise<Models.Message> => {
       const messaging = sdk.forProject(projectId!).messaging
       const recipients = {
         messageId: ID.unique(),
         topics: input.topics ?? [],
         users: input.users ?? [],
-        targets: [],
+        targets: input.targets ?? [],
         draft: true,
       }
       switch (input.type) {

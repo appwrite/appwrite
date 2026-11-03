@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { MessagingProviderType } from '@appwrite.io/console'
 import {
   Copy,
   Trash2,
@@ -47,14 +46,14 @@ import {
   openDialogAfterOverlayCloses,
   closeDialogBeforeOverlayUnmount,
 } from '@/lib/utils/overlay-lock'
-import { SendMessageContextSub } from './SendMessageMenu'
+import { SendMessageContextSub, useTopicReach } from './SendMessageMenu'
 
 export type TopicContextMenuTopic = {
   $id: string
   name?: string | null
-  emailTotal?: number
-  smsTotal?: number
-  pushTotal?: number
+  emailTotal: number
+  smsTotal: number
+  pushTotal: number
 }
 
 interface TopicContextMenuProps {
@@ -69,6 +68,7 @@ export function TopicContextMenu({
   children,
 }: TopicContextMenuProps) {
   const t = useT()
+  const reach = useTopicReach(topic)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -132,23 +132,11 @@ export function TopicContextMenu({
             <ContextMenuIcon icon={Settings} />
             {t('Settings')}
           </ContextMenuItem>
+          <ContextMenuSeparator />
           <SendMessageContextSub
             projectId={projectId}
             topics={[topic.$id]}
-            unavailable={{
-              [MessagingProviderType.Email]:
-                topic.emailTotal === 0
-                  ? 'No subscribers for this channel'
-                  : undefined,
-              [MessagingProviderType.Sms]:
-                topic.smsTotal === 0
-                  ? 'No subscribers for this channel'
-                  : undefined,
-              [MessagingProviderType.Push]:
-                topic.pushTotal === 0
-                  ? 'No subscribers for this channel'
-                  : undefined,
-            }}
+            reach={reach}
           />
           <ContextMenuSeparator />
           <ContextMenuSub>

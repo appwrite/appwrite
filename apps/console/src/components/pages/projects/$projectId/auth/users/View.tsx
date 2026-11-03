@@ -40,7 +40,14 @@ import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
-import { SendMessageMenu } from '../../messaging/_components/SendMessageMenu'
+import { UserActionsMenu } from '../_components/UserActionsMenu'
+import { SendMessageMenuItem } from '../../messaging/_components/SendMessageMenu'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
@@ -384,14 +391,6 @@ export function View() {
   }
 
   const userName = user.name || '-'
-  const targetTypes = new Set(
-    (user.targets ?? []).map((target) => target.providerType),
-  )
-  const channelsWithoutTargets = Object.fromEntries(
-    Object.values(MessagingProviderType)
-      .filter((type) => !targetTypes.has(type))
-      .map((type) => [type, 'No targets for this channel']),
-  )
   const displayName = user.name || user.email || user.phone || t('Anonymous')
 
   const handleDeleteAllSessions = () => {
@@ -421,35 +420,31 @@ export function View() {
             }}
           />
         }
+        titleRightContent={
+          <UserActionsMenu projectId={projectId!} user={user} />
+        }
         tabs={tabs}
         activeTab={activeTab}
         showFilters={false}
         fullWidthBorder
         beforeCreateButtons={
-          <>
-            <SendMessageMenu
-              projectId={projectId!}
-              users={[user.$id]}
-              unavailable={channelsWithoutTargets}
-            />
-            {activeTab === 'sessions' &&
-            !sessionsLoading &&
-            sessions.length > 0 ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3"
-                onClick={() => setDeleteAllSessionsDialogOpen(true)}
-                disabled={deleteAllSessions.isPending}
-                aria-label={t('Delete all sessions')}
-              >
-                <LogOut className="h-4 w-4 shrink-0 @[640px]:me-1.5" />
-                <span className="hidden @[640px]:inline">
-                  {t('Delete all sessions')}
-                </span>
-              </Button>
-            ) : null}
-          </>
+          activeTab === 'sessions' &&
+          !sessionsLoading &&
+          sessions.length > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-9 p-0 text-[13px] @[640px]:w-auto @[640px]:px-3"
+              onClick={() => setDeleteAllSessionsDialogOpen(true)}
+              disabled={deleteAllSessions.isPending}
+              aria-label={t('Delete all sessions')}
+            >
+              <LogOut className="h-4 w-4 shrink-0 @[640px]:me-1.5" />
+              <span className="hidden @[640px]:inline">
+                {t('Delete all sessions')}
+              </span>
+            </Button>
+          ) : undefined
         }
         createLabel={
           activeTab === 'memberships' ? t('Create membership') : undefined
@@ -2858,6 +2853,7 @@ function TargetsTab({
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       {t('Created')}
                     </TableHead>
+                    <TableHead className="w-12 px-4 py-3" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -2882,6 +2878,23 @@ function TargetsTab({
                           date={new Date(target.$createdAt)}
                           className="text-[12px] text-muted-foreground"
                         />
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-end">
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <RowActionsMenuTrigger
+                                aria-label={`${t('Actions for')} ${target.name || target.identifier}`}
+                              />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <SendMessageMenuItem
+                                projectId={projectId}
+                                target={target}
+                              />
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
