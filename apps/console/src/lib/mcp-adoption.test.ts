@@ -37,10 +37,18 @@ describe('buildConnectMcpPrompt', () => {
 describe('generateAgentSetupMarkdown', () => {
   test('is fetchable agent instructions for Appwrite MCP', () => {
     const markdown = generateAgentSetupMarkdown()
-    expect(markdown).toContain('# Set yourself up to work with Appwrite')
+    expect(markdown).toContain('# Set up Appwrite and build with it')
     expect(markdown).toContain('https://mcp.appwrite.io')
     expect(markdown).toContain(AGENT_SETUP_URL)
     expect(markdown).not.toContain('—')
+  })
+
+  test('shows people reading along what happens and what changes', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('## At a glance')
+    expect(markdown).toContain('| Step | The agent | You |')
+    expect(markdown).toContain('### What changes on your machine')
+    expect(markdown).toContain('### What the agent never does')
   })
 
   test('prefers the plugins for Claude Code and Codex', () => {
@@ -84,17 +92,43 @@ describe('generateAgentSetupMarkdown', () => {
     )
   })
 
-  test('instructs the agent to install the matching official SDK at latest', () => {
+  test('proposes a build and checks in once before building', () => {
     const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('## 5. Propose the build and check in')
+    expect(markdown).toContain('| The app needs | Appwrite | Set it up with |')
     expect(markdown).toContain(
-      '## 5. Install the matching official Appwrite SDK',
+      'Approve the sign-ins, then reply "go", or change anything above.',
     )
+  })
+
+  test('links or creates the project and registers its platforms', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('## 6. Link or create the project')
+    expect(markdown).toContain('appwrite init project')
+    expect(markdown).toContain(
+      'appwrite project create-web-platform --platform-id "web-local"',
+    )
+    expect(markdown).toContain('general_unknown_origin')
+  })
+
+  test('keeps API keys out of client code, chat, and git', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('Do not invent an API key')
+    expect(markdown).toContain('never put one in client code')
+    expect(markdown).toContain('Never echo the key in chat or commit it.')
+    expect(markdown).toContain('x-appwrite-key')
+  })
+
+  test('instructs the agent to install the matching official SDKs at latest', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('## 7. Install the matching official SDKs')
     expect(markdown).toContain('npm install appwrite@latest')
+    expect(markdown).toContain('@appwrite.io/react')
     expect(markdown).toContain('npm install node-appwrite@latest')
     expect(markdown).toContain('npm install react-native-appwrite@latest')
     expect(markdown).toContain('deno add jsr:@appwrite/sdk')
     expect(markdown).toContain('flutter pub add appwrite')
-    expect(markdown).toContain('dart pub add appwrite')
+    expect(markdown).toContain('dart pub add dart_appwrite')
     expect(markdown).toContain('pip install -U appwrite')
     expect(markdown).toContain('composer require appwrite/appwrite')
     expect(markdown).toContain('bundle add appwrite')
@@ -105,9 +139,23 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('sdk-for-apple')
     expect(markdown).toContain('sdk-for-swift')
     expect(markdown).toContain('cargo add appwrite')
-    expect(markdown).toContain('Do not invent an API key')
-    expect(markdown).toContain('## 6. Sign the CLI in and select the project')
-    expect(markdown).toContain('## 7. Verify and hand off')
+  })
+
+  test('builds the first slice from schema config', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('## 8. Build the first working slice')
+    expect(markdown).toContain('appwrite push tables --all --force')
+    expect(markdown).toContain('run `appwrite pull tables` first')
+    expect(markdown).toContain('appwrite generate')
+    expect(markdown).toContain('Never grant write access to `any`.')
+  })
+
+  test('hands off with capabilities picked for the app, for senior developers', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('### Write for a senior developer')
+    expect(markdown).toContain('## 10. Hand off')
+    expect(markdown).toContain('**Next with Appwrite**')
+    expect(markdown).toContain('## Appwrite reference for the hand-off')
   })
 
   test('still installs the skills when MCP is already connected', () => {
