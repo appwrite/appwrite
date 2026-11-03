@@ -1,6 +1,5 @@
 import { useMemo, useState, type KeyboardEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   DndContext,
   PointerSensor,
@@ -233,13 +232,12 @@ export function EnvironmentSwitcher({
 }: EnvironmentSwitcherProps) {
   const t = useT()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { features } = useConsoleProfile()
   const environmentsEnabled = features.projectEnvironments
   // `projectId` is always the project itself: an environment has no project ID
-  // of its own, and the Console is in one when the `environment` search param
-  // names it. The environments routes act on the project, never inside one of
-  // its environments.
+  // of its own, and the Console is in one when the active-environment store
+  // holds one for the project. The environments routes act on the project,
+  // never inside one of its environments.
   const { project } = useProject(projectId)
   const activeEnvironmentId = useActiveEnvironmentId(projectId)
   const region = project?.region
@@ -322,10 +320,12 @@ export function EnvironmentSwitcher({
 
   // An environment is a working context on the project's own routes, not a URL:
   // the switcher sets it and opens the project root in it. Production is the
-  // project with none.
+  // project with none. Contexts are told apart by the active environment ID,
+  // never by row ID: an environment may share the project's ID, and production's
+  // row carries that ID too.
   const openEnvironment = (environmentId: string | null) => {
     // Opening the current one again would only leave the page for its root.
-    if ((environmentId ?? production.id) === selected.id) return
+    if (environmentId === activeEnvironmentId) return
     setActiveEnvironment(projectId, environmentId)
     void navigate({ to: '/projects/$projectId', params: { projectId } })
   }
@@ -366,10 +366,10 @@ export function EnvironmentSwitcher({
     deleteEnvironmentMutation.mutate(selected.id, {
       onSuccess: async () => {
         toast.success(t('Environment deleted'))
-        // Back to production, then drop the gone environment's cache.
+        // Back to production. Leaving the environment already drops the
+        // project's cached queries, so the navigation loads production fresh.
         setActiveEnvironment(projectId, null)
         await navigate({ to: '/projects/$projectId', params: { projectId } })
-        queryClient.removeQueries({ queryKey: ['project', projectId] })
       },
       onError: (deleteError: Error) => {
         toast.error(
@@ -446,14 +446,14 @@ export function EnvironmentSwitcher({
           <DropdownMenuItem
             className={cn(
               'gap-2',
-              production.id === selected.id && 'bg-accent/50',
+              selected.isDefault && 'bg-accent/50',
               dragging && 'pointer-events-none',
             )}
             onSelect={() => openEnvironment(null)}
           >
             <EnvironmentRow
               option={production}
-              isActive={production.id === selected.id}
+              isActive={selected.isDefault}
               reorderable={reorderable}
             />
           </DropdownMenuItem>
@@ -472,7 +472,7 @@ export function EnvironmentSwitcher({
                 <SortableEnvironmentItem
                   key={option.id}
                   option={option}
-                  isActive={option.id === selected.id}
+                  isActive={option.id === activeEnvironmentId}
                   reorderable={reorderable}
                   canReorder={canReorder}
                   someoneDragging={dragging}
