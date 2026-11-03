@@ -43,7 +43,7 @@ Each request made to a path on an Appwrite Site has a set time limit, after whic
 ![Timeout](/images/docs/sites/timeout.avif)
 {% /only_light %}
 
-The default timeout is set at `15 seconds` and the maximum value possible is `30 seconds`.
+The default timeout is `30 seconds`, which is also the maximum on Appwrite Cloud. On self-hosted Appwrite, the maximum is set by `_APP_SITES_TIMEOUT` (`900 seconds` by default).
 
 # Streaming responses {% #streaming-responses %}
 
