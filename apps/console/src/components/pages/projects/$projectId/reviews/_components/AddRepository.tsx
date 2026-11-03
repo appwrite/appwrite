@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  useCreateAllReviewRepositories,
   useCreateReviewRepository,
   useProject,
   useRepositories,
@@ -97,6 +98,8 @@ export function AddRepository({
     repositoriesData?.runtimeProviderRepositories ?? []
 
   const createMutation = useCreateReviewRepository(projectId)
+  const createAllMutation = useCreateAllReviewRepositories(projectId)
+  const busy = createMutation.isPending || createAllMutation.isPending
 
   const handleAdd = (repository: Models.ProviderRepository) => {
     createMutation.mutate(
@@ -106,6 +109,36 @@ export function AddRepository({
           toast.success(t('Code review turned on'), {
             description: `${repository.organization}/${repository.name}`,
           })
+          onOpenChange(false)
+        },
+        onError: (error) => {
+          toast.error(
+            getErrorMessage(error, t('Failed to turn on code review')),
+          )
+        },
+      },
+    )
+  }
+
+  const handleAddAll = () => {
+    createAllMutation.mutate(
+      { installationId, enrolledIds },
+      {
+        onSuccess: ({ added, skipped, failed }) => {
+          const summary = [
+            `${added} ${t('added')}`,
+            skipped > 0 ? `${skipped} ${t('already on')}` : null,
+            failed > 0 ? `${failed} ${t('failed')}` : null,
+          ]
+            .filter(Boolean)
+            .join(', ')
+          if (failed > 0) {
+            toast.error(t('Some repositories could not be added'), {
+              description: summary,
+            })
+            return
+          }
+          toast.success(t('Code review turned on'), { description: summary })
           onOpenChange(false)
         },
         onError: (error) => {
@@ -230,7 +263,7 @@ export function AddRepository({
                             variant="outline"
                             size="sm"
                             className="h-8 shrink-0 text-[13px]"
-                            disabled={added || createMutation.isPending}
+                            disabled={added || busy}
                             onClick={() => handleAdd(repository)}
                           >
                             {added ? t('Already added') : t('Add')}
@@ -248,6 +281,16 @@ export function AddRepository({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('Cancel')}
           </Button>
+          {installations.length > 0 && (
+            <Button disabled={!installationId || busy} onClick={handleAddAll}>
+              {createAllMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+              {createAllMutation.isPending
+                ? t('Adding repositories...')
+                : t('Add all repositories')}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

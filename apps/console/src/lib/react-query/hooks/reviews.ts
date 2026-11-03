@@ -11,7 +11,11 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
-import { Query } from '@appwrite.io/console'
+import {
+  AppwriteException,
+  Query,
+  VCSDetectionType,
+} from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
   Review,
@@ -19,12 +23,19 @@ import type {
   ReviewRepositoryList,
 } from '@/lib/appwrite/reviews'
 import { DEFAULT_STALE_TIME } from './constants'
+import { fetchRepositories } from './vcs'
 
 /** Reviews are fanned out by the review service, so poll while one is running. */
 const REVIEW_POLL_INTERVAL = 5 * 1000
 
 /** A project reviews a handful of repositories; load them in one page. */
 export const REVIEW_REPOSITORIES_LIMIT = 100
+
+/** Every listed repository is inspected by the server, so page in small steps. */
+const INSTALLATION_REPOSITORIES_PAGE_SIZE = 25
+
+/** Repositories turned on at the same time when adding all of them. */
+const ADD_ALL_CONCURRENCY = 5
 
 export function isReviewRunning(review: Pick<Review, 'status'>): boolean {
   return review.status === 'queued' || review.status === 'processing'
@@ -206,6 +217,80 @@ export function useCreateReviewRepository(
       providerRepositoryId: string
     }) => sdk.forProject(projectId!).reviews.createRepository(params),
     onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['review-repositories', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Turns code review on for every repository of a GitHub installation that the
+ * project does not review yet. A repository that is already on counts as
+ * skipped; any other failure is counted and the rest carry on.
+ */
+export function useCreateAllReviewRepositories(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      installationId: string
+      enrolledIds: ReadonlySet<string>
+    }) => {
+      const ids: string[] = []
+      for (let page = 0; ; page++) {
+        const result = await fetchRepositories(
+          projectId!,
+          params.installationId,
+          VCSDetectionType.Runtime,
+          page,
+          INSTALLATION_REPOSITORIES_PAGE_SIZE,
+        )
+        const repositories = result.runtimeProviderRepositories ?? []
+        ids.push(...repositories.map((repository) => repository.id))
+        if (
+          repositories.length < INSTALLATION_REPOSITORIES_PAGE_SIZE ||
+          ids.length >= result.total
+        ) {
+          break
+        }
+      }
+
+      const pending = ids.filter((id) => !params.enrolledIds.has(id))
+      const outcome = {
+        added: 0,
+        skipped: ids.length - pending.length,
+        failed: 0,
+      }
+      for (let i = 0; i < pending.length; i += ADD_ALL_CONCURRENCY) {
+        const results = await Promise.allSettled(
+          pending
+            .slice(i, i + ADD_ALL_CONCURRENCY)
+            .map((providerRepositoryId) =>
+              sdk.forProject(projectId!).reviews.createRepository({
+                installationId: params.installationId,
+                providerRepositoryId,
+              }),
+            ),
+        )
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
+            outcome.added++
+          } else if (
+            result.reason instanceof AppwriteException &&
+            result.reason.code === 409
+          ) {
+            outcome.skipped++
+          } else {
+            outcome.failed++
+          }
+        }
+      }
+      return outcome
+    },
+    onSettled: async () => {
       await queryClient.refetchQueries({
         queryKey: ['review-repositories', 'project', projectId],
       })

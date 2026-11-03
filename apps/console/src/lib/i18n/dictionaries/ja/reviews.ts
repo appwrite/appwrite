@@ -67,4 +67,11 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Failed to turn off code review': 'コードレビューを無効にできませんでした',
   "You don't have permission to add repositories.":
     'リポジトリを追加する権限がありません。',
+  'Add all repositories': 'すべてのリポジトリを追加',
+  'Adding repositories...': 'リポジトリを追加しています...',
+  added: '件追加',
+  'already on': '件は有効済み',
+  failed: '件失敗',
+  'Some repositories could not be added':
+    '一部のリポジトリを追加できませんでした',
 }
