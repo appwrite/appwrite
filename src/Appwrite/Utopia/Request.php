@@ -301,14 +301,79 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Returns the first of the given MIME types the client lists in its Accept header with a non-zero quality.
+     * Only exact entries count: wildcard ranges (`image/*`, any type) do not promise the client decodes a given format.
+     *
+     * @param array<string> $types MIME types in server preference order
+     */
+    public function getAcceptedType(array $types): ?string
+    {
+        $accepted = [];
+        foreach (\explode(',', $this->getHeaderLine('accept')) as $entry) {
+            $parts = \explode(';', $entry);
+            $type = \strtolower(\trim($parts[0]));
+            $quality = 1.0;
+            foreach (\array_slice($parts, 1) as $parameter) {
+                [$name, $value] = \array_pad(\explode('=', $parameter, 2), 2, '');
+                if (\strtolower(\trim($name)) === 'q') {
+                    $quality = (float) \trim($value);
+                }
+            }
+            if ($type !== '' && $quality > 0) {
+                $accepted[$type] = true;
+            }
+        }
+
+        foreach ($types as $type) {
+            if (isset($accepted[\strtolower($type)])) {
+                return $type;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolves params set to `auto` that the route negotiates from the Accept header.
+     *
+     * The route's `cache.negotiate` label maps a param to `[value => MIME type]` in preference order.
+     * An `auto` param resolves to the first value whose type the client accepts, or to an empty string when none is.
+     *
+     * @return array<string, string> resolved values keyed by param, only for params set to `auto`
+     */
+    public function getNegotiatedParams(): array
+    {
+        $negotiate = $this->getRoute()?->getLabel('cache.negotiate', []) ?? [];
+        $params = $this->getParams();
+        $resolved = [];
+        foreach ($negotiate as $param => $types) {
+            if (($params[$param] ?? null) !== 'auto') {
+                continue;
+            }
+            $type = $this->getAcceptedType(\array_values($types));
+            $resolved[$param] = $type === null ? '' : (string) \array_search($type, $types, true);
+        }
+
+        return $resolved;
+    }
+
+    /**
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
+     * Negotiated `auto` params are keyed by their resolved value, so they share entries with explicit requests.
      *
      * @return string
      */
     public function cacheIdentifier(): string
     {
         $params = $this->getParams();
+        foreach ($this->getNegotiatedParams() as $param => $value) {
+            if ($value === '') {
+                unset($params[$param]);
+            } else {
+                $params[$param] = $value;
+            }
+        }
         $allowedParams = $this->getRoute()?->getLabel('cache.params', null);
         if ($allowedParams !== null) {
             $params = array_intersect_key($params, array_flip($allowedParams));

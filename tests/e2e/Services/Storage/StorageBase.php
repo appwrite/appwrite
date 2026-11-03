@@ -1772,6 +1772,75 @@ trait StorageBase
         $this->assertNotEmpty($preview['body']);
     }
 
+    public function testFilePreviewAutoOutput(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $path = '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview';
+        $params = [
+            'width' => 120,
+            'height' => 60,
+            'output' => 'auto',
+        ];
+        $headers = fn (string $accept) => array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'accept' => $accept,
+        ], $this->getHeaders());
+
+        /**
+         * Test for SUCCESS
+         */
+        $avif = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif,image/webp,image/apng,image/*,*/*;q=0.8'), $params);
+        $this->assertEquals(200, $avif['headers']['status-code']);
+        $this->assertEquals('image/avif', $avif['headers']['content-type']);
+        $this->assertEquals('Accept', $avif['headers']['vary']);
+        $this->assertNotEmpty($avif['body']);
+
+        $webp = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp,*/*'), $params);
+        $this->assertEquals(200, $webp['headers']['status-code']);
+        $this->assertEquals('image/webp', $webp['headers']['content-type']);
+        $this->assertEquals('Accept', $webp['headers']['vary']);
+
+        // AVIF refused with q=0 and only wildcards otherwise: keep the original format
+        $original = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif;q=0,image/*,*/*'), $params);
+        $this->assertEquals(200, $original['headers']['status-code']);
+        $this->assertEquals('image/png', $original['headers']['content-type']);
+        $this->assertEquals('Accept', $original['headers']['vary']);
+
+        // Cached entries are keyed by the negotiated format, never served across Accept headers
+        $this->assertEventually(function () use ($path, $headers, $params) {
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif,image/webp'), $params);
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/avif', $cached['headers']['content-type']);
+            $this->assertEquals('Accept', $cached['headers']['vary']);
+
+            $cached = $this->client->call(Client::METHOD_GET, $path, $headers('image/webp'), $params);
+            $this->assertSame('hit', $cached['headers']['x-appwrite-cache']);
+            $this->assertEquals('image/webp', $cached['headers']['content-type']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $this->client->call(Client::METHOD_GET, $path, $headers('image/avif'), [
+            'output' => 'automatic',
+        ]);
+        $this->assertEquals(400, $invalid['headers']['status-code']);
+    }
+
     public function testFilePreview(): void
     {
         $data = $this->setupBucketFile();
