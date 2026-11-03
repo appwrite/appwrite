@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dff29e6c45f7b99f27253827cdef346a",
+    "content-hash": "a38785d8cc5d5b02d5c4d2cb559b846b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4615,16 +4615,16 @@
         },
         {
             "name": "utopia-php/video",
-            "version": "dev-feat-shipped-segments",
+            "version": "0.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/video.git",
-                "reference": "c33765c69e033102cccd6e89f6c826384520760a"
+                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/video/zipball/c33765c69e033102cccd6e89f6c826384520760a",
-                "reference": "c33765c69e033102cccd6e89f6c826384520760a",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/7cb15b5ead80c498713d36369c2859043cc5ecbf",
+                "reference": "7cb15b5ead80c498713d36369c2859043cc5ecbf",
                 "shasum": ""
             },
             "require": {
@@ -4636,8 +4636,8 @@
             "require-dev": {
                 "laravel/pint": "1.*",
                 "phpstan/phpstan": "^2.0",
-                "phpunit/phpunit": "9.*",
-                "swoole/ide-helper": "6.2.2"
+                "phpunit/phpunit": "11.*",
+                "swoole/ide-helper": "6.2.4"
             },
             "suggest": {
                 "ext-swoole": "Needed to run the library inside Swoole coroutines."
@@ -4673,9 +4673,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/video/issues",
-                "source": "https://github.com/utopia-php/video/tree/feat-shipped-segments"
+                "source": "https://github.com/utopia-php/video/tree/0.0.4"
             },
-            "time": "2026-11-03T12:22:25+00:00"
+            "time": "2026-11-03T16:45:03+00:00"
         },
         {
             "name": "web-auth/cose-lib",
@@ -7802,9 +7802,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/video": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
