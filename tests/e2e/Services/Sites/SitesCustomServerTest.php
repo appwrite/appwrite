@@ -1975,14 +1975,14 @@ final class SitesCustomServerTest extends Scope
 
         // The page renders over 4s; buffered, every piece would arrive together at the end.
         [$status, $arrivals] = $measure('/stream');
-        $this->assertEquals(200, $status);
+        $this->assertSame(200, $status);
         $this->assertCount(3, $arrivals);
         $this->assertGreaterThan(1.5, $arrivals['second'] - $arrivals['first']);
         $this->assertGreaterThan(1.5, $arrivals['third'] - $arrivals['second']);
 
         // An error status stays buffered, so the proxy can still replace it with an error page.
         [$status, $arrivals] = $measure('/stream?status=500');
-        $this->assertEquals(500, $status);
+        $this->assertSame(500, $status);
         $this->assertCount(3, $arrivals);
         $this->assertLessThan(0.5, $arrivals['third'] - $arrivals['first']);
 
