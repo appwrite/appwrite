@@ -408,6 +408,45 @@ final class StateTest extends TestCase
         $this->assertSame(['live-peer'], $this->userIds());
     }
 
+    public function testResumeOrphanedInProjectsRetriesFailedProjects(): void
+    {
+        $this->presence('orphan-1', 'realtime', 'host-c');
+        $calls = 0;
+
+        $result = (new State())->resumeOrphanedInProjects(
+            $this->platform([], 'project-1'),
+            function (Document $project) use (&$calls): Database {
+                // Unreachable on the first attempt only.
+                return ++$calls === 1 ? throw new \RuntimeException('Project database unreachable') : $this->database;
+            },
+            'host-a',
+            self::BOOTED_AT,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+            attempts: 3,
+            retrySeconds: 0,
+        );
+
+        $this->assertSame(['deleted' => 1, 'projects' => 1, 'failed' => 0, 'outcome' => 'done', 'attempts' => 2], $result);
+        $this->assertSame([], $this->userIds());
+    }
+
+    public function testResumeOrphanedInProjectsGivesUpAfterItsAttempts(): void
+    {
+        $result = (new State())->resumeOrphanedInProjects(
+            $this->platform([], 'broken'),
+            fn (Document $project): Database => throw new \RuntimeException('Project database unreachable'),
+            'host-a',
+            self::BOOTED_AT,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+            attempts: 2,
+            retrySeconds: 0,
+        );
+
+        $this->assertSame(['deleted' => 0, 'projects' => 1, 'failed' => 1, 'outcome' => 'done', 'attempts' => 2], $result);
+    }
+
     public function testSetPermissionsDefaultsForUser(): void
     {
         $userId = 'user123';

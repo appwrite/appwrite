@@ -514,6 +514,44 @@ class State
     }
 
     /**
+     * Finishes a sweep that {@see deleteOrphanedInProjects} left undone (timed out, failed or
+     * with failed projects), while serving. Safe then: rows written since `$before` are never
+     * deleted. Rescans every project per attempt, up to `$attempts`, with doubling backoff.
+     *
+     * @param callable(Document): Database $getProjectDB
+     * @return array{deleted: int, projects: int, failed: int, outcome: 'done'|'timeout'|'failed', attempts: int}
+     */
+    public function resumeOrphanedInProjects(
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        string $hostname,
+        string $before,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+        int $attempts = 5,
+        int $attemptSeconds = 600,
+        int $retrySeconds = DATABASE_RECONNECT_SLEEP,
+    ): array {
+        $deleted = 0;
+        $result = ['deleted' => 0, 'projects' => 0, 'failed' => 0, 'outcome' => 'failed'];
+
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            if ($attempt > 1) {
+                \sleep($retrySeconds * 2 ** ($attempt - 2));
+            }
+
+            $result = $this->deleteOrphanedInProjects($dbForPlatform, $getProjectDB, $hostname, $before, \microtime(true) + $attemptSeconds, $publisherForUsage, $queueForRealtime, $retrySeconds);
+            $deleted += $result['deleted'];
+
+            if ($result['outcome'] === 'done' && $result['failed'] === 0) {
+                break;
+            }
+        }
+
+        return [...$result, 'deleted' => $deleted, 'attempts' => \min($attempt, $attempts)];
+    }
+
+    /**
      * Deletes the realtime presences in one project whose host is no longer running: this
      * host's earlier runs and any host not in `$liveHosts` (only this host's when null). Rows
      * without a hostname are kept, as their host is unknown. Only rows untouched since
