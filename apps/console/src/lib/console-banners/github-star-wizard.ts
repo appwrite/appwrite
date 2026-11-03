@@ -6,11 +6,15 @@
  * The banner id lives in the catalog: `GITHUB_STAR_WIZARD_BANNER_ID`.
  */
 
-/** Distinct console visit days required before the wizard can show. */
-export const GITHUB_STAR_WIZARD_VISIT_THRESHOLD = 3
+/**
+ * Distinct console visit days required before the wizard can show. Also the
+ * most days ever stored: only the latest few can decide eligibility, which
+ * keeps the prefs value at a handful of short day keys.
+ */
+export const GITHUB_STAR_WIZARD_VISIT_THRESHOLD = 5
 
 /** Rolling window (days, inclusive of today) the visits must fall into. */
-export const GITHUB_STAR_WIZARD_VISIT_WINDOW_DAYS = 10
+export const GITHUB_STAR_WIZARD_VISIT_WINDOW_DAYS = 14
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -45,8 +49,9 @@ export function normalizeGithubStarVisitDays(
 }
 
 /**
- * Keep only the visit days inside the rolling window that ends at `todayKey`
- * (inclusive). Future day keys are dropped as corrupt.
+ * Keep only the most recent visit days inside the rolling window that ends at
+ * `todayKey` (inclusive), at most `GITHUB_STAR_WIZARD_VISIT_THRESHOLD` of
+ * them. Future day keys are dropped as corrupt.
  */
 export function pruneGithubStarVisitDays(
   days: readonly string[],
@@ -54,13 +59,17 @@ export function pruneGithubStarVisitDays(
 ): string[] {
   const todayMs = parseVisitDayKeyUtcMs(todayKey)
   const normalized = normalizeGithubStarVisitDays(days)
-  if (todayMs === null) return normalized
+  if (todayMs === null) {
+    return normalized.slice(-GITHUB_STAR_WIZARD_VISIT_THRESHOLD)
+  }
   const windowStartMs =
     todayMs - (GITHUB_STAR_WIZARD_VISIT_WINDOW_DAYS - 1) * DAY_MS
-  return normalized.filter((day) => {
-    const dayMs = parseVisitDayKeyUtcMs(day)
-    return dayMs !== null && dayMs >= windowStartMs && dayMs <= todayMs
-  })
+  return normalized
+    .filter((day) => {
+      const dayMs = parseVisitDayKeyUtcMs(day)
+      return dayMs !== null && dayMs >= windowStartMs && dayMs <= todayMs
+    })
+    .slice(-GITHUB_STAR_WIZARD_VISIT_THRESHOLD)
 }
 
 /** Record today's visit and prune the list to the rolling window. */

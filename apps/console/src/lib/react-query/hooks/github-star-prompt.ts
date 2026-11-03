@@ -6,11 +6,12 @@ import {
   getConsoleAccountFromCache,
   syncConsoleAccountAfterMutation,
   updateAccountPrefs,
-  useDismissConsoleBanner,
   type ConsoleAccountCache,
 } from '@/lib/react-query/hooks/auth'
 import {
+  clearGithubStarVisitDaysFromPrefs,
   isConsoleBannerDismissed,
+  mergeDismissedBannerPrefs,
   mergeGithubStarVisitDaysIntoPrefs,
   parseCommunitySupportPrefs,
   parseGithubStarVisitDayPrefs,
@@ -132,15 +133,32 @@ export function useGithubStarPrompt(
     !communitySupportEngaged &&
     isGithubStarWizardEligible(visitDays, todayKey)
 
-  const dismissBanner = useDismissConsoleBanner()
-  const { mutate: dismissBannerMutate } = dismissBanner
   const dismiss = useCallback(() => {
     // Wait out an in-flight visit write so its full-prefs payload cannot land
-    // after the dismissal and resurrect the wizard.
+    // after the dismissal and resurrect the wizard. One write then records
+    // the dismissal and drops the visit days, which nothing reads again.
     void visitWriteRef.current
       .catch(() => undefined)
-      .then(() => dismissBannerMutate(GITHUB_STAR_WIZARD_BANNER_ID))
-  }, [dismissBannerMutate])
+      .then(async () => {
+        const cached = getConsoleAccountFromCache(queryClient)
+        const basePrefs = (cached?.prefs ??
+          accountRef.current?.prefs ??
+          {}) as UserPrefs
+        const updatedAccount = await updateAccountPrefs(
+          clearGithubStarVisitDaysFromPrefs(
+            mergeDismissedBannerPrefs(basePrefs, GITHUB_STAR_WIZARD_BANNER_ID),
+          ),
+          'dismiss-github-star-wizard',
+        )
+        if (!updatedAccount) return
+        syncConsoleAccountAfterMutation(queryClient, {
+          apiResult: updatedAccount,
+        })
+      })
+      .catch((error) => {
+        console.error('[github-star-prompt] failed to dismiss', error)
+      })
+  }, [queryClient])
 
   return {
     visitDays,

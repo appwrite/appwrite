@@ -132,7 +132,8 @@ export function clearDismissedBannerPrefs(
 
 /**
  * Distinct console visit days (local `YYYY-MM-DD` keys) feeding the GitHub
- * star wizard trigger. Pruned to its rolling window on every write.
+ * star wizard trigger. Pruned to its rolling window and capped at the visit
+ * threshold on every write; removed once the wizard is dismissed.
  * Value: comma-separated day keys.
  */
 export const USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS =
@@ -156,6 +157,15 @@ export function mergeGithubStarVisitDaysIntoPrefs(
     ...(prefs ?? {}),
     [USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]: days.join(','),
   }
+}
+
+/** Drop the visit-day key (once dismissed it never feeds a decision again). */
+export function clearGithubStarVisitDaysFromPrefs(
+  prefs: UserPrefs | null | undefined,
+): UserPrefs {
+  const next = { ...(prefs ?? {}) } as UserPrefs
+  delete next[USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]
+  return next
 }
 
 /**

@@ -14,6 +14,9 @@ import {
   withRecordedGithubStarVisit,
 } from '@/lib/console-banners/github-star-wizard'
 import {
+  clearGithubStarVisitDaysFromPrefs,
+  isConsoleBannerDismissed,
+  mergeDismissedBannerPrefs,
   mergeGithubStarVisitDaysIntoPrefs,
   parseGithubStarVisitDayPrefs,
   USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS,
@@ -56,10 +59,10 @@ describe('GitHub star wizard visit tracking', () => {
   })
 
   test('prunes visits that fell out of the rolling window', () => {
-    const days = ['2026-10-20', '2026-10-24', '2026-11-01']
-    // Window is 10 days inclusive of today: 2026-10-24 .. 2026-11-02.
+    const days = ['2026-10-16', '2026-10-20', '2026-11-01']
+    // Window is 14 days inclusive of today: 2026-10-20 .. 2026-11-02.
     expect(pruneGithubStarVisitDays(days, '2026-11-02')).toEqual([
-      '2026-10-24',
+      '2026-10-20',
       '2026-11-01',
     ])
   })
@@ -70,33 +73,76 @@ describe('GitHub star wizard visit tracking', () => {
     ).toEqual(['2026-11-01'])
   })
 
-  test('becomes eligible on the third distinct day inside the window', () => {
-    expect(GITHUB_STAR_WIZARD_VISIT_THRESHOLD).toBe(3)
-    expect(GITHUB_STAR_WIZARD_VISIT_WINDOW_DAYS).toBe(10)
+  test('stores at most the threshold, keeping the most recent days', () => {
+    let days: string[] = []
+    for (const day of [
+      '2026-10-25',
+      '2026-10-26',
+      '2026-10-27',
+      '2026-10-28',
+      '2026-10-29',
+      '2026-10-30',
+      '2026-10-31',
+    ]) {
+      days = withRecordedGithubStarVisit(days, day)
+    }
+    expect(days).toEqual([
+      '2026-10-27',
+      '2026-10-28',
+      '2026-10-29',
+      '2026-10-30',
+      '2026-10-31',
+    ])
+    // A capped list is still a well-formed, tiny prefs value.
+    expect(days.join(',').length).toBeLessThanOrEqual(
+      GITHUB_STAR_WIZARD_VISIT_THRESHOLD * 11,
+    )
+  })
+
+  test('becomes eligible on the fifth distinct day inside the window', () => {
+    expect(GITHUB_STAR_WIZARD_VISIT_THRESHOLD).toBe(5)
+    expect(GITHUB_STAR_WIZARD_VISIT_WINDOW_DAYS).toBe(14)
 
     let days: string[] = []
-    days = withRecordedGithubStarVisit(days, '2026-11-02')
-    expect(isGithubStarWizardEligible(days, '2026-11-02')).toBe(false)
-
-    days = withRecordedGithubStarVisit(days, '2026-11-04')
-    expect(isGithubStarWizardEligible(days, '2026-11-04')).toBe(false)
-
-    days = withRecordedGithubStarVisit(days, '2026-11-08')
-    expect(isGithubStarWizardEligible(days, '2026-11-08')).toBe(true)
+    const visits = [
+      '2026-11-02',
+      '2026-11-04',
+      '2026-11-07',
+      '2026-11-10',
+      '2026-11-15',
+    ]
+    visits.forEach((day, index) => {
+      days = withRecordedGithubStarVisit(days, day)
+      expect(isGithubStarWizardEligible(days, day)).toBe(
+        index === visits.length - 1,
+      )
+    })
   })
 
   test('visits spread wider than the window never qualify', () => {
     let days: string[] = []
-    days = withRecordedGithubStarVisit(days, '2026-10-01')
-    days = withRecordedGithubStarVisit(days, '2026-10-15')
-    days = withRecordedGithubStarVisit(days, '2026-10-29')
-    // Each visit aged out before the next two arrived.
-    expect(isGithubStarWizardEligible(days, '2026-10-29')).toBe(false)
-    expect(days).toEqual(['2026-10-29'])
+    for (const day of [
+      '2026-10-01',
+      '2026-10-06',
+      '2026-10-11',
+      '2026-10-16',
+      '2026-10-21',
+    ]) {
+      days = withRecordedGithubStarVisit(days, day)
+    }
+    // 2026-10-01 aged out of the 14-day window before the fifth visit.
+    expect(days).toEqual(['2026-10-11', '2026-10-16', '2026-10-21'])
+    expect(isGithubStarWizardEligible(days, '2026-10-21')).toBe(false)
   })
 
-  test('three visits on window boundaries qualify', () => {
-    const days = ['2026-10-24', '2026-10-28', '2026-11-02']
+  test('five visits on window boundaries qualify', () => {
+    const days = [
+      '2026-10-20',
+      '2026-10-23',
+      '2026-10-27',
+      '2026-10-30',
+      '2026-11-02',
+    ]
     expect(isGithubStarWizardEligible(days, '2026-11-02')).toBe(true)
   })
 
@@ -115,6 +161,23 @@ describe('GitHub star wizard visit tracking', () => {
     ])
     expect(parseGithubStarVisitDayPrefs(undefined)).toEqual([])
     expect(parseGithubStarVisitDayPrefs({})).toEqual([])
+  })
+
+  test('dismissal drops the visit key and keeps everything else', () => {
+    const prefs = clearGithubStarVisitDaysFromPrefs(
+      mergeDismissedBannerPrefs(
+        {
+          existing: 'value',
+          [USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS]: '2026-11-01,2026-11-02',
+        },
+        'github-star-wizard-2026',
+      ),
+    )
+    expect(USER_PREFS_KEY_GITHUB_STAR_VISIT_DAYS in prefs).toBe(false)
+    expect(prefs.existing).toBe('value')
+    expect(isConsoleBannerDismissed(prefs, 'github-star-wizard-2026')).toBe(
+      true,
+    )
   })
 })
 
