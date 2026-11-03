@@ -448,7 +448,7 @@ class V25 extends Migration
                         // Each page and its cursor are read before clearing, so the shrinking filter cannot skip rows
                         $cursor = null;
                         do {
-                            $queries = [Query::notEqual('providerEmail', ''), Query::limit(100)];
+                            $queries = [Query::notEqual('providerEmail', ''), Query::orderAsc('$sequence'), Query::limit(100)];
                             if ($cursor !== null) {
                                 $queries[] = Query::cursorAfter($cursor);
                             }
