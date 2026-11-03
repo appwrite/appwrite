@@ -132,7 +132,7 @@ class Executor
         string $runtimeEntrypoint = '',
         ?int $requestTimeout = null,
         string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS,
-        ?callable $onPart = null
+        ?\Closure $onPart = null
     ) {
         $runtimeId = self::runtimeId($projectId, $deploymentId);
         $route = '/runtimes/' . $runtimeId . '/executions';
