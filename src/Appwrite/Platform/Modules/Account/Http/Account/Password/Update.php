@@ -146,6 +146,8 @@ class Update extends Action
             User::invalidateAuthentication($dbForProject, $user, $current->getId());
         }
 
+        User::deleteRecoveryTokens($dbForProject, $user);
+
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         try {

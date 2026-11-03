@@ -164,6 +164,7 @@ class Update extends Action
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
             }
+            User::deleteRecoveryTokens($dbForProject, $profile);
 
             // Recovery proves an unverified email, so whoever registered it keeps no other way in.
             // MFA in force is left alone, so the new password still needs the second factor to sign in

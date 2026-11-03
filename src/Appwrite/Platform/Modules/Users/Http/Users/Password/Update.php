@@ -113,6 +113,8 @@ class Update extends Action
                 User::invalidateAuthentication($dbForProject, $user);
             }
 
+            User::deleteRecoveryTokens($dbForProject, $user);
+
             $dbForProject->purgeCachedDocument('users', $user->getId());
 
             $queueForEvents->setParam('userId', $user->getId());
@@ -161,6 +163,8 @@ class Update extends Action
         if ($invalidate) {
             User::invalidateAuthentication($dbForProject, $user);
         }
+
+        User::deleteRecoveryTokens($dbForProject, $user);
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
