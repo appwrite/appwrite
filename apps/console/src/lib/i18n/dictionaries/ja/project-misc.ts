@@ -3910,4 +3910,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'これらのアラートは引き続きコンソール通知に表示されます。',
   'Saving...': '保存中...',
+  // Claude Desktop remote connector and local fallback
+  'In Claude Desktop, open Customize > Connectors, add a custom connector with this URL, and sign in to Appwrite.':
+    'Claude Desktop で Customize > Connectors を開き、この URL を使ってカスタムコネクタを追加し、Appwrite にログインしてください。',
+  'Local server fallback': 'ローカルサーバーを使う代替手順',
+  'Requires Node.js. Add this configuration under Settings > Developer > Local MCP servers > Edit Config, then restart Claude Desktop.':
+    'Node.js が必要です。Settings > Developer > Local MCP servers > Edit Config からこの設定を追加し、Claude Desktop を再起動してください。',
+
 }

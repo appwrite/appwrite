@@ -25,47 +25,31 @@ Browse all quick start prompts
 
 Connect the Appwrite MCP server to Claude Desktop for deeper integration with the Appwrite API and documentation.
 
-Before you begin, ensure you have [Node.js](https://nodejs.org/en/download) and npm installed on your system.
+Use a custom connector to connect Claude Desktop directly to the hosted Appwrite MCP server. This setup does not require Node.js or a local configuration file.
 
-Unlike other IDEs, Claude Desktop only supports local (stdio) MCP servers and not remote servers. The `mcp-remote` package acts as a proxy to connect to the remote Appwrite MCP server.
+1. Open **Customize > Connectors** in Claude Desktop.
+2. Choose **Add custom connector** and name it **Appwrite**.
+3. Enter the remote MCP server URL:
 
-In the Claude Desktop app, open the app's **Settings** page (press `CTRL + ,` on Windows or `CMD + ,` on MacOS) and head to the **Developer** tab.
-
-![Claude Settings](/images/docs/mcp/claude-desktop/claude-settings.avif)
-
-Clicking on the **Edit Config** button will take you to the `claude_desktop_config.json` file. In case the file is missing, please visit the [Model Context Protocol](https://modelcontextprotocol.io/quickstart/user#2-add-the-filesystem-mcp-server) docs.
-
-Add the Appwrite MCP server to your configuration:
-
-```json
-{
-    "mcpServers": {
-        "appwrite": {
-            "command": "npx",
-            "args": [
-                "mcp-remote",
-                "https://mcp.appwrite.io/"
-            ]
-        }
-    }
-}
+```text
+https://mcp.appwrite.io/
 ```
 
-The server uses OAuth for authentication. When Claude Desktop first connects to the server, your browser opens so you can sign in to your Appwrite account and authorize access.
+4. Follow the connector setup, then click **Connect** to sign in to your Appwrite account and authorize access when prompted.
+
+For Team and Enterprise organizations, someone with permission to manage connectors must add it before members can connect. See [Claude's custom connector guide](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) for current availability and setup options.
+
+{% info title="Self-hosted Appwrite" %}
+
+The hosted connector authenticates against Appwrite Cloud. For a self-hosted instance, follow the [local MCP server setup](/docs/tooling/ai/mcp-servers#self-hosted) instead.
+
+{% /info %}
 
 {% /section %}
 
 {% section #step-3 step=3 title="Verify MCP tools" %}
 
-Restart the Claude Desktop app, click on the MCP tools button (at the bottom right section of the prompt input) and click on it to view available Appwrite MCP tools.
-
-![Appwrite MCP tools](/images/docs/mcp/claude-desktop/claude-mcp-tools.avif)
-
-{% info title="npx ENOENT error" %}
-
-In case you see an `npx ENOENT` error, ensure that you either add `npx` to the `PATH` environment variable on your system or use the full path to your `npx` installation in the config file.
-
-{% /info %}
+In a conversation, open **Connectors** from the **+** menu and enable **Appwrite**. Confirm that the connector is connected and its tools are available.
 
 {% /section %}
 
@@ -83,5 +67,32 @@ Try out the following example prompts:
 - `How do I implement file uploads with Appwrite Storage?`
 
 ![List users in Appwrite project](/images/docs/mcp/claude-desktop/claude-list-users.avif)
+
+{% /section %}
+
+{% section #local-bridge title="Alternative: local stdio bridge" %}
+
+If custom connectors are unavailable in your environment, you can connect through a local stdio bridge instead. This alternative requires [Node.js](https://nodejs.org/en/download) and npm.
+
+Open **Settings > Developer > Local MCP servers**, choose **Edit Config**, and add this entry to `claude_desktop_config.json`:
+
+```json
+{
+    "mcpServers": {
+        "appwrite": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "mcp-remote@0.16.0",
+                "https://mcp.appwrite.io/"
+            ]
+        }
+    }
+}
+```
+
+Restart Claude Desktop, then complete the Appwrite sign-in in your browser. The server appears under **Local MCP servers**.
+
+If you see an `npx ENOENT` error, add `npx` to your `PATH` or use its full path in the configuration.
 
 {% /section %}
