@@ -296,7 +296,8 @@ class Anthropic extends Adapter implements Model
             $payload['output_config'] = $output;
         }
 
-        $sampling = $this->before('4.7');
+        // Anthropic rejects temperature, top_p and top_k while thinking is on.
+        $sampling = $this->before('4.7') && ! isset($payload['thinking']);
         $settings = [
             'temperature' => $sampling ? $request->temperature : null,
             'top_p' => $sampling ? $request->topP : null,

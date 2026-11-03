@@ -215,6 +215,30 @@ class OpenAITest extends TestCase
         $this->assertCount(3, $client->requests);
     }
 
+    public function testReadsRetryAfterAsHttpDate(): void
+    {
+        $client = (new Client())->queue(429, '{"error":{"message":"Slow down"}}', headers: ['retry-after' => gmdate('D, d M Y H:i:s', time() + 30).' GMT']);
+
+        try {
+            $this->adapter($client)->setRetries(0)->generate(new Request([Message::user('Hi')]));
+            $this->fail('Expected a rate limit exception');
+        } catch (RateLimit $error) {
+            $this->assertNotNull($error->retryAfter);
+            $this->assertGreaterThan(25.0, $error->retryAfter);
+        }
+    }
+
+    public function testRejectsOversizedEventInOneChunk(): void
+    {
+        $event = 'data: {"pad":"'.str_repeat('x', 8388608).'"}'."\n\n";
+        $client = (new Client())->queue(200, chunks: [$event]);
+
+        $this->expectException(Api::class);
+        $this->expectExceptionMessage('exceeds');
+
+        $this->adapter($client)->generate(new Request([Message::user('Hi')]));
+    }
+
     public function testDoesNotRetryClientErrors(): void
     {
         $client = (new Client())->queue(401, '{"error":{"message":"Bad key","code":"invalid_api_key"}}');

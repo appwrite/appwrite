@@ -225,6 +225,32 @@ class AnthropicTest extends TestCase
         $this->assertSame($sent, \array_key_exists('top_k', $payload));
     }
 
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function thinkingModels(): array
+    {
+        return [
+            'budget thinking' => ['claude-haiku-4-5-20251001'],
+            'adaptive thinking' => ['claude-sonnet-4-6'],
+        ];
+    }
+
+    #[DataProvider('thinkingModels')]
+    public function testSamplingIsDroppedWhileThinking(string $model): void
+    {
+        $client = $this->client($this->message([], 'end_turn'));
+
+        $this->adapter($client, $model)->generate(new Request([Message::user('Hi')], temperature: 0.3, topP: 0.9, topK: 5, stop: ['END'], effort: Effort::Medium));
+
+        $payload = $client->lastPayload();
+        $this->assertArrayHasKey('thinking', $payload);
+        $this->assertArrayNotHasKey('temperature', $payload);
+        $this->assertArrayNotHasKey('top_p', $payload);
+        $this->assertArrayNotHasKey('top_k', $payload);
+        $this->assertSame(['END'], $payload['stop_sequences']);
+    }
+
     public function testStreamsThinkingTextAndToolUse(): void
     {
         $client = $this->client($this->message([

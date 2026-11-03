@@ -43,6 +43,16 @@ class EmbedderTest extends TestCase
         (new Appwrite(client: $client))->embed(['a', 'b']);
     }
 
+    public function testNonNumericComponentThrows(): void
+    {
+        $client = (new Client())->queue(200, json_encode(['embeddings' => [[0.1, null]]]) ?: '');
+
+        $this->expectException(Api::class);
+        $this->expectExceptionMessage('non-numeric component');
+
+        (new Appwrite(client: $client))->embed(['a']);
+    }
+
     public function testAppwriteServiceErrorThrows(): void
     {
         $client = (new Client())->queue(400, '{"error":"model not loaded"}');

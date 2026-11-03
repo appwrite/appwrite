@@ -84,7 +84,7 @@ class Ollama extends Adapter implements Embedder
             if (! \is_array($row) || $row === []) {
                 throw new Api('Embedding response has an empty or invalid vector', $this->getName());
             }
-            $vectors[] = array_values(array_map(fn ($value) => \is_int($value) || \is_float($value) ? (float) $value : 0.0, $row));
+            $vectors[] = $this->vector($row);
         }
 
         if (\count($vectors) !== \count($texts)) {

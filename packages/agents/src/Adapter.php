@@ -222,6 +222,9 @@ abstract class Adapter
 
                 $buffer = str_replace("\r\n", "\n", $buffer.$chunk);
                 while (($end = strpos($buffer, "\n\n")) !== false) {
+                    if ($end > static::EVENT_BYTES) {
+                        throw new Api('Server-sent event exceeds '.static::EVENT_BYTES.' bytes', $this->getName());
+                    }
                     $block = substr($buffer, 0, $end);
                     $buffer = substr($buffer, $end + 2);
                     $dispatch($block);
@@ -265,6 +268,8 @@ abstract class Adapter
         $header = $response->getHeaderLine('retry-after');
         if ($header !== '' && is_numeric($header)) {
             $retryAfter = (float) $header;
+        } elseif ($header !== '' && ($time = strtotime($header)) !== false) {
+            $retryAfter = (float) max(0, $time - time());
         }
 
         $retryable = \in_array($status, [408, 409, 429], true) || $status >= 500;
@@ -426,6 +431,28 @@ abstract class Adapter
         }
 
         return $map;
+    }
+
+    /**
+     * An embedding row as floats; a component that is not a number fails the
+     * whole response rather than turning into a silent zero.
+     *
+     * @param  array<mixed>  $row
+     * @return list<float>
+     *
+     * @throws Api
+     */
+    protected function vector(array $row): array
+    {
+        $vector = [];
+        foreach ($row as $value) {
+            if (! \is_int($value) && ! \is_float($value)) {
+                throw new Api('Embedding response has a non-numeric component', $this->getName());
+            }
+            $vector[] = (float) $value;
+        }
+
+        return $vector;
     }
 
     /**
