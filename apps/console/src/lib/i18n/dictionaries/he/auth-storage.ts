@@ -508,7 +508,7 @@ export const heAuthStorageDictionary: Record<string, string> = {
   Expiration: 'תפוגה',
   Expired: 'פג תוקף',
   Expires: 'תוקף עד',
-  'Expires soon': 'יפוג בקרוב',
+  'Expires soon': 'התוקף יפוג בקרוב',
   'Extra protection if an auth code is intercepted.':
     'הגנה נוספת במקרה שקוד אימות יורט.',
   Facebook: 'Facebook',

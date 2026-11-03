@@ -88,6 +88,18 @@ export const jaSitesDictionary: Record<string, string> = {
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'Certificate expired': '証明書の期限切れ',
+  'Renewal failed': '証明書の更新に失敗しました',
+  'Renewal blocked': '証明書の更新が保留中',
+  'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
+  "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
+    'この証明書は期限切れです。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  "View logs for details. Check that the domain's DNS still points to Appwrite.":
+    '詳細はログを確認してください。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  'Renewal is waiting on a DNS record. View logs to see which record to add.':
+    '証明書の更新は DNS レコードの追加を待っています。追加するレコードはログで確認できます。',
+  "This certificate has not renewed yet. Check that the domain's DNS still points to Appwrite.":
+    'この証明書はまだ更新されていません。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
   'Back to sites': 'サイト一覧に戻る',
   'Your site is currently being deployed.': 'サイトは現在デプロイ中です。',
   'Filters coming soon': 'フィルターは近日公開',

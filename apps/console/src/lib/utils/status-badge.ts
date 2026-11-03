@@ -320,3 +320,67 @@ export function getDomainStatusBadgeConfig(status: string): {
       return { variant: 'processing', label: status }
   }
 }
+
+/** A certificate is at risk this long before it expires. */
+const CERTIFICATE_EXPIRY_WARNING_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
+
+/**
+ * Get proxy rule status badge config for rendering. A verified rule shows the
+ * state of its certificate, so a renewal problem is visible before the
+ * certificate expires. A rule without certificate state, for example from a
+ * server that does not report it, keeps the domain status badge.
+ */
+export function getRuleStatusBadgeConfig(
+  rule: { status: string; expireAt?: string; certificateStatus?: string },
+  now: Date = new Date(),
+): {
+  variant: DomainStatusBadgeVariant | 'success' | 'warning'
+  label: string
+  /** What to do about the certificate, for the badge tooltip */
+  hint?: string
+  /** When the certificate of a healthy verified rule expires */
+  expireAt?: Date
+} {
+  const config = getDomainStatusBadgeConfig(rule.status)
+  if (rule.status !== 'verified') return config
+
+  const expireAt = rule.expireAt ? new Date(rule.expireAt) : null
+  const remaining =
+    expireAt && !Number.isNaN(expireAt.getTime())
+      ? expireAt.getTime() - now.getTime()
+      : null
+
+  if (remaining !== null && remaining < 0) {
+    return {
+      variant: 'error',
+      label: 'Certificate expired',
+      hint: "This certificate has expired. Check that the domain's DNS still points to Appwrite.",
+    }
+  }
+  if (rule.certificateStatus === 'failed') {
+    return {
+      variant: 'error',
+      label: 'Renewal failed',
+      hint: "View logs for details. Check that the domain's DNS still points to Appwrite.",
+    }
+  }
+  if (rule.certificateStatus === 'blocked') {
+    return {
+      variant: 'warning',
+      label: 'Renewal blocked',
+      hint: 'Renewal is waiting on a DNS record. View logs to see which record to add.',
+    }
+  }
+  if (
+    rule.certificateStatus === 'expiring' ||
+    (remaining !== null && remaining <= CERTIFICATE_EXPIRY_WARNING_MS)
+  ) {
+    return {
+      variant: 'warning',
+      label: 'Expires soon',
+      hint: "This certificate has not renewed yet. Check that the domain's DNS still points to Appwrite.",
+    }
+  }
+
+  return remaining !== null && expireAt ? { ...config, expireAt } : config
+}

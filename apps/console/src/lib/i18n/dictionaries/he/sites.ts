@@ -174,6 +174,18 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'Certificate expired': 'פג תוקף התעודה',
+  'Renewal failed': 'חידוש התעודה נכשל',
+  'Renewal blocked': 'חידוש התעודה חסום',
+  'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
+  "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
+    'תוקף התעודה פג. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
+  "View logs for details. Check that the domain's DNS still points to Appwrite.":
+    'צפו בלוגים לפרטים נוספים. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
+  'Renewal is waiting on a DNS record. View logs to see which record to add.':
+    'חידוש התעודה ממתין לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
+  "This certificate has not renewed yet. Check that the domain's DNS still points to Appwrite.":
+    'התעודה עדיין לא חודשה. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
 
   // Site layout and settings shell
   Deployments: 'פריסות',
