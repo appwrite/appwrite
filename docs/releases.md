@@ -121,10 +121,12 @@ Versioned API specs and SDK examples live in [`appwrite/specs`](https://github.c
 
 The workflow cannot generate `X.Y.x` until cloud `main` knows about it, so every release starts with a cloud PR, `chore(specs): prepare X.Y.x`, opened after the `X.Y.x` → `main` merge and merged before any workflow run. It must contain:
 
-- [ ] `composer update appwrite/server-ce`, so the locked `dev-main` includes the release for the `latest` run.
+- [ ] `appwrite/server-ce` locked at the release commit (`git rev-parse X.Y.Z`), so the locked `dev-main` includes the release for the `latest` run. Set the constraint to `dev-main#<sha>`, run `composer update appwrite/server-ce appwrite/appwrite`, restore `dev-main` and run `composer update --lock`, so only `composer.lock` changes. The release's sdk-for-php comes with it.
 - [ ] `X.Y.x` added to the `version` choices in `specs.yml`, directly under `latest`.
 
-Merge it once cloud CI is green. The `composer update` also moves what Cloud builds from, so treat it like any other cloud dependency bump. Cloud classes that call a server-ce action positionally break when its signature changes: in 2.5.0, appwrite/appwrite#14423 moved `membershipId` to last, and cloud's `Organization/Http/Memberships/Create.php` needed the same order in this PR (appwrite-labs/cloud#6517).
+Do not take the tip of `main`: it carries whatever merged after the release, and in 2.7.0 that was an agents redesign (appwrite/appwrite#15223, 166 PHPStan errors in Cloud) and a streaming change Cloud's Sites lane fails (appwrite/appwrite#13314). Those belong in their own Cloud bump. A review bot may flag fixes from `main` that the lock leaves out; they are not regressions when the previous lock lacked them too.
+
+Merge it once cloud CI is green. The lock also moves what Cloud builds from, so treat it like any other cloud dependency bump. Cloud classes that call a server-ce action positionally break when its signature changes: in 2.5.0, appwrite/appwrite#14423 moved `membershipId` to last, and cloud's `Organization/Http/Memberships/Create.php` needed the same order in this PR (appwrite-labs/cloud#6517).
 
 ### Generate
 
