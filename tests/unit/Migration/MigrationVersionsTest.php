@@ -569,6 +569,72 @@ final class MigrationVersionsTest extends TestCase
      * On a shared-tables host the physical table and its _metadata row belong
      * to no tenant, so a second project's migration finds the collections already.
      */
+    /**
+     * The 2.6.x/2.7.0 upgrade path creates the video collections from V25, so
+     * the shared-tables rule holds there too: the metadata row belongs to no
+     * tenant, and a second project on the host sees the collections.
+     */
+    public function testV25SharedTablesCreateGlobalVideoCollections(): void
+    {
+        require_once __DIR__ . '/../../../app/init.php';
+
+        $authorization = new Authorization();
+        $database = new Database(new Memory(), new Cache(new NoCache()));
+        $database
+            ->setAuthorization($authorization)
+            ->setDatabase('migrationV25Shared')
+            ->setNamespace('migration_videos_shared_v25_' . \uniqid())
+            ->setSharedTables(true)
+            ->setTenant(null);
+        $database->create();
+
+        $migrate = function (string $tenant) use ($database, $authorization): void {
+            // Only the collection pass matters here; the document passes read
+            // collections a fresh schema does not have.
+            $migration = new class () extends V25 {
+                #[\Override]
+                public function forEachDocument(callable $callback): void
+                {
+                }
+
+                #[\Override]
+                protected function documentsIterator(string $collection, array $queries = []): \Generator
+                {
+                    yield from [];
+                }
+            };
+            $database->setTenant($tenant);
+            $migration->setProject(
+                new Document(['$id' => 'project-' . $tenant, '$sequence' => $tenant]),
+                $database,
+                $database,
+                $authorization,
+            );
+
+            \ob_start();
+            try {
+                $migration->execute();
+            } finally {
+                \ob_end_clean();
+            }
+        };
+
+        $migrate('tenant-a');
+
+        $metadata = $database->withTenant(null, fn () => $database->getDocument(Database::METADATA, 'videos'));
+        $this->assertFalse($metadata->isEmpty());
+        $this->assertNull($metadata->getTenant());
+
+        $migrate('tenant-b');
+
+        foreach (['videos', 'videosProfiles', 'videosCaptions'] as $collectionId) {
+            $this->assertFalse(
+                $database->getCollection($collectionId)->isEmpty(),
+                "Expected collection \"{$collectionId}\" to exist for tenant-b"
+            );
+        }
+    }
+
     public function testV26SharedTablesCreateGlobalCollections(): void
     {
         require_once __DIR__ . '/../../../app/init.php';

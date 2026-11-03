@@ -1015,14 +1015,12 @@ final class VideosCustomServerTest extends Scope
     }
 
     /**
-     * @return array<string, array{string}>
+     * @return \Iterator<string, array{string}>
      */
-    public static function encodedSources(): array
+    public static function encodedSources(): \Iterator
     {
-        return [
-            'encrypted' => ['none'],
-            'encrypted and zstd compressed' => ['zstd'],
-        ];
+        yield 'encrypted' => ['none'];
+        yield 'encrypted and zstd compressed' => ['zstd'];
     }
 
     /**
@@ -2486,8 +2484,9 @@ final class VideosCustomServerTest extends Scope
         );
         $path = '/videos/' . $videoId . '/thumbnails/' . $thumbnailId;
 
-        // Distinct sizes: the response cache keys on query params, not Accept,
-        // so a second request with the same width and height would replay the first bytes.
+        // Distinct sizes between formats, plus the same URL three times with a
+        // changing Accept header: the response cache keys on Accept as well, so
+        // the webp request must not replay the cached jpeg bytes and vice versa.
         $cases = [
             [
                 'params' => ['width' => 64, 'height' => 64],
@@ -2519,8 +2518,18 @@ final class VideosCustomServerTest extends Scope
             ],
             [
                 'params' => [],
+                'headers' => [],
+                'type' => 'image/jpeg',
+            ],
+            [
+                'params' => [],
                 'headers' => ['accept' => 'image/webp'],
                 'type' => 'image/webp',
+            ],
+            [
+                'params' => [],
+                'headers' => [],
+                'type' => 'image/jpeg',
             ],
         ];
 

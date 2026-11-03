@@ -46,6 +46,9 @@ class Get extends Base
             ->label('cache', true)
             ->label('cache.resourceType', 'video/{request.videoId}')
             ->label('cache.resource', 'thumbnail/{request.thumbnailId}')
+            // The format is negotiated on Accept when output is omitted, so the
+            // cached bytes must be keyed by it too.
+            ->label('cache.vary', ['accept'])
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
@@ -137,6 +140,7 @@ class Get extends Base
             ->setContentType($outputs[$output])
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 30)) . ' GMT') // 30 days
             ->addHeader('Cache-Control', 'private, max-age=2592000')
+            ->addHeader('Vary', 'Accept')
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->file($source);
     }

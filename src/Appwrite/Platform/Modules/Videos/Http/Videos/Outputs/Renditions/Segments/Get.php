@@ -133,7 +133,8 @@ class Get extends Base
 
             // A suffix range (bytes=-N) asks for the last N bytes. The request
             // parser rejects it, since it has no first-byte-pos.
-            if (\str_starts_with($spec, '-') && \ctype_digit($suffix)) {
+            $suffixed = \str_starts_with($spec, '-') && \ctype_digit($suffix);
+            if ($suffixed) {
                 $start = \max(0, $size - (int) $suffix);
                 $end = $size - 1;
             } else {
@@ -155,7 +156,13 @@ class Get extends Base
             }
 
             if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
-                $end = $start + MAX_OUTPUT_CHUNK_SIZE - 1;
+                // A suffix asks for the tail, so the cap moves the start and
+                // keeps the end at the segment boundary.
+                if ($suffixed) {
+                    $start = $end - MAX_OUTPUT_CHUNK_SIZE + 1;
+                } else {
+                    $end = $start + MAX_OUTPUT_CHUNK_SIZE - 1;
+                }
             }
 
             // RFC 9110: a last-byte-pos past the end of the file is clamped, not

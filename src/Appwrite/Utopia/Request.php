@@ -303,6 +303,8 @@ class Request extends UtopiaRequest
     /**
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
+     * A route that negotiates its response on request headers lists them in
+     * `cache.vary`, so each header value gets its own entry.
      *
      * @return string
      */
@@ -315,6 +317,9 @@ class Request extends UtopiaRequest
         }
         if (!isset($params['project'])) {
             $params['project'] = $this->getHeaderLine('x-appwrite-project', '');
+        }
+        foreach ($this->getRoute()?->getLabel('cache.vary', []) ?? [] as $header) {
+            $params['$' . $header] = $this->getHeaderLine($header, '');
         }
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
