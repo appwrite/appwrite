@@ -809,6 +809,7 @@ abstract class Response
 
         $this->streamCompression = $algorithm;
         $this->streamEncoder = $encoder;
+        $this->removeHeader('Content-Length');
         $this->addHeader('Content-Encoding', $algorithm->getContentEncoding());
         $this->addHeader('X-Utopia-Compression', 'true');
         $this->addHeader('Vary', 'Accept-Encoding');
