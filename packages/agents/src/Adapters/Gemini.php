@@ -4,432 +4,319 @@ namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
+use Utopia\Agents\Event;
+use Utopia\Agents\Events\ReasoningDelta;
+use Utopia\Agents\Events\TextDelta;
+use Utopia\Agents\Events\ToolCall as ToolCallEvent;
+use Utopia\Agents\Exception\Unsupported;
+use Utopia\Agents\FinishReason;
 use Utopia\Agents\Message;
+use Utopia\Agents\Model;
+use Utopia\Agents\Part;
+use Utopia\Agents\Parts\File;
+use Utopia\Agents\Parts\Image;
+use Utopia\Agents\Parts\Reasoning;
+use Utopia\Agents\Parts\Text;
+use Utopia\Agents\Parts\ToolCall;
+use Utopia\Agents\Parts\ToolResult;
+use Utopia\Agents\Request;
+use Utopia\Agents\Response;
+use Utopia\Agents\Role;
+use Utopia\Agents\Tool;
+use Utopia\Agents\ToolChoice;
+use Utopia\Agents\Usage;
 use Utopia\Client\Psr18\StreamingClientInterface;
 
-class Gemini extends Adapter
+/**
+ * Google Gemini API (generateContent).
+ *
+ * Tool and output schemas are sent as JSON Schema. Thought signatures on
+ * function calls are kept on the ToolCall and sent back with it, as thinking
+ * models require. Effort sets the thinking budget and returns thought
+ * summaries as reasoning.
+ */
+class Gemini extends Adapter implements Model
 {
-    protected const MAX_ATTACHMENTS_PER_MESSAGE = 10;
-
-    protected const MAX_ATTACHMENT_BYTES = 5000000;
-
-    protected const MAX_TOTAL_ATTACHMENT_BYTES = 20000000;
-
-    /**
-     * @var list<string>
-     */
-    protected const ALLOWED_ATTACHMENT_MIME_TYPES = [
-        'image/png',
-        'image/jpeg',
-        'image/webp',
-        'image/gif',
-    ];
-
-    /**
-     * Gemini 2.5 Flash Preview - Our best model in terms of price-performance, offering well-rounded capabilities.
-     */
-    public const MODEL_GEMINI_2_5_FLASH_PREVIEW = 'gemini-2.5-flash-preview-04-17';
-
-    /**
-     * Gemini 2.5 Pro Preview - Enhanced thinking and reasoning, multimodal understanding, advanced coding, and more.
-     */
-    public const MODEL_GEMINI_2_5_PRO_PREVIEW = 'gemini-2.5-pro-preview-03-25';
-
-    /**
-     * Gemini 2.0 Flash - Next generation features, speed, thinking, realtime streaming, and multimodal generation.
-     */
-    public const MODEL_GEMINI_2_0_FLASH = 'gemini-2.0-flash';
-
-    /**
-     * Gemini 2.0 Flash Lite - Cost efficiency and low latency.
-     */
-    public const MODEL_GEMINI_2_0_FLASH_LITE = 'gemini-2.0-flash-lite';
-
-    /**
-     * Gemini 1.5 Pro - Complex reasoning tasks requiring more intelligence.
-     */
-    public const MODEL_GEMINI_1_5_PRO = 'gemini-1.5-pro';
-
-    protected string $apiKey;
-
-    protected string $model;
-
-    protected int $maxTokens;
-
-    protected float $temperature;
+    protected const string ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta';
 
     protected string $endpoint;
 
-    protected int $timeout;
-
     /**
-     * Create a new Gemini adapter
-     *
-     *
-     * @throws \Exception
+     * @param  string|null  $endpoint  API base URL, without the /models path
      */
     public function __construct(
-        string $apiKey,
-        string $model = self::MODEL_GEMINI_2_0_FLASH,
-        int $maxTokens = 1024,
-        float $temperature = 1.0,
+        protected string $apiKey,
+        protected string $model,
         ?string $endpoint = null,
         int $timeout = 90000,
-        (ClientInterface&StreamingClientInterface)|null $client = null
+        (ClientInterface&StreamingClientInterface)|null $client = null,
     ) {
-        $this->apiKey = $apiKey;
-        $this->maxTokens = $maxTokens;
-        $this->temperature = $temperature;
-        $this->endpoint = $endpoint ?? 'https://generativelanguage.googleapis.com/v1beta/models/'.$model.':streamGenerateContent?alt=sse&key='.$apiKey;
+        $this->endpoint = rtrim($endpoint ?? static::ENDPOINT, '/');
         $this->timeout = $timeout;
         $this->client = $client;
-        $this->setModel($model);
     }
 
-    /**
-     * Check if the model supports JSON schema
-     */
-    public function isSchemaSupported(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Send a message to the API
-     *
-     * @param  array<Message>  $messages
-     *
-     * @throws \Exception
-     */
-    public function send(array $messages, ?callable $listener = null): Message
-    {
-        if ($this->getAgent() === null) {
-            throw new \Exception('Agent not set');
-        }
-
-        $systemParts = [];
-        $systemParts[] = [
-            'text' => $this->getAgent()->getDescription(),
-        ];
-
-        foreach ($this->getAgent()->getInstructions() as $name => $content) {
-            $text = is_array($content) ? implode("\n", $content) : $content;
-            $systemParts[] = [
-                'text' => '# '.$name."\n\n".$text,
-            ];
-        }
-
-        $formattedMessages = [];
-        foreach ($messages as $message) {
-            $formattedMessages[] = [
-                'role' => $message->getRole() === 'user' ? 'user' : 'model',
-                'parts' => $this->formatMessageParts($message),
-            ];
-        }
-
-        $payload = [
-            'system_instruction' => [
-                'parts' => $systemParts,
-            ],
-            'contents' => $formattedMessages,
-            'generationConfig' => [
-                'maxOutputTokens' => $this->maxTokens,
-                'temperature' => $this->temperature,
-            ],
-        ];
-
-        $content = '';
-        $this->beginStreamProcessing();
-        try {
-            $response = $this->post(
-                $this->endpoint,
-                $payload,
-                sink: function (string $chunk) use (&$content, $listener): void {
-                    $content .= $this->process($chunk, $listener);
-                }
-            );
-            $content .= $this->flushBufferedStreamData($listener);
-        } finally {
-            $this->endStreamProcessing();
-        }
-
-        if ($response->getStatusCode() >= 400) {
-            throw new \Exception(
-                ucfirst($this->getName()).' API error: '.$content,
-                $response->getStatusCode()
-            );
-        }
-
-        $message = new Message($content);
-
-        return $message;
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    protected function formatMessageParts(Message $message): array
-    {
-        $parts = [];
-
-        if ($message->getContent() !== '') {
-            $parts[] = [
-                'text' => $message->getContent(),
-            ];
-        }
-
-        foreach ($message->getAttachments() as $attachment) {
-            if (! $this->isImageAttachment($attachment)) {
-                continue;
-            }
-
-            $parts[] = $this->buildImagePart($attachment);
-        }
-
-        if (empty($parts)) {
-            $parts[] = [
-                'text' => '',
-            ];
-        }
-
-        return $parts;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function buildImagePart(Message $image): array
-    {
-        $mimeType = $image->getMimeType() ?? 'application/octet-stream';
-
-        return [
-            'inline_data' => [
-                'mime_type' => $mimeType,
-                'data' => base64_encode($image->getContent()),
-            ],
-        ];
-    }
-
-    /**
-     * Process a stream chunk from the Gemini API
-     *
-     *
-     * @throws \Exception
-     */
-    protected function process(string $chunk, ?callable $listener): string
-    {
-        [$data, $lines] = $this->prepareStreamLines($chunk);
-
-        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
-        if (is_array($json) && isset($json['error'])) {
-            return $this->formatErrorMessage($json);
-        }
-
-        return $this->processStreamLines($lines, $listener);
-    }
-
-    /**
-     * @param  array<int, string>  $lines
-     */
-    protected function processStreamLines(array $lines, ?callable $listener): string
-    {
-        $block = '';
-
-        foreach ($lines as $line) {
-            $json = $this->decodeSseJsonLine($line);
-            if (! is_array($json)) {
-                continue;
-            }
-
-            // Extract content from Gemini response format
-            $candidates = isset($json['candidates']) && is_array($json['candidates']) ? $json['candidates'] : [];
-            $firstCandidate = isset($candidates[0]) && is_array($candidates[0]) ? $candidates[0] : [];
-            $content = isset($firstCandidate['content']) && is_array($firstCandidate['content']) ? $firstCandidate['content'] : [];
-            $parts = isset($content['parts']) && is_array($content['parts']) ? $content['parts'] : [];
-            $firstPart = isset($parts[0]) && is_array($parts[0]) ? $parts[0] : [];
-            if (isset($firstPart['text']) && is_string($firstPart['text'])) {
-                $this->appendStreamToken($block, $firstPart['text'], $listener);
-            }
-        }
-
-        return $block;
-    }
-
-    protected function flushBufferedStreamData(?callable $listener): string
-    {
-        $line = $this->consumeStreamBufferLine();
-        if ($line === null) {
-            return '';
-        }
-
-        return $this->processStreamLines([$line], $listener);
-    }
-
-    /**
-     * Get available models
-     *
-     * @return array<string>
-     */
-    public function getModels(): array
-    {
-        return [
-            self::MODEL_GEMINI_2_0_FLASH,
-            self::MODEL_GEMINI_2_0_FLASH_LITE,
-            self::MODEL_GEMINI_1_5_PRO,
-            self::MODEL_GEMINI_2_5_FLASH_PREVIEW,
-            self::MODEL_GEMINI_2_5_PRO_PREVIEW,
-        ];
-    }
-
-    /**
-     * Get current model
-     */
-    public function getModel(): string
-    {
-        return $this->model;
-    }
-
-    /**
-     * Set model to use
-     */
-    public function setModel(string $model): self
-    {
-        $this->model = $model;
-
-        return $this;
-    }
-
-    /**
-     * Set max tokens
-     */
-    public function setMaxTokens(int $maxTokens): self
-    {
-        $this->maxTokens = $maxTokens;
-
-        return $this;
-    }
-
-    /**
-     * Set temperature
-     */
-    public function setTemperature(float $temperature): self
-    {
-        $this->temperature = $temperature;
-
-        return $this;
-    }
-
-    /**
-     * Get the API endpoint
-     */
-    public function getEndpoint(): string
-    {
-        return $this->endpoint;
-    }
-
-    /**
-     * Set the API endpoint
-     */
-    public function setEndpoint(string $endpoint): self
-    {
-        $this->endpoint = $endpoint;
-
-        return $this;
-    }
-
-    /**
-     * Get the adapter name
-     */
     public function getName(): string
     {
         return 'gemini';
     }
 
-    public function supportsAttachments(): bool
+    public function getModel(): string
     {
-        return true;
+        return $this->model;
     }
 
-    public function supportsAttachment(Message $attachment): bool
+    public function getEndpoint(): string
     {
-        return $this->isImageAttachment($attachment);
+        return $this->endpoint;
     }
 
-    public function getMaxAttachmentsPerMessage(): ?int
+    public function generate(Request $request): Response
     {
-        return self::MAX_ATTACHMENTS_PER_MESSAGE;
+        return $this->stream($request, static function (Event $event): void {
+        });
     }
 
-    public function getMaxAttachmentBytes(): ?int
+    public function stream(Request $request, callable $listener): Response
     {
-        return self::MAX_ATTACHMENT_BYTES;
-    }
+        $text = '';
+        $reasoning = '';
+        /** @var string|null $signature */
+        $signature = null;
+        /** @var list<ToolCall> $calls */
+        $calls = [];
+        /** @var string|null $reason */
+        $reason = null;
+        $usage = new Usage();
+        $id = '';
+        $model = $this->model;
 
-    public function getMaxTotalAttachmentBytes(): ?int
-    {
-        return self::MAX_TOTAL_ATTACHMENT_BYTES;
+        $url = "{$this->endpoint}/models/{$this->model}:streamGenerateContent?alt=sse";
+
+        $this->events($url, $this->payload($request), function (string $name, array $chunk) use (&$text, &$reasoning, &$signature, &$calls, &$reason, &$usage, &$id, &$model, $listener): void {
+            if (\is_string($chunk['responseId'] ?? null)) {
+                $id = $chunk['responseId'];
+            }
+            if (\is_string($chunk['modelVersion'] ?? null)) {
+                $model = $chunk['modelVersion'];
+            }
+            if (\is_array($chunk['usageMetadata'] ?? null)) {
+                $usage = $this->usage($chunk['usageMetadata']);
+            }
+
+            $feedback = \is_array($chunk['promptFeedback'] ?? null) ? $chunk['promptFeedback'] : [];
+            if (\is_string($feedback['blockReason'] ?? null)) {
+                $reason = 'SAFETY';
+            }
+
+            $candidates = \is_array($chunk['candidates'] ?? null) ? $chunk['candidates'] : [];
+            $candidate = \is_array($candidates[0] ?? null) ? $candidates[0] : [];
+            if (\is_string($candidate['finishReason'] ?? null)) {
+                $reason = $candidate['finishReason'];
+            }
+
+            $content = \is_array($candidate['content'] ?? null) ? $candidate['content'] : [];
+            $parts = \is_array($content['parts'] ?? null) ? $content['parts'] : [];
+
+            foreach ($parts as $part) {
+                if (! \is_array($part)) {
+                    continue;
+                }
+
+                $partSignature = \is_string($part['thoughtSignature'] ?? null) ? $part['thoughtSignature'] : null;
+
+                if (\is_array($part['functionCall'] ?? null)) {
+                    $function = $part['functionCall'];
+                    $call = new ToolCall(
+                        \is_string($function['id'] ?? null) ? $function['id'] : 'call_'.\count($calls),
+                        \is_string($function['name'] ?? null) ? $function['name'] : '',
+                        $this->map($function['args'] ?? null),
+                        $partSignature,
+                    );
+                    $calls[] = $call;
+                    $listener(new ToolCallEvent($call));
+
+                    continue;
+                }
+
+                if (! \is_string($part['text'] ?? null)) {
+                    continue;
+                }
+
+                if (($part['thought'] ?? false) === true) {
+                    $reasoning .= $part['text'];
+                    $signature = $partSignature ?? $signature;
+                    if ($part['text'] !== '') {
+                        $listener(new ReasoningDelta($part['text']));
+                    }
+
+                    continue;
+                }
+
+                $signature = $partSignature ?? $signature;
+                if ($part['text'] !== '') {
+                    $text .= $part['text'];
+                    $listener(new TextDelta($part['text']));
+                }
+            }
+        });
+
+        $parts = [];
+        if ($reasoning !== '' || $signature !== null) {
+            $parts[] = new Reasoning($reasoning, $signature);
+        }
+        if ($text !== '') {
+            $parts[] = new Text($text);
+        }
+        $parts = [...$parts, ...$calls];
+
+        $finish = match ($reason) {
+            'STOP' => $calls !== [] ? FinishReason::ToolCalls : FinishReason::Stop,
+            'MAX_TOKENS' => FinishReason::Length,
+            'SAFETY', 'RECITATION', 'BLOCKLIST', 'PROHIBITED_CONTENT', 'SPII', 'IMAGE_SAFETY' => FinishReason::ContentFilter,
+            default => $calls !== [] ? FinishReason::ToolCalls : FinishReason::Other,
+        };
+
+        return new Response($parts, $finish, $usage, $id, $model);
     }
 
     /**
-     * @return list<string>|null
+     * @return array<string, mixed>
      */
-    public function getAllowedAttachmentMimeTypes(): ?array
+    protected function payload(Request $request): array
     {
-        return self::ALLOWED_ATTACHMENT_MIME_TYPES;
-    }
+        $payload = ['contents' => $this->contents($request->messages)];
 
-    /**
-     * Extract and format error information from API response
-     *
-     * @param  mixed  $json
-     */
-    protected function formatErrorMessage($json): string
-    {
-        if (! is_array($json)) {
-            return '(unknown_error) Unknown error';
+        $system = $request->system();
+        if ($system !== '') {
+            $payload['systemInstruction'] = ['parts' => [['text' => $system]]];
         }
 
-        $error = isset($json['error']) && is_array($json['error']) ? $json['error'] : [];
-        $errorType = isset($error['status']) && is_string($error['status']) ? $error['status'] : 'unknown_error';
-        $errorMessage = isset($error['message']) && is_string($error['message']) ? $error['message'] : 'Unknown error';
-        $errorDetails = isset($error['details']) ? (string) json_encode($error['details'], JSON_PRETTY_PRINT) : '';
+        if ($request->tools !== []) {
+            $payload['tools'] = [[
+                'functionDeclarations' => array_map(fn (Tool $tool) => [
+                    'name' => $tool->name,
+                    'description' => $tool->description,
+                    'parametersJsonSchema' => $tool->input->toArray(),
+                ], $request->tools),
+            ]];
+        }
 
-        return '('.$errorType.') '.$errorMessage.PHP_EOL.$errorDetails;
-    }
+        if ($request->toolChoice !== null) {
+            $config = match ($request->toolChoice->type) {
+                ToolChoice::NONE => ['mode' => 'NONE'],
+                ToolChoice::REQUIRED => ['mode' => 'ANY'],
+                ToolChoice::TOOL => ['mode' => 'ANY', 'allowedFunctionNames' => [$request->toolChoice->name]],
+                default => ['mode' => 'AUTO'],
+            };
+            $payload['toolConfig'] = ['functionCallingConfig' => $config];
+        }
 
-    public function getSupportForEmbeddings(): bool
-    {
-        return false;
+        $config = [
+            'maxOutputTokens' => $request->maxTokens,
+            'temperature' => $request->temperature,
+            'topP' => $request->topP,
+            'topK' => $request->topK,
+            'stopSequences' => $request->stop === [] ? null : $request->stop,
+            'seed' => $request->seed,
+        ];
+
+        if ($request->schema !== null) {
+            $config['responseMimeType'] = 'application/json';
+            $config['responseJsonSchema'] = $request->schema->toArray();
+        }
+
+        if ($request->effort !== null) {
+            $config['thinkingConfig'] = ['thinkingBudget' => $request->effort->budget(), 'includeThoughts' => true];
+        }
+
+        $config = array_filter($config, fn ($value) => $value !== null);
+        if ($config !== []) {
+            $payload['generationConfig'] = $config;
+        }
+
+        return array_replace_recursive($payload, $request->options($this->getName()));
     }
 
     /**
-     * @return array{
-     *     embedding: array<int, float>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
-     * }
+     * Messages as Gemini contents: tool results travel in user turns and
+     * consecutive turns of one role are merged.
+     *
+     * @param  list<Message>  $messages
+     * @return list<array{role: string, parts: list<array<string, mixed>>}>
      */
-    public function embed(string $text): array
+    protected function contents(array $messages): array
     {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        $contents = [];
+
+        foreach ($messages as $message) {
+            if ($message->role === Role::System) {
+                continue;
+            }
+
+            $role = $message->role === Role::Assistant ? 'model' : 'user';
+            $parts = [];
+            foreach ($message->parts as $part) {
+                $formatted = $this->part($part);
+                if ($formatted !== null) {
+                    $parts[] = $formatted;
+                }
+            }
+            if ($parts === []) {
+                continue;
+            }
+
+            $last = \count($contents) - 1;
+            if ($last >= 0 && $contents[$last]['role'] === $role) {
+                $contents[$last]['parts'] = [...$contents[$last]['parts'], ...$parts];
+            } else {
+                $contents[] = ['role' => $role, 'parts' => $parts];
+            }
+        }
+
+        return $contents;
     }
 
     /**
-     * @param  array<int, string>  $texts
-     * @return array{
-     *     embeddings: array<int, array<int, float>>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null
-     * }
+     * @return array<string, mixed>|null
      */
-    public function bulkEmbed(array $texts): array
+    protected function part(Part $part): ?array
     {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        return match (true) {
+            $part instanceof Text => $part->text === '' ? null : ['text' => $part->text],
+            $part instanceof Image, $part instanceof File => $part->url !== null
+                ? ['fileData' => ['mimeType' => $part->mimeType, 'fileUri' => $part->url]]
+                : ['inlineData' => ['mimeType' => $part->mimeType, 'data' => $part->base64()]],
+            $part instanceof Reasoning => null,
+            $part instanceof ToolCall => array_filter([
+                'functionCall' => ['name' => $part->name, 'args' => $this->object($part->arguments)],
+                'thoughtSignature' => $part->signature,
+            ], fn ($value) => $value !== null),
+            $part instanceof ToolResult => ['functionResponse' => [
+                'name' => $part->name,
+                'response' => $part->error ? ['error' => $part->text()] : ['output' => $part->output],
+            ]],
+            default => throw new Unsupported('Gemini does not accept '.$part::class),
+        };
     }
 
-    public function getEmbeddingDimension(): int
+    /**
+     * @param  array<mixed>  $usage
+     */
+    protected function usage(array $usage): Usage
     {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        $thoughts = \is_int($usage['thoughtsTokenCount'] ?? null) ? $usage['thoughtsTokenCount'] : 0;
+
+        return new Usage(
+            input: \is_int($usage['promptTokenCount'] ?? null) ? $usage['promptTokenCount'] : 0,
+            output: (\is_int($usage['candidatesTokenCount'] ?? null) ? $usage['candidatesTokenCount'] : 0) + $thoughts,
+            cacheRead: \is_int($usage['cachedContentTokenCount'] ?? null) ? $usage['cachedContentTokenCount'] : 0,
+            reasoning: $thoughts,
+        );
+    }
+
+    protected function headers(): array
+    {
+        return ['x-goog-api-key' => $this->apiKey];
     }
 }

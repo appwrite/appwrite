@@ -2,142 +2,258 @@
 
 namespace Utopia\Agents\Tests\Adapters;
 
-use Utopia\Agents\Adapter as AgentAdapter;
+use PHPUnit\Framework\TestCase;
 use Utopia\Agents\Adapters\OpenAI;
-use Utopia\Agents\Agent;
+use Utopia\Agents\Effort;
+use Utopia\Agents\Event;
+use Utopia\Agents\Events\ReasoningDelta;
+use Utopia\Agents\Events\TextDelta;
+use Utopia\Agents\Events\ToolCall as ToolCallEvent;
+use Utopia\Agents\Events\ToolInputDelta;
+use Utopia\Agents\Exception\Api;
+use Utopia\Agents\Exception\Authentication;
+use Utopia\Agents\Exception\RateLimit;
+use Utopia\Agents\Exception\Unsupported;
+use Utopia\Agents\FinishReason;
 use Utopia\Agents\Message;
+use Utopia\Agents\Parts\File;
+use Utopia\Agents\Parts\Image;
+use Utopia\Agents\Parts\Reasoning;
+use Utopia\Agents\Parts\Text;
+use Utopia\Agents\Parts\ToolCall;
+use Utopia\Agents\Parts\ToolResult;
+use Utopia\Agents\Request;
 use Utopia\Agents\Schema;
-use Utopia\Agents\Schema\SchemaObject;
+use Utopia\Agents\Tests\Fakes\Client;
+use Utopia\Agents\Tool;
+use Utopia\Agents\ToolChoice;
 
-class OpenAITest extends Adapter
+class OpenAITest extends TestCase
 {
-    protected function createAdapter(): AgentAdapter
+    private function adapter(Client $client): OpenAI
     {
-        return new OpenAI('test-api-key');
+        return (new OpenAI('secret', 'gpt-test', client: $client))->setRetries(2, 0);
     }
 
-    protected function expectedName(): string
+    /**
+     * @param  array<string, mixed>  $delta
+     * @return array<string, mixed>
+     */
+    private function chunk(array $delta, ?string $finish = null): array
     {
-        return 'openai';
+        return ['id' => 'chatcmpl-1', 'model' => 'gpt-test-2025', 'choices' => [['index' => 0, 'delta' => $delta, 'finish_reason' => $finish]]];
     }
 
-    protected function expectedDefaultModel(): string
+    public function testPayloadMapsMessagesToolsAndSettings(): void
     {
-        return OpenAI::MODEL_O3_MINI;
-    }
+        $client = (new Client())->events([$this->chunk(['content' => 'ok'], 'stop')]);
+        $tool = new Tool('weather', 'Weather for a city', Schema::object(['city' => Schema::string()]));
 
-    protected function expectedModels(): array
-    {
-        return [
-            OpenAI::MODEL_GPT_5_NANO,
-            OpenAI::MODEL_GPT_4_5_PREVIEW,
-            OpenAI::MODEL_GPT_4_1,
-            OpenAI::MODEL_GPT_4O,
-            OpenAI::MODEL_O4_MINI,
-            OpenAI::MODEL_O3,
-            OpenAI::MODEL_O3_MINI,
-        ];
-    }
+        $this->adapter($client)->generate(new Request(
+            messages: [
+                Message::system('Be brief'),
+                Message::user([new Text('Look'), new Image('png-bytes', 'image/png'), new File('pdf-bytes', 'application/pdf', 'a.pdf')]),
+                Message::assistant([new Reasoning('hmm'), new Text('Checking'), new ToolCall('call_1', 'weather', ['city' => 'Rome'])]),
+                Message::tool([new ToolResult('call_1', 'weather', ['temp' => 20])]),
+            ],
+            tools: [$tool],
+            toolChoice: ToolChoice::tool('weather'),
+            maxTokens: 50,
+            temperature: 0.5,
+            stop: ['END'],
+            seed: 3,
+            effort: Effort::High,
+            options: ['openai' => ['user' => 'u1'], 'anthropic' => ['ignored' => true]],
+        ));
 
-    protected function expectsSchemaSupport(): bool
-    {
-        return true;
-    }
-
-    protected function expectsEmbeddingSupport(): bool
-    {
-        return false;
-    }
-
-    protected function supportsEndpointMutator(): bool
-    {
-        return true;
-    }
-
-    protected function expectedDefaultEndpoint(): ?string
-    {
-        return 'https://api.openai.com/v1/chat/completions';
-    }
-
-    public function testSchemaRequestIsPostedAsJsonWithBearerToken(): void
-    {
-        $client = new Client()->queue(200, json_encode([
-            'choices' => [['message' => ['role' => 'assistant', 'content' => '{"ok":true}']]],
-        ]) ?: '');
-        $adapter = new OpenAI('secret', OpenAI::MODEL_GPT_4_1, client: $client);
-
-        $object = new SchemaObject();
-        $object->addProperty('ok', ['type' => SchemaObject::TYPE_BOOLEAN, 'description' => 'ok']);
-        $agent = new Agent($adapter);
-        $agent->setSchema(new Schema('Result', 'Result', $object, $object->getNames()));
-
-        $message = $adapter->send([new Message('hi')]);
-
-        $this->assertSame('{"ok":true}', $message->getContent());
-        $this->assertCount(1, $client->requests);
         $request = $client->lastRequest();
-        $this->assertSame('POST', $request->getMethod());
         $this->assertSame('https://api.openai.com/v1/chat/completions', (string) $request->getUri());
         $this->assertSame('Bearer secret', $request->getHeaderLine('authorization'));
-        $this->assertSame('application/json', $request->getHeaderLine('content-type'));
+
         $payload = $client->lastPayload();
-        $this->assertSame(OpenAI::MODEL_GPT_4_1, $payload['model']);
-        $this->assertFalse($payload['stream']);
-        $this->assertIsArray($payload['response_format']);
-        $this->assertSame('json_schema', $payload['response_format']['type']);
+        $this->assertSame('gpt-test', $payload['model']);
+        $this->assertTrue($payload['stream']);
+        $this->assertSame(['include_usage' => true], $payload['stream_options']);
+        $this->assertSame(50, $payload['max_completion_tokens']);
+        $this->assertSame(0.5, $payload['temperature']);
+        $this->assertSame(['END'], $payload['stop']);
+        $this->assertSame(3, $payload['seed']);
+        $this->assertSame('high', $payload['reasoning_effort']);
+        $this->assertSame('u1', $payload['user']);
+        $this->assertArrayNotHasKey('ignored', $payload);
+        $this->assertArrayNotHasKey('top_p', $payload);
+        $this->assertSame(['type' => 'function', 'function' => ['name' => 'weather']], $payload['tool_choice']);
+        $this->assertSame([
+            'type' => 'function',
+            'function' => [
+                'name' => 'weather',
+                'description' => 'Weather for a city',
+                'parameters' => ['type' => 'object', 'properties' => ['city' => ['type' => 'string']], 'required' => ['city'], 'additionalProperties' => false],
+            ],
+        ], $client->payload('tools', 0));
+
+        $this->assertSame([
+            ['role' => 'system', 'content' => 'Be brief'],
+            ['role' => 'user', 'content' => [
+                ['type' => 'text', 'text' => 'Look'],
+                ['type' => 'image_url', 'image_url' => ['url' => 'data:image/png;base64,'.base64_encode('png-bytes')]],
+                ['type' => 'file', 'file' => ['filename' => 'a.pdf', 'file_data' => 'data:application/pdf;base64,'.base64_encode('pdf-bytes')]],
+            ]],
+            ['role' => 'assistant', 'content' => 'Checking', 'tool_calls' => [
+                ['id' => 'call_1', 'type' => 'function', 'function' => ['name' => 'weather', 'arguments' => '{"city":"Rome"}']],
+            ]],
+            ['role' => 'tool', 'tool_call_id' => 'call_1', 'content' => '{"temp":20}'],
+        ], $payload['messages']);
     }
 
-    public function testStreamedResponseIsAssembledAcrossChunkBoundaries(): void
+    public function testPayloadRequestsStrictJsonSchema(): void
     {
-        $delta = static fn (string $token): string => 'data: '.json_encode(['choices' => [['delta' => ['content' => $token]]]])."\n";
-        $first = $delta('Hel');
-        $client = new Client()->queue(200, chunks: [
-            substr($first, 0, 10),
-            substr($first, 10).$delta('lo').'data: [DONE]',
-        ]);
-        $adapter = new OpenAI('secret', client: $client);
-        new Agent($adapter);
+        $client = (new Client())->events([$this->chunk(['content' => '{}'], 'stop')]);
+        $schema = Schema::object(['name' => Schema::string()]);
 
-        $tokens = [];
-        $message = $adapter->send([new Message('hi')], function (string $token) use (&$tokens): void {
-            $tokens[] = $token;
+        $this->adapter($client)->generate(new Request([Message::user('Hi')], schema: $schema));
+
+        $this->assertSame([
+            'type' => 'json_schema',
+            'json_schema' => ['name' => 'response', 'strict' => true, 'schema' => $schema->toArray()],
+        ], $client->payload('response_format'));
+        $this->assertSame('Hi', $client->payload('messages', 0, 'content'));
+    }
+
+    public function testStreamsTextReasoningAndUsage(): void
+    {
+        $client = (new Client())->events([
+            $this->chunk(['role' => 'assistant', 'reasoning_content' => 'Think']),
+            $this->chunk(['content' => 'Hel']),
+            $this->chunk(['content' => 'lo']),
+            $this->chunk([], 'stop'),
+            ['id' => 'chatcmpl-1', 'choices' => [], 'usage' => [
+                'prompt_tokens' => 12,
+                'completion_tokens' => 7,
+                'prompt_tokens_details' => ['cached_tokens' => 4],
+                'completion_tokens_details' => ['reasoning_tokens' => 3],
+            ]],
+        ]);
+        $events = [];
+
+        $response = $this->adapter($client)->stream(new Request([Message::user('Hi')]), function (Event $event) use (&$events): void {
+            $events[] = $event;
         });
 
-        $this->assertSame('Hello', $message->getContent());
-        $this->assertSame(['Hel', 'lo'], $tokens);
-        $this->assertTrue($client->lastPayload()['stream']);
+        $this->assertEquals([new ReasoningDelta('Think'), new TextDelta('Hel'), new TextDelta('lo')], $events);
+        $this->assertEquals([new Reasoning('Think'), new Text('Hello')], $response->parts);
+        $this->assertSame(FinishReason::Stop, $response->finish);
+        $this->assertSame('chatcmpl-1', $response->id);
+        $this->assertSame('gpt-test-2025', $response->model);
+        $this->assertSame(12, $response->usage->input);
+        $this->assertSame(7, $response->usage->output);
+        $this->assertSame(4, $response->usage->cacheRead);
+        $this->assertSame(3, $response->usage->reasoning);
     }
 
-    public function testInjectedClientCarriesEveryRequestAcrossTimeoutChanges(): void
+    public function testAssemblesToolCallsFromDeltas(): void
     {
-        $client = new Client()
-            ->queue(200, chunks: ['data: '.json_encode(['choices' => [['delta' => ['content' => 'a']]]])."\n"])
-            ->queue(200, chunks: ['data: '.json_encode(['choices' => [['delta' => ['content' => 'b']]]])."\n"]);
-        $adapter = new OpenAI('secret', client: $client);
-        new Agent($adapter);
+        $client = (new Client())->events([
+            $this->chunk(['tool_calls' => [['index' => 0, 'id' => 'call_a', 'type' => 'function', 'function' => ['name' => 'weather', 'arguments' => '']]]]),
+            $this->chunk(['tool_calls' => [['index' => 1, 'id' => 'call_b', 'type' => 'function', 'function' => ['name' => 'time', 'arguments' => '{}']]]]),
+            $this->chunk(['tool_calls' => [['index' => 0, 'function' => ['arguments' => '{"city":']]]]),
+            $this->chunk(['tool_calls' => [['index' => 0, 'function' => ['arguments' => '"Rome"}']]]]),
+            $this->chunk([], 'tool_calls'),
+        ]);
+        $events = [];
 
-        $first = $adapter->send([new Message('one')]);
-        $adapter->setTimeout(2000);
-        $second = $adapter->send([new Message('two')]);
+        $response = $this->adapter($client)->stream(new Request([Message::user('Hi')]), function (Event $event) use (&$events): void {
+            $events[] = $event;
+        });
 
-        $this->assertSame('a', $first->getContent());
-        $this->assertSame('b', $second->getContent());
-        $this->assertCount(2, $client->requests);
+        $this->assertEquals([new ToolCall('call_a', 'weather', ['city' => 'Rome']), new ToolCall('call_b', 'time', [])], $response->parts);
+        $this->assertSame(FinishReason::ToolCalls, $response->finish);
+        $this->assertEquals(new ToolInputDelta('call_a', 'weather', '{"city":'), $events[1]);
+        $this->assertEquals(new ToolCallEvent(new ToolCall('call_a', 'weather', ['city' => 'Rome'])), $events[3]);
     }
 
-    public function testErrorResponseThrowsWithStatusCode(): void
+    public function testParsesEventsSplitAcrossChunksAndCrlf(): void
     {
-        $client = new Client()->queue(401, json_encode(['error' => ['code' => 'invalid_api_key', 'message' => 'Bad key']]) ?: '');
-        $adapter = new OpenAI('secret', client: $client);
-        $object = new SchemaObject();
-        $object->addProperty('ok', ['type' => SchemaObject::TYPE_BOOLEAN, 'description' => 'ok']);
-        $agent = new Agent($adapter);
-        $agent->setSchema(new Schema('Result', 'Result', $object, $object->getNames()));
+        $stream = 'data: '.json_encode($this->chunk(['content' => 'Hi there'], 'stop'))."\r\n\r\ndata: [DONE]\r\n\r\n";
+        $client = (new Client())->queue(200, chunks: str_split($stream, 7));
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionCode(401);
-        $this->expectExceptionMessage('(invalid_api_key) Bad key');
+        $response = $this->adapter($client)->generate(new Request([Message::user('Hi')]));
 
-        $adapter->send([new Message('hi')]);
+        $this->assertSame('Hi there', $response->text());
+    }
+
+    public function testRetriesRetryableErrors(): void
+    {
+        $client = (new Client())
+            ->queue(429, '{"error":{"message":"Slow down","type":"rate_limit"}}')
+            ->queue(503, 'upstream unavailable')
+            ->events([$this->chunk(['content' => 'ok'], 'stop')]);
+
+        $response = $this->adapter($client)->generate(new Request([Message::user('Hi')]));
+
+        $this->assertSame('ok', $response->text());
+        $this->assertCount(3, $client->requests);
+    }
+
+    public function testThrowsRateLimitAfterRetries(): void
+    {
+        $client = (new Client())
+            ->queue(429, '{"error":{"message":"Slow down","code":"rate_limit_exceeded"}}', headers: ['retry-after' => '0'])
+            ->queue(429, '{"error":{"message":"Slow down","code":"rate_limit_exceeded"}}', headers: ['retry-after' => '0'])
+            ->queue(429, '{"error":{"message":"Slow down","code":"rate_limit_exceeded"}}', headers: ['retry-after' => '0']);
+
+        try {
+            $this->adapter($client)->generate(new Request([Message::user('Hi')]));
+            $this->fail('Expected a rate limit exception');
+        } catch (RateLimit $error) {
+            $this->assertSame(429, $error->status);
+            $this->assertSame('rate_limit_exceeded', $error->type);
+            $this->assertSame(0.0, $error->retryAfter);
+            $this->assertTrue($error->retryable);
+            $this->assertSame('Openai API error (429, rate_limit_exceeded): Slow down', $error->getMessage());
+        }
+        $this->assertCount(3, $client->requests);
+    }
+
+    public function testDoesNotRetryClientErrors(): void
+    {
+        $client = (new Client())->queue(401, '{"error":{"message":"Bad key","code":"invalid_api_key"}}');
+
+        $this->expectException(Authentication::class);
+
+        try {
+            $this->adapter($client)->generate(new Request([Message::user('Hi')]));
+        } finally {
+            $this->assertCount(1, $client->requests);
+        }
+    }
+
+    public function testMidStreamErrorThrows(): void
+    {
+        $client = (new Client())->events([
+            $this->chunk(['content' => 'partial']),
+            ['error' => ['message' => 'Provider crashed', 'code' => 502]],
+        ]);
+
+        $this->expectException(Api::class);
+        $this->expectExceptionMessage('Provider crashed');
+
+        $this->adapter($client)->generate(new Request([Message::user('Hi')]));
+    }
+
+    public function testRejectsUnsupportedUserContent(): void
+    {
+        $this->expectException(Unsupported::class);
+
+        $this->adapter(new Client())->generate(new Request([Message::user([new Text('a'), new File(url: 'https://x.io/a.pdf')])]));
+    }
+
+    public function testCustomEndpoint(): void
+    {
+        $client = (new Client())->events([$this->chunk(['content' => 'ok'], 'stop')]);
+
+        (new OpenAI('key', 'local', 'http://localhost:8080/v1/chat/completions', client: $client))->generate(new Request([Message::user('Hi')]));
+
+        $this->assertSame('http://localhost:8080/v1/chat/completions', (string) $client->lastRequest()->getUri());
     }
 }

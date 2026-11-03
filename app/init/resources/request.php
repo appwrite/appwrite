@@ -44,7 +44,6 @@ use GraphQL\Error\Error as GraphQLError;
 use OpenRuntimes\Orchestrator\Jobs;
 use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
-use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Argon2;
@@ -1170,12 +1169,10 @@ return function (Container $context): void {
     $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
 
-    $context->set('embeddingAgent', function ($register) {
-        $adapter = new AppwriteAdapter();
-        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'));
-        $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
-        return new Agent($adapter);
-    }, ['register']);
+    $context->set('embedder', fn () => new AppwriteAdapter(
+        endpoint: System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'),
+        timeout: (int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'),
+    ));
 
     $context->set('geo', fn (Locale $locale, ?GeoClient $geoClient, Table $geoRecords) => new Geo(
         $geoClient,
