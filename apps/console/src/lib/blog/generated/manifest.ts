@@ -6,7 +6,7 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "slug": "add-your-first-appwrite-firewall-rules",
     "href": "/blog/post/add-your-first-appwrite-firewall-rules",
     "title": "Add your first Appwrite Firewall rules to a new project",
-    "description": "Pick your first Appwrite Firewall rules for a new project: rate limit sign-in, challenge bots, preview impact, and fit them inside the Free plan's two rules.",
+    "description": "Pick the two Appwrite Firewall rules a new Free project needs: rate limit sign-in, cap API traffic or challenge sign-ups, test them, and watch what they do.",
     "date": "2026-11-03",
     "lastUpdated": "2026-11-03",
     "timeToRead": 9,
