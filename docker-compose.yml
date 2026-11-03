@@ -885,7 +885,6 @@ services:
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-videos:/storage/videos:rw
-      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-imports:/storage/imports:rw
     environment:
       - _APP_ENV
