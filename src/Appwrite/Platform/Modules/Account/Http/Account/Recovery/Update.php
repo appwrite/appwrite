@@ -164,7 +164,6 @@ class Update extends Action
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
             }
-            User::deleteRecoveryTokens($dbForProject, $profile);
 
             // Recovery proves an unverified email, so whoever registered it keeps no other way in.
             // MFA in force is left alone, so the new password still needs the second factor to sign in
@@ -175,6 +174,9 @@ class Update extends Action
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project, mqtt: $mqtt));
                 $claimed = true;
             }
+
+            // Under the user lock, so a concurrent recovery request is either deleted here or lands after the reset
+            User::deleteRecoveryTokens($dbForProject, $profile);
 
             $updates = [
                 'password' => $newPassword,

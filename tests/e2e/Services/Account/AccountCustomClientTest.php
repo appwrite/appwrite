@@ -2002,6 +2002,67 @@ final class AccountCustomClientTest extends Scope
         $this->assertRecoveryRejected($userId, $secret, $code);
     }
 
+    public function testUpdateEmailFirstPasswordClearsRecovery(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid('', true) . bin2hex(random_bytes(4)) . '@localhost.test';
+        $serverHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // A user without a password, such as one who signs in with magic URLs
+        $user = $this->client->call(Client::METHOD_POST, '/users', $serverHeaders, [
+            'userId' => Id::unique(),
+            'email' => $email,
+        ]);
+        $this->assertEquals(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        // Without its email target, the account can keep its address while it sets a first password
+        $targets = $this->client->call(Client::METHOD_GET, '/users/' . $userId . '/targets', $serverHeaders);
+        $this->assertEquals(200, $targets['headers']['status-code']);
+        foreach ($targets['body']['targets'] as $target) {
+            $deleted = $this->client->call(Client::METHOD_DELETE, '/users/' . $userId . '/targets/' . $target['$id'], $serverHeaders);
+            $this->assertEquals(204, $deleted['headers']['status-code']);
+        }
+
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/tokens', $serverHeaders);
+        $this->assertEquals(201, $token['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => $userId,
+            'secret' => $token['body']['secret'],
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $secret = $this->requestRecoveryLink($email);
+        $code = $this->requestRecoveryCode($email);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ], [
+            'email' => $email,
+            'password' => 'first-password',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($email, $response['body']['email']);
+        $this->assertNotEmpty($response['body']['passwordUpdate']);
+
+        /**
+         * Test for FAILURE
+         */
+        $this->assertRecoveryRejected($userId, $secret, $code);
+    }
+
     public function testUpdateAccountPrefs(): void
     {
         $data = $this->setupAccountWithUpdatedEmail();
