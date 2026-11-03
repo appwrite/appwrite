@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f35156e3d2dda2f7a2d2f36ce5380cb9",
+    "content-hash": "a4204d0f1830f45deab8329db0371617",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4615,16 +4615,16 @@
         },
         {
             "name": "utopia-php/video",
-            "version": "0.0.2",
+            "version": "dev-feat-shipped-segments",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/video.git",
-                "reference": "14240b5d9190a14c25cd7dfbbfadf5d0998ab4f1"
+                "reference": "88e6f8b63024b3cc32dd4e0118a3bda6157066c7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/video/zipball/14240b5d9190a14c25cd7dfbbfadf5d0998ab4f1",
-                "reference": "14240b5d9190a14c25cd7dfbbfadf5d0998ab4f1",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/88e6f8b63024b3cc32dd4e0118a3bda6157066c7",
+                "reference": "88e6f8b63024b3cc32dd4e0118a3bda6157066c7",
                 "shasum": ""
             },
             "require": {
@@ -4673,9 +4673,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/video/issues",
-                "source": "https://github.com/utopia-php/video/tree/0.0.2"
+                "source": "https://github.com/utopia-php/video/tree/feat-shipped-segments"
             },
-            "time": "2026-10-11T15:44:48+00:00"
+            "time": "2026-11-03T09:23:46+00:00"
         },
         {
             "name": "web-auth/cose-lib",
@@ -7801,7 +7801,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/video": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -7824,5 +7826,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.2.0"
 }
