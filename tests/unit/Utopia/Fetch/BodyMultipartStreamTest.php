@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia\Fetch;
 
 use Appwrite\Utopia\Fetch\BodyMultipartStream;
 use Exception;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class BodyMultipartStreamTest extends TestCase
@@ -91,19 +92,47 @@ final class BodyMultipartStreamTest extends TestCase
         ], $events);
     }
 
-    public function testPartWithoutChunkedEncodingIsRejected(): void
+    #[DataProvider('malformedEnvelopes')]
+    public function testMalformedEnvelopeIsRejected(string $envelope, string $message): void
     {
         $stream = new BodyMultipartStream('X', function (): void {
         });
 
         $this->expectException(Exception::class);
+        $this->expectExceptionMessage($message);
 
-        $stream->feed(
+        $stream->feed($envelope);
+    }
+
+    public static function malformedEnvelopes(): \Iterator
+    {
+        yield 'not chunked' => [
             "--X\r\n"
             . "Content-Disposition: form-data; name=\"body\"\r\n\r\n"
             . "5\r\nhello\r\n0\r\n\r\n"
-            . '--X--'
-        );
+            . '--X--',
+            'Part "body" is not chunked',
+        ];
+        yield 'malformed chunk size' => [
+            "--X\r\n"
+            . "Content-Disposition: form-data; name=\"body\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "zz\r\nhello\r\n",
+            'Malformed chunk size',
+        ];
+        yield 'malformed content terminator' => [
+            "--X\r\n"
+            . "Content-Disposition: form-data; name=\"body\"\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "5\r\nhelloXX",
+            'Malformed content terminator',
+        ];
+        yield 'missing name' => [
+            "--X\r\n"
+            . "Content-Transfer-Encoding: chunked\r\n\r\n"
+            . "1\r\na\r\n0\r\n\r\n",
+            'Multipart part is missing a name',
+        ];
     }
 
     /**
@@ -205,21 +234,6 @@ final class BodyMultipartStreamTest extends TestCase
         $this->assertTrue($stream->isComplete());
     }
 
-    public function testMalformedChunkSizeIsRejected(): void
-    {
-        $stream = new BodyMultipartStream('X', function (): void {
-        });
-
-        $this->expectExceptionMessage('Malformed chunk size');
-
-        $stream->feed(
-            "--X\r\n"
-            . "Content-Disposition: form-data; name=\"body\"\r\n"
-            . "Content-Transfer-Encoding: chunked\r\n\r\n"
-            . "zz\r\nhello\r\n"
-        );
-    }
-
     public function testTruncatedEnvelopeIsNotComplete(): void
     {
         $stream = new BodyMultipartStream('X', function (): void {
@@ -250,35 +264,6 @@ final class BodyMultipartStreamTest extends TestCase
         );
 
         $this->assertFalse($stream->isComplete());
-    }
-
-    public function testMalformedContentTerminatorIsRejected(): void
-    {
-        $stream = new BodyMultipartStream('X', function (): void {
-        });
-
-        $this->expectException(Exception::class);
-
-        $stream->feed(
-            "--X\r\n"
-            . "Content-Disposition: form-data; name=\"body\"\r\n"
-            . "Content-Transfer-Encoding: chunked\r\n\r\n"
-            . "5\r\nhelloXX"
-        );
-    }
-
-    public function testPartWithoutANameIsRejected(): void
-    {
-        $stream = new BodyMultipartStream('X', function (): void {
-        });
-
-        $this->expectException(Exception::class);
-
-        $stream->feed(
-            "--X\r\n"
-            . "Content-Transfer-Encoding: chunked\r\n\r\n"
-            . "1\r\na\r\n0\r\n\r\n"
-        );
     }
 
     /**
