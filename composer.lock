@@ -4619,12 +4619,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/video.git",
-                "reference": "88e6f8b63024b3cc32dd4e0118a3bda6157066c7"
+                "reference": "c33765c69e033102cccd6e89f6c826384520760a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/video/zipball/88e6f8b63024b3cc32dd4e0118a3bda6157066c7",
-                "reference": "88e6f8b63024b3cc32dd4e0118a3bda6157066c7",
+                "url": "https://api.github.com/repos/utopia-php/video/zipball/c33765c69e033102cccd6e89f6c826384520760a",
+                "reference": "c33765c69e033102cccd6e89f6c826384520760a",
                 "shasum": ""
             },
             "require": {
@@ -4675,7 +4675,7 @@
                 "issues": "https://github.com/utopia-php/video/issues",
                 "source": "https://github.com/utopia-php/video/tree/feat-shipped-segments"
             },
-            "time": "2026-11-03T09:23:46+00:00"
+            "time": "2026-11-03T12:22:25+00:00"
         },
         {
             "name": "web-auth/cose-lib",
