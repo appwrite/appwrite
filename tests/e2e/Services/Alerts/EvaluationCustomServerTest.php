@@ -2132,6 +2132,7 @@ final class EvaluationCustomServerTest extends Scope
                         [],
                         new HttpClient(new CurlAdapter()),
                         $publicHostname,
+                        new NoTelemetry(),
                         $adapter,
                     );
                 }
