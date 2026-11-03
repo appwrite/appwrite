@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Key } from 'lucide-react'
-import { useParams } from '@tanstack/react-router'
+import { getRouteApi, useParams } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ApiKeysList } from '../shared/ApiKeysList'
@@ -14,7 +15,9 @@ import {
   fetchApiKeys,
   useProject,
   useOrganizationScopes,
+  consoleProjectScopesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { parseApiKeyPrefill } from '@/lib/api-keys/create-link'
 import { canCreateKey } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
@@ -45,11 +48,19 @@ type ViewProps = {
   initialData?: ApiKeysInitialData
 }
 
+const apiKeysRouteApi = getRouteApi('/_public/projects/$projectId/api-keys')
+
 export function View({ initialData }: ViewProps = {}) {
   const t = useT()
   const { projectId } = useParams({
     strict: false,
   })
+  const navigate = apiKeysRouteApi.useNavigate()
+  const search = apiKeysRouteApi.useSearch()
+  const prefill = useMemo(
+    () => parseApiKeyPrefill({ name: search.name, scopes: search.scopes }),
+    [search.name, search.scopes],
+  )
   const [searchValue, setSearchValue] = useState('')
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)
   const [updateDrawerOpen, setUpdateDrawerOpen] = useState(false)
@@ -75,8 +86,35 @@ export function View({ initialData }: ViewProps = {}) {
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
-  const { access } = useOrganizationScopes(project?.teamId)
+  const { access, isLoading: accessLoading } = useOrganizationScopes(
+    project?.teamId,
+  )
   const noCreatePermission = !canCreateKey(access, features)
+
+  // Prefilled links keep only scopes the server lists, so a typo never fails the create.
+  const { data: scopeCatalog } = useQuery({
+    ...consoleProjectScopesQueryOptions(),
+    enabled: !!prefill?.scopes,
+  })
+  const prefillScopes = useMemo(() => {
+    if (!prefill?.scopes || !scopeCatalog) return prefill?.scopes
+    const known = new Set(scopeCatalog.scopes.map((scope) => scope.$id))
+    return prefill.scopes.filter((scope) => known.has(scope))
+  }, [prefill, scopeCatalog])
+
+  // Open the create drawer once for a prefilled link, after access is known.
+  const prefillHandledRef = useRef(false)
+  useEffect(() => {
+    if (!prefill || prefillHandledRef.current || !project || accessLoading) {
+      return
+    }
+    prefillHandledRef.current = true
+    if (noCreatePermission) {
+      toast.error(t("You don't have permission to create API keys."))
+      return
+    }
+    setCreateDrawerOpen(true)
+  }, [prefill, project, accessLoading, noCreatePermission, t])
 
   // Clear selection when search changes
   useEffect(() => {
@@ -292,13 +330,18 @@ export function View({ initialData }: ViewProps = {}) {
         open={createDrawerOpen}
         onOpenChange={(open) => {
           setCreateDrawerOpen(open)
-          if (!open) setCreatedKeySecret(null)
+          if (!open) {
+            setCreatedKeySecret(null)
+            if (prefill) navigate({ search: {}, replace: true })
+          }
         }}
         onSubmit={handleCreate}
         isLoading={createMutation.isPending}
         createdKeySecret={createdKeySecret}
         onCopy={handleCopy}
         copiedField={copiedField}
+        initialName={prefill?.name}
+        initialScopes={prefillScopes}
       />
 
       {/* Update Drawer */}

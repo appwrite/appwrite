@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { AGENT_SETUP_URL } from '@/lib/seo/agent-setup'
+import { AGENT_SETUP_URL, API_KEY_CREATE_LINK } from '@/lib/seo/agent-setup'
 import { generateAgentSetupMarkdown } from '@/lib/seo/agent-setup'
 import { buildConnectMcpPrompt } from '@/lib/mcp-adoption'
 
@@ -117,6 +117,22 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('never put one in client code')
     expect(markdown).toContain('Never echo the key in chat or commit it.')
     expect(markdown).toContain('x-appwrite-key')
+  })
+
+  test('gets server keys from a prefilled Console link, not MCP or the CLI', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(API_KEY_CREATE_LINK).toBe(
+      'https://appwrite.io/projects/<projectId>/api-keys?name=<App>%20server&scopes=<scope>,<scope>',
+    )
+    expect(markdown).toContain(API_KEY_CREATE_LINK)
+    expect(markdown).toContain('it carries no `keys.write`')
+    expect(markdown).not.toContain('project_create_key')
+  })
+
+  test('checks row security with --raw, which keeps $permissions', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('--table-id "<tableId>" --raw')
+    expect(markdown).toContain('`--json` leaves out `$permissions`')
   })
 
   test('keeps user-scoped SSR requests on the session, not an API key', () => {

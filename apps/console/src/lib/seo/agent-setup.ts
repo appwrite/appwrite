@@ -9,6 +9,10 @@ import {
   APPWRITE_AGENT_SKILLS_REPO,
   APPWRITE_MCP_DOCS_PATH,
 } from './agent-discovery.ts'
+import {
+  API_KEY_PREFILL_NAME_PARAM,
+  API_KEY_PREFILL_SCOPES_PARAM,
+} from '../api-keys/create-link.ts'
 
 export const AGENT_SETUP_PATH = '/setup.md'
 export const AGENT_SETUP_ORIGIN = 'https://appwrite.io'
@@ -46,6 +50,9 @@ const CODEX_PLUGIN_ID =
   'app-6aa2c33323108191b17b9ccf4233b3ce@openai-curated-remote'
 const CODEX_PLUGIN_CONNECT_URL =
   'https://chatgpt.com/plugins/plugin_asdk_app_6aa2c33323108191b17b9ccf4233b3ce'
+
+/** Opens the project's create-key drawer filled in; placeholders for the agent to replace. */
+export const API_KEY_CREATE_LINK = `${AGENT_SETUP_ORIGIN}/projects/<projectId>/api-keys?${API_KEY_PREFILL_NAME_PARAM}=<App>%20server&${API_KEY_PREFILL_SCOPES_PARAM}=<scope>,<scope>`
 
 const CURSOR_MCP_INSTALL_URL =
   'https://cursor.com/install-mcp?name=appwrite&config=eyJ1cmwiOiJodHRwczovL21jcC5hcHB3cml0ZS5pby8ifQ=='
@@ -461,6 +468,7 @@ End your turn with one message in this shape. Leave out the rows and sections th
 **Your turn**
 1. Approve the CLI sign-in: <url> (or run appwrite login in your terminal)
 2. <the MCP sign-in step for this agent, from step 3, without restarts>
+3. <only when server code needs a key and the project is known: create it from <console link> (name and scopes are filled in), then paste it after APPWRITE_API_KEY= in <env file>>
 
 **Proposed build**
 - App: <one sentence>
@@ -509,7 +517,9 @@ Client SDKs only accept requests from platforms registered on the project. A mis
 
 - Put the endpoint and project ID in the app's env file under the framework's public prefix (for example \`NEXT_PUBLIC_APPWRITE_ENDPOINT\` or \`VITE_APPWRITE_PROJECT_ID\`). Check that the env file is gitignored. Flutter and native apps have no env file: use a config constants file or build-time defines (\`--dart-define\`). The endpoint and project ID are not secrets.
 - Client SDKs need only the endpoint and project ID. Do not invent an API key, and never put one in client code.
-- Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key. A project API key is only for code that acts as the app: SSR sign-in handlers that create sessions (\`sessions.write\`), admin operations, workers, and scripts. Give it only the scopes that code uses. With MCP loaded, create one with the \`project_create_key\` tool (search for "create project API key") and write it straight into the env file. Without MCP, do not stop the build for it: mint a key that lasts an hour with \`appwrite project create-ephemeral-key\` (\`--scopes\` for each scope, \`--duration 3600\`, \`--json --show-secrets\`), pipe its \`secret\` into the env file so it never shows in your output, and put a long-lived key on the hand-off list (MCP, or the Console under the project's **API keys**). Never echo the key in chat or commit it.
+- Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key. A project API key is only for code that acts as the app: SSR sign-in handlers that create sessions (\`sessions.write\`), admin operations, workers, and scripts. Give it only the scopes that code uses, and keep it in a server-only variable such as \`APPWRITE_API_KEY\`, never under the public prefix.
+- The user creates that key from a Console link that opens the create form with the name and scopes filled in: \`${API_KEY_CREATE_LINK}\`. Write \`APPWRITE_API_KEY=\` into the env file first, so they only create the key, copy it, and paste it after the \`=\`. Neither the MCP sign-in (it carries no \`keys.write\`) nor the CLI can create a long-lived key, so do not try. Never echo the key in chat or commit it.
+- When the project is known before the checkpoint, put the link in it. Otherwise do not stop the build for the key: mint one that lasts an hour with \`appwrite project create-ephemeral-key\` (\`--scopes\` for each scope, \`--duration 3600\`, \`--json --show-secrets\`), pipe its \`secret\` into the env file so it never shows in your output, and put the link on the hand-off list.
 - Server-rendered Sites and Functions get a short-lived key on every request, in the \`x-appwrite-key\` header, carrying the scopes set on the site or function. In production, prefer it to a stored key.
 
 ## 7. Install the matching official SDKs
@@ -573,7 +583,7 @@ For TypeScript, generate typed helpers from the schema with \`appwrite generate\
 ### Run and verify
 
 1. Start the app's dev server (or, for mobile, run it on a simulator or emulator) and run the slice yourself: create a test user, sign in, create a row, and read it back. Use generated test values with an easy-to-find prefix, never the user's real password, and list what you created in the hand-off. If background processes die when a command ends, start the server, run the checks, and stop it within one command.
-2. Confirm the data landed with \`appwrite tablesdb list-rows --database-id "<databaseId>" --table-id "<tableId>" --json\`, or with the MCP \`appwrite_show\` tool and \`view: "table"\`, which lets the user browse and edit the rows in the chat.
+2. Confirm the data landed with \`appwrite tablesdb list-rows --database-id "<databaseId>" --table-id "<tableId>" --raw\` (\`--json\` leaves out \`$permissions\`, so it cannot show row security), or with the MCP \`appwrite_show\` tool and \`view: "table"\`, which lets the user browse and edit the rows in the chat.
 3. Fix what fails before you hand off:
 
 | Error | Usual cause | Fix |
@@ -603,7 +613,7 @@ End with one message, in this order. Leave out the sections that are empty:
 
 1. **Built**: one or two sentences on what works now and where to see it. For example: "Sign-up, sign-in, and shared lists backed by TablesDB, running at \`http://localhost:3000\`."
 2. **Setup**: the checkpoint's tool table with the final status, plus the project ID and region.
-3. **Your turn**: a short numbered list of every remaining action, in order (approvals the user declined, sign-ins, a long-lived API key to replace a one-hour key, a restart or new session with its resume command). Put the sign-ins together so they can approve them in one go.
+3. **Your turn**: a short numbered list of every remaining action, in order (approvals the user declined, sign-ins, the server key from its Console link when a one-hour key stands in for it, a restart or new session with its resume command). Put the sign-ins together so they can approve them in one go.
 4. **In the repo**: three to six bullets with paths: the client module, \`appwrite.config.json\`, the env file, the new routes or screens, the commands to run the app and to push schema changes, and the test data you created.
 5. **Next with Appwrite**: three to five capabilities picked for this app from the reference below. One line each: what it unlocks here, and what it takes (an SDK call, a config entry and \`appwrite push\`, a Console toggle). Never a generic feature list.
 6. **Next step**: the one thing you recommend building next, as a yes or no question.
