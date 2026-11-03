@@ -511,6 +511,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   '1 day': '1 日',
   'Open activity details': 'アクティビティの詳細を開く',
   'View event': 'イベントを表示',
+  Reason: '理由',
   'Logged in': 'ログイン',
   'Logged out': 'ログアウト',
   'Project key': 'プロジェクトキー',
