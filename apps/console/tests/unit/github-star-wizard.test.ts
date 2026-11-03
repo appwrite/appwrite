@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
 import {
   COMMUNITY_SUPPORT_PROMPT_HOLD_OFF_MS,
   COMMUNITY_SUPPORT_UNIQUE_DAYS_THRESHOLD,
@@ -13,6 +13,12 @@ import {
   pruneGithubStarVisitDays,
   withRecordedGithubStarVisit,
 } from '@/lib/console-banners/github-star-wizard'
+import {
+  clearGuestConsoleBannerDismiss,
+  getAccountScopedConsoleBannerId,
+  isGuestConsoleBannerDismissed,
+  persistGuestConsoleBannerDismiss,
+} from '@/lib/console-banners/guest-dismissed-banners'
 import {
   clearGithubStarVisitDaysFromPrefs,
   isConsoleBannerDismissed,
@@ -231,5 +237,56 @@ describe('community-support deferral', () => {
 
   test('disengaged for a user who never saw the community wizard', () => {
     expect(isCommunitySupportPromptEngaged(baseState, now)).toBe(false)
+  })
+})
+
+describe('device dismissal marker', () => {
+  const globals = globalThis as { window?: unknown }
+  const originalWindow = globals.window
+  const bannerId = 'github-star-wizard-2026'
+
+  beforeEach(() => {
+    const storage = new Map<string, string>()
+    globals.window = {
+      localStorage: {
+        getItem: (key: string) => storage.get(key) ?? null,
+        setItem: (key: string, value: string) => void storage.set(key, value),
+        removeItem: (key: string) => void storage.delete(key),
+      },
+    }
+  })
+
+  afterEach(() => {
+    globals.window = originalWindow
+  })
+
+  test('is scoped to the account that dismissed', () => {
+    persistGuestConsoleBannerDismiss(
+      getAccountScopedConsoleBannerId(bannerId, 'user-a'),
+    )
+    expect(
+      isGuestConsoleBannerDismissed(
+        getAccountScopedConsoleBannerId(bannerId, 'user-a'),
+      ),
+    ).toBe(true)
+    expect(
+      isGuestConsoleBannerDismissed(
+        getAccountScopedConsoleBannerId(bannerId, 'user-b'),
+      ),
+    ).toBe(false)
+  })
+
+  test('reset clears every account-scoped marker for the banner', () => {
+    persistGuestConsoleBannerDismiss(
+      getAccountScopedConsoleBannerId(bannerId, 'user-a'),
+    )
+    persistGuestConsoleBannerDismiss('other-banner')
+    clearGuestConsoleBannerDismiss(bannerId)
+    expect(
+      isGuestConsoleBannerDismissed(
+        getAccountScopedConsoleBannerId(bannerId, 'user-a'),
+      ),
+    ).toBe(false)
+    expect(isGuestConsoleBannerDismissed('other-banner')).toBe(true)
   })
 })

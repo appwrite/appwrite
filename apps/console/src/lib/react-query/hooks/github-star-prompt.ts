@@ -27,6 +27,7 @@ import {
   withRecordedGithubStarVisit,
 } from '@/lib/console-banners/github-star-wizard'
 import {
+  getAccountScopedConsoleBannerId,
   isGuestConsoleBannerDismissed,
   persistGuestConsoleBannerDismiss,
 } from '@/lib/console-banners/guest-dismissed-banners'
@@ -74,11 +75,14 @@ export function useGithubStarPrompt(
     prefs,
     GITHUB_STAR_WIZARD_BANNER_ID,
   )
-  // Dismissal is also kept on the device: another hook's full-prefs write
-  // that was already in flight can land after ours and drop it from prefs.
-  const dismissedOnDevice = isGuestConsoleBannerDismissed(
-    GITHUB_STAR_WIZARD_BANNER_ID,
-  )
+  // Dismissal is also kept on the device, per account: another hook's
+  // full-prefs write that was already in flight can land after ours and drop
+  // it from prefs.
+  const dismissedOnDevice =
+    !!accountId &&
+    isGuestConsoleBannerDismissed(
+      getAccountScopedConsoleBannerId(GITHUB_STAR_WIZARD_BANNER_ID, accountId),
+    )
   const dismissed = dismissedInPrefs || dismissedOnDevice
 
   /** Record the dismissal and drop the visit days in one prefs write. */
@@ -184,7 +188,14 @@ export function useGithubStarPrompt(
     isGithubStarWizardEligible(visitDays, todayKey)
 
   const dismiss = useCallback(() => {
-    persistGuestConsoleBannerDismiss(GITHUB_STAR_WIZARD_BANNER_ID)
+    if (accountId) {
+      persistGuestConsoleBannerDismiss(
+        getAccountScopedConsoleBannerId(
+          GITHUB_STAR_WIZARD_BANNER_ID,
+          accountId,
+        ),
+      )
+    }
     // Mark this mount repaired: the write below is the dismissal itself.
     repairedForAccountRef.current = accountId ?? null
     // Wait out an in-flight visit write so its full-prefs payload cannot land
