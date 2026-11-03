@@ -68,8 +68,8 @@ export const heReviewsDictionary: Record<string, string> = {
     'אין לכם הרשאה להוסיף repos.',
   'Add all repositories': 'הוספת כל המאגרים',
   'Adding repositories...': 'מוסיף מאגרים...',
-  added: 'נוספו',
-  'already on': 'כבר פעילים',
-  failed: 'נכשלו',
+  'repositories added': 'מאגרים נוספו',
+  'repositories already on': 'מאגרים כבר פעילים',
+  'repositories failed': 'מאגרים נכשלו',
   'Some repositories could not be added': 'לא ניתן היה להוסיף חלק מהמאגרים',
 }

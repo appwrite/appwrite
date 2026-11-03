@@ -69,9 +69,9 @@ export const jaReviewsDictionary: Record<string, string> = {
     'リポジトリを追加する権限がありません。',
   'Add all repositories': 'すべてのリポジトリを追加',
   'Adding repositories...': 'リポジトリを追加しています...',
-  added: '件追加',
-  'already on': '件は有効済み',
-  failed: '件失敗',
+  'repositories added': '件のリポジトリを追加',
+  'repositories already on': '件は有効済み',
+  'repositories failed': '件のリポジトリが失敗',
   'Some repositories could not be added':
     '一部のリポジトリを追加できませんでした',
 }

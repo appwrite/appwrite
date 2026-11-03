@@ -126,9 +126,9 @@ export function AddRepository({
       {
         onSuccess: ({ added, skipped, failed }) => {
           const summary = [
-            `${added} ${t('added')}`,
-            skipped > 0 ? `${skipped} ${t('already on')}` : null,
-            failed > 0 ? `${failed} ${t('failed')}` : null,
+            `${added} ${t('repositories added')}`,
+            skipped > 0 ? `${skipped} ${t('repositories already on')}` : null,
+            failed > 0 ? `${failed} ${t('repositories failed')}` : null,
           ]
             .filter(Boolean)
             .join(', ')
