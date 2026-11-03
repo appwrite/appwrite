@@ -85,8 +85,22 @@ class LetsEncrypt implements Provider
         }
 
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
-        $certData = openssl_x509_parse(file_get_contents($certPath));
-        $validTo = $certData['validTo_time_t'] ?? null;
+        if (!\file_exists($certPath) || !\is_readable($certPath)) {
+            throw new Exception('Unable to read certificate file (cert.pem).');
+        }
+
+        $certContent = \file_get_contents($certPath);
+        if ($certContent === false) {
+            throw new Exception('Unable to read certificate file (cert.pem).');
+        }
+
+        $certData = \openssl_x509_parse($certContent);
+        $validTo = \is_array($certData) ? ($certData['validTo_time_t'] ?? null) : null;
+
+        if (empty($validTo) || !\is_int($validTo) || $validTo <= 0) {
+            throw new Exception('Unable to read certificate expiration date (cert.pem).');
+        }
+
         $dt = (new \DateTime())->setTimestamp($validTo);
         return DateTime::addSeconds($dt, -60 * 60 * 24 * 30);
     }
