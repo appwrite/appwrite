@@ -294,17 +294,22 @@ abstract class Response
 
     protected int $compressionMinSize = Http::COMPRESSION_MIN_SIZE_DEFAULT;
 
-    protected mixed $compressionSupported = [];
+    /**
+     * @var array<mixed>
+     */
+    protected array $compressionSupported = [];
 
     /**
-     * Encoding a streamed body was negotiated to
+     * Incremental gzip or deflate context a streamed body was negotiated to
      */
-    private ?Compression $streamCompression = null;
+    private ?\DeflateContext $deflateEncoder = null;
 
     /**
-     * Incremental compression context for $streamCompression
+     * Incremental brotli context a streamed body was negotiated to
+     *
+     * @var resource|null
      */
-    private mixed $streamEncoder = null;
+    private mixed $brotliEncoder = null;
 
     /**
      * Response constructor.
@@ -355,7 +360,10 @@ abstract class Response
     /**
      * Set supported compression algorithms
      */
-    public function setCompressionSupported(mixed $compressionSupported): static
+    /**
+     * @param  array<mixed>  $compressionSupported
+     */
+    public function setCompressionSupported(array $compressionSupported): static
     {
         $this->compressionSupported = $compressionSupported;
 
@@ -750,10 +758,9 @@ abstract class Response
         }
 
         $body = match (true) {
-            $this->streamEncoder === null => $body,
-            $this->streamCompression instanceof Brotli => \brotli_compress_add($this->streamEncoder, $body, $end ? BROTLI_FINISH : BROTLI_FLUSH),
-            // GZIP or Deflate, the only others negotiate() sets up
-            default => \deflate_add($this->streamEncoder, $body, $end ? ZLIB_FINISH : ZLIB_SYNC_FLUSH),
+            $this->brotliEncoder !== null => \brotli_compress_add($this->brotliEncoder, $body, $end ? BROTLI_FINISH : BROTLI_FLUSH),
+            $this->deflateEncoder !== null => \deflate_add($this->deflateEncoder, $body, $end ? ZLIB_FINISH : ZLIB_SYNC_FLUSH),
+            default => $body,
         };
 
         if ($body === false) {
@@ -807,8 +814,12 @@ abstract class Response
             return;
         }
 
-        $this->streamCompression = $algorithm;
-        $this->streamEncoder = $encoder;
+        if ($encoder instanceof \DeflateContext) {
+            $this->deflateEncoder = $encoder;
+        } else {
+            $this->brotliEncoder = $encoder;
+        }
+
         $this->removeHeader('Content-Length');
         $this->addHeader('Content-Encoding', $algorithm->getContentEncoding());
         $this->addHeader('X-Utopia-Compression', 'true');
