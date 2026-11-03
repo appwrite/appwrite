@@ -723,19 +723,21 @@ class Local extends Device
 
     /**
      * Get all files and directories directly inside a directory, hidden entries included.
+     * Names are taken literally, so an entry named like a glob pattern matches nothing else.
      *
      * @return string[]
      */
     private function scanDirectory(string $dir): array
     {
         $dir = rtrim($dir, DIRECTORY_SEPARATOR);
-        $files = glob($dir . DIRECTORY_SEPARATOR . '*') ?: [];
+        $entries = is_dir($dir . DIRECTORY_SEPARATOR) ? scandir($dir . DIRECTORY_SEPARATOR) : false;
 
-        /**
-         * Hidden files
-         */
-        foreach (glob($dir . DIRECTORY_SEPARATOR . '.[!.]*') ?: [] as $file) {
-            $files[] = $file;
+        $files = [];
+        foreach ($entries ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $files[] = $dir . DIRECTORY_SEPARATOR . $entry;
         }
 
         return $files;

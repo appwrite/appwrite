@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -37,7 +36,6 @@ export function VerifySmtpDomain({
   onVerifySuccess,
 }: VerifySmtpDomainProps) {
   const t = useT()
-  const queryClient = useQueryClient()
   const verifyMutation = useVerifyDomain(projectId, region)
   const [current, setCurrent] = useState(rule)
   const [verificationError, setVerificationError] =
@@ -57,7 +55,6 @@ export function VerifySmtpDomain({
         current.$id,
       )) as SmtpProxyRule
       if (updated.status === 'verified') {
-        await queryClient.refetchQueries({ queryKey: ['proxy-rules'] })
         toast.success(t('Email domain verified'))
         onOpenChange(false)
         onVerifySuccess()

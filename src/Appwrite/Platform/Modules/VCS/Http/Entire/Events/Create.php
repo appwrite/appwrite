@@ -388,6 +388,54 @@ class Create extends Action
         return \array_slice($found, 0, 100);
     }
 
+    /**
+     * Moves a repository's connection to the installation that delivered its
+     * push. An Entire repository keeps its id when it moves to another
+     * project, as when a GitHub mirror is detached, and only the installation
+     * on its project now covers it; one still connected through the old
+     * installation would build with a token that no longer reaches it. The
+     * move stays within the Appwrite project that connected the repository,
+     * so it happens only once that project has the new installation too.
+     *
+     * The site or function moves before the repository record, so a delivery
+     * retried after a partial move still finds the record to move.
+     */
+    private function moveRepository(Document $repository, Document $project, string $providerInstallationId, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB): Document
+    {
+        $current = $authorization->skip(fn () => $dbForPlatform->getDocument('installations', $repository->getAttribute('installationId', '')));
+        if ($providerInstallationId === '' || $current->getAttribute('providerInstallationId', '') === $providerInstallationId) {
+            return $repository;
+        }
+
+        $installation = $authorization->skip(fn () => $dbForPlatform->findOne('installations', [
+            Query::equal('provider', ['entire']),
+            Query::equal('providerInstallationId', [$providerInstallationId]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
+        ]));
+        if ($installation->isEmpty()) {
+            return $repository;
+        }
+
+        $moved = new Document([
+            'installationId' => $installation->getId(),
+            'installationInternalId' => $installation->getSequence(),
+        ]);
+
+        // The site or function follows while it is still connected through this record
+        $collection = $repository->getAttribute('resourceType') === 'function' ? 'functions' : 'sites';
+        $dbForProject = $getProjectDB($project);
+        $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $repository->getAttribute('resourceId', '')));
+        if ($resource->getAttribute('repositoryId') === $repository->getId() && $resource->getAttribute('installationId') !== $installation->getId()) {
+            $authorization->skip(fn () => $dbForProject->updateDocument($collection, $resource->getId(), $moved));
+        }
+
+        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $moved));
+
+        Span::add('vcs.entire.repository.moved', $repository->getId());
+
+        return $repository;
+    }
+
     private function isProjectInCurrentRegion(Document $project): bool
     {
         try {
@@ -531,6 +579,7 @@ class Create extends Action
 
             $attemptedAt = DateTime::now();
             try {
+                $repository = $this->moveRepository($repository, $project, $providerInstallationId, $dbForPlatform, $authorization, $getProjectDB);
                 $this->createGitDeployments($vcs, $providerInstallationId, [$repository], $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, '', $providerCommitMessage, $providerCommitUrl, '', $providerAffectedFiles, false, $dbForPlatform, $authorization, $bus, $getProjectDB, $platform, $deploymentsFactory);
             } catch (\Throwable $error) {
                 if ($deliveryId !== '' && !$this->hasDeployed($repository, $providerCommitHash, $providerBranch, $attemptedAt, $dbForPlatform, $authorization, $getProjectDB)) {

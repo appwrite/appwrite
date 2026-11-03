@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Screenshots;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
@@ -64,7 +65,7 @@ class Get extends Action
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
             ->label('usage.metric', METRIC_AVATARS_SCREENSHOTS_GENERATED)
-            ->label('abuse-limit', 60)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 60)])
             ->label('cache', true)
             ->label('cache.resource', 'avatar/screenshot')
             ->label('sdk', new Method(

@@ -39,11 +39,11 @@ final class SMTPAddressesTest extends TestCase
         $this->assertSame(1, $result['deliveredTo']);
     }
 
-    public function testAHostWithoutAnAddressIsDialledByName(): void
+    public function testAHostWithoutAnAddressIsRefused(): void
     {
         $server = new ScriptedSmtpServer(self::ACCEPTED);
         $adapter = new SMTP(
-            host: "smtp.example.invalid:{$server->port}",
+            host: "127.0.0.1:{$server->port}",
             timeout: 2,
             timelimit: 2,
             addresses: ['other.example.invalid' => '127.0.0.1'],
@@ -52,7 +52,7 @@ final class SMTPAddressesTest extends TestCase
         $result = $adapter->send($this->email());
 
         $this->assertSame(0, $result['deliveredTo']);
-        $this->assertStringContainsString('smtp.example.invalid', (string) $result['results'][0]['error']);
+        $this->assertStringContainsString('no checked address', (string) $result['results'][0]['error']);
     }
 
     private function email(): Email

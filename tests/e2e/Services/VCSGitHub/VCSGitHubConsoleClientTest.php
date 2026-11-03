@@ -27,6 +27,7 @@ final class VCSGitHubConsoleClientTest extends Scope
     public string $providerRepositoryId2 = '708688544'; // function1.4 (private)
     public string $providerRepositoryId3 = '943139433'; // svelte-starter (public)
     public string $providerRepositoryId4 = '943245292'; // templates-for-sites (public)
+    public string $foreignProviderRepositoryId = '180190854'; // appwrite/appwrite (public, outside the installation)
 
     private static array $cachedInstallationId = [];
     private static array $cachedFunctionData = [];
@@ -747,7 +748,7 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals('main', $function['body']['providerBranch']);
     }
 
-    private function sendPushEvent(): array
+    private function sendPushEvent(?string $providerInstallationId = null): array
     {
         $github = new GitHub(new Cache(new None()));
         $github->initializeVariables(
@@ -770,7 +771,7 @@ final class VCSGitHubConsoleClientTest extends Scope
                 'html_url' => 'https://github.com/appwrite-test/ruby-starter',
                 'owner' => ['name' => 'appwrite-test'],
             ],
-            'installation' => ['id' => (int) $this->providerInstallationId],
+            'installation' => ['id' => (int) ($providerInstallationId ?? $this->providerInstallationId)],
             'head_commit' => [
                 'author' => [
                     'name' => $commit['commitAuthor'],
@@ -881,6 +882,86 @@ final class VCSGitHubConsoleClientTest extends Scope
         ['event' => $event] = $this->sendPushEvent();
 
         $this->assertEquals(200, $event['headers']['status-code']);
+    }
+
+    public function testGitHubPushFromAnotherInstallationIsIgnored(): void
+    {
+        $data = $this->setupFunctionUsingVCS();
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $before = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', $headers, [
+            'queries' => [Query::equal('type', ['vcs'])->toString()],
+        ]);
+        $this->assertEquals(200, $before['headers']['status-code']);
+
+        ['event' => $event] = $this->sendPushEvent('1');
+
+        $this->assertEquals(200, $event['headers']['status-code']);
+
+        $after = $this->client->call(Client::METHOD_GET, '/functions/' . $data['functionId'] . '/deployments', $headers, [
+            'queries' => [Query::equal('type', ['vcs'])->toString()],
+        ]);
+        $this->assertEquals(200, $after['headers']['status-code']);
+        $this->assertSame($before['body']['total'], $after['body']['total']);
+    }
+
+    public function testConnectRepositoryOutsideInstallationRejected(): void
+    {
+        $installationId = $this->setupInstallation();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            'name' => 'Foreign repository',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->foreignProviderRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $function['headers']['status-code']);
+        $this->assertEquals('provider_repository_not_found', $function['body']['type']);
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            'name' => 'Foreign repository',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->foreignProviderRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $site['headers']['status-code']);
+        $this->assertEquals('provider_repository_not_found', $site['body']['type']);
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
+            'functionId' => Id::unique(),
+            'name' => 'Foreign repository',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $update = $this->client->call(Client::METHOD_PUT, '/functions/' . $function['body']['$id'], $headers, [
+            'name' => 'Foreign repository',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->foreignProviderRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(404, $update['headers']['status-code']);
+        $this->assertEquals('provider_repository_not_found', $update['body']['type']);
+
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $function['body']['$id'], $headers);
     }
 
     public function testUpdateFunctionUsingVCS(): void

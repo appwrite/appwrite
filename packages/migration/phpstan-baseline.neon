@@ -55,7 +55,7 @@ parameters:
 			path: src/Destinations/Appwrite.php
 
 		-
-			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength'' on mixed\.$#'
+			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength''\|''realtimeGuests'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Destinations/Appwrite.php
@@ -1352,6 +1352,12 @@ parameters:
 
 		-
 			message: '#^Parameter \$createdAt of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Auth/Policies.php
+
+		-
+			message: '#^Parameter \$denyRealtimeGuests of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects bool\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Auth/Policies.php
@@ -2965,55 +2971,55 @@ parameters:
 			path: src/Resources/Templates/EmailTemplate.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$duration\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$duration\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$enabled\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$enabled\.$#'
 			identifier: property.notFound
 			count: 4
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$total\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$total\.$#'
 			identifier: property.notFound
 			count: 3
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userAccessedAt\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userAccessedAt\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userEmail\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userEmail\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userId\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userId\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userMFA\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userMFA\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userName\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userName\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userPhone\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userPhone\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php

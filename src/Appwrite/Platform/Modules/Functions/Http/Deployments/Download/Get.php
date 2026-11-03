@@ -13,6 +13,7 @@ use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -20,6 +21,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -127,8 +129,10 @@ class Get extends Action
             default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid deployment download type.'),
         };
 
-        // Builds can write the builds volume, so links and paths outside the device are refused.
-        if (!Deployments::isArtifact($device, $path)) {
+        // Builds can write the builds volume, so a local file is opened once and read only through that handle
+        $local = $device->getType() === DeviceType::Local;
+        $artifact = $local ? Deployments::openArtifact($device, $path) : null;
+        if ($local ? $artifact === null : !Deployments::isArtifact($device, $path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -143,7 +147,7 @@ class Get extends Action
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
-        $size = $device->getFileSize($path);
+        $size = $artifact?->getSize() ?? $device->getFileSize($path);
         $rangeHeader = $request->getHeaderLine('range');
 
         if (!empty($rangeHeader)) {
@@ -168,23 +172,39 @@ class Get extends Action
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send((string) $device->read($path, $start, ($end - $start + 1)));
+            $response->send($this->read($device, $path, $artifact, $start, $end - $start + 1));
             return;
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    (string) $device->read(
+                    $this->read(
+                        $device,
                         $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
+                        $artifact,
+                        $i * MAX_OUTPUT_CHUNK_SIZE,
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
                     ),
                     (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
                 );
             }
         } else {
-            $response->send((string) $device->read($path));
+            $response->send($this->read($device, $path, $artifact));
         }
+    }
+
+    /**
+     * A window of the deployment file: through the handle opened for a local file, by path elsewhere.
+     */
+    private function read(Device $device, string $path, ?StreamInterface $artifact, int $offset = 0, ?int $length = null): string
+    {
+        if ($artifact === null) {
+            return (string) $device->read($path, $offset, $length);
+        }
+
+        $artifact->seek($offset);
+
+        return $length === null ? $artifact->getContents() : $artifact->read($length);
     }
 }

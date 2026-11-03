@@ -2,12 +2,14 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
 use Appwrite\Bus\Events\SessionCreated;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Geo\Geo;
 use Appwrite\Messaging\Adapter\Mqtt;
@@ -85,9 +87,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-reset', [201])
+            ->label('abuse', [Limit::failures(['projectId', 'url', 'ip'], 10)])
             ->param('provider', '', new WhiteList($idTokenProviders, true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $documentedProviders) . '.', enum: new Enum(name: 'IdTokenProvider', exclude: ['mock', 'mock-unverified']))
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
             ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token carries a nonce claim, which must match it. Ignored when the provider issued the token without a nonce.', true)
@@ -113,6 +113,7 @@ class Create extends Action
             ->inject('bus')
             ->inject('clientForOAuth2')
             ->inject('mqtt')
+            ->inject('queueForRealtime')
             ->callback($this->action(...));
     }
 
@@ -142,6 +143,7 @@ class Create extends Action
         Bus $bus,
         Client $clientForOAuth2,
         Mqtt $mqtt,
+        Realtime $queueForRealtime,
     ): void {
         $profile = new Document(Config::getParam('oAuthProviders', [])[$provider]['idToken'] ?? []);
         if ($profile->isEmpty()) {
@@ -231,7 +233,7 @@ class Create extends Action
         $newUser = null;
         $newTarget = null;
         if ($user->isEmpty()) {
-            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization);
+            [$newUser, $newTarget] = $this->resolveUser($user, $provider, $sub, $providerEmail, $isVerified, $name, $dbForProject, $project, $plan, $proofForPassword, $authorization, $mqtt, $queueForRealtime);
         }
 
         $authorization->addRole(Role::user($user->getId())->toString());
@@ -356,7 +358,7 @@ class Create extends Action
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken'])
         ;
 
         $bus->dispatch(new SessionCreated(
@@ -397,7 +399,7 @@ class Create extends Action
      * @return array{?Document, ?Document} the user and email target created by
      *     this request, if any, so they can be rolled back later
      */
-    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization): array
+    private function resolveUser(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $name, Database $dbForProject, Document $project, array $plan, ProofsPassword $proofForPassword, Authorization $authorization, Mqtt $mqtt, Realtime $queueForRealtime): array
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('provider', [$provider]),
@@ -433,7 +435,22 @@ class Create extends Action
                 }
                 $user->setAttributes($userWithEmail->getArrayCopy());
                 if (!$user->getAttribute('emailVerification', false)) {
-                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user));
+                    $authorization->skip(fn () => User::revokeCredentials($dbForProject, $user, $project, mqtt: $mqtt));
+                    $dbForProject->purgeCachedDocument('users', $user->getId());
+
+                    try {
+                        $mqtt->revoke($project->getId(), $user->getId());
+                    } catch (\Throwable $error) {
+                        Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+                    }
+
+                    // Sent before the request's own event, which would otherwise reach the registrant with the claimant's data
+                    (clone $queueForRealtime)
+                        ->reset()
+                        ->setProject($project)
+                        ->setEvent('users.[userId].sessions.delete')
+                        ->setParam('userId', $user->getId())
+                        ->trigger();
                 }
                 // The provider verified this address, or its canonical form on the same domain
                 if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {

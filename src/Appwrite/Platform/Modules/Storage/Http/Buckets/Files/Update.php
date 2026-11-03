@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -21,6 +22,7 @@ use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Validator\FileExt;
 use Utopia\Validator\Nullable;
 
 class Update extends Action
@@ -45,9 +47,7 @@ class Update extends Action
             ->label('audits.event', 'file.update')
             ->label('audits.resource', 'file/{response.$id}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',
@@ -141,6 +141,11 @@ class Update extends Action
         $file->setAttribute('$permissions', $permissions);
 
         if (!is_null($name)) {
+            $allowedFileExtensions = $bucket->getAttribute('allowedFileExtensions', []);
+            if (!empty($allowedFileExtensions) && $name !== $file->getAttribute('name') && !(new FileExt($allowedFileExtensions))->isValid($name)) {
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, 'File extension not allowed');
+            }
+
             $file->setAttribute('name', $name);
         }
 

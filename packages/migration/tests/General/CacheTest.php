@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Migration\Cache;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database;
+use Utopia\Migration\Resources\Database\Index;
 use Utopia\Migration\Resources\Database\Row;
 use Utopia\Migration\Resources\Database\Table;
 
@@ -105,5 +106,35 @@ class CacheTest extends TestCase
         $row->setStatus(Resource::STATUS_SUCCESS);
         $cache->update($row);
         $this->assertEquals(['pending' => '1', 'success' => '2'], $cache->get('row'));
+    }
+
+    /**
+     * The Appwrite source builds each table's database from the listing, without the sequence the
+     * destination gave it, and the destination numbers tables per database: the first table of
+     * every database used to land on one key, and only the last one got its columns and rows.
+     */
+    public function testTablesOfDifferentDatabasesKeepTheirOwnEntries(): void
+    {
+        $cache = new Cache();
+
+        $countries = new Table(database: new Database(id: 'app', name: 'app'), name: 'countries', id: 'countries');
+        $events = new Table(database: new Database(id: 'analytics', name: 'analytics'), name: 'events', id: 'events');
+        $countries->setSequence('1');
+        $events->setSequence('1');
+
+        $cache->add($countries);
+        $cache->add($events);
+
+        $this->assertSame([$countries, $events], \array_values($cache->get('table')));
+
+        $byName = new Index(id: 'by_name', key: 'by_name', table: $countries, type: 'key', columns: ['name']);
+        $byDay = new Index(id: 'by_day', key: 'by_day', table: $events, type: 'key', columns: ['day']);
+        $byName->setSequence('1');
+        $byDay->setSequence('1');
+
+        $cache->add($byName);
+        $cache->add($byDay);
+
+        $this->assertSame([$byName, $byDay], \array_values($cache->get('index')));
     }
 }

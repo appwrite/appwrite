@@ -9,7 +9,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\System\System;
 
 class Key
 {
@@ -34,6 +33,8 @@ class Key
         protected bool $deploymentStatusIgnored = false,
         protected bool $runtimeEphemeral = false,
         protected ?string $expire = null,
+        protected string $hostname = '',
+        protected string $deploymentId = '',
     ) {
     }
 
@@ -108,6 +109,16 @@ class Key
             return true;
         }
 
+        return $this->mayGrant($scopes);
+    }
+
+    /**
+     * Whether this key may grant these scopes, such as to a function or site. A key grants no scope it does not hold.
+     *
+     * @param array<string> $scopes
+     */
+    public function mayGrant(array $scopes): bool
+    {
         return \array_diff($scopes, $this->scopes) === [];
     }
 
@@ -144,6 +155,22 @@ class Key
     public function isRuntimeEphemeral(): bool
     {
         return $this->runtimeEphemeral;
+    }
+
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
+    /**
+     * Whether the router may apply this key's preview grants to the rule.
+     */
+    public function isBoundTo(Document $rule): bool
+    {
+        return $this->hostname !== ''
+            && $this->deploymentId !== ''
+            && $this->hostname === $rule->getAttribute('domain', '')
+            && $this->deploymentId === $rule->getAttribute('deploymentId', '');
     }
 
     /**
@@ -194,15 +221,8 @@ class Key
             // Dynamic supported for backwards compatibility
             case API_KEY_EPHEMERAL:
             case 'dynamic':
-                $jwtObj = new JWT(
-                    key: System::getEnv('_APP_OPENSSL_KEY_V1'),
-                    algo: 'HS256',
-                    maxAge: 86400,
-                    leeway: 0
-                );
-
                 try {
-                    $payload = $jwtObj->decode($secret);
+                    $payload = EncryptionKey::decode($secret, maxAge: 86400);
                 } catch (JWTException) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
@@ -220,6 +240,8 @@ class Key
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
                 $runtimeEphemeral = $payload['runtimeEphemeral'] ?? false;
+                $hostname = $payload['hostname'] ?? '';
+                $deploymentId = $payload['deploymentId'] ?? '';
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
                 $expire = isset($payload['exp']) ? DateTime::format((new \DateTime())->setTimestamp((int) $payload['exp'])) : null;
 
@@ -250,6 +272,8 @@ class Key
                     $deploymentStatusIgnored,
                     $runtimeEphemeral,
                     $expire,
+                    $hostname,
+                    $deploymentId,
                 );
             case API_KEY_STANDARD:
                 $key = self::find($project->getAttribute('keys', []), $key);

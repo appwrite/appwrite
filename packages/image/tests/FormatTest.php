@@ -6,6 +6,7 @@ namespace Utopia\Image\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Format;
 
 final class FormatTest extends TestCase
@@ -50,6 +51,7 @@ final class FormatTest extends TestCase
     #[DataProvider('unsupportedProvider')]
     public function testDetectRejects(string $data): void
     {
+        $this->expectException(UnsupportedFormatException::class);
         $this->expectExceptionMessage('Unsupported image format');
 
         Format::detect($data);
@@ -66,7 +68,7 @@ final class FormatTest extends TestCase
         try {
             Format::detect($data);
             $this->fail('An oversized file type box without a supported brand near its start must be refused');
-        } catch (\Exception $exception) {
+        } catch (UnsupportedFormatException $exception) {
             $this->assertSame('Unsupported image format', $exception->getMessage());
         }
 

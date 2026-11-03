@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Teams\Http\Memberships;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -76,7 +77,7 @@ class Create extends Action
                     ),
                 ]
             ))
-            ->label('abuse-limit', 10)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 10)])
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
@@ -577,13 +578,18 @@ class Create extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
+        // The privacy policy only hides other members, a member always sees their own details
+        $auths = $project->getAttribute('auths', []);
+        $isVisible = $isPrivilegedUser || $isAppUser
+            || ($user->getSequence() !== null && $invitee->getSequence() === $user->getSequence());
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(
                 $membership
                     ->setAttribute('teamName', $team->getAttribute('name'))
-                    ->setAttribute('userName', $invitee->getAttribute('name'))
-                    ->setAttribute('userEmail', $invitee->getAttribute('email')),
+                    ->setAttribute('userName', $isVisible || ($auths['membershipsUserName'] ?? true) ? $invitee->getAttribute('name') : '')
+                    ->setAttribute('userEmail', $isVisible || ($auths['membershipsUserEmail'] ?? true) ? $invitee->getAttribute('email') : ''),
                 Response::MODEL_MEMBERSHIP
             );
     }

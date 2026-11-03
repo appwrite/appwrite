@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Breaker;
 use Appwrite\SMTP\Refusal;
@@ -90,7 +91,7 @@ class Mails extends Action
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
-        $template = $payload['template'] ?? 'unknown';
+        $template = ($payload['template'] ?? '') ?: 'unknown';
         $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
 
         Span::add('mail.template', $template);
@@ -102,9 +103,37 @@ class Mails extends Action
         $body = $payload['body'];
         $preview = $payload['preview'] ?? '';
 
+        $variables['year'] = date('Y');
+
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+        }
+        // render() will return the subject in <p> tags, so use strip_tags() to remove them
+        $subject = \strip_tags($subjectTemplate->render());
+
+        $heading = $subject;
+        if (!empty($variables['heading'])) {
+            $headingTemplate = Template::fromString($variables['heading']);
+            foreach ($variables as $key => $value) {
+                $headingTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $heading = $headingTemplate->render(useContent: true);
+        }
         $variables['subject'] = $subject;
-        $variables['heading'] = $variables['heading'] ?? $subject;
-        $variables['year'] = date("Y");
+        $variables['heading'] = $heading;
+
+        // Expand the body's placeholders once, so values are inserted literally
+        if (!empty($body)) {
+            $bodyContent = Template::fromString($body);
+            foreach ($variables as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value);
+            }
+            foreach ($this->richTextParams as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $body = $bodyContent->render(useContent: true);
+        }
 
         $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'];
@@ -119,6 +148,7 @@ class Mails extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
 
@@ -142,13 +172,6 @@ class Mails extends Action
         $bodyTemplate->setParam('{{previewWhitespace}}', $previewWhitespace, false);
 
         $body = $bodyTemplate->render();
-
-        $subjectTemplate = Template::fromString($subject);
-        foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
-        }
-        // render() will return the subject in <p> tags, so use strip_tags() to remove them
-        $subject = \strip_tags($subjectTemplate->render());
 
         $breaker = null;
         if ($type === 'smtp') {
@@ -232,7 +255,9 @@ class Mails extends Action
                 html: true,
                 headers: $payload['headers'] ?? [],
             );
-            $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
+            $emailMessage
+                ->setOrigin(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setTemplate($template);
 
             // A pooled adapter belongs to this send alone; a project's own SMTP is
             // dialled for it, on the addresses just checked, and closed after.

@@ -284,6 +284,7 @@ trait TeamsBaseClient
 
     public function testCreateTeamMembership(): void
     {
+        $isConsole = $this->getProject()['$id'] === 'console';
         $teamData = $this->createTeamHelper();
         $teamUid = $teamData['teamUid'];
         $teamName = $teamData['teamName'];
@@ -306,8 +307,9 @@ trait TeamsBaseClient
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
-        $this->assertEquals($name, $response['body']['userName']);
-        $this->assertEquals($email, $response['body']['userEmail']);
+        // New projects hide other members' names and emails from clients
+        $this->assertEquals($isConsole ? $name : '', $response['body']['userName']);
+        $this->assertEquals($isConsole ? $email : '', $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(1, $response['body']['roles']);
@@ -373,8 +375,8 @@ trait TeamsBaseClient
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
-        $this->assertEquals($secondName, $response['body']['userName']);
-        $this->assertEquals($secondEmail, $response['body']['userEmail']);
+        $this->assertEquals($isConsole ? $secondName : '', $response['body']['userName']);
+        $this->assertEquals($isConsole ? $secondEmail : '', $response['body']['userEmail']);
         $this->assertNotEmpty($response['body']['teamId']);
         $this->assertNotEmpty($response['body']['teamName']);
         $this->assertCount(1, $response['body']['roles']);
@@ -502,8 +504,10 @@ trait TeamsBaseClient
 
         $this->assertEquals(201, $membership['headers']['status-code']);
         $this->assertEquals($customId, $membership['body']['$id']);
-        $this->assertEquals($email, $membership['body']['userEmail']);
-        $this->assertEquals($name, $membership['body']['userName']);
+        // New projects hide other members' names and emails from clients
+        $isConsole = $this->getProject()['$id'] === 'console';
+        $this->assertEquals($isConsole ? $email : '', $membership['body']['userEmail']);
+        $this->assertEquals($isConsole ? $name : '', $membership['body']['userName']);
 
         $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $customId, array_merge([
             'content-type' => 'application/json',

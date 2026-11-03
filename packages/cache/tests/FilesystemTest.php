@@ -125,4 +125,32 @@ final class FilesystemTest extends Base
             self::deletePath($path);
         }
     }
+
+    public function testFlushEmpty(): void
+    {
+        $path = self::scratch('flush-empty');
+
+        try {
+            $cache = new Cache(new Filesystem($path));
+
+            $this->assertTrue($cache->flush());
+        } finally {
+            self::deletePath($path);
+        }
+    }
+
+    public function testFlushKeepsRoot(): void
+    {
+        $path = self::scratch('flush-root');
+
+        try {
+            $cache = new Cache(new Filesystem($path));
+            $cache->save('item', 'data');
+            $cache->flush();
+
+            $this->assertDirectoryExists($path);
+        } finally {
+            self::deletePath($path);
+        }
+    }
 }

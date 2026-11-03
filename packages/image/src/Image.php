@@ -6,6 +6,7 @@ use Exception;
 use Imagick;
 use ImagickDraw;
 use ImagickPixel;
+use Utopia\Image\Exception\UnsupportedFormatException;
 
 class Image
 {
@@ -43,7 +44,7 @@ class Image
 
     /**
      * @throws \ImagickException
-     * @throws Exception
+     * @throws UnsupportedFormatException
      */
     public function __construct(string $data)
     {

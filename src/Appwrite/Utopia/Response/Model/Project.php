@@ -137,6 +137,15 @@ class Project extends Model
                 'array' => true,
             ])
 
+            // Resource: Preferences
+            ->addRule('prefs', [
+                'type' => Response::MODEL_PREFERENCES,
+                'description' => 'Project preferences as a key-value object',
+                'required' => false,
+                'default' => new \stdClass(),
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
+            ])
+
             // Resource: Billing
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
@@ -236,6 +245,11 @@ class Project extends Model
         $onboarding = $document->getAttribute('onboarding', []);
         if (\is_array($onboarding) && empty($onboarding)) {
             $document->setAttribute('onboarding', new \stdClass());
+        }
+
+        $prefs = $document->getAttribute('prefs', []);
+        if (\is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('prefs', new \stdClass());
         }
 
         return $document;

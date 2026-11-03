@@ -344,9 +344,10 @@ export const heSitesDictionary: Record<string, string> = {
   // Settings: silent mode card
   'Silent mode': 'מצב שקט',
   // pragma: allowlist secret
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
-    'קובע אם Appwrite מפרסם תגובות אוטומטיות על קומיטים ב-repo ה-GitHub המחובר שלכם (למשל הערות פריסה על pull requests). פריסות, בדיקות ובניות אינן משתנות; רק תגובות אופציונליות על קומיטים מדולגות כשמצב שקט פעיל.', // pragma: allowlist secret
-  'Disable automated commit comments': 'השבתת תגובות אוטומטיות על קומיטים',
+  "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.":
+    'כשהמצב פעיל, Appwrite לא מוסיף תגובות ל-pull requests ולא מדווח לספק ה-Git שלכם על בדיקות ופריסות. הבנייה והפריסה ממשיכות כרגיל.', // pragma: allowlist secret
+  'Skip pull request comments, checks and deployment reports':
+    'דילוג על תגובות ב-pull requests, בדיקות ודיווחי פריסה',
 
   // Settings: variables card
   'Environment variables': 'משתני סביבה',
@@ -488,8 +489,6 @@ export const heSitesDictionary: Record<string, string> = {
     'ה-Branch של הפרודקשן בה-repo המקושר לאתר. פריסות מוצלחות מה-Branch הזה מופעלות אוטומטית.',
   'Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web).':
     'הנתיב לקוד האתר בה-repo המקושר. השתמשו בשורש ה-repo (./) או בתת-תיקייה שמכילה את האפליקציה שלכם (למשל ./apps/web).',
-  'Disable automated comments on repository commits':
-    'השבתת תגובות אוטומטיות על קומיטים ב-repo',
   configured: 'הוגדרו',
   'Ready to deploy': 'מוכן לפריסה',
 
@@ -584,4 +583,6 @@ export const heSitesDictionary: Record<string, string> = {
   'Go live': 'עלייה לאוויר',
   'Get an appwrite.network URL right away, then add your own domain.':
     'קבלו כתובת appwrite.network מיד, ואז הוסיפו דומיין משלכם.',
+  "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
+    'התקנת ה-Git של האתר הזה כבר לא מגיעה ל-repo שלו, ולכן Push חדש לא ייפרס. נתקו את ה-repo ואז חברו אותו מחדש דרך ההתקנה שבה הוא נמצא עכשיו.',
 }

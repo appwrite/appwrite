@@ -54,7 +54,7 @@ type ModelFormState = {
 const emptyForm = (): ModelFormState => ({
   name: '',
   provider: 'openai',
-  model: 'gpt-4o',
+  model: 'gpt-6.1-terra',
   apiKey: '',
   baseUrl: getAssistantProviderDefaultBaseUrl('openai') ?? '',
   enabled: true,
@@ -151,7 +151,7 @@ export function AgentModelForm({
   const autoNameRef = useRef(
     model
       ? getAssistantProviderModelLabel(model.provider, model.model) || ''
-      : getAssistantProviderModelLabel('openai', 'gpt-4o') || '',
+      : getAssistantProviderModelLabel('openai', 'gpt-6.1-terra') || '',
   )
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export function AgentModelForm({
       ? getAssistantProviderModelLabel(model.provider, model.model) ||
         model.name ||
         ''
-      : getAssistantProviderModelLabel('openai', 'gpt-4o') || ''
+      : getAssistantProviderModelLabel('openai', 'gpt-6.1-terra') || ''
   }, [model])
 
   const isEditing = Boolean(model?.$id)
@@ -402,8 +402,8 @@ export function AgentModelForm({
                     }
                     placeholder={
                       form.provider === 'openrouter'
-                        ? 'openai/gpt-4o'
-                        : 'gpt-4o'
+                        ? 'openai/gpt-6.1-terra'
+                        : 'gpt-6.1-terra'
                     }
                     className="h-9 font-mono text-[13px]"
                     disabled={disabled}

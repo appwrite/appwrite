@@ -667,6 +667,25 @@ final class LocalTest extends TestCase
         $this->assertTrue($this->object->deletePath('symlink-delete-outside'));
     }
 
+    public function testDeletePathTakesEntryNamesLiterally(): void
+    {
+        $outside = $this->object->getPath('glob-delete-outside');
+        $this->assertTrue($this->object->createDirectory($outside));
+        $this->object->write($outside . DIRECTORY_SEPARATOR . 'kept.txt', new Stream('Hello World'));
+
+        $dir = $this->object->getPath('glob-delete-path');
+        $this->assertTrue($this->object->createDirectory($dir . DIRECTORY_SEPARATOR . '*'));
+        $this->assertTrue($this->object->createDirectory($dir . DIRECTORY_SEPARATOR . '..hidden'));
+        $this->assertTrue(\symlink($outside, $dir . DIRECTORY_SEPARATOR . 'link'));
+
+        $this->assertTrue($this->object->deletePath('glob-delete-path'));
+
+        $this->assertFalse($this->object->exists($dir));
+        $this->assertSame('Hello World', \file_get_contents($outside . DIRECTORY_SEPARATOR . 'kept.txt'));
+
+        $this->assertTrue($this->object->deletePath('glob-delete-outside'));
+    }
+
     // -------------------------------------------------------------------------
     // joinChunks tests
     // -------------------------------------------------------------------------

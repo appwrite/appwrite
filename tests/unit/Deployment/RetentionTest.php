@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Deployment;
 
 use Appwrite\Deployment\Retention;
+use Appwrite\Deployment\Retention\Reason;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
@@ -129,17 +130,41 @@ final class RetentionTest extends TestCase
         $this->assertSame(['policy'], $reasons, 'the age passes are handed out before the count lookup');
     }
 
+    public function testRefreshResourceBeforeCountExcludesProtectedFromCap(): void
+    {
+        $this->createDeployment('protected', 1);
+        $this->createDeployment('second', 2);
+        $this->createDeployment('third', 3);
+        $this->createDeployment('oldest', 4);
+
+        $this->assertSame(['count' => ['oldest', 'third']], $this->retire(new Retention(maxCount: 2), requested: 0));
+
+        $refresh = fn (array $resource): array => [...$resource, Query::notEqual('$id', 'protected')];
+
+        $this->assertSame(
+            ['count' => ['oldest']],
+            $this->retire(new Retention(maxCount: 2), requested: 0, refreshResourceBeforeCount: $refresh),
+        );
+    }
+
     /**
      * Runs every pass and returns the deployment IDs each reason selects.
      *
+     * @param null|callable(list<Query>): list<Query> $refreshResourceBeforeCount
      * @return array<string, list<string>>
      */
-    private function retire(Retention $retention, int $requested): array
+    private function retire(Retention $retention, int $requested, ?callable $refreshResourceBeforeCount = null): array
     {
+        $resourceQueries = [];
         $selected = [];
-        foreach ($retention->passes($this->database, [], $requested, $this->now) as $pass) {
+        foreach ($retention->passes($this->database, $resourceQueries, $requested, $this->now, $refreshResourceBeforeCount) as $pass) {
             $this->assertArrayNotHasKey($pass->reason->value, $selected, 'each reason has one pass');
-            $deployments = $this->database->find('deployments', [...$pass->queries, Query::limit(100)]);
+            $queries = $resourceQueries;
+            if ($pass->reason === Reason::Count && $refreshResourceBeforeCount !== null) {
+                $queries = $refreshResourceBeforeCount($resourceQueries);
+            }
+
+            $deployments = $this->database->find('deployments', [...$queries, ...$pass->queries, Query::limit(100)]);
             $ids = \array_map(fn (Document $deployment): string => $deployment->getId(), $deployments);
             \sort($ids);
             $selected[$pass->reason->value] = $ids;

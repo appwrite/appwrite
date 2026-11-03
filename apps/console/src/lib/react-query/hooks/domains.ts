@@ -689,6 +689,44 @@ export async function fetchPresetRecords(
   }
 }
 
+/**
+ * Add a preset's DNS records to a domain. Records the domain already has are
+ * skipped, and the response lists every record of the preset.
+ */
+export async function createPresetRecords(
+  domainId: string,
+  preset:
+    | 'zoho'
+    | 'mailgun'
+    | 'outlook'
+    | 'protonmail'
+    | 'icloud'
+    | 'google-workspace',
+) {
+  if (!domainId) {
+    throw new Error('Domain ID is required')
+  }
+
+  switch (preset) {
+    case 'zoho':
+      return await sdk.forConsole.domains.createPresetZoho({ domainId })
+    case 'mailgun':
+      return await sdk.forConsole.domains.createPresetMailgun({ domainId })
+    case 'outlook':
+      return await sdk.forConsole.domains.createPresetOutlook({ domainId })
+    case 'protonmail':
+      return await sdk.forConsole.domains.createPresetProtonMail({ domainId })
+    case 'icloud':
+      return await sdk.forConsole.domains.createPresetICloud({ domainId })
+    case 'google-workspace':
+      return await sdk.forConsole.domains.createPresetGoogleWorkspace({
+        domainId,
+      })
+    default:
+      throw new Error(`Unsupported preset: ${preset}`)
+  }
+}
+
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
@@ -1532,5 +1570,40 @@ export function usePresetRecords(
     queryFn: () => fetchPresetRecords(domainId!, preset!),
     enabled: !!domainId && !!preset,
     staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
+ * Hook to add a preset's DNS records to a domain
+ *
+ * @param domainId - The domain ID
+ * @returns Mutation hook for adding a preset's records
+ */
+export function useCreatePresetRecords(domainId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (
+      preset:
+        | 'zoho'
+        | 'mailgun'
+        | 'outlook'
+        | 'protonmail'
+        | 'icloud'
+        | 'google-workspace',
+    ) => {
+      if (!domainId) {
+        throw new Error('Domain ID is required')
+      }
+      return await createPresetRecords(domainId, preset)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['dns-records', 'domain', domainId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['domain', domainId],
+      })
+    },
   })
 }

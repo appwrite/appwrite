@@ -97,6 +97,11 @@ class CoreCallsEntire extends Entire
     public array $calls = [];
 
     /**
+     * @var list<array{endpoint: string, authorization: string}> Where each call went, and with which credential
+     */
+    public array $targets = [];
+
+    /**
      * @param list<array{int, array<mixed>}> $answers The status and body each call in turn is answered with
      * @param array<string, string>|null $permissions The permissions the installation token holds
      */
@@ -105,6 +110,8 @@ class CoreCallsEntire extends Entire
         parent::__construct(new Cache(new None()));
         $this->plugin = 'appwrite';
         $this->installationId = 'ins_01ARZ3NDEKTSV4RRFFQ69G5FAV';
+        $this->privateKey = base64_encode(random_bytes(SODIUM_CRYPTO_SIGN_SEEDBYTES));
+        $this->accessToken = 'token';
         $this->permissions = $permissions;
         $this->provisioningInterval = 0;
     }
@@ -113,6 +120,7 @@ class CoreCallsEntire extends Entire
     protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
     {
         $this->calls[] = ['method' => $method, 'path' => $path, 'params' => $params];
+        $this->targets[] = ['endpoint' => $this->endpoint, 'authorization' => $headers['Authorization'] ?? ''];
         [$status, $body] = array_shift($this->answers) ?? [200, []];
 
         return ['headers' => ['status-code' => $status], 'body' => $body];
@@ -879,6 +887,52 @@ final class EntireTest extends TestCase
         $this->assertSame('pricing-site', $repository['name']);
         $this->assertSame(self::OWNER, $repository['organization']);
         $this->assertTrue($repository['private']);
+    }
+
+    public function testCreateRepositoryOnTheProjectsHomeCore(): void
+    {
+        // The configured core is another jurisdiction's than the project's
+        $adapter = new CoreCallsEntire([
+            [421, [
+                'error' => 'project "' . self::OWNER . '" is homed in jurisdiction "eu"; retry against the home core',
+                'home_core_url' => 'https://eu.auth.entire.io',
+                'jurisdiction' => 'eu',
+            ]],
+            [201, ['token' => 'home', 'expires_at' => '2026-10-27T14:00:00Z', 'permissions' => ['repositories' => 'create', 'installations' => 'read']]],
+            [201, ['repositoryId' => 'repo_01M5NEW', 'name' => 'pricing-site', 'owningProjectId' => '01M4ZC', 'state' => 'active']],
+            [200, ['repositories' => [[
+                'id' => 'repo_01M5NEW',
+                'full_name' => 'et/' . self::OWNER . '/pricing-site',
+                'placements' => [['region' => 'aws-eu-central-1', 'role' => 'processing_primary', 'api_base_url' => 'https://aws-eu-central-1.api.entire.io']],
+            ]], 'next_cursor' => '']],
+        ]);
+
+        $repository = $adapter->createRepository(self::OWNER, 'pricing-site', true);
+
+        // The home core mints a token for creation alone, and creates with it
+        $this->assertSame('https://us.auth.entire.io/api/v1', $adapter->targets[0]['endpoint']);
+        $this->assertSame(['method' => 'POST', 'path' => '/plugins/appwrite/installations/ins_01ARZ3NDEKTSV4RRFFQ69G5FAV/access-tokens', 'params' => ['permissions' => ['repositories' => 'create']]], $adapter->calls[1]);
+        $this->assertSame('https://eu.auth.entire.io/api/v1', $adapter->targets[1]['endpoint']);
+        $this->assertSame(['method' => 'POST', 'path' => '/repos', 'params' => ['name' => 'pricing-site']], $adapter->calls[2]);
+        $this->assertSame(['endpoint' => 'https://eu.auth.entire.io/api/v1', 'authorization' => 'Bearer home'], $adapter->targets[2]);
+        // Any core lists the installation, so the configured one waits for the placement
+        $this->assertSame('https://us.auth.entire.io/api/v1', $adapter->targets[3]['endpoint']);
+        $this->assertSame('repo_01M5NEW', $repository['id']);
+    }
+
+    public function testCreateRepositoryFollowsOnlyAKnownCore(): void
+    {
+        $adapter = new CoreCallsEntire([[421, ['error' => 'retry against the home core', 'home_core_url' => 'https://core.example.com']]]);
+
+        try {
+            $adapter->createRepository(self::OWNER, 'pricing-site', true);
+            $this->fail('A redirect to an unknown core must not be followed');
+        } catch (\Exception $e) {
+            $this->assertSame(421, $e->getCode());
+            $this->assertStringContainsString('retry against the home core', $e->getMessage());
+        }
+
+        $this->assertCount(1, $adapter->calls);
     }
 
     public function testCreateRepositoryNamesAnExistingRepository(): void

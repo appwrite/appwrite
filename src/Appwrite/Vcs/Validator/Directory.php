@@ -16,7 +16,7 @@ class Directory extends Validator
 
     public function getDescription(): string
     {
-        return 'Value must be a directory inside the repository, at most ' . $this->length . ' chars long, without `..` segments or control characters.';
+        return 'Value must be a directory inside the repository, at most ' . $this->length . ' chars long, without `..` or `.git` segments or control characters.';
     }
 
     public function isValid(mixed $value): bool
@@ -29,7 +29,13 @@ class Directory extends Validator
             return false;
         }
 
-        return !\in_array('..', \explode('/', $value), true);
+        foreach (\explode('/', $value) as $segment) {
+            if ($segment === '..' || \strtolower($segment) === '.git') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function isArray(): bool

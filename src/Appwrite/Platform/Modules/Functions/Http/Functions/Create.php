@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Functions\Http\Functions;
 
+use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Deployment\Deployments;
@@ -146,6 +147,7 @@ class Create extends Base
             ->inject('authorization')
             ->inject('bus')
             ->inject('platform')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -197,8 +199,13 @@ class Create extends Base
         RepositoryWebhooks $repositoryWebhooks,
         Authorization $authorization,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Key $apiKey,
     ) {
+        if ($apiKey !== null && !$apiKey->mayGrant($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         $schedule ??= '';
 
         if ($schedule !== '' && $interval !== 0) {
@@ -255,6 +262,11 @@ class Create extends Base
 
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
+        }
+
+        if (!empty($providerRepositoryId)) {
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
         }
 
         try {
@@ -336,12 +348,7 @@ class Create extends Base
             ]));
 
             try {
-                $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                }
+                $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;

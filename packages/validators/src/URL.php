@@ -60,7 +60,17 @@ class URL extends Validator
 
         // FILTER_VALIDATE_URL rejects authority-less private-use URI schemes
         // (e.g. "com.example.app:/oauth", RFC 8252 §7.1). Optionally accept those.
-        if (filter_var($value, FILTER_VALIDATE_URL) === false && !$isPrivateUseSchemeURI) {
+        // FILTER_VALIDATE_URL is ASCII-only, so percent-encode non-ASCII bytes
+        // (IRIs, RFC 3987) before validating, e.g. "https://example.com/čšž".
+        $ascii = $value;
+        if (\is_string($value)) {
+            $ascii = '';
+            for ($i = 0; $i < \strlen($value); $i++) {
+                $ascii .= \ord($value[$i]) > 127 ? rawurlencode($value[$i]) : $value[$i];
+            }
+        }
+
+        if (filter_var($ascii, FILTER_VALIDATE_URL) === false && !$isPrivateUseSchemeURI) {
             return false;
         }
 

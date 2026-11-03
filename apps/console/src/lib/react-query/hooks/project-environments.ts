@@ -1,12 +1,14 @@
 /**
  * React Query hooks for project environments.
  *
- * An environment is itself a project, linked to its parent by `parentId`, so the
- * list returns `Models.Project` rows and never contains the parent. `projectId`
- * here is always the parent, also while the Console is inside one of its
- * environments: the routes act on the calling project's environments. Cloud
- * only, so callers gate on the `projectEnvironments` profile feature and the
- * queries stay quiet (no retry) where the routes are absent.
+ * An environment is a project of its own underneath, but it has no project ID
+ * of its own: it is addressed with the project's ID in `X-Appwrite-Project` and
+ * its own ID in `X-Appwrite-Environment`, and the environment routes list it by
+ * that ID. The routes act on the project itself, never inside one of its
+ * environments, so every call here passes `environment: null` to leave the
+ * environment the Console may be in. Cloud only, so callers gate on the
+ * `projectEnvironments` profile feature and the queries stay quiet (no retry)
+ * where the routes are absent.
  */
 
 import {
@@ -16,8 +18,15 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { ID, Query, type Models } from '@appwrite.io/console'
+import { ID, Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  createProjectEnvironment,
+  deleteProjectEnvironment,
+  listProjectEnvironments,
+  updateProjectEnvironment,
+  type ProjectEnvironment,
+} from '@/lib/appwrite/project-environments'
 import { DEFAULT_STALE_TIME } from './constants'
 
 /** One page covers the per-plan environment cap many times over. */
@@ -36,21 +45,22 @@ const PROJECT_ENVIRONMENTS_LIMIT = 100
  */
 async function fetchProjectEnvironments(projectId: string, region?: string) {
   if (!projectId) {
-    return { environments: [] as Models.Project[], total: 0 }
+    return { environments: [] as ProjectEnvironment[], total: 0 }
   }
 
-  const response = await sdk
-    .forProject(projectId, region)
-    .project.listEnvironments({
+  const response = await listProjectEnvironments(
+    sdk.forProject(projectId, region, { environment: null }).client,
+    {
       queries: [
         Query.orderDesc('$createdAt'),
         Query.limit(PROJECT_ENVIRONMENTS_LIMIT),
       ],
       total: true,
-    })
+    },
+  )
 
   return {
-    environments: response.projects ?? [],
+    environments: response.environments ?? [],
     total: response.total ?? 0,
   }
 }
@@ -103,7 +113,7 @@ export function useProjectEnvironments(
 }
 
 /**
- * Hook to create an environment for a project
+ * Hook to create an environment for a project, empty or as a copy of the project
  *
  * @param projectId - The project ID
  * @param region - The project region
@@ -118,18 +128,26 @@ export function useCreateProjectEnvironment(
     mutationFn: async ({
       environmentId,
       name,
+      resources = [],
     }: {
+      /** The ID the environment is addressed by; generated when blank */
       environmentId?: string
       name: string
+      /** Resource types to copy from the project; none for an empty environment */
+      resources?: string[]
     }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
 
-      return await sdk.forProject(projectId, region).project.createEnvironment({
-        environmentId: environmentId?.trim() || ID.unique(),
-        name: name.trim(),
-      })
+      return await createProjectEnvironment(
+        sdk.forProject(projectId, region, { environment: null }).client,
+        {
+          environmentId: environmentId?.trim() || ID.unique(),
+          name: name.trim(),
+          ...(resources.length > 0 ? { resources } : {}),
+        },
+      )
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -166,17 +184,19 @@ export function useUpdateProjectEnvironment(
         throw new Error('Environment ID is required')
       }
 
-      return await sdk
-        .forProject(projectId, region)
-        .project.updateEnvironment({ environmentId, name: name.trim() })
+      return await updateProjectEnvironment(
+        sdk.forProject(projectId, region, { environment: null }).client,
+        { environmentId, name: name.trim() },
+      )
     },
-    onSuccess: async (_environment, { environmentId }) => {
+    onSuccess: async () => {
       await Promise.all([
         queryClient.refetchQueries({
           queryKey: ['project-environments', 'project', projectId],
         }),
-        // The environment is a project the Console may be showing right now.
-        queryClient.invalidateQueries({ queryKey: ['project', environmentId] }),
+        // The environment answers as its project, which the Console may be showing
+        // right now: its name is the environment's.
+        queryClient.invalidateQueries({ queryKey: ['project', projectId] }),
       ])
     },
   })
@@ -203,9 +223,10 @@ export function useDeleteProjectEnvironment(
         throw new Error('Environment ID is required')
       }
 
-      return await sdk
-        .forProject(projectId, region)
-        .project.deleteEnvironment({ environmentId })
+      await deleteProjectEnvironment(
+        sdk.forProject(projectId, region, { environment: null }).client,
+        { environmentId },
+      )
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({

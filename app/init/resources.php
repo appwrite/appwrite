@@ -5,6 +5,7 @@ use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -18,6 +19,7 @@ use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -33,6 +35,7 @@ use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
@@ -54,6 +57,7 @@ use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -84,7 +88,7 @@ $container->set('register', fn () => $register);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
-$container->set('console', fn () => new Document(Config::getParam('console')), []);
+$container->set('console', fn () => new Project(Config::getParam('console')), []);
 
 $container->set('platform', fn () => Config::getParam('platform', []), []);
 
@@ -97,19 +101,23 @@ $container->set('executor', fn () => new Executor(), []);
 // container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
 // own network). A malformed range throws rather than being skipped. Shared per process: without
 // connection reuse every request opens its own handle, and each with*() returns a copy.
-$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(), new PublicInternet(
-    ...\array_map(
-        fn (string $range) => new IPRange($range),
-        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
-    )
-)), []);
-$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(), new PublicInternet(
-    ...\array_map(
-        fn (string $range) => new IPRange($range),
-        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
-    )
-)), []);
 // cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
 $container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
     \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
 ]), new PublicInternet(
@@ -195,6 +203,15 @@ $container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname 
         return (new MessagingProvider($telemetry, $publicHostname))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry', 'publicHostname']);
+
+$container->set('adapterForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): ?PushAdapter {
+    try {
+        return (new MessagingProvider($telemetry, $publicHostname))->internalPush();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_NOTIFICATIONS_PUSH_APNS: ' . $error->getMessage());
         return null;
     }
 }, ['telemetry', 'publicHostname']);
@@ -313,6 +330,11 @@ $container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublish
     new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('publisherForReviews', fn (Publisher $publisher) => new ReviewPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_REVIEWS_QUEUE_NAME', Event::REVIEWS_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('publisherForDatabase', fn (Publisher $publisher) => new DatabasePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
@@ -336,6 +358,11 @@ $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublis
 $container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForAlerts', fn (Publisher $publisher) => new AlertPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_ALERTS_QUEUE_NAME', Event::ALERTS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(

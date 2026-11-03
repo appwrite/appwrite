@@ -13,4 +13,25 @@ use Utopia\Database\Document;
 interface Provisioner
 {
     public function provisioning(Document $project): Database;
+
+    /**
+     * The database row with its DSN pointed at where the database lives now. Cloud moves dedicated
+     * databases between servers and keeps the live endpoint elsewhere; here the row is already current.
+     */
+    public function overlayLiveDedicatedDsn(
+        Document $databaseDocument,
+        Document $project,
+        int $timeout = 0,
+        int $maxQueryValues = 0,
+        bool $cache = true,
+    ): Document;
+
+    public function tenant(
+        Document $databaseDocument,
+        Document $project,
+        int $timeout = 0,
+        int $maxQueryValues = 0,
+        array $metadata = [],
+        bool $preserveDates = false,
+    ): Database;
 }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
@@ -28,7 +29,6 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git;
 
 class Create extends Base
 {
@@ -110,6 +110,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('vcsFactory')
             ->inject('repositoryWebhooks')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -145,8 +146,13 @@ class Create extends Base
         Event $queueForEvents,
         Database $dbForPlatform,
         VcsFactory $vcsFactory,
-        RepositoryWebhooks $repositoryWebhooks
+        RepositoryWebhooks $repositoryWebhooks,
+        ?Key $apiKey,
     ) {
+        if ($apiKey !== null && !$apiKey->mayGrant($scopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
+        }
+
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
             $adapters = \array_keys($configFramework['adapters'] ?? []);
@@ -176,6 +182,11 @@ class Create extends Base
 
         if (!empty($providerRepositoryId) && (empty($installationId) || empty($providerBranch))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'When connecting to VCS (Version Control System), you need to provide "installationId" and "providerBranch".');
+        }
+
+        if (!empty($providerRepositoryId)) {
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
         }
 
         $site = new Document([
@@ -237,12 +248,7 @@ class Create extends Base
             $repository = $dbForPlatform->createDocument('repositories', $repository);
 
             try {
-                $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                }
+                $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
             } catch (\Throwable $error) {
                 // Don't leave an orphaned repositories document behind -- it
                 // would make the next retry's connection count look like a
