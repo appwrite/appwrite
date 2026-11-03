@@ -1370,4 +1370,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   // Halloween caution tape
   Caution: '注意',
   'Spooky zone': '恐怖ゾーン',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'Appwriteを楽しんでいますか？',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwriteはオープンソースで、オープンに開発されています。スターを付けると、より多くの開発者がAppwriteを見つけやすくなります。',
+  'No thanks': 'いいえ、結構です',
+  'One-time ask, promise. May your builds be ever green.':
+    'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',
 }
