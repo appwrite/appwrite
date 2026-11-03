@@ -84,6 +84,7 @@ import { Route as ApiChangelogRssDotxmlRouteImport } from './routes/_api/changel
 import { Route as ApiDebugIpRouteImport } from './routes/_api/debug.ip'
 import { Route as ApiGeneratorCoverRouteImport } from './routes/_api/generator/cover'
 import { Route as ApiGeneratorDiagramRouteImport } from './routes/_api/generator/diagram'
+import { Route as ApiGoogleSplatRouteImport } from './routes/_api/google/$'
 import { Route as ApiOgCoverDotjpgRouteImport } from './routes/_api/og/cover[.]jpg'
 import { Route as ApiOgImageDotpngRouteImport } from './routes/_api/og/image[.]png'
 import { Route as ApiOgInitDotpngRouteImport } from './routes/_api/og/init[.]png'
@@ -856,6 +857,11 @@ const ApiGeneratorCoverRoute = ApiGeneratorCoverRouteImport.update({
 const ApiGeneratorDiagramRoute = ApiGeneratorDiagramRouteImport.update({
   id: '/_api/generator/diagram',
   path: '/generator/diagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGoogleSplatRoute = ApiGoogleSplatRouteImport.update({
+  id: '/_api/google/$',
+  path: '/google/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOgCoverDotjpgRoute = ApiOgCoverDotjpgRouteImport.update({
@@ -3515,6 +3521,7 @@ export interface FileRoutesByFullPath {
   '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/google/$': typeof ApiGoogleSplatRoute
   '/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
@@ -3984,6 +3991,7 @@ export interface FileRoutesByTo {
   '/debug/ip': typeof ApiDebugIpRoute
   '/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/google/$': typeof ApiGoogleSplatRoute
   '/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/og/image.png': typeof ApiOgImageDotpngRoute
   '/og/init.png': typeof ApiOgInitDotpngRoute
@@ -4412,6 +4420,7 @@ export interface FileRoutesById {
   '/_api/debug/ip': typeof ApiDebugIpRoute
   '/_api/generator/cover': typeof ApiGeneratorCoverRouteWithChildren
   '/_api/generator/diagram': typeof ApiGeneratorDiagramRoute
+  '/_api/google/$': typeof ApiGoogleSplatRoute
   '/_api/og/cover.jpg': typeof ApiOgCoverDotjpgRoute
   '/_api/og/image.png': typeof ApiOgImageDotpngRoute
   '/_api/og/init.png': typeof ApiOgInitDotpngRoute
@@ -4887,6 +4896,7 @@ export interface FileRouteTypes {
     | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/google/$'
     | '/og/cover.jpg'
     | '/og/image.png'
     | '/og/init.png'
@@ -5356,6 +5366,7 @@ export interface FileRouteTypes {
     | '/debug/ip'
     | '/generator/cover'
     | '/generator/diagram'
+    | '/google/$'
     | '/og/cover.jpg'
     | '/og/image.png'
     | '/og/init.png'
@@ -5783,6 +5794,7 @@ export interface FileRouteTypes {
     | '/_api/debug/ip'
     | '/_api/generator/cover'
     | '/_api/generator/diagram'
+    | '/_api/google/$'
     | '/_api/og/cover.jpg'
     | '/_api/og/image.png'
     | '/_api/og/init.png'
@@ -6217,6 +6229,7 @@ export interface RootRouteChildren {
   ApiDebugIpRoute: typeof ApiDebugIpRoute
   ApiGeneratorCoverRoute: typeof ApiGeneratorCoverRouteWithChildren
   ApiGeneratorDiagramRoute: typeof ApiGeneratorDiagramRoute
+  ApiGoogleSplatRoute: typeof ApiGoogleSplatRoute
   ApiOgCoverDotjpgRoute: typeof ApiOgCoverDotjpgRoute
   ApiOgImageDotpngRoute: typeof ApiOgImageDotpngRoute
   ApiOgInitDotpngRoute: typeof ApiOgInitDotpngRoute
@@ -6757,6 +6770,13 @@ declare module '@tanstack/react-router' {
       path: '/generator/diagram'
       fullPath: '/generator/diagram'
       preLoaderRoute: typeof ApiGeneratorDiagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_api/google/$': {
+      id: '/_api/google/$'
+      path: '/google/$'
+      fullPath: '/google/$'
+      preLoaderRoute: typeof ApiGoogleSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_api/og/cover.jpg': {
@@ -11601,6 +11621,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiDebugIpRoute: ApiDebugIpRoute,
   ApiGeneratorCoverRoute: ApiGeneratorCoverRouteWithChildren,
   ApiGeneratorDiagramRoute: ApiGeneratorDiagramRoute,
+  ApiGoogleSplatRoute: ApiGoogleSplatRoute,
   ApiOgCoverDotjpgRoute: ApiOgCoverDotjpgRoute,
   ApiOgImageDotpngRoute: ApiOgImageDotpngRoute,
   ApiOgInitDotpngRoute: ApiOgInitDotpngRoute,

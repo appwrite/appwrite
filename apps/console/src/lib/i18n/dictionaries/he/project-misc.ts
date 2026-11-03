@@ -3126,6 +3126,34 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'API key created and filled in below. Review and create the provider.':
     'מפתח ה-API נוצר ומולא למטה. בדקו ויצרו את הספק.',
   'One-click setup': 'הגדרה בקליק אחד',
+  // FCM one-click setup
+  'Connect with Google': 'התחברות עם Google',
+  'Let Appwrite create a service account for a Firebase project and fill this field.':
+    'תנו ל-Appwrite ליצור חשבון שירות עבור פרויקט Firebase ולמלא שדה זה.',
+  'Loading Firebase projects…': 'טוען פרויקטים של Firebase…',
+  'Enabling the required Google APIs…':
+    'מפעיל את ממשקי ה-API הנדרשים של Google…',
+  'Creating the service account…': 'יוצר את חשבון השירות…',
+  'Firebase project': 'פרויקט Firebase',
+  'Generate credentials': 'יצירת פרטי גישה',
+  'No Firebase projects found on this account.':
+    'לא נמצאו פרויקטים של Firebase בחשבון הזה.',
+  'Open Firebase': 'פתח את Firebase',
+  'Service account created and filled in below. Review and create the provider.':
+    'חשבון השירות נוצר ומולא למטה. בדקו ויצרו את הספק.',
+  'Google was connected without permission to create the credential. Reconnect and allow the requested access, or paste the service account JSON below.':
+    'Google חובר ללא הרשאה ליצירת פרטי הגישה. התחברו מחדש ואשרו את הגישה המבוקשת, או הדביקו למטה את קובץ ה-JSON של חשבון השירות.',
+  'This project blocks service account key creation. Paste the service account JSON from the Firebase console below.':
+    'הפרויקט הזה חוסם יצירת מפתחות לחשבון שירות. הדביקו למטה את קובץ ה-JSON של חשבון השירות מתוך מסוף Firebase.',
+  'Your Google account cannot create service accounts on this project. Paste the service account JSON below, or ask a project owner to run this.':
+    'חשבון ה-Google שלכם אינו יכול ליצור חשבונות שירות בפרויקט הזה. הדביקו למטה את קובץ ה-JSON של חשבון השירות, או בקשו מבעלים של הפרויקט להריץ זאת.',
+  'Reconnect your Google account to continue.':
+    'התחברו מחדש לחשבון ה-Google שלכם כדי להמשיך.',
+  Reconnect: 'התחברות מחדש',
+  'Enable the API': 'הפעלת ה-API',
+  'One-click FCM sender': 'שולח FCM בקליק אחד',
+  'A Google API required for setup is not enabled on this console. Enable it, wait a minute, then try again.':
+    'ממשק API של Google הנדרש להגדרה אינו מופעל במסוף הזה. הפעילו אותו, המתינו דקה ונסו שוב.',
   'Notify me': 'עדכנו אותי',
   'You will be notified': 'נודיע לכם',
   "You'll no longer be notified about this provider.":
