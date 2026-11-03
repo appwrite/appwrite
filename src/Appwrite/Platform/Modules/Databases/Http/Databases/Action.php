@@ -238,6 +238,11 @@ class Action extends AppwriteAction
      * set, and the field type — so users with different permissions never
      * share entries and permission changes take effect immediately.
      *
+     * Column grants are hashed separately from $permissions. The row stores the
+     * grants with every column dropped, so read("any", "name") and
+     * read("any", "salary") are the same string there while the columns a role
+     * may read, and so the masked response, are not.
+     *
      * @param Document $collection Collection document (for schema and permissions hash)
      * @param array<mixed> $roles Caller authorization roles
      * @param array<Query|string> $queries Queries for this list call
@@ -249,6 +254,7 @@ class Action extends AppwriteAction
             \json_encode($collection->getAttribute('attributes', []))
             . \json_encode($collection->getAttribute('indexes', []))
             . \json_encode($collection->getPermissions())
+            . \json_encode($collection->getAttribute('columnPermissions', []))
             . \json_encode($collection->getAttribute('documentSecurity', false))
         );
 
