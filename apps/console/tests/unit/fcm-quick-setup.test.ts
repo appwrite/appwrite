@@ -11,6 +11,8 @@ import { createMintedCredentialTracker } from '@/lib/smtp/quick-setup'
 import { proxyGoogleRequest } from '@/lib/fcm/google-proxy'
 import {
   checkProvisioningPermissions,
+  deleteServiceAccount,
+  enableServices,
   FcmProvisioningBlockedError,
   GoogleApiError,
   isGoogleUnauthorizedError,
@@ -221,11 +223,36 @@ describe('checkProvisioningPermissions', () => {
             'iam.serviceAccounts.create',
             'iam.serviceAccountKeys.create',
             'resourcemanager.projects.setIamPolicy',
+            'serviceusage.services.use',
           ],
         },
       },
     ])
     expect((await checkProvisioningPermissions('tok', 'proj-1')).ok).toBe(true)
+  })
+
+  test('checks serviceusage.services.use without sending a quota project', async () => {
+    // Assigned inside the mocked fetch; the assertion stops TS narrowing it to null.
+    let sent = null as { headers: Headers; body: string } | null
+    globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+      expect(String(input)).toContain(':testIamPermissions')
+      sent = {
+        headers: new Headers(init?.headers),
+        body: String(init?.body ?? ''),
+      }
+      return new Response(
+        JSON.stringify({ permissions: ['iam.serviceAccounts.create'] }),
+        { status: 200 },
+      )
+    }) as typeof fetch
+
+    const result = await checkProvisioningPermissions('tok', 'proj-1')
+
+    // Sending X-Goog-User-Project itself needs serviceusage.services.use, so
+    // the preflight must not, or a user without it gets a 403 instead of the gate.
+    expect(sent?.headers.has('X-Goog-User-Project')).toBe(false)
+    expect(sent?.body).toContain('serviceusage.services.use')
+    expect(result.missing).toContain('serviceusage.services.use')
   })
 
   test('reports the missing permission', async () => {
@@ -551,5 +578,249 @@ describe('planProvisionCompletion', () => {
         defaultName: 'One-click FCM sender',
       }),
     ).toEqual({ kind: 'fill', name: undefined })
+  })
+})
+
+type IamBinding = { role?: string; members?: string[]; condition?: unknown }
+
+describe('deleteServiceAccount', () => {
+  const email = 'sa@proj-1.iam.gserviceaccount.com'
+  const member = `serviceAccount:${email}`
+
+  test('removes the account from the FCM role before deleting it', async () => {
+    const calls: string[] = []
+    // Assigned inside the mocked fetch; the assertion stops TS narrowing it to null.
+    let written = null as { bindings?: IamBinding[] } | null
+    const conditional = {
+      role: FCM_SENDER_ROLE,
+      members: [member],
+      condition: { title: 'c', expression: 'true' },
+    }
+    globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+      const url = String(input)
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (url.includes(':getIamPolicy')) {
+        calls.push('get')
+        return new Response(
+          JSON.stringify({
+            etag: 'e',
+            bindings: [
+              { role: FCM_SENDER_ROLE, members: [member, 'user:a@x.com'] },
+              { role: FCM_SENDER_ROLE, members: [member] },
+              conditional,
+              { role: 'roles/viewer', members: [member] },
+            ],
+          }),
+          { status: 200 },
+        )
+      }
+      if (url.includes(':setIamPolicy')) {
+        calls.push('set')
+        written = (
+          JSON.parse(String(init?.body)) as {
+            policy: { bindings?: IamBinding[] }
+          }
+        ).policy
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      if (method === 'DELETE' && url.includes('/serviceAccounts/')) {
+        calls.push('delete')
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      throw new Error(`unexpected fetch ${method} ${url}`)
+    }) as typeof fetch
+
+    await deleteServiceAccount('tok', 'proj-1', email)
+
+    expect(calls).toEqual(['get', 'set', 'delete'])
+    const bindings = written?.bindings ?? []
+    // Member dropped from unconditional FCM bindings; an emptied one is removed.
+    expect(bindings).toContainEqual({
+      role: FCM_SENDER_ROLE,
+      members: ['user:a@x.com'],
+    })
+    expect(bindings.filter((b) => b.role === FCM_SENDER_ROLE)).toHaveLength(2)
+    // Conditional and unrelated bindings are left alone.
+    expect(bindings).toContainEqual(conditional)
+    expect(bindings).toContainEqual({ role: 'roles/viewer', members: [member] })
+  })
+
+  test('still deletes the account when the policy update fails', async () => {
+    let deleted = false
+    globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes(':getIamPolicy')) {
+        return new Response(
+          JSON.stringify(googleError('PERMISSION_DENIED', 'denied')),
+          { status: 403 },
+        )
+      }
+      if ((init?.method ?? 'GET').toUpperCase() === 'DELETE') {
+        deleted = true
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      throw new Error(`unexpected fetch ${url}`)
+    }) as typeof fetch
+
+    await deleteServiceAccount('tok', 'proj-1', email)
+    expect(deleted).toBe(true)
+  })
+})
+
+describe('enableServices', () => {
+  test('rejects when the enable operation finished with an error', async () => {
+    routeFetch([
+      {
+        method: 'POST',
+        match: ':batchEnable',
+        body: {
+          name: 'operations/op-1',
+          done: true,
+          error: {
+            status: 'PERMISSION_DENIED',
+            message: 'Billing is disabled',
+          },
+        },
+      },
+    ])
+    await expect(enableServices('tok', 'proj-1')).rejects.toThrow(
+      'Billing is disabled',
+    )
+  })
+
+  test('rejects when Google returns no operation to poll', async () => {
+    routeFetch([{ method: 'POST', match: ':batchEnable', body: {} }])
+    await expect(enableServices('tok', 'proj-1')).rejects.toBeInstanceOf(
+      GoogleApiError,
+    )
+  })
+
+  test('a failed auto-enable keeps the original SERVICE_DISABLED error', async () => {
+    globalThis.fetch = (async (input: unknown) => {
+      const url = String(input)
+      if (url.includes(':batchEnable')) {
+        return new Response(
+          JSON.stringify({
+            name: 'operations/op-1',
+            done: true,
+            error: { message: 'Permission denied' },
+          }),
+          { status: 200 },
+        )
+      }
+      return new Response(
+        JSON.stringify({
+          error: {
+            code: 403,
+            status: 'PERMISSION_DENIED',
+            message: 'API disabled',
+            details: [
+              {
+                '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+                reason: 'SERVICE_DISABLED',
+                metadata: {
+                  service: 'firebase.googleapis.com',
+                  consumer: 'projects/123',
+                  activationUrl: 'https://console.developers.google.com/x',
+                },
+              },
+            ],
+          },
+        }),
+        { status: 403 },
+      )
+    }) as typeof fetch
+
+    const error = await listFirebaseProjects('tok').catch((e: unknown) => e)
+    // The operator "Enable the API" help needs the original error and its link.
+    expect(isServiceDisabledError(error)).toBe(true)
+    expect((error as GoogleApiError).helpUrl).toBe(
+      'https://console.developers.google.com/x',
+    )
+  })
+})
+
+describe('proxyGoogleRequest body cap', () => {
+  const url = 'http://localhost/_api/google/crm/v1/projects/p:setIamPolicy'
+  const splat = 'crm/v1/projects/p:setIamPolicy'
+  const MAX = 256 * 1024
+
+  test('refuses a declared Content-Length over the cap without reading it', async () => {
+    let pulled = false
+    // highWaterMark 0: the stream only pulls when someone reads it.
+    const stream = new ReadableStream<Uint8Array>(
+      {
+        pull() {
+          pulled = true
+        },
+      },
+      { highWaterMark: 0 },
+    )
+    const response = await proxyGoogleRequest(
+      new Request(url, {
+        method: 'POST',
+        headers: {
+          authorization: 'Bearer t',
+          'content-length': String(MAX + 1),
+        },
+        body: stream,
+        duplex: 'half',
+      } as RequestInit),
+      splat,
+    )
+    expect(response.status).toBe(413)
+    expect(pulled).toBe(false)
+  })
+
+  test('stops reading a streamed body once it passes the cap', async () => {
+    let upstream = false
+    globalThis.fetch = (async () => {
+      upstream = true
+      return new Response('{}')
+    }) as unknown as typeof fetch
+
+    const chunk = new Uint8Array(64 * 1024)
+    let sent = 0
+    // Far larger than the cap; the relay must give up long before the end.
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (sent >= 100) return controller.close()
+        sent++
+        controller.enqueue(chunk)
+      },
+    })
+    const response = await proxyGoogleRequest(
+      new Request(url, {
+        method: 'POST',
+        headers: { authorization: 'Bearer t' },
+        body: stream,
+        duplex: 'half',
+      } as RequestInit),
+      splat,
+    )
+
+    expect(response.status).toBe(413)
+    expect(upstream).toBe(false)
+    expect(sent).toBeLessThan(100)
+  })
+
+  test('forwards a body within the cap', async () => {
+    // Assigned inside the mocked fetch; the assertion stops TS narrowing it to null.
+    let forwarded = null as string | null
+    globalThis.fetch = (async (_input: unknown, init?: RequestInit) => {
+      forwarded = String(init?.body)
+      return new Response('{}', { status: 200 })
+    }) as typeof fetch
+
+    const response = await proxyGoogleRequest(
+      new Request(url, {
+        method: 'POST',
+        headers: { authorization: 'Bearer t' },
+        body: '{"policy":{}}',
+      }),
+      splat,
+    )
+    expect(response.status).toBe(200)
+    expect(forwarded).toBe('{"policy":{}}')
   })
 })

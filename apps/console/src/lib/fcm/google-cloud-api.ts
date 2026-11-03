@@ -307,6 +307,9 @@ export async function checkProvisioningPermissions(
   accessToken: string,
   projectId: string,
 ): Promise<ProvisioningPreflight> {
+  // No quota project here: sending one requires `serviceusage.services.use`,
+  // which is one of the permissions being checked, so a user without it would
+  // get a 403 instead of the permission gate.
   const result = await googleFetch<{ permissions?: string[] }>(
     'crm',
     `/v1/projects/${encodeURIComponent(projectId)}:testIamPermissions`,
@@ -315,7 +318,6 @@ export async function checkProvisioningPermissions(
       method: 'POST',
       body: JSON.stringify({ permissions: FCM_PROVISIONING_PERMISSIONS }),
     },
-    projectId,
   )
   const granted = new Set(result.permissions ?? [])
   const missing = FCM_PROVISIONING_PERMISSIONS.filter((p) => !granted.has(p))
@@ -325,10 +327,11 @@ export async function checkProvisioningPermissions(
 /**
  * Enable the services provisioning needs on the user's own project, so a
  * `SERVICE_DISABLED` never interrupts the flow when the user owns the project.
- * Best effort: callers swallow failures (the user may lack permission, or the
+ * Callers treat a failure as "not enabled" (the user may lack permission, or the
  * project may be the OAuth client's), and the manual "Enable the API" fallback
  * still covers whatever stays disabled. Enablement is a long-running operation,
- * so this polls until Google reports it done, bounded so it never hangs.
+ * so this polls until Google reports it done, bounded so it never hangs. It
+ * throws when the operation fails, never returns, or does not finish in time.
  */
 export async function enableServices(
   accessToken: string,
@@ -336,7 +339,7 @@ export async function enableServices(
   services: readonly string[] = FCM_REQUIRED_SERVICES,
 ): Promise<void> {
   // autoEnable:false on these calls — enabling can't itself trigger enablement.
-  const operation = await googleFetch<{ name?: unknown; done?: unknown }>(
+  const operation = await googleFetch<EnableOperation>(
     'serviceusage',
     `/v1/projects/${encodeURIComponent(projectId)}/services:batchEnable`,
     accessToken,
@@ -348,15 +351,20 @@ export async function enableServices(
     false,
   )
 
-  if (operation.done === true || typeof operation.name !== 'string') {
-    return
+  throwIfOperationFailed(operation)
+  if (operation.done === true) return
+  if (typeof operation.name !== 'string') {
+    throw new GoogleApiError(
+      'Google did not return the enablement operation',
+      502,
+    )
   }
 
   // Poll the operation to completion (~30s cap); enablement is usually seconds.
   const name = operation.name
   for (let attempt = 0; attempt < 20; attempt++) {
     await delay(1500)
-    const status = await googleFetch<{ done?: unknown }>(
+    const status = await googleFetch<EnableOperation>(
       'serviceusage',
       `/v1/${name}`,
       accessToken,
@@ -364,8 +372,34 @@ export async function enableServices(
       projectId,
       false,
     )
+    throwIfOperationFailed(status)
     if (status.done === true) return
   }
+  throw new GoogleApiError(
+    'Enabling the Google API did not finish in time',
+    504,
+  )
+}
+
+/** A Service Usage long-running operation; a failed one is `done` with an `error`. */
+type EnableOperation = {
+  name?: unknown
+  done?: unknown
+  error?: { message?: unknown; status?: unknown }
+}
+
+function throwIfOperationFailed(operation: EnableOperation): void {
+  const error = operation.error
+  if (!error || typeof error !== 'object') return
+  throw new GoogleApiError(
+    typeof error.message === 'string'
+      ? error.message
+      : 'Enabling the Google API failed',
+    // Not an HTTP status from Google; kept off 403 so the scope and IAM
+    // classifiers do not misread it.
+    400,
+    typeof error.status === 'string' ? error.status : undefined,
+  )
 }
 
 function delay(ms: number): Promise<void> {
@@ -553,16 +587,62 @@ async function grantSenderRole(
   )
 }
 
+/** Read-modify-write the project IAM policy to take the service account out of the FCM role. */
+async function revokeSenderRole(
+  accessToken: string,
+  projectId: string,
+  email: string,
+): Promise<void> {
+  const policy = await googleFetch<IamPolicy>(
+    'crm',
+    `/v1/projects/${encodeURIComponent(projectId)}:getIamPolicy`,
+    accessToken,
+    {
+      method: 'POST',
+      body: JSON.stringify({ options: { requestedPolicyVersion: 3 } }),
+    },
+    projectId,
+  )
+
+  const member = `serviceAccount:${email}`
+  let changed = false
+  const bindings = (policy.bindings ?? []).flatMap((binding) => {
+    // Mirror grantSenderRole: only the unconditional binding is ever touched.
+    if (binding.role !== FCM_SENDER_ROLE || binding.condition) return [binding]
+    const members = binding.members ?? []
+    if (!members.includes(member)) return [binding]
+    changed = true
+    const rest = members.filter((m) => m !== member)
+    return rest.length > 0 ? [{ ...binding, members: rest }] : []
+  })
+  if (!changed) return
+
+  await googleFetch(
+    'crm',
+    `/v1/projects/${encodeURIComponent(projectId)}:setIamPolicy`,
+    accessToken,
+    {
+      method: 'POST',
+      body: JSON.stringify({ policy: { ...policy, version: 3, bindings } }),
+    },
+    projectId,
+  )
+}
+
 /**
- * Cleanup when a provisioned credential is abandoned or replaced: delete the
- * dedicated service account, which cascades to its key, leaving nothing behind.
- * Billed to the same project provisioning used (where the IAM API is enabled).
+ * Cleanup when a provisioned credential is abandoned or replaced: remove the
+ * account's FCM role binding, then delete the account (which cascades to its
+ * key). Google keeps a deleted account's bindings as `deleted:` principals, so
+ * the binding goes first. Billed to the same project provisioning used.
  */
 export async function deleteServiceAccount(
   accessToken: string,
   projectId: string,
   email: string,
 ): Promise<void> {
+  // Best effort: a failed policy write must not keep the account (and its live
+  // key) around, so the delete still runs.
+  await revokeSenderRole(accessToken, projectId, email).catch(() => {})
   await googleFetch(
     'iam',
     `/v1/projects/${encodeURIComponent(projectId)}/serviceAccounts/${encodeURIComponent(email)}`,

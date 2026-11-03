@@ -33,11 +33,15 @@ export const FCM_SENDER_ROLE = 'roles/firebasecloudmessaging.admin'
  * (`iam.disableServiceAccountKeyCreation`) is deliberately not here: it is not
  * an IAM permission and reading it needs rights most developers lack, so it can
  * only be discovered when key creation itself fails.
+ *
+ * `serviceusage.services.use` is required because provisioning calls bill the
+ * project through `X-Goog-User-Project`, which Google rejects without it.
  */
 export const FCM_PROVISIONING_PERMISSIONS = [
   'iam.serviceAccounts.create',
   'iam.serviceAccountKeys.create',
   'resourcemanager.projects.setIamPolicy',
+  'serviceusage.services.use',
 ] as const
 
 /**

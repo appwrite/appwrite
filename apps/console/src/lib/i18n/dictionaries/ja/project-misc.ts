@@ -3233,6 +3233,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   Reconnect: '再接続',
   'Enable the API': 'API を有効化',
   'One-click FCM sender': 'ワンクリック FCM 送信者',
+  'Sets up Firebase for you instead of doing it by hand. It runs the same steps our docs walk you through.':
+    '手作業の代わりに Firebase をセットアップします。ドキュメントで説明している手順と同じ処理を実行します。',
+  'The only reason we ask for Google access is to do that setup for you.':
+    'Google へのアクセスを求めるのは、このセットアップを代わりに行うためだけです。',
+  'This can take up to a minute. Keep this tab open.':
+    '最大 1 分ほどかかる場合があります。このタブを開いたままにしてください。',
   'A Google API required for setup is not enabled on this console. Enable it, wait a minute, then try again.':
     'セットアップに必要な Google API がこのコンソールで有効になっていません。有効化し、1 分ほど待ってから再試行してください。',
   'Notify me': '通知を受け取る',

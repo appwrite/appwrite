@@ -114,9 +114,9 @@ export const FcmOneClickSetup = forwardRef<
   )
 
   const { callWith } = useProviderTokens()
-  // The project a credential was provisioned on, so cleanup deletes its service
-  // account on the same project (where the IAM API is enabled).
-  const provisionProjectRef = useRef('')
+  // Each provisioned service account's project, so cleanup deletes it on the
+  // project it was created on even after the user picks a different one.
+  const accountProjectsRef = useRef(new Map<string, string>())
   // Latest form values, read when provisioning completes so a name typed while
   // setup ran is not overwritten by the default.
   const valuesRef = useRef(values)
@@ -129,7 +129,7 @@ export const FcmOneClickSetup = forwardRef<
         callWith(provider, (accessToken) =>
           provider.api.deleteServiceAccount(
             accessToken,
-            provisionProjectRef.current,
+            accountProjectsRef.current.get(serviceAccount) ?? '',
             serviceAccount,
           ),
         ),
@@ -249,9 +249,6 @@ export const FcmOneClickSetup = forwardRef<
   const generate = async () => {
     if (!selectedProject) return
     setErrorMessage('')
-    // Revocation targets this project (where the IAM API is enabled), and the
-    // late-completion guard below needs it even if the user navigates away.
-    provisionProjectRef.current = selectedProject.id
     try {
       // Best effort: turn on the services provisioning needs on the user's own
       // project so a SERVICE_DISABLED never interrupts the flow. Failures (no
@@ -309,7 +306,9 @@ export const FcmOneClickSetup = forwardRef<
 
       // Track by the key's identity (its private_key_id) so settling matches
       // even if the user reformats the JSON. Provisioning again replaces the
-      // credential, so the previous account (if any) is revoked here as well.
+      // credential, so the previous account (if any) is revoked here as well,
+      // on its own project from the map rather than the one selected now.
+      accountProjectsRef.current.set(key.serviceAccount, selectedProject.id)
       minted.track({
         id: key.serviceAccount,
         secret: serviceAccountKeyId(key.secret),

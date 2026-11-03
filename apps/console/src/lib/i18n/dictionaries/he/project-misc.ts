@@ -3152,6 +3152,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   Reconnect: 'התחברות מחדש',
   'Enable the API': 'הפעלת ה-API',
   'One-click FCM sender': 'שולח FCM בקליק אחד',
+  'Sets up Firebase for you instead of doing it by hand. It runs the same steps our docs walk you through.':
+    'מגדיר את Firebase עבורכם במקום לעשות זאת ידנית. מבצע את אותם שלבים שמתוארים בתיעוד שלנו.',
+  'The only reason we ask for Google access is to do that setup for you.':
+    'אנחנו מבקשים גישה ל-Google רק כדי לבצע עבורכם את ההגדרה הזו.',
+  'This can take up to a minute. Keep this tab open.':
+    'זה יכול להימשך עד דקה. השאירו את הלשונית הזו פתוחה.',
   'A Google API required for setup is not enabled on this console. Enable it, wait a minute, then try again.':
     'ממשק API של Google הנדרש להגדרה אינו מופעל במסוף הזה. הפעילו אותו, המתינו דקה ונסו שוב.',
   'Notify me': 'עדכנו אותי',

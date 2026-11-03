@@ -109,10 +109,11 @@ export async function proxyGoogleRequest(
   }
   let body: string | undefined
   if (request.method === 'POST') {
-    body = await request.text()
-    if (body.length > MAX_REQUEST_BODY_BYTES) {
+    const read = await readBodyWithinLimit(request, MAX_REQUEST_BODY_BYTES)
+    if (read === null) {
       return jsonError(413, 'payload_too_large', 'Request body is too large')
     }
+    body = read
     headers['Content-Type'] = 'application/json'
   }
 
@@ -145,4 +146,40 @@ export async function proxyGoogleRequest(
   } finally {
     clearTimeout(timer)
   }
+}
+
+/**
+ * The request body as text, or `null` once it passes `limit` bytes. Reads the
+ * stream incrementally and stops at the cap, so an oversized body is never
+ * buffered in full (a declared Content-Length over the cap is refused up front).
+ */
+async function readBodyWithinLimit(
+  request: Request,
+  limit: number,
+): Promise<string | null> {
+  const declared = Number(request.headers.get('content-length'))
+  if (Number.isFinite(declared) && declared > limit) return null
+  if (!request.body) return ''
+
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > limit) {
+      await reader.cancel().catch(() => {})
+      return null
+    }
+    chunks.push(value)
+  }
+
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(bytes)
 }
