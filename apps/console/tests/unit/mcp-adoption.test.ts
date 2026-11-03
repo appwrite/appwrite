@@ -164,7 +164,10 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('## 8. Build the first working slice')
     expect(markdown).toContain('appwrite push tables --all --force')
     expect(markdown).toContain(
-      'so use it only on a project you created in this session',
+      "Without the user's approval of the specific change, use it only on a project you created in this session.",
+    )
+    expect(markdown).toContain(
+      'run it again with `--force` only after they approve that change.',
     )
     expect(markdown).toContain(
       'run `appwrite pull tables` and `appwrite pull buckets` first',

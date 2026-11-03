@@ -553,14 +553,14 @@ Define databases, tables, and buckets in \`appwrite.config.json\` and push them,
 - **Buckets**: \`buckets\` entries with the allowed file extensions and a maximum file size.
 - **Sign-in methods**: email and password, magic URL, email and phone OTP, and anonymous sessions are on by default, and passkeys are off. Turn one on or off with \`appwrite project update-auth-method --method-id <method> --enabled <true|false>\`. An OAuth provider needs its client ID and secret: set them with \`appwrite project update-o-auth-2-<provider>\` (for example \`update-o-auth-2-google\`), or have the user do it in the Console.
 
-\`--force\` confirms destructive changes for you, so use it only on a project you created in this session. There, push without prompts:
+\`--force\` confirms destructive changes for you. Without the user's approval of the specific change, use it only on a project you created in this session. There, push without prompts:
 
 \`\`\`sh
 appwrite push tables --all --force
 appwrite push buckets --all --force
 \`\`\`
 
-Treat every other project as holding data, even one with no tables yet: it can still have buckets and files. There, run \`appwrite pull tables\` and \`appwrite pull buckets\` first, merge your changes into the pulled config, and push each with \`--all\` but without \`--force\`. If the CLI stops at a destructive change, show the user what it reported and ask before you run it again with \`--force\`.
+Treat every other project as holding data, even one with no tables yet: it can still have buckets and files. There, run \`appwrite pull tables\` and \`appwrite pull buckets\` first, merge your changes into the pulled config, and push each with \`--all\` but without \`--force\`. If the CLI stops at a destructive change, show the user what it reported, and run it again with \`--force\` only after they approve that change.
 
 For TypeScript, generate typed helpers from the schema with \`appwrite generate\`. For other languages, \`appwrite types <output-directory>\` writes the model types. Run it again after each schema change.
 
