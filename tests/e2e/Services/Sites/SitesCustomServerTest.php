@@ -1981,7 +1981,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertGreaterThan(1.5, $arrivals['third'] - $arrivals['second']);
 
         // An error status stays buffered, so the proxy can still replace it with an error page.
-        [$status, $arrivals] = $measure('/stream?status=500');
+        [$status, $arrivals] = $measure('/stream?code=500');
         $this->assertSame(500, $status);
         $this->assertCount(3, $arrivals);
         $this->assertLessThan(0.5, $arrivals['third'] - $arrivals['first']);
