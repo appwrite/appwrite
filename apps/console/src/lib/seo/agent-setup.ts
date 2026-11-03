@@ -137,7 +137,7 @@ The agent messages you twice: at the checkpoint after step 5 (two browser approv
 - **Never wait on a sign-in.** Sign-in commands such as \`appwrite login\` and \`codex mcp login\` block until the user approves in a browser. Start them in the background or add them to the user's list. Do not run them in the foreground.
 - **Batch what the user must do.** Keep a running list of what only the user can do (the user's list) and finish everything else first. The list, your questions, and the proposal go out together in one checkpoint at the end of step 5. Never ask what the repo already answers.
 - **Check before changing.** Skip anything already set up. Read existing config before editing it, merge instead of replacing, and keep unrelated entries.
-- **Use OAuth, not API keys.** Appwrite MCP and the CLI sign in through the browser. Only server-side code needs a project API key (step 6).
+- **Use OAuth, not API keys.** Appwrite MCP and the CLI sign in through the browser. Only server code that acts as the app, not as the signed-in user, needs a project API key (step 6).
 - **Do not make the build wait on MCP.** MCP tools often load only after a reload or a new session. The CLI and the SDKs cover everything the build needs. Use MCP for inspection, docs search, and one-off changes once it is loaded.
 - **Keep this conversation alive.** A reload that keeps the session (such as \`/reload-plugins\` in Claude Code) can go in the checkpoint. A restart or a new session (such as a new Codex session to load the plugin) goes on the hand-off list instead, because it stops this session and any background sign-in. The resume command (\`claude --continue\`, \`codex resume --last\`) brings the conversation back.
 - **Respect what exists.** If the project already has a backend (Firebase, Supabase, its own API), add Appwrite only where the user wants it. Each Appwrite service works on its own: auth only, storage only, or a single database is fine.
@@ -415,7 +415,7 @@ From step 1 and the user's words, work out:
 - **Platforms**: web, iOS, Android, desktop, or an API only.
 - **Stack**: keep the repo's stack. For an empty repo, recommend one and give the reason in a few words: Next.js with TypeScript for a web app, Flutter for one codebase across iOS and Android, React Native when the team already writes TypeScript, and Appwrite Functions (or the user's server framework) for an API only.
 - **Appwrite services**: map each feature with the table below.
-- **Existing auth**: if the app keeps another auth provider (Firebase Auth, Auth0, its own), bridge it with custom tokens instead of replacing it. Server code verifies the provider's token and calls \`users.createToken()\`, and the client exchanges the secret with \`account.createSession()\`. Mention migrating the users as the alternative, not the default.
+- **Existing auth**: if the app keeps another auth provider (Firebase Auth, Auth0, its own), bridge it with custom tokens instead of replacing it. Server code verifies the provider's token and finds or creates the matching Appwrite user with an ID derived from the provider's user ID, so the mapping stays stable across sign-ins. Only then does it call \`users.createToken()\`, which needs an existing user, and the client exchanges the secret with \`account.createSession()\`. Mention migrating the users as the alternative, not the default.
 - **First slice**: the smallest end-to-end flow that proves the stack, usually sign-in plus create, list, and update on one screen. Add uploads or realtime only when they are the point of the app.
 - **Ship**: whether to deploy at the end (step 9). Default to local only, unless the user asked for a live URL.
 
@@ -509,7 +509,7 @@ Client SDKs only accept requests from platforms registered on the project. A mis
 
 - Put the endpoint and project ID in the app's env file under the framework's public prefix (for example \`NEXT_PUBLIC_APPWRITE_ENDPOINT\` or \`VITE_APPWRITE_PROJECT_ID\`). Check that the env file is gitignored. Flutter and native apps have no env file: use a config constants file or build-time defines (\`--dart-define\`). The endpoint and project ID are not secrets.
 - Client SDKs need only the endpoint and project ID. Do not invent an API key, and never put one in client code.
-- Server code (SSR, API routes, workers, scripts) needs a project API key with only the scopes it uses. With MCP loaded, create one with the \`project_create_key\` tool (search for "create project API key") and write it straight into the env file. Without MCP, do not stop the build for it: mint a key that lasts an hour with \`appwrite project create-ephemeral-key\` (\`--scopes\` for each scope, \`--duration 3600\`, \`--json --show-secrets\`), pipe its \`secret\` into the env file so it never shows in your output, and put a long-lived key on the hand-off list (MCP, or the Console under the project's **API keys**). Never echo the key in chat or commit it.
+- Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key. A project API key is only for code that acts as the app: SSR sign-in handlers that create sessions (\`sessions.write\`), admin operations, workers, and scripts. Give it only the scopes that code uses. With MCP loaded, create one with the \`project_create_key\` tool (search for "create project API key") and write it straight into the env file. Without MCP, do not stop the build for it: mint a key that lasts an hour with \`appwrite project create-ephemeral-key\` (\`--scopes\` for each scope, \`--duration 3600\`, \`--json --show-secrets\`), pipe its \`secret\` into the env file so it never shows in your output, and put a long-lived key on the hand-off list (MCP, or the Console under the project's **API keys**). Never echo the key in chat or commit it.
 - Server-rendered Sites and Functions get a short-lived key on every request, in the \`x-appwrite-key\` header, carrying the scopes set on the site or function. In production, prefer it to a stored key.
 
 ## 7. Install the matching official SDKs
@@ -553,14 +553,14 @@ Define databases, tables, and buckets in \`appwrite.config.json\` and push them,
 - **Buckets**: \`buckets\` entries with the allowed file extensions and a maximum file size.
 - **Sign-in methods**: email and password, magic URL, email and phone OTP, and anonymous sessions are on by default, and passkeys are off. Turn one on or off with \`appwrite project update-auth-method --method-id <method> --enabled <true|false>\`. An OAuth provider needs its client ID and secret: set them with \`appwrite project update-o-auth-2-<provider>\` (for example \`update-o-auth-2-google\`), or have the user do it in the Console.
 
-For a project you created in this session, or one with no tables yet, push without prompts:
+\`--force\` confirms destructive changes for you, so use it only on a project you created in this session. There, push without prompts:
 
 \`\`\`sh
 appwrite push tables --all --force
 appwrite push buckets --all --force
 \`\`\`
 
-Any other project may hold data, and \`--force\` confirms destructive changes for you. There, run \`appwrite pull tables\` first, merge your tables into the pulled config, and push with \`--all\` but without \`--force\`. If the CLI stops at a destructive change, show the user what it reported and ask before you run it again with \`--force\`.
+Treat every other project as holding data, even one with no tables yet: it can still have buckets and files. There, run \`appwrite pull tables\` and \`appwrite pull buckets\` first, merge your changes into the pulled config, and push each with \`--all\` but without \`--force\`. If the CLI stops at a destructive change, show the user what it reported and ask before you run it again with \`--force\`.
 
 For TypeScript, generate typed helpers from the schema with \`appwrite generate\`. For other languages, \`appwrite types <output-directory>\` writes the model types. Run it again after each schema change.
 

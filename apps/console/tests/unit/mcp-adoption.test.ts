@@ -119,6 +119,24 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('x-appwrite-key')
   })
 
+  test('keeps user-scoped SSR requests on the session, not an API key', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain(
+      'Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key.',
+    )
+    expect(markdown).toContain(
+      'SSR sign-in handlers that create sessions (`sessions.write`)',
+    )
+  })
+
+  test('provisions the Appwrite user before bridging another auth provider', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('finds or creates the matching Appwrite user')
+    expect(markdown).toContain(
+      '`users.createToken()`, which needs an existing user',
+    )
+  })
+
   test('instructs the agent to install the matching official SDKs at latest', () => {
     const markdown = generateAgentSetupMarkdown()
     expect(markdown).toContain('## 7. Install the matching official SDKs')
@@ -145,7 +163,13 @@ describe('generateAgentSetupMarkdown', () => {
     const markdown = generateAgentSetupMarkdown()
     expect(markdown).toContain('## 8. Build the first working slice')
     expect(markdown).toContain('appwrite push tables --all --force')
-    expect(markdown).toContain('run `appwrite pull tables` first')
+    expect(markdown).toContain(
+      'so use it only on a project you created in this session',
+    )
+    expect(markdown).toContain(
+      'run `appwrite pull tables` and `appwrite pull buckets` first',
+    )
+    expect(markdown).not.toContain('or one with no tables yet')
     expect(markdown).toContain('appwrite generate')
     expect(markdown).toContain('Never grant write access to `any`.')
   })
