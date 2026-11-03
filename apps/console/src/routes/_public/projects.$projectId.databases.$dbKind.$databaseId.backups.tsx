@@ -10,6 +10,7 @@ import {
   backupArchivesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { pageTitle } from '@/lib/utils/page-title'
+import { projectEnvironmentId } from '@/lib/project-environments'
 
 const TABLES_PER_PAGE = 100
 
@@ -63,9 +64,7 @@ export const Route = createFileRoute(
 
     // An environment is backed up with its project: its backup routes refuse,
     // so nothing is asked of them
-    if (
-      !(project as { environmentId?: string | null } | undefined)?.environmentId
-    ) {
+    if (!projectEnvironmentId(project)) {
       await Promise.all([
         queryClient.prefetchQuery(
           backupPoliciesQueryOptions(
@@ -87,8 +86,7 @@ export const Route = createFileRoute(
     }
 
     const database = queryClient.getQueryData<{ name?: string }>(
-      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind)
-        .queryKey,
+      databaseQueryOptions(projectId, databaseId, dbKind as DatabaseRouteKind).queryKey,
     )
     return { database }
   },

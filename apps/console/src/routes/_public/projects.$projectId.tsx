@@ -257,39 +257,30 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Always resolve the project first. Throwing on access errors stops the
     // rest of the match (child beforeLoad + loaders) so nested pages cannot
     // re-fetch project.get and hang the fullscreen loader.
+    const ensureProject = () =>
+      context.queryClient.ensureQueryData({
+        queryKey: ['project', projectId],
+        queryFn: () => fetchProject(projectId),
+        staleTime: 5 * 60 * 1000,
+        retry: false,
+      })
     let projectData: Awaited<ReturnType<typeof fetchProject>>
     try {
-      try {
-        projectData = await context.queryClient.ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000,
-          retry: false,
-        })
-      } catch (projectError) {
-        // The restored environment may have been deleted while this tab was
-        // elsewhere, which fails the fetch with the header set. Leave it and
-        // load the project itself rather than carry a dead environment on every
-        // request. Any other error falls through to the handling below.
+      // The restored environment may have been deleted while this tab was
+      // elsewhere, which fails the fetch with the header set. Leave it, which
+      // drops the failed query, and load the project itself rather than carry a
+      // dead environment on every request. Other errors are handled below.
+      projectData = await ensureProject().catch((projectError: unknown) => {
         if (
-          getActiveEnvironmentId(projectId) &&
-          getAppwriteErrorInfo(projectError).type ===
+          !getActiveEnvironmentId(projectId) ||
+          getAppwriteErrorInfo(projectError).type !==
             'project_environment_not_found'
         ) {
-          setActiveEnvironment(projectId, null)
-          context.queryClient.removeQueries({
-            queryKey: ['project', projectId],
-          })
-          projectData = await context.queryClient.ensureQueryData({
-            queryKey: ['project', projectId],
-            queryFn: () => fetchProject(projectId),
-            staleTime: 5 * 60 * 1000,
-            retry: false,
-          })
-        } else {
           throw projectError
         }
-      }
+        setActiveEnvironment(projectId, null)
+        return ensureProject()
+      })
       registerProjectRegionFromProject(projectData)
 
       // Self-hosted usage availability is a backend capability. Resolve the
@@ -903,15 +894,12 @@ function ProjectLayout() {
       ) : null}
       {isPaused && projectForPaused && isZero ? (
         <ZeroExpiredCurtain />
-      ) : (
-        isPaused &&
-        projectForPaused && (
-          <PausedProjectCurtain
-            projectId={projectForPaused.$id}
-            teamId={projectForPaused.teamId}
-            onRestoreSuccess={() => setHidePausedCurtain(true)}
-          />
-        )
+      ) : isPaused && projectForPaused && (
+        <PausedProjectCurtain
+          projectId={projectForPaused.$id}
+          teamId={projectForPaused.teamId}
+          onRestoreSuccess={() => setHidePausedCurtain(true)}
+        />
       )}
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>

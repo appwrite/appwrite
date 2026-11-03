@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useBackupPolicies, useProject } from '@/lib/react-query/hooks'
+import { projectEnvironmentId } from '@/lib/project-environments'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
@@ -73,9 +74,7 @@ export function DatabaseBackupsNavLink({
   // An environment is backed up with the project it belongs to, never on its own:
   // its backup routes refuse, so the tab is disabled rather than reached.
   const { projectData } = useProject(projectId)
-  const isEnvironment = !!(
-    projectData as { environmentId?: string | null } | undefined
-  )?.environmentId
+  const isEnvironment = !!projectEnvironmentId(projectData)
   const disabled = disabledProp || isEnvironment
   const disabledTooltip = isEnvironment
     ? ENVIRONMENT_BACKUPS_TOOLTIP

@@ -23,7 +23,10 @@ import {
 } from '@/lib/react-query/hooks'
 import { LONG_STALE_TIME } from '@/lib/react-query/hooks/constants'
 import { getConsoleProject } from '@/lib/appwrite/console-projects'
-import { migrationProgress } from '@/lib/project-environments'
+import {
+  migrationProgress,
+  projectEnvironmentId,
+} from '@/lib/project-environments'
 import { useT } from '@/lib/i18n/translate'
 
 function CopyItem({
@@ -115,10 +118,7 @@ interface EnvironmentCopyBoxProps {
 export function EnvironmentCopyBox({ projectId }: EnvironmentCopyBoxProps) {
   const queryClient = useQueryClient()
   const { projectData } = useProject(projectId)
-  // The project answers as the environment while the Console is in one
-  const environmentId =
-    (projectData as { environmentId?: string | null } | undefined)
-      ?.environmentId || undefined
+  const environmentId = projectEnvironmentId(projectData)
   // The project itself, read on its own routes: the copy's source
   const { data: parent } = useQuery({
     queryKey: ['project', 'console', projectId, projectData?.teamId],

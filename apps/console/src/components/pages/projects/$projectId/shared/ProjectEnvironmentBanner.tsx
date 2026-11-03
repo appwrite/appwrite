@@ -14,6 +14,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useProject } from '@/lib/react-query/hooks'
 import { setActiveEnvironment } from '@/lib/active-environment'
+import { projectEnvironmentId } from '@/lib/project-environments'
 import { useT } from '@/lib/i18n/translate'
 
 export function ProjectEnvironmentBanner({ projectId }: { projectId: string }) {
@@ -21,10 +22,7 @@ export function ProjectEnvironmentBanner({ projectId }: { projectId: string }) {
   const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const { projectData } = useProject(projectId)
-  // The project answers as the environment while the Console is in one
-  const environmentId =
-    (projectData as { environmentId?: string | null } | undefined)
-      ?.environmentId || undefined
+  const environmentId = projectEnvironmentId(projectData)
 
   if (!features.projectEnvironments || !projectData || !environmentId) {
     return null

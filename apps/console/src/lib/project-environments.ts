@@ -91,6 +91,20 @@ export function suggestProjectEnvironmentName(
 }
 
 /**
+ * The environment a project document answers as, or null for production: while
+ * the Console is in an environment, the project answers as that environment.
+ * The pinned Console SDK's `Models.Project` does not carry `environmentId` yet.
+ */
+export function projectEnvironmentId(
+  project: object | null | undefined,
+): string | null {
+  return (
+    (project as { environmentId?: string | null } | null | undefined)
+      ?.environmentId || null
+  )
+}
+
+/**
  * The environment ID to offer for a name, as the ID the environment is addressed
  * by in `X-Appwrite-Environment`: the name lowercased, with everything that is
  * not a letter or a digit folded into single hyphens, no hyphen at either end

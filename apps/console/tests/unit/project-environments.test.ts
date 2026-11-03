@@ -75,7 +75,9 @@ describe('project environment name suggestion', () => {
 
   test('aliases of a suggestion count as taken', () => {
     expect(suggestProjectEnvironmentName(['Development'])).toBe('Stage')
-    expect(suggestProjectEnvironmentName(['Stage', 'development'])).toBe('QA')
+    expect(
+      suggestProjectEnvironmentName(['Stage', 'development']),
+    ).toBe('QA')
     expect(suggestProjectEnvironmentName(['testing'])).toBe('Stage')
   })
 

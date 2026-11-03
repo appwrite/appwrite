@@ -208,11 +208,7 @@ export function createRealtimeSession(
   const startHeartbeat = (activeId: number) => {
     clearHeartbeat()
     heartbeatTimer = setInterval(() => {
-      if (
-        activeId !== connectionId ||
-        !socket ||
-        socket.readyState !== WebSocket.OPEN
-      ) {
+      if (activeId !== connectionId || !socket || socket.readyState !== WebSocket.OPEN) {
         return
       }
       sendMessage(socket, { type: 'ping' }, callbacks.onMessage)
@@ -246,10 +242,7 @@ export function createRealtimeSession(
     pendingSubscribes.set(subscriptionId, record)
   }
 
-  const handleIncomingMessage = (
-    raw: RealtimeSocketMessage,
-    activeId: number,
-  ) => {
+  const handleIncomingMessage = (raw: RealtimeSocketMessage, activeId: number) => {
     if (activeId !== connectionId) return
 
     callbacks.onMessage({
@@ -306,8 +299,7 @@ export function createRealtimeSession(
 
   const scheduleReconnect = () => {
     clearReconnectTimer()
-    if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError)
-      return
+    if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError) return
 
     if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       shouldReconnect = false
@@ -341,8 +333,7 @@ export function createRealtimeSession(
     })
     reconnectTimer = setTimeout(() => {
       reconnectTimer = undefined
-      if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError)
-        return
+      if (closedByUser || !shouldReconnect || !isSessionActive() || fatalError) return
       reconnectAttempts += 1
       emitReconnectState({
         status: 'connecting',
