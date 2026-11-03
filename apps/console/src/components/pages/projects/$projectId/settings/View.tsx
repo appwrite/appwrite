@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useParams, useLocation } from '@tanstack/react-router'
+import { useParams, useLocation, useNavigate } from '@tanstack/react-router'
 import { useProject, useOrganizationScopes } from '@/lib/react-query/hooks'
 import {
   canWriteProjectDomains,
@@ -9,6 +9,7 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useT } from '@/lib/i18n/translate'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { BuyDomainHeaderButton } from '../shared/BuyDomainHeaderButton'
 import { ProjectSettingsOverview } from './Overview'
 import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
@@ -26,6 +27,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const t = useT()
   const params = useParams({ strict: false })
   const location = useLocation()
+  const navigate = useNavigate()
   const projectId = params.projectId as string
 
   const [searchValue, setSearchValue] = useState('')
@@ -207,6 +209,19 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         onCreate={handleCreate}
         createDisabled={createDisabled}
         createDisabledTooltip={createDisabledTooltip}
+        beforeCreateButtons={
+          activeTab === 'domains' ? (
+            <BuyDomainHeaderButton
+              orgId={project?.teamId}
+              onClick={() =>
+                navigate({
+                  to: '/projects/$projectId/settings/domains/buy',
+                  params: { projectId },
+                })
+              }
+            />
+          ) : undefined
+        }
       />
 
       <div className="flex-1">

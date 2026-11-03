@@ -1,7 +1,18 @@
+import { z } from 'zod'
+
 export type BuyDomainContinueSearch = {
   domain?: string
   stage?: 'checkout'
 }
+
+export const buyDomainSearchSchema = z.object({
+  payment: z.enum(['purchase']).optional(),
+  invoiceId: z.string().optional(),
+  domain: z.string().optional(),
+  stage: z.enum(['checkout']).optional(),
+})
+
+export type BuyDomainWizardSearch = z.infer<typeof buyDomainSearchSchema>
 
 function normalizeDomainParam(domain: string | undefined): string | undefined {
   const normalized = domain?.trim().toLowerCase()
@@ -19,7 +30,9 @@ export function buildBuyDomainContinuePath(
   return query ? `/domains/continue?${query}` : '/domains/continue'
 }
 
-export function buildBuyDomainWizardSearch(search: BuyDomainContinueSearch = {}) {
+export function buildBuyDomainWizardSearch(
+  search: BuyDomainContinueSearch = {},
+) {
   const normalized: BuyDomainContinueSearch = {}
   const domain = normalizeDomainParam(search.domain)
   if (domain) normalized.domain = domain
