@@ -169,7 +169,7 @@ final class StateTest extends TestCase
         $this->assertSame(1, $live->getAttribute('connections'));
     }
 
-    public function testDeleteForHostRemovesOnlyThisHostsRealtimePresences(): void
+    public function testDeleteOrphanedWithoutLiveHostsRemovesOnlyThisHostsPresences(): void
     {
         $this->presence('orphan-1', 'realtime', 'host-a');
         $this->presence('orphan-2', 'realtime', 'host-a');
@@ -180,10 +180,11 @@ final class StateTest extends TestCase
         $publisher = new MockPublisher();
         $queueForRealtime = new RecordingRealtime();
 
-        $deleted = (new State())->deleteForHost(
+        $deleted = (new State())->deleteOrphaned(
             $this->database,
             new Document(['$id' => 'project-1', '$sequence' => '1']),
             'host-a',
+            null,
             self::BOOTED_AT,
             new UsagePublisher($publisher, new Queue('usage')),
             $queueForRealtime,
@@ -204,7 +205,7 @@ final class StateTest extends TestCase
         $this->assertArrayNotHasKey('connections', $queueForRealtime->triggered[0]['payload']);
     }
 
-    public function testDeleteForHostReportsPresencesDeletedBeforeAFailure(): void
+    public function testDeleteOrphanedReportsPresencesDeletedBeforeAFailure(): void
     {
         // The first batch is deleted, the second fails.
         $this->database = $this->presenceDatabase(new FailingDeleteMemory(failFromCall: 2));
@@ -227,10 +228,11 @@ final class StateTest extends TestCase
         $queueForRealtime = new RecordingRealtime();
 
         try {
-            (new State())->deleteForHost(
+            (new State())->deleteOrphaned(
                 $this->database,
                 new Document(['$id' => 'project-1', '$sequence' => '1']),
                 'host-a',
+                null,
                 self::BOOTED_AT,
                 new UsagePublisher($publisher, new Queue('usage')),
                 $queueForRealtime,
@@ -244,7 +246,7 @@ final class StateTest extends TestCase
         $this->assertCount(Database::BATCH_SIZE, $queueForRealtime->triggered);
     }
 
-    public function testDeleteForHostKeepsAnnouncingAfterAFailedEvent(): void
+    public function testDeleteOrphanedKeepsAnnouncingAfterAFailedEvent(): void
     {
         $this->presence('orphan-1', 'realtime', 'host-a');
         $this->presence('orphan-2', 'realtime', 'host-a');
@@ -252,10 +254,11 @@ final class StateTest extends TestCase
         $publisher = new MockPublisher();
         $queueForRealtime = new FailingRealtime();
 
-        $deleted = (new State())->deleteForHost(
+        $deleted = (new State())->deleteOrphaned(
             $this->database,
             new Document(['$id' => 'project-1', '$sequence' => '1']),
             'host-a',
+            null,
             self::BOOTED_AT,
             new UsagePublisher($publisher, new Queue('usage')),
             $queueForRealtime,
@@ -266,17 +269,18 @@ final class StateTest extends TestCase
         $this->assertSame(-2, $publisher->getEvents('usage')[0]['metrics'][0]['value']);
     }
 
-    public function testDeleteForHostWithNothingToDeleteHasNoSideEffects(): void
+    public function testDeleteOrphanedWithNothingToDeleteHasNoSideEffects(): void
     {
         $this->presence('other-host', 'realtime', 'host-b');
 
         $publisher = new MockPublisher();
         $queueForRealtime = new RecordingRealtime();
 
-        $deleted = (new State())->deleteForHost(
+        $deleted = (new State())->deleteOrphaned(
             $this->database,
             new Document(['$id' => 'project-1', '$sequence' => '1']),
             'host-a',
+            null,
             self::BOOTED_AT,
             new UsagePublisher($publisher, new Queue('usage')),
             $queueForRealtime,
@@ -288,14 +292,15 @@ final class StateTest extends TestCase
         $this->assertSame([], $queueForRealtime->triggered);
     }
 
-    public function testDeleteForHostSkipsProjectWithoutPresences(): void
+    public function testDeleteOrphanedSkipsProjectWithoutPresences(): void
     {
         $this->database->deleteCollection(State::COLLECTION_ID);
 
-        $deleted = (new State())->deleteForHost(
+        $deleted = (new State())->deleteOrphaned(
             $this->database,
             new Document(['$id' => 'project-1', '$sequence' => '1']),
             'host-a',
+            null,
             self::BOOTED_AT,
             new UsagePublisher(new MockPublisher(), new Queue('usage')),
             new RecordingRealtime(),
@@ -304,27 +309,27 @@ final class StateTest extends TestCase
         $this->assertSame(0, $deleted);
     }
 
-    public function testDeleteForHostInProjectsSkipsFailingProjects(): void
+    public function testDeleteOrphanedInProjectsSkipsFailingProjects(): void
     {
         $this->presence('orphan-1', 'realtime', 'host-a');
 
-        $result = $this->deleteInProjects($this->platform('broken', 'project-1'), \microtime(true) + 30);
+        $result = $this->deleteInProjects($this->platform([], 'broken', 'project-1'), \microtime(true) + 30);
 
         $this->assertSame(['deleted' => 1, 'projects' => 2, 'failed' => 1, 'outcome' => 'done'], $result);
         $this->assertSame([], $this->userIds());
     }
 
-    public function testDeleteForHostInProjectsStopsAtDeadline(): void
+    public function testDeleteOrphanedInProjectsStopsAtDeadline(): void
     {
         $this->presence('orphan-1', 'realtime', 'host-a');
 
-        $result = $this->deleteInProjects($this->platform('project-1'), \microtime(true) - 1);
+        $result = $this->deleteInProjects($this->platform([], 'project-1'), \microtime(true) - 1);
 
         $this->assertSame('timeout', $result['outcome']);
         $this->assertSame(['orphan-1'], $this->userIds());
     }
 
-    public function testDeleteForHostInProjectsFailsWhenPlatformNeverReady(): void
+    public function testDeleteOrphanedInProjectsFailsWhenPlatformNeverReady(): void
     {
         $platform = $this->platform();
         $platform->deleteCollection('projects');
@@ -333,6 +338,74 @@ final class StateTest extends TestCase
 
         $this->assertSame('failed', $result['outcome']);
         $this->assertSame(0, $result['deleted']);
+    }
+
+    public function testDeleteOrphanedKeepsLivePeersPresences(): void
+    {
+        $this->presence('own-old', 'realtime', 'host-a');
+        $this->presence('dead-peer', 'realtime', 'host-c');
+        $this->presence('live-peer', 'realtime', 'host-b');
+        $this->presence('no-host', 'realtime', null);
+        $this->presence('after-boot', 'realtime', 'host-c', '2026-01-01 00:00:01.000');
+
+        $deleted = (new State())->deleteOrphaned(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            ['host-b'],
+            self::BOOTED_AT,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+        );
+
+        $this->assertSame(2, $deleted);
+        $this->assertSame(['after-boot', 'live-peer', 'no-host'], $this->userIds());
+    }
+
+    public function testGetLiveHostsHonoursWindowAndSkipsThisHost(): void
+    {
+        $platform = $this->platform([
+            'p1@host-a' => '2025-12-31 23:59:50.000', // this host's earlier run
+            'p2@host-b' => '2025-12-31 23:59:01.000', // 59s before boot
+            'p3@host-c' => '2025-12-31 23:58:59.000', // 61s before boot
+            'p4@host-d' => '2026-01-01 00:00:03.000', // after boot
+        ]);
+
+        $hosts = (new State())->getLiveHosts($platform, 'host-a', self::BOOTED_AT, 60);
+
+        $this->assertEqualsCanonicalizing(['host-b', 'host-d'], $hosts);
+    }
+
+    public function testGetLiveHostsIsNullWhenAHeartbeatNamesNoHost(): void
+    {
+        $platform = $this->platform([
+            'p2@host-b' => '2025-12-31 23:59:30.000',
+            'legacyid' => '2025-12-31 23:59:30.000',
+        ]);
+
+        $this->assertNull((new State())->getLiveHosts($platform, 'host-a', self::BOOTED_AT, 60));
+    }
+
+    public function testDeleteOrphanedInProjectsUsesHeartbeats(): void
+    {
+        $this->presence('own-old', 'realtime', 'host-a');
+        $this->presence('dead-peer', 'realtime', 'host-c');
+        $this->presence('live-peer', 'realtime', 'host-b');
+
+        $result = (new State())->deleteOrphanedInProjects(
+            $this->platform(['p2@host-b' => '2025-12-31 23:59:30.000', 'p3@host-c' => '2025-12-31 23:50:00.000'], 'project-1'),
+            fn (Document $project): Database => $this->database,
+            'host-a',
+            self::BOOTED_AT,
+            \microtime(true) + 30,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+            0,
+        );
+
+        $this->assertSame('done', $result['outcome']);
+        $this->assertSame(2, $result['deleted']);
+        $this->assertSame(['live-peer'], $this->userIds());
     }
 
     public function testSetPermissionsDefaultsForUser(): void
@@ -450,7 +523,7 @@ final class StateTest extends TestCase
         return $database;
     }
 
-    private function presence(string $userId, string $source, string $hostname, string $updatedAt = self::BEFORE_BOOT): void
+    private function presence(string $userId, string $source, ?string $hostname, string $updatedAt = self::BEFORE_BOOT): void
     {
         $this->database->setPreserveDates(true);
         try {
@@ -470,7 +543,10 @@ final class StateTest extends TestCase
         }
     }
 
-    private function platform(string ...$projectIds): Database
+    /**
+     * @param array<string, string> $heartbeats container => timestamp
+     */
+    private function platform(array $heartbeats = [], string ...$projectIds): Database
     {
         $platform = new Database(new Memory(), new Cache(new NoCache()));
         $platform
@@ -482,10 +558,21 @@ final class StateTest extends TestCase
             id: 'projects',
             attributes: [Attribute::string(key: 'name', size: 255)],
         ));
+        $platform->createCollection(Collection::create(
+            id: 'realtime',
+            attributes: [
+                Attribute::string(key: 'container', size: 255, required: true),
+                Attribute::datetime(key: 'timestamp'),
+                Attribute::string(key: 'value', size: 255, required: true),
+            ],
+        ));
 
-        $platform->getAuthorization()->skip(function () use ($platform, $projectIds): void {
+        $platform->getAuthorization()->skip(function () use ($platform, $heartbeats, $projectIds): void {
             foreach ($projectIds as $projectId) {
                 $platform->createDocument('projects', new Document(['$id' => $projectId, 'name' => $projectId]));
+            }
+            foreach ($heartbeats as $container => $timestamp) {
+                $platform->createDocument('realtime', new Document(['container' => $container, 'timestamp' => $timestamp, 'value' => '{}']));
             }
         });
 
@@ -497,7 +584,7 @@ final class StateTest extends TestCase
      */
     private function deleteInProjects(Database $platform, float $deadline, int $retrySeconds = 0): array
     {
-        return (new State())->deleteForHostInProjects(
+        return (new State())->deleteOrphanedInProjects(
             $platform,
             fn (Document $project): Database => $project->getId() === 'broken'
                 ? throw new \RuntimeException('Project database unreachable')

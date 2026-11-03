@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -414,14 +415,50 @@ class State
     }
 
     /**
-     * Runs {@see deleteForHost} on every project until done or `$deadline` (unix seconds).
+     * Hostnames of the other realtime processes that sent a heartbeat within `$window` seconds
+     * of `$before`. Null when a live heartbeat does not name its host (written by an older
+     * version), as then no other host can be called dead. This host never counts as live: the
+     * hostname is ours now, so any earlier heartbeat under it came from a run that is gone.
+     *
+     * @return list<string>|null
+     */
+    public function getLiveHosts(
+        Database $dbForPlatform,
+        string $hostname,
+        string $before,
+        int $window = REALTIME_HEARTBEAT_WINDOW_SECONDS,
+    ): ?array {
+        $since = DateTime::addSeconds(new \DateTime($before), -$window);
+
+        return $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $hostname, $since): ?array {
+            $hosts = [];
+            foreach ($dbForPlatform->cursor('realtime', [Query::greaterThan('timestamp', $since)]) as $heartbeat) {
+                // `container` is `<process id>@<hostname>`.
+                $container = (string) $heartbeat->getAttribute('container', '');
+                $separator = \strrpos($container, '@');
+                if ($separator === false) {
+                    return null;
+                }
+
+                $host = \substr($container, $separator + 1);
+                if ($host !== $hostname) {
+                    $hosts[] = $host;
+                }
+            }
+
+            return \array_values(\array_unique($hosts));
+        });
+    }
+
+    /**
+     * Runs {@see deleteOrphaned} on every project until done or `$deadline` (unix seconds).
      * Retries while the platform database is not ready; a failing project is recorded on the
      * current span and skipped.
      *
      * @param callable(Document): Database $getProjectDB
      * @return array{deleted: int, projects: int, failed: int, outcome: 'done'|'timeout'|'failed'}
      */
-    public function deleteForHostInProjects(
+    public function deleteOrphanedInProjects(
         Database $dbForPlatform,
         callable $getProjectDB,
         string $hostname,
@@ -441,7 +478,9 @@ class State
             $failed = 0;
 
             try {
-                $finished = $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $getProjectDB, $hostname, $before, $deadline, $publisherForUsage, $queueForRealtime, &$deleted, &$projects, &$failed): bool {
+                $liveHosts = $this->getLiveHosts($dbForPlatform, $hostname, $before);
+
+                $finished = $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $getProjectDB, $hostname, $liveHosts, $before, $deadline, $publisherForUsage, $queueForRealtime, &$deleted, &$projects, &$failed): bool {
                     foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $project) {
                         if (\microtime(true) >= $deadline) {
                             return false;
@@ -449,7 +488,7 @@ class State
 
                         $projects++;
                         try {
-                            $deleted += $this->deleteForHost($getProjectDB($project), $project, $hostname, $before, $publisherForUsage, $queueForRealtime);
+                            $deleted += $this->deleteOrphaned($getProjectDB($project), $project, $hostname, $liveHosts, $before, $publisherForUsage, $queueForRealtime);
                         } catch (Throwable $th) {
                             $failed++;
                             Span::current()?->setError($th)->set('project.id', $project->getId());
@@ -475,34 +514,48 @@ class State
     }
 
     /**
-     * Deletes the realtime presences a host holds in one project, such as those a crashed
-     * realtime server left online. Purges the list cache, decrements usage and emits a delete
-     * event per presence, like a socket closing. Only rows untouched since `$before` go, so a
-     * socket served meanwhile keeps its presence. Returns how many were deleted.
+     * Deletes the realtime presences in one project whose host is no longer running: this
+     * host's earlier runs and any host not in `$liveHosts` (only this host's when null). Rows
+     * without a hostname are kept, as their host is unknown. Only rows untouched since
+     * `$before` go, so a socket served meanwhile keeps its presence. Purges the list cache,
+     * decrements usage and emits a delete event per presence, like a socket closing.
+     * Returns how many were deleted.
+     *
+     * @param list<string>|null $liveHosts
      */
-    public function deleteForHost(
+    public function deleteOrphaned(
         Database $dbForProject,
         Document $project,
         string $hostname,
+        ?array $liveHosts,
         string $before,
         UsagePublisher $publisherForUsage,
         QueueRealtime $queueForRealtime,
     ): int {
+        $queries = [
+            Query::equal('source', ['realtime']),
+            Query::lessThan('$updatedAt', $before),
+        ];
+        if ($liveHosts === null) {
+            $queries[] = Query::equal('hostname', [$hostname]);
+        } else {
+            $queries[] = Query::isNotNull('hostname');
+            if (!empty($liveHosts)) {
+                $queries[] = Query::notEqual('hostname', $liveHosts);
+            }
+        }
+
         /** @var array<Document> $presences */
         $presences = [];
         try {
-            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $hostname, $before, &$presences): void {
+            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $queries, &$presences): void {
                 if ($dbForProject->findCollection(self::COLLECTION_ID) === null) {
                     return;
                 }
 
                 $dbForProject->deleteDocuments(
                     self::COLLECTION_ID,
-                    [
-                        Query::equal('source', ['realtime']),
-                        Query::equal('hostname', [$hostname]),
-                        Query::lessThan('$updatedAt', $before),
-                    ],
+                    $queries,
                     onNext: function (Document $presence) use (&$presences): void {
                         $presences[] = $presence;
                     },

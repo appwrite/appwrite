@@ -524,6 +524,9 @@ const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 // Longest realtime workers wait at boot for the self-hosted presence cleanup before serving anyway.
 const REALTIME_BOOT_TIMEOUT_SECONDS = 30;
 
+// A realtime process whose heartbeat (every 5s) is older than this counts as gone.
+const REALTIME_HEARTBEAT_WINDOW_SECONDS = 60;
+
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
