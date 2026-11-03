@@ -3813,6 +3813,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Project webhooks and functions can also listen to its alert events.':
     'גם Webhooks ופונקציות של הפרויקט יכולים להאזין לאירועי ההתראות שלו.',
   'Nobody, only its events': 'אף אחד, רק האירועים שלו',
+  Critical: 'קריטי',
+  "Rings on your phone even when it's on silent or in Do Not Disturb.":
+    "מצלצל בטלפון גם כשהוא במצב שקט או ב'נא לא להפריע'.",
+  'Critical. Rings on phones even on silent.':
+    'קריטי. מצלצל בטלפונים גם במצב שקט.',
+  'Rings on phones even on silent': 'מצלצל בטלפונים גם במצב שקט',
   'Notifies nobody': 'לא מתריע לאף אחד',
   'Notifies nobody. Its alerts only fire their events.':
     'לא מתריע לאף אחד. ההתראות שלו רק מפעילות את האירועים שלהן.',

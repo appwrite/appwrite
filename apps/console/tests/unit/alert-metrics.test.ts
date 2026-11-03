@@ -117,12 +117,14 @@ describe('alert rule form', () => {
     const input = monitorInputFromForm(emptyRuleForm(), t)
     expect(Object.keys(input).sort()).toEqual([
       'cooldown',
+      'critical',
       'name',
       'notify',
       'rules',
       'window',
     ])
     expect(input.notify).toEqual(['owner'])
+    expect(input.critical).toBe(false)
   })
 
   test('names an unnamed rule after its condition', () => {
