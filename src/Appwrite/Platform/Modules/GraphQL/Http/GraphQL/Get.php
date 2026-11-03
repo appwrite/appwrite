@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\GraphQL\Http\GraphQL;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\Platform\Action;
@@ -48,8 +49,7 @@ class Get extends Base
                     )
                 ]
             ))
-            ->label('abuse-limit', 60)
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 60, seconds: 60)])
             ->param('query', '', new Text(0, 0), 'The query to execute.', example: 'query { localeGet { ip } }')
             ->param('operationName', '', new Text(256), 'The name of the operation to execute.', true)
             ->param('variables', '', new Text(0), 'The JSON encoded variables to use in the query.', true)

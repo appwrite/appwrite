@@ -150,7 +150,7 @@ function parseRoute(chain) {
         path: path ? path[1] : null,
         scope: scopeOf(chain),
         groups: listOf(groups),
-        abuseLimit: /->label\(\s*['"]abuse-limit['"]/.test(chain),
+        abuseLimit: /->label\(\s*['"]abuse['"]/.test(chain),
     };
 }
 
@@ -419,12 +419,12 @@ const explainers = {
         if (route && !inApi) {
             return {
                 issue: `Guests can call this ${route.method || ''} route (scope ${code(scope)}), and it sits outside the ${code('api')} group, so no abuse limit can apply.`,
-                fix: `If it only forwards to a limited route, no change is needed beyond confirming that in review. Otherwise add it to ${code("->groups(['api', …])")} and set ${code("->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)")}.`,
+                fix: `If it only forwards to a limited route, no change is needed beyond confirming that in review. Otherwise add it to ${code("->groups(['api', …])")} and set ${code("->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT)])")}.`,
             };
         }
         return {
-            issue: `Guests can call this ${route?.method || ''} route (scope ${code(scope)}), and it has no ${code('abuse-limit')} label, so the shared api hook does not rate-limit it.`,
-            fix: `Add ${code("->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)")} and ${code("->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')")} to this route (the house default), or narrow the scope.`,
+            issue: `Guests can call this ${route?.method || ''} route (scope ${code(scope)}), and it has no ${code('abuse')} label, so the shared api hook does not rate-limit it.`,
+            fix: `Add ${code("->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT)])")} to this route (the house default), or narrow the scope.`,
         };
     },
     'weak-secret-env-default': (f) => {
