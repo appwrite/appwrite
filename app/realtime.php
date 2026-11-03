@@ -381,23 +381,8 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
 
             try {
                 if ($hostname !== false) {
-                    $dbForPlatform = getConsoleDB();
-
-                    // Heartbeat before serving, so a peer booting meanwhile sees this host as live.
-                    try {
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('realtime', new Document([
-                            '$id' => Id::unique(),
-                            '$permissions' => [],
-                            'container' => $containerId . '@' . $hostname,
-                            'timestamp' => DateTime::now(),
-                            'value' => '{}',
-                        ])));
-                    } catch (Throwable $th) {
-                        $span->setError($th);
-                    }
-
                     $result = $presenceState->deleteOrphanedInProjects(
-                        $dbForPlatform,
+                        getConsoleDB(),
                         getProjectDB(...),
                         $hostname,
                         $bootedAt,
@@ -414,6 +399,23 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
                 Span::add('outcome', 'failed');
                 $span->setError($th);
             } finally {
+                // Heartbeat only now, right before serving: a peer booting during the cleanup
+                // must see this host as gone, as its rows are its previous run's.
+                if ($hostname !== false) {
+                    try {
+                        $dbForPlatform = getConsoleDB();
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('realtime', new Document([
+                            '$id' => Id::unique(),
+                            '$permissions' => [],
+                            'container' => $containerId . '@' . $hostname,
+                            'timestamp' => DateTime::now(),
+                            'value' => '{}',
+                        ])));
+                    } catch (Throwable $th) {
+                        $span->setError($th);
+                    }
+                }
+
                 Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
                 $span->finish();
                 $booted->set(1);
@@ -429,14 +431,21 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
     $booted->set(1);
 }
 
-$server->onStart(function () use ($stats, $containerId, &$statsDocument) {
+$server->onStart(function () use ($stats, $containerId, $booted, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($containerId, &$statsDocument) {
+    go(function () use ($containerId, $booted, &$statsDocument) {
+        // The document is also this host's heartbeat, so not before the boot cleanup is done,
+        // unless workers are already serving past the boot timeout.
+        $deadline = \microtime(true) + REALTIME_BOOT_TIMEOUT_SECONDS;
+        while ($booted->get() === 0 && \microtime(true) < $deadline) {
+            Coroutine::sleep(0.1);
+        }
+
         $attempts = 0;
         $database = getConsoleDB();
 
