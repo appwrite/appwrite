@@ -509,13 +509,12 @@ class V25 extends Migration
                     } catch (Duplicate) {
                         // createCollection already made the row with connections; nothing to add.
                     }
-                    // Added in 2.7.0 for the realtime boot cleanup, which deletes a host's presences.
+                    // Added in 2.7.0 for the realtime boot cleanup. Like connections, any failure but a
+                    // Duplicate propagates so the version is not recorded without the index.
                     try {
                         $this->createIndexFromCollection($this->dbForProject, $id, '_key_source_hostname');
                     } catch (Duplicate) {
                         // createCollection already made it with the index.
-                    } catch (Throwable $th) {
-                        Console::warning("Failed to create index \"_key_source_hostname\" from {$id}: {$th->getMessage()}");
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
