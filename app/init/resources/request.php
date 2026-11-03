@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
 use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
@@ -539,9 +540,8 @@ return function (Container $context): void {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
             }
 
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException $error) {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
@@ -691,9 +691,8 @@ return function (Container $context): void {
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
         if (! $sessionId && ! empty($authJWT)) {
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException) {
                 return;
             }
@@ -1036,10 +1035,8 @@ return function (Container $context): void {
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // Instantiate with key, algo, maxAge and leeway.
-
             try {
-                $payload = $jwt->decode($tokenJWT);
+                $payload = EncryptionKey::decode($tokenJWT, RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY);
             } catch (JWTException $error) {
                 return new Document([]);
             }

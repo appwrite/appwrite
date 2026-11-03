@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Entire\Authorize;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
@@ -77,9 +78,9 @@ class Get extends Action
 
         $projectId = $project->getId();
 
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $signingKey = EncryptionKey::current();
         if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
         }
 
         // The callback is public and Entire performs no token exchange, so the

@@ -2836,7 +2836,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "monitors.delete": [
             "monitorId"
@@ -2855,7 +2856,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "notifications.list": [
             "queries",
@@ -7001,7 +7003,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "monitors.delete": [
             "monitorId"
@@ -7020,7 +7023,8 @@
             "window",
             "cooldown",
             "enabled",
-            "notify"
+            "notify",
+            "critical"
         ],
         "organization.createEphemeralProjectKey": [
             "projectId",

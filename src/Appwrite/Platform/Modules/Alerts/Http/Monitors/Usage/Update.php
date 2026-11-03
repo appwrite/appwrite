@@ -61,6 +61,7 @@ class Update extends Base
             ->param('cooldown', null, new Nullable(new Range(300, 2592000)), 'Minimum seconds between two team notifications of this monitor firing, between 300 and 2592000. Events fire on every change between firing and resolved regardless.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Whether the monitor is evaluated.', true)
             ->param('notify', null, fn () => new Nullable(new ArrayList(new WhiteList(Config::getParam('alerts', [])['roles'] ?? [], true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Organization roles whose confirmed members get an email and a console notification when the monitor fires and resolves. Each must be an organization role, such as `owner` or `developer`. Defaults to owners; pass an empty list to rely on the alert events alone.', true)
+            ->param('critical', null, new Nullable(new Boolean()), 'Whether the monitor is critical: its alerts may be delivered with higher urgency by the notification channels that support it.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -81,12 +82,13 @@ class Update extends Base
         ?int $cooldown,
         ?bool $enabled,
         ?array $notify,
+        ?bool $critical,
         Response $response,
         Document $project,
         Database $dbForPlatform,
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $this->updateMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization);
+        $this->updateMonitor(MONITOR_TYPE_USAGE, $monitorId, $name, $rules, $window, $cooldown, $enabled, $notify, $response, $project, $dbForPlatform, $dbForProject, $authorization, $critical);
     }
 }
