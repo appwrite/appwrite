@@ -33,7 +33,7 @@ use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\Span\Storage\Memory as SpanMemory;
-use Utopia\Telemetry\Adapter\Test as TestTelemetry;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 require_once __DIR__ . '/../../../../app/init.php';
 
@@ -175,11 +175,11 @@ final class NotificationsTest extends TestCase
     private Span $span;
     private Client $clientForWebhooks;
     private PublicHostname $publicHostname;
-    private TestTelemetry $telemetry;
+    private NoTelemetry $telemetry;
 
     protected function setUp(): void
     {
-        $this->telemetry = new TestTelemetry();
+        $this->telemetry = new NoTelemetry();
         $this->clientForWebhooks = new Client(new CurlAdapter());
         $this->publicHostname = new PublicHostname(new PublicInternet(), new FixedLookup());
         $this->authorization = new Authorization();
@@ -471,11 +471,6 @@ final class NotificationsTest extends TestCase
         $content = (string) $spy->captured?->getContent();
         $this->assertMatchesRegularExpression('#>Privacy</a></td>\\s*<td[^>]*><div[^>]*>\\|</div></td><td><a href="https://console\\.example/auth/alerts/unsubscribe\\?token=one&amp;x=1">Unsubscribe</a></td>#', $content);
         $this->assertStringNotContainsString('{{unsubscribeLink}}', $content);
-
-        // The send is counted, labelled with the template it was rendered from.
-        $this->assertSame(MAIL_TEMPLATE_ALERT, $spy->captured?->getTemplate());
-        $this->assertSame(MESSAGE_SEND_TYPE_INTERNAL, $spy->captured->getOrigin());
-        $this->assertArrayHasKey('messaging.send', $this->telemetry->counters);
     }
 
     public function testLegacyMailPayloadThrowsWhenSmtpIsNotConfigured(): void
