@@ -64,7 +64,7 @@ class Create extends Base
                 contentType: ContentType::JSON
             ))
             ->label('abuse', [
-                Limit::failures(['ip', 'param.userId'], 10),
+                Limit::failures(['url', 'ip', 'param.userId'], 10),
                 Limit::failures(['projectId', 'url', 'param.userId'], 10),
                 Limit::failures(['projectId', 'url', 'ip'], 100),
             ])

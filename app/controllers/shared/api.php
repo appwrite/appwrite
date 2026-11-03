@@ -602,13 +602,6 @@ Http::init()
         $response->setUser($user);
         $request->setUser($user);
 
-        // A retired label would otherwise be ignored, leaving the route with no limit at all.
-        foreach (['abuse-key', 'abuse-limit', 'abuse-time', 'abuse-reset'] as $retired) {
-            if ($route->getLabel($retired, null) !== null) {
-                throw new \LogicException("Route {$route->getPath()} declares the retired '{$retired}' label. Declare ->label('abuse', [Limit::attempts(...)]) instead.");
-            }
-        }
-
         $roles = $authorization->getRoles();
         $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
             && ! $user->isKey($roles)

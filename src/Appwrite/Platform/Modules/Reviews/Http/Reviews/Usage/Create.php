@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Reviews\Http\Reviews\Usage;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -35,9 +36,7 @@ class Create extends Base
             // Keyed on the caller's address: the limit runs before the secret is checked, so any
             // request param would let an unauthenticated caller pick a fresh bucket. {url} is the
             // route pattern, so the review service gets one bucket per route for every project.
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 10)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['url', 'ip'], APP_LIMIT_WRITE_RATE_DEFAULT * 10, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->param('reviewId', '', new UID(), 'Review ID.')
             ->param('projectId', '', new UID(), 'Project ID.')
             ->param('usage', [], new ArrayList(new Assoc(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Model calls, each with role, provider, model, inputTokens, outputTokens, durationMs and optional cachedInputTokens and reasoningTokens.')

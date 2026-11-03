@@ -70,7 +70,7 @@ class Update extends Base
                 ),
             ))
             ->label('abuse', [
-                Limit::failures(['ip', 'param.userId'], 10),
+                Limit::failures(['url', 'ip', 'param.userId'], 10),
                 Limit::failures(['projectId', 'url', 'param.userId'], 10),
                 Limit::failures(['projectId', 'url', 'ip'], 100),
             ])
