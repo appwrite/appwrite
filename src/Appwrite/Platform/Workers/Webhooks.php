@@ -377,6 +377,7 @@ class Webhooks extends Action
             $publisherForNotifications->enqueue(new NotificationMessage(
                 project: $project,
                 recipients: $recipients,
+                template: MAIL_TEMPLATE_WEBHOOK_FAILED,
                 deduplicationKey: 'webhook:' . $webhook->getId() . ':paused:' . $webhook->getUpdatedAt(),
                 subject: $subject,
                 bodyTemplate: __DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl',

@@ -245,6 +245,7 @@ export const jaCatalog: EnCatalog = {
         functions: 'Functions',
         messaging: 'メッセージング',
         videos: '動画',
+        reviews: 'コードレビュー',
         sites: 'サイト',
         distribution: 'Distribution',
         activity: 'アクティビティ',

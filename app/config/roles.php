@@ -139,6 +139,8 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'reviews.read',
+    'reviews.write',
 ];
 
 return [
