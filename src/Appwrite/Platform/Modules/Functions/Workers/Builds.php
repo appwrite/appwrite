@@ -1045,7 +1045,6 @@ class Builds extends Action
                             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['function']),
                             Query::equal('trigger', ['manual']),
-                            Query::equal('deploymentVcsProviderBranch', ['']),
                         ];
 
                         $rulesUpdated = false;
@@ -1070,7 +1069,6 @@ class Builds extends Action
                             Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
                             Query::equal('deploymentResourceType', ['site']),
                             Query::equal('trigger', ['manual']),
-                            Query::equal('deploymentVcsProviderBranch', ['']),
                         ];
 
                         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment) {
