@@ -2089,7 +2089,7 @@ return [
             ],
             [
                 'name' => '_APP_VIDEOS_ENCODE_TIMEOUT',
-                'description' => 'The maximum number of seconds one ffmpeg run in the videos worker may take. Each encode gets a limit scaled to the source duration, codec and resolution, capped at this value; a source with unknown duration gets this value. The default value is 21600 seconds (6 hours).',
+                'description' => 'The maximum number of seconds one ffmpeg run in the videos worker may take. Each encode gets a limit scaled to the source duration, codec and resolution, capped at this value; a source with unknown duration gets this value. Set it to 0 to disable the limit. When the limit is disabled, or set high enough that an hour of slack would pass 7 days, an S3 source is copied locally instead of read through a presigned URL, which cannot be signed for longer than 7 days and would otherwise expire mid-encode. The default value is 21600 seconds (6 hours).',
                 'introduction' => '2.6.0',
                 'default' => '21600',
                 'required' => false,

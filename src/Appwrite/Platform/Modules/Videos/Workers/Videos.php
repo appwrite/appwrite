@@ -111,6 +111,15 @@ class Videos extends Action
     /** Seconds an encode may report progress without its media time advancing. */
     private const STALL_TIMEOUT = 300;
 
+    /**
+     * Lifetime kept on a presigned source beyond the encode cap, for the probe
+     * and caption passes that run before it.
+     */
+    private const PRESIGN_SLACK = 3600;
+
+    /** Longest a SigV4 query signature may last (7 days). */
+    private const PRESIGN_LIMIT = 604800;
+
     /** Histogram bucket boundaries in seconds. */
     private const JOB_BUCKETS = [1, 5, 10, 30, 60, 120, 300, 600, 1200, 1800, 3600];
     private const PHASE_BUCKETS = [0.1, 0.5, 1, 5, 10, 30, 60, 120, 300, 600, 1800];
@@ -2027,7 +2036,8 @@ class Videos extends Action
      * into the workspace. Otherwise a local device's file is read where it is,
      * and an S3 device's through a presigned URL that ffmpeg range-reads, so the
      * workspace never holds a copy. The URL is a credential: it is kept off
-     * spans, logs and stored errors, and only `source.path` is recorded.
+     * spans, logs and stored errors, and only `source.path` is recorded. An
+     * encode the URL cannot outlive is copied instead.
      */
     private function source(Device $deviceForFiles, Document $file, string $inDir): string
     {
@@ -2051,12 +2061,22 @@ class Videos extends Action
             return $fullPath;
         }
 
-        // Valid for the longest encode the timeout allows, plus room for the
-        // probe and caption passes that run before it.
-        $expires = \min(604800, (int) System::getEnv('_APP_VIDEOS_ENCODE_TIMEOUT', '21600') + 3600);
-        Span::add('source.read', 'url');
+        // The URL has to outlive the longest encode the timeout allows, plus
+        // the probe and caption passes before it. A timeout of 0 leaves that
+        // encode unbounded, and SigV4 will not sign past 7 days, so either
+        // case is copied: a URL that expires mid-read fails a later range
+        // request. Clamping the lifetime instead would hide the same gap.
+        $cap = (int) System::getEnv('_APP_VIDEOS_ENCODE_TIMEOUT', '21600');
+        $expires = $cap + self::PRESIGN_SLACK;
+        if ($cap > 0 && $expires <= self::PRESIGN_LIMIT) {
+            Span::add('source.read', 'url');
 
-        return $device->getPresignedUrl($fullPath, $expires);
+            return $device->getPresignedUrl($fullPath, $expires);
+        }
+
+        Span::add('source.read', 'copy');
+
+        return $this->download($deviceForFiles, $file, $inDir);
     }
 
     /**
