@@ -378,45 +378,6 @@ final class V25Test extends TestCase
         $this->assertContains('connections', $attributes);
     }
 
-    public function testAddsSourceHostnameIndexToExistingPresenceLogs(): void
-    {
-        $authorization = new Authorization();
-        $database = new Database(new Memory(), new Cache(new NoCache()));
-        $database
-            ->setAuthorization($authorization)
-            ->setDatabase('migrationTests')
-            ->setNamespace('v25_' . \uniqid());
-        $database->create();
-
-        // A project from before this change has presenceLogs without the index.
-        $collections = Config::getParam('collections', [])['projects'];
-        foreach ($collections as $id => $collection) {
-            if (($collection['$collection'] ?? null) !== Database::METADATA) {
-                continue;
-            }
-            $indexes = $id === 'presenceLogs'
-                ? \array_filter($collection['indexes'], static fn (Index $index): bool => $index->key !== '_key_source_hostname')
-                : $collection['indexes'];
-            $database->createCollection(Collection::create(
-                id: $id,
-                attributes: \array_values($collection['attributes']),
-                indexes: \array_values($indexes),
-            ));
-        }
-        $database->createCollection(Collection::create(id: 'audit'));
-
-        $migration = new V25();
-        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
-        $migration->execute();
-        $migration->execute();
-
-        $indexes = \array_map(
-            fn (Document $index) => $index->getId(),
-            $database->getCollection('presenceLogs')->getAttribute('indexes', [])
-        );
-        $this->assertContains('_key_source_hostname', $indexes);
-    }
-
     public function testCreatesPresenceLogsForEveryTenantOnSharedTables(): void
     {
         $authorization = new Authorization();
@@ -450,10 +411,7 @@ final class V25Test extends TestCase
 
         // Another project on the host sees it too.
         $database->setTenant(2);
-        $presenceLogs = $database->findCollection('presenceLogs');
-        $this->assertInstanceOf(Collection::class, $presenceLogs);
-        $indexes = \array_map(fn (Document $index) => $index->getId(), $presenceLogs->getAttribute('indexes', []));
-        $this->assertContains('_key_source_hostname', $indexes);
+        $this->assertInstanceOf(Collection::class, $database->findCollection('presenceLogs'));
     }
 
     public function testBindsExistingPushLedgerToTopicInstances(): void

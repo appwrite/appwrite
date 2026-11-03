@@ -541,7 +541,6 @@ return [
             Index::key(key: '_key_status', attributes: ['status'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
             Index::key(key: '_key_source', attributes: ['source'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
             Index::key(key: '_key_source_status', attributes: ['source', 'status']),
-            Index::key(key: '_key_source_hostname', attributes: ['source', 'hostname']),
             Index::key(key: '_key_permissionsHash', attributes: ['permissionsHash']),
         ]
     ],
