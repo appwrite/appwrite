@@ -124,6 +124,16 @@ final class ReviewsConsoleClientTest extends Scope
         ]);
         $this->assertSame(204, $events['headers']['status-code']);
 
+        // The Console reads the trace back, oldest step first
+        $trace = $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId . '/events', $this->projectHeaders());
+        $this->assertSame(200, $trace['headers']['status-code']);
+        $this->assertSame(1, $trace['body']['total']);
+        $this->assertSame('tool_call', $trace['body']['events'][0]['type']);
+        $this->assertSame(['tool' => 'read_file'], $trace['body']['events'][0]['data']);
+
+        $missing = $this->client->call(Client::METHOD_GET, '/reviews/missing/events', $this->projectHeaders());
+        $this->assertSame(404, $missing['headers']['status-code']);
+
         $usage = $this->callService(Client::METHOD_POST, '/reviews/' . $reviewId . '/usage', [
             'projectId' => $projectId,
             'usage' => [
