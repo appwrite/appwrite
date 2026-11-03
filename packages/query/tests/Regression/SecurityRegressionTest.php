@@ -88,6 +88,8 @@ use Utopia\Query\Type;
  *      testHavingRawOrStaysInsideHavingClause
  *      testToAstEnclosesRawFilter
  *      testFilterInjectorEnclosesRawCondition
+ *  - (this branch)  fix(query): escape backslashes in toRawSql()
+ *      testToRawSqlEscapesBackslashBeforeQuote
  */
 class SecurityRegressionTest extends TestCase
 {
@@ -743,6 +745,20 @@ class SecurityRegressionTest extends TestCase
             'SELECT `name` FROM `users` WHERE `a` = 1 AND (tenant = 7 OR tenant IS NULL)',
             new Serializer()->serialize($statement),
         );
+    }
+
+    /**
+     * toRawSql() doubled quotes only, so under MySQL's backslash escaping the
+     * value `\' OR 1=1 -- ` closed its literal: `'\'' OR 1=1 -- '`.
+     */
+    public function testToRawSqlEscapesBackslashBeforeQuote(): void
+    {
+        $sql = new MySQLBuilder()
+            ->from('t')
+            ->filter([Query::equal('name', ["\\' OR 1=1 -- "])])
+            ->toRawSql();
+
+        $this->assertSame("SELECT * FROM `t` WHERE `name` IN ('\\\\'' OR 1=1 -- ')", $sql);
     }
 
     private function parse(string $sql): Select

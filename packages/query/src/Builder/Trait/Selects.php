@@ -270,7 +270,9 @@ trait Selects
 
         foreach ($result->bindings as $binding) {
             if (\is_string($binding)) {
-                $value = "'" . str_replace("'", "''", $binding) . "'";
+                // MySQL and ClickHouse read a backslash as an escape, so a
+                // value ending in one would otherwise escape its closing quote.
+                $value = "'" . \str_replace(['\\', "'"], ['\\\\', "''"], $binding) . "'";
             } elseif (\is_int($binding) || \is_float($binding)) {
                 $value = (string) $binding;
             } elseif (\is_bool($binding)) {

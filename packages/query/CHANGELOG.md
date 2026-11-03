@@ -17,6 +17,10 @@ All notable changes to `utopia-php/query` are documented in this file.
   now carries the parentheses; an empty `Query::raw()` still compiles to
   `1 = 1`. A hook's own condition is used as returned, so a hook returning an
   OR must enclose it.
+- `toRawSql()` escapes backslashes as well as quotes, as the AST serializer and
+  the schema builder do, so under MySQL's or ClickHouse's backslash escaping a
+  value cannot close its literal. Its output is still for logs and debugging
+  only.
 
 ## 0.7.2
 
