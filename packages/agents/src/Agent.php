@@ -217,12 +217,17 @@ class Agent
     {
         $json = trim($text);
         if (str_starts_with($json, '```')) {
-            $newline = strpos($json, "\n");
-            $json = $newline === false ? '' : substr($json, $newline + 1);
+            $json = substr($json, 3);
             if (str_ends_with($json, '```')) {
                 $json = substr($json, 0, -3);
             }
             $json = trim($json);
+
+            // Drop a language tag such as "json" before the payload.
+            if ($json !== '' && ! \in_array($json[0], ['{', '['], true)) {
+                $end = strcspn($json, " \t\r\n{[");
+                $json = trim(substr($json, $end));
+            }
         }
 
         try {

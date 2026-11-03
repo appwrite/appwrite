@@ -191,6 +191,17 @@ class AgentTest extends TestCase
         $this->assertSame(['name' => 'Ada', 'age' => 36], $result->output);
     }
 
+    public function testStructuredOutputAcceptsSingleLineFence(): void
+    {
+        $schema = Schema::object(['ok' => Schema::boolean()]);
+
+        foreach (['```{"ok":true}```', '```json {"ok":true}```', "```JSON\n{\"ok\":true}\n```"] as $text) {
+            $model = new Model([$this->text($text)]);
+
+            $this->assertSame(['ok' => true], (new Agent($model))->setSchema($schema)->generate('Ok?')->output, $text);
+        }
+    }
+
     public function testInvalidStructuredOutputThrows(): void
     {
         $model = new Model([$this->text('{"name":"Ada"}')]);
