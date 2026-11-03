@@ -59,9 +59,21 @@ final class ObjectStore
 
         $chunks = 0;
         $length = \strlen($data);
-        for ($offset = 0; $offset < $length; $offset += self::CHUNK_SIZE) {
-            $this->js->publish($chunkSubject, substr($data, $offset, self::CHUNK_SIZE));
-            $chunks++;
+        try {
+            for ($offset = 0; $offset < $length; $offset += self::CHUNK_SIZE) {
+                $this->js->publish($chunkSubject, substr($data, $offset, self::CHUNK_SIZE));
+                $chunks++;
+            }
+        } catch (\Throwable $e) {
+            // A chunk write that fails part way through leaves the chunks before it
+            // in the stream under a NUID no meta record will ever name, so neither
+            // delete() nor a later put() of this object can reclaim them. On a
+            // bucket limited by max_bytes (discard=New) those orphans hold the byte
+            // budget forever and every later put is rejected the same way, so the
+            // failure has to be compensated here. Unlike the meta publish below,
+            // this NUID is fresh and unreferenced, so purging it is always safe.
+            $this->purgeChunks($nuid);
+            throw $e;
         }
 
         $meta = new ObjectMeta(
