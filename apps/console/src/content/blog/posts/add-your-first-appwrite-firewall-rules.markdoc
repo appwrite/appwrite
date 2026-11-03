@@ -1,58 +1,38 @@
 ---
 layout: post
 title: "Add your first Appwrite Firewall rules to a new project"
-description: "Pick the two Appwrite Firewall rules a new Free project needs: rate limit sign-in, cap API traffic or challenge sign-ups, test them, and watch what they do."
+description: "Use the two Firewall rules on the Appwrite Free plan to rate limit sign-in and cap API traffic, then see what they stop in the Console."
 date: 2026-11-03
 cover: /images/blog/add-your-first-appwrite-firewall-rules/cover.avif
-timeToRead: 9
+timeToRead: 3
 author: atharva
 category: tutorials
 featured: false
 faqs:
   - question: "How many Firewall rules can I create on the Appwrite Free plan?"
-    answer: "Free organizations can create 2 Firewall rules per project, and Pro and Scale organizations can create 50. Disabled rules count toward the limit, every rule a preset creates counts, and the rule Attack mode creates keeps counting after you turn Attack mode off. See [Plan limits](/docs/products/firewall/rules#plan-limits)."
-  - question: "Which two Firewall rules should a new project on the Free plan add?"
-    answer: "If users sign in from the browser or a mobile app with an Appwrite client SDK, add an API rate limit on **Path** **Starts with** `/v1/account/sessions` and **Method** **Equals** `POST` at 10 requests per 600 seconds per IP address, then the **Rate limit project API** preset at priority `200`. If server code on Appwrite Sites signs users in, put both rules on the site: a rate limit on the login route and a challenge on the sign-up page. If server code hosted elsewhere signs users in, limit sign-in in that code, because Firewall sees only your server's address."
+    answer: "Free organizations can create 2 Firewall rules per project, and Pro and Scale organizations can create 50. See [Plan limits](/docs/products/firewall/rules#plan-limits)."
   - question: "What does Appwrite protect without any Firewall rules?"
-    answer: "Every Appwrite Cloud plan includes always-on [DDoS mitigation](/docs/products/network/ddos), and blocked attack traffic does not count toward your usage. Appwrite also applies built-in [rate limits](/docs/advanced/security/rate-limits) to sensitive endpoints. Sign-in, for example, blocks an address after 100 failed attempts in an hour and an email address after 10. These limits apply only to client SDK traffic, and you cannot change them."
-  - question: "Why does my Appwrite Firewall rate limit block all my users at once?"
-    answer: "Your server probably calls Appwrite with an API key, so Appwrite sees your server's IP address for every user and counts them all as one client. API keys skip Appwrite's built-in rate limits, but Firewall rules still apply to them. Put the limit on your Appwrite Site's login route instead, or limit sign-in attempts in your server code."
-  - question: "Can an Appwrite Firewall rule lock me out of the Console?"
-    answer: "No. Firewall never blocks the Appwrite Console, so you can always disable a rule that is too strict. Your own SDK calls and API key requests do go through your rules, and a challenge on a Site, including Attack mode, challenges you too."
-  - question: "How do I know which Firewall rule blocked a request?"
-    answer: "Read the response headers. `X-Appwrite-WAF-Rule` holds the rule ID and `X-Appwrite-WAF-Action` holds the action, such as `deny` or `rateLimit`. API rules add them to every request they match, even ones they let through. A `429` that carries `X-RateLimit-*` headers and no Firewall headers came from Appwrite's built-in rate limits."
+    answer: "Every Appwrite Cloud plan includes always-on [DDoS mitigation](/docs/products/network/ddos), and Appwrite applies built-in [rate limits](/docs/advanced/security/rate-limits) to sensitive endpoints such as sign-in. Firewall rules add limits that you choose on top."
+  - question: "Can a Firewall rule lock me out of the Appwrite Console?"
+    answer: "No. Firewall never blocks the Appwrite Console, so you can always update or turn off a rule."
+  - question: "How do I change a Firewall rule's limit later?"
+    answer: "Open the rule's menu in the Firewall rules list, choose **Update**, and change its **Request limit** or **Interval (seconds)**."
 ---
 
-A new Appwrite Cloud project is not wide open, but its built-in limits are fixed. None covers how fast one address reads your tables, and none applies when your server signs users in with an API key.
+Appwrite Firewall checks every request to your project before it reaches your API. With a couple of rules, you decide how often one address can sign in or call your API, while your users carry on as usual.
 
-**Appwrite Firewall** fills those gaps with rules that run before traffic reaches your API, Functions, or Sites. The Free plan gives you **two rules per project**. If users sign in from the browser or a mobile app, spend them on a sign-in rate limit and a broad API rate limit. If server code on Appwrite Sites signs users in, put both on your site: a login rate limit and a sign-up challenge.
+The Free plan includes two rules per project, and this guide uses both. By the end, sign-in has a limit of its own, the rest of your API has a broader one, and you can watch both at work in the Console.
 
-Start where you are:
+{% only_dark %}
+![Diagram: sign-in attempts count toward the Rate limit sign-in rule at priority 100, and every other request counts toward the Rate limit project API rule at priority 200](/images/blog/add-your-first-appwrite-firewall-rules/dark/priority-diagram.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram: sign-in attempts count toward the Rate limit sign-in rule at priority 100, and every other request counts toward the Rate limit project API rule at priority 200](/images/blog/add-your-first-appwrite-firewall-rules/priority-diagram.avif)
+{% /only_light %}
 
-- **No project yet:** create one in the [Console](/sign-in), then read on.
-- **Tried the docs quick start:** delete its test deny rule on `/v1/account` first. It blocks sign-in and uses one of your two rules. Then go to [Step 1](#pick-rules).
-- **Project ready:** go to [Step 1](#pick-rules).
-- **Rules saved:** [Step 6](#monitor).
-- **Under attack now:** [Step 7](#attack-mode).
-- **All done:** [grow your rules](#grow).
+You need an Appwrite project whose users sign in with an Appwrite client SDK, in the browser or in a mobile app. If you don't have a project yet, [create one in the Console](/sign-in).
 
-# What Appwrite protects before you add a rule {% #already-protected %}
-
-Every Appwrite Cloud project gets these with no setup:
-
-- **[DDoS mitigation](/docs/products/network/ddos)** on every plan. Traffic it blocks doesn't count toward your usage.
-- **Built-in [rate limits](/docs/advanced/security/rate-limits)** on sensitive endpoints. Sign-in blocks an address after 100 failed attempts in an hour, and an email address after 10. API key requests skip them, and you can't tune them.
-- **Platform checks.** Browser code on a domain you haven't added as a [platform](/docs/advanced/security/abuse-protection#CORS) can't call your project. A script outside a browser still can.
-
-Firewall never blocks the Console, so a bad rule can't lock you out.
-
-{% info title="What each plan includes" %}
-Free organizations get **2** Firewall rules per project, and Pro and Scale get **50**. Disabled rules, every rule a preset creates, and the rule [Attack mode](#attack-mode) creates all count.
-{% /info %}
-
-# Step 1: Pick your two rules {% #pick-rules %}
-
-Open your project and select **Firewall** under **Protect** in the sidebar. The **Rules 0/2** counter next to the title shows your plan's limit.
+# Step 1: Open Firewall {% #open-firewall %}
 
 {% only_dark %}
 ![Firewall page on a Free project with the Rules 0/2 counter, Create rule, and Add preset](/images/blog/add-your-first-appwrite-firewall-rules/dark/firewall-free-empty.avif)
@@ -61,25 +41,11 @@ Open your project and select **Firewall** under **Protect** in the sidebar. The 
 ![Firewall page on a Free project with the Rules 0/2 counter, Create rule, and Add preset](/images/blog/add-your-first-appwrite-firewall-rules/firewall-free-empty.avif)
 {% /only_light %}
 
-Pick your two rules by where sign-in runs:
+Open your project and select **Firewall** under **Protect** in the sidebar. The **Rules 0/2** counter at the top shows the two rules your plan includes.
 
-| Users sign in | Rule 1 | Rule 2 |
-| --- | --- | --- |
-| From the browser or a mobile app, with a client SDK | [Rate limit sign-in](#rate-limit-sign-in) on the API | [Rate limit project API](#broad-limit) at priority `200` |
-| Through server code on Appwrite Sites | [Rate limit the login route](#server-side-sign-in) on the site | [Challenge the sign-up page](#challenge-sign-up) on the site |
-| Through server code hosted elsewhere | Limit sign-in [in your server code](#hosted-elsewhere) | Optional, needs a fixed server IP |
+Keep the resource selector on **API**, so your rules cover every request to your project's API.
 
-Sign-in comes first because every guess there targets one of your users' accounts. Phone OTP isn't part of the Free plan; if you send SMS codes on Pro, add an [OTP rule](#grow) too.
-
-# Step 2: Rate limit sign-in attempts {% #rate-limit-sign-in %}
-
-Use this rule when users sign in with a client SDK. If server code signs them in, go to [Step 3](#server-side-sign-in).
-
-1. On the Firewall page, keep the resource selector on **API** and click **Create rule**.
-2. Set **Rule name** to `Rate limit sign-in` and keep **Resource type** on **API**.
-3. Add **Path** **Starts with** `/v1/account/sessions`, click **+**, and add **Method** **Equals** `POST`.
-4. Under **Then**, choose **Rate limit**. Set **Request limit** to `10` and **Interval (seconds)** to `600`. Keep **Strategy** on **Fixed window** and **Limit by** on **IP address**.
-5. Keep **Priority** at `100`, check the **Estimated impact** panel, and click **Create rule**.
+# Step 2: Rate limit sign-in {% #rate-limit-sign-in %}
 
 {% only_dark %}
 ![Create firewall rule wizard with Path starts with /v1/account/sessions, Method equals POST, and a rate limit of 10 per 600 seconds by IP address, next to the Estimated impact panel](/images/blog/add-your-first-appwrite-firewall-rules/dark/rule-sign-in.avif)
@@ -88,81 +54,21 @@ Use this rule when users sign in with a client SDK. If server code signs them in
 ![Create firewall rule wizard with Path starts with /v1/account/sessions, Method equals POST, and a rate limit of 10 per 600 seconds by IP address, next to the Estimated impact panel](/images/blog/add-your-first-appwrite-firewall-rules/rule-sign-in.avif)
 {% /only_light %}
 
-- **Path and method.** `POST` on this prefix covers email and password, anonymous, and [native](/docs/products/auth/native-sign-in) sign-in, plus `createSession`, the last step of OTP and magic URL sign-in. Without the method, signing out counts too.
-- **10 per 600 seconds.** Appwrite already blocks an address after 100 failed sign-ins in an hour, so a looser rule adds nothing. This one allows 60 attempts an hour, anonymous and successful ones included. If every visitor gets an anonymous session, or many users share one network, start at `30`.
-- **IP address.** Nobody is signed in yet, and a **User ID** rule skips signed-out requests.
-- **Fixed window.** Its `Retry-After` is exact, and you can't change the strategy later. [This comparison](/blog/post/firewall-rate-limit-strategies) covers the others.
+Your first rule sets how often one address can try to sign in.
 
-While you build your sign-in screen, you may trip the rule yourself. The window resets within 10 minutes.
+1. Click **Create rule**, set **Rule name** to `Rate limit sign-in`, and keep **Resource type** on **API**.
+2. Add **Path** **Starts with** `/v1/account/sessions`, click **+**, and add **Method** **Equals** `POST`.
+3. Under **Then**, choose **Rate limit**. Set **Request limit** to `10` and **Interval (seconds)** to `600`.
+4. Keep **Strategy** on **Fixed window** and **Limit by** on **IP address**.
+5. Keep **Priority** at `100` and click **Create rule**.
 
-## Read the impact preview {% #preview %}
+Each address can now sign in 10 times every 10 minutes. That's plenty for someone who mistypes a password, and it slows down anyone trying password after password.
 
-The **Estimated impact** panel counts matching requests from the last 24 hours, and the **Paths** chart lists the paths your app calls.
+{% info title="Signing users in from server code on Appwrite Sites?" %}
+Set **Resource type** to **Sites**, select your site under **Resource ID**, and use your login route, such as `/login`, as the path.
+{% /info %}
 
-- **Zero means no data yet.** A new project's traffic is mostly your own testing, so the preview can't tell you a limit is safe. Run the test below instead.
-- **It counts matches, not throttles.** Size a limit by how often one person hits the path, not by the total.
-
-## Test the rule {% #test-rate-limit %}
-
-Copy the **API Endpoint** and **Project ID** from your project's **Settings**. Each attempt uses a new email address, so the built-in per-email limit doesn't answer first.
-
-```sh
-for i in $(seq 1 11); do
-  curl -s -o /dev/null -D - -X POST "<API_ENDPOINT>/account/sessions/email" \
-    -H "X-Appwrite-Project: <PROJECT_ID>" \
-    -H "Content-Type: application/json" \
-    -d "{\"email\":\"test$i@example.com\",\"password\":\"wrong-password\"}" \
-    | grep -i -E "^HTTP|^x-appwrite-waf|^retry-after"
-done
-```
-
-You'll know it worked when every response names your rule in `x-appwrite-waf-rule`, the first ten are `401`, and the eleventh is `429` with `Retry-After`. A `429` without Firewall headers came from a built-in limit.
-
-With another limit, send one more request than it. Earlier sign-ins in the same window count, so the `429` can come sooner, and your address stays blocked until the window ends.
-
-# Step 3: Rate limit sign-in that your server handles {% #server-side-sign-in %}
-
-Server-side rendered apps often sign users in through an [admin client](/docs/products/auth/server-side-rendering#admin-client) that sends an API key. Appwrite then sees your server's address for every user, and API keys skip the built-in limits, so the Step 2 rule would throttle all your users together.
-
-On Appwrite Sites, put the limit on the site instead. Site rules run on the edge, where each request comes from the visitor.
-
-1. Click **Create rule** and name it `Rate limit login`.
-2. Set **Resource type** to **Sites** and select your site under **Resource ID**.
-3. Add **Path** **Starts with** `/login`, or the route your form posts to, and **Method** **Equals** `POST`.
-4. Under **Then**, choose **Rate limit**. Set **Request limit** to `10` and **Interval (seconds)** to `600`.
-5. Click **Create rule**.
-
-{% only_dark %}
-![Create firewall rule wizard for a site, with Path starts with /login, Method equals POST, and a rate limit of 10 per 600 seconds](/images/blog/add-your-first-appwrite-firewall-rules/dark/rule-site-login.avif)
-{% /only_dark %}
-{% only_light %}
-![Create firewall rule wizard for a site, with Path starts with /login, Method equals POST, and a rate limit of 10 per 600 seconds](/images/blog/add-your-first-appwrite-firewall-rules/rule-site-login.avif)
-{% /only_light %}
-
-No built-in limit backs this rule up, not even the per-email one, so keep it tight. Test it with 11 posts to your login route; the rule matches any body.
-
-```sh
-for i in $(seq 1 11); do
-  curl -s -o /dev/null -w "%{http_code}\n" -X POST "https://<YOUR_SITE_DOMAIN>/login" \
-    -d "email=test$i@example.com&password=wrong-password"
-done
-```
-
-You'll know it worked when the first ten return whatever your app sends for a failed sign-in and the eleventh is `429`.
-
-## When your server runs elsewhere {% #hosted-elsewhere %}
-
-On another host, your users' addresses never reach Appwrite, so no rule can tell them apart. Limit sign-in where users arrive: in your server code or your host's firewall.
-
-If your server has a fixed IP address, your two rules can still cover scripts that call the Appwrite API directly: create the Step 2 and Step 4 rules, then **Update** each to add **IP address** **Not equal** your server's address. Without a fixed address, skip per-IP API rules.
-
-# Step 4: Add a broad API rate limit {% #broad-limit %}
-
-On the client SDK path, the second rule caps all API traffic from one address, which slows scripts that page through your tables.
-
-1. With the resource selector on **API**, click **Add preset** and choose **Rate limit project API**.
-2. Keep **Request limit** at `600` per `1` **Minutes** and click **Create rule**.
-3. Open the new rule's menu, choose **Update**, set **Priority** to `200`, and click **Update**.
+# Step 3: Limit all API traffic {% #rate-limit-project-api %}
 
 {% only_dark %}
 ![Rate limit project API preset dialog with a request limit of 600 per minute and its estimated impact](/images/blog/add-your-first-appwrite-firewall-rules/dark/preset-project-api.avif)
@@ -171,115 +77,37 @@ On the client SDK path, the second rule caps all API traffic from one address, w
 ![Rate limit project API preset dialog with a request limit of 600 per minute and its estimated impact](/images/blog/add-your-first-appwrite-firewall-rules/preset-project-api.avif)
 {% /only_light %}
 
-You'll know it worked when the list shows both rules with priorities `100` and `200`, and the counter reads **Rules 2/2**.
+Your second rule caps every API request from one address, so no single client can page through your tables at full speed.
+
+1. Click **Add preset** and choose **Rate limit project API**.
+2. Keep **Request limit** at `600` per `1` **Minutes** and click **Create rule**.
+3. In the rules list, open the new rule's menu, choose **Update**, set **Priority** to `200`, and click **Update**.
+
+Rules run from the lowest priority number up, and each request counts toward the first rule it matches. At `200`, sign-in attempts meet your sign-in limit first, and everything else counts toward this one.
+
+The counter now reads **Rules 2/2**.
+
+# Step 4: See what your rules stop {% #monitor %}
 
 {% only_dark %}
-![Firewall rules list on a Free project at Rules 2/2, with Rate limit project API at priority 200 and Rate limit sign-in at priority 100](/images/blog/add-your-first-appwrite-firewall-rules/dark/rules-list.avif)
+![Firewall traffic overview for the last hour, with Rate limited requests next to Passed requests](/images/blog/add-your-first-appwrite-firewall-rules/dark/traffic-overview.avif)
 {% /only_dark %}
 {% only_light %}
-![Firewall rules list on a Free project at Rules 2/2, with Rate limit project API at priority 200 and Rate limit sign-in at priority 100](/images/blog/add-your-first-appwrite-firewall-rules/rules-list.avif)
+![Firewall traffic overview for the last hour, with Rate limited requests next to Passed requests](/images/blog/add-your-first-appwrite-firewall-rules/traffic-overview.avif)
 {% /only_light %}
 
-Rules run in **priority** order, lowest number first, and the first match decides. The preset starts at `100`, like your sign-in rule, and equal priorities run in no set order. If the preset ran first, it would let sign-in requests through and your sign-in limit would never count them. At `200`, the sign-in rule runs first.
+The chart above your rules shows your project's traffic and what Firewall did with it. Requests over one of your limits appear under **Rate limited**, next to **Passed**.
 
-{% only_dark %}
-![Diagram: a sign-in request stops at the priority 100 sign-in limit, a table read skips it and stops at the priority 200 API limit, and while Attack mode is on, a login form post stops at the priority 0 challenge so the site's login limit never runs](/images/blog/add-your-first-appwrite-firewall-rules/dark/priority-diagram.avif)
-{% /only_dark %}
-{% only_light %}
-![Diagram: a sign-in request stops at the priority 100 sign-in limit, a table read skips it and stops at the priority 200 API limit, and while Attack mode is on, a login form post stops at the priority 0 challenge so the site's login limit never runs](/images/blog/add-your-first-appwrite-firewall-rules/priority-diagram.avif)
-{% /only_light %}
+With everyday use, **Rate limited** stays close to zero. When it rises, your rules are slowing down a client that sent more requests than you allow.
 
-- **Server code counts as one client.** If SSR pages or API routes call Appwrite for your users, they share one quota. Raise the limit, or treat the app as [server-side](#hosted-elsewhere).
-- **Your own scripts count too.** API key requests go through Firewall, so pause the rule with its toggle during a bulk import.
+# Keep building {% #keep-building %}
 
-# Step 5: Challenge bots on your sign-up page {% #challenge-sign-up %}
+Your project now has its own limits on sign-in and on API traffic. As real users arrive, open a rule with **Update** and tune its limit to match your traffic.
 
-Use this on the Sites path, where sign-up runs through your API key and no built-in limit applies. A **challenge** makes the browser solve a small proof-of-work puzzle before the page loads. Browsers usually pass without the visitor noticing; scripts don't.
+On Pro, each project gets 50 rules, with room for the **Rate limit OTP** preset for SMS sign-in, **Attack mode** for your sites, and bypass rules for addresses you trust.
 
-1. Click **Create rule** and name it `Challenge sign-up`.
-2. Set **Resource type** to **Sites** and select your site under **Resource ID**.
-3. Add **Path** **Starts with** `/signup`, or your own sign-up route.
-4. Under **Then**, choose **Challenge**. Keep **Difficulty** at `3` and **TTL (seconds)** at `1800`.
-5. Click **Create rule**.
-
-{% only_dark %}
-![Create firewall rule wizard for a site, with Path starts with /signup and a Challenge action at difficulty 3 and a TTL of 1800 seconds](/images/blog/add-your-first-appwrite-firewall-rules/dark/rule-sign-up-challenge.avif)
-{% /only_dark %}
-{% only_light %}
-![Create firewall rule wizard for a site, with Path starts with /signup and a Challenge action at difficulty 3 and a TTL of 1800 seconds](/images/blog/add-your-first-appwrite-firewall-rules/rule-sign-up-challenge.avif)
-{% /only_light %}
-
-The rule also covers the submit when your form posts back under `/signup`, as Next.js server actions and SvelteKit form actions do. A cleared visitor's submit goes through, and a script that posts directly gets `403`. If your form posts to another route, such as `/api/signup`, move it under `/signup`.
-
-- **Don't challenge only the form's target.** A form post never gets a challenge page, so uncleared visitors get `403`.
-- **Don't challenge every page.** Every visitor pays the cost, and link previews can't read your pages.
-- **Don't test with `curl`.** Appwrite denies known scripts instead of challenging them.
-
-Appwrite's own sign-up endpoint isn't covered; it keeps its built-in limit of 10 sign-ups per address an hour.
-
-You'll know it worked when the page in a private window shows the challenge, then loads, and a reload skips it. Raise the difficulty only if unwanted sign-ups still pass the challenged page.
-
-# Step 6: Monitor what your rules do {% #monitor %}
-
-The chart above the rules list shows **Passed** next to each Firewall outcome, such as **Rate limited** and **Challenged**. It follows the resource selector, so select your site to see its rules at work.
-
-{% only_dark %}
-![Firewall traffic overview for the last hour, with Rate limited requests from the sign-in test next to Passed requests](/images/blog/add-your-first-appwrite-firewall-rules/dark/traffic-overview.avif)
-{% /only_dark %}
-{% only_light %}
-![Firewall traffic overview for the last hour, with Rate limited requests from the sign-in test next to Passed requests](/images/blog/add-your-first-appwrite-firewall-rules/traffic-overview.avif)
-{% /only_light %}
-
-- **Rate limited should stay near zero.** If it climbs with normal use, raise the limit or narrow the conditions.
-- **Built-in limits don't show here.** A `429` from Appwrite's own limits has no Firewall headers and no point on this chart.
-
-When a user reports an error, reproduce it in your browser's network tab: `X-Appwrite-WAF-Rule` names the rule that stopped it. A rule paused with its toggle still counts toward your two.
-
-# Step 7: Challenge every visitor during an attack {% #attack-mode %}
-
-**Attack mode** challenges every visitor to one site. It creates a challenge rule on **Path** **Starts with** `/` at priority `0`, so it needs a free rule slot, and its button appears only once the site has a rule.
-
-On Free with both rules used, do it by hand:
-
-1. On the Sites path, open **Challenge sign-up** with **Update** and set its path to `/` and its priority to `0`.
-2. On the API path, delete **Rate limit project API** and create a **Sites** challenge rule on **Path** **Starts with** `/` at priority `0`.
-3. After the attack, change the challenge back, or delete it and recreate the rule it replaced.
-
-{% only_dark %}
-![Firewall page for a site on a Free project at Rules 2/2, with the Attack mode button disabled and the tooltip You've reached the limit for this resource on your plan](/images/blog/add-your-first-appwrite-firewall-rules/dark/attack-mode-limit.avif)
-{% /only_dark %}
-{% only_light %}
-![Firewall page for a site on a Free project at Rules 2/2, with the Attack mode button disabled and the tooltip You've reached the limit for this resource on your plan](/images/blog/add-your-first-appwrite-firewall-rules/attack-mode-limit.avif)
-{% /only_light %}
-
-With a free slot, select the site, click **Attack mode**, and confirm **Turn on**. Turning it off from the banner disables its rule, which keeps counting.
-
-- **It takes over the site's other rules.** Every request matches it first, so your login rate limit doesn't run while it's on (see the diagram in [Step 4](#broad-limit)).
-- **It challenges your own tools.** Uptime monitors fail it.
-- **It only covers Sites.** For an API flood, create a deny rule with an **IP address** condition; the impact panel charts the top addresses.
-
-# Grow your Firewall rules with your traffic {% #grow %}
-
-Your first limits are guesses for a quiet project. Once real users arrive, open each rule with **Update** and tune it against the preview.
-
-On Pro, add these next:
-
-- **A bypass for addresses you control**: **IP address** **Equals** your office address or CIDR range at priority `10`, plus a **Path** condition. CI runners change IP each run, so give tests a separate project. Never bypass on a custom header; any client can send one.
-- **A negative priority for bypasses that must beat Attack mode.** The Console stops at `0`, so use the [Firewall API](/docs/products/firewall/rules#create-a-rule-through-the-api).
-- **Rate limit OTP** if you send SMS codes: tick only **Phone** and **OTP send**, with **Request limit** `5` per hour. Appwrite already allows 10, and every SMS costs money. With all four boxes ticked, the preset creates four rules.
-- **Rate limit database API**, updated from priority `100` to `150`, for a tighter quota on table traffic.
-- **On the Sites path, a challenge on your sign-in page**, and a site rate limit on each form.
-
-{% only_dark %}
-![Rate limit OTP preset dialog with only Phone and OTP send ticked and a request limit of 5 per hour](/images/blog/add-your-first-appwrite-firewall-rules/dark/preset-otp.avif)
-{% /only_dark %}
-{% only_light %}
-![Rate limit OTP preset dialog with only Phone and OTP send ticked and a request limit of 5 per hour](/images/blog/add-your-first-appwrite-firewall-rules/preset-otp.avif)
-{% /only_light %}
-
-[12 Appwrite Firewall rules to stop attacks](/blog/post/appwrite-firewall-use-cases) covers webhooks, regions, scanners, and redirects, and [Stop IP-rotating bots](/blog/post/firewall-network-rules-premium-geo-db) covers attackers spread across many addresses.
-
+- [12 Appwrite Firewall rules to stop attacks](/blog/post/appwrite-firewall-use-cases)
+- [Choosing a rate limit strategy](/blog/post/firewall-rate-limit-strategies)
 - [Firewall documentation](/docs/products/firewall)
 - [Rule priority](/docs/products/firewall/priority)
-- [Traffic overview and impact preview](/docs/products/firewall/monitor)
-- [Sign up for Appwrite Cloud](/sign-up)
+- [Traffic overview](/docs/products/firewall/monitor)

@@ -1,381 +1,110 @@
 ---
 layout: post
-title: "Deploy your first Appwrite Function and Site from GitHub"
-description: Deploy your first Appwrite Function and Site from GitHub or a template, and fix the usual first-deploy failures with entrypoints, variables and SPA routes.
+title: "How to deploy your first Appwrite site and function"
+description: Put your web app live with Appwrite Sites straight from GitHub, then create, deploy and run your first Appwrite Function.
 date: 2026-11-03
 cover: /images/blog/deploy-your-first-appwrite-function-and-site/cover.avif
-timeToRead: 11
+timeToRead: 4
 author: atharva
 category: tutorials
 featured: false
 faqs:
-  - question: "Do I need a GitHub repository to deploy an Appwrite Function or Site?"
-    answer: "No. A template can deploy with **Connect later**, and you can also upload a `.tar.gz` archive or deploy with the [Appwrite CLI](/docs/tooling/command-line/installation). A GitHub repository is still the better path for real work, because every push to the production branch builds and deploys without any extra step."
-  - question: "Why didn't my new environment variable reach my function or site?"
-    answer: "Variables apply only to deployments created after you set them. After you create, update or delete a variable, the Console shows **Settings changes are not live yet**. Click **Redeploy** there or on the **Deployments** tab. See [function environment variables](/docs/products/functions/environment-variables) and [site environment variables](/docs/products/sites/environment-variables)."
-  - question: "Why does my Appwrite Function domain return a 401 error?"
-    answer: "Requests to a function's domain arrive without a session, so the function's execute permissions must include **Any** or **All guests**. Add one of them on the function's **Security** tab. Executions from the Console, schedules, events and Server SDKs don't need that permission."
-  - question: "Can I edit the code of a function or site I created from a template?"
-    answer: "Yes, if you chose **Connect your repository** in the template wizard. Appwrite copies the template into your repository, commits it and deploys that commit, so you edit and push like any other project. With **Connect later**, the code stays in Appwrite's public template repository until you connect your own repository and push code to it."
-  - question: "Can I run an Appwrite Function on a cron schedule on the Free plan?"
-    answer: "No. On the Free plan the Console locks the **Cron** option and intervals start at 60 minutes. Use an interval, or upgrade to a paid plan for cron expressions such as `0 9 * * 1`, which runs at 09:00 UTC every Monday. See [function schedules](/docs/products/functions/execute#interval)."
-  - question: "Who can open an Appwrite Sites preview deployment?"
-    answer: "Only members of the Appwrite organization that owns the site. The first visit asks you to authorize **Appwrite Preview** with your Appwrite account. To share a preview with a reviewer, invite them to the organization. See [previews](/docs/products/sites/previews)."
+  - question: "Do I need a GitHub repository to deploy an Appwrite site?"
+    answer: "No. Pick a starter under **Clone template** on the **Create site** screen and Appwrite deploys it for you. You can also deploy with the [Appwrite CLI](/docs/products/sites/deploy-from-cli) or [upload your files](/docs/products/sites/deploy-manually)."
+  - question: "How do I add environment variables to my site or function?"
+    answer: "Open its **Variables** tab, add your keys, and redeploy. New values reach the next deployment. See [site environment variables](/docs/products/sites/environment-variables) and [function environment variables](/docs/products/functions/environment-variables)."
+  - question: "Can I use my own domain for my Appwrite site?"
+    answer: "Yes. Open your site's **Domains** tab and add your domain. A subdomain like `www.example.com` needs one CNAME record at your DNS provider. [Custom domains with Sites](/blog/post/custom-domains-with-sites) walks through it."
+  - question: "Which languages can I write Appwrite Functions in?"
+    answer: "Node.js, Python, PHP, Go, Dart, Ruby, Rust, Deno, Bun and more. Each has a starter template on the **Create function** screen. See [Functions runtimes](/docs/products/functions/runtimes) for every version."
 ---
 
-Appwrite Functions run your backend code, such as API endpoints, webhooks and scheduled jobs. Appwrite Sites hosts the web app your users open. Both deploy the same way. You connect a GitHub repository and pick a production branch, and every push to that branch builds and goes live.
+Appwrite Sites hosts the web app your users open, and Appwrite Functions run your backend code, such as API endpoints, webhooks and scheduled jobs. Both deploy from GitHub, so every push to your production branch builds and goes live.
 
-First deploys usually fail for small reasons. The entrypoint doesn't match the root directory, a variable was added after the build, nobody is allowed to call the function, or the function's key has no scopes.
+By the end of this guide, your web app runs on its own Appwrite domain, and your first function answers requests from the Console and from your app.
 
-# Start where you are {% #start-where-you-are %}
+You need an Appwrite project and a web app in a GitHub repository. If you don't have a project yet, [create one in the Console](/sign-in).
 
-- No project yet: [open the Console](/sign-in), create a project, then pick a path below.
-- Backend code already on GitHub: [deploy a function from your repository](#function-from-github).
-- No function code yet: [start a function from a template](#function-from-template).
-- Function deployed but calls fail: [choose who can run it](#function-permissions) and [grant its scopes](#function-variables).
-- Function needs to run on a timer: [schedule it](#schedule-function).
-- Web app on GitHub: [deploy a site from your repository](#site-from-github).
-- No web app yet: [start a site from a template](#site-from-template).
-- Need keys or config values: set [function variables](#function-variables) or [site variables](#site-variables).
-- First deploy failed: fix [function failures](#function-failures) or [site failures](#site-failures).
-- Site already live: set up [previews](#site-previews), a [custom domain](#site-domain) and [rollbacks](#site-rollback).
-- Both deployed: [send a message and upload a file](#next).
-
-# How Git deployments work on Appwrite {% #how-git-deployments-work %}
-
-The first time you connect GitHub, Appwrite installs its GitHub app on your account or organization. Functions and Sites in the same project share that connection.
+# Step 1: Deploy your site from GitHub {% #deploy-site %}
 
 {% only_dark %}
-![A push to the production branch builds an active deployment that your domains serve, while a push to any other branch builds an inactive deployment with preview URLs](/images/blog/deploy-your-first-appwrite-function-and-site/dark/git-deploy-flow.avif)
+![Create site screen with Import repository on the left and site templates under Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/dark/site-create.avif)
 {% /only_dark %}
 {% only_light %}
-![A push to the production branch builds an active deployment that your domains serve, while a push to any other branch builds an inactive deployment with preview URLs](/images/blog/deploy-your-first-appwrite-function-and-site/git-deploy-flow.avif)
+![Create site screen with Import repository on the left and site templates under Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/site-create.avif)
 {% /only_light %}
 
-- A push to the production branch builds a deployment and activates it if the build succeeds. A failed build leaves the current deployment live.
-- A push to any other branch builds a deployment that stays inactive. Sites also give it preview URLs.
-- Changes to entrypoints, build commands and variables apply to the next deployment. Until you redeploy, the Console shows **Settings changes are not live yet** with a **Redeploy** button.
+1. In the Console, open **Sites** and click **Create site**.
+2. Under **Import repository**, click **Connect GitHub** and choose the repositories Appwrite can read.
+3. Pick your web app's repository and click **Connect**.
+4. Appwrite detects your framework and fills in the build settings. If your app needs environment variables, add them under **Environment variables**.
+5. Click **Deploy**.
 
-# Deploy your first Appwrite Function {% #functions %}
+{% info title="No web app yet?" %}
+Pick a starter under **Clone template** instead, such as **React starter** or **TanStack Start starter**. It comes with your project's endpoint and ID already filled in.
+{% /info %}
 
-## Deploy a function from your GitHub repository {% #function-from-github %}
+# Step 2: Open your site {% #open-site %}
 
 {% only_dark %}
-![Create function screen with Connect Git repository on the left and Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-create.avif)
+![Site Deployments tab showing the active deployment with its preview, source, domain and Visit button](/images/blog/deploy-your-first-appwrite-function-and-site/dark/site-overview.avif)
 {% /only_dark %}
 {% only_light %}
-![Create function screen with Connect Git repository on the left and Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/function-create.avif)
+![Site Deployments tab showing the active deployment with its preview, source, domain and Visit button](/images/blog/deploy-your-first-appwrite-function-and-site/site-overview.avif)
 {% /only_light %}
+
+Appwrite builds your app and shows a preview when it's ready. Click **Visit site** to open it on its Appwrite domain. That's the link you share with your users.
+
+Click **Go to dashboard** to reach your site's **Deployments** tab, with the active deployment and its domain. From now on, every push to your production branch builds a new deployment and puts it live.
+
+# Step 3: Create a function {% #create-function %}
+
+{% only_dark %}
+![Create function screen with Connect Git repository on the left and language starters under Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-create.avif)
+{% /only_dark %}
+{% only_light %}
+![Create function screen with Connect Git repository on the left and language starters under Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/function-create.avif)
+{% /only_light %}
+
+The quickest start is a starter template, which gives you working code in a repository of your own.
 
 1. Open **Functions** and click **Create function**.
-2. If GitHub isn't connected yet, click **Connect GitHub** under **Connect Git repository**. Give the app access only to the repositories you'll deploy. **Update GitHub permissions** adds more later.
-3. Pick a repository and click **Connect**.
-4. Check the fields below, add any variables your code needs under **Variables**, and click **Create and deploy**.
+2. Under **Clone template**, click your language, such as **Node**. This opens the **Starter function**.
+3. Give your function a name.
+4. Choose **Connect your repository**, then **Create new repository**.
+5. Click **Create and deploy**.
 
-Appwrite fills in the runtime, entrypoint and build commands. Check these fields:
+Appwrite creates the repository, commits the starter code and deploys it. Like your site, the function deploys again on every push to its production branch.
 
-- **Root directory** is the folder copied into the build. In a monorepo, set it to the function's folder, such as `functions/api`. Appwrite detects the runtime once, from the repository root, so recheck the runtime, entrypoint and build commands after you change it.
-- **Entrypoint** is relative to the root directory. With a root of `functions/api`, it's `src/main.js`, not `functions/api/src/main.js`.
-- **Build commands** install dependencies, such as `npm install`, plus a build script if you compile TypeScript.
-- **Branch**, under **Production branch**, is the branch that goes live, usually `main`.
-- **Public** is on by default and grants the `any` execute role, so anyone with the URL can call the function. Keep it for webhooks and public endpoints. Turn it off for scheduled or server-only jobs.
-
-The smallest Node.js handler looks like this:
-
-```js
-// src/main.js
-export default async ({ req, res, log }) => {
-  log(`${req.method} ${req.path}`);
-  return res.json({ ok: true });
-};
-```
-
-You'll know it worked when the deployment shows as **Active** on the **Deployments** tab.
-
-## Start a function from a template {% #function-from-template %}
-
-On the **Create function** screen, pick your language under **Clone template**. That opens the **Starter function**, which answers `GET /` with JSON and `GET /ping` with `Pong`. **View all templates** lists use cases such as Stripe payments or an MCP server.
+# Step 4: Run your function {% #run-function %}
 
 {% only_dark %}
-![Template wizard with the Connect your repository and Connect later options above the environment variables](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-template-repository.avif)
+![Executions tab of a function listing completed runs with their status code, method, path and duration](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-executions.avif)
 {% /only_dark %}
 {% only_light %}
-![Template wizard with the Connect your repository and Connect later options above the environment variables](/images/blog/deploy-your-first-appwrite-function-and-site/function-template-repository.avif)
+![Executions tab of a function listing completed runs with their status code, method, path and duration](/images/blog/deploy-your-first-appwrite-function-and-site/function-executions.avif)
 {% /only_light %}
 
-The wizard defaults to **Connect later**, which builds from Appwrite's public template repository. Nothing lands in your GitHub account, so there's no code to edit. To own the code:
-
-1. Name the function.
-2. Choose **Connect your repository**, connect GitHub if asked, and choose **Create new repository**.
-3. Fill any required **Template variables**. The Starter function needs none.
-4. Click **Create and deploy**.
-
-Appwrite creates a private repository (clear **Keep repository private** for a public one), commits the template as `Create <name> function` and deploys that commit.
-
-To add the function to an existing repository instead, choose **Connect existing repository** and set the root directory to a new folder such as `functions/<name>`. Appwrite copies the template over files with the same names, so a root of `./` can replace your app's `package.json`.
-
-You'll know it worked when the `Create <name> function` commit is in your repository. Edit the handler, such as `src/main.js` in Node.js, push to the production branch, and the next execution returns your change.
-
-## Run your function and read its logs {% #run-function %}
-
-1. Open the function's **Executions** tab and click **Create execution**.
-2. Set the method, path, headers and body. Synchronous executions stop at 30 seconds whatever the function's timeout, so turn on **Async execution** for slower work.
+1. Open your function's **Executions** tab and click **Create execution**.
+2. Set **Path** to `/ping`.
 3. Click **Execute**.
 
-Requests to the function's domain, listed on the **Domains** tab, reach your handler as `req`:
+The response body shows `Pong`, and the run appears in the list.
+
+Your app can call the same function at its domain, listed on the **Domains** tab. The starter function is public, so you can try it from your terminal:
 
 ```bash
-curl -X POST https://<FUNCTION_DOMAIN> -H "Content-Type: application/json" -d '{"hello":"world"}'
+curl https://<FUNCTION_DOMAIN>/ping
 ```
 
-{% only_dark %}
-![Executions tab listing completed executions with their trigger, status code, method, path and duration](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-executions.avif)
-{% /only_dark %}
-{% only_light %}
-![Executions tab listing completed executions with their trigger, status code, method, path and duration](/images/blog/deploy-your-first-appwrite-function-and-site/function-executions.avif)
-{% /only_light %}
+To make it your own, edit `src/main.js` in your new repository and push. The next run returns your change.
 
-Click a run to see the **Logs** and **Errors** your code wrote with `log()` and `error()`. Appwrite doesn't store response bodies, so log anything you'll want to check later.
+# Keep building {% #keep-building %}
 
-## Choose who can run your function {% #function-permissions %}
+Your web app and your backend are both live. Click any run on the **Executions** tab to see what your function logged, and when you're ready for more, these guides pick up from here:
 
-Execute permissions on the **Security** tab decide who may start the function. Click **Add role**, pick a role and click **Update**.
-
-{% only_dark %}
-![Security tab with the Any role granted and the Add role menu showing All guests and All users](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-security.avif)
-{% /only_dark %}
-{% only_light %}
-![Security tab with the Any role granted and the Add role menu showing All guests and All users](/images/blog/deploy-your-first-appwrite-function-and-site/function-security.avif)
-{% /only_light %}
-
-Choose by caller:
-
-- Signed-in users calling from a Client SDK need **All users**.
-- Webhooks and public URLs need **Any**. Domain requests arrive as guests, so a domain answers only when the list includes **Any** or **All guests**. Otherwise it returns a 401.
-- Schedules, events and Server SDK calls skip execute permissions, so they need nothing. An empty list also keeps the domain closed.
-
-## Add variables and API scopes {% #function-variables %}
-
-Add environment variables on the **Variables** tab, and check **Secret** for keys and tokens.
-
-{% only_dark %}
-![Variables tab with one secret and two plain variables under the Settings changes are not live yet banner](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-variables.avif)
-{% /only_dark %}
-{% only_light %}
-![Variables tab with one secret and two plain variables under the Settings changes are not live yet banner](/images/blog/deploy-your-first-appwrite-function-and-site/function-variables.avif)
-{% /only_light %}
-
-- Redeploy after every change. The running deployment keeps the old values until you do.
-- You can't read a secret back or turn it back into a plain variable, but **Update** in its menu still replaces the value.
-- A function variable overrides a project variable with the same key. Appwrite's own variables, such as `APPWRITE_FUNCTION_PROJECT_ID`, win over both, so keep your keys out of the `APPWRITE_` prefix.
-
-You don't need an API key variable to call your own project. Appwrite sends a short-lived key on the `x-appwrite-key` header of every execution. To use it, install the Server SDK from the function's root directory, then commit `package.json` and the lockfile:
-
-```bash
-npm install node-appwrite
-```
-
-This handler replaces the earlier one and counts the rows in a table you already have:
-
-```js
-import { Client, TablesDB } from 'node-appwrite';
-
-export default async ({ req, res }) => {
-  const client = new Client()
-    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
-    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
-    .setKey(req.headers['x-appwrite-key']);
-
-  const tablesDB = new TablesDB(client);
-  const rows = await tablesDB.listRows({ databaseId: '<DATABASE_ID>', tableId: '<TABLE_ID>' });
-  return res.json({ total: rows.total });
-};
-```
-
-That key has only the scopes you grant in **Settings** > **Executions** > **Scopes**. A function connected from Git starts with none, so this call fails with a `missing scopes` error until you grant `rows.read`. Templates come with the scopes they need.
-
-{% only_dark %}
-![Scopes card filtered to rows, with rows.read granted to the function's key](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-scopes.avif)
-{% /only_dark %}
-{% only_light %}
-![Scopes card filtered to rows, with rows.read granted to the function's key](/images/blog/deploy-your-first-appwrite-function-and-site/function-scopes.avif)
-{% /only_light %}
-
-## Run a function on a schedule {% #schedule-function %}
-
-Choose an **interval** when a job runs every N minutes and the exact minute doesn't matter. Choose **cron** when the time of day matters, such as `0 9 * * 1` for 09:00 UTC every Monday.
-
-Cron needs a paid plan. On Free, the **Cron** option is locked and intervals start at 60 minutes.
-
-{% only_dark %}
-![Schedule type menu on a Free plan function with Interval recommended and Cron locked](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-schedule-free.avif)
-{% /only_dark %}
-{% only_light %}
-![Schedule type menu on a Free plan function with Interval recommended and Cron locked](/images/blog/deploy-your-first-appwrite-function-and-site/function-schedule-free.avif)
-{% /only_light %}
-
-{% tabs %}
-{% tabsitem #schedule-console title="Console" %}
-Open the function's **Settings** > **Executions**. In the **Schedule** card, pick **Interval** or **Cron** under **Schedule type**, set the value and click **Update**.
-{% /tabsitem %}
-
-{% tabsitem #schedule-cli title="CLI" %}
-With Appwrite CLI 28.3.0 or later, set the interval in minutes. Every update needs `--name`.
-
-```bash
-appwrite functions update --function-id <FUNCTION_ID> --name <NAME> --interval 360
-```
-{% /tabsitem %}
-
-{% tabsitem #schedule-agent title="AI agent" %}
-With [Appwrite agent skills](/docs/tooling/ai/skills) installed, paste this into your agent:
-
-```text
-Use the Appwrite CLI to run my function <FUNCTION_ID> every 6 hours
-on an interval. Keep its current name. Then run appwrite functions get
-and show me the interval it reports.
-```
-{% /tabsitem %}
-{% /tabs %}
-
-Intervals surprise people in two more ways. The first run can be a full interval away, and a daily interval runs at a fixed UTC time you can't choose.
-
-Click **Execute** once to test the code now instead of waiting. Scheduled runs then appear on the **Executions** tab with `schedule` as the trigger. They stop at the function's timeout, 15 seconds by default. Raise it, up to 900 seconds, in **Settings** > **Runtime** > **Timeout**.
-
-## Fix the first function deploy failures {% #function-failures %}
-
-Start with the failed deployment. Open it on the **Deployments** tab and read the build logs from the first error. Here the build command runs a `build` script that `package.json` doesn't define.
-
-{% only_dark %}
-![Failed function deployment whose build logs end with npm error Missing script build and Build failed with exit code 1](/images/blog/deploy-your-first-appwrite-function-and-site/dark/function-build-failed.avif)
-{% /only_dark %}
-{% only_light %}
-![Failed function deployment whose build logs end with npm error Missing script build and Build failed with exit code 1](/images/blog/deploy-your-first-appwrite-function-and-site/function-build-failed.avif)
-{% /only_light %}
-
-- **"Entrypoint for your Appwrite Function is missing."** Set it in **Settings** > **Runtime**, relative to the root directory, and redeploy.
-- **Modules missing at runtime.** Add your install command in **Settings** > **Build** > **Commands**. Don't commit `node_modules`, because packages installed on your machine may not run in the runtime.
-- **Files outside the root directory are missing.** Only the root directory reaches the build. To share code in a monorepo, set the root to the shared parent and `cd` into the function's folder in the build commands.
-- **A domain request returns a 401.** Add **Any** or **All guests** on the **Security** tab.
-- **A `missing scopes` error.** Grant the scope in **Settings** > **Executions** > **Scopes**.
-- **Executions stop at 15 or 30 seconds.** At 15 seconds, raise the timeout. At 30 seconds, switch to an async execution.
-
-# Deploy your first Appwrite Site {% #sites %}
-
-## Deploy a site from your GitHub repository {% #site-from-github %}
-
-{% only_dark %}
-![Create site screen with Import repository on the left and Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/dark/site-create.avif)
-{% /only_dark %}
-{% only_light %}
-![Create site screen with Import repository on the left and Clone template on the right](/images/blog/deploy-your-first-appwrite-function-and-site/site-create.avif)
-{% /only_light %}
-
-1. Open **Sites** and click **Create site**.
-2. If GitHub isn't connected yet, click **Connect GitHub** under **Import repository** and choose which repositories the app can read.
-3. Pick your repository and click **Connect**.
-4. Check the detected build settings, fill the **Variables** your build needs, choose a subdomain under **Domain** and click **Deploy**.
-
-Appwrite detects the framework and fills **Install command**, **Build command** and **Output directory**. Unlike functions, sites detect again when you change the root directory, and **Detect** reruns it. Two fields deserve a second look:
-
-- **Install command**: Appwrite reads your lockfile, so pnpm and Yarn projects get the right command. Bun projects still get `npm install`, so change it to `bun install`.
-- **Output directory**: only this folder gets published. If your framework config writes elsewhere, match it here.
-
-You'll know it worked when your domain opens the app.
-
-## Start a site from a template {% #site-from-template %}
-
-Pick a template under **Clone template** on the **Create site** screen. Filter by framework for a starter such as **React starter** or **TanStack Start starter**, which come with your project's endpoint and ID filled in.
-
-1. Name the site and choose a subdomain under **Domain**.
-2. Choose **Connect your repository**, connect GitHub if asked, and choose **Create new repository**.
-3. Check the **Template variables**.
-4. Click **Deploy**.
-
-Appwrite commits the template to your repository as `Create <name> site` and deploys that commit, so the template becomes your codebase. For an existing repository, use a new root folder, as with functions.
-
-{% only_dark %}
-![Site Deployments tab showing the active deployment with its preview, source and domain](/images/blog/deploy-your-first-appwrite-function-and-site/dark/site-overview.avif)
-{% /only_dark %}
-{% only_light %}
-![Site Deployments tab showing the active deployment with its preview, source and domain](/images/blog/deploy-your-first-appwrite-function-and-site/site-overview.avif)
-{% /only_light %}
-
-You'll know it worked when the `Create <name> site` commit is in your repository and the domain under **Active deployment** opens the template. [Building with Sites templates](/blog/post/building-with-sites-templates) walks through more templates.
-
-## Choose SSR or static rendering {% #site-rendering %}
-
-The rendering mode follows what your build outputs. Appwrite checks every build and shows the mode under **Settings** > **Build** > **Adapter**.
-
-{% only_dark %}
-![Site Build settings with React as the framework, Static site as the adapter, ./dist as the output directory and index.html as the fallback file](/images/blog/deploy-your-first-appwrite-function-and-site/dark/site-settings-build.avif)
-{% /only_dark %}
-{% only_light %}
-![Site Build settings with React as the framework, Static site as the adapter, ./dist as the output directory and index.html as the fallback file](/images/blog/deploy-your-first-appwrite-function-and-site/site-settings-build.avif)
-{% /only_light %}
-
-- **Static site** serves the files your build produced, with faster cold starts. Use it for single-page apps, docs and marketing pages.
-- **Server side rendering** runs your framework's server on every request. Use it when pages read cookies, load per-user data or include server routes.
-
-To switch, change your framework config first, for example `output: 'export'` in Next.js for a static build. Then set **Adapter** to match and redeploy. A site set to SSR whose build outputs static files fails with `Adapter mismatch`.
-
-React and Vue sites get `index.html` as the **Fallback file** automatically, so client-side routes survive a refresh. If Appwrite detected **Vite** or **Other**, refreshing a route like `/settings` returns a 404 until you set it yourself.
-
-For SSR, SvelteKit needs `@sveltejs/adapter-node` and Astro needs `@astrojs/node`. Next.js and TanStack Start need no changes. The [Next.js quick start](/docs/products/sites/quick-start/nextjs) and the [TanStack Start guide](/blog/post/deploy-tanstack-start-app-to-appwrite-sites) walk through an SSR deploy.
-
-## Set build time and runtime variables {% #site-variables %}
-
-Add variables on the site's **Variables** tab, then redeploy, because every change applies to the next deployment. Where your code reads a variable decides what it can hold:
-
-- A static site has no server runtime. Values your build writes into HTML or browser JavaScript are public, so keep secrets out of that output. Your Appwrite endpoint and project ID are fine.
-- An SSR site also reads variables at runtime, so secrets are safe in code that only runs on the server. Variables your framework exposes to the browser, such as `NEXT_PUBLIC_` or `VITE_` ones, land in the bundle either way.
-
-SSR code can call your project with the short-lived key on each request's `x-appwrite-key` header, so you don't need to store an API key. Like a function, a site starts with no scopes, so grant them under **Settings** > **Build** > **Scopes** first. See the [Sites development docs](/docs/products/sites/develop#ephemeral-api-key).
-
-That key acts as your server, without a session, so use it for work like creating a user. For anything a signed-in visitor does, forward their session as in [server-side rendering with Appwrite Auth](/docs/products/auth/server-side-rendering).
-
-## Use preview deployments for branches and pull requests {% #site-previews %}
-
-A push to any branch except production builds an inactive deployment. Click it on the **Deployments** tab to find two links under **URLs**: a branch URL that follows the branch's latest build, and a commit URL for that exact build. Pull requests also get a build comment unless **Silent mode** is on.
-
-Previews are private. Opening one takes an Appwrite account in the site's organization and a one-time authorization of **Appwrite Preview**, so invite reviewers to the organization first.
-
-In a monorepo, add path filters under **Settings** > **Build** so a change in `docs/` doesn't rebuild the site. [Git deployment triggers](/blog/post/announcing-git-deployment-triggers) covers the patterns.
-
-## Add a custom domain {% #site-domain %}
-
-Add your domain on the site's **Domains** tab. Start with a subdomain like `www.example.com`, which needs one CNAME record and leaves the rest of your DNS alone. When Appwrite asks for a rule type, pick **Active deployment** for production.
-
-An apex domain like `example.com` can't use a CNAME. Moving its nameservers to Appwrite works, but then you must recreate records like MX in Appwrite. If your DNS provider supports ALIAS or ANAME records, CNAME flattening avoids the move: add that record and the CAA record Appwrite shows.
-
-DNS can take up to 48 hours to propagate. You'll know it worked when the domain verifies and loads over HTTPS. [Custom domains with Sites](/blog/post/custom-domains-with-sites) shows the registrar side.
-
-## Roll back a bad deployment {% #site-rollback %}
-
-When a deployment breaks production, open the **Deployments** tab, open the menu on the last good deployment and click **Activate**. Traffic switches without a rebuild. Functions roll back the same way.
-
-The next successful push to production activates again, so revert the bad commit too. Appwrite deletes inactive deployments after the retention period in **Settings** > **Build**, so keep that period longer than your rollback window.
-
-## Fix the first site deploy failures {% #site-failures %}
-
-Start with the failed deployment on the **Deployments** tab and read its build logs from the first error. If the build passed but pages fail, open the **Logs** tab, where SSR sites also show `console.log` and `console.error` output.
-
-- **Appwrite can't detect the framework.** In a monorepo, set the root directory to the app's folder and click **Detect**.
-- **The install step fails.** Match the install command to your package manager. Bun projects need `bun install`.
-- **Pages or assets are missing after a successful build.** Fix the output directory under **Settings** > **Build**.
-- **Refreshing a client-side route returns a 404.** Set **Fallback file** to `index.html`.
-- **The build fails with `Adapter mismatch`.** Set **Adapter** to what your framework config builds.
-- **A SvelteKit or Astro SSR site fails to start.** Add `@sveltejs/adapter-node` or `@astrojs/node`.
-- **A variable is undefined.** Redeploy. In browser code, read only variables your framework exposes to the browser.
-- **The build stops at 15 minutes.** That's the Free plan's build limit. Pro allows 45.
-
-# Send your first message and upload your first file {% #next %}
-
-With your backend and frontend live, take the next two steps. [Send your first message with Appwrite Messaging](/blog/post/send-your-first-message-with-appwrite-messaging), for example from the function you just deployed, and [upload your first file to Appwrite Storage](/blog/post/upload-your-first-file-to-appwrite-storage) from your site.
-
-- [Deploy functions from Git](/docs/products/functions/deploy-from-git)
-- [Function executions and schedules](/docs/products/functions/execute)
-- [Deploy sites from Git](/docs/products/sites/deploy-from-git)
-- [Sites rendering](/docs/products/sites/rendering)
-
-[Sign up for Appwrite Cloud](/sign-up) if you don't have a project yet.
+- [Add a custom domain to your site](/blog/post/custom-domains-with-sites)
+- [Roll back to an earlier deployment](/docs/products/sites/instant-rollbacks)
+- [Run your function on a schedule](/docs/products/functions/execute#schedule)
+- [Send your first message with Appwrite Messaging](/blog/post/send-your-first-message-with-appwrite-messaging)
+- [Upload your first file to Appwrite Storage](/blog/post/upload-your-first-file-to-appwrite-storage)

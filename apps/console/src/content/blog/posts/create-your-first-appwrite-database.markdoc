@@ -1,93 +1,66 @@
 ---
 layout: post
 title: "Create your first Appwrite database and add your first row"
-description: "Pick the right Appwrite database type, set up a TablesDB table with typed columns and permissions, add your first row, query it, and watch it with Realtime."
+description: "Create a TablesDB database in Appwrite, add a table with typed columns, choose who can read and write, then add your first row and use it from your app."
 date: 2026-11-03
 cover: /images/blog/create-your-first-appwrite-database/cover.avif
-timeToRead: 10
+timeToRead: 4
 author: atharva
 category: tutorials
 featured: false
 faqs:
   - question: "Which Appwrite database type should I start with?"
-    answer: "Start with [TablesDB](/docs/products/databases/tablesdb) unless your data clearly fits another type. In the Appwrite Cloud Console, it is the only type that runs on Serverless compute with no compute fee, and your client app can read it directly with Appwrite permissions and Realtime. Pick DocumentsDB for records whose fields vary, VectorsDB for embeddings, and PostgreSQL or MySQL when you need a raw SQL engine."
+    answer: "Start with [TablesDB](/docs/products/databases/tablesdb). It runs on every plan, including Free, with no compute fee, and your app reads it directly with Appwrite permissions. Pick DocumentsDB for records whose fields vary, VectorsDB for embeddings, and PostgreSQL or MySQL when you want a dedicated SQL engine."
   - question: "Can I use DocumentsDB, VectorsDB, PostgreSQL, or MySQL on the Free plan?"
-    answer: "No. In the Appwrite Cloud Console, DocumentsDB, VectorsDB, PostgreSQL, and MySQL run on dedicated compute, which needs the Pro or Enterprise plan and starts at $10 per month per database. On Free, the Create database wizard marks them **Upgrade**. The Pro plan includes $10 a month in database compute credits, which covers one database on the smallest tier. TablesDB runs on Serverless compute on every plan, with no compute fee. See [pricing](/pricing) for the tiers."
-  - question: "Why does my Appwrite table return a 401 error from the client?"
-    answer: "With row level security off, a client that has no table-level read permission gets `401 user_unauthorized`, and a new table grants no permissions. For shared data, open the table's **Security** tab and grant **Read** to **Any** or **All users** under **Permissions**. For per-user data, don't grant table-level Read: turn on **Row level security (RLS)** instead, so each user reads only rows that carry their own read permission. The Console and API keys skip permissions, which is why the rows look fine there."
-  - question: "Why does listRows return an empty list when the Console shows rows?"
-    answer: "First remove your query filters and retry, in case the rows don't match them. If the list is still empty, row level security is on, the table grants the user no read permission, and the rows have no read permission for that user. Rows created in the Console, with an API key, or by CSV import get no row permissions unless you add them. For shared data, grant Read at the table level. For per-user data, create rows from the signed-in client, or add a read permission for the owner in each row's **Permissions** tab."
-  - question: "Should I use Varchar or Text for a string column in TablesDB?"
-    answer: "Use Varchar for short values you filter, sort, or index, sized to the longest real value. A Varchar column is fully indexable only when its size is under 768. Use Text, Mediumtext, or Longtext for long content, which supports only prefix indexes."
-  - question: "Why doesn't my Appwrite Realtime subscription receive row events?"
-    answer: "Realtime only delivers events for rows the current user can read, and a missing permission produces no error. Check that `listRows` returns the row for the same user first. Also subscribe after the user signs in: a subscription keeps the session it was created with, so call `realtime.disconnect()` and subscribe again when the session changes."
+    answer: "They run on dedicated compute, which comes with the Pro and Enterprise plans, from $10 a month per database. The Pro plan includes $10 a month in database compute credits, which covers one database on the smallest tier. See [pricing](/pricing) for the tiers."
+  - question: "How do I make a table's rows readable by everyone?"
+    answer: "Open the table's **Security** tab, click **Add role**, choose **Any**, tick **Read**, and click **Update**. Every visitor can then read every row, signed in or not."
+  - question: "Can my AI coding agent create the table for me?"
+    answer: "Yes. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe the table, its columns, and who can read and write it. Your agent creates the database, the table, and its permissions."
 ---
 
-Creating a database in Appwrite takes a minute. What costs new developers an afternoon comes after: the row is right there in the Console, and the app gets a `401` error or an empty list. Both usually come from table permissions, which you can set correctly before you write client code.
+An Appwrite database stores your app's data and serves it straight to your users, with permissions that decide who sees what. You set it up in the Console, and your app reads and writes it through the Appwrite SDK.
 
-The short version: create a **TablesDB** database on the default Serverless tier, decide whose rows it holds before you set permissions, then add a row, query it, and watch it with Realtime.
+In this guide, you create a TablesDB database with a `tasks` table, set it up so each user keeps their own tasks, and add and list tasks from your app. Everything here works on the Free plan.
 
-**Start where you are:**
+You need an Appwrite project. If you don't have one yet, [create one in the Console](/sign-in).
 
-- No Appwrite project yet: create one in the [Appwrite Console](/sign-in), then start at [step 1](#choose-type).
-- Already know you want TablesDB: go to [step 2](#create-database).
-- Database created, no table yet: go to [step 3](#create-table).
-- Already have a table, or your app gets a `401` or an empty list: go to [step 4](#permissions).
-- Data already in a spreadsheet: create a table whose column keys match its header row in [step 3](#create-table), then [import it as CSV](#csv).
-- Permissions set, app not connected yet: go to [step 5](#connect-app).
-- Rows load in your app: go to [step 8](#realtime) to make them live.
-- Done all of it: [deploy your first function and site](#deploy-next).
-
-# Step 1: Choose a database type {% #choose-type %}
-
-Appwrite Cloud offers five database types. Start with TablesDB unless another row below describes your data better.
-
-| Type | What it's for | Plan on Cloud |
-| --- | --- | --- |
-| [TablesDB](/docs/products/databases/tablesdb) | App data in tables with typed columns, with permissions down to each row | Every plan, including Free. Serverless, no compute fee |
-| [DocumentsDB](/docs/products/databases/documentsdb) | Flexible JSON documents whose fields vary, queried with filters and full-text search | Pro or Enterprise, from $10 a month |
-| [VectorsDB](/docs/products/databases/vectorsdb) | Embeddings for semantic search and AI features | Pro or Enterprise, from $10 a month |
-| [PostgreSQL](/docs/products/databases/postgresql) | A dedicated PostgreSQL engine for SQL tools, ORMs like Prisma, and extensions like pgvector | Pro or Enterprise, from $10 a month |
-| [MySQL](/docs/products/databases/mysql) | A dedicated MySQL engine for existing MySQL apps | Pro or Enterprise, from $10 a month |
-
-On Appwrite Cloud, TablesDB is the only type on Serverless compute. The other four run on dedicated compute, billed per database from $10 a month for the smallest tier, and the Console marks them **Beta**. The Pro plan includes $10 a month in database compute credits, which covers one database on that tier.
+# Step 1: Create a TablesDB database {% #create-database %}
 
 {% only_dark %}
-![The Create database wizard on the Free plan: TablesDB is available, while DocumentsDB, VectorsDB, PostgreSQL, and MySQL show an Upgrade badge](/images/blog/create-your-first-appwrite-database/dark/database-type.avif)
+![The Create database wizard showing the five database types: TablesDB, DocumentsDB, and VectorsDB under Appwrite databases, PostgreSQL and MySQL under native databases](/images/blog/create-your-first-appwrite-database/dark/database-type.avif)
 {% /only_dark %}
 {% only_light %}
-![The Create database wizard on the Free plan: TablesDB is available, while DocumentsDB, VectorsDB, PostgreSQL, and MySQL show an Upgrade badge](/images/blog/create-your-first-appwrite-database/database-type.avif)
+![The Create database wizard showing the five database types: TablesDB, DocumentsDB, and VectorsDB under Appwrite databases, PostgreSQL and MySQL under native databases](/images/blog/create-your-first-appwrite-database/database-type.avif)
 {% /only_light %}
 
-The bigger split is between the first three and the last two. TablesDB, DocumentsDB, and VectorsDB sit behind the Appwrite API, so your client app reads them directly, with Appwrite permissions and Realtime. PostgreSQL and MySQL are bare engines your server reaches with a driver, without either.
+Appwrite offers five database types. TablesDB fits most apps, so this guide uses it.
 
-Pro projects have no database limit, so adding VectorsDB next to TablesDB later is normal. [Native databases vs Appwrite databases](/blog/post/native-databases-vs-appwrite-databases) compares them in depth.
+| Type | Use it for |
+| --- | --- |
+| [TablesDB](/docs/products/databases/tablesdb) | App data in tables with typed columns, with permissions down to each row |
+| [DocumentsDB](/docs/products/databases/documentsdb) | Flexible JSON records whose fields vary from one to the next |
+| [VectorsDB](/docs/products/databases/vectorsdb) | Embeddings for semantic search and AI features |
+| [PostgreSQL](/docs/products/databases/postgresql) | A dedicated PostgreSQL engine for SQL tools, ORMs, and extensions like pgvector |
+| [MySQL](/docs/products/databases/mysql) | A dedicated MySQL engine for existing MySQL apps |
 
-# Step 2: Create a TablesDB database {% #create-database %}
-
-Using an AI agent? Skip to [step 3](#create-table). Its prompt creates the database too.
+TablesDB runs on Serverless compute on every plan, with no compute fee. The other four run on dedicated compute on the Pro and Enterprise plans, from $10 a month per database, and Pro includes $10 a month in database compute credits.
 
 1. Open your project in the [Console](/sign-in), go to **Databases**, and click **Create database**.
-2. Choose **TablesDB** and enter a **Name**.
-3. Under **Database ID**, click **Auto-generated** and enter `main`.
-4. Keep the **Serverless** specification it selects and click **Create database**.
+2. Choose **TablesDB** and enter a **Name**, such as `Main`.
+3. Under **Database ID**, click **Auto-generated** and enter `main`. Your code uses this ID.
+4. Keep the **Serverless** specification and click **Create database**.
+
+# Step 2: Create a table {% #create-table %}
 
 {% only_dark %}
-![The Create database wizard with TablesDB chosen, the name Main, the Database ID main, and the Serverless specification selected](/images/blog/create-your-first-appwrite-database/dark/create-database.avif)
+![The Columns tab of the Tasks table listing title as varchar size 255 and required, done as boolean with an index, and notes as text](/images/blog/create-your-first-appwrite-database/dark/table-columns.avif)
 {% /only_dark %}
 {% only_light %}
-![The Create database wizard with TablesDB chosen, the name Main, the Database ID main, and the Serverless specification selected](/images/blog/create-your-first-appwrite-database/create-database.avif)
+![The Columns tab of the Tasks table listing title as varchar size 255 and required, done as boolean with an index, and notes as text](/images/blog/create-your-first-appwrite-database/table-columns.avif)
 {% /only_light %}
 
-Set the ID yourself: it goes into every SDK call, and you can rename a database later but not change its ID. On the Free plan, which allows one database per project, `main` will hold all your tables.
-
-Dedicated tiers reserve CPU and memory for steady production traffic, which a first database doesn't need.
-
-You'll know it worked when the new database shows **No tables yet**.
-
-# Step 3: Create a table and its columns {% #create-table %}
-
-A **table** holds rows of one shape, and its **columns** define that shape and validate every write. The examples use this `tasks` table. If yours have other IDs, swap them in wherever the examples say `main` or `tasks`.
+A table holds rows of one shape, and its columns define that shape. This guide uses a `tasks` table with three columns:
 
 | Key | Type | Settings |
 | --- | --- | --- |
@@ -95,242 +68,85 @@ A **table** holds rows of one shape, and its **columns** define that shape and v
 | `done` | Boolean | Default `false` |
 | `notes` | Text | Optional |
 
-The choices behind it:
+1. Open your database and click **Create table**. Enter the **Name** `Tasks`, click **Auto-generated** under **Table ID** and enter `tasks`, then click **Create**.
+2. In the **Columns** tab, click **Create column**. Enter the **Key**, pick the **Type**, fill in the settings from the table above, and click **Create Column**. Repeat for each column.
+3. In the **Indexes** tab, click **Create index**. Enter the **Index Key** `done_index`, select the `done` column, and click **Create Index**. Your app filters on `done`, and the index keeps that fast.
 
-- **Varchar for short values you filter or sort on, Text for long ones.** A Varchar is fully indexable only when its size is under 768, so size it to the longest real value, not the maximum. Text types support only prefix indexes.
-- **Required or a default, never both.** A required column must have a value when you create a row, and Appwrite rejects a default on it. Require a value only when no fallback makes sense.
-- **Index what you query.** `done` gets an index because the query in step 7 filters on it. `Query.search()` needs a fulltext index.
-
-{% tabs %}
-{% tabsitem #table-console title="Console" %}
-
-1. Open your database and click **Create table**. Enter a **Name**, click **Auto-generated** under **Table ID** and enter `tasks`, then click **Create**.
-2. In the **Columns** tab, click **Create column**. Enter the **Key** and pick the **Type**, which starts on **Text**. Set **Size**, **Required**, or **Default value**, and click **Create Column**. Repeat for each column.
-3. In the **Indexes** tab, click **Create index**. Enter the **Index Key** `done_index`, keep **Index Type** on **Key**, select the `done` column, and click **Create Index**.
+# Step 3: Choose who can read and write {% #permissions %}
 
 {% only_dark %}
-![The Create Column drawer for title: Type Varchar, Size 255, and Required ticked, which hides the Default value field](/images/blog/create-your-first-appwrite-database/dark/create-column.avif)
+![The Security tab of the Tasks table with All users allowed to create rows and Row level security (RLS) turned on](/images/blog/create-your-first-appwrite-database/dark/table-security.avif)
 {% /only_dark %}
 {% only_light %}
-![The Create Column drawer for title: Type Varchar, Size 255, and Required ticked, which hides the Default value field](/images/blog/create-your-first-appwrite-database/create-column.avif)
+![The Security tab of the Tasks table with All users allowed to create rows and Row level security (RLS) turned on](/images/blog/create-your-first-appwrite-database/table-security.avif)
 {% /only_light %}
 
-{% /tabsitem %}
-{% tabsitem #table-agent title="AI agent" %}
-
-Connect your agent to the [Appwrite MCP server](/docs/tooling/ai/mcp-servers), then paste this prompt:
-
-```text
-In my Appwrite project, create a TablesDB database with the ID "main" if it doesn't exist. In it, create a table with the ID "tasks" and these columns: title (varchar, size 255, required), done (boolean, not required, default false), notes (text, optional). Add a key index on done. Don't set any table permissions. Show me the schema before you create it.
-```
-
-{% /tabsitem %}
-{% /tabs %}
-
-You'll know it worked when the **Columns** tab lists `title`, `done`, and `notes` as **Available**, with a tick under **Index** for `done`.
-
-{% only_dark %}
-![The Columns tab of the Tasks table listing title as varchar size 255 and required, done as boolean with an index, and notes as text, all Available](/images/blog/create-your-first-appwrite-database/dark/table-columns.avif)
-{% /only_dark %}
-{% only_light %}
-![The Columns tab of the Tasks table listing title as varchar size 255 and required, done as boolean with an index, and notes as text, all Available](/images/blog/create-your-first-appwrite-database/table-columns.avif)
-{% /only_light %}
-
-To keep the schema in Git, use `appwrite pull tables` and `appwrite push tables` from the [Appwrite CLI](/docs/tooling/command-line/tables).
-
-# Step 4: Set table permissions {% #permissions %}
-
-A new table grants no permissions to anyone. The Console and API keys skip permissions, so everything looks fine there while your app is refused.
-
-A user can read a row when the table grants them Read, or, with **Row level security (RLS)** on, when the row itself does. Either one is enough, and RLS never takes table access away.
-
-{% only_dark %}
-![Diagram: with table-level Read, a user reads every row whether RLS is off or on. Without it, RLS off fails with 401 user_unauthorized, and RLS on returns only rows that grant the user Read, which can be an empty list](/images/blog/create-your-first-appwrite-database/dark/permissions-diagram.avif)
-{% /only_dark %}
-{% only_light %}
-![Diagram: with table-level Read, a user reads every row whether RLS is off or on. Without it, RLS off fails with 401 user_unauthorized, and RLS on returns only rows that grant the user Read, which can be an empty list](/images/blog/create-your-first-appwrite-database/permissions-diagram.avif)
-{% /only_light %}
-
-Rows you add in the Console grant nobody anything. So with RLS on and no table-level Read, a list call returns an empty list instead of a `401`.
-
-Before granting anything, decide whose rows these are.
-
-**Shared data**, such as a catalog or public posts, needs table permissions only. Grant **Read** to **Any**, or to **All users** if people must sign in first. Grant Create, Update, and Delete only to roles that should write, which is rarely **Any**.
-
-**Per-user data**, such as each user's own tasks, needs RLS on and only **Create** granted to **All users** on the table. Don't grant table-level Read: it covers every row, so every signed-in user would read everyone's tasks, with RLS on or off. A row a signed-in user creates from a client SDK, without passing permissions, gets read, update, and delete for that user only.
+Permissions decide what your users can do with a table. In a task list, each user adds their own tasks and sees only those.
 
 1. Open the table's **Security** tab.
-2. Under **Permissions**, click **Add role**, pick a role, tick the actions, and click **Update**.
-3. For per-user data, turn on **Row level security (RLS)** below it and click that section's own **Update**. The switch alone saves nothing.
+2. Under **Permissions**, click **Add role**, choose **All users**, tick **Create**, and click **Update**.
+3. Turn on **Row level security (RLS)** and click **Update** in that section.
+
+Now any signed-in user can add tasks. Each task belongs to the user who created it, and only that user can read, update, or delete it.
+
+{% info title="Data everyone can see?" %}
+For data every visitor reads, like a product catalog, grant **Read** to **Any** instead. The [permissions guide](/docs/products/databases/tablesdb/permissions) covers teams and other roles.
+{% /info %}
+
+# Step 4: Add your first row {% #create-row %}
 
 {% only_dark %}
-![The Security tab of the tasks table in the per-user setup: All users has Create only, and Row level security (RLS) is on, each section with its own Update button](/images/blog/create-your-first-appwrite-database/dark/table-security.avif)
+![The Create row drawer for the Tasks table with title set to Write the first row and done left at False](/images/blog/create-your-first-appwrite-database/dark/create-row.avif)
 {% /only_dark %}
 {% only_light %}
-![The Security tab of the tasks table in the per-user setup: All users has Create only, and Row level security (RLS) is on, each section with its own Update button](/images/blog/create-your-first-appwrite-database/table-security.avif)
+![The Create row drawer for the Tasks table with title set to Write the first row and done left at False](/images/blog/create-your-first-appwrite-database/create-row.avif)
 {% /only_light %}
 
-To test before your app has sign-in, grant **Any** Read and Create on `tasks`, with test data only, since every row is public. Once sign-in works, move Create to **All users**. Then remove the table's Read grant for per-user rows, or move it to **All users** for shared rows.
+In the table's **Rows** tab, click **Create row**. Enter a `title`, leave `done` as it is, and click **Create row**.
 
-Rows created while testing have no owner, so a per-user app stops showing them. The [permissions guide](/docs/advanced/security/permissions) covers teams, labels, and private rows.
+The row appears in the **Rows** tab with its own `$id`, and `done` is `false` from the column default.
 
-You'll know it worked when the query in [step 7](#query) returns a signed-in user's own rows and none of another user's.
+# Step 5: Read and write rows from your app {% #connect-app %}
 
-# Step 5: Connect your app {% #connect-app %}
+Your app works with the table as a signed-in user. If it doesn't have sign-in yet, add it with [Appwrite Auth](/docs/products/auth/quick-start).
 
-Steps 6 to 8 call the table from your web app, so step 4's permissions apply as they will for your users. Install the SDK with `npm install appwrite`, and copy the **API Endpoint** and **Project ID** from your project's **Settings** page.
+Add your app under **Apps** in your project, with the hostname it runs on, such as `localhost`. Then install the SDK with `npm install appwrite`, and copy the **API Endpoint** and **Project ID** from your project's **Settings**.
+
+This adds a task for the signed-in user, then lists their open tasks, newest first:
 
 ```js
-import { Client, TablesDB } from 'appwrite';
+import { Client, TablesDB, ID, Query } from 'appwrite';
 
 const client = new Client()
   .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // API Endpoint
   .setProject('<PROJECT_ID>'); // Project ID
 
 const tablesDB = new TablesDB(client);
-```
 
-Under **Apps** in your project, add a web app for the page's hostname, such as `localhost`, or every call fails with `403 general_unknown_origin`. Once Read or Create belongs to **All users**, sign the user in on this `client` with [Appwrite Auth](/docs/products/auth/quick-start) before you call the table. An API key skips permissions, so a `node-appwrite` script proves nothing about your app.
-
-You'll know it worked when the SDK tab in [step 6](#create-row) creates a row without a `403`.
-
-# Step 6: Add your first row {% #create-row %}
-
-{% tabs %}
-{% tabsitem #row-console title="Console" %}
-
-In the table's **Rows** tab, click **Create row** and fill in `title`. Leave `done` alone so the default applies.
-
-{% only_dark %}
-![The Create row drawer for the tasks table with title set to Write the first row and done left at False](/images/blog/create-your-first-appwrite-database/dark/create-row.avif)
-{% /only_dark %}
-{% only_light %}
-![The Create row drawer for the tasks table with title set to Write the first row and done left at False](/images/blog/create-your-first-appwrite-database/create-row.avif)
-{% /only_light %}
-
-A row created here gets no row permissions. That's fine when the table grants Read. In the per-user setup, give the row an owner first, or clients won't see it:
-
-1. Open the drawer's **Permissions** tab and click **Add role** > **Select users**.
-2. Pick the user and click **Add**.
-3. Tick **Read**, **Update**, and **Delete** for that user.
-
-{% only_dark %}
-![The Permissions tab of the Create row drawer granting the user Maya Chen read, update, and delete on the new row](/images/blog/create-your-first-appwrite-database/dark/row-permissions.avif)
-{% /only_dark %}
-{% only_light %}
-![The Permissions tab of the Create row drawer granting the user Maya Chen read, update, and delete on the new row](/images/blog/create-your-first-appwrite-database/row-permissions.avif)
-{% /only_light %}
-
-Click **Create row** at the bottom of the drawer.
-
-{% /tabsitem %}
-{% tabsitem #row-sdk title="SDK" %}
-
-Run this with the `tablesDB` client from [step 5](#connect-app). If a user is signed in, the new row belongs to them, which is what the per-user setup relies on.
-
-```js
-import { ID } from 'appwrite';
-
-const row = await tablesDB.createRow({
+await tablesDB.createRow({
   databaseId: 'main',
   tableId: 'tasks',
   rowId: ID.unique(),
-  data: { title: 'Write the first row' }
+  data: { title: 'Ship my first feature' }
 });
-
-console.log(row.$id, row.done); // done is false, from the column default
-```
-
-{% /tabsitem %}
-{% tabsitem #row-agent title="AI agent" %}
-
-With the [Appwrite MCP server](/docs/tooling/ai/mcp-servers) connected, paste this prompt:
-
-```text
-Add a row to the "tasks" table in the "main" TablesDB database of my Appwrite project, with the title "Write the first row". Leave the other columns out so their defaults apply, then show me the created row.
-```
-
-{% /tabsitem %}
-{% /tabs %}
-
-You'll know it worked when the row shows in the **Rows** tab with its own `$id` and `done` set to `false`.
-
-A `401 user_unauthorized` on create means the table doesn't grant Create to the caller's role, so grant it in [step 4](#permissions). A `400 row_invalid_structure` means the data doesn't match the columns: a missing required value, an unknown key, or a wrong type.
-
-## Import and export rows as CSV {% #csv %}
-
-To bring rows in from a spreadsheet, save it as CSV with a header row of your column keys (`title`, `done`, `notes`), including every required column. In the **Rows** tab, click the upload icon (**Import CSV**), pick a **Local file** or a file in a bucket, and click **Import**.
-
-{% only_dark %}
-![The Import CSV dialog with Local file selected and tasks.csv chosen, ready to import](/images/blog/create-your-first-appwrite-database/dark/import-csv.avif)
-{% /only_dark %}
-{% only_light %}
-![The Import CSV dialog with Local file selected and tasks.csv chosen, ready to import](/images/blog/create-your-first-appwrite-database/import-csv.avif)
-{% /only_light %}
-
-The import runs in the background, 100 rows per batch, and a `$id` that already exists fails its whole batch. You'll know it worked when the progress box says **Import completed to** your table. If it says **Import failed to**, click **View details** for the errors.
-
-Imported rows get no row permissions, like Console rows. In the per-user setup, add a `$permissions` column in the [format the import docs show](/docs/products/databases/tablesdb/csv-imports#permissions), or your users won't see them.
-
-To export, click the download icon (**Export CSV**), choose the columns, delimiter, and header row, and click **Export**. When it finishes, click **Download** in the progress box. [CSV exports](/docs/products/databases/tablesdb/csv-exports) covers filtered exports.
-
-# Step 7: Read the row back with a query {% #query %}
-
-Query from the client, as your app will, so the permissions from step 4 are part of the test. This uses `tablesDB` from [step 5](#connect-app):
-
-```js
-import { Query } from 'appwrite';
 
 const { rows } = await tablesDB.listRows({
   databaseId: 'main',
   tableId: 'tasks',
   queries: [
     Query.equal('done', [false]),
-    Query.orderDesc('$createdAt'),
-    Query.limit(10)
+    Query.orderDesc('$createdAt')
   ]
 });
 ```
 
-Filter and sort on columns you indexed in step 3. Set `Query.limit()` on purpose: without it, a list returns the first 25 rows, and a growing table gets cut off silently. Page through the rest with [cursor pagination](/docs/products/databases/tablesdb/pagination).
+`rows` holds the task you just added. Each user gets back only their own tasks.
 
-You'll know it worked when `rows` holds the row from step 6.
+# Keep building {% #keep-building %}
 
-A `401 user_unauthorized` means the caller has no read permission, which includes calling without a session when only **All users** can read.
-
-If `rows` is empty while the Console shows data, remove `Query.equal()` and retry: it hides every row whose `done` isn't `false`. Still empty means RLS is on, the table doesn't grant this user Read, and those rows don't either, often because another user created them or nobody is signed in. [Step 4](#permissions) covers both fixes.
-
-# Step 8: Watch the row change with Realtime {% #realtime %}
-
-Realtime pushes row changes to your client over a WebSocket, so a list stays current without polling. Using the `client` from [step 5](#connect-app), subscribe to the table's rows channel:
-
-```js
-import { Realtime, Channel } from 'appwrite';
-
-const realtime = new Realtime(client);
-
-const subscription = await realtime.subscribe(
-  Channel.tablesdb('main').table('tasks').row(),
-  (response) => {
-    console.log(response.events, response.payload);
-  }
-);
-```
-
-Keep the page open, change the row's `title` in the Console, and save. You'll know it worked when your browser console logs an event ending in `.update` with the new title in `payload`.
-
-- **Events follow read permissions.** A user only receives events for rows they can read, and a missing permission produces silence, not an error. If step 7 returns the row for that user, Realtime delivers its changes.
-- **Subscribe after sign-in.** A subscription keeps the session it was created with, so call `realtime.disconnect()` and subscribe again when a user signs in or out.
-- **Events are changes, not state.** Load rows with `listRows` first, then apply each event by `$id`. Call `subscription.unsubscribe()` when the view unmounts.
-- **Client SDKs only.** Server SDKs can't subscribe. To react to rows on the server, trigger a [function on the row event](/docs/products/functions/execute#events).
-
-To receive only some changes, pass queries as a third argument, as [Realtime queries](/docs/apis/realtime/queries) shows. [How Appwrite Realtime works](/blog/post/appwrite-realtime) covers channels and when not to use Realtime.
-
-# Deploy your first function and site {% #deploy-next %}
-
-Your app now has a table it can write, query, and watch, with permissions you chose on purpose. Next, put your own code next to that data: [deploy your first Appwrite function and site](/blog/post/deploy-your-first-appwrite-function-and-site). A function can run server-side logic on each new row, and a site hosts the frontend that reads the table.
+Your app now has a table it can write and query, with permissions set for your users. Next, put your own code next to that data: [deploy your first Appwrite function and site](/blog/post/deploy-your-first-appwrite-function-and-site).
 
 - [TablesDB documentation](/docs/products/databases/tablesdb)
-- [TablesDB permissions](/docs/products/databases/tablesdb/permissions)
+- [Queries](/docs/products/databases/tablesdb/queries)
 - [Realtime documentation](/docs/apis/realtime)
-- [Start building on Appwrite Cloud](/sign-up)
+- [Native databases vs Appwrite databases](/blog/post/native-databases-vs-appwrite-databases)
