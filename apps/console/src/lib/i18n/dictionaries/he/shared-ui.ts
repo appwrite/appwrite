@@ -1391,8 +1391,7 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Load more': 'טעינת עוד',
   'Loading more failed. Try again.': 'טעינת פריטים נוספים נכשלה. נסו שוב.',
   Previews: 'תצוגות מקדימות',
-  'Early access. Saved in this browser.':
-    'גישה מוקדמת. נשמר בדפדפן הזה.',
+  'Early access. Saved in this browser.': 'גישה מוקדמת. נשמר בדפדפן הזה.',
   'Appwrite Analytics': 'Appwrite Analytics',
   'Visitor, page, and campaign tracking.':
     'מעקב אחרי מבקרים, עמודים וקמפיינים.',
@@ -1408,4 +1407,11 @@ export const heSharedUiDictionary: Record<string, string> = {
   // Halloween caution tape
   Caution: 'זהירות',
   'Spooky zone': 'אזור מפחיד',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'נהנים מ-Appwrite?',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwrite הוא קוד פתוח שנבנה בשקיפות מלאה. כוכב עוזר ליותר מפתחים לגלות אותו.',
+  'No thanks': 'לא תודה',
+  'One-time ask, promise. May your builds be ever green.':
+    'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
 }

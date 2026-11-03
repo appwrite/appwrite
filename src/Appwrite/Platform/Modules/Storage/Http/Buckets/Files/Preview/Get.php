@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
@@ -59,9 +60,7 @@ class Get extends Action
             ->label('scope', 'files.read')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},fileId:{param-fileId}')
-            ->label('abuse-limit', 60)
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId', 'param.fileId'], 60, seconds: 60)])
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')

@@ -2,7 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Console\Http\Alerts\Unsubscribe;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Alert\Unsubscribe;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -13,7 +15,6 @@ use Utopia\Database\Operator;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -50,8 +51,7 @@ abstract class Base extends Action
             ->groups(['api'])
             ->label('scope', 'public')
             ->label('docs', false)
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url}')
-            ->label('abuse-limit', 60)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url'], 60)])
             ->param('token', '', new Text(2048, 0), 'Unsubscribe token from the alert email.', true)
             ->param('scope', self::SCOPE_MONITOR, new WhiteList([self::SCOPE_MONITOR, self::SCOPE_ALL], true), 'What to stop or resume: this monitor\'s emails, or every alert email of its type.', true)
             ->inject('request')
@@ -102,7 +102,7 @@ abstract class Base extends Action
         $token = $token !== '' ? $token : (string) $request->getQuery('token', '');
 
         try {
-            ['userId' => $userId, 'monitorId' => $monitorId, 'type' => $type] = (new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1')))->verify($token);
+            ['userId' => $userId, 'monitorId' => $monitorId, 'type' => $type] = (new Unsubscribe(EncryptionKey::accepted()))->verify($token);
         } catch (\InvalidArgumentException) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }

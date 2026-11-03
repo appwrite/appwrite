@@ -10,6 +10,7 @@ use Appwrite\Alert\Schedules;
 use Appwrite\Alert\State;
 use Appwrite\Alert\Status;
 use Appwrite\Alert\Unsubscribe;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Alert as AlertMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
@@ -38,7 +39,7 @@ use Utopia\Usage\Tenant;
  * on the monitor and on the alert it opens while firing. Every change of state
  * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
  * `.resolved`) for webhooks, functions and realtime. The organization's members
- * holding a role its `notify` names are notified by email and in the console:
+ * holding a role its `notify` names are notified by email, by push and in the console:
  * on entering `firing` (at most once per cooldown) and on returning to `ok`.
  */
 class Alerts extends Action
@@ -281,6 +282,7 @@ class Alerts extends Action
                 'region' => (string) $monitor->getAttribute('region', ''),
                 'status' => State::Firing->value,
                 'rules' => $monitor->getAttribute('rules', []),
+                'critical' => (bool) $monitor->getAttribute('critical', false),
                 'type' => (string) $monitor->getAttribute('type'),
                 'resourceType' => (string) $monitor->getAttribute('resourceType'),
                 'resourceId' => (string) $monitor->getAttribute('resourceId'),
@@ -406,9 +408,10 @@ class Alerts extends Action
     /**
      * Notifies the team of the monitor's alert firing or resolving: one message
      * per confirmed member of the project's organization holding a role the
-     * monitor's `notify` names, for the console bell and, unless they stopped
-     * this monitor's or all alert emails, by email. Each links to the alert and
-     * carries one-click unsubscribe links signed for its recipient.
+     * monitor's `notify` names, for the console bell, by push to their signed-in
+     * devices unless they stopped this monitor, and by email unless they stopped
+     * this monitor's or all alert emails. Each links to the alert and carries
+     * one-click unsubscribe links signed for its recipient.
      *
      * The deduplication key names the monitor, its new status and the moment it
      * changed, so an at-least-once redelivery of the same evaluation sends
@@ -455,7 +458,7 @@ class Alerts extends Action
         $regionName = (string) (Config::getParam('regions', [])[$region]['name'] ?? '');
         $consoleUrl = (string) ($platform['consoleUrl'] ?? '');
         $endpoint = (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'disabled' ? 'http' : 'https') . '://' . ($platform['apiHostname'] ?? System::getEnv('_APP_DOMAIN', 'localhost')) . '/v1';
-        $unsubscribe = new Unsubscribe(System::getEnv('_APP_OPENSSL_KEY_V1'));
+        $unsubscribe = new Unsubscribe([EncryptionKey::current()]);
         $type = (string) $monitor->getAttribute('type');
         $typeConfig = Config::getParam('alerts', [])['types'][$type] ?? [];
         // Every email of a type is stopped at once only where the type allows it.
@@ -482,7 +485,7 @@ class Alerts extends Action
             'pauseUrl' => $consoleUrl . $this->path($project) . '/monitors?monitor=' . $monitor->getId(),
         ];
 
-        foreach ($members as [$user, $role]) {
+        foreach ($members as [$user]) {
             $resource = [
                 'resourceType' => RESOURCE_TYPE_USERS,
                 'resourceId' => $user->getId(),
@@ -492,6 +495,10 @@ class Alerts extends Action
 
             $recipients = [['address' => $user->getId(), 'channel' => NOTIFICATION_TYPE_CONSOLE, ...$resource]];
             $unsubscribed = $user->getAttribute('alertsUnsubscribed', []);
+            // Stopping every email of a type leaves pushes on, so a member can swap one for the other.
+            if (!\in_array($monitor->getId(), $unsubscribed, true)) {
+                $recipients[] = ['address' => $user->getId(), 'channel' => NOTIFICATION_TYPE_PUSH, ...$resource];
+            }
             if (
                 (string) $user->getAttribute('email', '') !== ''
                 && !\in_array($monitor->getId(), $unsubscribed, true)
@@ -501,11 +508,7 @@ class Alerts extends Action
             }
 
             $token = $unsubscribe->token($user->getId(), $monitor->getId(), $type);
-            $email = new Email(
-                ...$notice,
-                reason: 'You\'re receiving this as ' . (\in_array(\strtolower($role[0] ?? ''), ['a', 'e', 'i', 'o', 'u'], true) ? 'an ' : 'a ') . $role . ' of ' . $teamName . '.',
-                unsubscribeUrl: $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($token),
-            );
+            $email = new Email(...$notice, timeZone: $this->timeZone($user));
 
             $this->publish($publisherForNotifications, new NotificationMessage(
                 project: $project,
@@ -526,11 +529,29 @@ class Alerts extends Action
                     'terms' => $platform['termsUrl'] ?? APP_EMAIL_TERMS_URL,
                     'privacy' => $platform['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
                     'platform' => $platform['platformName'] ?? APP_NAME,
+                    'unsubscribeUrl' => $consoleUrl . '/auth/alerts/unsubscribe?token=' . \urlencode($token),
                 ],
                 // One-click unsubscribe (RFC 8058) from this monitor's emails.
                 headers: [
                     'List-Unsubscribe' => '<' . $endpoint . '/console/alerts/unsubscribe?project=console&token=' . \urlencode($token) . '>',
                     'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+                ],
+                // What the member's devices show; the resolved push replaces the firing one by its tag.
+                push: [
+                    'title' => ($status === Status::Firing ? 'Firing: ' : 'Resolved: ') . (string) $monitor->getAttribute('name'),
+                    'body' => \implode(' ', \array_filter([$email->summary(), $notice['location']])),
+                    'tag' => 'alert:' . $alert->getId(),
+                    'critical' => (bool) $monitor->getAttribute('critical', false),
+                    'data' => [
+                        'type' => 'alert',
+                        'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
+                        'alertId' => $alert->getId(),
+                        'monitorId' => $monitor->getId(),
+                        'organizationId' => (string) $project->getAttribute('teamId', ''),
+                        'projectId' => $project->getId(),
+                        'url' => $notice['url'],
+                        'unsubscribeToken' => $token,
+                    ],
                 ],
             ));
         }
@@ -552,6 +573,24 @@ class Alerts extends Action
         return (string) $dbForProject->getAuthorization()->skip(
             fn () => $dbForProject->getDocument($collection, (string) $monitor->getAttribute('resourceId'))->getAttribute('name', '')
         );
+    }
+
+    /**
+     * Where the recipient last signed in from, so the email says when the alert changed in their own time:
+     * the time zone geolocated for their most recent session, or none when no session has one.
+     */
+    protected function timeZone(Document $user): ?\DateTimeZone
+    {
+        $sessions = $user->getAttribute('sessions', []);
+        \usort($sessions, fn (Document $a, Document $b) => \strcmp((string) $b->getCreatedAt(), (string) $a->getCreatedAt()));
+        foreach ($sessions as $session) {
+            $name = (string) $session->getAttribute('timeZone', '');
+            if ($name !== '' && \in_array($name, \DateTimeZone::listIdentifiers(), true)) {
+                return new \DateTimeZone($name);
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -102,6 +102,24 @@ final readonly class TablesDB extends TimeLimit
         return $this->parseCount($row->data['count'] ?? 0) - 1;
     }
 
+    #[\Override]
+    protected function unhit(string $key, int $window): void
+    {
+        $row = $this->find($key, $this->toDateTime($window));
+
+        if (\is_null($row)) {
+            return;
+        }
+
+        try {
+            $this->tablesDB->decrementRowColumn($this->databaseId, self::TABLE_ID, $row->id, 'count', 1, 0);
+        } catch (AppwriteException $error) {
+            if ($error->getType() !== self::LIMIT_EXCEEDED) {
+                throw $error;
+            }
+        }
+    }
+
     /**
      * @throws \Exception
      */

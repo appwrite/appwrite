@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Tokens\OAuth2;
 
+use Appwrite\Abuse\Limit;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Action;
@@ -57,8 +59,7 @@ class Get extends Base
                 contentType: ContentType::HTML,
                 type: MethodType::WEBAUTH,
             ))
-            ->label('abuse-limit', 50)
-            ->label('abuse-key', 'ip:{ip}')
+            ->label('abuse', [Limit::attempts(['ip'], 50)])
             ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.', enum: new Enum(name: 'OAuthProvider', exclude: ['mock', 'mock-unverified', 'mock-no-email']))
             ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
             ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator'])
@@ -146,7 +147,7 @@ class Get extends Base
             'failure' => $failure,
             'token' => true,
             'nonce' => $nonce,
-            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), System::getEnv('_APP_OPENSSL_KEY_V1', '')),
+            'binding' => \hash_hmac('sha256', $nonce . ':' . $user->getId(), EncryptionKey::current()),
             'state' => $state,
         ], $scopes);
 

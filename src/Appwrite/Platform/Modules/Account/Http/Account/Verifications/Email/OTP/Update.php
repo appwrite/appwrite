@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Verifications\Email\OTP;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -54,8 +55,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{param-userId}')
+            ->label('abuse', [Limit::attempts(['url', 'param.userId'], 10)])
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid verification OTP code.')
             ->inject('response')

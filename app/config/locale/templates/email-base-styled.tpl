@@ -93,6 +93,7 @@
             }
             h1 {
                 font-size: 22px;
+                font-weight: 500;
                 margin-bottom: 0px;
                 margin-top: 0px;
                 color: #19191c;
@@ -258,6 +259,7 @@
                         <div style="margin: 0 8px">|</div>
                     </td>
                     <td><a href="{{privacy}}">Privacy</a></td>
+                    {{unsubscribeLink}}
                 </tr>
             </table>
             <p style="text-align: center" align="center">

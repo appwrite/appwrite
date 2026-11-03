@@ -160,6 +160,14 @@ export function canCreateVideo(
   return whenOrgRoles(access, features, access.canWriteVideos)
 }
 
+/** Turn code review on or off for a repository (`reviews.write`). */
+export function canWriteReviewRepositories(
+  access: ConsoleAccess,
+  features: AccessCheckFeatures,
+): boolean {
+  return whenOrgRoles(access, features, access.canWriteReviews)
+}
+
 export function canShowVideoSettings(
   access: ConsoleAccess,
   features: AccessCheckFeatures,
@@ -326,6 +334,8 @@ export function canSeeProjectNavItem(
       return access.canWriteSites
     case 'videos':
       return access.canSeeVideos
+    case 'reviews':
+      return access.canSeeReviews
     case 'usage':
     case 'playground':
     case 'analytics':

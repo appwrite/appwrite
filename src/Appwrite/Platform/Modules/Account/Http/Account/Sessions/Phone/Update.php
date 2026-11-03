@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Phone;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Realtime;
 use Appwrite\Geo\Geo;
@@ -67,8 +68,10 @@ class Update extends Base
                     replaceWith: 'account.createSession'
                 ),
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', ['ip:{ip},userId:{param-userId}', 'projectId:{projectId},url:{url},userId:{param-userId}'])
+            ->label('abuse', [
+                Limit::attempts(['url', 'ip', 'param.userId'], 10),
+                Limit::attempts(['projectId', 'url', 'param.userId'], 10),
+            ])
             ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid verification token.')
             ->inject('request')
