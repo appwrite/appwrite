@@ -319,6 +319,9 @@ class Certificates extends Action
         // Set once DNS has passed on a delayed provider, so a failure after that can be retried
         $awaitingProvider = false;
 
+        // A renewal: the domain already serves a certificate that is still valid
+        $renewing = $rule->getAttribute('status') === RULE_STATUS_VERIFIED;
+
         try {
             $certificate->setAttribute('logs', $logs);
 
@@ -438,8 +441,8 @@ class Certificates extends Action
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
                 Console::warning('Certificate for ' . $domain->get() . ' will be retried: ' . $e->getMessage());
             } else {
-                // Mark rule as 'unverified'
-                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+                // A failed renewal stays verified: 'unverified' rules are never renewed again
+                $rule->setAttribute('status', $renewing ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
                 if (!$e instanceof CertificateException) {
                     $certificate->setAttribute('status', Status::FAILED);
                 }

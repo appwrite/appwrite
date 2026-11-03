@@ -168,6 +168,22 @@ export type ReviewList = {
   reviews: Review[]
 }
 
+/** One step of the review agent, such as a tool call or the sandbox starting. */
+export type ReviewEvent = {
+  $id: string
+  $createdAt: string
+  /** Step name, such as `tool.read_file`, `sandbox.ready` or `review.done`. */
+  type: string
+  /** When the step happened, in ISO 8601 format. */
+  time: string
+  data: Record<string, unknown>
+}
+
+export type ReviewEventList = {
+  total: number
+  events: ReviewEvent[]
+}
+
 /**
  * Review Repository
  */

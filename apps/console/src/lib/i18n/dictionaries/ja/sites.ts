@@ -437,6 +437,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '接続された Git リポジトリでサイトを作成してデプロイ',
   'Configure the environment variables for this template':
     'このテンプレートの環境変数を構成',
+  'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.':
+    'このテンプレートは、サイトのビルドと SSR の実行ごとに生成される一時的なキーにこれらのスコープを付与します。スコープはサイトの設定で変更できます。',
   'Screenshot may take a few moments after build completes':
     'ビルド完了後、スクリーンショットの生成に少し時間がかかることがあります',
   'Configure your site or share it with others':

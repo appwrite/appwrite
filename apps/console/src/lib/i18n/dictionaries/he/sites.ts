@@ -528,6 +528,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Template variables': 'משתני תבנית',
   'Configure the environment variables for this template':
     'הגדירו את משתני הסביבה עבור התבנית הזו',
+  'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.':
+    'התבנית הזו מעניקה את הרשאות הגישה האלה למפתח הזמני שנוצר עבור כל בנייה והרצת SSR של האתר. אפשר לשנות אותן בהגדרות האתר.',
   'Optional variables': 'משתנים אופציונליים',
   Secret: 'סודי',
 
