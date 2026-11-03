@@ -2,6 +2,16 @@
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 ---
 
-<p>first</p>
-{wait(2000).then(() => 'second')}
-{wait(4000).then(() => 'third')}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astro Stream</title>
+</head>
+<body>
+  <p>first</p>
+  {wait(2000).then(() => 'second')}
+  {wait(4000).then(() => 'third')}
+</body>
+</html>
