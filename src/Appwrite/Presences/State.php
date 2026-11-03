@@ -532,6 +532,8 @@ class State
         UsagePublisher $publisherForUsage,
         QueueRealtime $queueForRealtime,
     ): int {
+        // deleteDocuments() re-applies these filters in the DELETE itself, so a row a socket
+        // updates after it was read is no longer older than `$before` and is kept.
         $queries = [
             Query::equal('source', ['realtime']),
             Query::lessThan('$updatedAt', $before),
