@@ -1,0 +1,366 @@
+---
+layout: post
+title: "Create your first Appwrite Storage bucket and upload a file"
+description: "Create your first Appwrite Storage bucket, choose settings you won't regret, lock down permissions, upload a file, then serve, resize, and share it safely."
+date: 2026-11-03
+cover: /images/blog/upload-your-first-file-to-appwrite-storage/cover.avif
+timeToRead: 8
+author: atharva
+category: tutorials
+featured: false
+faqs:
+  - question: "Should I give the Any role read access to my Appwrite Storage bucket?"
+    answer: "Only on a bucket that holds nothing but public assets. The Any role includes visitors who aren't signed in, and bucket-level read lets them list and download every file in the bucket using the project ID and bucket ID from your client code. For user uploads, grant All users the Create permission at the bucket level and turn on file security, so each file decides who can read it. All users includes anonymous sessions, so turn off anonymous sign-in if your app doesn't use it. See [Storage permissions](/docs/products/storage/permissions)."
+  - question: "Why does my Appwrite file URL return storage_file_not_found when I can see the file in the Console?"
+    answer: "When a bucket has file security turned on, Appwrite answers a request from someone who can't read the file with a 404 storage_file_not_found error instead of a 401. Check the file's permissions and the bucket's permissions for the user making the request. Files uploaded from the Console have no file permissions by default, so your app's users can't read them until you add a role."
+  - question: "What is the difference between getFileView, getFileDownload and getFilePreview?"
+    answer: "getFileView serves the file inline with its content type, which suits img and video tags and opening PDFs in a tab. getFileDownload sends the file as an attachment with its original name, which suits download buttons. getFilePreview returns a resized or converted image and returns a generic file icon for files that aren't JPEG, PNG, WebP, GIF or HEIC images, or are too large to preview. On Appwrite Cloud, getFilePreview needs the Pro or Scale plan. In the Web SDK all three return a URL string."
+  - question: "How does Appwrite Storage upload large files?"
+    answer: "The Appwrite SDKs upload files over 5 MB in 5 MB chunks automatically. The Web SDK sends the first chunk to create the file, then sends the remaining chunks up to 8 at a time, and the optional onProgress callback reports the percentage. The largest file a bucket accepts is set by its maximum file size, capped by your plan: 50 MB on Free and 5 GB on Pro."
+  - question: "Can I change an Appwrite bucket's encryption or compression after uploading files?"
+    answer: "Yes, but the change only applies to files uploaded afterwards. Appwrite records how each file was encrypted and compressed when it was uploaded, and existing files keep that state. The bucket ID can't be changed at all, and files can't be moved between buckets."
+  - question: "How do I share a private Appwrite Storage file with someone who has no account?"
+    answer: "Create a file token for the file, either from the file's Tokens tab in the Console or with the Server SDK's tokens.createFileToken method and an API key with the tokens.write scope. Pass the token's secret as the token parameter of getFileView, getFileDownload or getFilePreview. Anyone with the resulting URL can read that one file, so set an expiry. See [File tokens](/docs/products/storage/file-tokens)."
+---
+
+Creating a bucket in [Appwrite Storage](/docs/products/storage) takes one dialog. The settings around it decide who can upload, who can list every file, and how large a single upload can be. The Storage quick start grants the **Any** role create and read access to get you moving, and that shortcut tends to survive into production.
+
+The short version: give the bucket a size limit and an extension list, turn on file security, and grant **All users** (signed-in users) only **Create**. Never grant **Any** (everyone, signed in or not) read on the bucket.
+
+Then upload and serve your first file. Everything here works on the Free plan except image transformations in step 5, which need Pro or Scale.
+
+**Start where you are:**
+
+- No project yet: create one in the [Appwrite Console](/sign-in), then start at [step 1](#create-bucket).
+- Project open, no bucket yet: start at [step 1](#create-bucket).
+- Bucket created, but permissions untouched or set to **Any**: go to [step 2](#permissions).
+- Bucket ready, nothing uploaded: go to [step 3](#upload).
+- Files uploaded, not sure which URL to use: go to [step 4](#serve).
+- Serving full-size photos on the Pro or Scale plan: go to [step 5](#image-transformations).
+- Need to send a private file to someone without an account: go to [step 6](#file-tokens).
+- Done all of it: go to [protecting your project](#protect-your-project).
+
+# Step 1: Create a bucket and choose its settings {% #create-bucket %}
+
+A **bucket** is a container for files with its own permissions, size limit, and allowed file types. Create one bucket per access pattern, not one per file type: private user uploads in one, public assets in another.
+
+{% info title="Free plan" %}
+The Free plan allows one bucket per project and files up to 50 MB. Make that bucket your private uploads bucket. Step 2 shows how to make single files public inside it.
+{% /info %}
+
+{% tabs %}
+{% tabsitem #console title="Console" %}
+1. Open **Storage** in your project and click **Create bucket**.
+2. Enter a **Name**, such as `Uploads`.
+3. Under **Bucket ID**, click **Auto-generated** and type a readable ID such as `uploads`. Your code references it, and you can't rename it later.
+4. Click **Create**.
+
+{% only_dark %}
+![Create bucket dialog with the name Uploads and the bucket ID uploads](/images/blog/upload-your-first-file-to-appwrite-storage/dark/create-bucket.avif)
+{% /only_dark %}
+{% only_light %}
+![Create bucket dialog with the name Uploads and the bucket ID uploads](/images/blog/upload-your-first-file-to-appwrite-storage/create-bucket.avif)
+{% /only_light %}
+{% /tabsitem %}
+{% tabsitem #cli title="CLI" %}
+Create the bucket entry in your `appwrite.config.json`:
+
+```sh
+appwrite init buckets
+```
+
+Set `maximumFileSize` (in bytes), `allowedFileExtensions`, `fileSecurity`, and `"$permissions": ["create(\"users\")"]` on the new entry, so step 2's permissions live in Git too. Then create the bucket in your project:
+
+```sh
+appwrite push buckets
+```
+
+This keeps bucket settings in Git. See [CLI buckets](/docs/tooling/command-line/buckets).
+{% /tabsitem %}
+{% tabsitem #agent title="AI agent" %}
+[Connect your AI coding assistant to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then paste this prompt:
+
+```text
+Create an Appwrite Storage bucket in my project with the ID "uploads" and the name "Uploads". Set the maximum file size to 10 MB, allow only jpg, jpeg, png, webp and pdf, and turn on file security. Grant the create permission to all signed-in users (role "users") and no other bucket permissions. Tell me if anonymous sign-in is enabled, because the "users" role includes anonymous sessions. Show me the settings before you create it.
+```
+{% /tabsitem %}
+{% /tabs %}
+
+Then open the bucket's **Settings** tab. Each setting there is its own card with its own **Update** button, so save each one you change.
+
+{% only_dark %}
+![Bucket Settings tab with the maximum file size set to 10 MB and the allowed extensions jpg, jpeg, png, webp and pdf](/images/blog/upload-your-first-file-to-appwrite-storage/dark/bucket-limits.avif)
+{% /only_dark %}
+{% only_light %}
+![Bucket Settings tab with the maximum file size set to 10 MB and the allowed extensions jpg, jpeg, png, webp and pdf](/images/blog/upload-your-first-file-to-appwrite-storage/bucket-limits.avif)
+{% /only_light %}
+
+Set these before you upload anything:
+
+- **Maximum file size**: it defaults to your plan's limit, which is 5 GB on Pro. Set it to what the feature needs, such as 10 MB for photos.
+- **File extensions**: empty allows every type, so list the ones you accept. Appwrite checks the file name, not the contents, so this is a filter, not a security check.
+- **Compression**: leave it at **None**. Images and video are already compressed.
+- **Encryption**: leave it on, which is the default. Files over 20 MB are stored unencrypted.
+- **Image metadata**: for user photos, turn on **Remove metadata from uploaded images**. It strips location, device, and capture time, which phone photos carry.
+
+All five apply when a file is uploaded. Changing them later doesn't touch files already stored.
+
+The bucket ID is permanent and files can't move between buckets, so splitting a bucket later means uploading every file again.
+
+You'll know it worked when the bucket opens on its **Files** tab and **Settings** shows your size limit instead of the plan maximum.
+
+# Step 2: Set bucket permissions and file security {% #permissions %}
+
+Appwrite Storage has two permission levels:
+
+- **Bucket permissions** cover every file in the bucket.
+- **File permissions** cover one file. They only count when the bucket's **File security** switch is on.
+
+Access at either level is enough. The setup in this step uses the bucket to decide who can upload and each file to decide who can read it:
+
+{% only_dark %}
+![Diagram: the bucket grants All users Create, so signed-in Priya and Sam can upload and a signed-out visitor gets 401. Each file grants Read to its uploader, so other users get 404, and logo.png grants Any Read, so everyone can read it](/images/blog/upload-your-first-file-to-appwrite-storage/dark/permissions-diagram.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram: the bucket grants All users Create, so signed-in Priya and Sam can upload and a signed-out visitor gets 401. Each file grants Read to its uploader, so other users get 404, and logo.png grants Any Read, so everyone can read it](/images/blog/upload-your-first-file-to-appwrite-storage/permissions-diagram.avif)
+{% /only_light %}
+
+The common mistake is granting **Any** read on the bucket. **Any** includes visitors who aren't signed in, and bucket-level read lets them list and download every file using the project and bucket IDs in your client code. **Any** create is the upload version of the same mistake: anonymous visitors can fill your storage.
+
+For a bucket of user uploads, open the bucket's **Security** tab:
+
+1. Under **Permissions**, remove **Any** and any other role that has more than **Create**.
+2. Click **Add role**, choose **All users**, tick only **Create**, and click **Update**.
+3. Turn on **File level security** and click **Update**.
+
+{% only_dark %}
+![Bucket Security tab with All users granted only Create and File level security turned on](/images/blog/upload-your-first-file-to-appwrite-storage/dark/bucket-security.avif)
+{% /only_dark %}
+{% only_light %}
+![Bucket Security tab with All users granted only Create and File level security turned on](/images/blog/upload-your-first-file-to-appwrite-storage/bucket-security.avif)
+{% /only_light %}
+
+**All users** includes anonymous sessions, and anonymous sign-in is on by default. If your app doesn't use it, turn off **Anonymous** in **Auth** > **Settings**, or any visitor can create a session and upload.
+
+{% only_dark %}
+![Auth Settings tab listing auth methods, with the Anonymous toggle turned on](/images/blog/upload-your-first-file-to-appwrite-storage/dark/auth-anonymous.avif)
+{% /only_dark %}
+{% only_light %}
+![Auth Settings tab listing auth methods, with the Anonymous toggle turned on](/images/blog/upload-your-first-file-to-appwrite-storage/auth-anonymous.avif)
+{% /only_light %}
+
+Signed-in users can now upload, and nobody can read a file unless the file allows it. When a signed-in user uploads without passing permissions, Appwrite gives that user read, update, and delete on the file, so each user sees only their own uploads.
+
+Three behaviors catch people:
+
+- Files you upload from the Console get no file permissions, so your app's users can't read them. To make one public, such as a logo, add **Any** with **Read** on the file's **Permissions** tab.
+- Client code can only grant roles the signed-in user holds, so granting read to another user's ID fails with `Permissions must be one of`. Use a [team](/docs/products/auth/teams) both users belong to, or a file token from step 6.
+- Passing `permissions` to `createFile` replaces the defaults. For a public avatar, pass `Permission.read(Role.any())` plus update and delete for `Role.user(userId)`, or the user can't replace or remove it.
+
+You'll know it worked when the **Security** tab shows **All users** with only **Create** ticked and **File level security** turned on. Step 4 tests it from the outside.
+
+# Step 3: Upload a file from the Console, then from your app {% #upload %}
+
+Upload one image from the Console first. It proves the bucket accepts files before your code is involved:
+
+1. Open the bucket's **Files** tab and click **Create file**.
+2. Drop in a JPEG or PNG under your size limit.
+3. Click **Create**, then wait for the file to appear in the list.
+
+{% only_dark %}
+![Create file dialog with winter-campsite.jpg selected, showing the allowed extensions and the 10 MB limit](/images/blog/upload-your-first-file-to-appwrite-storage/dark/create-file.avif)
+{% /only_dark %}
+{% only_light %}
+![Create file dialog with winter-campsite.jpg selected, showing the allowed extensions and the 10 MB limit](/images/blog/upload-your-first-file-to-appwrite-storage/create-file.avif)
+{% /only_light %}
+
+The dialog lists the extensions and size limit from step 1 and skips files that don't match them.
+
+Then upload from your app with the Web SDK. Your app needs three things first, and the [Web quick start](/docs/quick-starts/web) sets up all of them:
+
+- The `appwrite` package installed.
+- Its hostname added as a Web platform in the project.
+- A signed-in user, because step 2 only lets **All users** create files.
+
+```js
+import { Client, Storage, ID } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const storage = new Storage(client);
+
+// Your page has <input type="file" id="uploader">
+const input = document.getElementById('uploader');
+
+input.addEventListener('change', async () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    const uploaded = await storage.createFile({
+        bucketId: 'uploads',
+        fileId: ID.unique(),
+        file,
+        onProgress: ({ progress }) => console.log(`${progress}%`)
+    });
+
+    console.log(uploaded.$id);
+});
+```
+
+The SDK splits files over 5 MB into chunks for you, so you don't write chunking code. Show `onProgress` to your users on large files, because an upload with no feedback looks frozen.
+
+Save `uploaded.$id` with the record it belongs to, such as the user's profile row. Every URL in step 4 needs it.
+
+When the upload fails, the error type names the setting that rejected it:
+
+- `storage_file_type_unsupported`: the extension isn't on the bucket's list.
+- `storage_invalid_file_size`: the file is larger than the bucket's maximum.
+- `user_unauthorized`: the user isn't signed in, or the bucket doesn't grant them **Create**.
+- `general_unknown_origin`: your app's hostname isn't added as a Web platform in the project.
+
+You'll know it worked when the file appears on the **Files** tab and its **Permissions** tab lists the user who uploaded it:
+
+{% only_dark %}
+![Files tab of the Uploads bucket with fjord-viewpoint.jpg open on its Permissions tab, where Priya Sharma has Read, Update and Delete](/images/blog/upload-your-first-file-to-appwrite-storage/dark/file-permissions.avif)
+{% /only_dark %}
+{% only_light %}
+![Files tab of the Uploads bucket with fjord-viewpoint.jpg open on its Permissions tab, where Priya Sharma has Read, Update and Delete](/images/blog/upload-your-first-file-to-appwrite-storage/file-permissions.avif)
+{% /only_light %}
+
+# Step 4: Serve files with view, download, and preview URLs {% #serve %}
+
+The Web SDK has three URL methods. Each returns a URL string without making a request, so you pass the result straight to `src` or `href`. The examples here use the `storage` client from step 3; replace `uploads` with your bucket ID and `<FILE_ID>` with the ID you saved, or copy both from the file in the Console.
+
+```js
+const url = storage.getFileView({ bucketId: 'uploads', fileId: '<FILE_ID>' });
+```
+
+| Method | What the response does | Use it for |
+| --- | --- | --- |
+| `getFileView` | Serves the file inline with its content type and supports range requests | `<img>`, `<video>`, opening a PDF in a tab |
+| `getFileDownload` | Sends the file as an attachment with its original name | Download buttons |
+| `getFilePreview` | Returns a resized or converted image | Thumbnails, avatars, photos (step 5) |
+
+`getFileView` displays common media types inline and serves other types as plain text. An SVG works in an `<img>` tag but downloads when opened directly.
+
+`getFilePreview` only transforms JPEG, PNG, WebP, GIF, and HEIC originals. For a PDF, any other file type, or an image too large to preview, it returns a generic file icon, not an error.
+
+Private files have one more catch. When a browser loads a URL from `src`, the Appwrite session cookie is its only proof of who's asking, and some browsers block that cookie as third-party when your app and the API are on different domains.
+
+Put the API on a [custom domain](/docs/products/network/custom-domains#third-party-cookies) under your app's domain, or use a file token from step 6.
+
+You'll know it worked when your app shows a user's upload through `getFileView` and the same URL returns a 404 `storage_file_not_found` error in a private window.
+
+With file security on, Appwrite answers 404 instead of 401 when the requester can't read the file. So when a file you can see in the Console returns 404, check in this order:
+
+1. The URL has the right project, bucket, and file IDs.
+2. The file or bucket permissions let the requesting user read it.
+3. The browser sent the session cookie.
+
+# Step 5: Resize and convert images with transformations {% #image-transformations %}
+
+{% info title="Pro or Scale plan" %}
+On Appwrite Cloud, image transformations from your app need the Pro or Scale plan. On Free, `getFilePreview` fails with a 403 `storage_image_transformations_blocked` error, even though **Transform** and thumbnails work in the Console, which runs as an admin. Serve images with `getFileView` instead.
+{% /info %}
+
+A full-size phone photo in a 400-pixel card wastes your users' bandwidth. `getFilePreview` resizes and converts the image on request and leaves the original untouched:
+
+```js
+import { ImageFormat } from 'appwrite';
+
+const srcset = [400, 800, 1600]
+    .map((width) => {
+        const url = storage.getFilePreview({
+            bucketId: 'uploads',
+            fileId: '<FILE_ID>',
+            width,
+            quality: 80,
+            output: ImageFormat.Webp
+        });
+        return `${url} ${width}w`;
+    })
+    .join(', ');
+```
+
+- **Width**: use a few fixed widths with `srcset`. Appwrite caches each parameter combination, so a few widths stay cached while exact per-container sizes keep producing new images. Set only the width and the height follows the aspect ratio.
+- **Quality**: 80 is a good start for photos. Without it, Appwrite keeps the original's quality.
+- **Output**: WebP compresses better than JPEG and PNG and works in every current browser.
+
+Pro includes 100 origin images a month, where an origin image is an original you request transformations of. It counts once however many variants you request, so three `srcset` widths cost the same as one.
+
+To pick values, open an image in the Console and click **Transform**. Try sizes, quality, and formats against the original: the footer compares the output size with the original's, and the **Code** tab has the matching SDK snippet.
+
+{% only_dark %}
+![Transform view on a 4032 by 3024 photo resized to 800 pixels wide as WebP at quality 80, shrinking it from 1.71 MB to 92.5 KB](/images/blog/upload-your-first-file-to-appwrite-storage/dark/transform.avif)
+{% /only_dark %}
+{% only_light %}
+![Transform view on a 4032 by 3024 photo resized to 800 pixels wide as WebP at quality 80, shrinking it from 1.71 MB to 92.5 KB](/images/blog/upload-your-first-file-to-appwrite-storage/transform.avif)
+{% /only_light %}
+
+On a paid plan, previews can still fail in your app with `storage_bucket_transformations_disabled`. That means someone turned off the bucket's **Image transformations** setting, which is on by default. The Console skips that check too, so Console testing won't catch it.
+
+You'll know it worked when the preview URL returns a WebP image that is a fraction of the original's size.
+
+# Step 6: Share a private file with a file token {% #file-tokens %}
+
+A **file token** is a secret tied to one file that lets anyone holding its URL read the file. Use it for people without an account, such as a client receiving an invoice, or for private images in browsers that block the session cookie. Give your signed-in users access through permissions instead.
+
+To create one in the Console:
+
+1. Click the file in the bucket's **Files** tab and open its **Tokens** tab.
+2. Click **Create token**.
+3. Pick an expiration. It defaults to **Never**, so choose a period such as **7 days** or set a custom date.
+4. Click **Create token**, then click the token's **Copy URL** icon and copy the **Preview**, **View**, or **Download** link.
+
+{% only_dark %}
+![Tokens tab of invoice-2026-10.pdf with a Create token button and one token that expires in 6 days](/images/blog/upload-your-first-file-to-appwrite-storage/dark/file-tokens.avif)
+{% /only_dark %}
+{% only_light %}
+![Tokens tab of invoice-2026-10.pdf with a Create token button and one token that expires in 6 days](/images/blog/upload-your-first-file-to-appwrite-storage/file-tokens.avif)
+{% /only_light %}
+
+Tokens can only be created in the Console or with an API key, not from the Web SDK. If your users need share links, create the token on your server or in an [Appwrite Function](/docs/products/functions) after checking that the user owns the file:
+
+```js
+import { Client, Tokens } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<API_KEY>'); // needs the tokens.write scope
+
+const tokens = new Tokens(client);
+
+const token = await tokens.createFileToken({
+    bucketId: 'uploads',
+    fileId: '<FILE_ID>',
+    expire: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+});
+```
+
+Send `token.secret` to your frontend and pass it as `token` when you build the URL:
+
+```js
+const shareUrl = storage.getFileDownload({
+    bucketId: 'uploads',
+    fileId: '<FILE_ID>',
+    token: '<TOKEN_SECRET>'
+});
+```
+
+Always set an expiry on links that leave your app. A token without one works until you delete it, for anyone the URL reaches. To revoke a link, delete its token on the file's **Tokens** tab.
+
+You'll know it worked when the token URL opens the file in a private window, where the plain view URL returned 404.
+
+# Protect your project before you ship uploads {% #protect-your-project %}
+
+Your first file is stored. Before you add uploads to your app, check the bucket's **Security** tab once more, then open a file URL in a private window to confirm signed-out visitors get a 404.
+
+The Storage endpoints are still public, and anyone with your project ID can send them traffic. [Appwrite Firewall](/docs/products/firewall) can deny or rate limit requests before they reach your project, such as requests to paths that start with `/v1/storage`. [Add your first Appwrite Firewall rules](/blog/post/add-your-first-appwrite-firewall-rules) sets up the first ones.
+
+- [Storage buckets](/docs/products/storage/buckets)
+- [Storage permissions](/docs/products/storage/permissions)
+- [Image transformations](/docs/products/storage/images)
+- [Sign up for Appwrite Cloud](/sign-up)

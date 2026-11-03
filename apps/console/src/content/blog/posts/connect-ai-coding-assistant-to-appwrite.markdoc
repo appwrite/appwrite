@@ -1,0 +1,330 @@
+---
+layout: post
+title: "How to connect your AI coding assistant to Appwrite"
+description: Connect Claude Code, Codex, ChatGPT, or Cursor to Appwrite with a plugin or the MCP server, then run a first agent session that wires Appwrite into your app.
+date: 2026-11-03
+cover: /images/blog/connect-ai-coding-assistant-to-appwrite/cover.avif
+timeToRead: 10
+author: atharva
+category: tutorials
+featured: false
+faqs:
+  - question: "Which AI tools have an official Appwrite plugin?"
+    answer: "Claude Code, Codex, ChatGPT, and Cursor. Codex and ChatGPT share one plugin, Appwrite's official ChatGPT plugin. Each plugin bundles the hosted [Appwrite MCP server](/docs/tooling/ai/mcp-servers) and [Appwrite Skills](/docs/tooling/ai/skills) for the CLI and the major SDKs. Other tools connect with the MCP server URL and `npx skills add appwrite/skills`."
+  - question: "Do I need an API key to connect my AI assistant to Appwrite Cloud?"
+    answer: "No. The hosted MCP server at `https://mcp.appwrite.io/` uses OAuth. Your browser opens, you sign in to your Appwrite account, and you approve access. A self-hosted Appwrite instance uses the [local MCP server](/docs/advanced/self-hosting/mcp) with an API key instead."
+  - question: "What access does the Appwrite MCP sign-in give my agent?"
+    answer: "By default, **Full access**: the tool can manage your organizations, projects, and their data on your behalf. On the consent screen you can limit **Project access** to specific projects, and **Customize access** lets you make every permission **Read-only** or choose **Read** or **Read + Write** per permission."
+  - question: "How do I revoke an AI tool's access to my Appwrite account?"
+    answer: "In the Appwrite Console, open the account menu, go to **Account** > **Applications**, and click **Revoke** next to the tool, or **Revoke all** if it signed in more than once. Its tokens stop working, and the tool has to sign in again before it can reach your projects."
+  - question: "Do I still need Appwrite Skills if my agent is connected to the MCP server?"
+    answer: "Yes. The MCP server lets the agent act on your project and search the docs. Skills shape the code it writes in your repository, for example by telling it to use `TablesDB` instead of the legacy `Databases` class. The Appwrite plugins include both."
+  - question: "Why does my AI agent write databases.createDocument instead of tablesDB.createRow?"
+    answer: "It is writing from training data that predates TablesDB. Install the Appwrite skill for your SDK with `npx skills add appwrite/skills` (or use an Appwrite plugin), start a new session, and ask again. The skill tells the agent to use `TablesDB` with object parameters for all new code."
+---
+
+AI coding assistants write Appwrite code from what they saw in training. That often means the legacy `Databases` API with collections and documents instead of tables and rows, and permissions picked to make an error go away rather than to protect your users' data.
+
+Appwrite Skills fix the outdated code. Permissions stay yours to check, and [prompt 4](#prompt-permissions) shows you how.
+
+If you use Claude Code, Codex, ChatGPT, or Cursor, install the official **Appwrite plugin**. It bundles the hosted **Appwrite MCP server**, which lets the agent act on your project, and **Appwrite Skills**, Markdown files that teach it the current SDKs.
+
+Any other tool gets the same result from one MCP URL and one Skills command. Then the five prompts in step 4 wire Appwrite into your own codebase.
+
+{% only_dark %}
+![Diagram: your AI tool loads the Appwrite plugin. Its Skills shape the code in your repository, and its MCP server reaches your Appwrite project only through the OAuth consent you approve](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/plugin-flow.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram: your AI tool loads the Appwrite plugin. Its Skills shape the code in your repository, and its MCP server reaches your Appwrite project only through the OAuth consent you approve](/images/blog/connect-ai-coding-assistant-to-appwrite/plugin-flow.avif)
+{% /only_light %}
+
+**Start where you are:**
+
+- No Appwrite project yet: create one in the [Appwrite Console](/sign-in), then go to [step 1](#install-plugin) if your tool has a plugin or [step 2](#mcp-and-skills) if it doesn't. The project has to exist before you can limit the agent to it.
+- Using Claude Code, Codex, or Cursor: start at [step 1](#install-plugin).
+- Using ChatGPT: install the plugin in [step 1](#install-plugin), then run [step 4](#first-session) in Codex, which works on the files in your repository.
+- Using VS Code, Windsurf, Zed, OpenCode, Antigravity, or another MCP client: go to [step 2](#mcp-and-skills).
+- Already connected, but you clicked through the sign-in screen: [step 3](#oauth-access) shows what you granted and how to narrow or revoke it.
+- Connected and signed in: go to [step 4](#first-session). If you added MCP by hand, [install Skills](#install-skills) first.
+- Finished the session: go to [your first database and row](#first-database).
+
+# Step 1: Install the Appwrite plugin for your tool {% #install-plugin %}
+
+Pick the plugin whenever your tool has one. It installs and updates the MCP server and the Skills together, so you don't keep two installs in sync.
+
+{% tabs %}
+{% tabsitem #claude-code title="Claude Code" %}
+
+Install the plugin from Anthropic's official marketplace:
+
+```bash
+claude plugin install appwrite@claude-plugins-official
+```
+
+Then connect it:
+
+1. In a session that is already open, run `/reload-plugins`.
+2. Run `/mcp`, select the Appwrite server, and choose **Authenticate**.
+3. On the consent screen that opens, narrow access as in [step 3](#oauth-access), then click **Authorize**.
+
+You'll know it worked when `/mcp` shows the Appwrite server as connected. Don't also run `claude mcp add` for Appwrite: the plugin already includes the server, and adding it again registers it twice.
+
+If Claude Code can't find the plugin, install it from Appwrite's own marketplace as in the [Claude Code docs](/docs/tooling/ai/agents/claude-code#install-plugin). If an older install asks for an API key, open `/plugins`, go to the **Installed** tab, and update **Appwrite**.
+
+{% /tabsitem %}
+{% tabsitem #codex title="Codex" %}
+
+Codex uses the same official plugin as ChatGPT.
+
+1. In the Codex CLI, run `/plugins`, switch to the **OpenAI Curated** marketplace, search for `Appwrite`, and select **Install plugin**. In the Codex desktop app, it's under **Plugins** in the sidebar.
+2. Sign in to Appwrite when prompted, and narrow access as in [step 3](#oauth-access) before you click **Authorize**.
+3. Start a new Codex session so the skills load, and ask it to list your Appwrite projects.
+
+You'll know it worked when it returns them by name.
+
+If `codex plugin list` shows `appwrite@appwrite`, you have an early version without the hosted MCP server. Remove it, then install from OpenAI Curated:
+
+```bash
+codex plugin remove appwrite@appwrite
+codex plugin marketplace remove appwrite
+```
+
+{% /tabsitem %}
+{% tabsitem #chatgpt title="ChatGPT" %}
+
+1. In the ChatGPT desktop app, open **Plugins** in the sidebar, search for `Appwrite`, open the **Appwrite** listing, and click **Install plugin**.
+2. Follow the connection prompt to sign in to Appwrite, and narrow access as in [step 3](#oauth-access) before you click **Authorize**.
+3. Start a new conversation and ask it to list your Appwrite projects.
+
+You'll know it worked when it returns them by name.
+
+ChatGPT is for inspecting your project. Run the coding session in [step 4](#first-session) in Codex, which works on your repository's files with the same plugin. The Codex tab shows the install.
+
+{% /tabsitem %}
+{% tabsitem #cursor title="Cursor" %}
+
+Install the [Appwrite plugin](https://cursor.com/marketplace/appwrite) from the Cursor Marketplace. It adds the skills, two deploy commands, and the hosted MCP server under the name `appwrite`.
+
+Cursor opens the Appwrite sign-in when the server first connects. Narrow access as in [step 3](#oauth-access) before you click **Authorize**. You'll know it worked when the `appwrite` MCP server lists its tools instead of a login prompt.
+
+If it doesn't connect, or the sign-in expires later, turn `appwrite` off and on and sign in again. Servers named `appwrite-api` and `appwrite-docs` are the old local setup that needs an API key, so reinstall the plugin. If no Appwrite server is listed, use the one-click link in the [Cursor setup docs](/docs/tooling/ai/agents/cursor#step-3).
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Step 2: Connect any other AI coding assistant with MCP and Skills {% #mcp-and-skills %}
+
+Skip this step if you installed a plugin. Every other tool needs two installs: the remote MCP server and the Skills.
+
+## Add the Appwrite MCP server {% #add-mcp %}
+
+The MCP server is one URL, `https://mcp.appwrite.io/`, with OAuth sign-in and no API key. Each tool wraps it in its own config format, so copy the snippet from your tool's guide, not another tool's file.
+
+Use the guide for [VS Code](/docs/tooling/ai/agents/vscode), [Windsurf](/docs/tooling/ai/agents/windsurf), [Zed](/docs/tooling/ai/agents/zed), [OpenCode](/docs/tooling/ai/agents/opencode), or [Antigravity](/docs/tooling/ai/agents/antigravity), which needs `serverUrl` and fails silently on `url`. The [MCP server docs](/docs/tooling/ai/mcp-servers#installation) list the rest.
+
+When the Appwrite consent screen opens, narrow access as in [step 3](#oauth-access) before you click **Authorize**. You'll know it worked when your tool lists `appwrite_get_context` among the server's tools.
+
+## Install Appwrite Skills {% #install-skills %}
+
+Run this from your project's root:
+
+```bash
+npx skills add appwrite/skills
+```
+
+The installer asks four questions:
+
+- Select only the SDKs this project uses.
+- Select every AI tool you work with.
+- Choose **project** scope, so a project on a different SDK gets its own set.
+- Choose **symlink**, so all your tools share one copy.
+
+You'll know it worked when your project has a `.agents/skills/` folder with your SDK's skill in it, such as `appwrite-typescript`. Start a new agent session so the skills load.
+
+# Step 3: Choose what the Appwrite sign-in grants {% #oauth-access %}
+
+The first time your tool connects, your browser opens an Appwrite consent screen. Its default is **Full access**, which lets the tool manage your organizations, projects, and their data on your behalf. Narrow it before you click **Authorize**:
+
+1. Under **Project access**, which shows **All projects**, click **Change** and choose **Specific projects**.
+2. Search for the project you're building, select it, and click **Done**.
+3. Do the same under **Organization access** for its organization, so a wrong guess by the agent can't reach anything else.
+
+{% only_dark %}
+![Appwrite consent screen with Project access set to one project, Organization access set to its organization, and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/consent-project-access.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite consent screen with Project access set to one project, Organization access set to its organization, and the Authorize button below](/images/blog/connect-ai-coding-assistant-to-appwrite/consent-project-access.avif)
+{% /only_light %}
+
+**Customize access** limits what the tool can do. It has a **Read-only** option and a **Read** or **Read + Write** level for each permission. Leave write access on for the session below, because the agent creates a table. Turn on **Read-only** when you point an agent at a project with real users.
+
+{% only_dark %}
+![Appwrite consent screen with Customize access open, showing the Read-only option and a Read or Read + Write choice for each permission](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/consent-customize.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite consent screen with Customize access open, showing the Read-only option and a Read or Read + Write choice for each permission](/images/blog/connect-ai-coding-assistant-to-appwrite/consent-customize.avif)
+{% /only_light %}
+
+Write access can mean silent changes. The MCP server runs a write only when the model passes `confirm_write: true`, but the model sets that flag itself, so your only check is your tool's approval prompt. For this session, turn off any auto-approve or auto-run mode and approve each write by hand.
+
+Every sign-in appears in the Console under the account menu > **Account** > **Applications**. **Revoke** (or **Revoke all**, for a tool that signed in more than once) ends that tool's access, including every token it holds.
+
+{% only_dark %}
+![Applications page in the Appwrite Console account settings, listing an authorized AI tool with a Revoke button](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/account-applications.avif)
+{% /only_dark %}
+{% only_light %}
+![Applications page in the Appwrite Console account settings, listing an authorized AI tool with a Revoke button](/images/blog/connect-ai-coding-assistant-to-appwrite/account-applications.avif)
+{% /only_light %}
+
+Revoking is also how you widen access later: revoke, reconnect, and choose the new project on the consent screen.
+
+If your tool runs on a remote machine over SSH, the sign-in's `localhost` callback lands on that machine. [Authenticate from a remote machine](/docs/tooling/ai/mcp-servers#remote) covers the fix for Claude Code.
+
+# Step 4: Wire Appwrite into your app in five prompts {% #first-session %}
+
+Open your app's root folder in your tool. With no app yet, open an empty folder, and prompt 2 clones a starter into it. Send the five prompts in order, one at a time, and replace the parts in angle brackets with a real feature of your app, such as tasks or notes.
+
+The code sample and the CORS check assume a web app. On another platform, the agent uses the SDK from prompt 2, and the permission checks stay the same.
+
+## Prompt 1: Confirm the organization and project {% #prompt-project %}
+
+```text
+Use Appwrite to show my workspace context: my organizations, the projects in each, and their IDs. Don't change anything. Tell me which project you'll use for this repository and wait for my confirmation.
+```
+
+The agent answers with `appwrite_get_context`. Compare the ID it picks with the **Project ID** on your project's **Settings** page in the Console. Names can repeat across organizations, so match the ID, not the name.
+
+{% only_dark %}
+![Project Settings page in the Appwrite Console with the Project ID and API endpoint under API credentials](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/project-settings-id.avif)
+{% /only_dark %}
+{% only_light %}
+![Project Settings page in the Appwrite Console with the Project ID and API endpoint under API credentials](/images/blog/connect-ai-coding-assistant-to-appwrite/project-settings-id.avif)
+{% /only_light %}
+
+If the project you want is missing, your sign-in doesn't cover it. Revoke and reconnect as in [step 3](#oauth-access).
+
+## Prompt 2: Wire the Appwrite SDK into your codebase {% #prompt-sdk %}
+
+If your app already calls Appwrite, skip to [prompt 3](#prompt-table). Otherwise, get a prompt with your real endpoint and project ID from the Console, so the agent doesn't have to guess them:
+
+1. In your project in the Console, open **Apps** > **Add app**.
+2. Choose your platform and framework, and click **Continue**.
+3. For a web app, keep `localhost` as the hostname, then click **Register and continue**.
+4. Under **Set up with AI**, click **Copy prompt**, and paste it into your agent.
+
+In an existing app, the agent installs the SDK, adds a client module, and calls `client.ping()` when the app starts. In an empty folder, it clones a starter with a demo control that sends the ping.
+
+Keep the Console wizard open and run your app. You'll know it worked when the **Connection** card shows **Connected - your SDK reached this project.**
+
+{% only_dark %}
+![Add app wizard in the Appwrite Console with the Copy prompt button under Set up with AI and the Connection card showing that the SDK reached the project](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/add-app-ai-prompt.avif)
+{% /only_dark %}
+{% only_light %}
+![Add app wizard in the Appwrite Console with the Copy prompt button under Set up with AI and the Connection card showing that the SDK reached the project](/images/blog/connect-ai-coding-assistant-to-appwrite/add-app-ai-prompt.avif)
+{% /only_light %}
+
+The wizard only reacts to a project's first ping. If your project received one before, check that `client.ping()` returns `Pong!` in your app instead.
+
+If the browser console shows a CORS error, the hostname you registered doesn't match where your app runs. Before you deploy, add your production domain the same way.
+
+Then ask the agent to save the project ID and endpoint in your repository's agent instructions file (`AGENTS.md`, or `CLAUDE.md` for Claude Code), so the next session starts from them.
+
+## Prompt 3: Create a table for one feature {% #prompt-table %}
+
+```text
+I need to store <tasks> for signed-in users, with <a title, a done flag, and a due date>. Propose a TablesDB database, a table, and columns with their types, and say which columns are required. Wait for my OK, then create them in Appwrite.
+```
+
+After you approve the writes, open **Databases** in the Console, open the new table, and check the column types on its **Columns** tab. The skills tell the agent to use explicit text types such as `varchar` and `text` instead of the deprecated `string` type.
+
+{% only_dark %}
+![Columns tab of a Tasks table in the Appwrite Console, with title as varchar, done as boolean, and dueDate as datetime](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/table-columns.avif)
+{% /only_dark %}
+{% only_light %}
+![Columns tab of a Tasks table in the Appwrite Console, with title as varchar, done as boolean, and dueDate as datetime](/images/blog/connect-ai-coding-assistant-to-appwrite/table-columns.avif)
+{% /only_light %}
+
+You can't change a column's type after creation, so if you see a `string` column, ask the agent to delete and recreate it while the table is still empty.
+
+## Prompt 4: Review the permissions the agent set {% #prompt-permissions %}
+
+This is the check that matters most. A table created without explicit permissions has none, so nobody can reach it from your app. Granting `Role.any()` to clear the errors that follow also grants access to guests.
+
+```text
+Show me the table-level permissions and the row security setting on the <tasks> table. I want any signed-in user to be able to create a row, and only the row's creator to read, update, or delete it. Change the table to match and list exactly what you changed.
+```
+
+That target is the [private rows pattern](/docs/advanced/security/permissions#example-3-private-rows), with row security on and **Create** for all users as the only table-level permission. Open the table's **Security** tab in the Console and check two cards:
+
+- **Permissions** should list **All users** with only **Create** selected. **Read** for **All users** at this level lets every signed-in user read every row, and any permission for **Any** includes guests.
+- **Row level security (RLS)** should be on. With it off, Appwrite ignores row permissions, so the per-user permissions from prompt 5 would do nothing.
+
+{% only_dark %}
+![Security tab of the Tasks table in the Appwrite Console, with All users allowed to Create only and Row level security turned on](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/table-security.avif)
+{% /only_dark %}
+{% only_light %}
+![Security tab of the Tasks table in the Appwrite Console, with All users allowed to Create only and Row level security turned on](/images/blog/connect-ai-coding-assistant-to-appwrite/table-security.avif)
+{% /only_light %}
+
+The agent's tool calls run as your Appwrite account, not as one of your app's users, so a successful call proves nothing about their access. Prompt 5 is the real test.
+
+## Prompt 5: Write the data code {% #prompt-code %}
+
+```text
+Using the table you created and this app's Appwrite SDK, add a form to create <tasks> and a list of the signed-in user's <tasks>. Each row should belong to the signed-in user. If the app has no sign-in yet, add email and password sign-up and sign-in first. Then tell me the command to run the app.
+```
+
+This is where Skills show up in your diff. Without them, the agent tends to write the legacy `databases.createDocument()` with positional arguments. The TypeScript skill tells it to use `TablesDB` with object parameters, so a web app's create call looks like this:
+
+```js
+import { TablesDB, ID, Permission, Role } from 'appwrite';
+import { client } from './appwrite';
+
+const tablesDB = new TablesDB(client);
+
+export function createTask(userId, title) {
+  return tablesDB.createRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: ID.unique(),
+    data: { title, done: false },
+    permissions: [
+      Permission.read(Role.user(userId)),
+      Permission.update(Role.user(userId)),
+      Permission.delete(Role.user(userId)),
+    ],
+  });
+}
+```
+
+If the diff adds `Databases`, `createDocument`, or `collectionId` to a codebase that didn't use them, the skill likely didn't load. Start a new session, check that your SDK's skill is installed for this tool, and ask again.
+
+Then test it as one of your app's users, who are separate from your Appwrite account:
+
+1. Run the app, sign up as a test user, and create a task.
+2. In the Console, open the table. The new row should appear there.
+3. Click the row and open its **Permissions** tab. It should list that user for read, update, and delete.
+4. Sign up as a second test user and confirm the first user's task doesn't appear.
+
+{% only_dark %}
+![Permissions tab of a row in the Appwrite Console, listing one user with Read, Update, and Delete selected](/images/blog/connect-ai-coding-assistant-to-appwrite/dark/row-permissions.avif)
+{% /only_dark %}
+{% only_light %}
+![Permissions tab of a row in the Appwrite Console, listing one user with Read, Update, and Delete selected](/images/blog/connect-ai-coding-assistant-to-appwrite/row-permissions.avif)
+{% /only_light %}
+
+If the test fails, match the symptom:
+
+- **401 `user_unauthorized` on create:** the user isn't signed in, or the table lacks **Create** for **All users**.
+- **400 `row_invalid_structure` on create:** the code skips a required column.
+- **401 on list:** row security is off.
+- **The second user sees the first user's task:** **Read** is set at the table level.
+
+# Create your first Appwrite database and row {% #first-database %}
+
+Your agent now has a scoped connection, current SDK knowledge, and one table whose permissions you've checked. To tell a good schema from a guessed one, learn the parts it built: [Create your first Appwrite database](/blog/post/create-your-first-appwrite-database) covers database types, columns, table permissions, and your first row and query.
+
+- [Appwrite MCP server](/docs/tooling/ai/mcp-servers)
+- [Appwrite Skills](/docs/tooling/ai/skills)
+- [Database permissions](/docs/products/databases/tablesdb/permissions)
+- [Sign up for Appwrite Cloud](/sign-up)

@@ -1,0 +1,342 @@
+---
+layout: post
+title: "Send your first email, SMS or push with Appwrite Messaging"
+description: Pick a channel, connect a provider, check your targets, then send, schedule and debug your first Appwrite Messaging message from the Console and Node.
+date: 2026-11-03
+cover: /images/blog/send-your-first-message-with-appwrite-messaging/cover.avif
+timeToRead: 8
+author: atharva
+category: tutorials
+featured: false
+faqs:
+  - question: "Which providers does Appwrite Messaging support?"
+    answer: "For email: Mailgun, Resend, SendGrid, Amazon SES and any SMTP server. For SMS: Twilio, MSG91, Telesign, Textmagic and Vonage. For push: Firebase Cloud Messaging (Android, iOS and web) and Apple Push Notification service (Apple devices). See the [providers docs](/docs/products/messaging/providers)."
+  - question: "Do Appwrite users get an email target automatically?"
+    answer: "Yes. When a user signs up with an email address, or you create a user with an email in the Console or the Users API, Appwrite creates an email target for them. Push targets are never automatic: your app must call `account.createPushTarget` after the user logs in."
+  - question: "Why does my Appwrite message show failed when some users received it?"
+    answer: "Appwrite marks a message `failed` if any recipient failed, even when the provider accepted the others. Read `deliveredTotal` and `deliveryErrors` with `messaging.getMessage` to see how many targets the provider accepted and why the rest failed. A failed message can't be sent again, so create a new one addressed to the recipients that failed."
+  - question: "What does 'No valid recipients found' mean in Appwrite Messaging?"
+    answer: "The message's users, targets and topics resolved to zero targets for that channel. The most common cause is a push notification sent to a user whose app never registered a device with `account.createPushTarget`."
+  - question: "Can I send an Appwrite Messaging message from the client SDK?"
+    answer: "No. `createEmail`, `createSms` and `createPush` need an API key with the `messages.write` scope, so call them from your backend or an [Appwrite Function](/docs/products/functions). Client SDKs can register push targets and subscribe a user's own targets to topics."
+---
+
+Appwrite Messaging sends email, SMS and push notifications through one API. A first send needs a **provider**, the service that delivers the message, such as Resend or Twilio, and a **target**, an address Appwrite can deliver to, for every person you message.
+
+The API accepts a message before anything is delivered, so a broken setup looks fine until you check the message's status. Get one real message delivered from the Console first, then move it into code.
+
+**Start where you are:**
+
+- No project yet: create one in the [Appwrite Console](/sign-in), then [choose your first channel](#choose-channel).
+- You know your channel and have provider credentials: go to [step 1, add a provider](#add-provider).
+- You added a provider: go to [step 2, check your targets](#targets).
+- Provider and targets are ready: go to [step 4, send a test from the Console](#send-console).
+- The Console test worked: go to [step 5, send from a server SDK](#send-server).
+- A message shows **Failed**: go to [step 7, read delivery status](#delivery-status).
+- You've done all of this: go to [what to set up after messaging](#after-messaging).
+
+# Choose your first channel {% #choose-channel %}
+
+Start with email, even if push is what your app needs. Every user who signs up with an email address already has an address Appwrite can deliver to, so once a provider is connected you can message yourself from the Console without changing your app. Push needs a provider, client code that registers the device, and a signed-in user before the first notification arrives.
+
+Get one channel working end to end, then add the others. Before the first send, each channel needs:
+
+- **Email:** an account with Mailgun, Resend, SendGrid, Amazon SES or an SMTP server, and a sender address on a domain you verified with that provider. Do the domain verification first. It's the one part you can't finish inside Appwrite.
+- **SMS:** an account with Twilio, MSG91, Telesign, Textmagic or Vonage, its API credentials, and a sender number or sender ID bought or registered with that provider.
+- **Push:** Firebase Cloud Messaging (FCM) for Android, iOS and web, or Apple Push Notification service (APNs) for Apple devices only. FCM needs a service account JSON file. APNs needs a `.p8` auth key, its key ID, your team ID and your app's bundle ID.
+
+If you ship on both Android and iOS, use FCM for both and upload your APNs key to Firebase. You then manage one push provider instead of two.
+
+{% only_dark %}
+![Create provider page listing the email, SMS and push services Appwrite Messaging supports](/images/blog/send-your-first-message-with-appwrite-messaging/dark/provider-picker.avif)
+{% /only_dark %}
+{% only_light %}
+![Create provider page listing the email, SMS and push services Appwrite Messaging supports](/images/blog/send-your-first-message-with-appwrite-messaging/provider-picker.avif)
+{% /only_light %}
+
+# Step 1: Add a provider {% #add-provider %}
+
+1. In the Console, open **Messaging** > **Providers** and click **Create provider**.
+2. Pick a service.
+3. Fill in its credentials and the sender.
+4. Click **Create provider**.
+
+{% only_dark %}
+![SMTP provider form filled in with host, credentials, sender name and sender email](/images/blog/send-your-first-message-with-appwrite-messaging/dark/provider-form.avif)
+{% /only_dark %}
+{% only_light %}
+![SMTP provider form filled in with host, credentials, sender name and sender email](/images/blog/send-your-first-message-with-appwrite-messaging/provider-form.avif)
+{% /only_light %}
+
+The [provider docs](/docs/products/messaging/providers) list each service's fields. The decision is which service to connect:
+
+- If you already send email through a provider, connect that one. Your sending domain is already verified there.
+- If you're on Appwrite Cloud and already have a domain verified in Resend, use Resend's **One-click setup**. Click **Connect with Resend**, pick the domain and click **Generate API key**. Appwrite creates a send-only key restricted to that domain and fills in the form.
+- For SMS, compare coverage and pricing for the countries your users live in. You send through every SMS provider with the same `createSms` call.
+
+Fill in **Sender email**, or **Sender phone** for SMS, before you save. If it's blank, Appwrite saves the provider as disabled, and every send fails with "No enabled provider found."
+
+The sender must be on a domain or identity you verified with that provider. Two services also need the right region:
+
+- **Mailgun:** the **EU region** switch must match where your account is hosted.
+- **Amazon SES:** the **Region** must be where you verified your identity.
+
+You'll know it worked when the provider shows **Enabled** in the **Providers** tab.
+
+{% only_dark %}
+![Providers tab with an SMTP email provider marked Enabled and a Twilio SMS provider saved without a sender marked Disabled](/images/blog/send-your-first-message-with-appwrite-messaging/dark/providers-list.avif)
+{% /only_dark %}
+{% only_light %}
+![Providers tab with an SMTP email provider marked Enabled and a Twilio SMS provider saved without a sender marked Disabled](/images/blog/send-your-first-message-with-appwrite-messaging/providers-list.avif)
+{% /only_light %}
+
+Enabled only means the required fields are filled in. Appwrite doesn't test the credentials when you save them, so the send in step 4 is the real check.
+
+Keep one provider per channel to start. With more than one, targets that don't name a provider go through whichever one is enabled first, which makes failures harder to trace.
+
+# Step 2: Check your targets {% #targets %}
+
+A target is one email address, phone number or device push token that belongs to a user. When you address a message to a user, Appwrite sends it to every target that user has for that channel.
+
+Whether a target already exists depends on the channel:
+
+- **Email:** created automatically when a user signs up with an email address, and when you create a user with an email in the Console or with the Users API.
+- **SMS:** created automatically when a user signs in with phone OTP, or when you create a user with a phone number. The number must start with `+` and have at most 15 digits, or Appwrite rejects it.
+- **Push:** never created automatically. Your app has to register each device after the user logs in.
+
+To test email right now:
+
+1. Open **Auth** > **Users** > **Create user** and create a user for yourself with your own email address.
+2. Open that user's **Targets** tab to see the email target and its ID.
+
+{% only_dark %}
+![A user's Targets tab listing a push, an SMS and an email target with their IDs](/images/blog/send-your-first-message-with-appwrite-messaging/dark/user-targets.avif)
+{% /only_dark %}
+{% only_light %}
+![A user's Targets tab listing a push, an SMS and an email target with their IDs](/images/blog/send-your-first-message-with-appwrite-messaging/user-targets.avif)
+{% /only_light %}
+
+For push, your app first gets the device's token. On the web, Firebase's `getToken()` returns it once the user allows notifications. On mobile, the FCM or APNs SDK gives it to you.
+
+Then call `account.createPushTarget` while the user has a session, and save the returned target ID: tokens change, and you'll pass the new one to `account.updatePushTarget`.
+
+{% tabs %}
+{% tabsitem #push-target-code title="Code" %}
+
+```js
+import { Client, Account, ID } from 'appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+// Run after every login. `token` is this device's FCM or APNs token.
+const target = await account.createPushTarget({
+    targetId: ID.unique(),
+    identifier: token
+});
+
+// Keep target.$id to call account.updatePushTarget when the token changes.
+```
+
+{% /tabsitem %}
+{% tabsitem #push-target-agent title="Ask your AI agent" %}
+
+```text
+Register this app's devices for Appwrite push notifications.
+After every login, get the device's FCM registration token
+(or APNs device token on Apple), then call
+account.createPushTarget with ID.unique() as targetId and the
+token as identifier. Store the returned target $id. When the
+token refreshes, call account.updatePushTarget with that
+target ID and the new token. Logging out deletes the target,
+so register again on the next login. Follow
+https://appwrite.io/docs/products/messaging/send-push-notifications
+```
+
+{% /tabsitem %}
+{% /tabs %}
+
+Two mistakes leave you without a push target:
+
+- **Registering at app start, before login.** `createPushTarget` needs a session, so the call fails.
+- **Registering once per install.** Logging out deletes the session's push targets, so register after every login.
+
+You'll know it worked when the user's **Targets** tab lists a target with the provider type you're about to send on.
+
+# Step 3: Choose topics or direct sends {% #topics-or-direct %}
+
+Every message takes three recipient lists, `users`, `targets` and `topics`, and you can combine them. Pick by what the message is about:
+
+- **One person**, such as a receipt or a security alert: send to `users`. A user's new devices and addresses are included without code changes.
+- **One address or device**, such as confirming a newly added email: send to `targets`.
+- **An opt-in group**, such as product updates or a weekly digest: send to a **topic**, a named list of subscribed targets you send to by ID.
+
+{% only_dark %}
+![Diagram: users own email, SMS and push targets, and a topic subscribes individual targets, so an email to a user and a push to a topic reach different targets](/images/blog/send-your-first-message-with-appwrite-messaging/dark/targets-diagram.avif)
+{% /only_dark %}
+{% only_light %}
+![Diagram: users own email, SMS and push targets, and a topic subscribes individual targets, so an email to a user and a push to a topic reach different targets](/images/blog/send-your-first-message-with-appwrite-messaging/targets-diagram.avif)
+{% /only_light %}
+
+To set up a topic in the Console:
+
+1. Open **Messaging** > **Topics** > **Create topic** and give it a name.
+2. On the topic's **Subscribers** tab, click **Add subscriber** and pick targets.
+3. When you write a message, pick the topic with **Add** under **Topics**.
+
+{% only_dark %}
+![Subscribers tab of a Product updates topic listing four email targets and one push target](/images/blog/send-your-first-message-with-appwrite-messaging/dark/topic-subscribers.avif)
+{% /only_dark %}
+{% only_light %}
+![Subscribers tab of a Product updates topic listing four email targets and one push target](/images/blog/send-your-first-message-with-appwrite-messaging/topic-subscribers.avif)
+{% /only_light %}
+
+Topic subscribers are targets, not users. A user who subscribes their email target gets the topic's emails but not its push notifications, so subscribe each channel's target separately.
+
+By default any signed-in user can subscribe their own targets with `messaging.createSubscriber` from the client SDK. To narrow that, set `subscribe` roles with `messaging.createTopic` or `updateTopic` from a server SDK, because the Console's topic form only asks for a name.
+
+Keep private content out of topics, and send it to `users` or `targets` instead. For your first message, skip topics and send to yourself as a user.
+
+# Step 4: Send a test from the Console {% #send-console %}
+
+1. Open **Messaging** > **Messages** > **Create message** and pick the channel you connected. The Console creates a draft right away and opens it.
+2. Fill in the subject and content.
+3. Click **Add** under **Users** and pick yourself.
+4. Click **Update draft**.
+5. Click **Send message**, check the estimate, and click **Send**.
+
+{% only_dark %}
+![Email draft with one user added under Users, below the Schedule, Update draft and Send message buttons](/images/blog/send-your-first-message-with-appwrite-messaging/dark/message-draft.avif)
+{% /only_dark %}
+{% only_light %}
+![Email draft with one user added under Users, below the Schedule, Update draft and Send message buttons](/images/blog/send-your-first-message-with-appwrite-messaging/message-draft.avif)
+{% /only_light %}
+
+Save before you click **Send message**, because it sends the last saved version of the draft.
+
+{% only_dark %}
+![Confirm sending message dialog estimating delivery to 1 target](/images/blog/send-your-first-message-with-appwrite-messaging/dark/send-confirm.avif)
+{% /only_dark %}
+{% only_light %}
+![Confirm sending message dialog estimating delivery to 1 target](/images/blog/send-your-first-message-with-appwrite-messaging/send-confirm.avif)
+{% /only_light %}
+
+The confirmation dialog estimates how many targets the message will reach. An estimate of 0 means your recipients weren't saved. The estimate counts each user as one target without checking their targets, so for push, check the user's **Targets** tab first.
+
+Drafts you never send stay in the **Messages** list until you delete them.
+
+You'll know it worked when the message shows **Sent** in the **Messages** list and reaches you.
+
+# Step 5: Send from a server SDK {% #send-server %}
+
+Client SDKs can't create messages. Creating one needs an API key, so call Messaging from your backend or from an [Appwrite Function](/docs/products/functions), for example one that runs when an order is created.
+
+Create a key in **API Keys** with the `messages.write` scope, and add `messages.read` for step 7. The [API keys docs](/docs/partners/project/api-keys#scopes) list every scope.
+
+Install the SDK with `npm install node-appwrite` and keep the key in an environment variable, not in your code.
+
+```js
+import { Client, Messaging, ID } from 'node-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey(process.env.APPWRITE_API_KEY);
+
+const messaging = new Messaging(client);
+
+const message = await messaging.createEmail({
+    messageId: ID.unique(),
+    subject: 'Your order has shipped',
+    content: '<p>Your order is on its way.</p>',
+    html: true,
+    users: ['<USER_ID>']
+});
+
+console.log(message.status); // "processing"
+```
+
+The call returns as soon as Appwrite queues the message, with status `processing`. A successful response means the message was accepted, not delivered. Delivery happens in the background.
+
+You'll know it worked when [`getMessage`](#delivery-status) returns status `sent` for that message ID.
+
+Errors from this call are about the request itself:
+
+- `message_missing_target`: you passed no users, targets or topics.
+- `message_target_not_email` (or `_sms`, `_push`): an ID in `targets` doesn't exist or belongs to a different channel.
+- `message_already_exists`: you reused a message ID. Generate one with `ID.unique()`.
+
+# Step 6: Schedule a message {% #schedule %}
+
+Add `scheduledAt` to any create call as an ISO 8601 date in the future. Appwrite stores the message as `scheduled` and moves it to `processing` at that time.
+
+A date in the past is rejected, so build it from the current time. `toISOString()` returns UTC with a `Z` suffix, which keeps the send time unambiguous.
+
+```js
+await messaging.createEmail({
+    messageId: ID.unique(),
+    subject: 'Your weekly summary',
+    content: 'Here is what changed this week.',
+    users: ['<USER_ID>'],
+    scheduledAt: new Date(Date.now() + 60 * 60 * 1000).toISOString() // in one hour
+});
+```
+
+In the Console, save the draft with **Update draft**, click **Schedule** and pick a time under **Send at**. A scheduled message offers **Reschedule** and **Cancel scheduling**, which returns it to a draft.
+
+You'll know it worked when the message shows **Scheduled** in the **Messages** list.
+
+{% only_dark %}
+![Messages list with a draft, a scheduled email, two sent emails and a failed SMS with a Details button](/images/blog/send-your-first-message-with-appwrite-messaging/dark/messages-list.avif)
+{% /only_dark %}
+{% only_light %}
+![Messages list with a draft, a scheduled email, two sent emails and a failed SMS with a Details button](/images/blog/send-your-first-message-with-appwrite-messaging/messages-list.avif)
+{% /only_light %}
+
+# Step 7: Read delivery status {% #delivery-status %}
+
+A message moves through `draft`, `scheduled`, `processing`, and then `sent` or `failed`. The status that misleads people is `failed`: Appwrite marks a message `failed` if any recipient failed, even when the rest were delivered.
+
+Read `deliveredTotal` to see how many targets the provider accepted, and `deliveryErrors` to see why the others failed. Accepted means the provider took the message, not that it reached an inbox, so check the provider's own logs for bounces and spam filtering.
+
+In the Console, click **Details** next to the **Failed** badge to see the same errors.
+
+{% only_dark %}
+![Message error dialog for a failed SMS showing the delivery error No enabled provider found](/images/blog/send-your-first-message-with-appwrite-messaging/dark/failed-details.avif)
+{% /only_dark %}
+{% only_light %}
+![Message error dialog for a failed SMS showing the delivery error No enabled provider found](/images/blog/send-your-first-message-with-appwrite-messaging/failed-details.avif)
+{% /only_light %}
+
+```js
+const message = await messaging.getMessage({ messageId: '<MESSAGE_ID>' });
+
+console.log(message.status, message.deliveredTotal, message.deliveryErrors);
+```
+
+The delivery errors you're likely to see first:
+
+- **No enabled provider found.** No provider for this channel is enabled. Add one, or enable it in the **Providers** tab.
+- **No valid recipients found.** The recipients resolved to zero targets on this channel. Usually it's a push to a user whose app never called `createPushTarget`, or a topic with no subscribers on this channel.
+- **Failed sending to target ... with error: ...** The provider rejected that one recipient. The text after `error:` comes from the provider, so look it up in the provider's docs.
+- **Failed sending to targets with error: ...** The whole request to the provider failed, so nobody in that batch got the message. Check the provider's credentials and sender address.
+
+A failed message can't be sent again. To retry, create a new message addressed only to the recipients that failed.
+
+A push error ending in `Expired device token` means FCM or APNs no longer accepts that token. Appwrite marks the target expired and skips it on later sends. If a device stops receiving notifications, the app most likely got a new token and never called `updatePushTarget`.
+
+[Messaging explained](/blog/post/messaging-explained) shows how the worker resolves topics and providers behind these statuses. Once push works, read [best practices for sending push notifications](/blog/post/push-notifications-best-practices).
+
+# What to set up after messaging {% #after-messaging %}
+
+Files you store in Storage can go out as email attachments, passed to `createEmail` as `<BUCKET_ID>:<FILE_ID>` with a key that also has the `files.read` scope. [Upload your first file to Appwrite Storage](/blog/post/upload-your-first-file-to-appwrite-storage) walks through the first bucket.
+
+Once real users can trigger sends, for example through a public Function, protect that path. [Add your first Appwrite Firewall rules](/blog/post/add-your-first-appwrite-firewall-rules) shows how to rate limit it, which matters most for SMS, where scripted requests turn into a provider bill.
+
+- [Messaging docs](/docs/products/messaging)
+- [Send email messages](/docs/products/messaging/send-email-messages)
+- [Send push notifications](/docs/products/messaging/send-push-notifications)
+- [Sign up for Appwrite Cloud](/sign-up)
