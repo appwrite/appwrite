@@ -377,6 +377,7 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $span = Span::init('realtime.presences.cleanup');
             $started = \microtime(true);
             $hostname = \gethostname();
+            $result = null;
             Span::add('hostname', $hostname ?: null);
 
             try {
@@ -419,6 +420,35 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
                 Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
                 $span->finish();
                 $booted->set(1);
+            }
+
+            // Finish what the boot sweep left while serving: rows written since boot are never deleted.
+            if ($hostname !== false && ($result === null || $result['outcome'] !== 'done' || $result['failed'] > 0)) {
+                $span = Span::init('realtime.presences.cleanup.resume');
+                $started = \microtime(true);
+                Span::add('hostname', $hostname);
+
+                try {
+                    $resumed = $presenceState->resumeOrphanedInProjects(
+                        getConsoleDB(),
+                        getProjectDB(...),
+                        $hostname,
+                        $bootedAt,
+                        $container->get('publisherForUsage'),
+                        getQueueForRealtime(),
+                    );
+                    Span::add('presences.deleted', $resumed['deleted']);
+                    Span::add('projects.scanned', $resumed['projects']);
+                    Span::add('projects.failed', $resumed['failed']);
+                    Span::add('attempts', $resumed['attempts']);
+                    Span::add('outcome', $resumed['outcome']);
+                } catch (Throwable $th) {
+                    Span::add('outcome', 'failed');
+                    $span->setError($th);
+                } finally {
+                    Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
+                    $span->finish();
+                }
             }
         }
 
