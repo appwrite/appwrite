@@ -270,7 +270,7 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         $operator = $values[1];
         $value = $values[2];
 
-        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/', $path)) {
+        if (!\preg_match('/^[a-zA-Z0-9_.\[\]]+$/D', $path)) {
             throw new ValidationException('Invalid JSON path: ' . $path);
         }
 

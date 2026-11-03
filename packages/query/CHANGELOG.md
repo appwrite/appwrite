@@ -21,6 +21,10 @@ All notable changes to `utopia-php/query` are documented in this file.
   the schema builder do, so under MySQL's or ClickHouse's backslash escaping a
   value cannot close its literal. Its output is still for logs and debugging
   only.
+- The allowlists that validate names, JSON paths, types, hints and settings
+  no longer accept a trailing newline, which their `$` anchors matched
+  before. Among them: JSON paths in the MySQL, PostgreSQL and SQLite builders,
+  `JoinBuilder::on()` and `where()` columns, and the `Tenant` hook's column.
 
 ## 0.7.2
 

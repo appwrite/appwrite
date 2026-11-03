@@ -3,6 +3,7 @@
 namespace Utopia\Query\Tests\Regression;
 
 use Closure;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Query\AST\Call\Func;
@@ -20,6 +21,7 @@ use Utopia\Query\Builder\JoinType;
 use Utopia\Query\Builder\MongoDB as MongoDBBuilder;
 use Utopia\Query\Builder\MySQL as MySQLBuilder;
 use Utopia\Query\Builder\PostgreSQL as PostgreSQLBuilder;
+use Utopia\Query\Builder\SQLite as SQLiteBuilder;
 use Utopia\Query\Builder\Statement;
 use Utopia\Query\Classifier\MongoDB as MongoDBClassifier;
 use Utopia\Query\Classifier\MySQL as MySQLClassifier;
@@ -90,6 +92,10 @@ use Utopia\Query\Type;
  *      testFilterInjectorEnclosesRawCondition
  *  - (this branch)  fix(query): escape backslashes in toRawSql()
  *      testToRawSqlEscapesBackslashBeforeQuote
+ *  - (this branch)  fix(query): reject a trailing newline in allowlisted names
+ *      testJsonPathRejectsTrailingNewline
+ *      testJoinBuilderRejectsTrailingNewlineInColumn
+ *      testTenantRejectsTrailingNewlineInColumn
  */
 class SecurityRegressionTest extends TestCase
 {
@@ -759,6 +765,62 @@ class SecurityRegressionTest extends TestCase
             ->toRawSql();
 
         $this->assertSame("SELECT * FROM `t` WHERE `name` IN ('\\\\'' OR 1=1 -- ')", $sql);
+    }
+
+    /**
+     * @return array<string, array{MySQLBuilder|PostgreSQLBuilder|SQLiteBuilder}>
+     */
+    public static function jsonPathBuilderProvider(): array
+    {
+        return [
+            'mysql' => [new MySQLBuilder()],
+            'postgresql' => [new PostgreSQLBuilder()],
+            'sqlite' => [new SQLiteBuilder()],
+        ];
+    }
+
+    /** A `$` anchor without the D modifier also matches before a final "\n". */
+    #[DataProvider('jsonPathBuilderProvider')]
+    public function testJsonPathRejectsTrailingNewline(MySQLBuilder|PostgreSQLBuilder|SQLiteBuilder $builder): void
+    {
+        $builder->from('t')->filter([Query::jsonPath('data', "a.b\n", '=', 1)]);
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid JSON path');
+
+        $builder->build();
+    }
+
+    /**
+     * @return array<string, array{Closure(JoinBuilder): JoinBuilder}>
+     */
+    public static function joinBuilderColumnProvider(): array
+    {
+        return [
+            'on left' => [fn (JoinBuilder $join): JoinBuilder => $join->on("users.id\n", 'orders.user_id')],
+            'on right' => [fn (JoinBuilder $join): JoinBuilder => $join->on('users.id', "orders.user_id\n")],
+            'where' => [fn (JoinBuilder $join): JoinBuilder => $join->where("orders.status\n", '=', 'active')],
+        ];
+    }
+
+    /**
+     * @param  Closure(JoinBuilder): JoinBuilder  $condition
+     */
+    #[DataProvider('joinBuilderColumnProvider')]
+    public function testJoinBuilderRejectsTrailingNewlineInColumn(Closure $condition): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid column name');
+
+        $condition(new JoinBuilder());
+    }
+
+    public function testTenantRejectsTrailingNewlineInColumn(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid column name');
+
+        new Tenant(['7'], "tenant_id\n");
     }
 
     private function parse(string $sql): Select

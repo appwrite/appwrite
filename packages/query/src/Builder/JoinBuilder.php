@@ -22,11 +22,11 @@ class JoinBuilder
      */
     public function on(string $left, string $right, string $operator = '='): static
     {
-        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $left)) {
+        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/D', $left)) {
             throw new ValidationException('Invalid column name: ' . $left);
         }
 
-        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $right)) {
+        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/D', $right)) {
             throw new ValidationException('Invalid column name: ' . $right);
         }
 
@@ -59,7 +59,7 @@ class JoinBuilder
      */
     public function where(string $column, string $operator, mixed $value): static
     {
-        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $column)) {
+        if (!\preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/D', $column)) {
             throw new ValidationException('Invalid column name: ' . $column);
         }
 

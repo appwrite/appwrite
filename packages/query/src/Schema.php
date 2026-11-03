@@ -399,7 +399,7 @@ abstract class Schema
 
             if (isset($index->collations[$col])) {
                 $collation = $index->collations[$col];
-                if (! \preg_match('/^[A-Za-z0-9_]+$/', $collation)) {
+                if (! \preg_match('/^[A-Za-z0-9_]+$/D', $collation)) {
                     throw new ValidationException('Invalid collation: ' . $collation);
                 }
                 $part .= ' COLLATE ' . $collation;
