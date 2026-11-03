@@ -30,10 +30,10 @@ const COMBINED_TOPOLOGY_SERVICES = [
 const SEPARATE_TOPOLOGY_PROFILE = 'separate'
 // Profiles the installer leaves on a service. Generator.php only acts on the
 // topology profile, so a service under any of these keeps its `profiles:` list
-// in the generated compose and stays opt-in through COMPOSE_PROFILES. The
-// embeddings container is the one case today: resource-heavy, so it is not
-// started until an operator adds "embedding" to COMPOSE_PROFILES.
-const KEPT_PROFILES = ['embedding']
+// in the generated compose and stays opt-in through COMPOSE_PROFILES: the
+// resource-heavy embeddings container ("embedding") and the pull request
+// review service ("reviews"), which also needs _APP_REVIEWS_SECRET.
+const KEPT_PROFILES = ['embedding', 'reviews']
 // Every Compose profile the appwrite compose file is allowed to use. Any other
 // profile aborts generation, because the docs generator would not know which
 // topology or database option it belongs to.
