@@ -254,7 +254,7 @@ class Create extends Action
             ? DateTime::addSeconds(new \DateTime(), $accessTokenExpiry)
             : null;
 
-        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $idToken, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
+        $this->upsertIdentity($user, $provider, $sub, $providerEmail, $isVerified, $idToken, $accessToken, $accessTokenExpiresAt, $photo, $dbForProject, $authorization, $newUser, $newTarget);
 
         if (empty($user->getAttribute('name'))) {
             $user->setAttribute('name', $name);
@@ -468,6 +468,14 @@ class Create extends Action
                 if (!$isVerified) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                 }
+                // An address held by identities of more than one user matches nobody
+                $identityOfAnotherUser = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $identityWithMatchingEmail->getAttribute('userInternalId')),
+                ]);
+                if (!$identityOfAnotherUser->isEmpty()) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                }
                 $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
             }
         }
@@ -601,7 +609,7 @@ class Create extends Action
      * ID token, access token and photo. Guards against attaching an email
      * already bound to another user's identity.
      */
-    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, string $idToken, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
+    private function upsertIdentity(User $user, string $provider, string $sub, string $providerEmail, bool $isVerified, string $idToken, string $accessToken, ?string $accessTokenExpiresAt, string $photo, Database $dbForProject, Authorization $authorization, ?Document $newUser, ?Document $newTarget): void
     {
         $identity = $dbForProject->findOne('identities', [
             Query::equal('userInternalId', [$user->getSequence()]),
@@ -611,12 +619,26 @@ class Create extends Action
 
         if ($identity->isEmpty()) {
             // Before creating the identity, check if the email is already associated with another user
+            // A request that fails here must not leave behind the user it just created.
+            $discardNewUser = function () use ($authorization, $dbForProject, $newUser, $newTarget): void {
+                if ($newUser === null) {
+                    return;
+                }
+                $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+                    if ($newTarget !== null) {
+                        $dbForProject->deleteDocument('targets', $newTarget->getId());
+                    }
+                    $dbForProject->deleteDocument('users', $newUser->getId());
+                });
+            };
+
             if (!empty($providerEmail)) {
                 $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!empty($identitiesWithMatchingEmail)) {
+                    $discardNewUser();
                     throw new Exception(Exception::GENERAL_BAD_REQUEST);
                     /** Return a generic bad request to prevent exposing existing accounts */
                 }
@@ -634,7 +656,8 @@ class Create extends Action
                     'userId' => $user->getId(),
                     'provider' => $provider,
                     'providerUid' => $sub,
-                    'providerEmail' => $providerEmail,
+                    // Identity email lookups adopt users, so only store an attested address
+                    'providerEmail' => $isVerified ? $providerEmail : '',
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => null,
                     'providerAccessTokenExpiry' => $accessTokenExpiresAt,
@@ -643,15 +666,7 @@ class Create extends Action
                 ]));
             } catch (Duplicate) {
                 // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
-                if ($newUser !== null) {
-                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
-                        if ($newTarget !== null) {
-                            $dbForProject->deleteDocument('targets', $newTarget->getId());
-                        }
-                        $dbForProject->deleteDocument('users', $newUser->getId());
-                    });
-                }
+                $discardNewUser();
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
             return;
@@ -660,6 +675,19 @@ class Create extends Action
         // The token is verified and required, so it always supersedes the stored
         // one: its claims would otherwise go stale, and it expires within the hour.
         $changes = ['providerIdToken' => $idToken];
+
+        // Store an email only once the provider attests it, and never one another user's identity holds.
+        // Any other response clears it, so an address the provider no longer attests stops matching.
+        $changes['providerEmail'] = '';
+        if ($isVerified && !empty($providerEmail)) {
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$providerEmail]),
+                Query::notEqual('userInternalId', $user->getSequence()),
+            ]);
+            if ($identityWithMatchingEmail->isEmpty()) {
+                $changes['providerEmail'] = $providerEmail;
+            }
+        }
 
         // Native sign-in often carries no access token at all, so only overwrite
         // the stored credentials when the client actually supplied one.

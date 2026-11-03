@@ -310,6 +310,7 @@ class Get extends Base
         }
         $providerEmail = $oauth2->getUserEmail($accessToken);
         $email = $providerEmail;
+        $isVerified = $oauth2->isEmailVerified($accessToken);
 
         // Check if this identity is connected to a different user
         if (!$user->isEmpty()) {
@@ -382,8 +383,6 @@ class Get extends Base
         $newTarget = null;
 
         if ($user->isEmpty()) { // No user logged in or with OAuth2 provider ID, create new one or connect with account with same email
-            $isVerified = $oauth2->isEmailVerified($accessToken);
-
             $identity = $dbForProject->findOne('identities', [
                 Query::equal('provider', [$provider]),
                 Query::equal('providerUid', [$oauth2ID]),
@@ -478,6 +477,14 @@ class Get extends Base
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
                     if (!$isVerified) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                    // An address held by identities of more than one user matches nobody
+                    $identityOfAnotherUser = $dbForProject->findOne('identities', [
+                        Query::equal('providerEmail', [$providerEmail]),
+                        Query::notEqual('userInternalId', $identityWithMatchingEmail->getAttribute('userInternalId')),
+                    ]);
+                    if (!$identityOfAnotherUser->isEmpty()) {
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($dbForProject->getDocument('users', $identityWithMatchingEmail->getAttribute('userId'))->getArrayCopy());
@@ -585,8 +592,6 @@ class Get extends Base
                 'emailIsFree' => null,
             ];
 
-            $isVerified = $oauth2->isEmailVerified($accessToken);
-
             try {
                 $parsedEmail = new Email($providerEmail);
                 $canonical = $parsedEmail->getCanonical();
@@ -687,12 +692,26 @@ class Get extends Base
             // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
 
+            // A request that fails here must not leave behind the user it just created.
+            $discardNewUser = function () use ($authorization, $dbForProject, $newUser, $newTarget): void {
+                if ($newUser === null) {
+                    return;
+                }
+                $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
+                    if ($newTarget !== null) {
+                        $dbForProject->deleteDocument('targets', $newTarget->getId());
+                    }
+                    $dbForProject->deleteDocument('users', $newUser->getId());
+                });
+            };
+
             if (!empty($providerEmail)) {
                 $identitiesWithMatchingEmail = $dbForProject->find('identities', [
                     Query::equal('providerEmail', [$providerEmail]),
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!empty($identitiesWithMatchingEmail)) {
+                    $discardNewUser();
                     $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     /** Return a generic bad request to prevent exposing existing accounts */
                 }
@@ -710,7 +729,8 @@ class Get extends Base
                     'userId' => $userId,
                     'provider' => $provider,
                     'providerUid' => $oauth2ID,
-                    'providerEmail' => $providerEmail,
+                    // Identity email lookups adopt users, so only store an attested address
+                    'providerEmail' => $isVerified ? $providerEmail : '',
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
@@ -718,25 +738,32 @@ class Get extends Base
                 ]));
             } catch (Duplicate) {
                 // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
-                if ($newUser !== null) {
-                    $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
-                        if ($newTarget !== null) {
-                            $dbForProject->deleteDocument('targets', $newTarget->getId());
-                        }
-                        $dbForProject->deleteDocument('users', $newUser->getId());
-                    });
-                }
+                $discardNewUser();
                 $failureRedirect(Exception::USER_ALREADY_EXISTS);
             }
         } else {
-            $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
+            $changes = [
                 'providerAccessToken' => $accessToken,
                 'providerRefreshToken' => $refreshToken,
                 'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                 // Refresh the photo URL on every login so expired CDN links self-heal.
                 'photo' => $oauth2->getUserPhoto($accessToken),
-            ]));
+            ];
+
+            // Store an email only once the provider attests it, and never one another user's identity holds.
+            // Any other response clears it, so an address the provider no longer attests stops matching.
+            $changes['providerEmail'] = '';
+            if ($isVerified && !empty($providerEmail)) {
+                $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                    Query::equal('providerEmail', [$providerEmail]),
+                    Query::notEqual('userInternalId', $user->getSequence()),
+                ]);
+                if ($identityWithMatchingEmail->isEmpty()) {
+                    $changes['providerEmail'] = $providerEmail;
+                }
+            }
+
+            $dbForProject->updateDocument('identities', $identity->getId(), new Document($changes));
         }
 
         if (empty($user->getAttribute('name'))) {
