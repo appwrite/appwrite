@@ -282,6 +282,25 @@ final class S3CustomServerTest extends Scope
     }
 
     #[Group('s3')]
+    public function testCreateBucketRefusesPathSegments(): void
+    {
+        // The bucket ID is a segment of every object's storage path, so these would write outside the project's directory.
+        foreach (['..', '....', '..\\..\\builds'] as $bucketId) {
+            $encoded = \rawurlencode($bucketId);
+
+            $create = $this->call(Client::METHOD_PUT, '/' . $encoded . '%2F');
+            $this->assertSame(400, $create['headers']['status-code'], $bucketId . ': ' . $create['body']);
+
+            $put = $this->call(Client::METHOD_PUT, '/' . $encoded . '%2Fescaped.bin', body: 'appwrite');
+            $this->assertSame(404, $put['headers']['status-code'], $bucketId . ': ' . $put['body']);
+
+            $buckets = $this->call(Client::METHOD_GET, '');
+            $this->assertSame(200, $buckets['headers']['status-code'], $buckets['body']);
+            $this->assertStringNotContainsString('<Name>' . $bucketId . '</Name>', (string) $buckets['body']);
+        }
+    }
+
+    #[Group('s3')]
     public function testCopyObjectRequiresSignedCopySource(): void
     {
         $bucketId = $this->setupBucket();

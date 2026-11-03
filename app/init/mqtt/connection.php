@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
@@ -10,7 +11,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\System\System;
 
 return function (Container $container): void {
     $getProject = function (string $projectId, Authorization $authorization) use ($container): Document {
@@ -54,10 +54,8 @@ return function (Container $container): void {
 
         switch ($authMethod) {
             case 'appwrite-jwt':
-                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
                 try {
-                    $payload = $jwt->decode($credential);
+                    $payload = EncryptionKey::decode($credential);
                 } catch (JWTException) {
                     return [];
                 }
