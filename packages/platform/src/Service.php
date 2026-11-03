@@ -2,6 +2,8 @@
 
 namespace Utopia\Platform;
 
+use Exception;
+
 abstract class Service
 {
     public const TYPE_HTTP = 'http';
@@ -88,6 +90,9 @@ abstract class Service
         $action = $this->actions[$key];
 
         if (\is_string($action)) {
+            if (\method_exists($action, 'getName') && $action::getName() !== $key) {
+                throw new Exception('Action ' . $action . ' is registered under a key other than its name: ' . $key);
+            }
             $action = new $action();
             $this->actions[$key] = $action;
         }

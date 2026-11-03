@@ -787,6 +787,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'バックアップの支払い方法を設定しておくと、主要な支払い方法が失敗した場合でもサービスが中断されません。',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.':
     '前回の試行でカード情報が入力されています。以下の詳細を入力して追加を完了してください。',
+  'Use a different card': '別のカードを使用',
   'A new payment method has been added to your account':
     '新しい支払い方法がアカウントに追加されました',
   'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':

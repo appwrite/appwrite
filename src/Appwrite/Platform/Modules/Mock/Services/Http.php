@@ -30,25 +30,25 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(GetOAuth2::getName(), GetOAuth2::class);
-        $this->addAction(GetLocale::getName(), GetLocale::class);
-        $this->addAction(GetOAuth2Token::getName(), GetOAuth2Token::class);
-        $this->addAction(GetOAuth2Photo::getName(), GetOAuth2Photo::class);
-        $this->addAction(GetFaviconPage::getName(), GetFaviconPage::class);
-        $this->addAction(GetBadIcon::getName(), GetBadIcon::class);
-        $this->addAction(GetFaviconPageTruncated::getName(), GetFaviconPageTruncated::class);
-        $this->addAction(GetTruncatedIcon::getName(), GetTruncatedIcon::class);
-        $this->addAction(GetOAuth2PhotoRefreshed::getName(), GetOAuth2PhotoRefreshed::class);
-        $this->addAction(GetOAuth2User::getName(), GetOAuth2User::class);
-        $this->addAction(GetOAuth2UserUnverified::getName(), GetOAuth2UserUnverified::class);
-        $this->addAction(GetOAuth2UserNoEmail::getName(), GetOAuth2UserNoEmail::class);
-        $this->addAction(UpdateOAuth2Native::getName(), UpdateOAuth2Native::class);
-        $this->addAction(GetOAuth2JWKS::getName(), GetOAuth2JWKS::class);
-        $this->addAction(GetOAuth2IdToken::getName(), GetOAuth2IdToken::class);
-        $this->addAction(GetOAuth2Success::getName(), GetOAuth2Success::class);
-        $this->addAction(GetOAuth2Failure::getName(), GetOAuth2Failure::class);
-        $this->addAction(CreateAPIKeyUnprefixed::getName(), CreateAPIKeyUnprefixed::class);
-        $this->addAction(GetGitHubCallback::getName(), GetGitHubCallback::class);
-        $this->addAction(Shutdown::getName(), Shutdown::class);
+        $this->addAction('getOAuth2', GetOAuth2::class);
+        $this->addAction('getLocale', GetLocale::class);
+        $this->addAction('getOAuth2Token', GetOAuth2Token::class);
+        $this->addAction('getOAuth2Photo', GetOAuth2Photo::class);
+        $this->addAction('getFaviconPage', GetFaviconPage::class);
+        $this->addAction('getBadIcon', GetBadIcon::class);
+        $this->addAction('getFaviconPageTruncated', GetFaviconPageTruncated::class);
+        $this->addAction('getTruncatedIcon', GetTruncatedIcon::class);
+        $this->addAction('getOAuth2PhotoRefreshed', GetOAuth2PhotoRefreshed::class);
+        $this->addAction('getOAuth2User', GetOAuth2User::class);
+        $this->addAction('getOAuth2UserUnverified', GetOAuth2UserUnverified::class);
+        $this->addAction('getOAuth2UserNoEmail', GetOAuth2UserNoEmail::class);
+        $this->addAction('updateOAuth2Native', UpdateOAuth2Native::class);
+        $this->addAction('getOAuth2JWKS', GetOAuth2JWKS::class);
+        $this->addAction('getOAuth2IdToken', GetOAuth2IdToken::class);
+        $this->addAction('getOAuth2Success', GetOAuth2Success::class);
+        $this->addAction('getOAuth2Failure', GetOAuth2Failure::class);
+        $this->addAction('createAPIKeyUnprefixed', CreateAPIKeyUnprefixed::class);
+        $this->addAction('getGitHubCallback', GetGitHubCallback::class);
+        $this->addAction('shutdown', Shutdown::class);
     }
 }

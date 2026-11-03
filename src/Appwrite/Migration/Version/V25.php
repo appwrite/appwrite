@@ -541,10 +541,36 @@ class V25 extends Migration
                     $this->createCollection($id);
                     break;
 
+                case 'reviews':
+                case 'reviewFindings':
+                case 'reviewEvents':
+                case 'reviewChats':
+                case 'reviewLearnings':
+                case 'reviewUsage':
+                    // New in 2.7.0. Created even with reviews disabled, so turning them on later needs no migration.
+                    // On shared tables the collection is global: created with a project's tenant, its
+                    // metadata row would belong to that project only and be missing for every other one.
+                    $tenant = $this->dbForProject->getTenant();
+                    if ($this->dbForProject->hasSharedTables()) {
+                        $this->dbForProject->setTenant(null);
+                    }
+                    try {
+                        $this->createCollection($id);
+                    } finally {
+                        $this->dbForProject->setTenant($tenant);
+                    }
+                    break;
+
                 case 'monitors':
                 case 'monitorAlerts':
                     // New in 2.7.0. Platform collections, so only the console project visits them.
                     $this->createCollection($id);
+                    // Created before monitors could be critical.
+                    try {
+                        $this->createAttributeFromCollection($this->dbForProject, $id, 'critical');
+                    } catch (Duplicate) {
+                    }
+                    $this->dbForProject->purgeCachedCollection($id);
                     break;
 
                 case 'pushLedger':

@@ -24,21 +24,21 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(GetHealth::getName(), GetHealth::class);
-        $this->addAction(GetHealthVersion::getName(), GetHealthVersion::class);
-        $this->addAction(GetDB::getName(), GetDB::class);
-        $this->addAction(GetCache::getName(), GetCache::class);
-        $this->addAction(GetPubSub::getName(), GetPubSub::class);
-        $this->addAction(GetTime::getName(), GetTime::class);
-        $this->addAction(GetCertificate::getName(), GetCertificate::class);
-        $this->addAction(GetStorageLocal::getName(), GetStorageLocal::class);
-        $this->addAction(GetStorage::getName(), GetStorage::class);
-        $this->addAction(GetAntivirus::getName(), GetAntivirus::class);
-        $this->addAction(GetGeo::getName(), GetGeo::class);
-        $this->addAction(GetUsage::getName(), GetUsage::class);
+        $this->addAction('get', GetHealth::class);
+        $this->addAction('getVersion', GetHealthVersion::class);
+        $this->addAction('getDB', GetDB::class);
+        $this->addAction('getCache', GetCache::class);
+        $this->addAction('getPubSub', GetPubSub::class);
+        $this->addAction('getTime', GetTime::class);
+        $this->addAction('getCertificate', GetCertificate::class);
+        $this->addAction('getStorageLocal', GetStorageLocal::class);
+        $this->addAction('getStorage', GetStorage::class);
+        $this->addAction('getAntivirus', GetAntivirus::class);
+        $this->addAction('getGeo', GetGeo::class);
+        $this->addAction('getUsage', GetUsage::class);
 
-        $this->addAction(GetFailedJobs::getName(), GetFailedJobs::class);
+        $this->addAction('getFailedJobs', GetFailedJobs::class);
 
-        $this->addAction(GetStats::getName(), GetStats::class);
+        $this->addAction('getStats', GetStats::class);
     }
 }

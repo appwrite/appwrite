@@ -30,29 +30,29 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // API and Web init hooks!
-        $this->addAction(API::getName(), API::class);
-        $this->addAction(Web::getName(), Web::class);
+        $this->addAction('consoleAPI', API::class);
+        $this->addAction('consoleWeb', Web::class);
 
-        $this->addAction(GetVariables::getName(), GetVariables::class);
-        $this->addAction(GetEmailTemplate::getName(), GetEmailTemplate::class);
-        $this->addAction(ListOAuth2Providers::getName(), ListOAuth2Providers::class);
-        $this->addAction(ListKeyScopes::getName(), ListKeyScopes::class);
-        $this->addAction(ListOrganizationScopes::getName(), ListOrganizationScopes::class);
-        $this->addAction(GetResourceAvailability::getName(), GetResourceAvailability::class);
-        $this->addAction(GetVersions::getName(), GetVersions::class);
+        $this->addAction('getVariables', GetVariables::class);
+        $this->addAction('getConsoleEmailTemplate', GetEmailTemplate::class);
+        $this->addAction('listOAuth2Providers', ListOAuth2Providers::class);
+        $this->addAction('listConsoleProjectScopes', ListKeyScopes::class);
+        $this->addAction('listConsoleOrganizationScopes', ListOrganizationScopes::class);
+        $this->addAction('getResource', GetResourceAvailability::class);
+        $this->addAction('getVersions', GetVersions::class);
 
         // Alert email unsubscribe links, which carry a signed token instead of a session
-        $this->addAction(GetAlertsUnsubscribe::getName(), GetAlertsUnsubscribe::class);
-        $this->addAction(CreateAlertsUnsubscribe::getName(), CreateAlertsUnsubscribe::class);
-        $this->addAction(DeleteAlertsUnsubscribe::getName(), DeleteAlertsUnsubscribe::class);
+        $this->addAction('getAlertsUnsubscribe', GetAlertsUnsubscribe::class);
+        $this->addAction('createAlertsUnsubscribe', CreateAlertsUnsubscribe::class);
+        $this->addAction('deleteAlertsUnsubscribe', DeleteAlertsUnsubscribe::class);
 
         // web redirects to the console
-        $this->addAction(RedirectRoot::getName(), RedirectRoot::class);
-        $this->addAction(RedirectAuth::getName(), RedirectAuth::class);
-        $this->addAction(RedirectInvite::getName(), RedirectInvite::class);
-        $this->addAction(RedirectLogin::getName(), RedirectLogin::class);
-        $this->addAction(RedirectMFA::getName(), RedirectMFA::class);
-        $this->addAction(RedirectRecover::getName(), RedirectRecover::class);
-        $this->addAction(RedirectRegister::getName(), RedirectRegister::class);
+        $this->addAction('consoleRedirectRoot', RedirectRoot::class);
+        $this->addAction('consoleRedirectAuth', RedirectAuth::class);
+        $this->addAction('consoleRedirectInvite', RedirectInvite::class);
+        $this->addAction('consoleRedirectLogin', RedirectLogin::class);
+        $this->addAction('consoleRedirectMFA', RedirectMFA::class);
+        $this->addAction('consoleRedirectRecover', RedirectRecover::class);
+        $this->addAction('consoleRedirectRegister', RedirectRegister::class);
     }
 }

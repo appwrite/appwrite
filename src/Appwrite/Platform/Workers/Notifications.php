@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Unsubscribe;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
@@ -30,6 +31,7 @@ use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class Notifications extends Action
 {
@@ -48,6 +50,8 @@ class Notifications extends Action
 
     private PublicHostname $publicHostname;
 
+    private Telemetry $telemetry;
+
     public static function getName(): string
     {
         return 'notifications';
@@ -64,12 +68,14 @@ class Notifications extends Action
             ->inject('platform')
             ->inject('clientForWebhooks')
             ->inject('publicHostname')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, Telemetry $telemetry): void
     {
         $this->publicHostname = $publicHostname;
+        $this->telemetry = $telemetry;
 
         $payload = $message->getPayload();
 
@@ -286,6 +292,7 @@ class Notifications extends Action
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
         if (!empty($preview)) {
@@ -367,6 +374,9 @@ class Notifications extends Action
                 html: true,
                 headers: \is_array($payload['headers'] ?? null) ? $payload['headers'] : [],
             );
+            $emailMessage
+                ->setOrigin(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setTemplate(($payload['template'] ?? '') ?: 'unknown');
 
             // A pooled adapter belongs to this send alone; a project's own SMTP is
             // dialled for it, on the addresses just checked, and closed after.
@@ -384,7 +394,13 @@ class Notifications extends Action
                 addresses: new Host($this->publicHostname)->addresses($smtp['host']),
             );
 
-            $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+            $telemetry = $this->telemetry;
+            // Pooled adapters are shared with other senders, so bind the counter on every use.
+            $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
+                $adapter->setTelemetry($telemetry);
+
+                return $adapter->send($emailMessage);
+            };
 
             $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
         } catch (InvalidArgumentException $error) {
@@ -549,7 +565,7 @@ class Notifications extends Action
             'type' => $payload['type'] ?? 'info',
             'channel' => $channel,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
+            'projectInternalId' => self::internalId($project),
             'resourceType' => $recipient['resourceType'],
             'resourceId' => $recipient['resourceId'],
             'resourceInternalId' => $recipient['resourceInternalId'],
@@ -705,6 +721,16 @@ class Notifications extends Action
     }
 
     /**
+     * The project a notification row is filed under, and the tracking token must match. The console project is
+     * not stored, so its sequence is empty or its ID ('console'), which the BIGINT column refuses: a record that
+     * fails after the email went out retries the message and sends the email again. It is filed under 0.
+     */
+    private static function internalId(Document $project): string
+    {
+        return $project->getId() === 'console' ? '0' : (string) $project->getSequence();
+    }
+
+    /**
      * Splice a visible tracking logo before the last `</body>` tag (or
      * append at the end if the body has no closing tag). The logo URL
      * carries a signed JWT identifying the notification recipient, which the
@@ -719,7 +745,7 @@ class Notifications extends Action
                 'channel' => $channel,
                 'recipientHash' => $recipientHash,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
+                'projectInternalId' => self::internalId($project),
                 'purpose' => 'notification_track',
             ]);
 

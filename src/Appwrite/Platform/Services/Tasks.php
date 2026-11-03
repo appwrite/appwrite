@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Doctor;
+use Appwrite\Platform\Tasks\Encryption;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Interval;
 use Appwrite\Platform\Tasks\Maintenance;
@@ -30,26 +31,27 @@ class Tasks extends Service
     {
         $this->type = Service::TYPE_TASK;
         $this
-            ->addAction(Doctor::getName(), Doctor::class)
-            ->addAction(Install::getName(), Install::class)
-            ->addAction(Interval::getName(), Interval::class)
-            ->addAction(Maintenance::getName(), Maintenance::class)
-            ->addAction(Migrate::getName(), Migrate::class)
-            ->addAction(QueueRetry::getName(), QueueRetry::class)
-            ->addAction(SDKs::getName(), SDKs::class)
-            ->addAction(SSL::getName(), SSL::class)
-            ->addAction(Screenshot::getName(), Screenshot::class)
-            ->addAction(Schedule::getName(), Schedule::class)
-            ->addAction(ScheduleAlerts::getName(), ScheduleAlerts::class)
-            ->addAction(ScheduleFunctions::getName(), ScheduleFunctions::class)
-            ->addAction(ScheduleExecutions::getName(), ScheduleExecutions::class)
-            ->addAction(ScheduleMaintenance::getName(), ScheduleMaintenance::class)
-            ->addAction(ScheduleMessages::getName(), ScheduleMessages::class)
-            ->addAction(Specs::getName(), Specs::class)
-            ->addAction(Upgrade::getName(), Upgrade::class)
-            ->addAction(Vars::getName(), Vars::class)
-            ->addAction(Version::getName(), Version::class)
-            ->addAction(TimeTravel::getName(), TimeTravel::class)
+            ->addAction('doctor', Doctor::class)
+            ->addAction('encryption', Encryption::class)
+            ->addAction('install', Install::class)
+            ->addAction('interval', Interval::class)
+            ->addAction('maintenance', Maintenance::class)
+            ->addAction('migrate', Migrate::class)
+            ->addAction('queue-retry', QueueRetry::class)
+            ->addAction('sdks', SDKs::class)
+            ->addAction('ssl', SSL::class)
+            ->addAction('screenshot', Screenshot::class)
+            ->addAction('schedule', Schedule::class)
+            ->addAction('schedule-alerts', ScheduleAlerts::class)
+            ->addAction('schedule-functions', ScheduleFunctions::class)
+            ->addAction('schedule-executions', ScheduleExecutions::class)
+            ->addAction('schedule-maintenance', ScheduleMaintenance::class)
+            ->addAction('schedule-messages', ScheduleMessages::class)
+            ->addAction('specs', Specs::class)
+            ->addAction('upgrade', Upgrade::class)
+            ->addAction('vars', Vars::class)
+            ->addAction('version', Version::class)
+            ->addAction('time-travel', TimeTravel::class)
         ;
     }
 }

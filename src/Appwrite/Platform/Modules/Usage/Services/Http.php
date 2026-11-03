@@ -11,7 +11,7 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
-        $this->addAction(EventsList::getName(), EventsList::class);
-        $this->addAction(GaugesList::getName(), GaugesList::class);
+        $this->addAction('listEvents', EventsList::class);
+        $this->addAction('listGauges', GaugesList::class);
     }
 }

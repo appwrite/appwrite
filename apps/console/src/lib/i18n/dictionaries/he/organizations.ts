@@ -28,6 +28,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אמצעי תשלום גיבוי מבטיח שירות רציף אם אמצעי התשלום הראשי נכשל.',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.':
     'כרטיס הוזן בניסיון קודם. השלימו את הפרטים למטה כדי לסיים את ההוספה.',
+  'Use a different card': 'שימוש בכרטיס אחר',
   'A new payment method has been added to your account':
     'אמצעי תשלום חדש נוסף לחשבון שלכם',
   'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':
