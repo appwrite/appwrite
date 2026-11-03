@@ -47,9 +47,9 @@ The default timeout is `30 seconds`, which is also the maximum on Appwrite Cloud
 
 # Streaming responses {% #streaming-responses %}
 
-On Appwrite Cloud, server-rendered sites stream their responses. Each chunk your site writes reaches the browser as soon as it is ready, so streamed HTML (such as React Suspense or deferred loaders), server-sent events, and other streamed bodies work without extra configuration. A stream still ends when the site's [timeout](#timeouts) is reached.
+Server-rendered sites stream their responses. Each chunk your site writes reaches the browser as soon as it is ready, so streamed HTML (such as React Suspense or deferred loaders), server-sent events, and other streamed bodies work without extra configuration. A stream still ends when the site's [timeout](#timeouts) is reached.
 
-On self-hosted Appwrite, set `_APP_COMPUTE_STREAMING` to `enabled` to turn streaming on.
+On self-hosted Appwrite, `_APP_COMPUTE_STREAMING` turns streaming on (`enabled`) or off (`disabled`).
 
 On Cloud, a connection that sends no data for 60 seconds is closed. If your stream can go quiet for that long, such as a server-sent events endpoint waiting for updates, send a heartbeat every 30 seconds or so. For server-sent events, a comment line works:
 
