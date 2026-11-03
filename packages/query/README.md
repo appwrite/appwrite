@@ -1993,6 +1993,8 @@ use Utopia\Query\Schema\Table;
 // or: PostgreSQL, ClickHouse, SQLite, MongoDB
 ```
 
+> **String literals.** DDL takes no bound parameters, so comments, defaults, enum values and the schema builder's other string literals are inlined with `\` and `'` escaped, as are the AST serializer's. MySQL reads `\` as an escape, so this relies on a connection charset in which byte `0x5C` cannot occur inside a multibyte character, such as `utf8mb4` or `latin1`. Under GBK, BIG5, SJIS/CP932 or GB18030 it can: a character ending in `0x5C` absorbs the escaping backslash and the value closes its literal. Do not pass untrusted text into these literals over such a connection.
+
 ### Creating Tables
 
 ```php
