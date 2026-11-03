@@ -1032,6 +1032,94 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->assertSame($before, $this->listDeploymentIdsHelper($function['body']['$id']));
     }
 
+    public function testGiteaPushCannotRedirectBuildSource(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        // The victim repository the forged delivery will name by id.
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'victim-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'functionId' => Id::unique(),
+            'name' => 'Gitea source pin',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+
+        // The repository id is the victim's, but every name field names a repository the sender
+        // controls. The webhook secret is one instance-wide value, so any tenant can sign this.
+        $commitHash = \sha1(\uniqid('', true));
+        $spoofedOwner = 'attacker';
+        $spoofedName = 'attacker-' . \uniqid();
+        $payload = [
+            'created' => false,
+            'deleted' => false,
+            'ref' => 'refs/heads/main',
+            'after' => $commitHash,
+            'repository' => [
+                'id' => (int) $repository['body']['id'],
+                'name' => $spoofedName,
+                'full_name' => $spoofedOwner . '/' . $spoofedName,
+                'html_url' => 'http://gitea:3000/' . $spoofedOwner . '/' . $spoofedName,
+                'owner' => ['login' => $spoofedOwner],
+            ],
+            'head_commit' => [
+                'author' => ['name' => 'Attacker', 'email' => 'vcs-e2e@appwrite.io'],
+                'message' => 'Forged push',
+                'url' => 'http://gitea:3000/' . $spoofedOwner . '/' . $spoofedName . '/commit/' . $commitHash,
+            ],
+            'commits' => [[
+                'id' => $commitHash,
+                'added' => [],
+                'removed' => [],
+                'modified' => ['index.js'],
+            ]],
+            'sender' => ['html_url' => 'http://gitea:3000/' . $spoofedOwner, 'avatar_url' => ''],
+        ];
+
+        $body = \json_encode($payload, JSON_THROW_ON_ERROR);
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/gitea/events', [
+            'content-type' => 'application/json',
+            'x-gitea-event' => 'push',
+            'x-gitea-signature' => \hash_hmac('sha256', $body, System::getEnv('_APP_VCS_GITEA_WEBHOOK_SECRET', '')),
+        ], $payload);
+        $this->assertSame(200, $event['headers']['status-code'], \json_encode($event['body']));
+
+        // The delivery resolves to the victim repository by id, so a deployment is created, but its
+        // source is pinned to the victim repository and never to the names the delivery carried.
+        $this->assertEventually(function () use ($functionId, $commitHash, $repositoryName, $spoofedName, $spoofedOwner) {
+            $deployment = null;
+            foreach ($this->listDeploymentsHelper($functionId) as $candidate) {
+                if (($candidate['providerCommitHash'] ?? '') === $commitHash) {
+                    $deployment = $candidate;
+                    break;
+                }
+            }
+
+            $this->assertNotNull($deployment, 'The forged delivery did not create a deployment.');
+            $this->assertSame($repositoryName, $deployment['providerRepositoryName']);
+            $this->assertSame(self::GITEA_USERNAME, $deployment['providerRepositoryOwner']);
+            $this->assertNotSame($spoofedName, $deployment['providerRepositoryName']);
+            $this->assertNotSame($spoofedOwner, $deployment['providerRepositoryOwner']);
+        }, 60000, 2000);
+    }
+
     public function testCreateInstallationWithoutState(): void
     {
         $response = $this->callGiteaCallbackHelper(['code' => 'unused']);
