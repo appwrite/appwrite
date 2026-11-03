@@ -212,8 +212,11 @@ Settings left unset use the provider's default.
 Adapters implement `Model`, so you can call them directly with a `Request`:
 
 ```php
+use Utopia\Agents\Adapters\Anthropic;
+use Utopia\Agents\Message;
 use Utopia\Agents\Request;
 
+$model = new Anthropic(getenv('ANTHROPIC_API_KEY'), 'claude-haiku-4-5');
 $response = $model->generate(new Request([Message::user('Hi')], maxTokens: 100));
 $response->parts;   // list of Part
 $response->finish;  // FinishReason

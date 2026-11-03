@@ -173,19 +173,23 @@ final readonly class Schema
                 continue;
             }
 
-            $matched = false;
+            $matches = 0;
             foreach ($branches as $branch) {
                 $branchErrors = [];
                 if (\is_array($branch)) {
                     $this->check($branch, $value, $path, $branchErrors);
                 }
                 if ($branchErrors === []) {
-                    $matched = true;
-                    break;
+                    $matches++;
                 }
             }
-            if (! $matched) {
+            if ($matches === 0) {
                 $errors[] = "{$path}: does not match any allowed schema";
+
+                return;
+            }
+            if ($keyword === 'oneOf' && $matches > 1) {
+                $errors[] = "{$path}: matches more than one schema";
 
                 return;
             }

@@ -99,6 +99,15 @@ class SchemaTest extends TestCase
         $this->assertSame(['$: does not match any allowed schema'], $schema->validate('a'));
     }
 
+    public function testOneOfRequiresExactlyOneMatch(): void
+    {
+        $schema = Schema::fromArray(['oneOf' => [['type' => 'integer'], ['type' => 'number']]]);
+
+        $this->assertSame([], $schema->validate(1.5));
+        $this->assertSame(['$: matches more than one schema'], $schema->validate(2));
+        $this->assertSame(['$: does not match any allowed schema'], $schema->validate('a'));
+    }
+
     public function testNullableAcceptsNull(): void
     {
         $schema = Schema::nullable(Schema::object(['id' => Schema::string()]));

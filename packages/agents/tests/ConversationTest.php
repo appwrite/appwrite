@@ -68,6 +68,28 @@ class ConversationTest extends TestCase
         $this->assertSame([Role::User, Role::Assistant, Role::Tool], array_map(fn (Message $message) => $message->role, $model->requests[1]->messages));
     }
 
+    public function testKeepsFinishedStepsWhenRunFails(): void
+    {
+        $runs = 0;
+        $model = new Model([new Response([new ToolCall('call_1', 'charge', [])], FinishReason::ToolCalls)]);
+        $agent = (new Agent($model))->addTool(new Tool('charge', 'Charge the card', Schema::object([]), function () use (&$runs): string {
+            $runs++;
+
+            return 'charged';
+        }));
+        $conversation = new Conversation($agent);
+
+        try {
+            $conversation->send('Pay');
+            $this->fail('Expected the second model call to fail');
+        } catch (\LogicException) {
+        }
+
+        $this->assertSame(1, $runs);
+        $this->assertSame([Role::User, Role::Assistant, Role::Tool], array_map(fn (Message $message) => $message->role, $conversation->getMessages()));
+        $this->assertSame('charged', $conversation->getMessages()[2]->toolResults()[0]->output);
+    }
+
     public function testStreamsWithListener(): void
     {
         $model = new Model([new Response([new Text('streamed')], FinishReason::Stop)]);

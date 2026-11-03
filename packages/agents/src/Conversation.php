@@ -2,6 +2,8 @@
 
 namespace Utopia\Agents;
 
+use Utopia\Agents\Events\StepFinish;
+
 /**
  * A running conversation with an agent: keeps the message history and the
  * usage of every run.
@@ -34,8 +36,8 @@ class Conversation
     }
 
     /**
-     * Append $input, run the agent on the whole history and append what it
-     * produced. Pass no input to continue after add().
+     * Append $input, run the agent on the whole history and append each
+     * step's messages as it finishes. Pass no input to continue after add().
      *
      * @param  string|Message|list<Message>  $input
      * @param  (callable(Event): void)|null  $listener
@@ -51,12 +53,21 @@ class Conversation
         };
         $this->add(...$input);
 
-        $result = $listener === null
-            ? $this->agent->generate($this->messages)
-            : $this->agent->stream($this->messages, $listener);
+        // Record every step as it finishes, so a run that fails partway keeps
+        // the tool calls it already executed and a retry does not repeat them.
+        $result = $this->agent->stream($this->messages, function (Event $event) use ($listener): void {
+            if ($event instanceof StepFinish) {
+                $this->add($event->step->response->message());
+                if ($event->step->results !== []) {
+                    $this->add(Message::tool($event->step->results));
+                }
+                $this->usage = $this->usage->add($event->step->response->usage);
+            }
 
-        $this->add(...$result->messages);
-        $this->usage = $this->usage->add($result->usage);
+            if ($listener !== null) {
+                $listener($event);
+            }
+        });
 
         return $result;
     }
