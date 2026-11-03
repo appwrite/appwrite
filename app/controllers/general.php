@@ -831,8 +831,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         } catch (\Throwable $th) {
             if ($streamed === true) {
                 // Content is already on the wire; a truncated response must not read as a complete one.
-                $response->getSwooleResponse()->close();
-                $response->setSent(true);
+                $response->abort();
             }
 
             $execution
