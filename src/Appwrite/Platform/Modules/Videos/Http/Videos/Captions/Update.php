@@ -125,10 +125,6 @@ class Update extends Base
 
         $nextCode = $code !== '' ? $code : (string) $caption->getAttribute('code', '');
 
-        if ($default === true) {
-            $this->clearDefault($dbForProject, $authorization, $video, $caption->getId());
-        }
-
         $updates = [
             'name' => $name !== '' ? $name : $caption->getAttribute('name'),
             'code' => $nextCode,
@@ -155,6 +151,12 @@ class Update extends Base
         }
 
         $caption = $authorization->skip(fn () => $dbForProject->updateDocument('videosCaptions', $caption->getId(), new Document($updates)));
+
+        // After the update, so a failed write cannot cost the video its
+        // default track.
+        if ($default === true) {
+            $this->clearDefault($dbForProject, $authorization, $video, $caption->getId());
+        }
 
         if ($sourceChanged) {
             $publisherForVideos->enqueue(new VideoMessage(

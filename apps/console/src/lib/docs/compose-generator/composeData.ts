@@ -1542,6 +1542,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
       - appwrite-videos:/storage/videos:rw
+      - appwrite-videos-tmp:/storage/videos-tmp:rw
       - appwrite-imports:/storage/imports:rw
     environment:
       - _APP_ENV
@@ -1935,6 +1936,9 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_REDIS_HOST
@@ -1954,6 +1958,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION

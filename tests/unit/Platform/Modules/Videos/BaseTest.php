@@ -71,4 +71,20 @@ final class BaseTest extends TestCase
         $this->assertStringEndsWith('~proj1~vid1~rendition-ren1', $name);
     }
 
+    public function testJobMatchesProjectAndVideo(): void
+    {
+        $name = '202610121200~proj1~vid1~rendition-ren1';
+
+        $this->assertTrue(Base::jobMatches($name, 'proj1', 'vid1'));
+        $this->assertTrue(Base::jobMatches($name, 'proj1'));
+        $this->assertFalse(Base::jobMatches($name, 'proj1', 'vid2'));
+        $this->assertFalse(Base::jobMatches($name, 'proj1', 'vid'));
+        $this->assertFalse(Base::jobMatches($name, 'proj', 'vid1'));
+        $this->assertFalse(Base::jobMatches($name, 'proj10'));
+        $this->assertFalse(Base::jobMatches('202610121200~proj10~vid1~rendition-ren1', 'proj1', 'vid1'));
+        $this->assertFalse(Base::jobMatches('not-a-stamp', 'proj1', 'vid1'));
+        $this->assertFalse(Base::jobMatches('2026101212xx~proj1~vid1~rendition-ren1', 'proj1', 'vid1'));
+        $this->assertFalse(Base::jobMatches('202610121200', 'proj1'));
+        $this->assertFalse(Base::jobMatches($name, ''));
+    }
 }

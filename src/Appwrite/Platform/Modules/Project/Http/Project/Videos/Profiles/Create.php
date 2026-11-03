@@ -39,7 +39,7 @@ class Create extends Base
             ->desc('Create video profile')
             ->groups(['api', 'project'])
             ->label('scope', 'project.profiles.write')
-            ->label('event', 'projects.[projectId].videos.profiles.[profileId].create')
+            ->label('event', 'projects.[projectId].profiles.[profileId].create')
             ->label('audits.event', 'project.video-profile.create')
             ->label('audits.resource', 'project.video-profile/{response.$id}')
             ->label('sdk', new Method(

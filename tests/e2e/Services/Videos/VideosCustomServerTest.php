@@ -1988,11 +1988,37 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals('bytes 0-' . $last . '/' . $segmentSize, $partial['headers']['content-range'] ?? '');
         $this->assertSame($cmafSegment['body'], $partial['body']);
 
-        // A range starting past the end is not satisfiable.
+        // A suffix range returns the last N bytes.
+        $partial = $this->client->call(Client::METHOD_GET, $segmentPath, \array_merge($this->headers(), [
+            'range' => 'bytes=-1',
+        ]));
+        $this->assertEquals(206, $partial['headers']['status-code']);
+        $this->assertEquals('bytes ' . $last . '-' . $last . '/' . $segmentSize, $partial['headers']['content-range'] ?? '');
+        $this->assertSame(\substr($cmafSegment['body'], -1), $partial['body']);
+
+        // A suffix longer than the segment returns the whole segment.
+        $partial = $this->client->call(Client::METHOD_GET, $segmentPath, \array_merge($this->headers(), [
+            'range' => 'bytes=-' . ($segmentSize + 500),
+        ]));
+        $this->assertEquals(206, $partial['headers']['status-code']);
+        $this->assertEquals('bytes 0-' . $last . '/' . $segmentSize, $partial['headers']['content-range'] ?? '');
+        $this->assertSame($cmafSegment['body'], $partial['body']);
+
+        // A range starting past the end is not satisfiable, and says how long
+        // the segment is.
         $invalid = $this->client->call(Client::METHOD_GET, $segmentPath, \array_merge($this->headers(), [
             'range' => 'bytes=' . $segmentSize . '-' . $segmentSize,
         ]));
         $this->assertEquals(416, $invalid['headers']['status-code']);
+        $this->assertEquals('bytes */' . $segmentSize, $invalid['headers']['content-range'] ?? '');
+        $this->assertEquals('storage_invalid_range', $invalid['body']['type']);
+
+        // An empty suffix selects no bytes.
+        $invalid = $this->client->call(Client::METHOD_GET, $segmentPath, \array_merge($this->headers(), [
+            'range' => 'bytes=-0',
+        ]));
+        $this->assertEquals(416, $invalid['headers']['status-code']);
+        $this->assertEquals('bytes */' . $segmentSize, $invalid['headers']['content-range'] ?? '');
         $this->assertEquals('storage_invalid_range', $invalid['body']['type']);
 
         // Only the bytes unit is supported.

@@ -132,10 +132,6 @@ class Create extends Base
             throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
         }
 
-        if ($default) {
-            $this->clearDefault($dbForProject, $authorization, $video);
-        }
-
         $caption = $authorization->skip(fn () => $dbForProject->createDocument('videosCaptions', new Document([
             '$id' => Id::unique(),
             'videoId' => $video->getId(),
@@ -150,7 +146,11 @@ class Create extends Base
             'status' => self::STATUS_PENDING,
         ])));
 
-        if (!$default) {
+        if ($default) {
+            // After the insert, so a failed create cannot cost the video its
+            // default track.
+            $this->clearDefault($dbForProject, $authorization, $video, $caption->getId());
+        } else {
             // Uploads outrank auto-extracted tracks: when the current default is
             // an embedded track for the same language, the upload takes the flag
             // so players pick the authored file first. Runs after the insert so a
@@ -226,7 +226,7 @@ class Create extends Base
     /**
      * Only one track per video may be the default, so demote any current holder.
      */
-    private function clearDefault(Database $dbForProject, Authorization $authorization, Document $video): void
+    private function clearDefault(Database $dbForProject, Authorization $authorization, Document $video, string $exceptId): void
     {
         $existing = $authorization->skip(fn () => $dbForProject->find('videosCaptions', [
             Query::equal('videoInternalId', [$video->getSequence()]),
@@ -235,6 +235,10 @@ class Create extends Base
         ]));
 
         foreach ($existing as $caption) {
+            if ($caption->getId() === $exceptId) {
+                continue;
+            }
+
             $authorization->skip(fn () => $dbForProject->updateDocument(
                 'videosCaptions',
                 $caption->getId(),

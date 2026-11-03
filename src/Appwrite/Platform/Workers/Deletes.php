@@ -1489,6 +1489,12 @@ class Deletes extends Action
             }
 
             try {
+                $this->deleteVideoTmpJobs($projectId);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos temp jobs: ' . $th->getMessage());
+            }
+
+            try {
                 $deviceForImports = new TelemetryDevice($telemetry, getDevice(APP_STORAGE_IMPORTS . '/app-' . $projectId));
                 $deviceForImports->delete($deviceForImports->getRoot(), true);
             } catch (Throwable $th) {
@@ -2350,9 +2356,7 @@ class Deletes extends Action
     /**
      * Cascades a video deletion across its timelines, renditions and captions —
      * including the per-rendition and per-caption segment rows — then removes the
-     * transcoded output tree. Scratch under videos-tmp is not touched: it is a
-     * per-pod emptyDir that each videos job clears itself, and the pod's restart
-     * clears whatever a killed job left.
+     * transcoded output tree and this video's scratch jobs under videos-tmp/jobs.
      *
      * @param callable $getProjectDB
      * @param Device $deviceForVideos
@@ -2397,6 +2401,47 @@ class Deletes extends Action
             $deviceForVideos->deletePath($document->getId());
         } catch (Throwable $th) {
             Console::error('Failed to delete video storage directory: ' . $th->getMessage());
+        }
+
+        try {
+            $this->deleteVideoTmpJobs($project->getId(), $document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video temp jobs: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Remove scratch folders under videos-tmp/jobs for a project, or one video.
+     *
+     * Each videos job clears its own folder, but one killed mid-run leaves it
+     * behind. In cloud that scratch is a per-pod emptyDir this worker does not
+     * mount, so the root is missing and this is a no-op. On Docker Compose it
+     * is a named volume that outlives restarts, and only this sweep removes a
+     * deleted project's or video's leftovers.
+     */
+    private function deleteVideoTmpJobs(string $projectId, string $videoId = ''): void
+    {
+        $root = VideosBase::tmpJobsRoot();
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.' || !VideosBase::jobMatches($name, $projectId, $videoId)) {
+                continue;
+            }
+
+            $path = $root . '/' . $name;
+            $stdout = '';
+            $stderr = '';
+            $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
+
+            if ($code !== 0) {
+                Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
+                continue;
+            }
+
+            Console::info('Removed video tmp [' . $path . ']');
         }
     }
 

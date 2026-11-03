@@ -35,7 +35,7 @@ class Delete extends Base
             ->desc('Delete video profile')
             ->groups(['api', 'project'])
             ->label('scope', 'project.profiles.write')
-            ->label('event', 'projects.[projectId].videos.profiles.[profileId].delete')
+            ->label('event', 'projects.[projectId].profiles.[profileId].delete')
             ->label('audits.event', 'project.video-profile.delete')
             ->label('audits.resource', 'project.video-profile/{request.profileId}')
             ->label('sdk', new Method(

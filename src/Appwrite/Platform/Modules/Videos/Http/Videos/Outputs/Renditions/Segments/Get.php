@@ -128,9 +128,31 @@ class Get extends Base
         $rangeHeader = $request->getHeaderLine('range');
 
         if (!empty($rangeHeader)) {
-            $start = $request->getRangeStart();
-            $end = $request->getRangeEnd();
-            $unit = $request->getRangeUnit();
+            [$unit, $spec] = \array_pad(\explode('=', $rangeHeader, 2), 2, '');
+            $suffix = \substr($spec, 1);
+
+            // A suffix range (bytes=-N) asks for the last N bytes. The request
+            // parser rejects it, since it has no first-byte-pos.
+            if (\str_starts_with($spec, '-') && \ctype_digit($suffix)) {
+                $start = \max(0, $size - (int) $suffix);
+                $end = $size - 1;
+            } else {
+                $start = $request->getRangeStart();
+                $end = $request->getRangeEnd();
+                $unit = $request->getRangeUnit();
+            }
+
+            if ($unit !== 'bytes' || $start === null) {
+                throw new Exception(Exception::STORAGE_INVALID_RANGE);
+            }
+
+            // RFC 9110: an unsatisfiable range answers 416 with the full length,
+            // so the client can retry inside it. This also covers bytes=-0 and
+            // any range against an empty segment.
+            if ($start >= $size) {
+                $response->addHeader('Content-Range', 'bytes */' . $size);
+                throw new Exception(Exception::STORAGE_INVALID_RANGE);
+            }
 
             if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
                 $end = $start + MAX_OUTPUT_CHUNK_SIZE - 1;
@@ -140,13 +162,6 @@ class Get extends Base
             // rejected. Players request a window such as bytes=0-2000000 against
             // a much smaller segment; that span stays under the read buffer.
             $end = \min($end, $size - 1);
-
-            // `>` not `>=`: a single byte range (bytes=0-0, or the file's final
-            // byte) has start === end and is valid. Players probe segments that
-            // way before fetching the rest.
-            if ($unit !== 'bytes' || $start > $end) {
-                throw new Exception(Exception::STORAGE_INVALID_RANGE);
-            }
 
             $response
                 ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)

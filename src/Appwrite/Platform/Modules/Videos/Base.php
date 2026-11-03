@@ -180,6 +180,36 @@ abstract class Base extends Action
     }
 
     /**
+     * True when a job folder belongs to `$projectId`, and to `$videoId` when set.
+     *
+     * Names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`. The stamp and
+     * the `~` after each id are required, so a shorter id cannot match a
+     * longer neighbor. An empty `$videoId` matches every job in the project.
+     */
+    public static function jobMatches(string $name, string $projectId, string $videoId = ''): bool
+    {
+        if ($projectId === '' || \strlen($name) < 13 || $name[12] !== '~') {
+            return false;
+        }
+
+        if (!\ctype_digit(\substr($name, 0, 12))) {
+            return false;
+        }
+
+        $rest = \substr($name, 13);
+        $projectPrefix = $projectId . '~';
+        if (!\str_starts_with($rest, $projectPrefix)) {
+            return false;
+        }
+
+        if ($videoId === '') {
+            return true;
+        }
+
+        return \str_starts_with(\substr($rest, \strlen($projectPrefix)), $videoId . '~');
+    }
+
+    /**
      * Bounds for video profile parameters, in kilobits per second and pixels.
      *
      * One set shared by create and update: the pre-merge controller validated
