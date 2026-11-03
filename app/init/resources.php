@@ -57,6 +57,7 @@ use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -202,6 +203,15 @@ $container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname 
         return (new MessagingProvider($telemetry, $publicHostname))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
+        return null;
+    }
+}, ['telemetry', 'publicHostname']);
+
+$container->set('adapterForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): ?PushAdapter {
+    try {
+        return (new MessagingProvider($telemetry, $publicHostname))->internalPush();
+    } catch (\Throwable $error) {
+        Console::error('Ignoring _APP_NOTIFICATIONS_PUSH_APNS: ' . $error->getMessage());
         return null;
     }
 }, ['telemetry', 'publicHostname']);

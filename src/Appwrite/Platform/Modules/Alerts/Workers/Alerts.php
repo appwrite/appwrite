@@ -39,7 +39,7 @@ use Utopia\Usage\Tenant;
  * on the monitor and on the alert it opens while firing. Every change of state
  * fires a project event (`monitors.[monitorId].alerts.[alertId].firing` or
  * `.resolved`) for webhooks, functions and realtime. The organization's members
- * holding a role its `notify` names are notified by email and in the console:
+ * holding a role its `notify` names are notified by email, by push and in the console:
  * on entering `firing` (at most once per cooldown) and on returning to `ok`.
  */
 class Alerts extends Action
@@ -408,9 +408,10 @@ class Alerts extends Action
     /**
      * Notifies the team of the monitor's alert firing or resolving: one message
      * per confirmed member of the project's organization holding a role the
-     * monitor's `notify` names, for the console bell and, unless they stopped
-     * this monitor's or all alert emails, by email. Each links to the alert and
-     * carries one-click unsubscribe links signed for its recipient.
+     * monitor's `notify` names, for the console bell, by push to their signed-in
+     * devices unless they stopped this monitor, and by email unless they stopped
+     * this monitor's or all alert emails. Each links to the alert and carries
+     * one-click unsubscribe links signed for its recipient.
      *
      * The deduplication key names the monitor, its new status and the moment it
      * changed, so an at-least-once redelivery of the same evaluation sends
@@ -494,6 +495,10 @@ class Alerts extends Action
 
             $recipients = [['address' => $user->getId(), 'channel' => NOTIFICATION_TYPE_CONSOLE, ...$resource]];
             $unsubscribed = $user->getAttribute('alertsUnsubscribed', []);
+            // Stopping every email of a type leaves pushes on, so a member can swap one for the other.
+            if (!\in_array($monitor->getId(), $unsubscribed, true)) {
+                $recipients[] = ['address' => $user->getId(), 'channel' => NOTIFICATION_TYPE_PUSH, ...$resource];
+            }
             if (
                 (string) $user->getAttribute('email', '') !== ''
                 && !\in_array($monitor->getId(), $unsubscribed, true)
@@ -530,6 +535,23 @@ class Alerts extends Action
                 headers: [
                     'List-Unsubscribe' => '<' . $endpoint . '/console/alerts/unsubscribe?project=console&token=' . \urlencode($token) . '>',
                     'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+                ],
+                // What the member's devices show; the resolved push replaces the firing one by its tag.
+                push: [
+                    'title' => ($status === Status::Firing ? 'Firing: ' : 'Resolved: ') . (string) $monitor->getAttribute('name'),
+                    'body' => \implode(' ', \array_filter([$email->summary(), $notice['location']])),
+                    'tag' => 'alert:' . $alert->getId(),
+                    'critical' => (bool) $monitor->getAttribute('critical', false),
+                    'data' => [
+                        'type' => 'alert',
+                        'status' => $status === Status::Firing ? State::Firing->value : State::Resolved->value,
+                        'alertId' => $alert->getId(),
+                        'monitorId' => $monitor->getId(),
+                        'organizationId' => (string) $project->getAttribute('teamId', ''),
+                        'projectId' => $project->getId(),
+                        'url' => $notice['url'],
+                        'unsubscribeToken' => $token,
+                    ],
                 ],
             ));
         }

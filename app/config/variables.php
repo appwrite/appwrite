@@ -153,6 +153,24 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_NOTIFICATIONS_PUSH_APNS',
+                'description' => "Push service that delivers alerts to the iOS devices console users sign in on. Use the following format: 'apns://[KEY_ID]:[TEAM_ID]@[BUNDLE_ID]', adding '?sandbox=true' for development builds, with the APNs auth key (.p8) in _APP_NOTIFICATIONS_PUSH_APNS_KEY. Leave empty to disable alert pushes.",
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_PUSH_APNS_KEY',
+                'description' => 'APNs auth key (.p8 contents) that _APP_NOTIFICATIONS_PUSH_APNS signs with.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN',
                 'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
