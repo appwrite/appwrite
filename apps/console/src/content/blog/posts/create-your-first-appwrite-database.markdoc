@@ -72,6 +72,10 @@ A table holds rows of one shape, and its columns define that shape. This guide u
 2. In the **Columns** tab, click **Create column**. Enter the **Key**, pick the **Type**, fill in the settings from the table above, and click **Create Column**. Repeat for each column.
 3. In the **Indexes** tab, click **Create index**. Enter the **Index Key** `done_index`, select the `done` column, and click **Create Index**. Your app filters on `done`, and the index keeps that fast.
 
+{% info title="Let your agent create it" %}
+Your AI coding agent can also create the table for you through the Appwrite MCP server. Describe the table and its columns in the chat, and your agent builds it in your project. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite) to set it up.
+{% /info %}
+
 # Step 3: Choose who can read and write {% #permissions %}
 
 {% only_dark %}
