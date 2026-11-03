@@ -168,7 +168,7 @@
         "nyholm/psr7": "1.*",
         "open-telemetry/exporter-otlp": "1.*",
         "open-telemetry/sdk": "1.*",
-        "symfony/http-client": "7.*",
+        "symfony/http-client": "8.*",
         "open-runtimes/sdk-for-php": "^2.1",
         "psr/http-factory": "^1.0",
         "psr/http-client": "^1.0",
