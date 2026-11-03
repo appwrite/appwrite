@@ -99,7 +99,7 @@ class Action extends PlatformAction
         }
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-        if (!$project->isEmpty() && $this->resolveOwnership($rule) !== true) {
+        if (!$project->isEmpty() && !$this->hasOwnershipProof($rule)) {
             return false;
         }
 
@@ -307,6 +307,7 @@ class Action extends PlatformAction
      * @param Document $rule Rule claiming the domain
      * @return bool|null True when the proof names the rule's own project, false when
      *  it names another one, and null when the owner published no proof at all
+     * @throws Exception When the proof cannot be resolved, leaving no safe answer
      */
     protected function resolveOwnership(Document $rule): ?bool
     {
@@ -324,7 +325,30 @@ class Action extends PlatformAction
             return true;
         }
 
+        // A query the resolvers cannot answer leaves no records behind, exactly like a
+        // domain that genuinely has no proof, and says so only through its reason.
+        // Reading one as the other would verify a rule over a published proof whenever
+        // the resolvers hiccup, so an unresolved proof is no answer at all.
+        if (!empty($validator->reason)) {
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as the project assigned to domain ' . $domain . ' could not be resolved. ' . $validator->getDescription());
+        }
+
         return $validator->count > 0 ? false : null;
+    }
+
+    /**
+     * Whether the owner of a rule's domain assigned the domain to the rule's own project
+     *
+     * A proof that cannot be resolved counts as no proof: the domain stays with the
+     * project holding it until its owner can be heard from again.
+     */
+    private function hasOwnershipProof(Document $rule): bool
+    {
+        try {
+            return $this->resolveOwnership($rule) === true;
+        } catch (Exception) {
+            return false;
+        }
     }
 
     /**

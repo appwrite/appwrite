@@ -39,6 +39,7 @@ final class RuleOwnershipTest extends TestCase
         \putenv('_APP_DOMAIN_TARGET_CNAME=' . self::TARGET);
 
         RuleOwnershipTestDNS::$zone = [self::DOMAIN => [Record::TYPE_CNAME => [self::TARGET]]];
+        RuleOwnershipTestDNS::$unresolvable = [];
     }
 
     protected function tearDown(): void
@@ -48,6 +49,7 @@ final class RuleOwnershipTest extends TestCase
         }
 
         RuleOwnershipTestDNS::$zone = [];
+        RuleOwnershipTestDNS::$unresolvable = [];
     }
 
     public function testDomainWithoutOwnershipProofVerifiesByItsTargetAlone(): void
@@ -112,6 +114,36 @@ final class RuleOwnershipTest extends TestCase
         try {
             $this->action()->exposeCreateRule($this->rule('shop'), $this->heldDomain($deleted, 'shop'), new Authorization(), $this->createStub(Bus::class));
             $this->fail('A project proving the domain is its own must not replace the rule it already has for it');
+        } catch (Exception $err) {
+            $this->assertSame(Exception::RULE_ALREADY_EXISTS, $err->getType());
+        }
+
+        $this->assertSame([], $deleted);
+    }
+
+    public function testUnresolvableOwnershipProofFailsVerification(): void
+    {
+        RuleOwnershipTestDNS::$zone[self::PROOF] = [Record::TYPE_TXT => ['shop']];
+        RuleOwnershipTestDNS::$unresolvable = [Record::TYPE_TXT];
+
+        try {
+            $this->action()->exposeVerifyRule($this->rule('squatter'));
+            $this->fail('A proof that cannot be resolved must not be read as a domain nobody claimed');
+        } catch (Exception $err) {
+            $this->assertSame(Exception::RULE_VERIFICATION_FAILED, $err->getType());
+        }
+    }
+
+    public function testUnresolvableOwnershipProofDoesNotClaimAHeldDomain(): void
+    {
+        RuleOwnershipTestDNS::$zone[self::PROOF] = [Record::TYPE_TXT => ['shop']];
+        RuleOwnershipTestDNS::$unresolvable = [Record::TYPE_TXT];
+
+        $deleted = [];
+
+        try {
+            $this->action()->exposeCreateRule($this->rule('shop'), $this->heldDomain($deleted), new Authorization(), $this->createStub(Bus::class));
+            $this->fail('A domain held by a live project must stay put while its owner cannot be heard from');
         } catch (Exception $err) {
             $this->assertSame(Exception::RULE_ALREADY_EXISTS, $err->getType());
         }
@@ -201,11 +233,18 @@ final class RuleOwnershipTestDNS extends Validator
     public static array $zone = [];
 
     /**
+     * @var array<int> Record types the resolvers cannot answer at all
+     */
+    public static array $unresolvable = [];
+
+    /**
      * @var array<string>
      */
     public array $records = [];
 
     public int $count = 0;
+
+    public string $reason = '';
 
     /**
      * @param array<string> $dnsServers
@@ -216,11 +255,27 @@ final class RuleOwnershipTestDNS extends Validator
 
     public function getDescription(): string
     {
+        if ($this->reason !== '') {
+            return $this->reason;
+        }
+
         return 'Resolvers ' . \implode(',', $this->dnsServers) . ' found no ' . $this->type . ' record of value ' . $this->target . '.';
     }
 
     public function isValid(mixed $value): bool
     {
+        $this->records = [];
+        $this->count = 0;
+        $this->reason = '';
+
+        // A query the resolvers cannot answer leaves no records behind, exactly
+        // like a name that genuinely has none, and says so only through the reason
+        if (\in_array($this->type, self::$unresolvable, true)) {
+            $this->reason = 'DNS query failed.';
+
+            return false;
+        }
+
         $this->records = \is_string($value) ? (self::$zone[$value][$this->type] ?? []) : [];
         $this->count = \count($this->records);
 
