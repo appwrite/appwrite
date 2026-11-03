@@ -156,6 +156,14 @@ class Table extends Model
         $documentSecurity = $document->getAttribute('documentSecurity');
         $document->setAttribute('rowSecurity', $documentSecurity);
 
+        // The row stores the permissions with every column dropped, because that is the form
+        // the read gate matches. The verbatim list beside it is what the caller wrote and what
+        // they should read back.
+        $columnPermissions = $document->getAttribute('columnPermissions');
+        if (!empty($columnPermissions) && \is_array($columnPermissions)) {
+            $document->setAttribute('$permissions', $columnPermissions);
+        }
+
         // remove anyways as they are already copied above.
         $document
             ->removeAttribute('attributes')

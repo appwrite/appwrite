@@ -16,6 +16,7 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Index as IndexObject;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
 use Utopia\Database\SetType;
@@ -275,6 +276,49 @@ class Databases extends Action
      * @throws \Exception
      * @throws \Throwable
      **/
+    /**
+     * Drop the grants naming $key from a collection's metadata row.
+     *
+     * The library drops them from the collection itself when the column goes. The row keeps
+     * its own copy of the list -- the one the API reports and an update replays -- so it is
+     * dropped there too, or the two disagree about what the table grants and a later update
+     * replays a grant on a column that no longer exists.
+     */
+    private function dropColumnGrant(Database $dbForProject, Document $database, Document $collection, string $key): void
+    {
+        // Read the row as it stands rather than trusting the message. A delete carries the
+        // collection as it was when the job was queued, and the permissions may have been
+        // rewritten since -- writing the queued list back would replace newer grants with
+        // the ones that happened to exist when the column was asked to go.
+        $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collection->getId());
+
+        if ($collection->isEmpty()) {
+            return;
+        }
+
+        $columnPermissions = $collection->getAttribute('columnPermissions', []);
+
+        if (!\is_array($columnPermissions) || $columnPermissions === []) {
+            return;
+        }
+
+        $remaining = Permission::withoutColumn($columnPermissions, $key);
+
+        $dbForProject->updateDocument(
+            'database_' . $database->getSequence(),
+            $collection->getId(),
+            new Document([
+                // Both forms, because $permissions is derived from the verbatim list rather
+                // than stored alongside it: dropping read("any", "name") has to drop the
+                // read("any") it widened to, or the row keeps granting a read no surviving
+                // grant justifies and the role can still list and get the table. Cleared to
+                // [] when nothing names a column any more, as setPermissions() does.
+                '$permissions' => Permission::withoutColumns($remaining),
+                'columnPermissions' => Permission::hasColumns($remaining) ? $remaining : [],
+            ]),
+        );
+    }
+
     private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForPlatform, Database $dbForProject, Database $dbForDatabases, Realtime $queueForRealtime): void
     {
         if ($collection->isEmpty()) {
@@ -316,6 +360,14 @@ class Databases extends Action
                     $dbForDatabases->deleteAttribute('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $key);
                 }
 
+                $this->dropColumnGrant($dbForProject, $database, $collection, $key);
+
+                // A two-way relationship takes a key off the related collection too, so its
+                // row loses the grants on that key the same way.
+                if ($type === ColumnType::Relationship->value && $options['twoWay'] && !$relatedCollection->isEmpty()) {
+                    $this->dropColumnGrant($dbForProject, $database, $relatedCollection, $options['twoWayKey']);
+                }
+
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
 
                 if (!$relatedAttribute->isEmpty()) {
@@ -324,6 +376,20 @@ class Databases extends Action
 
             } catch (NotFound $e) {
                 Span::add('database.attribute.not_found', $e->getMessage());
+
+                // The column is already gone from the data plane, which is the state the
+                // success path above leaves behind, so its grants have to go the same way.
+                // A retry lands here after a first run that dropped the column but failed
+                // before this cleanup: leaving the grants would keep $permissions widened
+                // to a read that still authorizes listing and getting the table, and the
+                // next collection update would replay a grant naming a column that no
+                // longer exists, which the library refuses. Idempotent, so it costs
+                // nothing on the path where the column was never created.
+                $this->dropColumnGrant($dbForProject, $database, $collection, $key);
+
+                if ($type === ColumnType::Relationship->value && $options['twoWay'] && !$relatedCollection->isEmpty()) {
+                    $this->dropColumnGrant($dbForProject, $database, $relatedCollection, $options['twoWayKey']);
+                }
 
                 $dbForProject->deleteDocument('attributes', $attribute->getId());
 

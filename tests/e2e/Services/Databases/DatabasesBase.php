@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
+use Tests\E2E\Services\Databases\ColumnPermissions\DatabasesColumnPermissionsBase;
 use Tests\E2E\Services\Databases\Queries\AggregateShape;
 use Tests\E2E\Services\Databases\Queries\DottedPaths;
 use Tests\E2E\Services\Databases\Queries\JoinAliasDefault;
@@ -34,6 +35,7 @@ use Utopia\Query\Schema\IndexType;
 
 trait DatabasesBase
 {
+    use DatabasesColumnPermissionsBase;
     use DatabasesUrlHelpers;
     use SchemaPolling;
     use AggregateShape;

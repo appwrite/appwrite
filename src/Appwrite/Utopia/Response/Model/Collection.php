@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Collection extends Model
 {
@@ -120,6 +121,27 @@ class Collection extends Model
      *
      * @return string
      */
+    /**
+     * Report the permissions as the caller wrote them.
+     *
+     * The row stores them with every column dropped, because that is the form the read gate
+     * matches and a column left there would hide the table from the role it was granted to.
+     * The verbatim list lives beside it, and is what a caller asked for and should read back.
+     */
+    public function filter(Document $document): Document
+    {
+        $columnPermissions = $document->getAttribute('columnPermissions');
+
+        if (!empty($columnPermissions) && \is_array($columnPermissions)) {
+            $document->setAttribute('$permissions', $columnPermissions);
+        }
+
+        // columnPermissions itself needs no removing: output() builds the response from the
+        // model's rules, so an attribute no rule declares never reaches a response, a webhook
+        // or a realtime message.
+        return $document;
+    }
+
     public function getName(): string
     {
         return 'Collection';
