@@ -851,8 +851,18 @@ export function messagingTargetPickerUsersQueryOptions(
 // MUTATIONS
 // ============================================================================
 
-/** Create an empty draft message, optionally addressed to topics or users. */
-export function useCreateDraftMessage(projectId: string | null | undefined) {
+/**
+ * Create an empty draft message, optionally addressed to topics, users or targets.
+ * Handlers run at the mutation level so they still fire after a menu that
+ * started the draft has closed and unmounted.
+ */
+export function useCreateDraftMessage(
+  projectId: string | null | undefined,
+  handlers: {
+    onSuccess?: (message: Models.Message) => void
+    onError?: (error: Error) => void
+  } = {},
+) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (input: {
@@ -887,10 +897,12 @@ export function useCreateDraftMessage(projectId: string | null | undefined) {
           })
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (message) => {
       await queryClient.refetchQueries({
         queryKey: ['messages', 'project', projectId],
       })
+      handlers.onSuccess?.(message)
     },
+    onError: handlers.onError,
   })
 }

@@ -433,7 +433,8 @@ export function View({
     setTeamsSearchInput(teamsUrlSearch ?? '')
   }, [teamsUrlSearch])
 
-  // Clear selection when navigating between pages/routes or when search/filters change
+  // Clear selection whenever the listed users change (route, search, filters, sort),
+  // so bulk actions only ever cover users on screen
   useEffect(() => {
     setSelectedUsers(new Set())
     setDeleteDialogOpen(false)
@@ -444,7 +445,9 @@ export function View({
     projectId,
     urlSearch,
     teamsUrlSearch,
-    usersFilterMap.size,
+    usersFilterQueryString,
+    urlSortBy,
+    urlSortOrder,
     teamsFilterMap.size,
   ])
 
@@ -872,7 +875,7 @@ export function View({
     bulkDeleteMutation.mutate(Array.from(selectedUsers))
   }
 
-  // Selection is cleared on page change, so every selected user is on this page.
+  // Selection clears whenever the listed users change, so every selected user is on this page.
   const selectedReach = useUsersReach(
     paginatedUsers.filter((user) => selectedUsers.has(user.$id)),
   )

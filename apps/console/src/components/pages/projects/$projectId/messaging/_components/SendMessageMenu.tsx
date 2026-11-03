@@ -150,23 +150,22 @@ function useSendMessage(projectId: string) {
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const createDraft = useCreateDraftMessage(projectId)
+  // Selecting a channel closes the menu and unmounts this component,
+  // so the handlers live on the mutation rather than on `mutate()`.
+  const createDraft = useCreateDraftMessage(projectId, {
+    onSuccess: (message) => {
+      toast.success(t('Draft message created'))
+      navigate({
+        to: '/projects/$projectId/messaging/$messageId',
+        params: { projectId, messageId: message.$id },
+      })
+    },
+    onError: (e) =>
+      toast.error(getErrorMessage(e) || t('Could not create message')),
+  })
 
   const send = (type: MessagingProviderType, recipients: Recipients) =>
-    createDraft.mutate(
-      { type, ...recipients },
-      {
-        onSuccess: (message) => {
-          toast.success(t('Draft message created'))
-          navigate({
-            to: '/projects/$projectId/messaging/$messageId',
-            params: { projectId, messageId: message.$id },
-          })
-        },
-        onError: (e: Error) =>
-          toast.error(getErrorMessage(e) || t('Could not create message')),
-      },
-    )
+    createDraft.mutate({ type, ...recipients })
 
   return {
     send,

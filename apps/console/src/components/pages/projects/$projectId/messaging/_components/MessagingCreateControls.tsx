@@ -60,23 +60,20 @@ export function MessagingCreateControls({
   const [topicDialogOpen, setTopicDialogOpen] = useState(false)
   const [topicName, setTopicName] = useState('')
 
-  const createDraft = useCreateDraftMessage(projectId)
+  const createDraft = useCreateDraftMessage(projectId, {
+    onSuccess: (msg) => {
+      toast.success(t('Draft message created'))
+      navigate({
+        to: '/projects/$projectId/messaging/$messageId',
+        params: { projectId: projectId!, messageId: msg.$id },
+      })
+    },
+    onError: (e) =>
+      toast.error(getErrorMessage(e) || t('Could not create message')),
+  })
 
   const startDraft = (type: MessagingProviderType) =>
-    createDraft.mutate(
-      { type },
-      {
-        onSuccess: (msg) => {
-          toast.success(t('Draft message created'))
-          navigate({
-            to: '/projects/$projectId/messaging/$messageId',
-            params: { projectId: projectId!, messageId: msg.$id },
-          })
-        },
-        onError: (e: Error) =>
-          toast.error(getErrorMessage(e) || t('Could not create message')),
-      },
-    )
+    createDraft.mutate({ type })
 
   const createTopicMutation = useMutation({
     mutationFn: async (name: string) => {
