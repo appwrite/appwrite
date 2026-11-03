@@ -930,7 +930,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "apis/rest",
     "title": "REST",
     "description": "Discover the Appwrite REST API for building robust and scalable applications. Access detailed documentation on REST endpoints, authentication, and data management.",
-    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - Content-Type: application/json - required…",
+    "excerpt": "Appwrite supports multiple protocols for accessing the server, including REST, GraphQL, and Realtime. The REST API allows you to access your Appwrite server through HTTP requests without needing an SDK. Each endpoint in the API represents a specific operation on a specific resource. Headers Appwrite's REST APIs expect certain headers to be included with each request: - Header - - Description --- - X-Appwrite-Project: [PROJECT-ID] - required - The ID of your Appwrite project --- - X-Appwrite-Environment: [ENVIRONMENT-ID] - optional…",
     "breadcrumbs": [
       "APIs",
       "Protocols",
