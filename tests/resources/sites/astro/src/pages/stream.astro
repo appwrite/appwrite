@@ -1,5 +1,6 @@
 ---
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+Astro.response.status = Number(Astro.url.searchParams.get('status') ?? 200);
 ---
 
 <!DOCTYPE html>
