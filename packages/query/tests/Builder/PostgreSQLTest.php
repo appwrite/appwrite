@@ -1805,7 +1805,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM "t" WHERE score > ?', $result->query);
+        $this->assertSame('SELECT * FROM "t" WHERE (score > ?)', $result->query);
         $this->assertContains(10, $result->bindings);
     }
 
@@ -2391,7 +2391,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT COUNT(*) AS "cnt" FROM "orders" GROUP BY "user_id" HAVING SUM("amount") > ?', $result->query);
+        $this->assertSame('SELECT COUNT(*) AS "cnt" FROM "orders" GROUP BY "user_id" HAVING (SUM("amount") > ?)', $result->query);
     }
 
     public function testWhereRawAppendsFragmentAndBindings(): void
@@ -2402,7 +2402,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM "users" WHERE a = ?', $result->query);
+        $this->assertSame('SELECT * FROM "users" WHERE (a = ?)', $result->query);
         $this->assertSame([1], $result->bindings);
     }
 
@@ -2415,7 +2415,7 @@ class PostgreSQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM "users" WHERE "b" IN (?) AND a = ?', $result->query);
+        $this->assertSame('SELECT * FROM "users" WHERE "b" IN (?) AND (a = ?)', $result->query);
         $this->assertContains(1, $result->bindings);
         $this->assertContains(2, $result->bindings);
     }
@@ -5972,7 +5972,7 @@ class PostgreSQLTest extends TestCase
             ->filter([Query::raw('score BETWEEN ? AND ?', [10, 90])])
             ->build();
 
-        $this->assertSame('SELECT * FROM "t" WHERE score BETWEEN ? AND ?', $result->query);
+        $this->assertSame('SELECT * FROM "t" WHERE (score BETWEEN ? AND ?)', $result->query);
         $this->assertSame([10, 90], $result->bindings);
         $this->assertBindingCount($result);
     }
@@ -6235,7 +6235,7 @@ class PostgreSQLTest extends TestCase
             ->havingRaw('SUM("amount") > ? AND COUNT(*) > ?', [1000, 5])
             ->build();
 
-        $this->assertSame('SELECT COUNT(*) AS "cnt", SUM("amount") AS "total" FROM "orders" WHERE "status" IN (?) GROUP BY "user_id" HAVING SUM("amount") > ? AND COUNT(*) > ?', $result->query);
+        $this->assertSame('SELECT COUNT(*) AS "cnt", SUM("amount") AS "total" FROM "orders" WHERE "status" IN (?) GROUP BY "user_id" HAVING (SUM("amount") > ? AND COUNT(*) > ?)', $result->query);
         $this->assertSame(['active', 1000, 5], $result->bindings);
         $this->assertBindingCount($result);
     }

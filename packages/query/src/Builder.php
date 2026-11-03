@@ -748,7 +748,7 @@ abstract class Builder implements
         }
 
         foreach ($this->rawWheres as $rawWhere) {
-            $whereClauses[] = $rawWhere->expression;
+            $whereClauses[] = $this->enclose($rawWhere->expression);
             $this->addBindings($rawWhere->bindings);
         }
 
@@ -817,7 +817,7 @@ abstract class Builder implements
         }
 
         foreach ($this->rawHavings as $rawHaving) {
-            $havingClauses[] = $rawHaving->expression;
+            $havingClauses[] = $this->enclose($rawHaving->expression);
             $this->addBindings($rawHaving->bindings);
         }
 
@@ -1113,7 +1113,7 @@ abstract class Builder implements
         }
 
         foreach ($this->rawWheres as $rawWhere) {
-            $whereClauses[] = $rawWhere->expression;
+            $whereClauses[] = $this->enclose($rawWhere->expression);
             $this->addBindings($rawWhere->bindings);
         }
 
@@ -1925,7 +1925,18 @@ abstract class Builder implements
             $this->addBinding($binding);
         }
 
-        return $attribute;
+        return $this->enclose($attribute);
+    }
+
+    /**
+     * Enclose a raw SQL condition in parentheses. Conditions are joined with
+     * AND, which binds tighter than OR, so a raw `a = ? OR b = ?` left bare
+     * beside a hook's `tenant_id IN (?)` would let the OR escape the tenant
+     * and permission conditions.
+     */
+    private function enclose(string $condition): string
+    {
+        return '(' . $condition . ')';
     }
 
     public function toAst(): Select

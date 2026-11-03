@@ -40,11 +40,13 @@ class JoinBuilder
     }
 
     /**
+     * Add a raw ON condition, enclosed in parentheses like whereRaw().
+     *
      * @param  list<mixed>  $bindings
      */
     public function onRaw(string $expression, array $bindings = []): static
     {
-        $this->wheres[] = new Condition($expression, $bindings);
+        $this->wheres[] = new Condition('(' . $expression . ')', $bindings);
 
         return $this;
     }
@@ -71,11 +73,17 @@ class JoinBuilder
     }
 
     /**
+     * Add a raw condition to the join's ON clause.
+     *
+     * The expression is enclosed in parentheses, because the ON conditions are
+     * joined with AND: an OR inside a bare `a = b OR 1 = 1` would escape the
+     * other conditions, including those a join-filter hook adds.
+     *
      * @param  list<mixed>  $bindings
      */
     public function whereRaw(string $expression, array $bindings = []): static
     {
-        $this->wheres[] = new Condition($expression, $bindings);
+        $this->wheres[] = new Condition('(' . $expression . ')', $bindings);
 
         return $this;
     }

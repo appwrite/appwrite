@@ -2,6 +2,7 @@
 
 namespace Utopia\Query\Tests\Regression;
 
+use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Query\AST\Call\Func;
@@ -9,14 +10,17 @@ use Utopia\Query\AST\Expression\Binary;
 use Utopia\Query\AST\Expression\Cast;
 use Utopia\Query\AST\Literal;
 use Utopia\Query\AST\Parser;
+use Utopia\Query\AST\Raw;
 use Utopia\Query\AST\Reference\Column;
 use Utopia\Query\AST\Serializer;
 use Utopia\Query\AST\Statement\Select;
 use Utopia\Query\AST\Visitor\FilterInjector;
 use Utopia\Query\Builder\JoinBuilder;
+use Utopia\Query\Builder\JoinType;
 use Utopia\Query\Builder\MongoDB as MongoDBBuilder;
 use Utopia\Query\Builder\MySQL as MySQLBuilder;
 use Utopia\Query\Builder\PostgreSQL as PostgreSQLBuilder;
+use Utopia\Query\Builder\Statement;
 use Utopia\Query\Classifier\MongoDB as MongoDBClassifier;
 use Utopia\Query\Classifier\MySQL as MySQLClassifier;
 use Utopia\Query\Classifier\PostgreSQL as PostgreSQLClassifier;
@@ -76,6 +80,14 @@ use Utopia\Query\Type;
  *      testFuncRejectsTrailingWhitespaceInName
  *      testCastRejectsTrailingWhitespaceInType
  *      testCastAcceptsMultiWordType
+ *  - (this branch)  fix(query): enclose raw conditions in parentheses
+ *      testRawFilterOrCannotEscapeTenantScope
+ *      testWhereRawOrCannotEscapeTenantScope
+ *      testJoinWhereRawOrCannotEscapeJoinedTenantScope
+ *      testJoinOnRawOrStaysInsideOnClause
+ *      testHavingRawOrStaysInsideHavingClause
+ *      testToAstEnclosesRawFilter
+ *      testFilterInjectorEnclosesRawCondition
  */
 class SecurityRegressionTest extends TestCase
 {
@@ -586,6 +598,151 @@ class SecurityRegressionTest extends TestCase
         $this->expectExceptionMessage('Unsupported filter type: search');
 
         $builder->toAst();
+    }
+
+    /**
+     * Conditions are joined with AND, which binds tighter than OR. A raw
+     * `a = ? OR b = ?` beside the Tenant hook's condition compiled to
+     * `a = ? OR b = ? AND tenant_id IN (?)`, which matches every tenant's rows
+     * where `a = ?`.
+     */
+    public function testRawFilterOrCannotEscapeTenantScope(): void
+    {
+        $result = new MySQLBuilder()
+            ->addHook(new Tenant(['7']))
+            ->from('docs')
+            ->filter([Query::raw('a = ? OR b = ?', [1, 2])])
+            ->build();
+
+        $this->assertSame('SELECT * FROM `docs` WHERE (a = ? OR b = ?) AND tenant_id IN (?)', $result->query);
+        $this->assertSame([1, 2, '7'], $result->bindings);
+    }
+
+    /**
+     * @return array<string, array{Closure(MySQLBuilder): Statement, string, list<mixed>}>
+     */
+    public static function whereRawStatementProvider(): array
+    {
+        return [
+            'select' => [
+                fn (MySQLBuilder $builder): Statement => $builder->build(),
+                'SELECT * FROM `docs` WHERE tenant_id IN (?) AND (a = ? OR b = ?)',
+                ['7', 1, 2],
+            ],
+            'update' => [
+                fn (MySQLBuilder $builder): Statement => $builder->set(['c' => 3])->update(),
+                'UPDATE `docs` SET `c` = ? WHERE tenant_id IN (?) AND (a = ? OR b = ?)',
+                [3, '7', 1, 2],
+            ],
+            'delete' => [
+                fn (MySQLBuilder $builder): Statement => $builder->delete(),
+                'DELETE FROM `docs` WHERE tenant_id IN (?) AND (a = ? OR b = ?)',
+                ['7', 1, 2],
+            ],
+        ];
+    }
+
+    /**
+     * `tenant_id IN (?) AND a = ? OR b = ?` reads, updates or deletes every
+     * tenant's rows where `b = ?`.
+     *
+     * @param  Closure(MySQLBuilder): Statement  $statement
+     * @param  list<mixed>  $bindings
+     */
+    #[DataProvider('whereRawStatementProvider')]
+    public function testWhereRawOrCannotEscapeTenantScope(Closure $statement, string $query, array $bindings): void
+    {
+        $builder = new MySQLBuilder()
+            ->addHook(new Tenant(['7']))
+            ->from('docs')
+            ->whereRaw('a = ? OR b = ?', [1, 2]);
+
+        $result = $statement($builder);
+
+        $this->assertSame($query, $result->query);
+        $this->assertSame($bindings, $result->bindings);
+    }
+
+    /**
+     * A left join takes the Tenant hook's condition in its ON clause, after
+     * the join's own conditions. A bare raw OR there joined the rows of other
+     * tenants for which `orders.x = orders.y`.
+     */
+    public function testJoinWhereRawOrCannotEscapeJoinedTenantScope(): void
+    {
+        $result = new MySQLBuilder()
+            ->addHook(new Tenant(['7']))
+            ->from('docs')
+            ->joinWhere('orders', function (JoinBuilder $join): void {
+                $join->on('docs.id', 'orders.doc_id')
+                    ->whereRaw('orders.x = orders.y OR 1 = 1');
+            }, JoinType::Left)
+            ->build();
+
+        $this->assertSame(
+            'SELECT * FROM `docs` LEFT JOIN `orders` ON `docs`.`id` = `orders`.`doc_id` AND (orders.x = orders.y OR 1 = 1) AND tenant_id IN (?) WHERE tenant_id IN (?)',
+            $result->query,
+        );
+        $this->assertSame(['7', '7'], $result->bindings);
+    }
+
+    public function testJoinOnRawOrStaysInsideOnClause(): void
+    {
+        $result = new MySQLBuilder()
+            ->from('docs')
+            ->joinWhere('orders', function (JoinBuilder $join): void {
+                $join->on('docs.id', 'orders.doc_id')
+                    ->onRaw('orders.x = ? OR 1 = 1', [5]);
+            })
+            ->build();
+
+        $this->assertSame(
+            'SELECT * FROM `docs` JOIN `orders` ON `docs`.`id` = `orders`.`doc_id` AND (orders.x = ? OR 1 = 1)',
+            $result->query,
+        );
+        $this->assertSame([5], $result->bindings);
+    }
+
+    public function testHavingRawOrStaysInsideHavingClause(): void
+    {
+        $result = new MySQLBuilder()
+            ->from('orders')
+            ->count('*', 'cnt')
+            ->groupBy(['user_id'])
+            ->having([Query::greaterThan('cnt', 1)])
+            ->havingRaw('SUM(total) > ? OR COUNT(*) > ?', [100, 10])
+            ->build();
+
+        $this->assertSame(
+            'SELECT COUNT(*) AS `cnt` FROM `orders` GROUP BY `user_id` HAVING COUNT(*) > ? AND (SUM(total) > ? OR COUNT(*) > ?)',
+            $result->query,
+        );
+        $this->assertSame([1, 100, 10], $result->bindings);
+    }
+
+    /** toAst() turns a raw filter into a Raw node, which hides its operators the same way. */
+    public function testToAstEnclosesRawFilter(): void
+    {
+        $statement = new MySQLBuilder()
+            ->from('docs')
+            ->filter([Query::raw('a = 1 OR b = 2'), Query::equal('tenant', [7])])
+            ->toAst();
+
+        $this->assertSame(
+            'SELECT * FROM `docs` WHERE (a = 1 OR b = 2) AND `tenant` = 7',
+            new Serializer()->serialize($statement),
+        );
+    }
+
+    public function testFilterInjectorEnclosesRawCondition(): void
+    {
+        $statement = $this->parse('SELECT name FROM users WHERE a = 1');
+        $statement = new FilterInjector(new Raw('tenant = 7 OR tenant IS NULL'))->visitSelect($statement);
+
+        $this->assertSame(
+            'SELECT `name` FROM `users` WHERE `a` = 1 AND (tenant = 7 OR tenant IS NULL)',
+            new Serializer()->serialize($statement),
+        );
     }
 
     private function parse(string $sql): Select

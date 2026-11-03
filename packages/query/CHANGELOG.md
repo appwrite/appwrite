@@ -2,6 +2,22 @@
 
 All notable changes to `utopia-php/query` are documented in this file.
 
+## 0.7.3
+
+### Fixed
+
+- Raw conditions are enclosed in parentheses where they are ANDed with other
+  conditions: `Query::raw()` filters, `whereRaw()` in SELECT, UPDATE and
+  DELETE, `havingRaw()`, `JoinBuilder::whereRaw()` and `onRaw()`, and `Raw`
+  operands of AND in the AST serializer (`toAst()`, `FilterInjector`). AND
+  binds tighter than OR, so an OR inside one escaped the conditions beside
+  it, including those filter and join-filter hooks add: `whereRaw('a = ? OR
+  b = ?')` with `Hook\Filter\Tenant` compiled to `tenant_id IN (?) AND a = ?
+  OR b = ?` and read, updated and deleted other tenants' rows. Generated SQL
+  now carries the parentheses; an empty `Query::raw()` still compiles to
+  `1 = 1`. A hook's own condition is used as returned, so a hook returning an
+  OR must enclose it.
+
 ## 0.7.2
 
 ### Changed

@@ -265,6 +265,8 @@ Most builder clauses have a `Query` factory equivalent, so a whole statement can
 Query::raw('score > ? AND score < ?', [10, 100]);
 ```
 
+The SQL builders compile it in parentheses, `(score > ? AND score < ?)`, so an `OR` inside a raw condition cannot escape the conditions it is ANDed with.
+
 ### Serialization
 
 Queries serialize to JSON and can be parsed back:
@@ -398,8 +400,10 @@ $result = (new Builder())
     ->whereRaw('LENGTH(`bio`) > ?', [100])
     ->build();
 
-// SELECT * FROM `users` WHERE LENGTH(`bio`) > ?
+// SELECT * FROM `users` WHERE (LENGTH(`bio`) > ?)
 ```
+
+The fragment is enclosed in parentheses, as are `havingRaw()` and a join's `whereRaw()` and `onRaw()`, so an `OR` inside it cannot escape the other conditions, including the ones filter hooks add.
 
 **`whereColumn()`** — typed column-to-column predicate with quoting. The operator is validated against `['=', '!=', '<>', '<', '>', '<=', '>=']`:
 
@@ -1057,6 +1061,8 @@ class SoftDeleteHook implements Filter
     }
 }
 ```
+
+A hook's condition is ANDed with the statement's other conditions exactly as returned, so a hook that returns an `OR` encloses it: `new Condition('(deleted_at IS NULL OR restored = 1)')`.
 
 **Join filter hooks** inject per-join conditions with placement control (ON vs WHERE):
 
