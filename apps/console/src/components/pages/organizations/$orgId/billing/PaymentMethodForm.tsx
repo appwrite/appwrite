@@ -249,18 +249,12 @@ export function PaymentMethodForm({
         const { setupIntent: existingIntent, error: retrieveError } =
           await stripe.retrieveSetupIntent(secret)
         if (!mounted) return
-        // A canceled intent still mounts the Payment Element, but every confirm
-        // fails. Drop the row; the skip re-runs this effect, which creates a new one.
+        // A canceled or missing intent still mounts the Payment Element, but every
+        // confirm fails. Drop the row; the skip re-runs this effect to create one.
         if (
           existingIncomplete &&
-          (retrieveError ||
-            !existingIntent ||
-            ![
-              'requires_payment_method',
-              'requires_confirmation',
-              'requires_action',
-              'succeeded',
-            ].includes(existingIntent.status))
+          (existingIntent?.status === 'canceled' ||
+            retrieveError?.code === 'resource_missing')
         ) {
           deletePaymentMethodMutation.mutate(
             { paymentMethodId: existingIncomplete.$id },
@@ -479,13 +473,15 @@ export function PaymentMethodForm({
           if (aborted()) return
 
           if (stripeError) {
-            captureExceptionWithContext(new Error(stripeError.message), {
-              source: 'stripe-confirm-setup',
-              orgId: organizationId,
-              stripeCode: stripeError.code,
-              stripeDeclineCode: stripeError.decline_code,
-              stripeType: stripeError.type,
-            })
+            if (stripeError.type !== 'card_error') {
+              captureExceptionWithContext(new Error(stripeError.message), {
+                source: 'stripe-confirm-setup',
+                orgId: organizationId,
+                stripeCode: stripeError.code,
+                stripeDeclineCode: stripeError.decline_code,
+                stripeType: stripeError.type,
+              })
+            }
             throw new Error(stripeError.message)
           }
 
