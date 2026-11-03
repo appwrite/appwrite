@@ -1,10 +1,9 @@
 import { describe, expect, test } from 'bun:test'
 import {
   getSmtpDnsRecords,
-  getSmtpMxRecordName,
-  getSmtpTxtHost,
+  getSmtpRecordName,
   needsSmtpDnsVerification,
-  proxyRuleProtocolQuery,
+  isSmtpRule,
   type SmtpProxyRule,
 } from '@/lib/function-smtp-domain'
 import { ProxyRuleStatus, type Models } from '@appwrite.io/console'
@@ -31,15 +30,20 @@ function ruleStub(overrides: Partial<SmtpProxyRule> = {}): SmtpProxyRule {
 }
 
 describe('smtp domain DNS helpers', () => {
-  test('builds ownership TXT host', () => {
-    expect(getSmtpTxtHost('Mail.Example.com')).toBe(
-      '_appwrite.mail.example.com',
-    )
+  test('names records relative to the registrable domain', () => {
+    expect(getSmtpRecordName('example.com')).toBe('@')
+    expect(getSmtpRecordName('mail.example.com')).toBe('mail')
+    expect(getSmtpRecordName('in.mail.example.co.uk')).toBe('in.mail')
   })
 
-  test('uses @ for apex MX name', () => {
-    expect(getSmtpMxRecordName('example.com')).toBe('@')
-    expect(getSmtpMxRecordName('mail.example.com')).toBe('mail.example.com')
+  test('names the TXT record for an apex domain', () => {
+    expect(
+      getSmtpDnsRecords({
+        domain: 'example.com',
+        projectId: 'project1',
+        mxTarget: 'mx.example',
+      }).map((r) => r.name),
+    ).toEqual(['@', '_appwrite'])
   })
 
   test('returns MX then TXT records when inputs are complete', () => {
@@ -51,13 +55,16 @@ describe('smtp domain DNS helpers', () => {
     expect(records).toEqual([
       {
         type: 'MX',
-        name: 'mail.example.com',
+        name: 'mail',
         value: 'fra.staging.appwrite.email',
+        ttl: 3600,
+        priority: 10,
       },
       {
         type: 'TXT',
-        name: '_appwrite.mail.example.com',
+        name: '_appwrite.mail',
         value: 'project1',
+        ttl: 3600,
       },
     ])
   })
@@ -82,8 +89,9 @@ describe('smtp domain DNS helpers', () => {
     ).toEqual([
       {
         type: 'TXT',
-        name: '_appwrite.mail.example.com',
+        name: '_appwrite.mail',
         value: 'project1',
+        ttl: 3600,
       },
     ])
   })
@@ -100,17 +108,10 @@ describe('smtp domain DNS helpers', () => {
   })
 })
 
-describe('smtp rule filtering', () => {
-  test('builds a server-side protocol query', () => {
-    expect(JSON.parse(proxyRuleProtocolQuery('smtp'))).toEqual({
-      method: 'equal',
-      attribute: 'protocol',
-      values: ['smtp'],
-    })
-    expect(JSON.parse(proxyRuleProtocolQuery('http'))).toEqual({
-      method: 'equal',
-      attribute: 'protocol',
-      values: ['http'],
-    })
+describe('smtp rule detection', () => {
+  test('tells SMTP rules apart from HTTP rules', () => {
+    expect(isSmtpRule(ruleStub())).toBe(true)
+    expect(isSmtpRule(ruleStub({ protocol: 'http' }))).toBe(false)
+    expect(isSmtpRule(ruleStub({ protocol: undefined }))).toBe(false)
   })
 })

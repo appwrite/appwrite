@@ -17,6 +17,7 @@ use Utopia\SMTP\Exception\CapabilityException;
 use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\TransactionException;
+use Utopia\SMTP\Exception\UnconfirmedException;
 use Utopia\SMTP\Message;
 use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Tests\Support\FakeTransport;
@@ -493,8 +494,8 @@ final class ClientTest extends TestCase
         try {
             $client->sendRaw($this->envelope(), 'Body');
             $this->fail('Expected the send to fail');
-        } catch (ConnectionException) {
-            // expected
+        } catch (UnconfirmedException $exception) {
+            $this->assertInstanceOf(ConnectionException::class, $exception->getPrevious());
         }
 
         $this->assertTrue($transport->closed, 'the transport should have been dropped');
@@ -529,7 +530,7 @@ final class ClientTest extends TestCase
 
         try {
             $client->sendRaw($this->envelope(), 'Body');
-        } catch (ConnectionException) {
+        } catch (UnconfirmedException) {
             // expected
         }
 

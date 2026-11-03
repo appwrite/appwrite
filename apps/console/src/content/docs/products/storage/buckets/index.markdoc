@@ -314,6 +314,21 @@ Two algorithms are available, which are [gzip](https://www.gzip.org/) and [zstd]
 You can enable compress under your bucket's **Settings** > **Compression**.
 For files larger than 20MB, compression will be skipped even when enabled.
 
+# Image metadata {% #image-metadata %}
+Photos often carry metadata that reveals more than the image itself, such as where a photo was taken.
+Enable stripping under your bucket's **Settings** > **Image metadata** to remove it from images uploaded to the bucket. Stripping is disabled by default.
+
+Stripping applies to JPEG, PNG, WebP, GIF, TIFF, HEIC, HEIF, and AVIF images. It removes EXIF, XMP, and IPTC metadata, including:
+- GPS location
+- Camera make, model, and serial number
+- Capture date and time
+- Author, copyright, captions, and keywords
+- The software used to edit the image
+
+The color profile and orientation are kept, so a stripped image looks the same as the original, and the pixels are not re-encoded. The file's size and signature describe the stripped file.
+
+Files of other types, files larger than 20MB, and images that cannot be rewritten are stored as uploaded. The setting only applies to files uploaded after it is enabled. A bucket with stripping enabled can't be used through the [S3-compatible API](/docs/products/storage/s3), because S3 clients expect stored files to match their uploads.
+
 # Maximum file size {% #max-size %}
 Limit the maximum file size allowed in the bucket to prevent abuse.
 You can configure maximum file size under your bucket's **Settings** > **Maximum file size**.

@@ -96,7 +96,7 @@ class XList extends Action
             $ruleId = $cursor->getValue();
             $cursorDocument = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $ruleId));
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('projectInternalId') !== $project->getSequence()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Rule '{$ruleId}' for the 'cursor' value not found.");
             }
 

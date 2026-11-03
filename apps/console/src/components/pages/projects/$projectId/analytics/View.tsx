@@ -99,9 +99,9 @@ function StatHighlight({
  * property created mid-window would otherwise show a meaningless +100%.
  */
 function trendFor(
-  current: number,
+  current: number | null | undefined,
   previous: Models.AnalyticsMetric | undefined,
-  pick: (stats: Models.AnalyticsMetric) => number,
+  pick: (stats: Models.AnalyticsMetric) => number | null | undefined,
 ): number | undefined {
   if (!previous || !hasTraffic(previous)) return undefined
   return analyticsChangePercent(current, pick(previous))
@@ -109,7 +109,7 @@ function trendFor(
 
 /** A property only has data once it has received at least one event. */
 function hasTraffic(stats: Models.AnalyticsMetric): boolean {
-  return stats.events > 0 || stats.visitors > 0 || stats.pageviews > 0
+  return stats.events > 0 || stats.visitors > 0 || (stats.pageviews ?? 0) > 0
 }
 
 export function View() {

@@ -185,4 +185,90 @@ final class StorageConsoleClientTest extends Scope
         ]);
         $this->assertEquals(200, $view['headers']['status-code']);
     }
+
+    public function testConsoleDefaultBucketIsPrivate(): void
+    {
+        $guest = [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => 'console',
+        ];
+        $owner = \array_merge($guest, ['cookie' => 'a_session_console=' . $this->createConsoleSession()]);
+        $other = \array_merge($guest, ['cookie' => 'a_session_console=' . $this->createConsoleSession()]);
+
+        /**
+         * Test for SUCCESS
+         */
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/default/files', \array_merge($owner, [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(\realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files/' . $fileId, $owner);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([$guest, $other] as $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files', $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertNotContains($fileId, \array_column($response['body']['files'], '$id'));
+
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files/' . $fileId, $headers);
+            $this->assertSame(404, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/default/files/' . $fileId . '/download', $headers);
+            $this->assertSame(404, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/default/files/' . $fileId, \array_merge($headers, [
+                'content-type' => 'application/json',
+            ]), [
+                'name' => 'renamed.png',
+            ]);
+            $this->assertSame(401, $response['headers']['status-code']);
+
+            $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/default/files/' . $fileId, $headers);
+            $this->assertSame(401, $response['headers']['status-code']);
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/default/files', \array_merge($guest, [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(\realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/default/files/' . $fileId, $owner);
+        $this->assertSame(204, $response['headers']['status-code']);
+    }
+
+    private function createConsoleSession(): string
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ];
+        $email = Id::unique() . '@localhost.test';
+
+        $account = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        return $session['cookies']['a_session_console'];
+    }
 }

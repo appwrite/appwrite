@@ -23,6 +23,9 @@ final class PublishFaults
     /** Sockets the transport has opened. */
     public int $connects = 0;
 
+    /** Subject prefix of the request to fault. */
+    public string $subject = 'q.';
+
     public function __construct(public int $faults)
     {
     }

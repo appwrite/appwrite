@@ -69,12 +69,13 @@ class Enum extends Column
      *     },
      *     createdAt: string,
      *     updatedAt: string,
+     *     description?: string,
      * } $array
      * @return self
      */
     public static function fromArray(array $array): self
     {
-        return new self(
+        return (new self(
             $array['key'],
             Table::fromArray($array['table'] ?? $array['collection']),
             elements: $array['formatOptions']['elements'],
@@ -84,7 +85,7 @@ class Enum extends Column
             size: $array['size'],
             createdAt: $array['createdAt'] ?? '',
             updatedAt: $array['updatedAt'] ?? '',
-        );
+        ))->setDescription($array['description'] ?? '');
     }
 
     public function getType(): string

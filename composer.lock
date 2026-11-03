@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5db9eaeb7a2992161d6cdbf2d76e216f",
+    "content-hash": "074cceb2ac7d489bceff880b253c68fe",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "30.4.0",
+            "version": "32.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "2a57ecdd9f3b7fcf43c7c7776ad1e9aac727d5af"
+                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2a57ecdd9f3b7fcf43c7c7776ad1e9aac727d5af",
-                "reference": "2a57ecdd9f3b7fcf43c7c7776ad1e9aac727d5af",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/92e840031d688c933acfde19e5114ca6f5ca2bb6",
+                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6",
                 "shasum": ""
             },
             "require": {
@@ -86,6 +86,7 @@
                 "ext-curl": "*",
                 "ext-json": "*",
                 "php": ">=8.5",
+                "psr/http-client": "^1.0",
                 "utopia-php/client": "^0.6"
             },
             "require-dev": {
@@ -110,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/30.4.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-10-14T12:03:49+00:00"
+            "time": "2026-10-28T08:19:04+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4426,16 +4427,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-collection-level-column-permissions",
+            "version": "10.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "af607ce55bef45271f227bdc4bc6c945500b03b9"
+                "reference": "950a4907d5519efd7ac7d1aff8978e482f8e07ae"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/af607ce55bef45271f227bdc4bc6c945500b03b9",
-                "reference": "af607ce55bef45271f227bdc4bc6c945500b03b9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/950a4907d5519efd7ac7d1aff8978e482f8e07ae",
+                "reference": "950a4907d5519efd7ac7d1aff8978e482f8e07ae",
                 "shasum": ""
             },
             "require": {
@@ -4445,7 +4446,7 @@
                 "ext-redis": "*",
                 "php": ">=8.5",
                 "utopia-php/async": "^0.2",
-                "utopia-php/cache": "^4.0 || ^5.0",
+                "utopia-php/cache": "^6.1.3 || ^7.0",
                 "utopia-php/console": "^0.1 || ^0.2",
                 "utopia-php/mongo": "^1.5.4",
                 "utopia-php/pools": "^2.0",
@@ -4493,9 +4494,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/collection-level-column-permissions"
+                "source": "https://github.com/utopia-php/database/tree/10.1.0"
             },
-            "time": "2026-10-18T12:32:48+00:00"
+            "time": "2026-11-01T18:56:51+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -4860,16 +4861,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.13.0",
+            "version": "5.13.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "36ac9b85d732176cb2599c95bab6392ea445b3de"
+                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/36ac9b85d732176cb2599c95bab6392ea445b3de",
-                "reference": "36ac9b85d732176cb2599c95bab6392ea445b3de",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/be65dd140b1f01386a1a93307c2de2ec326ad4e9",
+                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9",
                 "shasum": ""
             },
             "require": {
@@ -4906,9 +4907,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.13.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.13.17"
             },
-            "time": "2026-10-19T09:11:15+00:00"
+            "time": "2026-10-24T11:32:35+00:00"
         },
         {
             "name": "brianium/paratest",
@@ -7679,18 +7680,9 @@
             "time": "2026-09-25T13:20:01+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-collection-level-column-permissions",
-            "alias": "8.3.999",
-            "alias_normalized": "8.3.999.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -7713,5 +7705,5 @@
     "platform-dev": {
         "ext-fileinfo": "*"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

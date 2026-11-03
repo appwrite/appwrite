@@ -11,15 +11,26 @@ type YoutubePlayerDialogProps = {
   children?: ReactNode
 }
 
-export function withAutoplay(embedSrc: string): string {
+const YOUTUBE_EMBED_HOSTS = new Set([
+  'www.youtube-nocookie.com',
+  'youtube-nocookie.com',
+  'www.youtube.com',
+  'youtube.com',
+])
+
+/** The embed URL with autoplay on, or null when it is not an https YouTube URL. */
+export function withAutoplay(embedSrc: string): string | null {
+  let url: URL
   try {
-    const url = new URL(embedSrc)
-    url.searchParams.set('autoplay', '1')
-    return url.toString()
+    url = new URL(embedSrc)
   } catch {
-    const separator = embedSrc.includes('?') ? '&' : '?'
-    return `${embedSrc}${separator}autoplay=1`
+    return null
   }
+  if (url.protocol !== 'https:' || !YOUTUBE_EMBED_HOSTS.has(url.hostname)) {
+    return null
+  }
+  url.searchParams.set('autoplay', '1')
+  return url.toString()
 }
 
 export function YoutubePlayerDialog({
@@ -44,6 +55,7 @@ export function YoutubePlayerDialog({
   )
 
   const dialogTitle = title?.trim() || 'YouTube video'
+  const playerSrc = embed ? withAutoplay(embed) : null
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -74,10 +86,10 @@ export function YoutubePlayerDialog({
           />
 
           <div className="aspect-video w-full max-h-[min(75dvh,calc(92vw*9/16))]">
-            {open && embed ? (
+            {open && playerSrc ? (
               <iframe
                 key={playerKey}
-                src={withAutoplay(embed)}
+                src={playerSrc}
                 title={dialogTitle}
                 className="size-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

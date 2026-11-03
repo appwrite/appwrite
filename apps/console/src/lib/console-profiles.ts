@@ -47,11 +47,6 @@ export type ConsoleProfileFeatures = {
    * still render; only new connect actions are gated.
    */
   extraVcsOAuth: boolean
-  /**
-   * Entire on Git connect. Off until Entire makes plugin installs available to
-   * every Entire account; existing installations still render.
-   */
-  vcsEntire: boolean
   /** Organization compliance (DPA, BAA, SOC 2) */
   compliance: boolean
   /** Organization API keys */
@@ -72,8 +67,19 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /**
+   * Internal only, switched on from the debug menu. Review product (AI code
+   * review of GitHub pull requests) via the `reviews` service. Even when on, it
+   * shows only where the server reports `_APP_REVIEWS_ENABLED`, since
+   * self-hosted instances run the review service only when they opt in.
+   */
+  reviews: boolean
   /** Project environments switcher in the project sidebar (`/project/environments`, Cloud only). */
   projectEnvironments: boolean
+  /** Project transfers through the Organization API: direct move to one of your organizations and hand-off with a claim link, in one card. */
+  projectTransfers: boolean
+  /** Internal only, switched on from the debug menu. Usage monitors and the alerts they raise: the Usage sidebar's Monitors and Alerts pages, their quick actions, budget monitors in billing, and the alert events in the webhook event picker. */
+  alerts: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -108,10 +114,6 @@ export type ConsoleProfileFeatures = {
   analyticsTrafficFilter: boolean
   /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
   appwritePush: boolean
-  /** Inbound email (SMTP) trigger card in function Executions settings. */
-  functionEmail: boolean
-  /** Custom inbound email (SMTP) domains on the function Domains tab. */
-  functionEmailDomains: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -134,7 +136,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
-  vcsEntire: 'Entire Git provider',
   compliance: 'Compliance',
   orgApiKeys: 'Partners keys',
   agent: 'Agent',
@@ -145,7 +146,10 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  reviews: 'Review',
   projectEnvironments: 'Project environments',
+  projectTransfers: 'Project transfers',
+  alerts: 'Alerts',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -155,8 +159,6 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
   appwritePush: 'Appwrite push',
-  functionEmail: 'Function email trigger',
-  functionEmailDomains: 'Function email domains',
 }
 
 export type ConsoleProfile = {
@@ -191,7 +193,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountPasskeys: true,
       accountApplications: true,
       extraVcsOAuth: false,
-      vcsEntire: false,
       compliance: true,
       orgApiKeys: false,
       agent: false,
@@ -202,7 +203,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      reviews: false,
       projectEnvironments: false,
+      projectTransfers: false,
+      alerts: false,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -213,9 +217,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: false,
-      // Off until launch; enable from Debug → Feature flags.
-      functionEmail: false,
-      functionEmailDomains: false,
     },
   },
   'self-hosted': {
@@ -238,7 +239,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       accountPasskeys: false,
       accountApplications: false,
       extraVcsOAuth: false,
-      vcsEntire: false,
       compliance: false,
       orgApiKeys: false,
       agent: false,
@@ -249,7 +249,10 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      reviews: false,
       projectEnvironments: false,
+      projectTransfers: false,
+      alerts: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,
@@ -259,8 +262,6 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       analytics: false,
       analyticsTrafficFilter: false,
       appwritePush: false,
-      functionEmail: false,
-      functionEmailDomains: false,
     },
   },
 }
@@ -555,7 +556,7 @@ function parseEnvFeatureOverride(value: string): boolean | null {
 /**
  * Per-feature overrides from runtime env vars (e.g.
  * VITE_CONSOLE_USER_VERIFICATION, VITE_CONSOLE_COOKIE_BANNER,
- * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH, VITE_CONSOLE_VCS_ENTIRE,
+ * VITE_CONSOLE_BLOG_DRAFTS, VITE_CONSOLE_EXTRA_VCS_OAUTH,
  * VITE_CONSOLE_DATABASE_PITR_RESTORE,
  * VITE_CONSOLE_PROJECT_ENVIRONMENTS, VITE_CONSOLE_BROWSER_ALERTS), applied on top
  * of the canonical profile. A stored debug override still wins.
@@ -581,10 +582,6 @@ function applyEnvFeatureOverrides(
   const extraVcsOAuth = parseEnvFeatureOverride(config.extraVcsOAuth)
   if (extraVcsOAuth !== null) {
     next = { ...next, extraVcsOAuth }
-  }
-  const vcsEntire = parseEnvFeatureOverride(config.vcsEntire)
-  if (vcsEntire !== null) {
-    next = { ...next, vcsEntire }
   }
   const databasePitrRestore = parseEnvFeatureOverride(
     config.databasePitrRestore,

@@ -595,7 +595,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           <p className="text-muted-foreground">{t('Template not found')}</p>
           <Button variant="outline" className="mt-4" asChild>
             <Link
-              to="/projects/$projectId/sites/create/templates"
+              to="/projects/$projectId/sites/create"
               params={{ projectId: projectId! }}
             >
               {t('Browse templates')}

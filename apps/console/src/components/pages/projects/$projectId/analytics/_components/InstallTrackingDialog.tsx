@@ -171,8 +171,7 @@ export function InstallTrackingDialog({
   }, [open, initialPlatform, initialProxy])
 
   const endpoint = getProjectApiEndpoint(projectId)
-  // Ingestion takes either ID; the snippet ID is meant for client code.
-  const trackingId = property.snippetId || property.$id
+  const trackingId = property.$id
 
   // Two blocks: the install command, then all the code in one snippet.
   const guide = useMemo(
@@ -341,12 +340,6 @@ export function InstallTrackingDialog({
                   {t('Property ID')}
                   <CopyableId id={property.$id} size="xs" />
                 </span>
-                {property.snippetId ? (
-                  <span className="inline-flex items-center gap-2">
-                    {t('Snippet ID')}
-                    <CopyableId id={property.snippetId} size="xs" />
-                  </span>
-                ) : null}
               </div>
               <SetupStatus
                 eventReceived={eventReceived}

@@ -6,11 +6,13 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
-use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -19,7 +21,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Platform\Enum;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -27,8 +28,6 @@ use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createAppwriteMigration';
@@ -49,7 +48,7 @@ class Create extends Action
                 group: null,
                 name: 'createAppwriteMigration',
                 description: '/docs/references/migrations/migration-appwrite.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -62,6 +61,7 @@ class Create extends Action
             ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Source Project ID', false, ['dbForProject'])
             ->param('apiKey', '', new Text(512), 'Source API Key')
             ->param('onDuplicate', OnDuplicate::Fail->value, new WhiteList(OnDuplicate::values()), 'Behavior when a row with an existing $id is encountered. "fail" (default): abort on first conflict. "skip": silently ignore. "overwrite": replace existing row.', true, enum: new Enum(name: 'OnDuplicate'))
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
@@ -69,6 +69,7 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
             ->inject('publicHostname')
+            ->inject('deploymentHostname')
             ->callback($this->action(...));
     }
 
@@ -78,20 +79,23 @@ class Create extends Action
         string $projectId,
         string $apiKey,
         string $onDuplicate,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
         array $platform,
         Event $queueForEvents,
         MigrationPublisher $publisherForMigrations,
-        PublicHostname $publicHostname
+        PublicHostname $publicHostname,
+        DeploymentHostname $deploymentHostname
     ): void {
-        // Block a source endpoint that resolves to a private or reserved
-        // address to prevent SSRF into the internal network.
-        $hostname = $publicHostname;
-        if (!$hostname->isValid(\parse_url($endpoint, PHP_URL_HOST) ?? '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+        $host = \parse_url($endpoint, PHP_URL_HOST) ?: '';
+
+        if (!$deploymentHostname->isValid($host) && !$publicHostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $publicHostname->getDescription());
         }
+
+        $scopes = $this->authorize($request, $resources);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => Id::unique(),
@@ -110,6 +114,7 @@ class Create extends Action
             'errors' => [],
             'options' => [
                 'onDuplicate' => $onDuplicate,
+                'scopes' => $scopes,
             ],
         ]));
 

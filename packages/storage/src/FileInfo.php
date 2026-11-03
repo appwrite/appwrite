@@ -11,6 +11,7 @@ final readonly class FileInfo
         public int $size,
         public ?\DateTimeImmutable $modifiedAt = null,
         public ?string $etag = null,
+        public ?string $mimeType = null,
     ) {
     }
 }

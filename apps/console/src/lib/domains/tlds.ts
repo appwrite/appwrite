@@ -166,3 +166,20 @@ export const DOMAIN_SEARCH_TLDS = [
   'wtf',
   'zone',
 ] as const
+
+/** Search TLDs, led by the typed one when the search is a full domain outside the list. */
+export function getDomainSearchTlds(
+  baseName: string,
+  normalizedSearch: string,
+): readonly string[] {
+  if (!normalizedSearch.startsWith(`${baseName}.`)) return DOMAIN_SEARCH_TLDS
+  const typedTld = normalizedSearch.slice(baseName.length + 1)
+  const labels = typedTld.split('.')
+  const isComplete =
+    labels.every((label) => label.length > 0) &&
+    labels[labels.length - 1].length >= 2
+  if (!isComplete || DOMAIN_SEARCH_TLDS.some((tld) => tld === typedTld)) {
+    return DOMAIN_SEARCH_TLDS
+  }
+  return [typedTld, ...DOMAIN_SEARCH_TLDS]
+}

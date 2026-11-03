@@ -231,6 +231,7 @@ class Appwrite extends Destination
      * @param OnDuplicate $onDuplicate Behavior when a row with an existing $id is encountered.
      * @param (callable(Database $resource): string)|null $getDatabaseDSN Resolver for the destination's `_databases.database` value. Pass when the destination project's DSN differs from the source's, so the destination row carries its own DSN instead of inheriting the source's.
      * @param array<string, CollectionStructure> $collectionStructures Per-database-type metadata collection structures (e.g. `['vectorsdb' => ...]`), used instead of $collectionStructure when the imported database's type has an entry. Types with an entry also get type-specific metadata written (e.g. vectorsdb collection `dimension`).
+     * @param array<string>|null $scopes Scopes the migration was granted; imported API keys may hold no others. Null grants every scope.
      */
     public function __construct(
         string $project,
@@ -244,6 +245,7 @@ class Appwrite extends Destination
         protected OnDuplicate $onDuplicate = OnDuplicate::Fail,
         ?callable $getDatabaseDSN = null,
         protected array $collectionStructures = [],
+        protected ?array $scopes = null,
     ) {
         $this->projectId = $project;
         $this->endpoint = $endpoint;
@@ -727,7 +729,8 @@ class Appwrite extends Destination
                 SchemaAction::Overwrite => (function () use ($resource, $existing, $updatedAt, $isIncomplete): bool {
                     $document = [
                         'name' => $resource->getDatabaseName(),
-                        'search' => implode(' ', [$resource->getId(), $resource->getDatabaseName()]),
+                        'description' => $resource->getDescription(),
+                        'search' => implode(' ', [$resource->getId(), $resource->getDatabaseName(), $resource->getDescription()]),
                         'enabled' => $resource->getEnabled(),
                         'type' => empty($resource->getType()) ? 'legacy' : $resource->getType(),
                         'originalId' => empty($resource->getOriginalId()) ? null : $resource->getOriginalId(),
@@ -776,8 +779,9 @@ class Appwrite extends Destination
         $document = [
             '$id' => $resource->getId(),
             'name' => $resource->getDatabaseName(),
+            'description' => $resource->getDescription(),
             'enabled' => $resource->getEnabled(),
-            'search' => implode(' ', [$resource->getId(), $resource->getDatabaseName()]),
+            'search' => implode(' ', [$resource->getId(), $resource->getDatabaseName(), $resource->getDescription()]),
             '$createdAt' => $createdAt,
             '$updatedAt' => $updatedAt,
             'originalId' => empty($resource->getOriginalId()) ? null : $resource->getOriginalId(),
@@ -900,7 +904,8 @@ class Appwrite extends Destination
                         $existing->getId(),
                         new UtopiaDocument([
                             'name' => $resource->getTableName(),
-                            'search' => implode(' ', [$resource->getId(), $resource->getTableName()]),
+                            'description' => $resource->getDescription(),
+                            'search' => implode(' ', [$resource->getId(), $resource->getTableName(), $resource->getDescription()]),
                             'enabled' => $resource->getEnabled(),
                             '$permissions' => Permission::aggregate($resource->getPermissions()),
                             'documentSecurity' => $resource->getRowSecurity(),
@@ -925,7 +930,8 @@ class Appwrite extends Destination
             'documentSecurity' => $resource->getRowSecurity(),
             'enabled' => $resource->getEnabled(),
             'name' => $resource->getTableName(),
-            'search' => implode(' ', [$resource->getId(), $resource->getTableName()]),
+            'description' => $resource->getDescription(),
+            'search' => implode(' ', [$resource->getId(), $resource->getTableName(), $resource->getDescription()]),
             '$createdAt' => $createdAt,
             '$updatedAt' => $updatedAt,
         ] + $this->entityTypeMetadata($resource)));
@@ -1097,6 +1103,7 @@ class Appwrite extends Destination
             $column = new UtopiaDocument([
                 '$id' => Id::custom($attributeMetaId),
                 'key' => $resource->getKey(),
+                'description' => $resource->getDescription(),
                 'databaseInternalId' => $database->getSequence(),
                 'databaseId' => $database->getId(),
                 'collectionInternalId' => $table->getSequence(),
@@ -1499,6 +1506,7 @@ class Appwrite extends Destination
         $index = new UtopiaDocument([
             '$id' => Id::custom($indexMetaId),
             'key' => $resource->getKey(),
+            'description' => $resource->getDescription(),
             'status' => 'available', // processing, available, failed, deleting, stuck
             'databaseInternalId' => $database->getSequence(),
             'databaseId' => $database->getId(),
@@ -1788,6 +1796,7 @@ class Appwrite extends Destination
         );
 
         $this->dbForProject->updateDocument(self::META_ATTRIBUTES, $existingAttr->getId(), new UtopiaDocument([
+            'description' => $resource->getDescription(),
             'key' => $resource->getKey(),
             'type' => $type,
             'size' => $resource->getSize(),
@@ -1842,6 +1851,7 @@ class Appwrite extends Destination
         }
 
         $this->dbForProject->updateDocument(self::META_ATTRIBUTES, $existingAttr->getId(), new UtopiaDocument([
+            'description' => $resource->getDescription(),
             'key' => $resource->getKey(),
             'type' => $type,
             'options' => array_merge($destOptions, [
@@ -1895,7 +1905,8 @@ class Appwrite extends Destination
         $sourceType = empty($resource->getType()) ? 'legacy' : $resource->getType();
         $sourceOriginalId = empty($resource->getOriginalId()) ? null : $resource->getOriginalId();
 
-        return $existing->getAttribute('name')       === $resource->getDatabaseName()
+        return $existing->getAttribute('description', '') === $resource->getDescription()
+            && $existing->getAttribute('name')       === $resource->getDatabaseName()
             && $existing->getAttribute('enabled')    === $resource->getEnabled()
             && $existing->getAttribute('type')       === $sourceType
             && $existing->getAttribute('originalId') === $sourceOriginalId
@@ -1904,7 +1915,8 @@ class Appwrite extends Destination
 
     private function tableSpecMatches(UtopiaDocument $existing, Table $resource): bool
     {
-        if ($existing->getAttribute('name') !== $resource->getTableName()
+        if ($existing->getAttribute('description', '') !== $resource->getDescription()
+            || $existing->getAttribute('name') !== $resource->getTableName()
             || $existing->getAttribute('enabled') !== $resource->getEnabled()
             || $existing->getAttribute('documentSecurity') !== $resource->getRowSecurity()) {
             return false;
@@ -1921,6 +1933,10 @@ class Appwrite extends Destination
     /** Full-spec equality: short-circuits Overwrite to Skip when nothing changed. */
     private function attributeSpecMatches(UtopiaDocument $existing, Column|Attribute $resource, string $type, bool $isRelationship): bool
     {
+        if ($existing->getAttribute('description', '') !== $resource->getDescription()) {
+            return false;
+        }
+
         if (!$this->typeMatches($existing->getAttribute('type'), $type)) {
             return false;
         }
@@ -2036,6 +2052,10 @@ class Appwrite extends Destination
      */
     private function indexSpecMatches(UtopiaDocument $existingIdx, Index $resource): bool
     {
+        if ($existingIdx->getAttribute('description', '') !== $resource->getDescription()) {
+            return false;
+        }
+
         try {
             $deployed = UtopiaIndex::fromDocument($existingIdx);
             $wanted = UtopiaIndex::fromArray([
@@ -2405,7 +2425,9 @@ class Appwrite extends Destination
                     $compression,
                     $resource->getEncryption(),
                     $resource->getAntiVirus(),
-                    $resource->getTransformations()
+                    $resource->getTransformations(),
+                    description: $resource->getDescription(),
+                    stripMetadata: $resource->getStripMetadata(),
                 );
 
                 $resource->setId($response->id);
@@ -2701,6 +2723,7 @@ class Appwrite extends Destination
                     key: $resource->getKey(),
                     value: $resource->getValue(),
                     secret: $resource->isSecret(),
+                    description: $resource->getDescription(),
                 );
                 break;
             case Resource::TYPE_DEPLOYMENT:
@@ -2735,6 +2758,7 @@ class Appwrite extends Destination
             runtimeSpecification: $resource->getRuntimeSpecification() ?: null,
             deploymentRetention: $resource->getDeploymentRetention(),
             interval: $interval,
+            description: $resource->getDescription(),
         );
     }
 
@@ -2909,6 +2933,7 @@ class Appwrite extends Destination
                     runtimeSpecification: $resource->getRuntimeSpecification() ?: null,
                     deploymentRetention: $resource->getDeploymentRetention(),
                     scopes: $resource->getScopes(),
+                    description: $resource->getDescription(),
                 );
                 break;
             case Resource::TYPE_SITE_VARIABLE:
@@ -2919,6 +2944,7 @@ class Appwrite extends Destination
                     key: $resource->getKey(),
                     value: $resource->getValue(),
                     secret: $resource->isSecret(),
+                    description: $resource->getDescription(),
                 );
                 break;
             case Resource::TYPE_SITE_DEPLOYMENT:
@@ -3135,6 +3161,7 @@ class Appwrite extends Destination
             $resource->getSubscribe(),
             $resource->getQos(),
             $resource->getExpiry(),
+            description: $resource->getDescription(),
         );
     }
 
@@ -3294,6 +3321,7 @@ class Appwrite extends Destination
                 $scheduledAt,
                 $this->optionalString($data, 'replyToEmail'),
                 $this->optionalString($data, 'replyToName'),
+                emails: \is_array($data['emails'] ?? null) ? $data['emails'] : null,
             ),
             'sms' => $this->messaging->createSMS(
                 $resource->getId(),
@@ -3554,6 +3582,7 @@ class Appwrite extends Destination
                 'resourceId' => '',
                 'resourceType' => 'project',
                 'key' => $key,
+                'description' => $resource->getDescription(),
                 'value' => $resource->getValue(),
                 'secret' => $resource->isSecret(),
                 'search' => \implode(' ', [$variableId, $key, 'project']),
@@ -3792,6 +3821,7 @@ class Appwrite extends Destination
                 'projectInternalId' => $this->projectInternalId,
                 'projectId' => $this->projectId,
                 'name' => $resource->getWebhookName(),
+                'description' => $resource->getDescription(),
                 'events' => $resource->getEvents(),
                 'url' => $resource->getUrl(),
                 'security' => $resource->getSecurity(),
@@ -3973,6 +4003,7 @@ class Appwrite extends Destination
             'corporateEmails' => $resource->getDenyCorporateEmail(),
             'passwordPwned' => $resource->getPasswordPwned(),
             'passwordRotation' => $resource->getPasswordRotation(),
+            'realtimeGuests' => $resource->getDenyRealtimeGuests(),
             'passkeyRpId' => $this->resolvePasskeyRpId($resource->getPasskeyRpId(), \is_array($auths) ? $this->optionalString($auths, 'passkeyRpId') ?? '' : ''),
         ];
         foreach ($reported as $key => $value) {
@@ -4021,6 +4052,17 @@ class Appwrite extends Destination
 
     protected function createApiKey(ApiKey $resource): bool
     {
+        // An imported key holds no scope the migration was not granted
+        if ($this->scopes !== null && !empty(\array_diff($resource->getScopes(), $this->scopes))) {
+            throw new Exception(
+                resourceName: $resource->getName(),
+                resourceGroup: $resource->getGroup(),
+                resourceId: $resource->getId(),
+                message: 'API key has scopes this migration was not granted',
+                code: Exception::CODE_UNAUTHORIZED,
+            );
+        }
+
         $existing = $this->dbForPlatform->findOne('keys', [
             Query::equal('resourceType', ['projects']),
             Query::equal('resourceInternalId', [$this->projectInternalId]),
@@ -4044,6 +4086,7 @@ class Appwrite extends Destination
                 'resourceId' => $this->projectId,
                 'resourceType' => 'projects',
                 'name' => $resource->getApiKeyName(),
+                'description' => $resource->getDescription(),
                 'scopes' => $resource->getScopes(),
                 'expire' => empty($expire) ? null : $expire,
                 'sdks' => $resource->getSdks(),

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Psr7\Tests;
 
 use InvalidArgumentException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Utopia\Psr7\Request;
@@ -42,6 +43,49 @@ final class MessageTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         new Response\Factory()->createResponse()->withHeader("Bad\nHeader", 'value');
+    }
+
+    /**
+     * @return array<string, array{0: string|array<string>}>
+     */
+    public static function invalidHeaderValues(): array
+    {
+        return [
+            'carriage return' => ["one\rtwo"],
+            'line feed' => ["one\ntwo"],
+            'crlf' => ["one\r\nX-Injected: yes"],
+            'nul' => ["one\0two"],
+            'within a list' => [['valid', "in\nvalid"]],
+        ];
+    }
+
+    /**
+     * @param string|array<string> $value
+     */
+    #[DataProvider('invalidHeaderValues')]
+    public function testWithHeaderRejectsLineBreaksAndNul(string|array $value): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new Response\Factory()->createResponse()->withHeader('X-Test', $value);
+    }
+
+    /**
+     * @param string|array<string> $value
+     */
+    #[DataProvider('invalidHeaderValues')]
+    public function testWithAddedHeaderRejectsLineBreaksAndNul(string|array $value): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new Response\Factory()->createResponse()->withHeader('X-Test', 'valid')->withAddedHeader('X-Test', $value);
+    }
+
+    public function testHeaderValuesWithTabsAndUnicodeAreAccepted(): void
+    {
+        $response = new Response\Factory()->createResponse()->withHeader('X-Test', "one\ttwo é");
+
+        $this->assertSame("one\ttwo é", $response->getHeaderLine('X-Test'));
     }
 
     public function testRequestFactorySetsHostAndWithUriHonorsPreserveHostRules(): void

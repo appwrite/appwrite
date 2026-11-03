@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
 use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
@@ -20,6 +21,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Geo\Geo;
+use Appwrite\GraphQL\ResolverLock;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -38,6 +40,7 @@ use Appwrite\Utopia\Database\Hook\Usage;
 use Appwrite\Utopia\Database\Hook\UserEvents;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use GraphQL\Error\Error as GraphQLError;
 use OpenRuntimes\Orchestrator\Jobs;
 use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
@@ -55,6 +58,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
@@ -80,6 +84,8 @@ use Utopia\Usage\Tenant as UsageTenant;
  */
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
+
+    $context->set('resolverLock', fn (): ResolverLock => new ResolverLock(), []);
 
     $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
@@ -153,7 +159,8 @@ return function (Container $context): void {
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
-        if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
+        // A blocked actor keeps no capability, so the blocked check sees the actor
+        if ($user->isEmpty() || !$user->getAttribute('impersonator', false) || $user->getAttribute('status') === false) {
             return new Document();
         }
 
@@ -259,7 +266,7 @@ return function (Container $context): void {
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request, string $mode) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
@@ -268,8 +275,8 @@ return function (Container $context): void {
             $allowed[] = $consoleHostname;
         }
 
-        /* Add platform configured hostnames */
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        /* Add platform configured hostnames, admin mode carries the console session so only console hosts may use it */
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $platforms = $project->getAttribute('platforms', []);
             $hostnames = Platform::getHostnames($platforms);
             $allowed = [...$allowed, ...$hostnames];
@@ -288,21 +295,23 @@ return function (Container $context): void {
             $allowed[] = $hostname;
         }
 
-        /* Allow the request origin of rule */
-        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', ''))) {
+        /* Allow the request origin of rule, in admin mode only when it belongs to a trusted console project */
+        $trustedProjects = \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')));
+        $ruleAllowed = $mode !== APP_MODE_ADMIN || \in_array($rule->getAttribute('projectId', ''), $trustedProjects, true);
+        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', '')) && $ruleAllowed) {
             $allowed[] = $rule->getAttribute('domain', '');
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'request']);
+    }, ['platform', 'project', 'rule', 'request', 'mode']);
 
     /**
      * List of allowed request schemes for the request.
      */
-    $context->set('allowedSchemes', function (array $platform, Document $project) {
+    $context->set('allowedSchemes', function (array $platform, Document $project, string $mode) {
         $allowed = [...($platform['schemas'] ?? [])];
 
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             /* Add hardcoded schemes */
             $allowed[] = 'exp';
             $allowed[] = 'appwrite-callback-' . $project->getId();
@@ -314,7 +323,7 @@ return function (Container $context): void {
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project']);
+    }, ['platform', 'project', 'mode']);
 
     /**
      * Whether the request origin is verified against the request hostname.
@@ -513,10 +522,14 @@ return function (Container $context): void {
             }
         }
 
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
         if (
             ! $user ||
             $user->isEmpty() // Check a document has been found in the DB
-            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt)
         ) { // Validate user has valid login token
             $user = new User([]);
         }
@@ -527,9 +540,8 @@ return function (Container $context): void {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
             }
 
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException $error) {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
@@ -556,7 +568,7 @@ return function (Container $context): void {
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) { // Match JWT to active session
                 $user = new User([]);
             }
         }
@@ -598,7 +610,9 @@ return function (Container $context): void {
 
         $path = (string) \parse_url($request->getURI(), PHP_URL_PATH);
         $segments = \array_values(\array_filter(\explode('/', $path), fn (string $segment) => $segment !== ''));
-        if (($segments[0] ?? '') !== 'v1' || ($segments[1] ?? '') !== 'projects') {
+        $isProjectPath = ($segments[1] ?? '') === 'projects';
+        $isOrganizationProjectPath = ($segments[1] ?? '') === 'organization' && ($segments[2] ?? '') === 'projects';
+        if (($segments[0] ?? '') !== 'v1' || (!$isProjectPath && !$isOrganizationProjectPath)) {
             return '';
         }
 
@@ -646,7 +660,8 @@ return function (Container $context): void {
         $deprecatedProjectPathPrefix = '/v1/projects/';
         if (!empty($route)) {
             $isDeprecatedAlias = $projectIdFromPath !== '' &&
-                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
+                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix) &&
+                !\str_starts_with($route->getPath(), '/v1/organization/projects/');
 
             if ($isDeprecatedAlias) {
                 $projectId = $projectIdFromPath;
@@ -662,25 +677,28 @@ return function (Container $context): void {
         return $project;
     }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
 
-    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request) {
+    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request, Document $project, Document $console, string $mode) {
         if ($user->isEmpty()) {
             return;
         }
 
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
         $sessions = $user->getAttribute('sessions', []);
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
         if (! $sessionId && ! empty($authJWT)) {
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException) {
                 return;
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId)) {
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) {
                 $sessionId = $jwtSessionId;
             }
         }
@@ -696,7 +714,7 @@ return function (Container $context): void {
         }
 
         return;
-    }, ['user', 'store', 'proofForToken', 'request']);
+    }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service
@@ -755,11 +773,32 @@ return function (Container $context): void {
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 
         $complexity = function (int $complexity, array $args) {
-            $queries = Query::parseQueries($args['queries'] ?? []);
+            $rawQueries = $args['queries'] ?? [];
+
+            if (!\is_array($rawQueries)) {
+                if (\is_string($rawQueries)) {
+                    $rawQueries = [$rawQueries];
+                } else {
+                    throw new GraphQLError('Parameter "queries" must be an array of query strings.');
+                }
+            }
+
+            try {
+                $queries = Query::parseQueries($rawQueries);
+            } catch (QueryException $e) {
+                throw new GraphQLError($e->getMessage());
+            }
+
             $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
-            return $complexity * $limit;
+            // Anything past the cap fails the query either way; capping keeps the sum an int.
+            $over = (int) System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250) + 1;
+            if (!\is_int($limit) || $limit < 1 || $limit >= $over) {
+                return $over;
+            }
+
+            return \min($complexity * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
@@ -927,19 +966,19 @@ return function (Container $context): void {
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
-        $allowed = false;
+        $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
 
-        if (Http::isDevelopment()) {
-            $allowed = true;
-        } elseif (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
-            $allowed = true;
+        if (empty($host)) {
+            return '';
         }
 
-        if ($allowed) {
-            $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
-            if (! empty($host)) {
-                return $host;
-            }
+        if (Http::isDevelopment()) {
+            return $host;
+        }
+
+        // Keys may only override to the hostname they were issued for
+        if (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true && $apiKey->getHostname() === $host) {
+            return $host;
         }
 
         return '';
@@ -952,7 +991,15 @@ return function (Container $context): void {
             return null;
         }
 
-        $key = Key::decode($project, $team, $user, $key);
+        try {
+            $key = Key::decode($project, $team, $user, $key);
+        } catch (Exception $error) {
+            if ($error->getType() === Exception::USER_UNAUTHORIZED) {
+                return null;
+            }
+
+            throw $error;
+        }
 
         $userHeader = $request->getHeaderLine('x-appwrite-user');
         $organizationHeader = $request->getHeaderLine('x-appwrite-organization');
@@ -988,10 +1035,8 @@ return function (Container $context): void {
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // Instantiate with key, algo, maxAge and leeway.
-
             try {
-                $payload = $jwt->decode($tokenJWT);
+                $payload = EncryptionKey::decode($tokenJWT, RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY);
             } catch (JWTException $error) {
                 return new Document([]);
             }

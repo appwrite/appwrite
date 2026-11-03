@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Messaging\Http\Messages\Push;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -201,19 +202,15 @@ class Create extends Action
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
-            $scheduleTime = $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
-            } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
-            }
+            $delivery = \is_null($scheduledAt) ? \time() : (new \DateTime($scheduledAt))->getTimestamp();
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
+            $encoder = new JWT(EncryptionKey::current(), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
+                'exp' => $delivery + APP_PUSH_IMAGE_TOKEN_DURATION,
             ]);
 
             $image = [

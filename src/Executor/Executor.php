@@ -42,16 +42,29 @@ class Executor
     }
 
     /**
+     * The runtime id of a deployment. Both ids may contain hyphens, so when
+     * either does the project id length is appended to keep the pair unambiguous.
+     * Hyphen-free pairs keep the original id, so their running runtimes stay warm.
+     */
+    public static function runtimeId(string $projectId, string $deploymentId): string
+    {
+        $runtimeId = "{$projectId}-{$deploymentId}";
+
+        if (\str_contains($projectId, '-') || \str_contains($deploymentId, '-')) {
+            $runtimeId .= '-' . \strlen($projectId);
+        }
+
+        return $runtimeId;
+    }
+
+    /**
      * Delete Runtime
      *
      * Deletes a runtime and cleans up any containers remaining.
-     *
-     * @param string $projectId
-     * @param string $deploymentId
      */
-    public function deleteRuntime(string $projectId, string $deploymentId, string $suffix = '')
+    public function deleteRuntime(string $projectId, string $deploymentId)
     {
-        $runtimeId = "$projectId-$deploymentId" . $suffix;
+        $runtimeId = self::runtimeId($projectId, $deploymentId);
         $route = "/runtimes/$runtimeId";
 
         $response = $this->call($this->endpoint, self::METHOD_DELETE, $route, [
@@ -116,13 +129,20 @@ class Executor
         ?int $requestTimeout = null,
         string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS
     ) {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = self::runtimeId($projectId, $deploymentId);
         $route = '/runtimes/' . $runtimeId . '/executions';
 
         // Remove after migration
         if ($version === 'v3' || $version === 'v4') {
             $version = 'v5';
         }
+
+        // Never forward a header that could split into extra lines on the runtime request
+        $headers = \array_filter(
+            $headers,
+            fn (mixed $value, mixed $key) => \strpbrk($key . (\is_scalar($value) ? (string) $value : ''), "\r\n\x00") === false,
+            ARRAY_FILTER_USE_BOTH
+        );
 
         $params = [
             'runtimeId' => $runtimeId,

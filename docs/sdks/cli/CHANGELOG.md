@@ -1,5 +1,56 @@
 # Change Log
 
+## 28.9.0
+
+* Added: `migrations` commands for provider reports, imports, exports, retries, and migration management
+* Fixed: shell installer verified downloaded binaries against release checksums
+* Fixed: rejected incomplete JSON and trailing content before rewriting project and included configs
+* Fixed: respected Unicode characters, escapes and negations in deployment ignore patterns
+* Updated: required patched Go `1.26.10` when building the CLI from source
+* Updated: WAF command help covered request content and session age conditions
+* Updated: built against Go SDK `v7.15.0`
+
+## 28.8.0
+
+* Added: `account list-memberships`
+* Added: `--description` on create and update commands for databases, collections, tables, attributes, columns, indexes, buckets, functions, sites, variables, topics, webhooks and keys
+* Added: `--deny-list` on `project update-password-dictionary-policy` and `update-password-personal-data-policy`
+* Added: `--strip-metadata` on `storage create-bucket` and `update-bucket`
+* Added: `--self-signed` on `login` to accept a self-signed certificate for that sign-in
+* Fixed: an array flag given only `[]` sends an empty array, so lists such as `--deny-list` can be cleared
+* Fixed: `pull all` and `push all` skip console-only resources such as project settings with a warning when only an API key is configured, instead of stopping
+* Updated: built against sdk-for-go v7.14.0
+
+## 28.7.0
+
+* Added: `appwrite types -l python` generates Pydantic models for tables
+* Added: `--enum-style const` on `types` and `generate` emits erasable `as const` objects instead of TypeScript enums
+* Added: config directory follows `XDG_CONFIG_HOME` when `~/.appwrite` does not exist
+* Added: `create-query` on `databases`, `documentsdb` and `tablesdb` to send queries in the request body, with `--select`
+* Added: `--total` on list commands in `activities`, `analytics`, `backups`, `domains`, `mongo`, `mysql` and `postgresql`
+* Added: `--emails` on `messaging create-email` and `messaging update-email`
+* Fixed: `login` completes MFA when the account requires more factors
+* Fixed: `init site` downloads templates on Windows and no longer changes the global git config
+* Updated: built on Go SDK v7.13.0
+
+## 28.6.0
+
+* Added: `analytics` in `appwrite.config.json`, synced by `pull analytics`, `push analytics`, `pull all` and `push all`
+* Added: `pull analytics` and `pull all` skip analytics on servers that do not offer it
+
+## 28.5.0
+
+* Breaking: built on Go SDK v7.12.0; requests send response format `2.5.0` and JSON output follows the 2.5 shapes
+* Breaking: removed `--public` from `analytics create-property` and `analytics update-property`
+* Added: `appwrite init apns` to set up Apple Push Notification service for Appwrite Push
+* Added: `mongo`, `mysql` and `postgresql` `promote-restoration`, and `--restore-mode`, `--target-name` and `--auto-promote` on `create-restoration`
+* Added: `proxy create-smtp-rule`
+* Added: `--email-enabled` on `functions update`
+* Added: `project` commands `list-environments`, `create-environment`, `get-environment`, `update-environment` and `delete-environment`
+* Added: `project update-password-rotation-policy`
+* Added: `--fingerprints` on `project create-android-platform` and `update-android-platform`
+* Updated: generated TypeScript types take a typed `QueryBuilder` for queries
+
 ## 28.4.0
 
 * Added: `account` passkey commands `list-passkeys`, `create-passkey`, `get-passkey`, `update-passkey`, `delete-passkey` and `update-passkey-verification`

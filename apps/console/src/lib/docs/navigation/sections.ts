@@ -1977,6 +1977,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             label: 'Execute',
             href: '/docs/products/functions/execute',
           },
+          {
+            label: 'Email triggers',
+            href: '/docs/products/functions/email',
+          },
         ],
       },
       {

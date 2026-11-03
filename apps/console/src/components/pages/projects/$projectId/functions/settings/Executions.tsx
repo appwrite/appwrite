@@ -46,7 +46,7 @@ export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
-  const { features } = useConsoleProfile()
+  const { isCloud } = useConsoleProfile()
 
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
@@ -264,7 +264,8 @@ export function View() {
         </div>
       ),
     },
-    ...(features.functionEmail
+    // Inbound email is Cloud-only.
+    ...(isCloud
       ? [
           {
             id: 'email',

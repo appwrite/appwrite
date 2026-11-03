@@ -229,6 +229,12 @@ class Supabase extends NHost
         }
     }
 
+    #[\Override]
+    public function getDatabaseHost(): string
+    {
+        return $this->host;
+    }
+
     public function report(array $resources = [], array $resourceIds = []): array
     {
         $report = [];

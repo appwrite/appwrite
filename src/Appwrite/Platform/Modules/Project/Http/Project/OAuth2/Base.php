@@ -483,6 +483,27 @@ abstract class Base extends Action
     }
 
     /**
+     * The stored client secret is write-only, so it is only kept while every
+     * endpoint it is sent to stays the same. Changing one requires the secret
+     * again.
+     *
+     * @param array<string, mixed> $existing Decoded stored secret.
+     * @param array<string, ?string> $endpoints Stored key => new value, null when not provided.
+     */
+    protected function requireSecretOnEndpointChange(?string $clientSecret, array $existing, array $endpoints): void
+    {
+        if (!\is_null($clientSecret) || empty($existing['clientSecret'] ?? '')) {
+            return;
+        }
+
+        foreach ($endpoints as $key => $value) {
+            if (!\is_null($value) && $value !== ($existing[$key] ?? '')) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Param "' . static::getClientSecretParamName() . '" is required when changing the provider endpoint.');
+            }
+        }
+    }
+
+    /**
      * Apply the provided credential changes to the project's oAuthProviders map,
      * run the optional credential verification hook, persist the project, and
      * return the updated project document.

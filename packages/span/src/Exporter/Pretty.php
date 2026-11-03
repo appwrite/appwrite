@@ -30,11 +30,15 @@ readonly class Pretty implements Exporter
      * @param Closure(Span): bool|null $sampler Filter function. Defaults to exporting every span.
      * @param int $maxTraceFrames Maximum stacktrace frames to include for errors
      * @param int $width Line width for the separator
+     * @param resource|null $stdout Stream for non-error spans. Defaults to STDOUT.
+     * @param resource|null $stderr Stream for error spans. Defaults to STDERR.
      */
     public function __construct(
         ?Closure $sampler = null,
         private int $maxTraceFrames = 3,
         private int $width = 60,
+        private mixed $stdout = null,
+        private mixed $stderr = null,
     ) {
         $this->sampler = $sampler ?? static fn (Span $span): bool => true;
     }
@@ -48,7 +52,7 @@ readonly class Pretty implements Exporter
     {
         $error = $span->getError();
         $hasError = $error instanceof \Throwable;
-        $stream = $hasError ? STDERR : STDOUT;
+        $stream = $hasError ? ($this->stderr ?? STDERR) : ($this->stdout ?? STDOUT);
 
         $lines = [];
 
@@ -70,7 +74,7 @@ readonly class Pretty implements Exporter
 
         $maxKeyLen = 0;
         foreach (array_keys($attributes) as $key) {
-            $maxKeyLen = max($maxKeyLen, \strlen($key));
+            $maxKeyLen = max($maxKeyLen, \strlen($this->escape($key)));
         }
 
         foreach ($attributes as $key => $value) {
@@ -88,7 +92,7 @@ readonly class Pretty implements Exporter
             $limited = \array_slice($trace, 0, $this->maxTraceFrames);
 
             foreach ($limited as $frame) {
-                $file = $frame['file'] ?? 'unknown';
+                $file = $this->escape((string) ($frame['file'] ?? 'unknown'));
                 $line = $frame['line'] ?? '?';
                 $lines[] = self::DIM . "    at {$file}:{$line}" . self::RESET;
             }
@@ -107,7 +111,7 @@ readonly class Pretty implements Exporter
 
     private function header(Span $span, bool $hasError): string
     {
-        $action = $span->getAction();
+        $action = $this->escape($span->getAction());
         $duration = $span->get('span.duration');
         $traceId = $span->get('span.trace_id');
 
@@ -132,7 +136,7 @@ readonly class Pretty implements Exporter
 
     private function attribute(string $key, string|int|float|bool|null $value, int $padTo): string
     {
-        $padded = str_pad($key, $padTo);
+        $padded = str_pad($this->escape($key), $padTo);
         $keyStr = self::CYAN . $padded . self::RESET;
         $valStr = self::WHITE . $this->formatValue($value) . self::RESET;
 
@@ -141,9 +145,9 @@ readonly class Pretty implements Exporter
 
     private function error(\Throwable $error): string
     {
-        $type = $error::class;
-        $message = $error->getMessage();
-        $file = $error->getFile();
+        $type = $this->escape($error::class);
+        $message = $this->escape($error->getMessage());
+        $file = $this->escape($error->getFile());
         $line = $error->getLine();
 
         return self::RED . self::BOLD . "  {$type}" . self::RESET
@@ -157,8 +161,30 @@ readonly class Pretty implements Exporter
             $value === null => 'null',
             $value === true => 'true',
             $value === false => 'false',
-            default => (string) $value,
+            default => $this->escape((string) $value),
         };
+    }
+
+    /**
+     * Replace C0 controls and DEL so a value cannot forge extra log lines
+     * or inject terminal control sequences.
+     */
+    private function escape(string $value): string
+    {
+        $escaped = '';
+        $length = \strlen($value);
+
+        for ($i = 0; $i < $length; $i++) {
+            $byte = \ord($value[$i]);
+            if ($byte < 0x20 || $byte === 0x7F) {
+                $escaped .= '\\x' . \str_pad(\dechex($byte), 2, '0', \STR_PAD_LEFT);
+                continue;
+            }
+
+            $escaped .= $value[$i];
+        }
+
+        return $escaped;
     }
 
     private function formatDuration(float $seconds): string

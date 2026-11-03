@@ -52,13 +52,13 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Network/Validator/Origin.php",
         "src/Appwrite/Network/Validator/Redirect.php",
         "src/Appwrite/Auth/OAuth2",
         "src/Appwrite/Auth/OIDC/",
         "src/Appwrite/Auth/Passkey/",
         "src/Appwrite/Auth/MFA/",
+        "src/Appwrite/Auth/OTPToken.php",
         "src/Appwrite/Platform/Workers/Mails.php",
         "app/config/oAuthProviders.php",
         "packages/messaging/",
@@ -145,14 +145,13 @@
       "functional": false,
       "processes": null,
       "paths": [
-        "app/controllers/api/graphql.php",
-        "app/controllers/api/account.php",
-        "app/controllers/api/locale.php",
+        "src/Appwrite/Platform/Modules/GraphQL/",
         "src/Appwrite/Platform/Modules/Account/",
         "src/Appwrite/Platform/Modules/Avatars/",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/Locale/",
         "src/Appwrite/Platform/Modules/Messaging/",
         "src/Appwrite/Platform/Modules/Presences/",
         "src/Appwrite/Platform/Modules/Storage/",
@@ -179,11 +178,40 @@
       "paths": ["src/Appwrite/Platform/Modules/Advisor/"]
     },
     {
+      "name": "Reviews",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Reviews/",
+        "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Event/Message/Review.php",
+        "src/Appwrite/Event/Publisher/Review.php",
+        "packages/vcs/"
+      ]
+    },
+    {
+      "name": "Alerts",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "documentsdb": true,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Alerts/",
+        "src/Appwrite/Alert/",
+        "src/Appwrite/Schedule/Source/Alerts.php",
+        "src/Appwrite/Platform/Tasks/ScheduleAlerts.php",
+        "src/Appwrite/Platform/Workers/Notifications.php",
+        "app/config/alerts.php",
+        "app/config/locale/templates/email-alert.tpl"
+      ]
+    },
+    {
       "name": "Locale",
       "runner": "e2e",
       "functional": true,
       "processes": null,
-      "paths": ["app/controllers/api/locale.php", "app/config/locale/"]
+      "paths": ["src/Appwrite/Platform/Modules/Locale/", "app/config/locale/"]
     },
     {
       "name": "Projects",
@@ -193,11 +221,21 @@
       "documentsdb": true,
       "paths": [
         "src/Appwrite/Platform/Modules/Projects/",
-        "app/controllers/api/projects.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "src/Appwrite/Platform/Workers/Certificates.php",
-        "src/Appwrite/Certificates/"
+        "src/Appwrite/Certificates/",
+        "src/Appwrite/Maintenance/",
+        "src/Appwrite/Platform/Tasks/ScheduleMaintenance.php",
+        "src/Appwrite/Platform/Tasks/Schedule.php",
+        "src/Appwrite/Schedule/Source/Maintenance.php",
+        "src/Appwrite/Platform/Workers/Deletes.php",
+        "src/Appwrite/Platform/Workers/Maintenance.php",
+        "src/Appwrite/Event/Message/Maintenance.php",
+        "src/Appwrite/Event/Publisher/Maintenance.php",
+        "app/config/workers.php",
+        "app/init/resources.php",
+        "packages/schedule/"
       ]
     },
     {
@@ -210,7 +248,6 @@
         "app/realtime.php",
         "src/Appwrite/Realtime/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
@@ -334,7 +371,6 @@
       "paths": [
         "src/Appwrite/Platform/Modules/Webhooks/",
         "src/Appwrite/Platform/Modules/Account/",
-        "app/controllers/api/account.php",
         "src/Appwrite/Platform/Modules/Databases/",
         "src/Appwrite/Platform/Modules/Functions/",
         "src/Appwrite/Platform/Modules/Compute/",
@@ -429,7 +465,6 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/Project/",
-        "app/controllers/api/project.php",
         "src/Appwrite/Platform/Workers/StatsResources.php",
         "src/Appwrite/Platform/Workers/StatsUsage.php",
         "packages/smtp/"
@@ -465,6 +500,7 @@
       "processes": 1,
       "paths": [
         "app/mqtt.php",
+        "app/init/mqtt/",
         "src/Appwrite/Mqtt/",
         "src/Appwrite/Messaging/Adapter/Mqtt.php",
         "src/Appwrite/Messaging/Adapter/Push/",
@@ -532,7 +568,7 @@
       "storage_antivirus": "disabled",
       "compose_profiles": "",
       "wait": "executor",
-      "services": ["Functions", "Webhooks"]
+      "services": ["Functions", "Storage", "Webhooks"]
     }
   ]
 }

@@ -18,6 +18,7 @@ final class Build extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
@@ -33,6 +34,7 @@ final class Build extends Base
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

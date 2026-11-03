@@ -157,7 +157,7 @@ import {
 } from '@/lib/databases/sql-api-statements'
 import { randomUUID } from '@/lib/random-uuid'
 
-function isPostgresEngine(engine: string | undefined): boolean {
+function isPostgresEngine(engine: string | null | undefined): boolean {
   return matchesNativeEngine(engine, 'postgres')
 }
 

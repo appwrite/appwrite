@@ -149,7 +149,7 @@ bun run release:self-hosted X.Y.Z --specs  # after the appwrite/specs PR for X.Y
 - creates the changelog entry `src/content/changelog/entries/YYYY-MM-DD.markdoc` from the notes' Highlights, linking to the GitHub Release
 - regenerates the compose generator data (`composeData.ts`), including the ClickHouse and MongoDB helper files, from the appwrite checkout, after checking that its `APP_VERSION_STABLE` is `X.Y.Z`
 
-`--specs` moves the `@appwrite.io/specs` pin to `appwrite/specs` `main`, fails if that commit has no `specs/X.Y.x`, and regenerates the reference `versions.ts`. It runs last because it needs the specs PR merged (see [Specs](#specs)).
+`--specs` moves the `@appwrite.io/specs` pin to `appwrite/specs` `main`, fails if that commit has no `specs/X.Y.x`, and regenerates the reference `versions.ts`. It runs last because it needs the specs PR merged (see [Specs](#specs)). A new version widens the reference version type, which changes the text of any baselined console type error that names it; run `bun run lint:types --against origin/main` and fix what it reports before pushing (see `apps/console/AGENTS.md`).
 
 What stays manual:
 

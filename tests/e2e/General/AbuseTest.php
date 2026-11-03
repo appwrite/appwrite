@@ -12,6 +12,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideNone;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\System\System;
 
@@ -21,6 +22,8 @@ final class AbuseTest extends Scope
     use SideNone;
 
     private const int MEMBERSHIP_STATUS_PERIOD = 3600;
+
+    private const int ACCOUNT_CREATE_PERIOD = 3600;
 
     private const int COUNTING_SECONDS = 20;
 
@@ -422,6 +425,51 @@ final class AbuseTest extends Scope
         }
     }
 
+    #[Group('abuseEnabled')]
+    public function testAbuseGetFilePreview(): void
+    {
+        $bucketId = $this->createBucket()['bucketId'];
+        $max = 60;
+
+        $fileIds = [];
+        for ($i = 0; $i < 2; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'preview.png'),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+            $this->assertSame(201, $response['headers']['status-code']);
+            $fileIds[] = $response['body']['$id'];
+        }
+
+        $headers = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        // Each width is a distinct transform, so none of these are answered from the preview cache.
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $i + 1]);
+            $this->assertSame(200, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 1]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest previewing past the limit is throttled');
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[0] . '/preview', $headers, ['width' => $max + 2, 'fileId' => $fileIds[1]]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A query param cannot replace the file ID in the limit key');
+
+        $response = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileIds[1] . '/preview', $headers, ['width' => 1]);
+        $this->assertSame(200, $response['headers']['status-code'], 'Another file has its own limit');
+    }
+
     private function assertQueryLimited(string $path): void
     {
         $max = 120;
@@ -439,6 +487,24 @@ final class AbuseTest extends Scope
 
         $response = $this->client->call(Client::METHOD_POST, $path, $headers, ['queries' => []]);
         $this->assertSame(429, $response['headers']['status-code'], 'A guest querying past the limit is throttled');
+    }
+
+    private function assertAvatarFetchLimited(string $path): void
+    {
+        $max = 60;
+        $headers = [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '198.51.100.' . \random_int(1, 254),
+        ];
+
+        $this->startCountingInOneWindow(60);
+        for ($i = 0; $i < $max; $i++) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['url' => 'http://127.0.0.1/?request=' . $i]);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, $path, $headers, ['url' => 'http://127.0.0.1/?request=' . $max]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A guest fetching past the limit is throttled');
     }
 
     private function createCollectionOrTable(bool $isCollection = true): array
@@ -581,6 +647,114 @@ final class AbuseTest extends Scope
     }
 
     #[Group('abuseEnabled')]
+    public function testAbuseEmailSessionLimitPerProjectAccount(): void
+    {
+        $email = 'login.' . \bin2hex(\random_bytes(8)) . '@example.com';
+        $password = 'password-' . \bin2hex(\random_bytes(4));
+        $projects = [$this->getProject(), $this->getProject(true)];
+
+        foreach ($projects as $project) {
+            $user = $this->client->call(Client::METHOD_POST, '/users', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ], [
+                'userId' => Id::unique(),
+                'email' => $email,
+                'password' => $password,
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+        }
+
+        $headers = fn (array $project): array => [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+                'email' => $email,
+                'password' => 'wrong-password',
+            ]);
+            $this->assertSame(401, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => \strtoupper($email),
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the email case must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[1]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code'], 'Another project keeps its own limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers($projects[0]), [
+            'email' => $email,
+            'password' => 'wrong-password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A sign in on another project must not reset the limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseLimitIgnoresHost(): void
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '2001:db8::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+        ];
+
+        $this->startCountingInOneWindow(self::ACCOUNT_CREATE_PERIOD);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+                'userId' => Id::unique(),
+                'email' => 'host.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            ...$headers,
+            'host' => 'abuse-' . \bin2hex(\random_bytes(4)) . '.example.com',
+        ], [
+            'userId' => Id::unique(),
+            'email' => 'host.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the Host header must not reset the limit');
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
+            ...$headers,
+            'x-forwarded-host' => 'abuse-' . \bin2hex(\random_bytes(4)) . '.example.com',
+        ], [
+            'userId' => Id::unique(),
+            'email' => 'host.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'Changing the forwarded host must not reset the limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseGetAvatarImage(): void
+    {
+        $this->assertAvatarFetchLimited('/avatars/image');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseGetAvatarFavicon(): void
+    {
+        $this->assertAvatarFetchLimited('/avatars/favicon');
+    }
+
+    #[Group('abuseEnabled')]
     public function testAbuseCreateTransactionOperationsCollectionsAPI(): void
     {
         $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions/' . Id::unique() . '/operations', ['operations' => []], 120);
@@ -590,6 +764,176 @@ final class AbuseTest extends Scope
     public function testAbuseCreateTransactionOperationsTablesAPI(): void
     {
         $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions/' . Id::unique() . '/operations', ['operations' => []], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/databases/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/databases/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionCollectionsAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/databases/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/tablesdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/tablesdb/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionTablesAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/tablesdb/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/documentsdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/documentsdb/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionDocumentsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/documentsdb/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseCreateTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_POST, '/vectorsdb/transactions', [], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseUpdateTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_PATCH, '/vectorsdb/transactions/' . Id::unique(), ['rollback' => true], 120);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseDeleteTransactionVectorsDBAPI(): void
+    {
+        $this->assertGuestLimited(Client::METHOD_DELETE, '/vectorsdb/transactions/' . Id::unique(), [], 60);
+    }
+
+    #[Group('abuseEnabled')]
+    public function testAbuseLimitWithOutOfRangeContentRange(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-forwarded-for' => '2001:db8:c0::' . \dechex(\random_int(1, 0xffff)) . ':' . \dechex(\random_int(1, 0xffff)),
+            'content-range' => 'bytes 9223372036854775807-9223372036854775807/9223372036854775807',
+        ];
+
+        $this->startCountingInOneWindow(3600);
+        for ($i = 0; $i < 10; $i++) {
+            $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+                'userId' => Id::unique(),
+                'email' => 'range.' . \bin2hex(\random_bytes(8)) . '@example.com',
+                'password' => 'password',
+            ]);
+            $this->assertNotSame(429, $response['headers']['status-code'], 'Request ' . ($i + 1) . ' is within the limit');
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => 'range.' . \bin2hex(\random_bytes(8)) . '@example.com',
+            'password' => 'password',
+        ]);
+        $this->assertSame(429, $response['headers']['status-code'], 'A Content-Range header must not bypass the limit');
+    }
+
+    #[Group('abuseEnabled')]
+    public function testCreateFileWithOutOfRangeContentRange(): void
+    {
+        $bucketId = $this->createBucket()['bucketId'];
+
+        foreach ([
+            'bytes 9223372036854775807-9223372036854775807/9223372036854775807',
+            'bytes 0-99999999999999999999/99999999999999999999',
+        ] as $contentRange) {
+            $fileId = Id::unique();
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-id' => $fileId,
+                'content-range' => $contentRange,
+                'x-forwarded-for' => '203.0.113.' . \random_int(1, 254),
+            ], [
+                'fileId' => $fileId,
+                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'range.png'),
+            ]);
+
+            $this->assertSame(400, $response['headers']['status-code'], $contentRange);
+            $this->assertSame('storage_invalid_content_range', $response['body']['type'], $contentRange);
+        }
+    }
+
+    #[Group('abuseEnabled')]
+    public function testGraphQLComplexityIgnoresInvalidLimits(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $query = 'query listUsers($first: [String!], $second: [String!]) {
+            first: usersList(queries: $first) { total users { _id } }
+            second: usersList(queries: $second) { total }
+        }';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
+            'query' => $query,
+            'variables' => [
+                'first' => [Query::limit(10)->toString()],
+                'second' => [Query::limit(10)->toString()],
+            ],
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertArrayNotHasKey('errors', $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach ([[100, -100000], [PHP_INT_MAX, 10]] as [$first, $second]) {
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', $headers, [
+                'query' => $query,
+                'variables' => [
+                    'first' => [\json_encode(['method' => 'limit', 'values' => [$first]])],
+                    'second' => [\json_encode(['method' => 'limit', 'values' => [$second]])],
+                ],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertArrayHasKey('errors', $response['body']);
+            $this->assertStringContainsString('Max query complexity', (string) $response['body']['errors'][0]['message']);
+            $this->assertArrayNotHasKey('data', $response['body']);
+        }
     }
 
     /**

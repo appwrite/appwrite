@@ -138,7 +138,7 @@ class Update extends Action
         };
 
         try {
-            $deployment = $locks('jobs-deployment:' . $deploymentId, 30, $cancel, 10.0);
+            $deployment = $locks(Deployments::lock($project->getSequence(), $deploymentId), 30, $cancel, 10.0);
         } catch (Contention) {
             $deployment = $cancel();
         }

@@ -1,4 +1,5 @@
 import { Query, type Models } from '@appwrite.io/console'
+import { isCloudProfile } from '@/lib/console-profiles'
 import { getApexDomain } from '@/lib/utils/proxy-domains'
 
 /**
@@ -16,37 +17,39 @@ export type SmtpProxyRule = Models.ProxyRule & {
 
 export type SmtpDnsRecord = {
   type: 'MX' | 'TXT'
+  /** Host relative to the registrable domain, as DNS providers expect it. */
   name: string
   value: string
-}
-
-/** Absolute TXT hostname Cloud checks during SMTP verification. */
-export function getSmtpTxtHost(domain: string): string {
-  return `_appwrite.${domain.trim().toLowerCase()}`
+  ttl: number
+  /** MX preference; Cloud only checks the target, so any value works. */
+  priority?: number
 }
 
 /**
- * DNS provider "Name" for the MX record. Apex domains use `@`; otherwise the
- * full hostname (matches how HTTP domain verification labels CNAME names).
+ * DNS provider "Name" for a domain: `@` for an apex domain, otherwise the
+ * labels in front of the registrable domain (`mail` for `mail.example.com`).
+ * Providers append the zone themselves, so a full hostname here would end up
+ * as `mail.example.com.example.com`.
  */
-export function getSmtpMxRecordName(domain: string): string {
+export function getSmtpRecordName(domain: string): string {
   const normalized = domain.trim().toLowerCase()
   const apex = getApexDomain(normalized)
-  if (apex && apex === normalized) return '@'
-  return normalized
+  if (!apex || apex === normalized) return '@'
+  return normalized.slice(0, -(apex.length + 1))
 }
 
 /**
- * Server-side `protocol` filter for the proxy rules list (Cloud only).
- *
- * Cloud overrides `listRules` to accept `protocol` in queries, and a schema
- * patch backfills existing rules to `protocol='http'` before this Console
- * feature ships. Filtering on the server keeps limit/offset and `total`
- * correct for each protocol. Self-hosted rules have no `protocol` attribute,
- * so callers must only send this on Cloud.
+ * Extra list queries for views that only want web (HTTP) domains. Filtering
+ * on the server keeps email rows from taking up the fetched page. Only sent on
+ * Cloud: self-hosted rules have no `protocol` attribute to query.
  */
-export function proxyRuleProtocolQuery(protocol: 'http' | 'smtp'): string {
-  return Query.equal('protocol', [protocol])
+export function webDomainQueries(): string[] {
+  return isCloudProfile() ? [Query.equal('protocol', ['http'])] : []
+}
+
+/** SMTP rules share the HTTP rules list; `protocol` tells them apart. */
+export function isSmtpRule(rule: Models.ProxyRule): rule is SmtpProxyRule {
+  return (rule as SmtpProxyRule).protocol === 'smtp'
 }
 
 export function needsSmtpDnsVerification(
@@ -72,21 +75,25 @@ export function getSmtpDnsRecords(params: {
   const projectId = params.projectId.trim()
   const mxTarget = params.mxTarget.trim()
   if (!domain || !projectId) return []
+  const name = getSmtpRecordName(domain)
 
   return [
     ...(mxTarget
       ? [
           {
             type: 'MX' as const,
-            name: getSmtpMxRecordName(domain),
+            name,
             value: mxTarget,
+            ttl: 3600,
+            priority: 10,
           },
         ]
       : []),
     {
       type: 'TXT',
-      name: getSmtpTxtHost(domain),
+      name: name === '@' ? '_appwrite' : `_appwrite.${name}`,
       value: projectId,
+      ttl: 3600,
     },
   ]
 }

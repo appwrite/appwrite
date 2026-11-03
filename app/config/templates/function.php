@@ -2305,7 +2305,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.4.0',
+        'providerVersion' => '1.4.1',
         'variables' => [
             [
                 'name' => 'DODO_PAYMENTS_API_KEY',
@@ -2367,7 +2367,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.4.0',
+        'providerVersion' => '1.4.1',
         'variables' => [
             [
                 'name' => 'DODO_PAYMENTS_API_KEY',

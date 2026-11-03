@@ -3,6 +3,9 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Alert\Unsubscribe;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Messaging\Adapter\Console as ConsoleAdapter;
 use Appwrite\Utopia\Messaging\Adapter\Webhook as WebhookAdapter;
@@ -28,11 +31,14 @@ use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class Notifications extends Action
 {
     protected int $previewMaxLen = 150;
-    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+    // Zero-width non-joiner + no-break space only: spam filters such as rspamd treat these as
+    // preview padding, while direction marks (U+200E, U+200F) count as hidden text (HIDDEN_TEXT).
+    protected string $whitespaceCodes = '&#x200C;&nbsp;';
 
     /**
      * @var array<string, string>
@@ -41,6 +47,10 @@ class Notifications extends Action
         'b' => '<strong>',
         '/b' => '</strong>',
     ];
+
+    private PublicHostname $publicHostname;
+
+    private Telemetry $telemetry;
 
     public static function getName(): string
     {
@@ -57,11 +67,16 @@ class Notifications extends Action
             ->inject('dbForPlatform')
             ->inject('platform')
             ->inject('clientForWebhooks')
+            ->inject('publicHostname')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, Telemetry $telemetry): void
     {
+        $this->publicHostname = $publicHostname;
+        $this->telemetry = $telemetry;
+
         $payload = $message->getPayload();
 
         if (empty($payload)) {
@@ -229,9 +244,36 @@ class Notifications extends Action
         $body = $payload['body'] ?? '';
         $preview = $payload['preview'] ?? '';
 
-        $variables['subject'] = $subject;
-        $variables['heading'] = $variables['heading'] ?? $subject;
         $variables['year'] = \date('Y');
+
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+        }
+        $subject = \strip_tags($subjectTemplate->render());
+
+        $heading = $subject;
+        if (!empty($variables['heading'])) {
+            $headingTemplate = Template::fromString($variables['heading']);
+            foreach ($variables as $key => $value) {
+                $headingTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $heading = $headingTemplate->render(useContent: true);
+        }
+        $variables['subject'] = $subject;
+        $variables['heading'] = $heading;
+
+        // Expand the body's placeholders once, so values are inserted literally
+        if (!empty($body)) {
+            $bodyContent = Template::fromString($body);
+            foreach ($variables as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value);
+            }
+            foreach ($this->richTextParams as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $body = $bodyContent->render(useContent: true);
+        }
 
         $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'] ?? '';
@@ -245,11 +287,12 @@ class Notifications extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
         if (!empty($preview)) {
@@ -259,9 +302,10 @@ class Notifications extends Action
             }
             $preview = \strip_tags($previewTemplate->render());
 
-            $previewLen = \strlen($preview);
+            // Pad up to previewMaxLen characters; each padding unit is two characters
+            $previewLen = \mb_strlen($preview);
             if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace = \str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                $previewWhitespace = \str_repeat($this->whitespaceCodes, \intdiv($this->previewMaxLen - $previewLen, 2));
             }
         }
 
@@ -270,32 +314,11 @@ class Notifications extends Action
 
         $body = $bodyTemplate->render();
 
-        $subjectTemplate = Template::fromString($subject);
-        foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value);
-        }
-        $subject = \strip_tags($subjectTemplate->render());
-
         $recipientHash = self::buildRecipientHash($recipient);
         $trackingSecret = System::getEnv('_APP_NOTIFICATIONS_TRACKING_SECRET');
         if ($messageId !== '' && !empty($trackingSecret)) {
             $body = $this->injectTrackingLogo($body, $messageId, $recipient['channel'], $recipientHash, $project, $trackingSecret);
         }
-
-        // A pooled adapter belongs to this send alone; a project's own SMTP is
-        // dialled for it and closed after.
-        $adapter = empty($smtp) ? null : new SMTP(
-            host: $smtp['host'],
-            port: (int) $smtp['port'],
-            username: $smtp['username'] ?? '',
-            password: $smtp['password'] ?? '',
-            smtpSecure: $smtp['secure'] ?? '',
-            smtpAutoTLS: false,
-            xMailer: 'Appwrite Mailer',
-            timeout: 10,
-            keepAlive: false,
-            timelimit: 30,
-        );
 
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $defaultFromName = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
@@ -349,9 +372,35 @@ class Notifications extends Action
                 replyToEmail: $replyTo,
                 attachments: $attachments,
                 html: true,
+                headers: \is_array($payload['headers'] ?? null) ? $payload['headers'] : [],
+            );
+            $emailMessage
+                ->setOrigin(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setTemplate(($payload['template'] ?? '') ?: 'unknown');
+
+            // A pooled adapter belongs to this send alone; a project's own SMTP is
+            // dialled for it, on the addresses just checked, and closed after.
+            $adapter = empty($smtp) ? null : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: false,
+                timelimit: 30,
+                addresses: new Host($this->publicHostname)->addresses($smtp['host']),
             );
 
-            $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+            $telemetry = $this->telemetry;
+            // Pooled adapters are shared with other senders, so bind the counter on every use.
+            $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
+                $adapter->setTelemetry($telemetry);
+
+                return $adapter->send($emailMessage);
+            };
 
             $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
         } catch (InvalidArgumentException $error) {
@@ -516,7 +565,7 @@ class Notifications extends Action
             'type' => $payload['type'] ?? 'info',
             'channel' => $channel,
             'projectId' => $project->getId(),
-            'projectInternalId' => $project->getSequence(),
+            'projectInternalId' => self::internalId($project),
             'resourceType' => $recipient['resourceType'],
             'resourceId' => $recipient['resourceId'],
             'resourceInternalId' => $recipient['resourceInternalId'],
@@ -603,6 +652,10 @@ class Notifications extends Action
             return $payloadSmtp;
         }
 
+        if ($this->isPlatformMail($payload)) {
+            return [];
+        }
+
         $smtp = $project->getAttribute('smtp', []);
         if (!\is_array($smtp) || empty($smtp['enabled'] ?? false)) {
             return [];
@@ -619,6 +672,18 @@ class Notifications extends Action
             'replyToEmail' => $smtp['replyToEmail'] ?? $smtp['replyTo'] ?? '',
             'replyToName' => $smtp['replyToName'] ?? '',
         ];
+    }
+
+    /**
+     * Mail the platform writes to a project's console users, such as an alert
+     * rule changing state, goes out through the platform mailer, never through
+     * the SMTP server the project configured for its own users.
+     *
+     * @param array<string, mixed> $payload
+     */
+    protected function isPlatformMail(array $payload): bool
+    {
+        return ($payload['template'] ?? '') === MAIL_TEMPLATE_ALERT;
     }
 
     private function validateConsoleRecipient(array $recipient): void
@@ -656,6 +721,16 @@ class Notifications extends Action
     }
 
     /**
+     * The project a notification row is filed under, and the tracking token must match. The console project is
+     * not stored, so its sequence is empty or its ID ('console'), which the BIGINT column refuses: a record that
+     * fails after the email went out retries the message and sends the email again. It is filed under 0.
+     */
+    private static function internalId(Document $project): string
+    {
+        return $project->getId() === 'console' ? '0' : (string) $project->getSequence();
+    }
+
+    /**
      * Splice a visible tracking logo before the last `</body>` tag (or
      * append at the end if the body has no closing tag). The logo URL
      * carries a signed JWT identifying the notification recipient, which the
@@ -670,7 +745,7 @@ class Notifications extends Action
                 'channel' => $channel,
                 'recipientHash' => $recipientHash,
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
+                'projectInternalId' => self::internalId($project),
                 'purpose' => 'notification_track',
             ]);
 

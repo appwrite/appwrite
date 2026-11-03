@@ -55,7 +55,7 @@ parameters:
 			path: src/Destinations/Appwrite.php
 
 		-
-			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength'' on mixed\.$#'
+			message: '#^Cannot access offset ''canonicalEmails''\|''corporateEmails''\|''disposableEmails''\|''freeEmails''\|''membershipsUserAccessedAt''\|''mfaFactors''\|''passkeyRpId''\|''passwordPwned''\|''passwordRotation''\|''passwordStrength''\|''realtimeGuests'' on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: src/Destinations/Appwrite.php
@@ -1357,6 +1357,12 @@ parameters:
 			path: src/Resources/Auth/Policies.php
 
 		-
+			message: '#^Parameter \$denyRealtimeGuests of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects bool\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Resources/Auth/Policies.php
+
+		-
 			message: '#^Parameter \$passkeyRpId of class Utopia\\Migration\\Resources\\Auth\\Policies constructor expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1531,13 +1537,13 @@ parameters:
 			path: src/Resources/Database/Collection.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null\}, array\{id\: string, name\: string, type\: string\} given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null, \.\.\.\}, array\{id\: string, name\: string, type\: string\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Database/Collection.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null\}, array\{id\: string, name\: string, type\: ''documentsdb''\} given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null, \.\.\.\}, array\{id\: string, name\: string, type\: ''documentsdb''\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Database/Collection.php
@@ -1555,7 +1561,7 @@ parameters:
 			path: src/Resources/Database/Columns/BigInt.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string, \.\.\.\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/BigInt.php
@@ -1567,7 +1573,7 @@ parameters:
 			path: src/Resources/Database/Columns/BigInt.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: bool\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: bool\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Boolean.php
@@ -1579,7 +1585,7 @@ parameters:
 			path: src/Resources/Database/Columns/Boolean.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: string\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: string\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/DateTime.php
@@ -1597,7 +1603,7 @@ parameters:
 			path: src/Resources/Database/Columns/Decimal.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: float\|null, formatOptions\: array\{min\: float\|null, max\: float\|null\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: float\|null, formatOptions\: array\{min\: float\|null, max\: float\|null\}, createdAt\: string, updatedAt\: string, \.\.\.\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Decimal.php
@@ -1633,7 +1639,7 @@ parameters:
 			path: src/Resources/Database/Columns/Integer.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, array\: bool, default\: int\|null, formatOptions\: array\{min\: int\|null, max\: int\|null\}, createdAt\: string, updatedAt\: string, \.\.\.\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Integer.php
@@ -1651,7 +1657,7 @@ parameters:
 			path: src/Resources/Database/Columns/Line.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Line.php
@@ -1693,7 +1699,7 @@ parameters:
 			path: src/Resources/Database/Columns/ObjectType.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/ObjectType.php
@@ -1711,7 +1717,7 @@ parameters:
 			path: src/Resources/Database/Columns/Point.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Point.php
@@ -1729,7 +1735,7 @@ parameters:
 			path: src/Resources/Database/Columns/Polygon.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Polygon.php
@@ -1789,7 +1795,7 @@ parameters:
 			path: src/Resources/Database/Columns/Relationship.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, options\: array\{relatedCollection\: string, relationType\: string, twoWay\: bool, twoWayKey\: string\|null, onDelete\: string, side\: string\}, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, options\: array\{relatedCollection\: string, relationType\: string, twoWay\: bool, twoWayKey\: string\|null, onDelete\: string, side\: string\}, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Relationship.php
@@ -1831,7 +1837,7 @@ parameters:
 			path: src/Resources/Database/Columns/Vector.php
 
 		-
-			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, size\: int, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string\}\.$#'
+			message: '#^Offset ''collection'' might not exist on array\{key\: string, collection\?\: array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\: bool, permissions\: array\<string\>\|null\}, size\: int, required\: bool, default\: array\<mixed\>\|null, createdAt\: string, updatedAt\: string, description\?\: string\}\.$#'
 			identifier: offsetAccess.notFound
 			count: 1
 			path: src/Resources/Database/Columns/Vector.php
@@ -1885,7 +1891,7 @@ parameters:
 			path: src/Resources/Database/Row.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null\}, array\{id\: string, name\: string\} given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null, \.\.\.\}, array\{id\: string, name\: string\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Resources/Database/Table.php
@@ -2965,55 +2971,55 @@ parameters:
 			path: src/Resources/Templates/EmailTemplate.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$duration\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$duration\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$enabled\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$enabled\.$#'
 			identifier: property.notFound
 			count: 4
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$total\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$total\.$#'
 			identifier: property.notFound
 			count: 3
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userAccessedAt\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userAccessedAt\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userEmail\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userEmail\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userId\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userId\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userMFA\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userMFA\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userName\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userName\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userPhone\.$#'
+			message: '#^Access to an undefined property Appwrite\\Models\\PolicyDenyAliasedEmail\|Appwrite\\Models\\PolicyDenyCorporateEmail\|Appwrite\\Models\\PolicyDenyDisposableEmail\|Appwrite\\Models\\PolicyDenyFreeEmail\|Appwrite\\Models\\PolicyDenyRealtimeGuests\|Appwrite\\Models\\PolicyMembershipPrivacy\|Appwrite\\Models\\PolicyMfaFactors\|Appwrite\\Models\\PolicyPasskey\|Appwrite\\Models\\PolicyPasswordDictionary\|Appwrite\\Models\\PolicyPasswordHistory\|Appwrite\\Models\\PolicyPasswordPersonalData\|Appwrite\\Models\\PolicyPasswordPwned\|Appwrite\\Models\\PolicyPasswordRotation\|Appwrite\\Models\\PolicyPasswordStrength\|Appwrite\\Models\\PolicySessionAlert\|Appwrite\\Models\\PolicySessionDuration\|Appwrite\\Models\\PolicySessionInvalidation\|Appwrite\\Models\\PolicySessionLimit\|Appwrite\\Models\\PolicyUserLimit\:\:\$userPhone\.$#'
 			identifier: property.notFound
 			count: 1
 			path: src/Sources/Appwrite.php
@@ -3517,13 +3523,13 @@ parameters:
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null\}, array given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\Database\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\: string, status\: string\|null, \.\.\.\}, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null\}, array given\.$#'
+			message: '#^Parameter \#1 \$array of static method Utopia\\Migration\\Resources\\Database\\DocumentsDB\:\:fromArray\(\) expects array\{id\: string, name\: string, createdAt\: string, updatedAt\: string, enabled\: bool, originalId\: string\|null, database\?\: string, status\: string\|null, \.\.\.\}, array given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite.php
@@ -3799,7 +3805,7 @@ parameters:
 			path: src/Sources/Appwrite.php
 
 		-
-			message: '#^Parameter \#2 \$entity of static method Utopia\\Migration\\Sources\\Appwrite\:\:getEntity\(\) expects array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\?\: bool, rowSecurity\?\: bool, permissions\: array\<string\>\|null, createdAt\: string, updatedAt\: string, \.\.\.\}, array\{id\: mixed, name\: mixed, rowSecurity\: mixed, documentSecurity\: mixed, permissions\: mixed, createdAt\: mixed, updatedAt\: mixed, enabled\: mixed, \.\.\.\} given\.$#'
+			message: '#^Parameter \#2 \$entity of static method Utopia\\Migration\\Sources\\Appwrite\:\:getEntity\(\) expects array\{database\: array\{id\: string, name\: string\}, name\: string, id\: string, documentSecurity\?\: bool, rowSecurity\?\: bool, permissions\: array\<string\>\|null, createdAt\: string, updatedAt\: string, \.\.\.\}, array\{id\: mixed, name\: mixed, description\: string, rowSecurity\: mixed, documentSecurity\: mixed, permissions\: mixed, createdAt\: mixed, updatedAt\: mixed, \.\.\.\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/Sources/Appwrite.php
@@ -7705,7 +7711,7 @@ parameters:
 			path: tests/General/CSVTest.php
 
 		-
-			message: '#^Property Utopia\\Migration\\Destinations\\CSV@anonymous/tests/General/CSVTest\.php\:124\:\:\$resourceChildId has no type specified\.$#'
+			message: '#^Property Utopia\\Migration\\Destinations\\CSV@anonymous/tests/General/CSVTest\.php\:127\:\:\$resourceChildId has no type specified\.$#'
 			identifier: missingType.property
 			count: 1
 			path: tests/General/CSVTest.php

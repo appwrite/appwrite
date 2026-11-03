@@ -1,0 +1,79 @@
+---
+layout: article
+title: Send events over REST
+description: Send Appwrite Analytics events with a plain HTTP request from any platform, including native iOS and Android apps, games, and command-line tools.
+---
+
+Any client that can make an HTTP request can send analytics events. Use REST when your platform has no tracking helper, such as a native iOS or Android app, a game engine, a smart TV app, or a command-line tool.
+
+Each event is one `POST` request to your property. Client-side events need no API key.
+
+# Send an event {% #send-an-event %}
+
+Send the event name and the URL it happened on.
+
+```bash
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -d '{
+        "name": "pageview",
+        "url": "https://example.com/pricing",
+        "referrer": "https://www.google.com/"
+    }'
+```
+
+Appwrite responds with `204 No Content`.
+
+An event named `pageview` counts as a pageview. Any other name is a custom event. Add `props` to attach details, as a flat list that alternates keys and values.
+
+```bash
+curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
+    -H 'Content-Type: application/json' \
+    -H 'X-Appwrite-Project: <PROJECT_ID>' \
+    -d '{
+        "name": "signup_completed",
+        "url": "https://example.com/signup",
+        "props": ["plan", "pro", "source", "pricing_page"]
+    }'
+```
+
+# Parameters {% #parameters %}
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `name` | string | Required. The event name, up to 64 characters. |
+| `url` | string | Required. The full URL the event happened on, including the scheme, such as `https://example.com/pricing`. For a native app, use your own scheme, such as `app://ios/settings`. |
+| `domain` | string | The hostname to record, which also identifies the visitor. Defaults to the hostname of `url`. |
+| `referrer` | string | The URL of the page that sent the visitor. |
+| `screenWidth` | integer | The width of the window or viewport in CSS or logical pixels. |
+| `scrollDepth` | integer | How far the visitor scrolled, from `0` to `100` percent. |
+| `engagementTime` | integer | Seconds the visitor was active since you last sent this value. |
+| `sessionHash` | string | A value, up to 128 characters, that keeps separate visits apart when they share a visitor ID. It doesn't change the visitor ID. |
+| `props` | string[] | Custom props as alternating keys and values. Up to 32 items, so 16 key and value pairs, each up to 255 characters. |
+| `userId`, `ip`, `userAgent` | string | Server-side only. They need an API key. See [Track events from your server](/docs/products/analytics/server-side). |
+
+Appwrite records the path of `url` without its query string and fragment. Before it drops the query string, it reads UTM parameters and ad click IDs from it, so `https://example.com/?utm_source=newsletter` is recorded as the page `/` with `newsletter` as its UTM source. See [Traffic sources](/docs/products/analytics/sources).
+
+Include a path in `url`, even if it's only `/`. For a URL without one, such as `https://example.com`, Appwrite records the whole URL as the page.
+
+# Who an event belongs to {% #visitors %}
+
+Appwrite counts visitors from the request itself: the IP address it came from, its `User-Agent` header, and the hostname. Send events from the user's device, so every user is counted separately and located by their own IP address.
+
+Appwrite reads the browser, operating system, and device from the `User-Agent` header. When it doesn't recognize the value, those fields stay empty and the event still counts. For how visitors and sessions are counted, see [Visitors and sessions](/docs/products/analytics/visitors).
+
+# Origins {% #origins %}
+
+Browsers add an `Origin` header to these requests, and so does the Appwrite Flutter SDK. When a request has an `Origin` header, Appwrite checks it against the apps under **Apps** in your project. A browser origin must match a Web app's hostname. An app origin, such as `appwrite-android://com.example.shop`, must be for a platform you added an app for. To accept only your own package, add its origin to the property's [allowed origins](/docs/products/analytics/properties#allowed-origins).
+
+Native HTTP clients usually send no `Origin` header. Appwrite accepts those requests while the property allows every origin, which is the default. If you limit a property's allowed origins, requests without a matching `Origin` header are rejected unless they use an API key with the `analytics.write` scope. See [Properties](/docs/products/analytics/properties).
+
+# Errors {% #errors %}
+
+| Status | Type | Cause |
+| --- | --- | --- |
+| `400` | `general_argument_invalid` | A parameter is missing or invalid, such as a URL without a scheme or a name over 64 characters. |
+| `401` | `general_access_forbidden` | The origin isn't in the property's allowed origins, or the request sets `userId`, `ip`, or `userAgent` without an API key. |
+| `403` | `general_unknown_origin` | The `Origin` header doesn't belong to an app in the project. |
+| `404` | `analytics_property_not_found` | The property ID is wrong, or the property is turned off. |

@@ -615,7 +615,7 @@ parameters:
 		-
 			message: '#^Cannot call method execute\(\) on Utopia\\Http\\Http\|null\.$#'
 			identifier: method.nonObject
-			count: 28
+			count: 29
 			path: tests/HttpTest.php
 
 		-

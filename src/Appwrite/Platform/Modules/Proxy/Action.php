@@ -116,7 +116,7 @@ class Action extends PlatformAction
             $restrictions[] = ValidatorDomain::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
         }
 
-        $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '') . ',' . System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
         foreach (\explode(',', $functionsDomains) as $functionsDomain) {
             if (empty($functionsDomain)) {
                 continue;

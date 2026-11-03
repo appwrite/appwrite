@@ -117,6 +117,33 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_OPENSSL_KEY_V2',
+                'description' => 'The next server secret key, used once `_APP_OPENSSL_KEY_CURRENT` is set to 2. Rotate by adding the next version, making it current, re-encrypting stored data with the `encryption` task, then raising `_APP_OPENSSL_KEY_OLDEST`. Keep every version that still encrypts stored data or files.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_CURRENT',
+                'description' => 'Version of `_APP_OPENSSL_KEY_V{version}` that signs new tokens and encrypts new data. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_OPENSSL_KEY_OLDEST',
+                'description' => 'Oldest key version still accepted when verifying tokens and signatures, such as JWTs and ephemeral API keys. Every configured version from this one up is accepted. Raise it to retire a key. Stored data keeps decrypting with the version it records. Defaults to 1.',
+                'introduction' => '2.7.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_NOTIFICATIONS_TRACKING_SECRET',
                 'description' => 'Secret key used to sign notification logo tracking tokens. This must be the same value for API containers and notification workers. Change it from the default value before running in production.',
                 'introduction' => '1.9.0',
@@ -217,7 +244,7 @@ return [
             ],
             [
                 'name' => '_APP_DNS_EXTERNAL',
-                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source, an avatar URL or a project\'s SMTP server before Appwrite connects to it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -226,7 +253,7 @@ return [
             ],
             [
                 'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
-                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars) or connecting to a project\'s SMTP server (project SMTP and messaging SMTP providers). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
                 'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
@@ -434,7 +461,7 @@ return [
             [
                 'name' => '_APP_LOGGING_FORMAT',
                 'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
-                'introduction' => '1.9.6',
+                'introduction' => '2.7.0',
                 'default' => 'pretty',
                 'required' => false,
                 'question' => '',
@@ -445,6 +472,15 @@ return [
                 'description' => 'Internal Worker per core for the API and Executor containers. Can be configured to optimize performance. Realtime ignores this and runs a single worker per container; use _APP_WORKERS_NUM to override.',
                 'introduction' => '0.13.0',
                 'default' => 6,
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MEMORY_LIMIT',
+                'description' => 'PHP memory limit of each Appwrite process, including the API, Realtime, workers and tasks. Accepts any PHP memory_limit value, such as \'2G\', or \'-1\' for no limit. Raise it when a Realtime container holds thousands of connections. By default, set to \'512M\'.',
+                'introduction' => '2.6.2',
+                'default' => '512M',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -520,6 +556,33 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_SUBSCRIPTIONS',
+                'description' => 'Maximum number of subscriptions one realtime connection can hold. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_CHANNELS',
+                'description' => 'Maximum number of channels one realtime connection can subscribe to, counted across all of its subscriptions. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_LIMIT_REALTIME_QUERIES',
+                'description' => 'Maximum number of queries one realtime connection can hold, counted across all of its subscriptions and including queries nested in and/or. Raising it lets one connection use more of the realtime server memory. Default value is: 100.',
+                'introduction' => '2.7.0',
+                'default' => '100',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ]
         ],
     ],
@@ -589,6 +652,15 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_MAX_CONNECTIONS',
+                'description' => 'Maximum number of connections the bundled PostgreSQL server accepts. Every API worker and worker coroutine holds its own connections, so raise it on hosts with many cores. Default value is: 500.',
+                'introduction' => '2.7.0',
+                'default' => '500',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
             [
                 'name' => '_APP_DB_ADAPTER_DOCUMENTSDB',
@@ -994,6 +1066,16 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_EXIFTOOL_HOST',
+                'description' => 'The host of the ExifTool service (for example `http://appwrite-exiftool:8080`) used to remove metadata from images uploaded to buckets with `stripMetadata` enabled. Leave empty to disable stripping; those images are then stored as uploaded.',
+                'introduction' => '2.6.0',
+                'default' => '',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_ANTIVIRUS',
                 'description' => 'This variable allows you to disable the internal anti-virus scans. This value is set to \'disabled\' by default, to enable the scans set the value to \'enabled\'. Before enabling, you must add the ClamAV service and depend on it on main Appwrite service.',
                 'introduction' => '',
@@ -1343,7 +1425,7 @@ return [
                 'default' => 'your-secret-key',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_EXECUTOR_HOST',
@@ -1385,12 +1467,12 @@ return [
             ],
             [
                 'name' => '_APP_JOBS_SECRET',
-                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. Make sure to change this.',
+                'description' => 'The secret used to authenticate with the jobs-service and to sign/verify job callback (HMAC) requests. The installer generates a unique value. `/v1/jobs/event` rejects signatures when this is empty or the public `your-secret-key` placeholder. **Keep it a secret**.',
                 'introduction' => '1.9.0',
-                'default' => 'your-secret-key',
+                'default' => '',
                 'required' => false,
                 'question' => '',
-                'filter' => ''
+                'filter' => 'token'
             ],
             [
                 'name' => '_APP_JOBS_ENDPOINT',
@@ -1771,7 +1853,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_PLUGIN',
                 'description' => 'Entire plugin slug, as registered with Entire. It names the plugin in Entire\'s API and is the audience of the webhook tokens Entire signs for it.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1780,7 +1862,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_PRIVATE_KEY',
                 'description' => 'Entire plugin private key: the Ed25519 key whose public half is registered on the plugin, as a PKCS#8 PEM.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1789,7 +1871,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_ISSUER',
                 'description' => 'Issuer registered on the Entire plugin: the iss claim of the JWTs Appwrite signs for it and the audience of the install receipts Entire signs back. Usually this server\'s public URL.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1798,7 +1880,7 @@ return [
             [
                 'name' => '_APP_VCS_ENTIRE_ENDPOINT',
                 'description' => 'URL of the Entire core (control plane) Appwrite talks to. Any core serves any installation; defaults to https://us.auth.entire.io when unset, set it to a nearer jurisdiction such as https://eu.auth.entire.io.',
-                'introduction' => '2.1.0',
+                'introduction' => '2.6.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -1816,14 +1898,74 @@ return [
         ],
     ],
     [
+        'category' => 'Reviews',
+        'description' => 'AI code review for GitHub pull requests, run by the appwrite/hansi service. Optional: reviews stay off until `_APP_REVIEWS_SECRET` is set, and the installer adds the service only then. The service reads jobs from the Redis queue at `_APP_REDIS_HOST` and `_APP_REDIS_PORT`, with `_APP_REDIS_USER` and `_APP_REDIS_PASS`. It runs reviews read-only, without sandboxes. The GitHub App needs these repository permissions: Contents and Metadata (read), Pull requests, Issues and Checks (read and write). It must also subscribe to the "Pull request", "Issue comment" and "Pull request review comment" events. Comments that mention the app (`_APP_VCS_GITHUB_APP_NAME`) are answered, and "@app review" asks for a review.',
+        'variables' => [
+            [
+                'name' => '_APP_REVIEWS_SECRET',
+                'description' => 'Enables code reviews. The secret the code review service sends in the `X-Appwrite-Reviews-Secret` header to report results and request installation tokens. Leave it empty to keep reviews disabled: repositories cannot be enrolled, pull requests queue no reviews and the internal review routes reject every call. **Keep it a secret**.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_MODEL',
+                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-4.5`. Required when reviews are enabled.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_VERIFY_MODEL',
+                'description' => 'The model that double-checks findings before they are posted, as an AI Gateway model ID. Empty uses `_APP_REVIEWS_MODEL`.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_AI_GATEWAY_KEY',
+                'description' => 'API key for the Vercel AI Gateway, which serves the review models. **Keep it a secret**.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
         'category' => 'Maintenance',
         'description' => '',
         'variables' => [
             [
                 'name' => '_APP_MAINTENANCE_INTERVAL',
-                'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
+                'description' => 'How often, in seconds, the maintenance process runs system cleanups, and how often the scheduler runs maintenance for each project accessed in the last 30 days. Those projects are spread across five-minute slices like inactive ones, so use a multiple of 300. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_QUEUE_NAME',
+                'description' => 'Queue used for scheduled maintenance slices. Set the same value on the maintenance scheduler and workers. Defaults to v1-maintenance.',
+                'introduction' => '2.6.0',
+                'default' => 'v1-maintenance',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_INACTIVE_INTERVAL',
+                'description' => 'How often, in seconds, the scheduler runs maintenance for each project not accessed in the last 30 days or never accessed. Projects are spread across five-minute slices, so use a multiple of 300; a value under 600 gives a single slice that reaches every inactive project on each run. The scheduler dispatches each slice to the maintenance worker, which defers a slice while the deletes queue is backed up; a slice still deferred after a full interval gives way to its next run. The default value is 604800 seconds (7 days).',
+                'introduction' => '2.6.0',
+                'default' => '604800',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1839,7 +1981,7 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_START_TIME',
-                'description' => 'The time of day (in 24-hour format) when the maintenance process should start. The default value is 00:00.',
+                'description' => 'The time of day (in 24-hour format) when the maintenance process should start its system cleanups. Project maintenance runs in slices around the clock. The default value is 00:00.',
                 'introduction' => '1.6.2',
                 'default' => '00:00',
                 'required' => false,
@@ -1896,6 +2038,15 @@ return [
                 'description' => 'Schedules deletion interval ( in seconds ) ',
                 'introduction' => '2.0.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_ALERTS',
+                'description' => 'How long a resolved alert is kept, in seconds. A firing alert is always kept. The default value is 7776000 seconds (90 days).',
+                'introduction' => '2.7.0',
+                'default' => '7776000',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1992,6 +2143,24 @@ return [
                 'description' => 'Interval in seconds between resource-count snapshots. Each active project is counted once per interval, at a slot spread across it.',
                 'introduction' => '',
                 'default' => '3600',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALERTS_INTERVAL',
+                'description' => 'Interval in seconds between two evaluations of each alert rule. Each rule is evaluated once per interval, at a slot spread across it. The default value is 60 seconds.',
+                'introduction' => '2.7.0',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALERTS_USAGE_LAG',
+                'description' => 'Seconds behind the evaluation time that usage monitors read usage, so events still being written are counted by a later evaluation instead of missed. The default value is 120 seconds.',
+                'introduction' => '2.7.0',
+                'default' => '120',
                 'required' => false,
                 'question' => '',
                 'filter' => ''

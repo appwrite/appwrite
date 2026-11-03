@@ -27,6 +27,7 @@ trait PoliciesBase
             'membership-privacy' => ['userId', 'userEmail', 'userPhone', 'userName', 'userMFA', 'userAccessedAt'],
             'mfa-factors' => ['totp', 'email', 'phone', 'custom'],
             'passkey' => ['rpId', 'origins'],
+            'deny-realtime-guests' => ['enabled'],
         ];
     }
 
@@ -1048,6 +1049,41 @@ trait PoliciesBase
     }
 
     // =========================================================================
+    // Deny Realtime Guests Policy
+    // =========================================================================
+
+    public function testUpdateDenyRealtimeGuestsPolicy(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->updateDenyRealtimeGuestsPolicy(true);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/deny-realtime-guests', $this->buildHeaders());
+        $this->assertSame(200, $policy['headers']['status-code']);
+        $this->assertSame('deny-realtime-guests', $policy['body']['$id']);
+        $this->assertTrue($policy['body']['enabled']);
+
+        $response = $this->updateDenyRealtimeGuestsPolicy(false);
+        $this->assertSame(200, $response['headers']['status-code']);
+
+        $policy = $this->client->call(Client::METHOD_GET, '/project/policies/deny-realtime-guests', $this->buildHeaders());
+        $this->assertFalse($policy['body']['enabled']);
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', $this->buildHeaders(), [
+            'enabled' => 'not-a-boolean',
+        ]);
+        $this->assertSame(400, $invalid['headers']['status-code']);
+
+        $this->assertSame(401, $this->updateDenyRealtimeGuestsPolicy(true, false)['headers']['status-code']);
+    }
+
+    // =========================================================================
     // Session Duration Policy
     // =========================================================================
 
@@ -1704,6 +1740,13 @@ trait PoliciesBase
     protected function updateSessionAlertPolicy(bool $enabled, bool $authenticated = true): mixed
     {
         return $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $this->buildHeaders($authenticated), [
+            'enabled' => $enabled,
+        ]);
+    }
+
+    protected function updateDenyRealtimeGuestsPolicy(bool $enabled, bool $authenticated = true): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-realtime-guests', $this->buildHeaders($authenticated), [
             'enabled' => $enabled,
         ]);
     }

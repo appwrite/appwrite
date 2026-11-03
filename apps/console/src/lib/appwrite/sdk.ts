@@ -9,6 +9,7 @@ import {
   Account,
   Activities,
   Affiliates,
+  Alerts,
   Analytics,
   Apps,
   Avatars,
@@ -22,6 +23,7 @@ import {
   Manager,
   Messaging,
   Migrations,
+  Monitors,
   Oauth2,
   Project,
   Project as ProjectApi,
@@ -51,6 +53,8 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { Reviews } from '@/lib/appwrite/reviews'
+import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -59,6 +63,7 @@ import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
 import { toResourceUrl } from '@/lib/appwrite/admin-resource-url'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
+import { clearApiExplorerAuthStorage } from '@/lib/api-explorer/auth-storage'
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
 import {
   fetchConsoleAccount,
@@ -222,6 +227,8 @@ function createConsoleSdkRaw(client: Client) {
     client,
     account: new Account(client),
     affiliates: new Affiliates(client),
+    alerts: new Alerts(client),
+    monitors: new Monitors(client),
     apps: new Apps(client),
     oauth2: new Oauth2(client),
     avatars: new Avatars(client),
@@ -269,6 +276,7 @@ function createConsoleSdkRaw(client: Client) {
     usage: new Usage(client),
     webhooks: new Webhooks(client),
     notifications: new Notifications(client),
+    zero: new Zero(client),
   }
 }
 
@@ -424,6 +432,7 @@ const CONSOLE_SDK_PROJECT_ID = 'console'
  *
  * - Clears operator impersonation.
  * - Removes Appwrite `cookieFallback` from localStorage (SDK uses it when cookies are restricted).
+ * - Removes the API explorer's stored auth state, including project API keys.
  * - Clears in-memory session/JWT/key on the shared console and project clients.
  * - Best-effort expiry of `a_session_console` on the current document host (only works for
  *   non-httpOnly cookies; cross-site session cookies require a successful server sign-out).
@@ -434,6 +443,7 @@ export function clearConsoleSessionLocally(): void {
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession()
   clearConsoleAccountCache()
+  clearApiExplorerAuthStorage()
 
   try {
     window.localStorage.removeItem('cookieFallback')
@@ -552,6 +562,8 @@ const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
   activities: new Activities(clientProject),
+  alerts: new Alerts(clientProject),
+  monitors: new Monitors(clientProject),
   analytics: new Analytics(clientProject),
   apps: new Apps(clientProject),
   avatars: new Avatars(clientProject),
@@ -570,6 +582,8 @@ const sdkForProjectRaw = {
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),
+  // Hand-written until a Console SDK release carries the reviews service.
+  reviews: new Reviews(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),

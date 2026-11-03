@@ -314,6 +314,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
 
         $attributes = [
             $this->attribute('name', ColumnType::String, required: true, size: 256),
+            $this->attribute('description', ColumnType::String, size: 1024),
             $this->attribute('enabled', ColumnType::Boolean, default: true),
             $this->attribute('search', ColumnType::String, size: 16384),
             $this->attribute('originalId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),

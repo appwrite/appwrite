@@ -55,6 +55,7 @@ import { DowngradeAddonWarning } from './change-plan/DowngradeAddonWarning'
 import { DowngradeUsageWarning } from './change-plan/DowngradeUsageWarning'
 import { DowngradePlanLossWarning } from './change-plan/DowngradePlanLossWarning'
 import { resolveOrgToDelete } from '@/lib/billing/free-plan-conflict'
+import { linkSourcesBeforeUpgrade } from '@/lib/marketing/utm'
 import {
   fetchDeletedOrganizationImpact,
   type DeletedOrganizationImpact,
@@ -1237,6 +1238,7 @@ export function ChangePlanWizardFullscreen() {
     })
 
     try {
+      if (currentPlanIsFree) await linkSourcesBeforeUpgrade()
       const result = await updatePlanMutation.mutateAsync({
         organizationId: orgId,
         billingPlan: selectedPlan,
@@ -1563,6 +1565,7 @@ export function ChangePlanWizardFullscreen() {
     })
 
     try {
+      if (!selectedPlanIsFree) await linkSourcesBeforeUpgrade()
       const result = await createOrgMutation.mutateAsync({
         organizationId,
         name: organizationName.trim(),
@@ -1905,6 +1908,7 @@ export function ChangePlanWizardFullscreen() {
                 hasFreeOrgs={hasFreeOrgs}
                 isCreateMode={isCreateMode}
                 variant="inline"
+                orgId={orgId}
               />
             ) : (
               <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

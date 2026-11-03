@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Deployment\GitAction;
 use Appwrite\Extend\Exception;
-use Appwrite\Filter\BranchDomain as BranchDomainFilter;
+use Appwrite\Platform\Modules\Compute\Base as ComputeBase;
 use Appwrite\Vcs\Comment;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -198,6 +198,10 @@ trait Deployment
 
                     $commentStatus = $existingDeployment->getAttribute('status', 'waiting');
 
+                    // This pass deploys nothing, so the comment links the deployment the
+                    // push made; without one, it links none
+                    $deploymentId = $existingDeployment->getId();
+
                     if ($resource->getCollection() === 'sites' && !$existingDeployment->isEmpty()) {
                         $previewRule = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
                             Query::equal('projectInternalId', [$project->getSequence()]),
@@ -247,7 +251,7 @@ trait Deployment
                         if ($lockAcquired) {
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
-                                $comment = new Comment($platform);
+                                $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
 
@@ -259,7 +263,7 @@ trait Deployment
                             }
                         }
                     } else {
-                        $comment = new Comment($platform);
+                        $comment = new Comment($platform, $vcs->supportsCommentImages());
                         $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $commentPreviewUrl);
                         $latestCommentId = \strval($vcs->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
@@ -320,7 +324,7 @@ trait Deployment
                         if ($lockAcquired) {
                             // Wrap in try/finally to ensure lock file gets deleted
                             try {
-                                $comment = new Comment($platform);
+                                $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
@@ -359,6 +363,20 @@ trait Deployment
                         Query::equal('providerCommitHash', [$providerCommitHash]),
                         Query::equal('providerBranch', [$providerBranch]),
                     ]));
+
+                    // A build that moved on while the comment was written reported before it
+                    // could find the comment, so the comment takes the state it is in now
+                    if (!$existingDeployment->isEmpty() && !empty($latestCommentId)) {
+                        $linkedDeployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $existingDeployment->getId()));
+                        $linkedStatus = $linkedDeployment->getAttribute('status', $commentStatus);
+                        if ($linkedStatus !== $commentStatus) {
+                            try {
+                                $authorization->skip(fn () => GitAction::run($linkedStatus, $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $linkedDeployment, $dbForPlatform, $platform));
+                            } catch (\Throwable $e) {
+                                Console::warning("Failed to update PR comment '{$latestCommentId}': " . $e->getMessage());
+                            }
+                        }
+                    }
 
                     // Skip rest - prevent double deployments (previous one was made by push)
                     continue;
@@ -471,12 +489,7 @@ trait Deployment
                     $branchDomain = null;
                     if (!empty($providerBranch)) {
                         try {
-                            $branchDomain = (new BranchDomainFilter())->apply([
-                                'branch' => $providerBranch,
-                                'resourceId' => $resource->getId(),
-                                'projectId' => $project->getId(),
-                                'sitesDomain' => $sitesDomain,
-                            ]);
+                            $branchDomain = $authorization->skip(fn () => ComputeBase::branchDomain($project, $resource, $providerBranch, $sitesDomain, $dbForPlatform));
                         } catch (\InvalidArgumentException $error) {
                             // Deploy without a branch preview rather than store an unreachable rule
                             Console::warning('Skipping branch preview rule: ' . $error->getMessage());
@@ -577,7 +590,7 @@ trait Deployment
                             $previewUrl = GitAction::previewUrl($rule);
 
                             if (!empty($previewUrl)) {
-                                $comment = new Comment($platform);
+                                $comment = new Comment($platform, $vcs->supportsCommentImages());
                                 $comment->parseComment($vcs->getComment($owner, $repositoryName, $latestCommentId));
                                 $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
                                 $vcs->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
@@ -599,8 +612,11 @@ trait Deployment
                         $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
                         $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
 
-                        // The comment above already lists this build; only the check is still owed
-                        $authorization->skip(fn () => GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform));
+                        // The comment above already lists this build; the check and the deployed resource are still owed
+                        $authorization->skip(function () use ($vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform) {
+                            GitAction::check('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
+                            GitAction::deployment('waiting', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $deployment, $dbForPlatform, $platform);
+                        });
                     } catch (\Throwable $e) {
                         Console::warning("Failed to report deployment '{$deploymentId}' as waiting: " . $e->getMessage());
                     }

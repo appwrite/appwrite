@@ -1,0 +1,32 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="axumGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="axumBack">
+<path d="M150 296V188C150 176 172 176 172 188V296Z"/>
+<path d="M310 296V212C310 202 330 202 330 212V296Z"/>
+<path d="M346 296L352 252C353 246 366 247 365 254L360 296Z"/>
+</g>
+<g id="axum">
+<path d="M222 284L226 96H256L260 284Z"/>
+<path d="M226 96C226 76 256 76 256 96Z"/>
+<path d="M196 284H286V296H196Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#axumBack" fill="#19191C"/>
+<use href="#axumBack" fill="url(#axumGrad)"/>
+<use href="#axumBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#axum" fill="#19191C"/>
+<use href="#axum" fill="url(#axumGrad)"/>
+<use href="#axum" stroke="#FD366E" stroke-width="1.36239"/>
+<g fill="#19191C" stroke="#FD366E" stroke-width="1.36239"><path d="M234 252H248V282H234Z"/><path d="M230 116H238V124H230Z"/><path d="M244 116H252V124H244Z"/><path d="M230 142H238V150H230Z"/><path d="M244 142H252V150H244Z"/><path d="M230 168H238V176H230Z"/><path d="M244 168H252V176H244Z"/><path d="M230 194H238V202H230Z"/><path d="M244 194H252V202H244Z"/><path d="M230 220H238V228H230Z"/><path d="M244 220H252V228H244Z"/></g>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M225.5 110H256.5"/><path d="M225.5 136H256.5"/><path d="M225.5 162H256.5"/><path d="M225.5 188H256.5"/><path d="M225.5 214H256.5"/><path d="M225.5 240H256.5"/><path d="M152 214H170"/><path d="M152 240H170"/><path d="M152 266H170"/></g>
+</svg>

@@ -18,6 +18,7 @@ use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Client;
+use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -45,6 +46,9 @@ class Get extends Action
             ->desc('Get favicon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->label('abuse-limit', 60)
+            ->label('abuse-time', 60)
             ->label('cache', true)
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(
@@ -87,10 +91,8 @@ class Get extends Action
             System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
         );
 
-        $client = $clientForAvatars->withTimeout(15);
-
         try {
-            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $client, $pageUrl);
+            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $clientForAvatars, $pageUrl);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -154,7 +156,7 @@ class Get extends Action
         }
 
         try {
-            $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $client);
+            $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $clientForAvatars);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -194,7 +196,12 @@ class Get extends Action
             return;
         }
 
-        $image = new Image($data);
+        try {
+            $image = new Image($data);
+        } catch (UnsupportedFormatException | \ImagickException) {
+            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
+        }
+
         $image->crop((int) $width, (int) $height);
         $data = $image->output($output, $quality);
 

@@ -187,6 +187,20 @@ final class IdTokenVerifierTest extends TestCase
         $this->assertRejected('Signature failed', fn () => $this->verifier()->verify($this->profile(), \implode('.', $parts), [self::AUDIENCE], null));
     }
 
+    public function testIntegerLikeKidIsAccepted(): void
+    {
+        $kid = '1234567890123456';
+
+        $claims = $this->verifier($kid)->verify(
+            $this->profile(),
+            $this->mint([], ['kid' => $kid]),
+            [self::AUDIENCE],
+            null,
+        );
+
+        $this->assertSame('subject-1', $claims['sub']);
+    }
+
     public function testUnknownKidIsRejected(): void
     {
         $this->assertRejected('Unknown signing key', fn () => $this->verifier()->verify($this->profile(), $this->mint([], ['kid' => 'rotated-away']), [self::AUDIENCE], null));
@@ -243,9 +257,10 @@ final class IdTokenVerifierTest extends TestCase
         $this->fail('The token must be rejected');
     }
 
-    private function verifier(): IdTokenVerifier
+    private function verifier(string $kid = self::KID): IdTokenVerifier
     {
-        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => \json_encode(['keys' => [self::$jwk]]))));
+        $jwk = [...self::$jwk, 'kid' => $kid];
+        $jwks = new Jwks(new Cache(new Memory()), new Client(new CannedTransport(fn (): string => \json_encode(['keys' => [$jwk]]))));
 
         return new IdTokenVerifier($jwks);
     }

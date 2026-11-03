@@ -47,6 +47,7 @@ class PolicyList extends Model
             Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
             Response::MODEL_POLICY_DENY_FREE_EMAIL,
             Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            Response::MODEL_POLICY_DENY_REALTIME_GUESTS,
             Response::MODEL_POLICY_PASSKEY,
         ];
     }

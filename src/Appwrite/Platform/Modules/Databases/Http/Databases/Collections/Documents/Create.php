@@ -323,7 +323,7 @@ class Create extends Action
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
+            if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -366,14 +366,7 @@ class Create extends Action
                 'data' => $isBulk ? $documents : $documents[0],
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 

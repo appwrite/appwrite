@@ -1139,7 +1139,100 @@ trait TemplatesBase
         }
     }
 
+    public function testSessionAlertIgnoresCustomTemplateWhenSMTPDisabled(): void
+    {
+        $this->ensureSMTPEnabled();
+
+        $alertsResponse = $this->client->call(
+            Client::METHOD_PATCH,
+            '/projects/' . $this->getProject()['$id'] . '/auth/session-alerts',
+            [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ],
+            ['enabled' => true],
+        );
+        $this->assertSame(200, $alertsResponse['headers']['status-code'], 'failed to enable session alerts');
+
+        $runId = \uniqid();
+        $subject = "Custom alert subject {$runId}";
+        $message = "Custom alert body marker {$runId}";
+
+        $update = $this->updateEmailTemplate(
+            templateId: 'sessionAlert',
+            locale: 'en',
+            subject: $subject,
+            message: $message,
+        );
+        $this->assertSame(200, $update['headers']['status-code']);
+
+        // Disabling SMTP keeps the stored template, but it must no longer be applied.
+        $smtp = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/smtp',
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            ['enabled' => false],
+        );
+        $this->assertSame(200, $smtp['headers']['status-code']);
+        $this->assertSame(false, $smtp['body']['smtpEnabled']);
+
+        try {
+            $email = "session-alert-disabled-{$runId}@appwrite.io";
+            $this->triggerSessionAlert($email);
+
+            $received = $this->getLastEmailByAddress($email);
+
+            $this->assertNotSame($subject, $received['subject']);
+            $this->assertStringContainsString('Security alert', $received['subject']);
+            $this->assertStringNotContainsString($message, $received['text'] . $received['html']);
+        } finally {
+            $this->ensureSMTPEnabled();
+        }
+
+        // With SMTP enabled again, the same stored template applies.
+        $email = "session-alert-enabled-{$runId}@appwrite.io";
+        $this->triggerSessionAlert($email);
+
+        $received = $this->getLastEmailByAddress($email);
+
+        $this->assertSame($subject, $received['subject']);
+        $this->assertStringContainsString($message, $received['text'] . $received['html']);
+    }
+
     // Helpers
+
+    /**
+     * Creates a user and two sessions; the second one triggers the session alert.
+     */
+    protected function triggerSessionAlert(string $email): void
+    {
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $password = 'password123';
+
+        $create = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertSame(201, $create['headers']['status-code']);
+
+        for ($i = 0; $i < 2; $i++) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+                'email' => $email,
+                'password' => $password,
+            ]);
+            $this->assertSame(201, $session['headers']['status-code']);
+        }
+    }
 
     protected function getEmailTemplate(string $templateId, ?string $locale = null, bool $authenticated = true): mixed
     {

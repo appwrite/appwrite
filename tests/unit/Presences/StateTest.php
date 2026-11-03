@@ -47,6 +47,8 @@ final class StateTest extends TestCase
             id: State::COLLECTION_ID,
             attributes: [
                 Attribute::string(key: 'userInternalId', size: 255, required: true),
+                Attribute::string(key: 'userId', size: 255),
+                Attribute::integer(key: 'connections', default: 0, signed: false),
                 Attribute::string(key: 'status', size: 255),
             ],
             permissions: [
@@ -102,6 +104,83 @@ final class StateTest extends TestCase
         $this->assertSame('concurrent', $presence->getId());
         $this->assertSame(0, $this->created, 'The final attempt updated an existing presence, so no creation may be reported.');
         $this->assertSame(['away'], $this->statuses());
+    }
+
+    public function testFirstSocketCreatesRowWithOneConnection(): void
+    {
+        $write = $this->hold('user-1', 'online');
+
+        $this->assertTrue($write['created']);
+        $this->assertTrue($write['counted']);
+        $this->assertSame(1, $write['presence']->getAttribute('connections'));
+    }
+
+    public function testSecondSocketIncrementsConnections(): void
+    {
+        $first = $this->hold('user-1', 'online');
+        $second = $this->hold('user-1', 'online');
+
+        $this->assertFalse($second['created']);
+        $this->assertTrue($second['counted']);
+        $this->assertSame($first['presence']->getId(), $second['presence']->getId());
+        $this->assertSame(2, $second['presence']->getAttribute('connections'));
+    }
+
+    public function testSameSocketRefreshDoesNotCount(): void
+    {
+        $first = $this->hold('user-1', 'online');
+        $refresh = $this->hold('user-1', 'busy', (string) $first['presence']->getSequence());
+
+        $this->assertFalse($refresh['created']);
+        $this->assertFalse($refresh['counted']);
+        $this->assertSame(1, $refresh['presence']->getAttribute('connections'));
+        $this->assertSame('busy', $refresh['presence']->getAttribute('status'));
+    }
+
+    public function testStaleHeldRowRecounts(): void
+    {
+        $this->hold('user-1', 'online');
+        $write = $this->hold('user-1', 'online', '999999');
+
+        $this->assertFalse($write['created']);
+        $this->assertTrue($write['counted']);
+        $this->assertSame(2, $write['presence']->getAttribute('connections'));
+    }
+
+    public function testGoneHeldRowRecreates(): void
+    {
+        $first = $this->hold('user-1', 'online');
+        (new State())->releaseConnectionForUser($this->database, 'user-1', (string) $first['presence']->getSequence());
+
+        $write = $this->hold('user-1', 'online', (string) $first['presence']->getSequence());
+
+        $this->assertTrue($write['created']);
+        $this->assertTrue($write['counted']);
+        $this->assertSame(1, $write['presence']->getAttribute('connections'));
+    }
+
+    public function testReleaseDecrementsThenDeletesAtZero(): void
+    {
+        $this->hold('user-1', 'online');
+        $sequence = (string) $this->hold('user-1', 'online')['presence']->getSequence();
+
+        (new State())->releaseConnectionForUser($this->database, 'user-1', $sequence);
+        $afterFirst = $this->database->findOne(State::COLLECTION_ID, [Query::equal('userId', ['user-1'])]);
+        $this->assertSame(1, $afterFirst->getAttribute('connections'));
+
+        (new State())->releaseConnectionForUser($this->database, 'user-1', $sequence);
+        $afterSecond = $this->database->findOne(State::COLLECTION_ID, [Query::equal('userId', ['user-1'])]);
+        $this->assertTrue($afterSecond->isEmpty());
+    }
+
+    public function testReleaseIgnoresMismatchedSequence(): void
+    {
+        $this->hold('user-1', 'online');
+
+        $this->assertNull((new State())->releaseConnectionForUser($this->database, 'user-1', '999999'));
+
+        $live = $this->database->findOne(State::COLLECTION_ID, [Query::equal('userId', ['user-1'])]);
+        $this->assertSame(1, $live->getAttribute('connections'));
     }
 
     public function testSetPermissionsDefaultsForUser(): void
@@ -166,6 +245,23 @@ final class StateTest extends TestCase
             function (): void {
                 $this->created++;
             },
+        );
+    }
+
+    /**
+     * @return array{presence: Document, created: bool, counted: bool}
+     */
+    private function hold(string $userId, string $status, ?string $sequence = null): array
+    {
+        return (new State())->upsertForUserWithConnections(
+            $this->database,
+            new Document([
+                'userInternalId' => self::USER_INTERNAL_ID,
+                'userId' => $userId,
+                'status' => $status,
+            ]),
+            $userId,
+            $sequence,
         );
     }
 

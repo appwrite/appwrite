@@ -125,6 +125,26 @@ final class APNSTest extends TestCase
         $this->assertContains('apns-priority: 10', $stub->capturedHeaders);
     }
 
+    public function testResultsMapToTheTokenSent(): void
+    {
+        $stub = new APNSStub($this->authKey(), 'keyId', 'teamId', 'com.example.app');
+        $stub->failures = [0 => 'BadDeviceToken'];
+
+        $result = $stub->send(new Push(
+            to: ['abc#/victim-token', 'valid-token'],
+            title: 'Title',
+        ));
+
+        $this->assertSame('https://api.push.apple.com/3/device/abc%23%2Fvictim-token', $stub->capturedUrls[0]);
+        $this->assertSame('https://api.push.apple.com/3/device/valid-token', $stub->capturedUrls[1]);
+        $this->assertSame(1, $result['deliveredTo']);
+
+        $failed = \array_values(\array_filter($result['results'], fn (array $entry): bool => $entry['status'] === 'failure'));
+        $this->assertCount(1, $failed);
+        $this->assertSame('abc#/victim-token', $failed[0]['recipient']);
+        $this->assertSame('Expired device token', $failed[0]['error']);
+    }
+
     /**
      * The adapter signs a real ES256 assertion before it builds any payload, so the credentials carry a
      * freshly generated EC key rather than a literal.
@@ -151,6 +171,18 @@ class APNSStub extends APNS
     public array $capturedHeaders = [];
 
     /**
+     * @var array<string>
+     */
+    public array $capturedUrls = [];
+
+    /**
+     * Request index => APNs failure reason; every other request succeeds.
+     *
+     * @var array<int, string>
+     */
+    public array $failures = [];
+
+    /**
      * @param  array<string>  $urls
      * @param  array<string>  $headers
      * @param  array<array<string, mixed>>  $bodies
@@ -169,10 +201,13 @@ class APNSStub extends APNS
     ): array {
         $this->capturedBodies = $bodies;
         $this->capturedHeaders = $headers;
+        $this->capturedUrls = $urls;
 
         $results = [];
         foreach ($urls as $index => $url) {
-            $results[] = ['index' => $index, 'url' => $url, 'statusCode' => 200, 'response' => null, 'headers' => [], 'error' => '', 'errorCode' => 0];
+            $results[] = isset($this->failures[$index])
+                ? ['index' => $index, 'url' => $url, 'statusCode' => 400, 'response' => ['reason' => $this->failures[$index]], 'headers' => [], 'error' => '', 'errorCode' => 0]
+                : ['index' => $index, 'url' => $url, 'statusCode' => 200, 'response' => null, 'headers' => [], 'error' => '', 'errorCode' => 0];
         }
 
         if ($onResult !== null) {

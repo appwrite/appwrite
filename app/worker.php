@@ -24,7 +24,7 @@ use Utopia\System\System;
 try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
-        System::getEnv('_APP_OPENSSL_KEY_V1')
+        EncryptionKey::current()
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());
@@ -89,8 +89,8 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 }
 
 // Same as a single worker: resolve queue + concurrency from config/env.
-// For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases).
-// For many, each queue keeps its own cap so databases stays at 1.
+// For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases and maintenance).
+// For many, each queue keeps its own cap.
 $jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
 // Keep commands available for heartbeats and recovery while receive blocks.
