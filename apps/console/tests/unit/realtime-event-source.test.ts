@@ -101,12 +101,17 @@ describe('realtime context ping', () => {
     ).toBe(true)
   })
 
-  test('inside an environment, its ping counts though the event names its internal ID', () => {
+  test('inside an environment, its ping counts', () => {
     setActiveEnvironment('app', 'staging')
     expect(
       isRealtimeContextPing(
         'app',
-        ['projects.6a1f0c2b9d.ping'],
+        [
+          'projects.app.environments.staging.ping',
+          'projects.*.ping',
+          'projects.app.environments.staging',
+          'projects.*',
+        ],
         ['console', 'projects.app.environments.staging'],
       ),
     ).toBe(true)

@@ -38,9 +38,10 @@ export function realtimeEventSource(
 }
 
 /**
- * Whether the event is a `client.ping()` of the context on screen. The event
- * itself names the project the ping reached by its own ID, which for an
- * environment is internal, so the ping is told by its channel.
+ * Whether the event is a `client.ping()` of the context on screen. The context
+ * is told by the channel. The ping is told by its `projects.*.ping` event, which
+ * every ping carries, an environment's included. An environment's own ping event
+ * is named `projects.<projectId>.environments.<environmentId>.ping`.
  */
 export function isRealtimeContextPing(
   projectId: string,
