@@ -171,6 +171,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM',
+                'description' => "Push service that delivers alerts to the Android devices console users sign in on. Use the following format: 'fcm://[FIREBASE_PROJECT_ID]', with the service account JSON in _APP_NOTIFICATIONS_PUSH_FCM_KEY. Leave empty to disable alert pushes to Android.",
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM_KEY',
+                'description' => 'Firebase service account JSON that _APP_NOTIFICATIONS_PUSH_FCM signs with; it has to belong to the project _APP_NOTIFICATIONS_PUSH_FCM names.',
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN',
                 'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
