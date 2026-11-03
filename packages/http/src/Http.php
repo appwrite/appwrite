@@ -175,8 +175,7 @@ class Http
 
     /**
      * Set supported compression algorithms
-     */
-    /**
+     *
      * @param  array<mixed>  $compressionSupported
      */
     public function setCompressionSupported(array $compressionSupported): void
