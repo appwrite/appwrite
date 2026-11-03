@@ -71,6 +71,20 @@ Plain ASCII text without `%` can be sent as it is.
 A request fails with `general_argument_invalid` before it runs when its reason is longer, isn't valid UTF-8,
 or contains control characters such as line breaks, tabs or terminal escapes, or Unicode bidirectional override characters.
 
+## From the CLI {% #reason-cli %}
+
+Pass `--reason` to any [Appwrite CLI](/docs/tooling/command-line/commands#reason) command, or set the `APPWRITE_REASON`
+environment variable for a whole shell session or CI job. The CLI encodes the reason and sends it with every request the command makes.
+
+```sh
+appwrite push functions --reason "Release 2.4: move checkout to the storefront site"
+```
+
+## From the MCP server {% #reason-mcp %}
+
+The [Appwrite MCP server](/docs/tooling/ai/mcp-servers#reasons) asks the AI agent for a reason with every change it makes
+and records it on the request. Changes an agent makes show up in **Activity** with the reason the agent gave.
+
 # Retention {% #retention %}
 
 GDPR data retention rules require any personal data that is collected or processed to be kept

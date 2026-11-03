@@ -147,6 +147,9 @@ The `init`, `pull`, `push`, and `run` commands support [multi-file project confi
 * `--config-file <path>`
 * Project config file to use instead of the nearest `appwrite.config.json`
 ---
+* `--reason <text>`
+* Why you are running the command, recorded on the audit log of every request it makes
+---
 * `--report`          
 * Enable reporting in case of CLI errors
 ---
@@ -189,6 +192,15 @@ By default, the CLI reads the nearest `appwrite.config.json`. Use the `--config-
 ```sh
 appwrite push --config-file appwrite.config.prod.json
 ```
+
+# Reason {% #reason %}
+Use the `--reason` flag to record why you are running a command. The CLI sends the reason with every request the command makes, and it appears next to each change in the **Activity** tab of your project. Set the `APPWRITE_REASON` environment variable to give every command in a shell session or CI job the same reason; the flag takes precedence over the variable.
+
+```sh
+appwrite push tables --reason "Add the orders table for checkout v2"
+```
+
+A reason is one line of up to 256 characters. [Learn more about reasons](/docs/advanced/security/audit-logs#reason).
 
 # Error reporting {% #report %}
 If you encounter errors with any command, you can use the --report flag to generate a GitHub reporting link.

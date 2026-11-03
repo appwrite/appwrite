@@ -72,6 +72,17 @@ appwrite push all --all --force
 
 If the job also sets `APPWRITE_PROJECT_ID` or `APPWRITE_ENDPOINT`, those values take precedence over the ones in the config file. [Learn more about multiple environments](/docs/tooling/command-line/installation#multiple-environments).
 
+# Reasons {% #reasons %}
+
+Set `APPWRITE_REASON` in the job to record why it changed your project. Every request the CLI makes carries the reason, and it appears next to each change in the **Activity** tab, so a deploy can be traced back to the commit or pipeline run that made it.
+
+```sh
+export APPWRITE_REASON="Deploy ${GITHUB_SHA} from ${GITHUB_REF_NAME}"
+appwrite push all --all --force
+```
+
+[Learn more about reasons](/docs/tooling/command-line/commands#reason).
+
 # CI/CD integrations {% #ci-cd-integrations %}
 
 Use providers like Github actions to create continuous integrations and continuous delivery or deployment (CI/CD).

@@ -182,7 +182,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Audit logs",
     "description": "Appwrite provides audit logs to help detect anomalies and investigate security incidents.",
     "layout": "article",
-    "readingTimeMinutes": 2
+    "readingTimeMinutes": 3
   },
   {
     "slug": "advanced/security/authentication",
@@ -3973,7 +3973,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Appwrite MCP server",
     "description": "Enable LLMs and code-generation tools to interact with your Appwrite project and documentation",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 9
   },
   {
     "slug": "tooling/ai/persistent-agents-with-realtime",
@@ -4267,7 +4267,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Commands",
     "description": "Learn about Appwrites CLI and the powerful, feature complete commands to manage Appwrite's auth, databases, functions, storage, and more.",
     "layout": "article",
-    "readingTimeMinutes": 6
+    "readingTimeMinutes": 7
   },
   {
     "slug": "tooling/command-line/functions",
