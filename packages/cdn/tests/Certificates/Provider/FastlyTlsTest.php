@@ -213,7 +213,7 @@ final class FastlyTlsTest extends TestCase
             );
             $this->assertSame([], $exception->getWarnings());
             $this->assertSame(
-                'Add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership, then wait for the certificate to be issued.',
+                'Add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership.',
                 $exception->getMessage(),
             );
         }
@@ -242,7 +242,7 @@ final class FastlyTlsTest extends TestCase
             $this->assertSame([$warning], $exception->getWarnings());
             $this->assertCount(1, $exception->getChallenges());
             $this->assertSame(
-                'Remove any other record named _acme-challenge.example.com, then add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership, then wait for the certificate to be issued.',
+                'Remove any other record named _acme-challenge.example.com, then add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership.',
                 $exception->getMessage(),
             );
         }
@@ -258,7 +258,7 @@ final class FastlyTlsTest extends TestCase
             $this->fail('A blocked authorization has to be reported, not waited on.');
         } catch (Certificate $exception) {
             $this->assertSame(
-                'A CAA record on example.com does not allow the certificate authority to issue. Add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership, then wait for the certificate to be issued.',
+                'A CAA record on example.com does not allow the certificate authority to issue. Add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership.',
                 $exception->getMessage(),
             );
         }
@@ -544,7 +544,7 @@ final class FastlyTlsTest extends TestCase
         } catch (Certificate $exception) {
             $this->assertCount(2, $exception->getChallenges());
             $this->assertSame(
-                'Add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership, then wait for the certificate to be issued.',
+                'Add a CNAME record named _acme-challenge.example.com with the value token.fastly-validations.com to verify ownership.',
                 $exception->getMessage(),
             );
         }

@@ -351,7 +351,7 @@ class FastlyTls implements Provider
         if ($record !== null) {
             $sentences[] = ($conflict ? "Remove any other record named {$record->recordName}, then add" : 'Add')
                 . " a {$record->recordType} record named {$record->recordName} with the value " . implode(' or ', $record->values)
-                . ' to verify ownership, then ' . ($status === Status::FAILED ? 'retry.' : 'wait for the certificate to be issued.');
+                . ' to verify ownership' . ($status === Status::FAILED ? ', then retry.' : '.');
         } elseif (\count($challenges) === 1) {
             $sentences[] = "Create a {$challenges[0]->recordType} record for {$challenges[0]->recordName} pointing to " . implode(' or ', $challenges[0]->values) . '.';
         } elseif ($challenges !== []) {

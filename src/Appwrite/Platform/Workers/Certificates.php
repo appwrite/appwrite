@@ -51,9 +51,10 @@ class Certificates extends Action
     /**
      * How long after a rule is created its certificate can wait on a DNS record
      * only the domain owner can add before each check counts as a failed
-     * attempt. The interval verifies a new domain's DNS for as long.
+     * attempt. The interval verifies a new domain's DNS for as long. Protected
+     * so that a subclass checking the provider elsewhere ends the same wait.
      */
-    private const DNS_RECORD_WAIT = 60 * 60 * 24 * 3;
+    protected const DNS_RECORD_WAIT = 60 * 60 * 24 * 3;
 
     public static function getName(): string
     {
