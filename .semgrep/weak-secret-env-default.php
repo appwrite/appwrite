@@ -19,3 +19,6 @@ $dsn = System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost');
 
 // ok: php.appwrite.weak-secret-env-default
 $region = System::getEnv('_APP_REGION', 'default');
+
+// ok: php.appwrite.weak-secret-env-default
+$version = System::getEnv('_APP_OPENSSL_KEY_CURRENT', '1');
