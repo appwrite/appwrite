@@ -541,91 +541,109 @@ function isTransientNotFound(error: unknown): boolean {
   return message.includes('does not exist') || message.includes('not found')
 }
 
-/** Read-modify-write the project IAM policy to add the service account to the FCM role. */
-async function grantSenderRole(
+/** Add the service account to the unconditional FCM sender binding. */
+function grantSenderRole(
   accessToken: string,
   projectId: string,
   email: string,
 ): Promise<void> {
-  // Request v3 so conditional bindings come back intact; with the default
-  // version they are masked as `_withcond_*` roles and writing the policy back
-  // fails on any project that uses IAM Conditions.
-  const policy = await googleFetch<IamPolicy>(
-    'crm',
-    `/v1/projects/${encodeURIComponent(projectId)}:getIamPolicy`,
-    accessToken,
-    {
-      method: 'POST',
-      body: JSON.stringify({ options: { requestedPolicyVersion: 3 } }),
-    },
-    projectId,
-  )
-
   const member = `serviceAccount:${email}`
-  const bindings = policy.bindings ?? []
-  // Only ever add to an unconditional binding, leaving conditional ones as-is.
-  const existing = bindings.find(
-    (binding) => binding.role === FCM_SENDER_ROLE && !binding.condition,
-  )
-  if (existing) {
+  return updateProjectPolicy(accessToken, projectId, (bindings) => {
+    // Only ever add to an unconditional binding, leaving conditional ones as-is.
+    const existing = bindings.find(
+      (binding) => binding.role === FCM_SENDER_ROLE && !binding.condition,
+    )
+    if (!existing)
+      return [...bindings, { role: FCM_SENDER_ROLE, members: [member] }]
     const members = existing.members ?? []
-    if (members.includes(member)) return // Already bound; nothing to write.
+    if (members.includes(member)) return null // Already bound; nothing to write.
     existing.members = [...members, member]
-  } else {
-    bindings.push({ role: FCM_SENDER_ROLE, members: [member] })
-  }
-
-  await googleFetch(
-    'crm',
-    `/v1/projects/${encodeURIComponent(projectId)}:setIamPolicy`,
-    accessToken,
-    {
-      method: 'POST',
-      body: JSON.stringify({ policy: { ...policy, version: 3, bindings } }),
-    },
-    projectId,
-  )
+    return bindings
+  })
 }
 
-/** Read-modify-write the project IAM policy to take the service account out of the FCM role. */
-async function revokeSenderRole(
+/**
+ * Take the service account out of the FCM sender role. Also drops the
+ * `deleted:serviceAccount:<email>?uid=…` form Google gives a deleted account's
+ * member, so a binding left by an earlier interrupted cleanup goes too.
+ */
+function revokeSenderRole(
   accessToken: string,
   projectId: string,
   email: string,
 ): Promise<void> {
-  const policy = await googleFetch<IamPolicy>(
-    'crm',
-    `/v1/projects/${encodeURIComponent(projectId)}:getIamPolicy`,
-    accessToken,
-    {
-      method: 'POST',
-      body: JSON.stringify({ options: { requestedPolicyVersion: 3 } }),
-    },
-    projectId,
-  )
-
   const member = `serviceAccount:${email}`
-  let changed = false
-  const bindings = (policy.bindings ?? []).flatMap((binding) => {
-    // Mirror grantSenderRole: only the unconditional binding is ever touched.
-    if (binding.role !== FCM_SENDER_ROLE || binding.condition) return [binding]
-    const members = binding.members ?? []
-    if (!members.includes(member)) return [binding]
-    changed = true
-    const rest = members.filter((m) => m !== member)
-    return rest.length > 0 ? [{ ...binding, members: rest }] : []
+  const isAccount = (m: string) =>
+    m === member || m.startsWith(`deleted:${member}?uid=`)
+  return updateProjectPolicy(accessToken, projectId, (bindings) => {
+    let changed = false
+    const next = bindings.flatMap((binding) => {
+      // Mirror grantSenderRole: only the unconditional binding is ever touched.
+      if (binding.role !== FCM_SENDER_ROLE || binding.condition)
+        return [binding]
+      const members = binding.members ?? []
+      const rest = members.filter((m) => !isAccount(m))
+      if (rest.length === members.length) return [binding]
+      changed = true
+      return rest.length > 0 ? [{ ...binding, members: rest }] : []
+    })
+    return changed ? next : null
   })
-  if (!changed) return
+}
 
-  await googleFetch(
-    'crm',
-    `/v1/projects/${encodeURIComponent(projectId)}:setIamPolicy`,
-    accessToken,
-    {
-      method: 'POST',
-      body: JSON.stringify({ policy: { ...policy, version: 3, bindings } }),
-    },
-    projectId,
+/**
+ * Read-modify-write the project IAM policy. `edit` returns the new bindings, or
+ * null when nothing needs writing. setIamPolicy carries the etag that was read,
+ * so a concurrent writer makes it fail with a conflict; that is retried with a
+ * fresh read rather than failing provisioning (or cleanup).
+ */
+async function updateProjectPolicy(
+  accessToken: string,
+  projectId: string,
+  edit: (bindings: IamBinding[]) => IamBinding[] | null,
+): Promise<void> {
+  const backoffMs = [500, 1000, 2000]
+  for (let attempt = 0; ; attempt++) {
+    // Request v3 so conditional bindings come back intact; with the default
+    // version they are masked as `_withcond_*` roles and writing the policy back
+    // fails on any project that uses IAM Conditions.
+    const policy = await googleFetch<IamPolicy>(
+      'crm',
+      `/v1/projects/${encodeURIComponent(projectId)}:getIamPolicy`,
+      accessToken,
+      {
+        method: 'POST',
+        body: JSON.stringify({ options: { requestedPolicyVersion: 3 } }),
+      },
+      projectId,
+    )
+    const bindings = edit(structuredClone(policy.bindings ?? []))
+    if (!bindings) return
+
+    try {
+      await googleFetch(
+        'crm',
+        `/v1/projects/${encodeURIComponent(projectId)}:setIamPolicy`,
+        accessToken,
+        {
+          method: 'POST',
+          body: JSON.stringify({ policy: { ...policy, version: 3, bindings } }),
+        },
+        projectId,
+      )
+      return
+    } catch (error) {
+      if (attempt >= backoffMs.length || !isPolicyConflict(error)) throw error
+      await delay(backoffMs[attempt]!)
+    }
+  }
+}
+
+/** setIamPolicy rejected because the policy changed since it was read (etag mismatch). */
+function isPolicyConflict(error: unknown): boolean {
+  if (!(error instanceof GoogleApiError)) return false
+  return (
+    error.status === 409 || error.status === 412 || error.reason === 'ABORTED'
   )
 }
 
@@ -640,8 +658,11 @@ export async function deleteServiceAccount(
   projectId: string,
   email: string,
 ): Promise<void> {
-  // Best effort: a failed policy write must not keep the account (and its live
-  // key) around, so the delete still runs.
+  // If the binding still can't be removed after conflict retries, delete anyway:
+  // a live account with a live key is the real exposure. The leftover `deleted:`
+  // member can't authenticate, its `?uid=` keeps a recreated account with the
+  // same email from inheriting the role, and revokeSenderRole clears it if this
+  // account is ever cleaned up again.
   await revokeSenderRole(accessToken, projectId, email).catch(() => {})
   await googleFetch(
     'iam',

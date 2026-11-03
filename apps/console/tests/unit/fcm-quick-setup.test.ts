@@ -344,6 +344,55 @@ describe('provisionServiceAccountKey', () => {
     expect(granted?.members).toContain(`serviceAccount:${email}`)
   })
 
+  test('retries granting the role after an etag conflict instead of failing', async () => {
+    let sets = 0
+    let deleted = false
+    globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+      const url = String(input)
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (method === 'DELETE') {
+        deleted = true
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      if (url.includes(':getIamPolicy')) {
+        return new Response(JSON.stringify({ bindings: [], etag: 'e' }), {
+          status: 200,
+        })
+      }
+      if (url.includes(':setIamPolicy')) {
+        sets++
+        if (sets === 1) {
+          return new Response(
+            JSON.stringify(
+              googleError('ABORTED', 'There were concurrent policy changes.'),
+            ),
+            { status: 409 },
+          )
+        }
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      if (url.includes('/keys')) {
+        return new Response(
+          JSON.stringify({ privateKeyData: btoa(JSON.stringify(keyJson)) }),
+          { status: 200 },
+        )
+      }
+      if (url.includes('/serviceAccounts')) {
+        return new Response(JSON.stringify({ email }), { status: 200 })
+      }
+      throw new Error(`unexpected fetch ${method} ${url}`)
+    }) as typeof fetch
+
+    const key = await provisionServiceAccountKey('tok', {
+      projectId: 'proj-1',
+      projectName: 'My App',
+    })
+    expect(key.serviceAccount).toBe(email)
+    expect(sets).toBe(2)
+    // A transient conflict must not throw away the new account.
+    expect(deleted).toBe(false)
+  })
+
   test('maps an insufficient-scope failure to the scope gate', async () => {
     routeFetch([
       {
@@ -643,6 +692,81 @@ describe('deleteServiceAccount', () => {
     // Conditional and unrelated bindings are left alone.
     expect(bindings).toContainEqual(conditional)
     expect(bindings).toContainEqual({ role: 'roles/viewer', members: [member] })
+  })
+
+  test('retries the policy write after an etag conflict, re-reading the policy', async () => {
+    const calls: string[] = []
+    let sets = 0
+    globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes(':getIamPolicy')) {
+        calls.push('get')
+        return new Response(
+          JSON.stringify({
+            etag: `e${calls.length}`,
+            bindings: [{ role: FCM_SENDER_ROLE, members: [member] }],
+          }),
+          { status: 200 },
+        )
+      }
+      if (url.includes(':setIamPolicy')) {
+        calls.push('set')
+        sets++
+        if (sets === 1) {
+          return new Response(
+            JSON.stringify(
+              googleError('ABORTED', 'There were concurrent policy changes.'),
+            ),
+            { status: 409 },
+          )
+        }
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      if ((init?.method ?? 'GET').toUpperCase() === 'DELETE') {
+        calls.push('delete')
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      throw new Error(`unexpected fetch ${url}`)
+    }) as typeof fetch
+
+    await deleteServiceAccount('tok', 'proj-1', email)
+    expect(calls).toEqual(['get', 'set', 'get', 'set', 'delete'])
+  })
+
+  test('also clears the deleted: form of the account left by an earlier cleanup', async () => {
+    // Assigned inside the mocked fetch; the assertion stops TS narrowing it to null.
+    let written = null as { bindings?: IamBinding[] } | null
+    globalThis.fetch = (async (input: unknown, init?: RequestInit) => {
+      const url = String(input)
+      if (url.includes(':getIamPolicy')) {
+        return new Response(
+          JSON.stringify({
+            etag: 'e',
+            bindings: [
+              {
+                role: FCM_SENDER_ROLE,
+                members: [`deleted:${member}?uid=123`, 'user:a@x.com'],
+              },
+            ],
+          }),
+          { status: 200 },
+        )
+      }
+      if (url.includes(':setIamPolicy')) {
+        written = (
+          JSON.parse(String(init?.body)) as {
+            policy: { bindings?: IamBinding[] }
+          }
+        ).policy
+        return new Response(JSON.stringify({}), { status: 200 })
+      }
+      return new Response(JSON.stringify({}), { status: 200 })
+    }) as typeof fetch
+
+    await deleteServiceAccount('tok', 'proj-1', email)
+    expect(written?.bindings).toEqual([
+      { role: FCM_SENDER_ROLE, members: ['user:a@x.com'] },
+    ])
   })
 
   test('still deletes the account when the policy update fails', async () => {
