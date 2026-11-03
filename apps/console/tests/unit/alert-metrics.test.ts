@@ -127,6 +127,34 @@ describe('alert rule form', () => {
     expect(input.critical).toBe(false)
   })
 
+  test('keeps a critical monitor critical through the edit form', () => {
+    const input = monitorInputFromForm(
+      { ...emptyRuleForm(), critical: true },
+      t,
+    )
+    expect(input.critical).toBe(true)
+    const monitor = parseMonitor({
+      $id: 'm1',
+      $createdAt: '',
+      $updatedAt: '',
+      type: 'usage',
+      resourceType: 'project',
+      resourceId: '',
+      window: 3600,
+      cooldown: 3600,
+      enabled: true,
+      status: 'ok',
+      value: null,
+      evaluatedAt: null,
+      alertId: '',
+      triggeredAt: null,
+      ...input,
+    } as Monitor)
+    expect(monitorInputFromForm(ruleFormFromMonitor(monitor), t).critical).toBe(
+      true,
+    )
+  })
+
   test('names an unnamed rule after its condition', () => {
     expect(monitorInputFromForm(emptyRuleForm(), t).name).toBe(
       'Outbound bandwidth > 10 GB',
