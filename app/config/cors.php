@@ -22,6 +22,7 @@ return [
         'X-Appwrite-Mode',
         'X-Appwrite-JWT',
         'X-Appwrite-Organization',
+        'X-Appwrite-Environment',
         'X-Appwrite-Response-Format',
         'X-Appwrite-Timeout',
         'X-Appwrite-ID',

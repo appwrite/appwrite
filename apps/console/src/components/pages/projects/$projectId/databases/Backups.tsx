@@ -3,6 +3,8 @@ import { Link, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, BackupServices } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { setActiveEnvironment } from '@/lib/active-environment'
+import { projectEnvironmentId } from '@/lib/project-environments'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { formatDateTime } from '@/lib/date-utils'
@@ -160,7 +162,7 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
   const region = project?.region
   // An environment is backed up with the project it belongs to: its backup
   // routes refuse, so nothing is asked of them
-  const isEnvironment = !!projectData?.parentId
+  const isEnvironment = !!projectEnvironmentId(projectData)
 
   // Get organization plan to check backups availability
   const { plan: organizationPlan, isLoading: planLoading } =
@@ -582,7 +584,8 @@ export function BackupsView({ databaseId, dbKind }: BackupsViewProps) {
                 <Button asChild variant="outline" size="sm">
                   <Link
                     to="/projects/$projectId/databases"
-                    params={{ projectId: projectData.parentId as string }}
+                    params={{ projectId }}
+                    onClick={() => setActiveEnvironment(projectId, null)}
                   >
                     {t('Open the project')}
                   </Link>
