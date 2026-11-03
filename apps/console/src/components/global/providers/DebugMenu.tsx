@@ -1765,6 +1765,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Review',
+                'Show the Review product (AI code review of GitHub pull requests) in projects where the server has reviews enabled.',
+                'reviews',
+                profileId,
+                features.reviews,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Analytics humans/bots filter',
                 'Clicking Humans or Bots in analytics filters the page (via an empty vs non-empty bot category).',
                 'analyticsTrafficFilter',
@@ -2117,6 +2125,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.videos,
     features.analytics,
     features.alerts,
+    features.reviews,
     features.analyticsTrafficFilter,
     features.appwritePush,
     features.nativeDbsMongo,

@@ -3337,6 +3337,16 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to update environment order': 'עדכון סדר הסביבות נכשל',
   'Project environment': 'סביבת פרויקט',
   'Switch to production': 'מעבר לפרודקשן',
+  'Environment ID': 'מזהה סביבה',
+  'An environment with this ID already exists in this project.':
+    'סביבה עם המזהה הזה כבר קיימת בפרויקט.',
+  'Use lowercase letters, numbers and hyphens, starting with a letter or a number.':
+    'השתמשו באותיות קטנות, ספרות ומקפים, והתחילו באות או בספרה.',
+  'What your apps pass as the environment next to the project ID, so pick one you can type: staging, preview, qa.':
+    'מה שהאפליקציות שלכם מעבירות כסביבה לצד מזהה הפרויקט, אז בחרו משהו שנוח להקליד: staging, preview, qa.',
+  'Connect to this environment': 'התחברות לסביבה הזו',
+  'Same endpoint and project ID as production. The environment ID is what tells them apart.':
+    'אותו endpoint ואותו מזהה פרויקט כמו בפרודקשן. מזהה הסביבה הוא מה שמבדיל ביניהם.',
   'Changes here do not affect production.':
     'שינויים כאן לא משפיעים על פרודקשן.',
   'Name the environment and choose where it starts.':

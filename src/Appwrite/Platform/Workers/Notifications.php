@@ -35,6 +35,7 @@ use Utopia\Queue\PermanentFailure;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 
 class Notifications extends Action
 {
@@ -52,6 +53,8 @@ class Notifications extends Action
     ];
 
     private PublicHostname $publicHostname;
+
+    private Telemetry $telemetry;
 
     private ?PushAdapter $adapterForPush = null;
 
@@ -71,13 +74,15 @@ class Notifications extends Action
             ->inject('platform')
             ->inject('clientForWebhooks')
             ->inject('publicHostname')
+            ->inject('telemetry')
             ->inject('adapterForPush')
             ->callback($this->action(...));
     }
 
-    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, ?PushAdapter $adapterForPush = null): void
+    public function action(Message $message, Document $project, Registry $register, Database $dbForPlatform, array $platform, Client $clientForWebhooks, PublicHostname $publicHostname, Telemetry $telemetry, ?PushAdapter $adapterForPush = null): void
     {
         $this->publicHostname = $publicHostname;
+        $this->telemetry = $telemetry;
         $this->adapterForPush = $adapterForPush;
 
         $payload = $message->getPayload();
@@ -378,6 +383,9 @@ class Notifications extends Action
                 html: true,
                 headers: \is_array($payload['headers'] ?? null) ? $payload['headers'] : [],
             );
+            $emailMessage
+                ->setOrigin(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setTemplate(($payload['template'] ?? '') ?: 'unknown');
 
             // A pooled adapter belongs to this send alone; a project's own SMTP is
             // dialled for it, on the addresses just checked, and closed after.
@@ -395,7 +403,13 @@ class Notifications extends Action
                 addresses: new Host($this->publicHostname)->addresses($smtp['host']),
             );
 
-            $send = static fn (EmailAdapter $adapter): array => $adapter->send($emailMessage);
+            $telemetry = $this->telemetry;
+            // Pooled adapters are shared with other senders, so bind the counter on every use.
+            $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
+                $adapter->setTelemetry($telemetry);
+
+                return $adapter->send($emailMessage);
+            };
 
             $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
         } catch (InvalidArgumentException $error) {
