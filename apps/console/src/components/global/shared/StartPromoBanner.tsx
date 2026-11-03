@@ -206,7 +206,7 @@ export function StartPromoBanner() {
               <img
                 src={promoContent.imageSrc}
                 alt=""
-                className="absolute start-[-28px] top-[-60px] h-[240px] w-auto max-w-none opacity-90 sm:start-[-40px] sm:top-[-92px] sm:h-[360px]"
+                className="absolute start-[-28px] top-[-60px] h-[240px] w-auto max-w-none opacity-40 sm:start-[-40px] sm:top-[-92px] sm:h-[360px] sm:opacity-90"
                 style={START_PROMO_IMAGE_MASK_STYLE}
               />
             </div>
