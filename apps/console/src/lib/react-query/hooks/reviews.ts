@@ -19,6 +19,7 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import type {
   Review,
+  ReviewEventList,
   ReviewList,
   ReviewRepositoryList,
 } from '@/lib/appwrite/reviews'
@@ -27,6 +28,9 @@ import { fetchRepositories } from './vcs'
 
 /** Reviews are fanned out by the review service, so poll while one is running. */
 const REVIEW_POLL_INTERVAL = 5 * 1000
+
+/** A review's trace is a few hundred steps at most; load it in one page. */
+export const REVIEW_EVENTS_LIMIT = 500
 
 /** A project reviews a handful of repositories; load them in one page. */
 export const REVIEW_REPOSITORIES_LIMIT = 100
@@ -141,6 +145,28 @@ export function reviewQueryOptions(
   })
 }
 
+/**
+ * The review agent's trace. Polls while the review runs, so the steps appear live.
+ */
+export function reviewEventsQueryOptions(
+  projectId: string | null | undefined,
+  reviewId: string | null | undefined,
+  running: boolean,
+) {
+  return queryOptions({
+    queryKey: ['review-events', 'project', projectId, reviewId],
+    queryFn: (): Promise<ReviewEventList> =>
+      sdk.forProject(projectId!).reviews.listEvents({
+        reviewId: reviewId!,
+        queries: [Query.limit(REVIEW_EVENTS_LIMIT)],
+      }),
+    enabled: !!projectId && !!reviewId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchInterval: running ? REVIEW_POLL_INTERVAL : false,
+  })
+}
+
 export function reviewRepositoriesQueryOptions(
   projectId: string | null | undefined,
 ) {
@@ -188,6 +214,23 @@ export function useReview(
   )
 
   return { review: data ?? null, isLoading, error }
+}
+
+export function useReviewEvents(
+  projectId: string | null | undefined,
+  reviewId: string | null | undefined,
+  running: boolean,
+) {
+  const { data, isLoading, error } = useQuery(
+    reviewEventsQueryOptions(projectId, reviewId, running),
+  )
+
+  return {
+    events: data?.events ?? [],
+    total: data?.total ?? 0,
+    isLoading,
+    error,
+  }
 }
 
 export function useReviewRepositories(projectId: string | null | undefined) {

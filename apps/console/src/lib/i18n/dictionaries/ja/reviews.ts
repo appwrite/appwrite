@@ -78,4 +78,6 @@ export const jaReviewsDictionary: Record<string, string> = {
   'Turn on code review for every repository in the installation?':
     'インストール内のすべてのリポジトリでコードレビューを有効にしますか？',
   'Add all': 'すべて追加',
+  Trace: 'トレース',
+  'No steps recorded yet.': 'まだステップは記録されていません。',
 }

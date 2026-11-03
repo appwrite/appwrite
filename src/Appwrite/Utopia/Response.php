@@ -373,6 +373,8 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW = 'review';
     public const MODEL_REVIEW_LIST = 'reviewList';
     public const MODEL_REVIEW_FINDING = 'reviewFinding';
+    public const MODEL_REVIEW_EVENT = 'reviewEvent';
+    public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
 

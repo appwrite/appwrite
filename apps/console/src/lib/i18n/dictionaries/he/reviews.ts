@@ -76,4 +76,6 @@ export const heReviewsDictionary: Record<string, string> = {
   'Turn on code review for every repository in the installation?':
     'להפעיל סקירת קוד לכל המאגרים בהתקנה?',
   'Add all': 'הוספת הכל',
+  Trace: 'מעקב',
+  'No steps recorded yet.': 'עדיין לא נרשמו שלבים.',
 }
