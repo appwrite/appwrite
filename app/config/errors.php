@@ -1201,6 +1201,31 @@ return [
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
     ],
+    Exception::TRANSFER_NOT_FOUND => [
+        'name' => Exception::TRANSFER_NOT_FOUND,
+        'description' => 'Transfer with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TRANSFER_INVALID_SECRET => [
+        'name' => Exception::TRANSFER_INVALID_SECRET,
+        'description' => 'The transfer secret is invalid. Please ask the sender for a new transfer link.',
+        'code' => 401,
+    ],
+    Exception::TRANSFER_EXPIRED => [
+        'name' => Exception::TRANSFER_EXPIRED,
+        'description' => 'The transfer has expired. Please ask the sender for a new transfer link.',
+        'code' => 410,
+    ],
+    Exception::TRANSFER_RECIPIENT_MISMATCH => [
+        'name' => Exception::TRANSFER_RECIPIENT_MISMATCH,
+        'description' => 'The transfer can only be claimed by its recipient.',
+        'code' => 403,
+    ],
+    Exception::TRANSFER_ALREADY_OWNED => [
+        'name' => Exception::TRANSFER_ALREADY_OWNED,
+        'description' => 'The resource already belongs to this recipient.',
+        'code' => 400,
+    ],
     Exception::PROJECT_ALREADY_EXISTS => [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
@@ -1301,6 +1326,36 @@ return [
         'description' => 'One or more webhook deliveries failed.',
         'code' => 502,
         'publish' => false,
+    ],
+    Exception::MONITOR_NOT_FOUND => [
+        'name' => Exception::MONITOR_NOT_FOUND,
+        'description' => 'Monitor with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MONITOR_ALREADY_EXISTS => [
+        'name' => Exception::MONITOR_ALREADY_EXISTS,
+        'description' => 'Monitor with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::MONITOR_RULES_INVALID => [
+        'name' => Exception::MONITOR_RULES_INVALID,
+        'description' => 'The monitor\'s rules are invalid. A usage monitor takes one rule comparing a metric with a threshold, optionally scoped with equal(\'resourceType\') and equal(\'resourceId\') rules.',
+        'code' => 400,
+    ],
+    Exception::MONITOR_TYPE_MISMATCH => [
+        'name' => Exception::MONITOR_TYPE_MISMATCH,
+        'description' => 'The monitor is of a different type. Update it with the route for its type.',
+        'code' => 400,
+    ],
+    Exception::MONITOR_RESOURCE_NOT_FOUND => [
+        'name' => Exception::MONITOR_RESOURCE_NOT_FOUND,
+        'description' => 'The resource the monitor watches could not be found in this project.',
+        'code' => 400,
+    ],
+    Exception::ALERT_NOT_FOUND => [
+        'name' => Exception::ALERT_NOT_FOUND,
+        'description' => 'Alert with the requested ID could not be found.',
+        'code' => 404,
     ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
@@ -1628,6 +1683,28 @@ return [
     Exception::REPORT_ALREADY_EXISTS => [
         'name' => Exception::REPORT_ALREADY_EXISTS,
         'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reviews */
+    Exception::REVIEW_NOT_FOUND => [
+        'name' => Exception::REVIEW_NOT_FOUND,
+        'description' => 'Review with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_CHAT_NOT_FOUND => [
+        'name' => Exception::REVIEW_CHAT_NOT_FOUND,
+        'description' => 'No answer was queued for the requested comment on this repository and pull request.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_STATUS_INVALID => [
+        'name' => Exception::REVIEW_STATUS_INVALID,
+        'description' => 'The review has already ended and its status can no longer change.',
+        'code' => 409,
+    ],
+    Exception::REVIEW_REPOSITORY_ALREADY_EXISTS => [
+        'name' => Exception::REVIEW_REPOSITORY_ALREADY_EXISTS,
+        'description' => 'Code review is already on for this repository in this project.',
         'code' => 409,
     ],
 ];

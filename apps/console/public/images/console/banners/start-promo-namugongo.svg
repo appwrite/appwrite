@@ -1,0 +1,35 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="namugongoGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="namugongo">
+<path d="M241 64C222 140 182 210 122 262H360C300 210 260 140 241 64Z"/>
+<path d="M128 262H354V268H128Z"/>
+<path d="M239.25 40H242.75V64H239.25Z"/>
+<path d="M96 296H386V310H96Z"/>
+<path d="M134 268H139V296H134Z"/>
+<path d="M154 268H159V296H154Z"/>
+<path d="M174 268H179V296H174Z"/>
+<path d="M194 268H199V296H194Z"/>
+<path d="M214 268H219V296H214Z"/>
+<path d="M234 268H239V296H234Z"/>
+<path d="M254 268H259V296H254Z"/>
+<path d="M274 268H279V296H274Z"/>
+<path d="M294 268H299V296H294Z"/>
+<path d="M314 268H319V296H314Z"/>
+<path d="M334 268H339V296H334Z"/>
+</g>
+</defs>
+<use href="#namugongo" fill="#19191C"/>
+<use href="#namugongo" fill="url(#namugongoGrad)"/>
+<use href="#namugongo" stroke="#FD366E" stroke-width="1.36239"/>
+<g fill="#19191C" stroke="#FD366E" stroke-width="1.36239"><path d="M226 296V282C226 261.99 256 261.99 256 282V296Z"/></g>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M241 64C236 140 220 210 196 262"/><path d="M241 64C246 140 262 210 286 262"/><path d="M241 64C230 140 202 210 160 262"/><path d="M241 64C252 140 280 210 322 262"/><path d="M241 64V262"/><path d="M232 40H250"/><path d="M234 48H248"/></g>
+</svg>

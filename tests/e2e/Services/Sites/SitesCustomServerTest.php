@@ -2870,9 +2870,13 @@ final class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
+            $buildLogs = (string) $deployment['body']['buildLogs'];
+            $screenshotsCaptured = ! empty($deployment['body']['screenshotLight'])
+                && ! empty($deployment['body']['screenshotDark']);
             $this->assertTrue(
-                \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing finished.')
-                || \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing failed.'),
+                \str_contains($buildLogs, 'Screenshot capturing finished.')
+                || \str_contains($buildLogs, 'Screenshot capturing failed.')
+                || $screenshotsCaptured,
                 'Screenshot worker did not finish: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT)
             );
         }, 120000, 500);
@@ -4182,8 +4186,59 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
-        // Failure: User missing
-        $cookie = 'a_session_console=' .$this->getRoot()['session'];
+        // Failure: Blocked user (must not use getRoot(); blocking poisons later tests in this worker)
+        $blockedEmail = \uniqid() . 'blocked-preview@appwrite.io';
+        $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => Id::unique(),
+            'email' => $blockedEmail,
+            'password' => 'password',
+        ]);
+
+        $adminCookie = 'a_session_console=' . $this->getRoot()['session'];
+        $blockedMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $adminCookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'email' => $blockedEmail,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $blockedMembership['headers']['status-code']);
+
+        $invite = $this->getLastEmailByAddress($blockedEmail, function (array $email): void {
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
+
+        $blockedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $blockedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $blockedSession['headers']['status-code']);
+
+        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $blockedMembership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $blockedSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirm['headers']['status-code']);
+
+        $cookie = 'a_session_console=' . $blockedSession['cookies']['a_session_console'];
         $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',

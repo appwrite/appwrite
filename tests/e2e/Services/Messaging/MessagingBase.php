@@ -2967,6 +2967,148 @@ trait MessagingBase
         );
     }
 
+    public function testDraftWithScheduledAtToScheduledEmail(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create draft message with a scheduledAt, which stores scheduledAt without a schedule
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $messageId = $message['body']['$id'];
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        // Convert draft to scheduled message, creating the missing schedule
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        // Reschedule to verify the schedule was created and linked to the message
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 900);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($rescheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+    }
+
+    public function testDraftWithScheduledAtToScheduledPush(): void
+    {
+        // Create topic
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => Id::unique(),
+            'name' => 'topic-scheduled-draft-push',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        // Create draft message with a scheduledAt, which stores scheduledAt without a schedule
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'topics' => [$topic['body']['$id']],
+            'title' => 'Test-Notification',
+            'body' => 'Test-Notification-Body',
+            'draft' => true,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $messageId = $message['body']['$id'];
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        // Convert draft to scheduled message, creating the missing schedule
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        // Reschedule to verify the schedule was created and linked to the message
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 900);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($rescheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+    }
+
     public function testUpdateScheduledAt(): void
     {
         // Create user

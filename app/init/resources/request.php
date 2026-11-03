@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
 use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
@@ -39,6 +40,7 @@ use Appwrite\Utopia\Database\Hook\Usage;
 use Appwrite\Utopia\Database\Hook\UserEvents;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use GraphQL\Error\Error as GraphQLError;
 use OpenRuntimes\Orchestrator\Jobs;
 use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
@@ -56,6 +58,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
@@ -537,9 +540,8 @@ return function (Container $context): void {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
             }
 
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException $error) {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
@@ -689,9 +691,8 @@ return function (Container $context): void {
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
         if (! $sessionId && ! empty($authJWT)) {
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException) {
                 return;
             }
@@ -772,7 +773,22 @@ return function (Container $context): void {
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 
         $complexity = function (int $complexity, array $args) {
-            $queries = Query::parseQueries($args['queries'] ?? []);
+            $rawQueries = $args['queries'] ?? [];
+
+            if (!\is_array($rawQueries)) {
+                if (\is_string($rawQueries)) {
+                    $rawQueries = [$rawQueries];
+                } else {
+                    throw new GraphQLError('Parameter "queries" must be an array of query strings.');
+                }
+            }
+
+            try {
+                $queries = Query::parseQueries($rawQueries);
+            } catch (QueryException $e) {
+                throw new GraphQLError($e->getMessage());
+            }
+
             $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
@@ -1019,10 +1035,8 @@ return function (Container $context): void {
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // Instantiate with key, algo, maxAge and leeway.
-
             try {
-                $payload = $jwt->decode($tokenJWT);
+                $payload = EncryptionKey::decode($tokenJWT, RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY);
             } catch (JWTException $error) {
                 return new Document([]);
             }

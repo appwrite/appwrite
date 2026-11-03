@@ -261,9 +261,15 @@ class Response extends SwooleResponse
     public const MODEL_PROJECT_PROTOCOL = 'projectProtocol';
     public const MODEL_WEBHOOK = 'webhook';
     public const MODEL_WEBHOOK_LIST = 'webhookList';
+    public const MODEL_MONITOR = 'monitor';
+    public const MODEL_MONITOR_LIST = 'monitorList';
+    public const MODEL_ALERT = 'alert';
+    public const MODEL_ALERT_LIST = 'alertList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_EPHEMERAL_KEY = 'ephemeralKey';
+    public const MODEL_TRANSFER = 'transfer';
+    public const MODEL_TRANSFER_LIST = 'transferList';
     public const MODEL_MOCK_NUMBER = 'mockNumber';
     public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_POLICY_LIST = 'policyList';
@@ -362,6 +368,13 @@ class Response extends SwooleResponse
     public const MODEL_INSIGHT_CTA = 'insightCTA';
     public const MODEL_REPORT = 'report';
     public const MODEL_REPORT_LIST = 'reportList';
+
+    // Reviews
+    public const MODEL_REVIEW = 'review';
+    public const MODEL_REVIEW_LIST = 'reviewList';
+    public const MODEL_REVIEW_FINDING = 'reviewFinding';
+    public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
+    public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
@@ -493,8 +506,11 @@ class Response extends SwooleResponse
             $document->setAttribute('impersonatorUserId', $this->impersonatorUser->getId());
         }
 
-        $output = $this->output(clone $document, $model);
-        $output = $this->applyFilters($output, $model, raw: clone $document);
+        // output() clones the document itself, filters get their own copy as raw content
+        $output = $this->output($document, $model);
+        if ($this->hasFilters()) {
+            $output = $this->applyFilters($output, $model, raw: clone $document);
+        }
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:

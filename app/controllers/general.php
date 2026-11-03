@@ -1,5 +1,7 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
+
 require_once __DIR__ . '/../init.php';
 
 use Ahc\Jwt\JWT;
@@ -276,11 +278,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             // Security checks to mark authorized true
             if (!empty($cookie)) {
-                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
                 $payload = [];
                 try {
-                    $payload = $jwt->decode($cookie);
+                    $payload = EncryptionKey::decode($cookie);
                 } catch (JWTException $error) {
                     // Authorized remains false
                 }
@@ -433,7 +433,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $headers['x-appwrite-client-ip'] = $ip;
 
         $jwtExpiry = $resource->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+        $jwtObj = new JWT(EncryptionKey::current(), 'HS256', $jwtExpiry, 0);
         $jwtKey = $jwtObj->encode([
             Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),

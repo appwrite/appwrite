@@ -5,6 +5,7 @@ use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -18,6 +19,7 @@ use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
@@ -317,6 +319,11 @@ $container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublish
     new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('publisherForReviews', fn (Publisher $publisher) => new ReviewPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_REVIEWS_QUEUE_NAME', Event::REVIEWS_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('publisherForDatabase', fn (Publisher $publisher) => new DatabasePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
@@ -340,6 +347,11 @@ $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublis
 $container->set('publisherForMessaging', fn (Publisher $publisher) => new MessagingPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForAlerts', fn (Publisher $publisher) => new AlertPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_ALERTS_QUEUE_NAME', Event::ALERTS_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(

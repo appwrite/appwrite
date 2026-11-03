@@ -19,13 +19,13 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Rules
-        $this->addAction(CreateAPIRule::getName(), new CreateAPIRule());
-        $this->addAction(CreateSiteRule::getName(), new CreateSiteRule());
-        $this->addAction(CreateFunctionRule::getName(), new CreateFunctionRule());
-        $this->addAction(CreateRedirectRule::getName(), new CreateRedirectRule());
-        $this->addAction(GetRule::getName(), new GetRule());
-        $this->addAction(ListRules::getName(), new ListRules());
-        $this->addAction(DeleteRule::getName(), new DeleteRule());
-        $this->addAction(UpdateRuleStatus::getName(), new UpdateRuleStatus());
+        $this->addAction('createAPIRule', CreateAPIRule::class);
+        $this->addAction('createSiteRule', CreateSiteRule::class);
+        $this->addAction('createFunctionRule', CreateFunctionRule::class);
+        $this->addAction('createRedirectRule', CreateRedirectRule::class);
+        $this->addAction('getRule', GetRule::class);
+        $this->addAction('listRules', ListRules::class);
+        $this->addAction('deleteRule', DeleteRule::class);
+        $this->addAction('updateRuleVerification', UpdateRuleStatus::class);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Push;
 
-use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Documents\User;
@@ -71,10 +71,8 @@ class Get extends Action
         Authorization $authorization,
         User $user
     ) {
-        $decoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
         try {
-            $decoded = $decoder->decode($jwt);
+            $decoded = EncryptionKey::decode($jwt);
         } catch (JWTException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }

@@ -570,7 +570,7 @@ export function VerifyDomainContent({
         <Alert variant="default" className="border-blue-500/30 bg-blue-500/5">
           <AlertDescription className="text-[13px] text-muted-foreground">
             {t(
-              'SSL certificate is being issued. This usually takes a couple of minutes - no action needed on your end.',
+              "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.",
             )}
           </AlertDescription>
         </Alert>

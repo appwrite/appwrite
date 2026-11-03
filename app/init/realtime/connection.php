@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
@@ -259,10 +260,8 @@ return function (Container $container): void {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
             }
 
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException $error) {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
@@ -352,10 +351,8 @@ return function (Container $container): void {
 
         $authJWT = $request->getHeaderLine('x-appwrite-jwt', (string)($request->getParam('jwt', '')));
         if (!$sessionId && !empty($authJWT)) {
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException $error) {
                 // The user resource verified this token, but it can expire before this
                 // second decode. The signature is checked before expiry, so its claims
@@ -363,7 +360,7 @@ return function (Container $container): void {
                 if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
                     return null;
                 }
-                $payload = $jwt->decode($authJWT, false);
+                $payload = (new JWT(EncryptionKey::current()))->decode($authJWT, false);
             }
 
             $jwtSessionId = $payload['sessionId'] ?? '';
@@ -394,17 +391,15 @@ return function (Container $container): void {
             return null;
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
         try {
-            $payload = $jwt->decode($authJWT);
+            $payload = EncryptionKey::decode($authJWT);
         } catch (JWTException $error) {
             // Expired since the user resource verified it: keep that expiry, which
             // closes the connection at its first send, rather than dropping it.
             if ($error->getCode() !== JWT::ERROR_TOKEN_EXPIRED) {
                 return null;
             }
-            $payload = $jwt->decode($authJWT, false);
+            $payload = (new JWT(EncryptionKey::current()))->decode($authJWT, false);
         }
 
         $expire = $payload['exp'] ?? null;

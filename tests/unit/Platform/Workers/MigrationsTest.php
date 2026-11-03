@@ -338,7 +338,7 @@ final class MigrationsTest extends TestCase
             }
 
             #[\Override]
-            protected function generateAPIKey(Document $project): string
+            protected function generateAPIKey(Document $project, Document $migration): string
             {
                 return 'key';
             }
