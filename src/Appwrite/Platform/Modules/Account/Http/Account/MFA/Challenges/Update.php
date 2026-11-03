@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Event\Event;
@@ -77,8 +78,7 @@ class Update extends Action
                     contentType: ContentType::JSON
                 )
             ])
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
+            ->label('abuse', [Limit::attempts(['url', 'param.challengeId'], 10)])
             ->param('challengeId', '', new Text(256), 'ID of the challenge.')
             ->param('otp', '', new Text(256), 'Valid verification token.')
             ->inject('project')

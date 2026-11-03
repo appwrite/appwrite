@@ -66,4 +66,16 @@ export const heReviewsDictionary: Record<string, string> = {
   'Failed to turn off code review': 'כיבוי סקירת הקוד נכשל',
   "You don't have permission to add repositories.":
     'אין לכם הרשאה להוסיף repos.',
+  'Add all repositories': 'הוספת כל המאגרים',
+  'Adding repositories...': 'מוסיף מאגרים...',
+  'repositories added': 'מאגרים נוספו',
+  'repositories already on': 'מאגרים כבר פעילים',
+  'repositories failed': 'מאגרים נכשלו',
+  'Some repositories could not be added': 'לא ניתן היה להוסיף חלק מהמאגרים',
+  'Counting repositories...': 'סופר מאגרים...',
+  'Turn on code review for every repository in the installation?':
+    'להפעיל סקירת קוד לכל המאגרים בהתקנה?',
+  'Add all': 'הוספת הכל',
+  Trace: 'מעקב',
+  'No steps recorded yet.': 'עדיין לא נרשמו שלבים.',
 }

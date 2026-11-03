@@ -368,13 +368,20 @@ export function useCsvImportMigrations(
 export async function fetchEnvironmentCopyMigrations(
   projectId: string,
   region?: string,
+  environmentId?: string,
 ) {
   if (!projectId) {
     return { migrations: [] as Models.Migration[] }
   }
-  // A project the Console has not loaded yet is not in the region cache, so a
-  // caller that knows the region (a freshly created environment) passes it
-  const projectSdk = sdk.forProject(projectId, region)
+  // The copy is a migration of the environment, read inside it: the environment
+  // the Console is in, or the one a caller names (the wizard, from the project).
+  // A caller that knows the region passes it, as the project's region is the
+  // environment's and may not be cached yet.
+  const projectSdk = sdk.forProject(
+    projectId,
+    region,
+    environmentId === undefined ? {} : { environment: environmentId },
+  )
   const response = await projectSdk.migrations.list({
     queries: [
       Query.equal('source', 'Appwrite'),

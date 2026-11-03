@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\OAuth2\Redirect;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OAuth2;
@@ -18,6 +19,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Account\Base;
 use Appwrite\URL\URL as URLParser;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -67,8 +69,7 @@ class Get extends Base
             ->label('audits.event', 'session.create')
             ->label('audits.resource', 'user/{user.$id}')
             ->label('audits.userId', '{user.$id}')
-            ->label('abuse-limit', 50)
-            ->label('abuse-key', 'ip:{ip}')
+            ->label('abuse', [Limit::attempts(['ip'], 50)])
             ->label('docs', false)
             ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
             ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
@@ -107,7 +108,7 @@ class Get extends Base
         string $error_description,
         Request $request,
         Response $response,
-        Document $project,
+        Project $project,
         Validator $redirectValidator,
         User $user,
         Database $dbForProject,
@@ -196,7 +197,7 @@ class Get extends Base
         // The default relays live on the console host; the same path on any other allowed host is a customer page.
         // Native apps skip the relay: its JavaScript redirect into the app is late or dropped on slow in-app browsers.
         $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
-        $nativeCallback = ['scheme' => 'appwrite-callback-' . $project->getId()];
+        $nativeCallback = ['scheme' => $project->getCallbackScheme()];
 
         $failure = [];
         if (!empty($state['failure'])) {

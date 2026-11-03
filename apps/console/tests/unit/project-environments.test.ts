@@ -4,6 +4,7 @@ import {
   PROJECT_ENVIRONMENT_DOT_CLASS_PRODUCTION,
   projectEnvironmentDotClass,
   sortProjectEnvironments,
+  suggestProjectEnvironmentId,
   suggestProjectEnvironmentName,
 } from '@/lib/project-environments'
 
@@ -103,5 +104,25 @@ describe('project environment name suggestion', () => {
 
   test('blank taken names are ignored', () => {
     expect(suggestProjectEnvironmentName(['', '  '])).toBe('Stage')
+  })
+})
+
+describe('project environment id suggestion', () => {
+  test('the name becomes a project-shaped id', () => {
+    expect(suggestProjectEnvironmentId('Stage')).toBe('stage')
+    expect(suggestProjectEnvironmentId('QA / Beta 2')).toBe('qa-beta-2')
+    expect(suggestProjectEnvironmentId('  Preview  ')).toBe('preview')
+  })
+
+  test('a name without letters or digits leaves the id to the server', () => {
+    expect(suggestProjectEnvironmentId('***')).toBe('')
+    expect(suggestProjectEnvironmentId('')).toBe('')
+  })
+
+  test('the id never exceeds the project id length nor ends in a hyphen', () => {
+    const id = suggestProjectEnvironmentId('a'.repeat(35) + ' tail')
+    expect(id.length).toBeLessThanOrEqual(36)
+    expect(id.endsWith('-')).toBe(false)
+    expect(id).toBe('a'.repeat(35))
   })
 })

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\ClamAV\Network;
 use Appwrite\ClamAV\ScanResult;
@@ -96,9 +97,7 @@ class Create extends Action
             ->label('event', 'buckets.[bucketId].files.[fileId].create')
             ->label('audits.resource', 'file/{response.$id}')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{response.$id}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId', 'chunkId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'storage',
                 group: 'files',

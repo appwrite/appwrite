@@ -38,7 +38,7 @@ Patches leave on a schedule so that "is this worth a release?" stops being a per
 Every release is tagged from its `X.Y.x` branch, never from `main`. The branch gives a stable target to test before tagging, and it is what nightly and backports follow.
 
 1. **Minor:** cut `X.Y.x` from `main`. **Patch:** reuse the existing `X.Y.x`. `bin/release prepare` does this.
-2. Open the prep PR against `X.Y.x`, with the [version bump](#version-bump), the [environment variable sync](#environment-variables) and, for a minor, the [migration library sync](#migration-library).
+2. Open the prep PR against `X.Y.x`, with the [version bump](#version-bump) and the [environment variable sync](#environment-variables). For a minor, the [migration sync](#migration-library) lands on `main` first, so `prepare` picks it up.
 3. Open a PR from `X.Y.x` into `main`. For a minor, `X.Y.x` starts at `main`, so this PR can only open once the prep PR has merged into `X.Y.x`. Run both [gates](#self-hosted-rc--final) locally against `X.Y.x` and record the results, with the exact commit SHA tested, in this PR, so it is the release's test record. Tag that SHA, then merge this PR after the release is published so the version bump and any release-only fixes land back on `main`.
 
 If a fix must reach the release while the prep PR is open, land it on `main` and move `X.Y.x` up to `main` (a plain push while `X.Y.x` has no commits of its own, a backport after that). Then merge `X.Y.x` into `release/X.Y.Z`. Do not rebase the prep branch: `release/*` can't be force-pushed.
@@ -62,7 +62,7 @@ bin/release check X.Y.Z [--ref=<commit>]
 
 A **minor** (`2.2.0` → `2.3.0`) is anything with new public API, a schema change or removed env vars. A **patch** is fixes only (see rule 1).
 
-`prepare` also writes a release-notes draft to the git directory (its path is printed, and `push` uses it as the prep PR body): the section skeleton of the published [2.2.0 release](https://github.com/appwrite/appwrite/releases/tag/2.2.0) with the install and upgrade commands and contributors filled in, followed by GitHub's generated PR list. Rewrite it in the prep PR body so it is reviewed with the bump, listing only what a self-hosted user can reach through the API and the pinned console. Leave out API additions that have no console screen yet, and say so in the PR. Check every item against the `self-hosted` profile in [`apps/console/src/lib/console-profiles.ts`](../apps/console/src/lib/console-profiles.ts): console features that are off there (the activity log, the email verification page, account MFA, OAuth sign-in, …) are Cloud-only. Infrastructure self-hosters can't turn on, such as NATS queues, stays out too. The sections:
+`prepare` also writes a release-notes draft to the git directory (its path is printed, and `push` uses it as the prep PR body): the section skeleton of the published [2.2.0 release](https://github.com/appwrite/appwrite/releases/tag/2.2.0) with the install and upgrade commands and contributors filled in, followed by GitHub's generated PR list. Rewrite it in the prep PR body so it is reviewed with the bump, listing only what a self-hosted user can reach through the API and the pinned console. Leave out API additions that have no console screen yet, and say so in the PR. The generated list compares the previous tag, which sits on its patch branch, with `main`, so fixes already backported into an earlier patch show up again; drop them (about a third of the 2.7.0 list). Check console items against the pinned console tag, not `main`. Check every item against the `self-hosted` profile in [`apps/console/src/lib/console-profiles.ts`](../apps/console/src/lib/console-profiles.ts): console features that are off there (the activity log, the email verification page, account MFA, OAuth sign-in, …) are Cloud-only. Infrastructure self-hosters can't turn on, such as NATS queues, stays out too. The sections:
 
 - one intro paragraph: themes, console version, upgrade effort
 - `### Highlights`, including the console bump
@@ -87,13 +87,17 @@ Every `_APP_` variable a user can set needs a definition in [`app/config/variabl
 
 ## Migration library
 
-Projects move between installs and to Cloud through [`utopia-php/migration`](https://github.com/utopia-php/migration). It reads the source with sdk-for-php (`appwrite/appwrite`) and writes the destination through the same SDK or straight to the database, so a field that a release adds is dropped on migration until the library carries it.
+Projects move between installs and to Cloud through the migration package in [`packages/migration`](../packages/migration). It reads the source with sdk-for-php (`appwrite/appwrite`) and writes the destination through the same SDK or straight to the platform database, so a field that a release adds is dropped on migration until the package carries it, and it can only carry it once sdk-for-php has the method. sdk-for-php is generated from this repository's code, so release it from the release code rather than waiting for one that follows the release.
 
 For a minor, before the prep PR:
 
-1. In utopia-php/migration, bump `appwrite/appwrite` to the sdk-for-php release that covers this version, on the branch this repo's `utopia-php/migration` constraint resolves to (`2.0.x` for `^2.0`).
-2. Run its unit tests. `AppwriteSdkCoverageTest` fails for every SDK parameter or project setting that the Appwrite destination neither sends nor records as skipped. Carry each one through the resource, the Appwrite source and the Appwrite destination, or add it to the test's skip list with the reason.
-3. Release migration, then bump `utopia-php/migration` and `appwrite/appwrite` in this repo's prep PR. Cover each new field with an assertion in [`tests/e2e/Services/Migrations`](../tests/e2e/Services/Migrations).
+1. Run `bin/release prepare X.Y.Z` and keep `release/X.Y.Z` local.
+2. Generate sdk-for-php from that branch with the `release-sdk` skill in `appwrite-labs/cloud` (`server php --version=X.Y.x`), stopping before its push. Before its `specs` step, copy the branch's `src`, `app` and `packages` over `vendor/appwrite/server-ce`, so the spec reads `X.Y.Z` and the SDK sends `X-Appwrite-Response-Format: X.Y.Z`.
+3. Copy the generated SDK's `src` over `vendor/appwrite/appwrite/src` here and run the package's unit suite: `vendor/bin/phpunit -c packages/migration/phpunit.xml --bootstrap vendor/autoload.php --testsuite unit`. `AppwriteSdkCoverageTest` fails for every SDK parameter or project method that the Appwrite destination neither sends nor records as skipped. Carry each one through the resource, the Appwrite source and the Appwrite destination, or add it to the test's skip list with the reason. A new resource type adds a value to the `AppwriteMigrationResource` enum, so regenerate the SDK afterwards, from the branch with the change.
+4. Release the SDK (the rest of the skill), then open a PR on `main` with the migration change and `appwrite/appwrite` bumped in `composer.json` and `packages/migration/composer.json`. Cover each new field with an assertion in [`tests/e2e/Services/Migrations`](../tests/e2e/Services/Migrations).
+5. Once it merges, delete the local `release/X.Y.Z` and run `prepare` again.
+
+The source reads servers older than the release, so a response model field the release adds must hydrate when it is missing. The generated model fills a missing field from the spec's `default`, but an object default (`new \stdClass()`) never reaches the spec, so give a new nested-model rule `'required' => false` (2.7.0 did this for the project's `prefs`).
 
 A patch needs this only when a fix changes a field that migration carries.
 
@@ -117,10 +121,12 @@ Versioned API specs and SDK examples live in [`appwrite/specs`](https://github.c
 
 The workflow cannot generate `X.Y.x` until cloud `main` knows about it, so every release starts with a cloud PR, `chore(specs): prepare X.Y.x`, opened after the `X.Y.x` → `main` merge and merged before any workflow run. It must contain:
 
-- [ ] `composer update appwrite/server-ce`, so the locked `dev-main` includes the release for the `latest` run.
+- [ ] `appwrite/server-ce` locked at the release commit (`git rev-parse X.Y.Z`), so the locked `dev-main` includes the release for the `latest` run. Set the constraint to `dev-main#<sha>`, run `composer update appwrite/server-ce appwrite/appwrite`, restore `dev-main` and run `composer update --lock`, so only `composer.lock` changes. The release's sdk-for-php comes with it.
 - [ ] `X.Y.x` added to the `version` choices in `specs.yml`, directly under `latest`.
 
-Merge it once cloud CI is green. The `composer update` also moves what Cloud builds from, so treat it like any other cloud dependency bump. Cloud classes that call a server-ce action positionally break when its signature changes: in 2.5.0, appwrite/appwrite#14423 moved `membershipId` to last, and cloud's `Organization/Http/Memberships/Create.php` needed the same order in this PR (appwrite-labs/cloud#6517).
+Do not take the tip of `main`: it carries whatever merged after the release, and in 2.7.0 that was an agents redesign (appwrite/appwrite#15223, 166 PHPStan errors in Cloud) and a streaming change Cloud's Sites lane fails (appwrite/appwrite#13314). Those belong in their own Cloud bump. A review bot may flag fixes from `main` that the lock leaves out; they are not regressions when the previous lock lacked them too.
+
+Merge it once cloud CI is green. The lock also moves what Cloud builds from, so treat it like any other cloud dependency bump. Cloud classes that call a server-ce action positionally break when its signature changes: in 2.5.0, appwrite/appwrite#14423 moved `membershipId` to last, and cloud's `Organization/Http/Memberships/Create.php` needed the same order in this PR (appwrite-labs/cloud#6517).
 
 ### Generate
 
@@ -169,6 +175,15 @@ A release is not ready until a **fresh install** and an **upgrade from the previ
 **Fresh install:** `docker compose down -v` then `up -d --force-recreate --build --wait`. Check `docker compose ps` / logs for crash loops, missing env, failed workers. Hit `/v1/health/version` on the public port. Run unit tests, `tests/e2e/General`, and service e2e. Exercise console users, projects, databases/rows, storage, and (when in scope) functions/sites through public APIs — not empty-stack health checks alone.
 
 **Upgrade:** install the previous stable image, seed broad data (empty values, long strings, relationships, mixed permissions), keep volumes, switch to the target image, run migrate. Migration must complete, be idempotent, and preserve seeded data through public API reads/writes. Install it on non-default ports with a `docker-compose.override.yml`, so the upgrade also shows that both are kept. On a production `.env`, an Appwrite→Appwrite migration between projects on the same instance needs the stack's subnet in `_APP_ALLOWED_INTERNAL_ADDRESSES`.
+
+**Isolate gate stacks.** The installer's compose file is written for one Appwrite per host, so a gate stack next to a running dev or Cloud stack silently talks to it. In 2.7.0 that crashed the upgraded API against the other stack's Postgres (`relation "appwrite._console__metadata" does not exist`) and sent half the gate's requests to the other stack. Run the installer and `upgrade` with `--no-start=true` and `-e COMPOSE_PROJECT_NAME=<project>`, then add a `docker-compose.override.yml`, regenerated after `upgrade`, that:
+
+- renames every network to `<project>_<network>`, since `appwrite`, `gateway`, `browser` and `runtimes` have fixed names, and sets `_APP_COMPUTE_RUNTIMES_NETWORK` to match
+- replaces Traefik's `--providers.docker.constraints` with ``Label(`com.docker.compose.project`,`<project>`)``, since `traefik.constraint-label-stack=appwrite` is on every Appwrite stack
+- resets each `container_name` (`!reset null`) and re-adds the old name as a network alias
+- moves the published ports, including `_APP_MQTT_PORT` and `_APP_MQTT_WSS_PORT`
+
+The executor is still addressed as `exc1` through the Docker socket, so afterwards check that no other stack's `exc1` was attached to the gate's networks (`docker inspect exc1`). A gate image tagged locally as `appwrite/appwrite:X.Y.Z` must be untagged before publishing, so nothing on the host runs it in place of the published image.
 
 **Metadata:** `bin/release check X.Y.Z --ref=<tested-sha>` passes, and the console PR is ready. For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](../app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
 

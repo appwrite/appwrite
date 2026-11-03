@@ -520,7 +520,17 @@ class V25 extends Migration
                 case 'videosCaptions':
                 case 'videosCaptionsSegments':
                     // New in 2.6.0. The document pass visits these collections even when video APIs are disabled.
-                    $this->createCollection($id);
+                    // On shared tables the collection is global: created with a project's tenant, its
+                    // metadata row would belong to that project only and be missing for every other one.
+                    $tenant = $this->dbForProject->getTenant();
+                    if ($this->dbForProject->hasSharedTables()) {
+                        $this->dbForProject->setTenant(null);
+                    }
+                    try {
+                        $this->createCollection($id);
+                    } finally {
+                        $this->dbForProject->setTenant($tenant);
+                    }
                     break;
 
                 case 'reviews':

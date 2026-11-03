@@ -304,7 +304,7 @@ abstract class Response
         $this->startTime = (!empty($time)) ? $time : microtime(true);
     }
 
-    private function isCompressible(?string $contentType): bool
+    protected function isCompressible(?string $contentType): bool
     {
         if (!$contentType) {
             return false;

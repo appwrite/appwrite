@@ -3736,6 +3736,11 @@
             "queries",
             "total"
         ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
         "reviews.listRepositories": [
             "queries",
             "total"
@@ -7968,6 +7973,11 @@
             "reviewId"
         ],
         "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
             "queries",
             "total"
         ],

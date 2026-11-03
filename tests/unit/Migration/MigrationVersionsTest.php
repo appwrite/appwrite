@@ -49,7 +49,10 @@ final class MigrationVersionsTest extends TestCase
         // V26 creates the video collections. 2.6.0 through 2.6.2 already shipped
         // on V25, so the video migration belongs to 2.6.3. Mapping an earlier
         // release to V26 would create the collections too soon, and leaving
-        // 2.6.3 on V25 would skip them. Class existence does not catch either swap.
+        // 2.6.3 on V25 would skip them. 2.7.0 stays on V25: that migration
+        // creates the 2.7 collections and the video collections. Pointing it
+        // at V26 would skip reviews and monitors. Class existence does not
+        // catch either swap.
         $this->assertSame(
             [
                 '2.4.0' => 'V25',
@@ -58,8 +61,9 @@ final class MigrationVersionsTest extends TestCase
                 '2.6.1' => 'V25',
                 '2.6.2' => 'V25',
                 '2.6.3' => 'V26',
+                '2.7.0' => 'V25',
             ],
-            \array_intersect_key(Migration::$versions, \array_flip(['2.4.0', '2.5.0', '2.6.0', '2.6.1', '2.6.2', '2.6.3']))
+            \array_intersect_key(Migration::$versions, \array_flip(['2.4.0', '2.5.0', '2.6.0', '2.6.1', '2.6.2', '2.6.3', '2.7.0']))
         );
     }
 

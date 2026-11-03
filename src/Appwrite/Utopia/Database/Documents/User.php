@@ -287,6 +287,24 @@ class User extends Document
     }
 
     /**
+     * Delete the user's pending recovery links and codes. Each was issued to reset the
+     * password as it stood, so once the password changes none of them is needed.
+     * The caller purges the cached user document, which lists the tokens.
+     */
+    public static function deleteRecoveryTokens(Database $dbForProject, Document $user): void
+    {
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('tokens', [
+            Query::equal('userInternalId', [$sequence]),
+            Query::equal('type', [TOKEN_TYPE_RECOVERY, TOKEN_TYPE_RECOVERY_OTP]),
+        ]);
+    }
+
+    /**
      * Revoke every way into the account other than the address just proven: password,
      * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
      * address and every target not on the proven channel.
