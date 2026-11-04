@@ -2,6 +2,7 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
@@ -15,6 +16,7 @@ use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Query\Schema\ColumnType;
+use Utopia\System\System;
 
 class V25 extends Migration
 {
@@ -625,6 +627,20 @@ class V25 extends Migration
                     // worker silently drops both on every write.
                     if ($collectionType === 'console' && $this->dbForProject->findCollection($id) !== null) {
                         $this->createAttributesFromCollection($this->dbForProject, $id, ['expireDate', 'status']);
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        // A certificate issued before this release has no expiry, so maintenance would
+                        // never check it as it nears expiry. Read it from the certificate in storage.
+                        $letsEncrypt = new LetsEncrypt(System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', '')));
+                        foreach ($this->dbForProject->cursor($id, batchSize: 100) as $certificate) {
+                            if (!empty($certificate->getAttribute('expireDate'))) {
+                                continue;
+                            }
+                            $expireDate = $letsEncrypt->getCertificateExpiry($certificate->getAttribute('domain', ''), null);
+                            if ($expireDate !== null) {
+                                $this->dbForProject->updateDocument($id, $certificate->getId(), new Document(['expireDate' => $expireDate]));
+                            }
+                        }
                     }
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
