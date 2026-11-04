@@ -309,9 +309,10 @@ class User extends Document
      * user row lock, re-read the account and, while the address is still unproven, revoke every
      * other way in and mark it proven in the same transaction.
      *
-     * The lock orders the claim against the account's other writers: a session or token racing it is
-     * either swept by the revocation or written by a request that takes the same lock afterwards and
-     * re-checks the claimed account, and of two concurrent claims only the first revokes.
+     * The lock orders the claim against the account's other writers that take it, so of two concurrent
+     * claims only the first revokes and a request that re-checks the account under the same lock, such
+     * as issuing an email token, sees it claimed. `$user` is left holding the locked row, so a caller
+     * that persists it as a whole document cannot bring back what the winning claim revoked.
      * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
      * Returns true when this claim revoked the credentials, so the caller can purge the cached
      * user and mirror the revocation to MQTT and realtime once the transaction has committed.
@@ -327,6 +328,10 @@ class User extends Document
             if ($locked->isEmpty()) {
                 return;
             }
+
+            // The claim decides on the locked row, and leaves the caller holding it in place of the copy
+            // it came with, which a claim that got here first has already stripped of its credentials
+            $user->setAttributes($locked->getArrayCopy());
 
             // An address already proven was claimed by someone who holds it, so there is nothing left to revoke
             if (!$locked->getAttribute($verification, false)) {

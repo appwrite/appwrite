@@ -741,6 +741,11 @@ final class UserTest extends TestCase
         $this->assertTrue($stale->getAttribute('emailVerification'));
         $this->assertCount(1, $database->find('sessions'));
         $this->assertSame('claimant', $database->find('sessions')[0]->getId());
+
+        // The copy the caller goes on to persist as a whole document must not bring the revoked password back
+        $this->assertEmpty($stale->getAttribute('password'));
+        $database->updateDocument('users', $stale->getId(), $stale);
+        $this->assertEmpty($database->getDocument('users', $stale->getId())->getAttribute('password'));
     }
 
     private function createProjectDatabase(): Database

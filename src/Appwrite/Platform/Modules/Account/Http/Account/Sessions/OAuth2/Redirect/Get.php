@@ -449,8 +449,8 @@ class Get extends Base
                     // The provider verified this address, or its canonical form on the same domain
                     if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
                         // Proving an unverified address claims the account, so whoever registered it keeps no other way in.
-                        // The claim takes the user row lock, so a credential racing it is either swept by the revocation or
-                        // written by a request that takes the same lock afterwards and re-checks the claimed account
+                        // The claim takes the user row lock, so of two concurrent claims only the first revokes, and a
+                        // request that re-checks the account under the same lock finds it already claimed
                         $claimed = $authorization->skip(fn () => User::claim($dbForProject, $user, $project, mqtt: $mqtt));
 
                         if ($claimed) {
