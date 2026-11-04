@@ -2687,7 +2687,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:4.0.0
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:5.0.0
     restart: unless-stopped
     user: root
     networks:
@@ -2700,6 +2700,8 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       # names; both name the network the workload containers join.
       - ORCHESTRATOR_NETWORK=appwrite
       - DOCKER_NETWORK=appwrite
+      # The key appwrite authenticates with; v5 refuses to start without one.
+      - API_KEY=\${_APP_JOBS_SECRET}
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
       - S3_ENDPOINT=\${_APP_STORAGE_S3_ENDPOINT:-}
       - S3_REGION=\${_APP_STORAGE_S3_REGION:-us-east-1}
