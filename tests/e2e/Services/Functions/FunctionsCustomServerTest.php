@@ -704,6 +704,7 @@ final class FunctionsCustomServerTest extends Scope
             'events' => ['users.*.create'],
             'schedule' => '0 0 1 1 *',
             'execute' => ['any'],
+            'scopes' => ['users.read'],
         ]);
 
         $this->assertEquals(201, $function['headers']['status-code']);
@@ -716,6 +717,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(['users.*.create'], $function['body']['events']);
         $this->assertEquals('0 0 1 1 *', $function['body']['schedule']);
         $this->assertEquals(['any'], $function['body']['execute']);
+        $this->assertEquals(['users.read'], $function['body']['scopes']);
 
         // Perform a partial PUT update omitting those fields
         $updated = $this->updateFunction($functionId, [
@@ -732,6 +734,7 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(['users.*.create'], $updated['body']['events']);
         $this->assertEquals('0 0 1 1 *', $updated['body']['schedule']);
         $this->assertEquals(['any'], $updated['body']['execute']);
+        $this->assertEquals(['users.read'], $updated['body']['scopes']);
 
         // Assert values are preserved in the database
         $fetched = $this->getFunction($functionId);
@@ -745,6 +748,25 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertEquals(['users.*.create'], $fetched['body']['events']);
         $this->assertEquals('0 0 1 1 *', $fetched['body']['schedule']);
         $this->assertEquals(['any'], $fetched['body']['execute']);
+        $this->assertEquals(['users.read'], $fetched['body']['scopes']);
+
+        // Match the interval update pattern from issue #14401.
+        $updated = $this->updateFunction($functionId, [
+            'name' => 'Function Interval Updated',
+            'interval' => 30,
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertEquals(30, $updated['body']['interval']);
+        $this->assertEquals(['users.read'], $updated['body']['scopes']);
+        $this->assertEquals(45, $updated['body']['timeout']);
+        $this->assertEquals(['users.*.create'], $updated['body']['events']);
+
+        $fetched = $this->getFunction($functionId);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals(30, $fetched['body']['interval']);
+        $this->assertEquals(['users.read'], $fetched['body']['scopes']);
+        $this->assertEquals(45, $fetched['body']['timeout']);
 
         $this->deleteFunction($functionId);
     }
