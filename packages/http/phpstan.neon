@@ -8,5 +8,8 @@ parameters:
         - tests
     excludePaths:
         - tests/bench
+        - tests/phpstan-stubs.php
     scanDirectories:
         - vendor/swoole/ide-helper
+    scanFiles:
+        - tests/phpstan-stubs.php
