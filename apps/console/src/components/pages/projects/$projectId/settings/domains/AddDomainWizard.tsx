@@ -57,7 +57,10 @@ export function AddDomainWizard({
 
   const fallbackPath = `/projects/${projectId}/settings/domains`
   const isPending =
-    registering || createMutation.isPending || verifyMutation.isPending
+    registering ||
+    createMutation.isPending ||
+    verifyMutation.isPending ||
+    deleteMutation.isPending
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
