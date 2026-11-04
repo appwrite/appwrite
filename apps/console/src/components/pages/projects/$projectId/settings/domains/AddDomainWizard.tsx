@@ -14,6 +14,7 @@ import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from './VerifyDomainContent'
 import {
@@ -138,8 +139,8 @@ export function AddDomainWizard({
           params: { projectId: projectId! },
         })
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
