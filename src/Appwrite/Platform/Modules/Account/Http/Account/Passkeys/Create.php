@@ -60,7 +60,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse', [Limit::attempts(['url', 'userId'], 10)])
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'userId'], 10)])
             ->param('passkeyId', 'unique()', new CustomId(), 'Passkey ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('name', '', new Text(128, 0), 'Passkey name, shown when listing passkeys. Max length: 128 chars.', true)
             ->inject('request')

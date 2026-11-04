@@ -67,7 +67,7 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->label('abuse', [
-                Limit::attempts(['url', 'param.email'], 10),
+                Limit::attempts(['projectId', 'url', 'param.email'], 10),
                 Limit::attempts(['url', 'ip'], 10),
             ])
             ->param('email', '', new EmailValidator(), 'User email.')

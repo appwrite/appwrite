@@ -78,7 +78,7 @@ class Update extends Action
                     public: false,
                 )
             ])
-            ->label('abuse', [Limit::attempts(['url', 'param.userId'], 10)])
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'param.userId'], 10)])
             ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('secret', '', new Text(256), 'Valid verification token.')
             ->inject('response')
