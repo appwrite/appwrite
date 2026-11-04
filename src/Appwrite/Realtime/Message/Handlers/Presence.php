@@ -7,6 +7,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime as QueueRealtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Presences\BootGate;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Realtime\Message\Dispatcher;
 use Appwrite\Utopia\Database\Documents\User;
@@ -18,6 +19,7 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Platform\Action;
+use Utopia\Span\Span;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -38,6 +40,7 @@ class Presence extends Action
             ->inject('database')
             ->inject('authorization')
             ->inject('presenceState')
+            ->inject('presenceBootGate')
             ->inject('project')
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
@@ -59,6 +62,7 @@ class Presence extends Action
         Database $database,
         Authorization $authorization,
         PresenceState $presenceState,
+        BootGate $presenceBootGate,
         ?Document $project,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
@@ -104,6 +108,11 @@ class Presence extends Action
         $sequence = (\is_array($stash) && ($stash['userId'] ?? null) === $userId)
             ? ($stash['sequence'] ?? null)
             : null;
+
+        // Held until the boot cleanup has removed rows left by gone processes, so it can't add to one.
+        if (!$presenceBootGate->wait()) {
+            Span::add('presence.boot_gate', 'timeout');
+        }
 
         $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $sequence);
         $presence = $write['presence'];
