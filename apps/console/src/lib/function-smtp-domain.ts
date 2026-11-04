@@ -1,6 +1,10 @@
 import { Query, type Models } from '@appwrite.io/console'
 import { isCloudProfile } from '@/lib/console-profiles'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  getApexDomain,
+  getClaimRecord,
+  getRecordName,
+} from '@/lib/utils/proxy-domains'
 
 /**
  * Cloud SMTP (inbound email) proxy rules, separate from HTTP function domains
@@ -75,25 +79,19 @@ export function getSmtpDnsRecords(params: {
   const projectId = params.projectId.trim()
   const mxTarget = params.mxTarget.trim()
   if (!domain || !projectId) return []
-  const name = getSmtpRecordName(domain)
 
   return [
     ...(mxTarget
       ? [
           {
             type: 'MX' as const,
-            name,
+            name: getRecordName(domain),
             value: mxTarget,
             ttl: 3600,
             priority: 10,
           },
         ]
       : []),
-    {
-      type: 'TXT',
-      name: name === '@' ? '_appwrite' : `_appwrite.${name}`,
-      value: projectId,
-      ttl: 3600,
-    },
+    getClaimRecord(domain, projectId),
   ]
 }
