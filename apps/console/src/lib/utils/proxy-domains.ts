@@ -85,6 +85,20 @@ export function getRecordName(domain: string): string {
 }
 
 /**
+ * TXT record that proves a project owns a domain: the project ID at
+ * `_appwrite.<domain>`, named relative to the registrable domain.
+ */
+export function getClaimRecord(domain: string, projectId: string) {
+  const name = getRecordName(domain)
+  return {
+    type: 'TXT' as const,
+    name: name === '@' ? '_appwrite' : `_appwrite.${name}`,
+    value: projectId,
+    ttl: 3600,
+  }
+}
+
+/**
  * Check if domain is Appwrite Cloud (isCloud)
  */
 export function isCloud(): boolean {
