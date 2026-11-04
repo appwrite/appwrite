@@ -330,13 +330,18 @@ class State
                     try {
                         $presence = $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
                         $presenceCreated = true;
-                    } catch (DuplicateException) {
+                    } catch (DuplicateException $e) {
                         // Lost the create race: the row exists now. Re-read it, upsert over it, and
                         // purge on a real permission change so a narrowing cannot keep being served
-                        // from a page cached under the former ACL.
+                        // from a page cached under the former ACL. If the re-read finds no row the
+                        // duplicate was the requested id colliding with another user's presence, not
+                        // a userId race -- propagate it to the PRESENCE_ALREADY_EXISTS handler below.
                         $raced = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
                         );
+                        if ($raced->isEmpty()) {
+                            throw $e;
+                        }
                         $previousHash = $raced->getAttribute('permissionsHash');
                         $presenceDocument->setAttribute('$id', $raced->getId());
                         $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
