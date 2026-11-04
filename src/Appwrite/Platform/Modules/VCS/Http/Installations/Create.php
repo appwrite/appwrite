@@ -44,7 +44,7 @@ class Create extends Action
                 group: 'installations',
                 name: 'createInstallation',
                 description: <<<EOT
-                Connect a version control installation that another project in the same organization already has to this project. The provider app is not installed again, so its repository access stays as it is.
+                Connect a GitHub installation that another project in the same organization already has to this project. The provider app is not installed again, so its repository access stays as it is.
                 EOT,
                 auth: [AuthType::ADMIN],
                 responses: [
@@ -75,7 +75,8 @@ class Create extends Action
     ) {
         $source = $dbForPlatform->getDocument('installations', $installationId);
 
-        if ($source->isEmpty()) {
+        // GitLab, Gitea and Bitbucket rotate the refresh token copied below, so a second copy would revoke the first
+        if ($source->isEmpty() || $source->getAttribute('provider') !== 'github') {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 

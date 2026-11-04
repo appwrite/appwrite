@@ -58,7 +58,7 @@ class XList extends Action
             ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-            ->param('shared', false, new Boolean(true), 'When set to true, lists installations of the other projects in this project\'s organization instead, which can be reused with the create installation endpoint.', true)
+            ->param('shared', false, new Boolean(true), 'When set to true, lists GitHub installations of the other projects in this project\'s organization instead, which can be reused with the create installation endpoint.', true)
             ->inject('vcsFactory')
             ->inject('response')
             ->inject('project')
@@ -97,6 +97,7 @@ class XList extends Action
             $roles = $user->getRoles($authorization);
             $projects = \array_filter($projects, fn (Document $sibling) => !empty(\array_intersect($sibling->getPermissionsByType(PermissionType::Read), $roles)));
 
+            $queries[] = Query::equal('provider', ['github']);
             $queries[] = Query::equal('projectInternalId', \array_values(\array_map(fn (Document $sibling) => $sibling->getSequence(), $projects)) ?: ['']);
         } else {
             $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
