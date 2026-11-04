@@ -64,10 +64,6 @@ interface VerifyDomainContentProps {
    * Defaults to 'api' for backward compatibility.
    */
   resourceType?: 'api' | 'function' | 'site'
-  onChange?: () => void
-  onVerify?: () => void
-  isVerifying?: boolean
-  isChanging?: boolean
   /** Inline verification error (string or structured alert) */
   verificationError?: DomainVerificationError | string | null
 }
@@ -239,10 +235,6 @@ export function VerifyDomainContent({
   compact,
   noCard,
   resourceType = 'api',
-  onChange,
-  onVerify,
-  isVerifying,
-  isChanging,
   verificationError,
 }: VerifyDomainContentProps) {
   const t = useT()
@@ -593,27 +585,6 @@ export function VerifyDomainContent({
         <div className="space-y-4">{innerContent}</div>
       ) : (
         <div className={cardClassName}>{innerContent}</div>
-      )}
-      {onVerify && (
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          {onChange && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onChange}
-              disabled={isVerifying || isChanging}
-            >
-              {t('Change')}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            onClick={onVerify}
-            disabled={isVerifying || isChanging}
-          >
-            {t('Verify')}
-          </Button>
-        </div>
       )}
     </div>
   )
