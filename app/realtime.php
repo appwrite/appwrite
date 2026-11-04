@@ -29,7 +29,6 @@ use Swoole\Atomic;
 use Swoole\Coroutine;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Swoole\Process;
 use Swoole\Runtime;
 use Swoole\Table;
 use Swoole\Timer;
@@ -364,100 +363,14 @@ $server->error(function (Throwable $error): void {
 /**
  * Boot gate for presence writes. On self-hosted it opens once the presences left online by realtime
  * processes that are gone (this host's earlier runs, and hosts with no recent heartbeat) are deleted;
- * everything else is served from boot. The cleanup runs in its own process, as a worker coroutine
- * cannot fork. It is only read with get(): Atomic::wait() would consume the 1 and close it again.
+ * everything else is served from boot. Worker 0 runs the cleanup in the background. The flag is only
+ * read with get(): Atomic::wait() would consume the 1 and close it again.
  */
 $bootCleanupFinished = new Atomic(0);
 // No presence is written before this, so newer rows belong to live sockets, even past the timeout.
 $bootedAt = DateTime::now();
 
-if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-    $adapter->getNative()->addProcess(new Process(function () use ($bootCleanupFinished, $bootedAt, $container, $containerId, $presenceState): void {
-        if ($bootCleanupFinished->get() === 0) {
-            $span = Span::init('realtime.presences.cleanup');
-            $started = \microtime(true);
-            $hostname = \gethostname();
-            $result = null;
-            Span::add('hostname', $hostname ?: null);
-
-            try {
-                if ($hostname !== false) {
-                    $result = $presenceState->deleteOrphanedInProjects(
-                        getConsoleDB(),
-                        getProjectDB(...),
-                        $hostname,
-                        $bootedAt,
-                        $started + REALTIME_BOOT_TIMEOUT_SECONDS,
-                        $container->get('publisherForUsage'),
-                        getQueueForRealtime(),
-                    );
-                    Span::add('presences.deleted', $result['deleted']);
-                    Span::add('projects.scanned', $result['projects']);
-                    Span::add('projects.failed', $result['failed']);
-                    Span::add('outcome', $result['outcome']);
-                }
-            } catch (Throwable $th) {
-                Span::add('outcome', 'failed');
-                $span->setError($th);
-            } finally {
-                // Heartbeat only now, right before serving: a peer booting during the cleanup
-                // must see this host as gone, as its rows are its previous run's.
-                if ($hostname !== false) {
-                    try {
-                        $dbForPlatform = getConsoleDB();
-                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('realtime', new Document([
-                            '$id' => Id::unique(),
-                            '$permissions' => [],
-                            'container' => $containerId . '@' . $hostname,
-                            'timestamp' => DateTime::now(),
-                            'value' => '{}',
-                        ])));
-                    } catch (Throwable $th) {
-                        $span->setError($th);
-                    }
-                }
-
-                Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
-                $span->finish();
-                $bootCleanupFinished->set(1);
-            }
-
-            // Finish what the boot sweep left while serving: rows written since boot are never deleted.
-            if ($hostname !== false && ($result === null || $result['outcome'] !== 'done' || $result['failed'] > 0)) {
-                $span = Span::init('realtime.presences.cleanup.resume');
-                $started = \microtime(true);
-                Span::add('hostname', $hostname);
-
-                try {
-                    $resumed = $presenceState->resumeOrphanedInProjects(
-                        getConsoleDB(),
-                        getProjectDB(...),
-                        $hostname,
-                        $bootedAt,
-                        $container->get('publisherForUsage'),
-                        getQueueForRealtime(),
-                    );
-                    Span::add('presences.deleted', $resumed['deleted']);
-                    Span::add('projects.scanned', $resumed['projects']);
-                    Span::add('projects.failed', $resumed['failed']);
-                    Span::add('attempts', $resumed['attempts']);
-                    Span::add('outcome', $resumed['outcome']);
-                } catch (Throwable $th) {
-                    Span::add('outcome', 'failed');
-                    $span->setError($th);
-                } finally {
-                    Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
-                    $span->finish();
-                }
-            }
-        }
-
-        // Swoole restarts a process that exits, so idle until shutdown.
-        while ($bootCleanupFinished->get() === 1) {
-            \sleep(3600);
-        }
-    }, false, 0, true));
-} else {
+if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted') {
     $bootCleanupFinished->set(1);
 }
 
@@ -548,8 +461,91 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $bootCleanupFinished, $bootedAt, $container, $containerId, $presenceState) {
     Console::success('Worker ' . $workerId . ' started successfully');
+
+    // Runs once, in the background: other traffic is served meanwhile and presence writes wait for it.
+    // A restarted worker 0 skips it once it has finished.
+    if ($workerId === 0 && $bootCleanupFinished->get() === 0) {
+        go(function () use ($bootCleanupFinished, $bootedAt, $container, $containerId, $presenceState): void {
+            $span = Span::init('realtime.presences.cleanup');
+            $started = \microtime(true);
+            $hostname = \gethostname();
+            $result = null;
+            Span::add('hostname', $hostname ?: null);
+
+            try {
+                if ($hostname !== false) {
+                    $result = $presenceState->deleteOrphanedInProjects(
+                        getConsoleDB(),
+                        getProjectDB(...),
+                        $hostname,
+                        $bootedAt,
+                        $started + REALTIME_BOOT_TIMEOUT_SECONDS,
+                        $container->get('publisherForUsage'),
+                        getQueueForRealtime(),
+                    );
+                    Span::add('presences.deleted', $result['deleted']);
+                    Span::add('projects.scanned', $result['projects']);
+                    Span::add('projects.failed', $result['failed']);
+                    Span::add('outcome', $result['outcome']);
+                }
+            } catch (Throwable $th) {
+                Span::add('outcome', 'failed');
+                $span->setError($th);
+            } finally {
+                // Heartbeat only now, right before serving: a peer booting during the cleanup
+                // must see this host as gone, as its rows are its previous run's.
+                if ($hostname !== false) {
+                    try {
+                        $dbForPlatform = getConsoleDB();
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->createDocument('realtime', new Document([
+                            '$id' => Id::unique(),
+                            '$permissions' => [],
+                            'container' => $containerId . '@' . $hostname,
+                            'timestamp' => DateTime::now(),
+                            'value' => '{}',
+                        ])));
+                    } catch (Throwable $th) {
+                        $span->setError($th);
+                    }
+                }
+
+                Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
+                $span->finish();
+                $bootCleanupFinished->set(1);
+            }
+
+            // Finish what the boot sweep left while serving: rows written since boot are never deleted.
+            if ($hostname !== false && ($result === null || $result['outcome'] !== 'done' || $result['failed'] > 0)) {
+                $span = Span::init('realtime.presences.cleanup.resume');
+                $started = \microtime(true);
+                Span::add('hostname', $hostname);
+
+                try {
+                    $resumed = $presenceState->resumeOrphanedInProjects(
+                        getConsoleDB(),
+                        getProjectDB(...),
+                        $hostname,
+                        $bootedAt,
+                        $container->get('publisherForUsage'),
+                        getQueueForRealtime(),
+                    );
+                    Span::add('presences.deleted', $resumed['deleted']);
+                    Span::add('projects.scanned', $resumed['projects']);
+                    Span::add('projects.failed', $resumed['failed']);
+                    Span::add('attempts', $resumed['attempts']);
+                    Span::add('outcome', $resumed['outcome']);
+                } catch (Throwable $th) {
+                    Span::add('outcome', 'failed');
+                    $span->setError($th);
+                } finally {
+                    Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
+                    $span->finish();
+                }
+            }
+        });
+    }
 
     $telemetry = getTelemetry($workerId);
     $realtimeDelayBuckets = [100, 250, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 30000];
