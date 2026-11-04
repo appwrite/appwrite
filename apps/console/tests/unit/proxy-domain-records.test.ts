@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'bun:test'
-import { getClaimRecord, getRecordName } from '@/lib/utils/proxy-domains'
+import { AppwriteException } from '@appwrite.io/console'
+import {
+  getClaimRecord,
+  getRecordName,
+  isDomainClaimError,
+} from '@/lib/utils/proxy-domains'
 
 describe('getRecordName', () => {
   test('names an apex domain @', () => {
@@ -29,5 +34,42 @@ describe('getClaimRecord', () => {
     expect(getClaimRecord('in.mail.example.co.uk', 'project1').name).toBe(
       '_appwrite.in.mail',
     )
+  })
+})
+
+describe('isDomainClaimError', () => {
+  test('asks for a claim on a pointed domain or one another project holds', () => {
+    expect(
+      isDomainClaimError(
+        new AppwriteException(
+          'This domain already points to Appwrite.',
+          400,
+          'rule_verification_failed',
+        ),
+      ),
+    ).toBe(true)
+    expect(
+      isDomainClaimError(
+        new AppwriteException(
+          'Domain is already used by another project.',
+          409,
+          'rule_claim_required',
+        ),
+      ),
+    ).toBe(true)
+  })
+
+  test('leaves every other create failure alone', () => {
+    expect(
+      isDomainClaimError(
+        new AppwriteException(
+          'Domain already assigned to a different project.',
+          409,
+          'rule_already_exists',
+        ),
+      ),
+    ).toBe(false)
+    expect(isDomainClaimError(new Error('Network request failed'))).toBe(false)
+    expect(isDomainClaimError(null)).toBe(false)
   })
 })
