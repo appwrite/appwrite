@@ -42,7 +42,7 @@ class Presence extends Action
             ->inject('authorization')
             ->inject('presenceState')
             ->inject('bootCleanupFinished')
-            ->inject('bootedAt')
+            ->inject('bootDeadline')
             ->inject('project')
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
@@ -65,7 +65,7 @@ class Presence extends Action
         Authorization $authorization,
         PresenceState $presenceState,
         Atomic $bootCleanupFinished,
-        string $bootedAt,
+        float $bootDeadline,
         ?Document $project,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
@@ -114,7 +114,7 @@ class Presence extends Action
 
         // Held until the boot cleanup has removed rows left by gone processes, so it can't add to one.
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-            $this->waitForBootCleanup($bootCleanupFinished, $bootedAt);
+            $this->waitForBootCleanup($bootCleanupFinished, $bootDeadline);
         }
 
         $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $sequence);
@@ -190,11 +190,10 @@ class Presence extends Action
     /**
      * Waits until the boot cleanup has finished, or the boot timeout has passed.
      */
-    private function waitForBootCleanup(Atomic $bootCleanupFinished, string $bootedAt): void
+    private function waitForBootCleanup(Atomic $bootCleanupFinished, float $deadline): void
     {
-        $deadline = (new \DateTime($bootedAt))->getTimestamp() + REALTIME_BOOT_TIMEOUT_SECONDS;
         // Read with get() only: Atomic::wait() would consume the 1 and close the gate again.
-        while ($bootCleanupFinished->get() === 0 && \time() < $deadline) {
+        while ($bootCleanupFinished->get() === 0 && \microtime(true) < $deadline) {
             // A hooked sleep: only this message waits, the worker keeps serving others.
             \usleep(50_000);
         }

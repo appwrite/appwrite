@@ -369,23 +369,24 @@ $server->error(function (Throwable $error): void {
 $bootCleanupFinished = new Atomic(0);
 // No presence is written before this, so newer rows belong to live sockets, even past the timeout.
 $bootedAt = DateTime::now();
+// One deadline for the cleanup, the presence gate and the heartbeat, so none outlasts the others.
+$bootDeadline = \microtime(true) + REALTIME_BOOT_TIMEOUT_SECONDS;
 
 if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted') {
     $bootCleanupFinished->set(1);
 }
 
-$server->onStart(function () use ($stats, $containerId, $bootCleanupFinished, &$statsDocument) {
+$server->onStart(function () use ($stats, $containerId, $bootCleanupFinished, $bootDeadline, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($containerId, $bootCleanupFinished, &$statsDocument) {
+    go(function () use ($containerId, $bootCleanupFinished, $bootDeadline, &$statsDocument) {
         // The document is also this host's heartbeat, so not before the boot cleanup is done,
         // unless presence writes are already allowed past the boot timeout.
-        $deadline = \microtime(true) + REALTIME_BOOT_TIMEOUT_SECONDS;
-        while ($bootCleanupFinished->get() === 0 && \microtime(true) < $deadline) {
+        while ($bootCleanupFinished->get() === 0 && \microtime(true) < $bootDeadline) {
             Coroutine::sleep(0.1);
         }
 
@@ -461,13 +462,13 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $bootCleanupFinished, $bootedAt, $container, $containerId, $presenceState) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson, $bootCleanupFinished, $bootedAt, $bootDeadline, $container, $containerId, $presenceState) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     // Runs once, in the background: other traffic is served meanwhile and presence writes wait for it.
     // A restarted worker 0 skips it once it has finished.
     if ($workerId === 0 && $bootCleanupFinished->get() === 0) {
-        go(function () use ($bootCleanupFinished, $bootedAt, $container, $containerId, $presenceState): void {
+        go(function () use ($bootCleanupFinished, $bootedAt, $bootDeadline, $container, $containerId, $presenceState): void {
             $span = Span::init('realtime.presences.cleanup');
             $started = \microtime(true);
             $hostname = \gethostname();
@@ -481,7 +482,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         getProjectDB(...),
                         $hostname,
                         $bootedAt,
-                        $started + REALTIME_BOOT_TIMEOUT_SECONDS,
+                        $bootDeadline,
                         $container->get('publisherForUsage'),
                         getQueueForRealtime(),
                     );
@@ -1222,7 +1223,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $bootCleanupFinished, $bootedAt, $messageDispatcher, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $bootCleanupFinished, $bootDeadline, $messageDispatcher, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1354,7 +1355,7 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $messageContainer->set('response', fn () => $response);
         $messageContainer->set('presenceState', fn () => $presenceState);
         $messageContainer->set('bootCleanupFinished', fn () => $bootCleanupFinished);
-        $messageContainer->set('bootedAt', fn () => $bootedAt);
+        $messageContainer->set('bootDeadline', fn () => $bootDeadline);
         $messageContainer->set('database', fn () => $database);
         $messageContainer->set('authorization', fn () => $authorization);
         $messageContainer->set('project', fn () => $project);
