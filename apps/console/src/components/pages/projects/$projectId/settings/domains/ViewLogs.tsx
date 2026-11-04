@@ -20,12 +20,17 @@ interface ViewLogsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   rule: Models.ProxyRule
+  /** Refetches the list the rule is read from. */
+  onRefresh?: () => void
+  isRefreshing?: boolean
 }
 
 export function ViewLogsDialog({
   open,
   onOpenChange,
   rule,
+  onRefresh,
+  isRefreshing,
 }: ViewLogsDialogProps) {
   const t = useT()
   const buildLogs = normalizeLogs(rule.logs)
@@ -57,6 +62,8 @@ export function ViewLogsDialog({
             hideTitle
             downloadFilename={`verification-logs-${rule.domain.replace(/\./g, '-')}.txt`}
             hideWhenEmpty={false}
+            onRefresh={onRefresh}
+            isRefreshing={isRefreshing}
           />
         </div>
 
