@@ -4683,6 +4683,30 @@ trait MigrationsBase
             $this->assertEquals(25, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
         }, 10_000, 500);
 
+        // Deleting an import migration must also drop the copy it staged on the imports volume,
+        // so a create+delete loop cannot grow the shared volume without bound. This exercises the
+        // delete path on a freshly created migration (the pre-worker-pickup case in the report).
+        $disposable = $this->performCsvMigration([
+            'endpoint' => $this->webEndpoint,
+            'fileId' => $fileIds['documents-internals'],
+            'bucketId' => $bucketIds['documents-internals'],
+            'databaseId' => $databaseId,
+            'collectionId' => $tableId,
+        ]);
+        $disposableId = $disposable['body']['$id'];
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/migrations/' . $disposableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $deleted['headers']['status-code']);
+
+        $gone = $this->client->call(Client::METHOD_GET, '/migrations/' . $disposableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(404, $gone['headers']['status-code']);
+
         return [
             'databaseId' => $databaseId,
             'tableId' => $tableId,

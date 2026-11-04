@@ -13,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 
 class Delete extends Action
 {
@@ -52,10 +53,11 @@ class Delete extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('deviceForMigrations')
             ->callback($this->action(...));
     }
 
-    public function action(string $migrationId, Response $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $migrationId, Response $response, Database $dbForProject, Event $queueForEvents, Device $deviceForMigrations): void
     {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
@@ -65,6 +67,14 @@ class Delete extends Action
 
         if (!$dbForProject->deleteDocument('migrations', $migration->getId())) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove migration from DB');
+        }
+
+        // An import stages a copy of the uploaded file on the shared imports volume and records it
+        // at options.path. The worker only removes it after a successful run, so deleting the
+        // migration before it runs would otherwise orphan the copy and grow the volume unbounded.
+        $path = $migration->getAttribute('options', [])['path'] ?? null;
+        if (\is_string($path) && $path !== '' && $deviceForMigrations->exists($path)) {
+            $deviceForMigrations->delete($path);
         }
 
         $queueForEvents->setParam('migrationId', $migration->getId());
