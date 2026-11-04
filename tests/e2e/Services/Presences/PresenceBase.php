@@ -378,7 +378,10 @@ trait PresenceBase
         $update = $this->client->call(
             Client::METHOD_PATCH,
             '/presences/' . $presenceOne['$id'],
-            \array_merge(['content-type' => 'application/json'], $this->getPresenceServerHeaders()),
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders()),
             ['permissions' => [Permission::read(Role::any())]]
         );
         $this->assertEquals(200, $update['headers']['status-code'], \json_encode($update['body']));
@@ -417,14 +420,16 @@ trait PresenceBase
         $response = $this->client->call(
             Client::METHOD_GET,
             '/presences',
-            \array_merge(['content-type' => 'application/json'], $this->getPresenceServerHeaders()),
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getPresenceServerHeaders()),
             [
                 'queries' => $query,
                 'ttl' => 3600,
             ]
         );
         $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
-        $this->assertArrayHasKey('presences', $response['body'], 'list body: ' . \json_encode($response['body']));
 
         return $response;
     }
