@@ -352,10 +352,6 @@ export function SiteDomainsView() {
               setVerifyOpen(false)
               setSelectedRule(null)
             }}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-            }}
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}

@@ -390,13 +390,6 @@ export function View() {
             onVerifySuccess={() => {
               setSelectedRule(null)
             }}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/sites/$siteId/domains/add',
-                params: { projectId: projectId!, siteId: siteId! }})
-            }}
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
