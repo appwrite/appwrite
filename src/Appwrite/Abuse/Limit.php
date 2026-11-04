@@ -45,6 +45,15 @@ final readonly class Limit
                 throw new \InvalidArgumentException("Abuse limit part '{$part}' is not one of " . \implode(', ', self::PARTS) . ' or param.<name>.');
             }
         }
+
+        // One abuse store serves every project on the instance, and a user id is project local and chosen by the
+        // caller while an email or a phone number is the user's own, so the same value exists in other projects.
+        // Without the project, a caller on any project spends the count of that account or address everywhere
+        // else. A count also kept per ip only ever counts one caller's own requests, so it needs no project.
+        $perCaller = \array_values(\array_filter($by, fn (string $part): bool => $part === 'userId' || \str_starts_with($part, 'param.')));
+        if ($perCaller !== [] && ! \in_array('projectId', $by, true) && ! \in_array('ip', $by, true)) {
+            throw new \InvalidArgumentException("An abuse limit kept per '" . \implode("', '", $perCaller) . "' must also be kept per 'projectId' or per 'ip'.");
+        }
     }
 
     /**

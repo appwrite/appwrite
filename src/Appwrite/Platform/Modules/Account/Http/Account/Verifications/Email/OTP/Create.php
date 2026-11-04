@@ -67,7 +67,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON,
             ))
-            ->label('abuse', [Limit::attempts(['url', 'userId'], 10)])
+            ->label('abuse', [Limit::attempts(['projectId', 'url', 'userId'], 10)])
             ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be sent with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
             ->inject('request')
             ->inject('response')

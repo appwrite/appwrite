@@ -42,6 +42,11 @@ final class LimitTest extends TestCase
         yield 'unknown part' => [['project.$id'], 10, 60];
         yield 'placeholder syntax' => [['{ip}'], 10, 60];
         yield 'unnamed param' => [['param.'], 10, 60];
+        // One abuse store serves the whole instance, and ids and addresses repeat across projects, so these
+        // would let a caller on one project spend the quota of an account or an address on every other project.
+        yield 'account without the project' => [['url', 'userId'], 10, 60];
+        yield 'address without the project' => [['url', 'param.email'], 10, 60];
+        yield 'account param without the project' => [['param.userId'], 10, 60];
     }
 
     /**
@@ -53,6 +58,26 @@ final class LimitTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
 
         Limit::failures($by, $limit, $seconds);
+    }
+
+    /**
+     * @return \Iterator<string, array{list<string>}>
+     */
+    public static function callerScoped(): \Iterator
+    {
+        yield 'per project' => [['projectId', 'url', 'param.userId']];
+        // A count also kept per ip only ever counts one caller's own requests, so no project can spend another's.
+        yield 'per ip' => [['url', 'ip', 'param.userId']];
+        yield 'per ip and account' => [['ip', 'method', 'url', 'userId']];
+    }
+
+    /**
+     * @param list<string> $by
+     */
+    #[DataProvider('callerScoped')]
+    public function testAccountLimitIsKeptPerProjectOrPerIp(array $by): void
+    {
+        $this->assertSame($by, Limit::failures($by, 10)->by);
     }
 
     public function testKeyFromTheRequestsValues(): void
