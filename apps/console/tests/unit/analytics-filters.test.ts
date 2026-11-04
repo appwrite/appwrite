@@ -8,12 +8,12 @@ import {
   sanitizeAnalyticsFilterMap,
   type AnalyticsFilter,
 } from '@/lib/analytics/analytics-filters'
-import type { FilterMap } from '@/lib/table-filters'
+import type { CompactFilterKey, FilterMap } from '@/lib/table-filters'
 
 function mapOf(
-  ...entries: { key: { c: string; o: string; v: string }; query: string }[]
+  ...entries: { key: CompactFilterKey; query: string }[]
 ): FilterMap {
-  return new Map(entries.map((entry) => [entry.key, entry.query])) as FilterMap
+  return new Map(entries.map((entry) => [entry.key, entry.query]))
 }
 
 describe('analytics filter attributes', () => {
