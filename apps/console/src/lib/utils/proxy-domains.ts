@@ -56,6 +56,7 @@ import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
+import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -77,6 +78,44 @@ export function getApexDomain(domain: string): string | null {
   if (!domain?.trim()) return null
   const result = parse(domain.trim().toLowerCase())
   return result.domain ?? null
+}
+
+/**
+ * DNS provider "Name" for a domain: `@` for an apex domain, otherwise the
+ * labels in front of the registrable domain (`mail` for `mail.example.com`).
+ * Providers append the zone themselves, so a full hostname here would end up
+ * as `mail.example.com.example.com`.
+ */
+export function getRecordName(domain: string): string {
+  const normalized = domain.trim().toLowerCase()
+  const apex = getApexDomain(normalized)
+  if (!apex || apex === normalized) return '@'
+  return normalized.slice(0, -(apex.length + 1))
+}
+
+/**
+ * TXT record that proves a project owns a domain: the project ID at
+ * `_appwrite.<domain>`, named relative to the registrable domain.
+ */
+export function getClaimRecord(domain: string, projectId: string) {
+  const name = getRecordName(domain)
+  return {
+    type: 'TXT' as const,
+    name: name === '@' ? '_appwrite' : `_appwrite.${name}`,
+    value: projectId,
+    ttl: 3600,
+  }
+}
+
+/**
+ * Whether a rule create was refused until the project proves it owns the
+ * domain with the claim record. Cloud answers 400 `rule_verification_failed`
+ * for a domain that already points to Appwrite (self-hosted never does on a
+ * create), and 409 `rule_claim_required` for one another project holds.
+ */
+export function isDomainClaimError(error: unknown): boolean {
+  const { type } = getAppwriteErrorInfo(error)
+  return type === 'rule_verification_failed' || type === 'rule_claim_required'
 }
 
 /**

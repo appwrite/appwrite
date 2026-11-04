@@ -81,7 +81,8 @@ export function View() {
   const {
     data: domainsData,
     isLoading: domainsLoading,
-    isFetching: domainsFetching} = useQuery(
+    isFetching: domainsFetching,
+    refetch: refetchDomains} = useQuery(
     siteDomainsQueryOptions(
       projectId,
       siteId,
@@ -370,18 +371,11 @@ export function View() {
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => {
               setSelectedRule(null)
-            }}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/sites/$siteId/domains/add',
-                params: { projectId: projectId!, siteId: siteId! }})
             }}
           />
           <DeleteDomainDialog
@@ -406,6 +400,8 @@ export function View() {
             if (!open) setViewLogsRule(null)
           }}
           rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
+          onRefresh={() => void refetchDomains()}
+          isRefreshing={domainsFetching}
         />
       )}
     </>

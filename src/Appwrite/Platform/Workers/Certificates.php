@@ -319,7 +319,7 @@ class Certificates extends Action
         // Set once DNS has passed on a delayed provider, so a failure after that can be retried
         $awaitingProvider = false;
 
-        // A renewal: the domain already serves a certificate that is still valid
+        // A renewal: the domain already serves a certificate. Retries keep the rule verified, so this holds on every attempt
         $renewing = $rule->getAttribute('status') === RULE_STATUS_VERIFIED;
 
         try {

@@ -218,6 +218,9 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to remove domain': 'ドメインの削除に失敗しました',
   'Failed to add domain': 'ドメインの追加に失敗しました',
   'Failed to register domain': 'ドメインの登録に失敗しました',
+  'Verify domain ownership': 'ドメイン所有権の検証',
+  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
+    'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',

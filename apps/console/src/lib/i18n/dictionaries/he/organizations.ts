@@ -413,7 +413,6 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Domain name': 'שם דומיין',
   'Domain name does not match': 'שם הדומיין אינו תואם',
   'Domain not found': 'הדומיין לא נמצא',
-  'Domain not verified': 'הדומיין לא אומת',
   'Domain not verified yet': 'הדומיין עדיין לא אומת',
   'Domain transfer in progress': 'העברת דומיין בתהליך',
   'Domain transfer started': 'העברת הדומיין החלה',
@@ -716,6 +715,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Name must be no longer than': 'השם חייב להיות באורך של עד',
   Nameserver: 'שרת שמות',
   Nameservers: 'שרתי שמות',
+  'Nameservers not pointed to Appwrite': 'שרתי השמות לא מצביעים על Appwrite',
+  'Appwrite nameservers': 'שרתי השמות של Appwrite',
+  'External nameservers': 'שרתי שמות חיצוניים',
+  'External DNS': 'DNS חיצוני',
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
