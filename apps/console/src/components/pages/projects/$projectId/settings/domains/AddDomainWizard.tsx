@@ -62,6 +62,31 @@ export function AddDomainWizard({
     verifyMutation.isPending ||
     deleteMutation.isPending
 
+  const createRule = async (d: string) => {
+    const created = await createMutation.mutateAsync(d)
+    if (created.status === 'verified') {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'project', projectId],
+      })
+      toast.success(t('Domain verified successfully'))
+      navigate({
+        to: '/projects/$projectId/settings/domains',
+        params: { projectId: projectId! },
+      })
+    } else if (created.status === 'verifying') {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'project', projectId],
+      })
+      toast.success(t('Verification in progress'))
+      navigate({
+        to: '/projects/$projectId/settings/domains',
+        params: { projectId: projectId! },
+      })
+    } else {
+      setRule(created)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isPending) return
@@ -92,28 +117,7 @@ export function AddDomainWizard({
     }
 
     try {
-      const created = await createMutation.mutateAsync(d)
-      if (created.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'project', projectId],
-        })
-        toast.success(t('Domain verified successfully'))
-        navigate({
-          to: '/projects/$projectId/settings/domains',
-          params: { projectId: projectId! },
-        })
-      } else if (created.status === 'verifying') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'project', projectId],
-        })
-        toast.success(t('Verification in progress'))
-        navigate({
-          to: '/projects/$projectId/settings/domains',
-          params: { projectId: projectId! },
-        })
-      } else {
-        setRule(created)
-      }
+      await createRule(d)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t('Failed to add domain'))
     }
