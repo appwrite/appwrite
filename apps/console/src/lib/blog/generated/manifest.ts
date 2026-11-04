@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "incident-report-sites-functions-secret-exposure",
+    "href": "/blog/post/incident-report-sites-functions-secret-exposure",
+    "title": "Incident report: Sites & Functions secret exposure, November 1st, 2026",
+    "description": "What happened in the November 1st, 2026 Appwrite Sites and Functions secret exposure, who is affected, what we've changed, and which secrets you should rotate.",
+    "date": "2026-11-04",
+    "lastUpdated": "2026-11-04",
+    "timeToRead": 6,
+    "author": "luke-silver",
+    "category": "security",
+    "featured": false,
+    "cover": "/images/blog/incident-report-sites-functions-secret-exposure/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "october-product-update-passkeys-mcp-and-more",
     "href": "/blog/post/october-product-update-passkeys-mcp-and-more",
     "title": "October product update: Passkeys, MCP and more",
