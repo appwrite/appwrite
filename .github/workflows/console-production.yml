@@ -1,8 +1,10 @@
 name: Console / Production
 
 on:
-    # Console versions are apps/console/<version> tags: GitHub releases belong
-    # to the server, and console/<version> is the packages/console release tag.
+    # Console versions are apps/console/<version> tags, and console/<version>
+    # is the packages/console release tag. Each deployed console tag gets a
+    # GitHub release (the release job), never marked latest: that stays the
+    # server's.
     push:
         tags:
             - 'apps/console/*'
@@ -358,3 +360,29 @@ jobs:
                     git commit -m "chore($ENVIRONMENT): $APPLICATION image to $IMAGE_NAME:$TAG"
                     git push
                   fi
+
+    release:
+        # Published only once the deploy landed, so #releases announces what is
+        # live. GITHUB_TOKEN releases start no workflow, so the server's
+        # release.yml never builds from a console tag.
+        needs: [version, deploy]
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: write
+            pull-requests: read
+        env:
+            TAG: ${{ github.ref_name }}
+            VERSION: ${{ needs.version.outputs.tag }}
+            GH_REPO: ${{ github.repository }}
+            GH_TOKEN: ${{ github.token }}
+        steps:
+            - name: Checkout the repo
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+              with:
+                  fetch-depth: 0
+                  filter: blob:none
+                  persist-credentials: false
+
+            - name: Publish the console release
+              run: bash .github/scripts/console/publish-release.sh
