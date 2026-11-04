@@ -684,22 +684,11 @@ class Get extends Base
             Query::equal('providerUid', [$oauth2ID]),
         ]);
         if ($identity->isEmpty()) {
-            // Before creating the identity, check if the email is already associated with another user
             $userId = $user->getId();
-
-            if (!empty($providerEmail)) {
-                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                    Query::notEqual('userInternalId', $user->getSequence()),
-                ]);
-                if (!empty($identitiesWithMatchingEmail)) {
-                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
-                    /** Return a generic bad request to prevent exposing existing accounts */
-                }
-            }
+            $conflict = null;
 
             try {
-                $dbForProject->createDocument('identities', new Document([
+                $linked = User::linkIdentity($dbForProject, new Document([
                     '$id' => Id::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -716,9 +705,18 @@ class Get extends Base
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int) $accessTokenExpiry),
                     'photo' => $oauth2->getUserPhoto($accessToken),
                 ]));
+
+                if (!$linked) {
+                    /** Return a generic bad request to prevent exposing existing accounts */
+                    $conflict = Exception::GENERAL_BAD_REQUEST;
+                }
             } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
+                // The (provider, providerUid) unique index guards the same identity being connected to two users
+                $conflict = Exception::USER_ALREADY_EXISTS;
+            }
+
+            if ($conflict !== null) {
+                // A request whose link did not hold must not leave behind the user it just created
                 if ($newUser !== null) {
                     $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
                         if ($newTarget !== null) {
@@ -727,7 +725,7 @@ class Get extends Base
                         $dbForProject->deleteDocument('users', $newUser->getId());
                     });
                 }
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect($conflict);
             }
         } else {
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
