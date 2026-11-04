@@ -118,13 +118,17 @@ class Update extends Action
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             $certificateId = $rule->getAttribute('certificateId', '');
-            // Reset logs, attempts and the last reported state for the associated certificate.
+            // Reset logs, attempts and the last reported state for the associated certificate. A renewal keeps
+            // its state until the renewal reports, so the domain does not read as healthy before it is.
             if (!empty($certificateId)) {
-                $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
+                $reset = new Document([
                     'logs' => '',
                     'attempts' => 0,
-                    'status' => '',
-                ])));
+                ]);
+                if (!$renewal) {
+                    $reset->setAttribute('status', '');
+                }
+                $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, $reset));
             }
         } catch (Exception $err) {
             $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
