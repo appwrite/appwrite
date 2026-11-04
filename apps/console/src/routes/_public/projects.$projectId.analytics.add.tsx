@@ -4,10 +4,13 @@ import { View } from '@/components/pages/projects/$projectId/analytics/add/View'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { pageTitle } from '@/lib/utils/page-title'
 import { fetchProject } from '@/lib/react-query/hooks'
+import { ANALYTICS_PLATFORMS } from '@/lib/analytics-wizard/snippets'
+import { ANALYTICS_PROPERTY_TYPES } from '@/lib/analytics-wizard/property-types'
 
 const addPropertySearchSchema = z.object({
   step: z.enum(['configure', 'setup']).optional(),
-  platform: z.enum(['web', 'flutter', 'rest']).optional(),
+  type: z.enum(ANALYTICS_PROPERTY_TYPES).optional().catch(undefined),
+  platform: z.enum(ANALYTICS_PLATFORMS).optional().catch(undefined),
   propertyId: z.string().optional(),
   /** `platform` = choose stack; `details` = create form (deep-link to skip step 1) */
   configureStep: z.enum(['platform', 'details']).optional(),

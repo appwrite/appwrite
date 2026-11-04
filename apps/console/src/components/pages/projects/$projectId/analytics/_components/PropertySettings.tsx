@@ -7,6 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -17,6 +24,12 @@ import {
   useUpdateAnalyticsProperty,
   type UpdateAnalyticsPropertyInput,
 } from '@/lib/react-query/hooks'
+import {
+  ANALYTICS_PROPERTY_TYPES,
+  ANALYTICS_PROPERTY_TYPE_META,
+  analyticsPropertyType,
+  type AnalyticsPropertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { DeleteProperty } from './DeleteProperty'
 import { InstallTrackingDialog } from './InstallTrackingDialog'
 
@@ -288,6 +301,42 @@ export function PropertySettings({
           </div>
         </div>
 
+        {/* Type */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Type')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t('Only changes which panels the dashboard shows.')}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <Select
+              value={analyticsPropertyType(property)}
+              onValueChange={(next) =>
+                applyUpdate(
+                  { type: next as AnalyticsPropertyType },
+                  t('Type updated'),
+                )
+              }
+              disabled={isBusy}
+            >
+              <SelectTrigger className="h-9 w-full max-w-sm text-[13px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ANALYTICS_PROPERTY_TYPES.map((id) => (
+                  <SelectItem key={id} value={id}>
+                    {t(ANALYTICS_PROPERTY_TYPE_META[id].label)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Tracking */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
@@ -334,7 +383,9 @@ export function PropertySettings({
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
-              {t('Primary domain being tracked. Optional for native apps.')}
+              {t(
+                'Primary domain being tracked. May be empty for mobile and agent properties.',
+              )}
             </p>
             <Input
               value={domain}

@@ -116,7 +116,13 @@ export function pageRowHref(
   return undefined
 }
 
-export function PagesPanel(props: PanelProps) {
+export function PagesPanel({
+  screens,
+  ...props
+}: PanelProps & {
+  /** Mobile apps report screen names in the page dimensions. */
+  screens?: boolean
+}) {
   // Cached by the page header already; used to turn paths into links.
   const { property } = useAnalyticsProperty(props.projectId, props.propertyId)
   return (
@@ -124,8 +130,8 @@ export function PagesPanel(props: PanelProps) {
       {...props}
       rowHref={(value, tabId) => pageRowHref(value, tabId, property?.domain)}
       cardId="pages"
-      title="Pages"
-      description="Most visited paths"
+      title={screens ? 'Screens' : 'Pages'}
+      description={screens ? 'Most viewed screens' : 'Most visited paths'}
       tabs={PAGE_TABS}
       // Rank numbers come from the panel (and the modal's own rank column),
       // not renderLeading, so they're never drawn twice.

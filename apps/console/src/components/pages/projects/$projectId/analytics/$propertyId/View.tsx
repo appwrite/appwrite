@@ -43,6 +43,10 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAnalyticsChartPrefs } from '@/hooks/use-analytics-chart-prefs'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
+import {
+  analyticsPropertyType,
+  type AnalyticsPropertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { AnalyticsOverview } from '../_components/AnalyticsOverview'
 import {
   PropertyHeaderLive,
@@ -102,6 +106,32 @@ interface ViewProps {
 const HOURLY_DEFAULT_MAX_HOURS = 72
 
 type DateSelection = { dateRange: DateRange; presetId: string | null }
+
+type DimensionPanel =
+  | 'sources'
+  | 'split'
+  | 'pages'
+  | 'locations'
+  | 'technology'
+  | 'bots'
+
+// The overview and custom events apply to every type. Mobile apps have no
+// referrers or crawlers; agents only send their own events.
+const PANELS_BY_TYPE: Record<
+  AnalyticsPropertyType,
+  ReadonlySet<DimensionPanel>
+> = {
+  web: new Set([
+    'sources',
+    'split',
+    'pages',
+    'locations',
+    'technology',
+    'bots',
+  ]),
+  mobile: new Set(['pages', 'locations', 'technology']),
+  agent: new Set(),
+}
 
 function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
   if (!dateRange.from || !dateRange.to) return DEFAULT_ANALYTICS_CHART_INTERVAL
@@ -431,6 +461,9 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
+  const propertyType = property ? analyticsPropertyType(property) : 'web'
+  const panels = PANELS_BY_TYPE[propertyType]
+
   if (!property && !propertyLoading) {
     return (
       <div className="flex flex-col">
@@ -595,39 +628,52 @@ export function View({
                 so switching tabs never shifts the grid. */}
               <div className="grid gap-4 lg:grid-cols-2">
                 {/* Channels, referrers and UTM campaigns in one card. */}
-                <TrafficSourcesPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
+                {panels.has('sources') ? (
+                  <TrafficSourcesPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
                 {/* Humans vs bots, stretched to the sources card's height. */}
-                <TrafficSplit
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                  comparisonRange={comparisonRange}
-                  compareLabel={t(compareModeLabel(compareMode))}
-                />
-                <PagesPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
-                <LocationsPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
-                <TechnologyPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
-                <BotsPanel
-                  projectId={projectId}
-                  propertyId={propertyId}
-                  range={range}
-                />
+                {panels.has('split') ? (
+                  <TrafficSplit
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                    comparisonRange={comparisonRange}
+                    compareLabel={t(compareModeLabel(compareMode))}
+                  />
+                ) : null}
+                {panels.has('pages') ? (
+                  <PagesPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                    screens={propertyType === 'mobile'}
+                  />
+                ) : null}
+                {panels.has('locations') ? (
+                  <LocationsPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {panels.has('technology') ? (
+                  <TechnologyPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {panels.has('bots') ? (
+                  <BotsPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
                 {/* Custom events close the page at full width: it's the card
                   most specific to the product, and its empty state carries
                   the how-to CTA. */}

@@ -45,12 +45,19 @@ import {
   isAnalyticsPlatform,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
+import {
+  ANALYTICS_PROPERTY_TYPE_META,
+  analyticsPropertyType,
+  isAnalyticsPropertyType,
+  type AnalyticsPropertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { IntegrationSnippets } from '../_components/IntegrationSnippets'
-import { PlatformCards } from './_components/PlatformCards'
+import { PlatformCards, TypeCards } from './_components/PlatformCards'
 import { EventAside } from './_components/EventAside'
 
 export type AddPropertySearchState = {
   step?: 'configure' | 'setup'
+  type?: AnalyticsPropertyType
   platform?: AnalyticsPlatform
   propertyId?: string
   /** Legacy two-part configure step; ignored (configure is one page now). */
@@ -65,16 +72,10 @@ type ViewProps = {
   search: AddPropertySearchState
 }
 
-function normalizePlatform(
-  value: AnalyticsPlatform | undefined,
-): AnalyticsPlatform {
-  return isAnalyticsPlatform(value) ? value : 'web'
-}
-
 /**
  * Two stages, no progress bar:
  *
- * 1. Configure - name, domain, platform and an optional custom ID on one page.
+ * 1. Configure - name, type, domain, SDK and an optional custom ID on one page.
  * 2. Install - the snippet for the chosen platform while we wait for the
  *    first event. The user can skip at any point; tracking keeps working and
  *    the snippet is always available again in the property's settings.
@@ -84,7 +85,6 @@ export function View({ projectId, search }: ViewProps) {
   const navigate = useNavigate()
 
   const step = search.step === 'setup' && search.propertyId ? 'setup' : 'configure'
-  const platform = normalizePlatform(search.platform)
 
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
@@ -104,6 +104,21 @@ export function View({ projectId, search }: ViewProps) {
     projectId,
     step === 'setup' ? search.propertyId : undefined,
   )
+
+  // A setup deep link without ?type= takes the created property's type.
+  const type = isAnalyticsPropertyType(search.type)
+    ? search.type
+    : property
+      ? analyticsPropertyType(property)
+      : 'web'
+  const typePlatforms = ANALYTICS_PROPERTY_TYPE_META[type].platforms
+  // A platform the type doesn't offer (stale or hand-edited URL) falls back
+  // to the type's default SDK.
+  const platform =
+    isAnalyticsPlatform(search.platform) &&
+    typePlatforms.includes(search.platform)
+      ? search.platform
+      : typePlatforms[0]
 
   const { eventReceived, firstEventName } = useAnalyticsFirstEvent(
     projectId,
@@ -129,7 +144,8 @@ export function View({ projectId, search }: ViewProps) {
       // owns those values.
       search: {
         step: search.step,
-        platform: search.platform,
+        type: search.type,
+        platform,
         propertyId: search.propertyId,
         ...patch,
       },
@@ -159,11 +175,17 @@ export function View({ projectId, search }: ViewProps) {
       {
         propertyId,
         name: name.trim(),
-        domain: domain.trim() || undefined,
+        domain: type === 'agent' ? undefined : domain.trim() || undefined,
+        type,
       },
       {
         onSuccess: (created) => {
-          updateSearch({ step: 'setup', propertyId: created.$id, platform })
+          updateSearch({
+            step: 'setup',
+            propertyId: created.$id,
+            type,
+            platform,
+          })
         },
         onError: (error) => setCreateError(getErrorMessage(error)),
       },
@@ -284,11 +306,42 @@ export function View({ projectId, search }: ViewProps) {
                 <p className="text-[12px] text-destructive">{nameError}</p>
               )}
             </div>
+          </section>
 
+          <section className="space-y-3">
+            <div>
+              <Label>{t('Type')}</Label>
+              <p className="mt-1 text-[12px] text-muted-foreground">
+                {t(
+                  'Decides which panels the dashboard shows. You can change it later in settings.',
+                )}
+              </p>
+            </div>
+            <TypeCards
+              value={type}
+              onChange={(next) =>
+                updateSearch({
+                  type: next,
+                  platform: ANALYTICS_PROPERTY_TYPE_META[next].platforms[0],
+                })
+              }
+              disabled={createMutation.isPending}
+            />
+          </section>
+
+          {/* Agents have no domain to track. */}
+          {type !== 'agent' ? (
             <div className="space-y-2">
               <Label htmlFor="add-property-domain">
-                {t('Domain')}{' '}
-                <span className="text-muted-foreground">({t('optional')})</span>
+                {t('Domain')}
+                {type === 'mobile' ? (
+                  <>
+                    {' '}
+                    <span className="text-muted-foreground">
+                      ({t('optional')})
+                    </span>
+                  </>
+                ) : null}
               </Label>
               <Input
                 id="add-property-domain"
@@ -298,17 +351,25 @@ export function View({ projectId, search }: ViewProps) {
                 onChange={(e) => setDomain(e.target.value)}
                 disabled={createMutation.isPending}
               />
+              {type === 'web' ? (
+                <p className="text-[12px] text-muted-foreground">
+                  {t(
+                    'The site you are tracking. Page paths in reports link to it.',
+                  )}
+                </p>
+              ) : null}
             </div>
-          </section>
+          ) : null}
 
           <section className="space-y-3">
             <div>
-              <Label>{t('Platform')}</Label>
+              <Label>{t('SDK')}</Label>
               <p className="mt-1 text-[12px] text-muted-foreground">
                 {t('Decides which install snippet you get next. You can switch any time.')}
               </p>
             </div>
             <PlatformCards
+              platforms={typePlatforms}
               value={platform}
               onChange={(next) => updateSearch({ platform: next })}
               disabled={createMutation.isPending}
@@ -441,6 +502,7 @@ export function View({ projectId, search }: ViewProps) {
                 <IntegrationSnippets
                   projectId={projectId}
                   property={property}
+                  platforms={typePlatforms}
                   platform={platform}
                   onPlatformChange={(next) => updateSearch({ platform: next })}
                 />

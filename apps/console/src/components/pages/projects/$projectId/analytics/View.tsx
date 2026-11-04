@@ -24,6 +24,10 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
+import {
+  ANALYTICS_PROPERTY_TYPE_META,
+  analyticsPropertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -332,6 +336,16 @@ export function View() {
                             <h3 className="truncate text-[14px] font-medium text-foreground">
                               {property.name}
                             </h3>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] shrink-0"
+                            >
+                              {t(
+                                ANALYTICS_PROPERTY_TYPE_META[
+                                  analyticsPropertyType(property)
+                                ].label,
+                              )}
+                            </Badge>
                             {!property.enabled && (
                               <Badge
                                 variant="warning"
@@ -525,6 +539,16 @@ export function View() {
                                   <p className="truncate text-[13px] font-medium text-foreground">
                                     {property.name}
                                   </p>
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] shrink-0"
+                                  >
+                                    {t(
+                                      ANALYTICS_PROPERTY_TYPE_META[
+                                        analyticsPropertyType(property)
+                                      ].label,
+                                    )}
+                                  </Badge>
                                   {!property.enabled && (
                                     <Badge
                                       variant="warning"
