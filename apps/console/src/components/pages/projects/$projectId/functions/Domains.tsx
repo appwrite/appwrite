@@ -430,14 +430,6 @@ export function View() {
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/functions/$functionId/domains/add',
-                params: { projectId: projectId!, functionId: functionId! },
-              })
-            }}
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
