@@ -12,6 +12,7 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
@@ -147,13 +148,19 @@ class Maintenance extends Action
         // again and its certificate would expire silently. One about to expire is
         // checked regardless, so the worker renews it or reports why it cannot.
         $due = \array_map(fn (Document $certificate) => $certificate->getId(), $documents);
-        $expiring = $dbForPlatform->find('certificates', [
-            Query::greaterThan('expireDate', $time),
-            Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
-            Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
-            Query::orderAsc('expireDate'),
-            Query::limit(100),
-        ]);
+        try {
+            $expiring = $dbForPlatform->find('certificates', [
+                Query::greaterThan('expireDate', $time),
+                Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
+                Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
+                Query::orderAsc('expireDate'),
+                Query::limit(100),
+            ]);
+        } catch (QueryException $e) {
+            // A schema without expireDate (the migration has not run yet) must not stop the renewals above
+            Console::warning("[{$time}] Skipping certificates about to expire: " . $e->getMessage());
+            $expiring = [];
+        }
 
         foreach ($expiring as $certificate) {
             if (!\in_array($certificate->getId(), $due, true)) {
