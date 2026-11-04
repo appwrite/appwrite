@@ -226,6 +226,13 @@ trait ProxyBase
         $rule = $this->createAPIRule('nested.' . \uniqid() . '.fallback.localhost');
         $this->assertSame(400, $rule['headers']['status-code']);
 
+        // A sibling name that merely ends with the platform domain string is not a subdomain of it,
+        // so it must not be claimed as Appwrite-owned and auto-verified; it takes the normal DNS path.
+        $lookalike = $this->createAPIRule(\uniqid() . 'fallback.localhost');
+        $this->assertSame(201, $lookalike['headers']['status-code']);
+        $this->assertNotSame('verified', $lookalike['body']['status']);
+        $this->cleanupRule($lookalike['body']['$id']);
+
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://appwrite.test');
         $proxyClient->addHeader('x-appwrite-hostname', 'fallback.localhost');

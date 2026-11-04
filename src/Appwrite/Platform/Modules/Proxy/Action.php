@@ -289,7 +289,9 @@ class Action extends PlatformAction
         }
 
         foreach ($appwriteDomains as $appwriteDomain) {
-            if (\str_ends_with($domain, $appwriteDomain)) {
+            // Match on a DNS label boundary: the platform domain itself, or a subdomain of it.
+            // A bare suffix test would also claim sibling names like 'evil-appwrite.io'.
+            if ($domain === $appwriteDomain || \str_ends_with($domain, '.' . $appwriteDomain)) {
                 return true;
             }
         }
