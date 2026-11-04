@@ -81,7 +81,8 @@ export function View() {
   const {
     data: domainsData,
     isLoading: domainsLoading,
-    isFetching: domainsFetching} = useQuery(
+    isFetching: domainsFetching,
+    refetch: refetchDomains} = useQuery(
     siteDomainsQueryOptions(
       projectId,
       siteId,
@@ -413,6 +414,8 @@ export function View() {
             if (!open) setViewLogsRule(null)
           }}
           rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
+          onRefresh={() => void refetchDomains()}
+          isRefreshing={domainsFetching}
         />
       )}
     </>
