@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import { canViewRuleLogs, getApexDomain } from '@/lib/utils/proxy-domains'
 import { Loader2 } from 'lucide-react'
 import {
   useSiteDomains,
@@ -241,7 +241,7 @@ export function SiteDomainsView() {
                                 <RowActionsMenuTrigger />
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                {ruleData.status !== 'verified' && (
+                                {canViewRuleLogs(ruleData) && (
                                   <DropdownMenuItem
                                     onClick={() => handleViewLogs(ruleData)}
                                   >
