@@ -404,12 +404,12 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(200, $head['headers']['status-code']);
     }
 
-    public function testPutObjectOverwriteInvalidatesPreviewCache(): void
+    public function testS3OverwritePathsInvalidatePreviewCache(): void
     {
         $bucketId = $this->setupBucket();
 
         // Create through the Storage API so the test holds the file id; the S3 gateway addresses
-        // the object by name, so a later PutObject to the same key overwrites this same file.
+        // the object by name, so a later write to the same key overwrites this same file.
         $key = Id::unique() . '.png';
         $created = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
             'content-type' => 'multipart/form-data',
@@ -421,25 +421,59 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(201, $created['headers']['status-code'], \json_encode($created['body']));
         $fileId = $created['body']['$id'];
 
-        // Prime the image-transformation cache for this file.
-        $previewBefore = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', \array_merge([
+        $baseline = $this->fetchPreview($bucketId, $fileId);
+        $this->assertSame(200, $baseline['headers']['status-code']);
+        $this->assertNotEmpty($baseline['body']);
+
+        // Each overwrite path keeps the file id but changes the bytes, so /preview must stop serving
+        // the cached rendering. A fresh preview is re-primed as the baseline before the next path.
+
+        // 1) Plain PutObject overwrite.
+        $put = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/logo-after.png')), headers: ['content-type' => 'image/png']);
+        $this->assertSame(200, $put['headers']['status-code'], $put['body']);
+        $baseline = $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline['body']);
+
+        // 2) CopyObject overwrite (copies a different image onto the same key).
+        $sourceKey = Id::unique() . '.png';
+        $source = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $sourceKey, body: (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/initials.png')), headers: ['content-type' => 'image/png']);
+        $this->assertSame(200, $source['headers']['status-code'], $source['body']);
+        $copy = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, headers: ['x-amz-copy-source' => '/' . $bucketId . '/' . $sourceKey]);
+        $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
+        $baseline = $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline);
+
+        // 3) Multipart-complete overwrite.
+        $uploadId = $this->createMultipartUpload($bucketId, $key);
+        $etag = $this->uploadPart($bucketId, $key, $uploadId, 1, (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/file.png')));
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => $etag]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+        $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fetchPreview(string $bucketId, string $fileId): array
+    {
+        return $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), ['width' => 64]);
-        $this->assertSame(200, $previewBefore['headers']['status-code']);
-        $this->assertNotEmpty($previewBefore['body']);
+    }
 
-        // Overwrite the object's bytes with a different image through the S3 gateway.
-        $overwrite = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/logo-after.png')), headers: ['content-type' => 'image/png']);
-        $this->assertSame(200, $overwrite['headers']['status-code'], $overwrite['body']);
-
-        // The overwrite drops the file's cached preview, so /preview stops serving the old image.
-        $this->assertEventually(function () use ($bucketId, $fileId, $previewBefore) {
-            $previewAfter = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', \array_merge([
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), ['width' => 64]);
-            $this->assertSame(200, $previewAfter['headers']['status-code']);
-            $this->assertNotSame($previewBefore['body'], $previewAfter['body']);
+    /**
+     * Assert the preview stops matching $previousBody once the overwrite's cache purge runs
+     * (it runs on the deletes worker, hence eventually), and return the new rendering.
+     */
+    private function assertPreviewEventuallyChanges(string $bucketId, string $fileId, string $previousBody): string
+    {
+        $current = $previousBody;
+        $this->assertEventually(function () use ($bucketId, $fileId, $previousBody, &$current): void {
+            $preview = $this->fetchPreview($bucketId, $fileId);
+            $this->assertSame(200, $preview['headers']['status-code']);
+            $this->assertNotSame($previousBody, $preview['body']);
+            $current = $preview['body'];
         }, 20000, 500);
+
+        return $current;
     }
 
     #[Group('antivirus')]
