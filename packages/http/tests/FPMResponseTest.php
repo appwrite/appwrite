@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Http\Tests;
 
+use PHPUnit\Framework\Attributes\RequiresFunction;
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Adapter\FPM\Response;
 
@@ -136,6 +137,28 @@ final class FPMResponseTest extends TestCase
             @$response->stream('last');
             @$response->stream('', true);
             $rest = \inflate_add($decoder, (string) ob_get_contents(), ZLIB_FINISH);
+        } finally {
+            ob_end_clean();
+        }
+
+        $this->assertSame('first-', $first);
+        $this->assertSame('last', $rest);
+    }
+
+    #[RequiresFunction('zstd_compress_init')]
+    public function testStreamedZstdChunksDecodeAsTheyArrive(): void
+    {
+        $response = new Response();
+        $response->setAcceptEncoding('zstd')->setContentType(Response::CONTENT_TYPE_HTML);
+        $decoder = \zstd_uncompress_init() ?: $this->fail('zstd cannot decode');
+        ob_start();
+        try {
+            @$response->stream('first-');
+            $first = \zstd_uncompress_add($decoder, (string) ob_get_contents());
+            ob_clean();
+            @$response->stream('last');
+            @$response->stream('', true);
+            $rest = \zstd_uncompress_add($decoder, (string) ob_get_contents());
         } finally {
             ob_end_clean();
         }
