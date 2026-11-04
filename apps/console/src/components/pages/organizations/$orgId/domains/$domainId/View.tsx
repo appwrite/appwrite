@@ -292,14 +292,15 @@ export function View({ initialData }: ViewProps = {}) {
       ? (recordsTotalFromHook ?? initialData.records.total)
       : (recordsTotalFromHook ?? 0)
 
-  // Get verification status
+  // Nameserver delegation of the zone, not a project domain's verification;
+  // short enough for one metadata column
   const verificationStatus = useMemo(() => {
     if (!domain) return null
     const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
     return {
       isVerified,
       icon: isVerified ? CheckCircle2 : AlertCircle,
-      label: isVerified ? 'Verified' : 'Unverified',
+      label: isVerified ? 'Appwrite DNS' : 'External DNS',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
         : 'text-yellow-600 dark:text-yellow-500',
@@ -988,7 +989,7 @@ export function View({ initialData }: ViewProps = {}) {
                             <>
                               <code
                                 className={cn(
-                                  'text-[12px] font-mono font-medium',
+                                  'text-[12px] font-mono font-medium truncate',
                                   verificationStatus.isVerified
                                     ? 'text-green-600 dark:text-green-500'
                                     : 'text-yellow-600 dark:text-yellow-500',
