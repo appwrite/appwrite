@@ -9,6 +9,7 @@ import {
   DnsRecordsTable,
   DomainVerificationAlert,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import {
@@ -137,4 +138,4 @@ export function VerifySmtpDomainContent({
   )
 }
 
-export { dnsPendingVerificationError }
+export { dnsPendingVerificationError, domainVerificationError }
