@@ -34,6 +34,10 @@ $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bu
 // ok: php.appwrite.skip-ungated-load
 $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
 
+// Transfers have no document permissions; their routes check the sender or the secret themselves.
+// ok: php.appwrite.skip-ungated-load
+$transfer = $authorization->skip(fn () => $dbForPlatform->getDocument('transfers', $transferId));
+
 // Intentional lookup / subquery collections (allowlisted).
 // ok: php.appwrite.skip-ungated-load
 $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));

@@ -77,6 +77,7 @@ import {
 } from '@/lib/project-settings'
 import { GitConfigurationCard } from './GitConfigurationCard'
 import { PremiumGeoDBCard } from './_components/PremiumGeoDBCard'
+import { TransferProjectCard } from './_components/TransferProjectCard'
 import { buildVcsAuthUrl, type VcsProviderId } from '@/lib/vcs/providers'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -1104,16 +1105,22 @@ export function ProjectSettingsOverview({
           <MCPSection projectId={projectId} projectName={project.name} />
 
           {/* Change Organization Section (cloud multi-tenancy only) */}
-          {supportsMultiTenancy && (
-            <ChangeOrganizationSection
-              project={project}
-              organizations={organizations}
-              organizationsLoading={organizationsLoading}
-              selectedOrgId={selectedOrgId}
-              onOrgChange={setSelectedOrgId}
-              onTransfer={transferProjectMutation}
-            />
-          )}
+          {supportsMultiTenancy &&
+            (features.projectTransfers ? (
+              <TransferProjectCard
+                projectId={projectId}
+                teamId={project.teamId}
+              />
+            ) : (
+              <ChangeOrganizationSection
+                project={project}
+                organizations={organizations}
+                organizationsLoading={organizationsLoading}
+                selectedOrgId={selectedOrgId}
+                onOrgChange={setSelectedOrgId}
+                onTransfer={transferProjectMutation}
+              />
+            ))}
 
           {/* Delete Project Section */}
           <DeleteProjectSection

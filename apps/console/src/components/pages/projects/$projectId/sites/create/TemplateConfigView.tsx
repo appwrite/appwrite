@@ -311,6 +311,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         buildRuntime: defaults.buildRuntime ?? 'node-22',
         adapter: defaults.adapter ?? '',
         fallbackFile: defaults.fallbackFile ?? '',
+        scopes: template.scopes?.length ? template.scopes : undefined,
         ...(connectNow && {
           installationId: formData.installationId,
           providerRepositoryId: formData.providerRepositoryId,
@@ -925,6 +926,33 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             </div>
           )
         })()}
+
+      {/* Template scopes section (read-only) */}
+      {template.scopes && template.scopes.length > 0 && (
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('Scopes')}
+            </h3>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              {t(
+                'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.',
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 flex flex-wrap gap-2">
+            {template.scopes.map((scope) => (
+              <code
+                key={scope}
+                className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded"
+              >
+                {scope}
+              </code>
+            ))}
+          </div>
+        </div>
+      )}
     </WizardLayout>
   )
 }

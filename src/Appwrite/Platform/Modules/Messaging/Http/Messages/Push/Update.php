@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Messaging\Http\Messages\Push;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -182,7 +183,11 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        // Drafts created with a scheduledAt have no schedule document yet, so create one on demand.
+        if (
+            (\is_null($currentScheduledAt) || \is_null($message->getAttribute('scheduleId')))
+            && !\is_null($scheduledAt ?? $currentScheduledAt)
+        ) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -191,14 +196,12 @@ class Update extends Action
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
-                'schedule' => $scheduledAt,
+                'schedule' => $scheduledAt ?? $currentScheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
 
             $message->setAttribute('scheduleId', $schedule->getId());
-        }
-
-        if (!\is_null($currentScheduledAt)) {
+        } elseif (!\is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
@@ -318,7 +321,7 @@ class Update extends Action
             $scheduleTime = $scheduledAt ?? $currentScheduledAt;
             $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
+            $encoder = new JWT(EncryptionKey::current(), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
                 'bucketId' => $pushData['image']['bucketId'],

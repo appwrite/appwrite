@@ -16,11 +16,11 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        $this->addAction(Init::getName(), new Init());
-        $this->addAction(Get::getName(), new Get());
-        $this->addAction(Create::getName(), new Create());
-        $this->addAction(Delete::getName(), new Delete());
-        $this->addAction(ShutdownEvents::getName(), new ShutdownEvents());
-        $this->addAction(ShutdownUsage::getName(), new ShutdownUsage());
+        $this->addAction('init', Init::class);
+        $this->addAction('s3Get', Get::class);
+        $this->addAction('s3Create', Create::class);
+        $this->addAction('s3Delete', Delete::class);
+        $this->addAction('shutdownEvents', ShutdownEvents::class);
+        $this->addAction('shutdownUsage', ShutdownUsage::class);
     }
 }

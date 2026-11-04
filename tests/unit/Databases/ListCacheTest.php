@@ -60,6 +60,23 @@ final class ListCacheTest extends TestCase
         $this->assertFalse($this->cache->load($this->key, self::TTL, self::FIELD));
     }
 
+    public function testNamespacedListReadsStayWarmAndPermissionWritesInvalidateThem(): void
+    {
+        $cache = (new Cache(new Redis($this->redis)))->withNamespace('v2:');
+        $listCache = new ListCache($cache, $this->key);
+        $this->assertSame('stored', ListCache::purged([$listCache], fn (): string => 'stored'));
+        $version = $listCache->getVersion();
+        $listCache->save([self::FIELD => ['row']], $version);
+        $this->assertSame(['row'], $cache->load($this->key, self::TTL, self::FIELD));
+
+        $this->assertSame('updated', ListCache::purged([$listCache], fn (): string => 'updated'));
+        $this->assertFalse($cache->load($this->key, self::TTL, self::FIELD));
+        $listCache->save([self::FIELD => ['stale row']], $version);
+        $this->assertFalse($cache->load($this->key, self::TTL, self::FIELD));
+        $this->assertNotSame($version, $listCache->getVersion());
+        $this->assertGreaterThan(0, $this->redis->ttl('v2:'.$this->key.':version'));
+    }
+
     public function testVersionMarkerExpires(): void
     {
         ListCache::purged([new ListCache($this->cache, $this->key)], fn (): string => 'stored');

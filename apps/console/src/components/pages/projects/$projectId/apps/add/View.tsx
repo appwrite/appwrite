@@ -38,6 +38,7 @@ import {
 } from '@/lib/config/ide'
 import { registerConsoleRealtimeListener } from '@/lib/realtime/console-hub'
 import { PROJECT_CHANNELS } from '@/lib/realtime/constants'
+import { isRealtimeContextPing } from '@/lib/realtime/event-source'
 import type { AddAppKind, WebFrameworkKey } from '@/lib/add-app-wizard/types'
 import {
   ADD_APP_KINDS,
@@ -226,8 +227,13 @@ export function View({ projectId, search }: ViewProps) {
         [...PROJECT_CHANNELS],
         (response) => {
           if (cancelled) return
-          const events = response.events ?? []
-          if (events.includes(`projects.${projectId}.ping`)) {
+          if (
+            isRealtimeContextPing(
+              projectId,
+              response.events ?? [],
+              response.channels ?? [],
+            )
+          ) {
             setPingReceived(true)
           }
         },

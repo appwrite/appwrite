@@ -666,6 +666,8 @@ class Install extends Action
             'database' => $database,
             'hostPath' => $this->hostPath,
             'topology' => $this->topology,
+            // Reviews are optional: the review service is added only once its secret is set.
+            'reviews' => ($input['_APP_REVIEWS_SECRET'] ?? '') !== '',
         ]);
 
         $templateForEnv->setParam('vars', $input);

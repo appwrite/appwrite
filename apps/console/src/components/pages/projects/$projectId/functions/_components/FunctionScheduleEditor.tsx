@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Tooltip,
   TooltipContent,
@@ -33,9 +32,6 @@ import { useT } from '@/lib/i18n/translate'
 import { CronScheduleEditor } from '../CronScheduleEditor'
 
 const CUSTOM_PRESET = 'custom'
-
-const MODE_ITEM_CLASS =
-  'h-8 flex-none gap-1.5 px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-secondary data-[state=on]:text-secondary-foreground data-[state=on]:hover:bg-secondary data-[state=on]:hover:text-secondary-foreground'
 
 const INTERVAL_UNITS: IntervalUnit[] = ['minutes', 'hours', 'days']
 
@@ -125,52 +121,64 @@ export function FunctionScheduleEditor({
     onIntervalChange(count * INTERVAL_UNIT_MINUTES[next])
   }
 
+  const cronSelectItem = (
+    <SelectItem value="cron" disabled={cronLocked} className="text-[13px]">
+      <span className="flex items-center gap-1.5">
+        {t('Cron')}
+        {cronLocked ? <Lock className="h-3 w-3" /> : null}
+      </span>
+    </SelectItem>
+  )
+
   return (
     <div className="space-y-4">
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        size="sm"
-        value={mode}
-        onValueChange={handleModeChange}
-        disabled={disabled}
-        aria-label={t('Schedule type')}
-      >
-        <ToggleGroupItem value="none" className={MODE_ITEM_CLASS}>
-          {t('None')}
-        </ToggleGroupItem>
-        <ToggleGroupItem value="interval" className={MODE_ITEM_CLASS}>
-          {t('Interval')}
-          <Badge variant="success" className="text-[10px] shrink-0">
-            {t('Recommended')}
-          </Badge>
-        </ToggleGroupItem>
-        {cronLocked ? (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <ToggleGroupItem
-                    value="cron"
-                    className={MODE_ITEM_CLASS}
-                    disabled
-                  >
-                    {t('Cron')}
-                    <Lock className="h-3 w-3" />
-                  </ToggleGroupItem>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {t('Upgrade to unlock')}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ) : (
-          <ToggleGroupItem value="cron" className={MODE_ITEM_CLASS}>
-            {t('Cron')}
-          </ToggleGroupItem>
-        )}
-      </ToggleGroup>
+      <div className="space-y-2">
+        <Label
+          htmlFor="function-schedule-type"
+          className="text-[13px] font-medium"
+        >
+          {t('Schedule type')}
+        </Label>
+        <Select
+          value={mode}
+          onValueChange={handleModeChange}
+          disabled={disabled}
+        >
+          <SelectTrigger
+            id="function-schedule-type"
+            className="h-9 w-full text-[13px]"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none" className="text-[13px]">
+              {t('None')}
+            </SelectItem>
+            <SelectItem value="interval" className="text-[13px]">
+              <span className="flex items-center gap-1.5">
+                {t('Interval')}
+                <Badge variant="success" className="text-[10px] shrink-0">
+                  {t('Recommended')}
+                </Badge>
+              </span>
+            </SelectItem>
+            {cronLocked ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>{cronSelectItem}</div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    {t('Upgrade to unlock')}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              cronSelectItem
+            )}
+          </SelectContent>
+        </Select>
+      </div>
 
       {cronLocked && (
         <p className="text-[12px] text-muted-foreground">

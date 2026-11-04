@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Alert\Monitors;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
@@ -15,6 +16,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Execution\Store;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Presences\State as PresenceState;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
@@ -57,6 +59,8 @@ class Deletes extends Action
 
     private const UPLOAD_ABORT_ATTEMPTS = 3; // Daily runs before a failing abort falls back to deleting the path
 
+    private const DEPLOYMENT_BATCH_SIZE = 50; // Deployments carry build logs, a default batch of full rows exceeds the worker memory limit
+
     public static function getName(): string
     {
         return 'deletes';
@@ -79,6 +83,7 @@ class Deletes extends Action
             ->inject('deviceForSites')
             ->inject('deviceForBuilds')
             ->inject('telemetry')
+            ->inject('mqtt')
             ->inject('certificates')
             ->inject('executor')
             ->inject('executionRetention')
@@ -112,6 +117,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Telemetry $telemetry,
+        Mqtt $mqtt,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -148,6 +154,7 @@ class Deletes extends Action
             $deviceForSites,
             $deviceForBuilds,
             $telemetry,
+            $mqtt,
             $certificates,
             $executor,
             $executionRetention,
@@ -244,6 +251,7 @@ class Deletes extends Action
         Device $deviceForSites,
         Device $deviceForBuilds,
         Telemetry $telemetry,
+        Mqtt $mqtt,
         Provider $certificates,
         Executor $executor,
         string $executionRetention,
@@ -295,13 +303,13 @@ class Deletes extends Action
                         $this->deleteDeployment($dbForPlatform, $getProjectDB, $deviceForFunctions, $deviceForSites, $deviceForBuilds, $deviceForFiles, $document, $certificates, $project, $executor, $bus);
                         break;
                     case DELETE_TYPE_USERS:
-                        $this->deleteUser($getProjectDB, $document, $project, $queueForRealtime, $publisherForUsage);
+                        $this->deleteUser($getProjectDB, $document, $project, $mqtt, $queueForRealtime, $publisherForUsage);
                         break;
                     case DELETE_TYPE_TEAMS:
                         $this->deleteTeam($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
-                        $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
+                        $this->deleteBucket($dbForPlatform, $getProjectDB, $deviceForFiles, $document, $project);
                         break;
                     case DELETE_TYPE_INSTALLATIONS:
                         $this->deleteInstallation($dbForPlatform, $getProjectDB, $document, $project);
@@ -359,23 +367,26 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForPlatform, $getProjectDB, $datetime);
                 break;
+            case DELETE_TYPE_ALERTS:
+                $this->deleteAlerts($dbForPlatform, $datetime);
+                break;
             case DELETE_TYPE_TOPIC:
-                $this->deleteTopic($project, $getProjectDB, $document);
+                $this->deleteTopic($project, $getProjectDB, $document, $mqtt);
                 break;
             case DELETE_TYPE_TARGET:
-                Targets::deleteSubscribers($getProjectDB($project), $document);
+                Targets::deleteSubscribers($getProjectDB($project), $document, $mqtt, $project->getId());
                 break;
             case DELETE_TYPE_EXPIRED_TARGETS:
-                $this->deleteExpiredTargets($project, $getProjectDB);
+                $this->deleteExpiredTargets($project, $getProjectDB, $mqtt);
                 break;
             case DELETE_TYPE_SESSION_TARGETS:
-                $this->deleteSessionTargets($project, $getProjectDB, $document);
+                $this->deleteSessionTargets($project, $getProjectDB, $document, $mqtt);
                 break;
             case DELETE_TYPE_CSV_EXPORTS:
                 $this->deleteOldExports($dbForPlatform, $deviceForFiles);
                 break;
             case DELETE_TYPE_MAINTENANCE:
-                $this->deleteExpiredTargets($project, $getProjectDB);
+                $this->deleteExpiredTargets($project, $getProjectDB, $mqtt);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTokens($project, $getProjectDB);
@@ -409,6 +420,7 @@ class Deletes extends Action
             DELETE_TYPE_TEAM_PROJECTS,
             DELETE_TYPE_REALTIME,
             DELETE_TYPE_SCHEDULES,
+            DELETE_TYPE_ALERTS,
             DELETE_TYPE_CSV_EXPORTS,
             DELETE_TYPE_REPORT,
         ], true);
@@ -495,6 +507,19 @@ class Deletes extends Action
      * @throws Structure
      * @throws DatabaseException|Exception
      */
+    /**
+     * Removes this region's alerts that resolved before the retention cutoff;
+     * a firing alert is kept however old it is.
+     */
+    private function deleteAlerts(Database $dbForPlatform, string $datetime): void
+    {
+        $this->deleteByGroup('monitorAlerts', [
+            Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+            Query::equal('status', ['resolved']),
+            Query::lessThan('resolvedAt', $datetime),
+        ], $dbForPlatform);
+    }
+
     private function deleteSchedules(Database $dbForPlatform, callable $getProjectDB, string $datetime): void
     {
         $this->listByGroup(
@@ -508,6 +533,19 @@ class Deletes extends Action
             ],
             $dbForPlatform,
             function (Document $document) use ($dbForPlatform, $getProjectDB) {
+                $resourceType = $document->getAttribute('resourceType');
+                $resourceId = $document->getAttribute('resourceId');
+
+                // Monitors live in the platform database, and a monitor need not
+                // belong to a project, so their rows go once the monitor is gone.
+                if ($resourceType === SCHEDULE_RESOURCE_TYPE_MONITOR) {
+                    if ($dbForPlatform->getDocument('monitors', $resourceId)->isEmpty()) {
+                        $dbForPlatform->deleteDocument('schedules', $document->getId());
+                        Console::success('Deleting schedule for monitor ' . $resourceId);
+                    }
+                    return;
+                }
+
                 $project = $dbForPlatform->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
@@ -515,9 +553,6 @@ class Deletes extends Action
                     Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
-
-                $resourceType = $document->getAttribute('resourceType');
-                $resourceId = $document->getAttribute('resourceId');
 
                 // One-shot execution schedules are claimed then deleted by the
                 // functions worker; this sweeper does not reap them.
@@ -552,7 +587,7 @@ class Deletes extends Action
      * @param Document $topic
      * @throws Exception
      */
-    private function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
+    private function deleteTopic(Document $project, callable $getProjectDB, Document $topic, Mqtt $mqtt)
     {
         if ($topic->isEmpty()) {
             Console::error('Failed to delete subscribers. Topic not found');
@@ -567,7 +602,16 @@ class Deletes extends Action
                 Query::equal('topicInternalId', [$topic->getSequence()]),
                 Query::orderAsc(),
             ],
-            $dbForProject
+            $dbForProject,
+            function (Document $subscriber) use ($project, $topic, $mqtt) {
+                // The topic itself is gone, so every subscriber row deleted here is the user's
+                // last one for it; unlike Targets::deleteSubscribers(), no other-row check is needed.
+                try {
+                    $mqtt->revokeTopic($project->getId(), $subscriber->getAttribute('userId'), $topic->getId());
+                } catch (\Throwable $error) {
+                    Console::error('Failed to unsubscribe MQTT connection: ' . $error->getMessage());
+                }
+            }
         );
 
         if ($dbForProject->findCollection('pushLedger') === null) {
@@ -590,16 +634,16 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
+    private function deleteExpiredTargets(Document $project, callable $getProjectDB, Mqtt $mqtt): void
     {
         Console::info('Delete expired targets');
-        Targets::delete($getProjectDB($project), Query::equal('expired', [true]));
+        Targets::delete($getProjectDB($project), Query::equal('expired', [true]), $mqtt, $project->getId());
     }
 
-    private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
+    private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session, Mqtt $mqtt): void
     {
         Console::info('Delete session targets');
-        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]));
+        Targets::delete($getProjectDB($project), Query::equal('sessionInternalId', [$session->getSequence()]), $mqtt, $project->getId());
     }
 
     private function updateProcessingMigrations(Document $project, callable $getProjectDB): void
@@ -809,7 +853,8 @@ class Deletes extends Action
                     type: DELETE_TYPE_DOCUMENT,
                     document: $deployment,
                 ));
-            }
+            },
+            self::DEPLOYMENT_BATCH_SIZE
         );
     }
 
@@ -1000,6 +1045,17 @@ class Deletes extends Action
             Console::error('Failed to delete keys: ' . $th->getMessage());
         }
 
+        // Delete Transfers
+        try {
+            $this->deleteByGroup('transfers', [
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+        } catch (Throwable $th) {
+            Console::error('Failed to delete transfers: ' . $th->getMessage());
+        }
+
         // Delete Webhooks
         try {
             $this->deleteByGroup('webhooks', [
@@ -1008,6 +1064,18 @@ class Deletes extends Action
             ], $dbForPlatform);
         } catch (Throwable $th) {
             Console::error('Failed to delete webhooks: ' . $th->getMessage());
+        }
+
+        // Delete monitors and the alerts they raised
+        foreach (['monitors', 'monitorAlerts'] as $collection) {
+            try {
+                $this->deleteByGroup($collection, [
+                    Query::equal('projectInternalId', [$projectInternalId]),
+                    Query::orderAsc()
+                ], $dbForPlatform);
+            } catch (Throwable $th) {
+                Console::error("Failed to delete {$collection}: " . $th->getMessage());
+            }
         }
 
         // Delete VCS Installations
@@ -1252,7 +1320,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteUser(callable $getProjectDB, Document $document, Document $project, Realtime $queueForRealtime, UsagePublisher $publisherForUsage): void
+    private function deleteUser(callable $getProjectDB, Document $document, Document $project, Mqtt $mqtt, Realtime $queueForRealtime, UsagePublisher $publisherForUsage): void
     {
         $userId = $document->getId();
         $userInternalId = $document->getSequence();
@@ -1310,7 +1378,7 @@ class Deletes extends Action
         Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
         // Delete targets
-        Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+        Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]), $mqtt, $project->getId());
 
         // Delete presences, in case removing them while deleting the user failed
         $usage = new UsageContext();
@@ -1591,6 +1659,9 @@ class Deletes extends Action
         $siteId = $document->getId();
         $siteInternalId = $document->getSequence();
 
+        // Monitors scoped to the site go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'site', $document);
+
         /**
          * Delete rules for site
          */
@@ -1671,6 +1742,9 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $functionId = $document->getId();
         $functionInternalId = $document->getSequence();
+
+        // Monitors scoped to the function go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'function', $document);
 
         /**
          * Delete rules
@@ -1959,6 +2033,7 @@ class Deletes extends Action
      * @param array $queries
      * @param Database $database
      * @param ?callable $callback
+     * @param int $batchSize
      * @return void
      * @throws DatabaseException
      */
@@ -1966,7 +2041,8 @@ class Deletes extends Action
         string $collection,
         array $queries,
         Database $database,
-        ?callable $callback = null
+        ?callable $callback = null,
+        int $batchSize = Database::BATCH_SIZE
     ): void {
         $start = \microtime(true);
 
@@ -1982,6 +2058,7 @@ class Deletes extends Action
             $count = $database->deleteDocuments(
                 $collection,
                 $queries,
+                $batchSize,
                 onNext: $callback
             );
         } catch (Throwable $th) {
@@ -2053,8 +2130,11 @@ class Deletes extends Action
      * @param Document $project
      * @return void
      */
-    private function deleteBucket(callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
+    private function deleteBucket(Database $dbForPlatform, callable $getProjectDB, Device $deviceForFiles, Document $document, Document $project): void
     {
+        // Monitors scoped to the bucket go with it; their alert history stays.
+        (new Monitors($dbForPlatform))->deleteWatching($project, 'bucket', $document);
+
         $dbForProject = $getProjectDB($project);
 
         $dbForProject->deleteCollection('bucket_' . $document->getSequence());

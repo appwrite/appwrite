@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Storage;
 
 use Ahc\Jwt\JWT;
-use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Extend\Exception;
 use CURLFile;
 use PHPUnit\Framework\Attributes\Group;
@@ -1164,7 +1163,7 @@ final class StorageCustomServerTest extends Scope
             $this->assertEquals(1, $file['body']['chunksUploaded']);
         }
 
-        $this->withFactory(function (DatabaseFactory $factory) use ($bucketId, $idleId): void {
+        $this->withFactory(function ($factory) use ($bucketId, $idleId): void {
             $dbForProject = $factory->project($factory->platform()->getDocument('projects', $this->getProject()['$id']));
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -1200,7 +1199,7 @@ final class StorageCustomServerTest extends Scope
     }
 
     /**
-     * @param callable(DatabaseFactory): void $callback receives the server's database factory
+     * @param callable(mixed): void $callback receives the server's database factory, untyped as an edition may register its own
      */
     private function withFactory(callable $callback): void
     {

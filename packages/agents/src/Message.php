@@ -2,111 +2,111 @@
 
 namespace Utopia\Agents;
 
-class Message
+use Utopia\Agents\Parts\Reasoning;
+use Utopia\Agents\Parts\Text;
+use Utopia\Agents\Parts\ToolCall;
+use Utopia\Agents\Parts\ToolResult;
+
+/**
+ * One turn of a conversation: who said it and what it contains.
+ */
+final readonly class Message
 {
-    protected string $role;
-
-    protected string $content;
-
     /**
-     * @var array<Message>
-     */
-    protected array $attachments;
-
-    /**
-     * Create a new message
-     *
-     * @param  array<int, mixed>  $attachments
+     * @param  list<Part>  $parts
      */
     public function __construct(
-        string $content,
-        ?string $role = null,
-        array $attachments = []
+        public Role $role,
+        public array $parts,
     ) {
-        $this->content = $content;
-        $this->role = $role ?? Role::ROLE_USER;
-        $this->attachments = [];
-        $this->setAttachments($attachments);
+    }
+
+    public static function system(string $text): self
+    {
+        return new self(Role::System, [new Text($text)]);
     }
 
     /**
-     * Get the message role
+     * @param  string|list<Part>  $content
      */
-    public function getRole(): string
+    public static function user(string|array $content): self
     {
-        return $this->role;
+        return new self(Role::User, \is_string($content) ? [new Text($content)] : $content);
     }
 
     /**
-     * Get the message content
+     * @param  string|list<Part>  $content
      */
-    public function getContent(): string
+    public static function assistant(string|array $content): self
     {
-        return $this->content;
+        return new self(Role::Assistant, \is_string($content) ? [new Text($content)] : $content);
     }
 
     /**
-     * Detect MIME type of message content.
+     * @param  list<ToolResult>  $results
      */
-    public function getMimeType(): ?string
+    public static function tool(array $results): self
     {
-        if (empty($this->content)) {
-            return null;
-        }
-
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->buffer($this->content);
-
-        return $mimeType === false ? null : $mimeType;
+        return new self(Role::Tool, $results);
     }
 
     /**
-     * Clone the message with a different role.
+     * All text parts joined together.
      */
-    public function withRole(string $role): static
+    public function text(): string
     {
-        $clone = clone $this;
-        $clone->role = $role;
-
-        return $clone;
-    }
-
-    /**
-     * Attach a message payload (for example an image) to this message.
-     */
-    public function addAttachment(Message $attachment): self
-    {
-        $this->attachments[] = $attachment;
-
-        return $this;
-    }
-
-    /**
-     * @param  array<int, mixed>  $attachments
-     */
-    public function setAttachments(array $attachments): self
-    {
-        $this->attachments = [];
-        foreach ($attachments as $attachment) {
-            if (! $attachment instanceof Message) {
-                throw new \InvalidArgumentException('Attachments must be Message instances');
+        $text = '';
+        foreach ($this->parts as $part) {
+            if ($part instanceof Text) {
+                $text .= $part->text;
             }
-            $this->attachments[] = $attachment;
         }
 
-        return $this;
+        return $text;
     }
 
     /**
-     * @return array<Message>
+     * All reasoning text joined together.
      */
-    public function getAttachments(): array
+    public function reasoning(): string
     {
-        return $this->attachments;
+        $text = '';
+        foreach ($this->parts as $part) {
+            if ($part instanceof Reasoning) {
+                $text .= $part->text;
+            }
+        }
+
+        return $text;
     }
 
-    public function hasAttachments(): bool
+    /**
+     * @return list<ToolCall>
+     */
+    public function toolCalls(): array
     {
-        return ! empty($this->attachments);
+        $calls = [];
+        foreach ($this->parts as $part) {
+            if ($part instanceof ToolCall) {
+                $calls[] = $part;
+            }
+        }
+
+        return $calls;
+    }
+
+    /**
+     * @return list<ToolResult>
+     */
+    public function toolResults(): array
+    {
+        $results = [];
+        foreach ($this->parts as $part) {
+            if ($part instanceof ToolResult) {
+                $results[] = $part;
+            }
+        }
+
+        return $results;
     }
 }

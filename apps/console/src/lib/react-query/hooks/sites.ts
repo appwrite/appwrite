@@ -1307,6 +1307,7 @@ export interface CreateSiteParams {
   providerRootDirectory?: string
   buildSpecification?: string
   runtimeSpecification?: string
+  scopes?: string[]
 }
 
 /**

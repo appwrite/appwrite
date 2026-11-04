@@ -1,23 +1,19 @@
 ---
 layout: changelog
-title: Set up APNs for an iOS app with one CLI command
+title: "Email triggers for Appwrite Functions"
 date: 2026-10-30
-cover: /images/blog/announcing-apns-one-click-setup/cover.avif
-tags: messaging, cli
+cover: /images/blog/announcing-function-email-triggers/cover.avif
+tags: functions
 ---
 
-Since version 28.5.0, the Appwrite CLI sets up push notifications for iOS apps. Run `appwrite init apns` in your project and it creates the [APNs](/docs/products/messaging/apns#one-click-setup) production and sandbox providers, adds the push entitlement and background mode to your Xcode target, adds an Apple platform for the bundle ID, and checks with Apple that the App ID has Push Notifications on.
+Appwrite Functions on Appwrite Cloud can now execute when an email arrives. Turn on the **Email trigger** of a function, and an email sent to an address such as `support@<FUNCTION_ID>-<PROJECT_ID>.appwrite.email` executes it. You can also connect a domain that you own with an MX record and a TXT record.
 
-The bundle ID, team ID, and key ID are read from your Xcode project or Expo `app.json` and the `.p8` file name. With `--create-key`, the CLI signs in with your Apple ID and creates the APNs key for you, no Apple Developer portal needed.
+Your function receives the email as JSON and each attachment as a file in one `multipart/form-data` request, together with a spam score that it can use to decide what to keep.
 
-```bash
-appwrite init apns --create-key
-```
-
-{% arrow_link href="/blog/post/announcing-apns-one-click-setup" %}
+{% arrow_link href="/blog/post/announcing-function-email-triggers" %}
 Read the announcement
 {% /arrow_link %}
 
-{% arrow_link href="/docs/products/messaging/apns#one-click-setup" %}
-Set up APNs with the CLI
+{% arrow_link href="/docs/products/functions/email" %}
+Read the email triggers docs
 {% /arrow_link %}

@@ -180,3 +180,39 @@ export async function confirmPayment(config: {
     `Payment cannot be completed in its current state (${status ?? 'unknown'}).`,
   )
 }
+
+/**
+ * Confirm a SetupIntent for a card already saved on the customer.
+ *
+ * Used to register a mandate on an Indian card: the bank asks for an OTP once
+ * here, so later automatic payments under the mandate limit go through
+ * without one.
+ */
+export async function confirmSetup(config: {
+  clientSecret: string
+  paymentMethod: string
+}): Promise<void> {
+  const envKey = getRuntimeConfig().stripePublishableKey || undefined
+  const stripe = await getStripeInstance(
+    typeof window !== 'undefined'
+      ? ((window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
+          .__STRIPE_PUBLISHABLE_KEY__ ?? envKey)
+      : envKey,
+  )
+  if (!stripe) throw new Error('Stripe not available')
+
+  const { error, setupIntent } = await stripe.confirmCardSetup(
+    config.clientSecret,
+    { payment_method: config.paymentMethod },
+  )
+  if (error) throw new Error(error.message ?? 'Authentication failed')
+
+  if (setupIntent?.status === 'requires_payment_method') {
+    throw new Error('Authentication was cancelled. Please try again.')
+  }
+  if (setupIntent?.status !== 'succeeded') {
+    throw new Error(
+      `Setup did not complete (status: ${setupIntent?.status ?? 'unknown'}).`,
+    )
+  }
+}
