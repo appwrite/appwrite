@@ -1061,10 +1061,14 @@ final class VCSGiteaConsoleClientTest extends Scope
         ]);
         $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
         $functionId = $function['body']['$id'];
+        $before = $this->listDeploymentIdsHelper($functionId);
 
         // The repository id is the victim's, but every name field names a repository the sender
         // controls. The webhook secret is one instance-wide value, so any tenant can sign this.
-        $commitHash = \sha1(\uniqid('', true));
+        // Only the branch head builds, so the delivery carries the victim's own head commit.
+        $branch = $this->giteaApiHelper(Client::METHOD_GET, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/branches/main');
+        $this->assertEquals(200, $branch['headers']['status-code'], \json_encode($branch['body']));
+        $commitHash = $branch['body']['commit']['id'];
         $spoofedOwner = 'attacker';
         $spoofedName = 'attacker-' . \uniqid();
         $payload = [
@@ -1103,9 +1107,13 @@ final class VCSGiteaConsoleClientTest extends Scope
 
         // The delivery resolves to the victim repository by id, so a deployment is created, but its
         // source is pinned to the victim repository and never to the names the delivery carried.
-        $this->assertEventually(function () use ($functionId, $commitHash, $repositoryName, $spoofedName, $spoofedOwner) {
+        $this->assertEventually(function () use ($functionId, $commitHash, $repositoryName, $spoofedName, $spoofedOwner, $before) {
             $deployment = null;
             foreach ($this->listDeploymentsHelper($functionId) as $candidate) {
+                if (\in_array($candidate['$id'], $before, true)) {
+                    continue;
+                }
+
                 if (($candidate['providerCommitHash'] ?? '') === $commitHash) {
                     $deployment = $candidate;
                     break;
@@ -1118,6 +1126,103 @@ final class VCSGiteaConsoleClientTest extends Scope
             $this->assertNotSame($spoofedName, $deployment['providerRepositoryName']);
             $this->assertNotSame($spoofedOwner, $deployment['providerRepositoryOwner']);
         }, 60000, 2000);
+    }
+
+    public function testGiteaPushCannotActivateARevisionTheBranchDoesNotPointAt(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'victim-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+        $repositoryName = $repository['body']['name'];
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'functionId' => Id::unique(),
+            'name' => 'Gitea revision pin',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'installationId' => $installationId,
+            'providerRepositoryId' => (string) $repository['body']['id'],
+            'providerBranch' => 'main',
+            'providerBranches' => ['main'],
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code'], \json_encode($function['body']));
+        $functionId = $function['body']['$id'];
+        $liveDeploymentId = $function['body']['deploymentId'];
+        $before = $this->listDeploymentIdsHelper($functionId);
+
+        // A revision of the victim's own repository that only a side branch points at. Its own
+        // push is not built, because the function deploys the production branch alone.
+        $side = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repositoryName . '/contents/index.js', [
+            'content' => \base64_encode("module.exports = async (context) => context.res.send('side');\n"),
+            'message' => 'Add function on a side branch',
+            'branch' => 'main',
+            'new_branch' => 'side',
+        ]);
+        $this->assertEquals(201, $side['headers']['status-code'], \json_encode($side['body']));
+        $commitHash = $side['body']['commit']['sha'];
+
+        // Everything the delivery names is the victim's, apart from the revision: the production
+        // branch never pointed at this commit. The instance-wide secret signs it all the same.
+        $payload = [
+            'created' => false,
+            'deleted' => false,
+            'ref' => 'refs/heads/main',
+            'after' => $commitHash,
+            'repository' => [
+                'id' => (int) $repository['body']['id'],
+                'name' => $repositoryName,
+                'full_name' => self::GITEA_USERNAME . '/' . $repositoryName,
+                'html_url' => 'http://gitea:3000/' . self::GITEA_USERNAME . '/' . $repositoryName,
+                'owner' => ['login' => self::GITEA_USERNAME],
+            ],
+            'head_commit' => [
+                'author' => ['name' => 'Attacker', 'email' => 'vcs-e2e@appwrite.io'],
+                'message' => 'Forged push',
+                'url' => 'http://gitea:3000/' . self::GITEA_USERNAME . '/' . $repositoryName . '/commit/' . $commitHash,
+            ],
+            'commits' => [[
+                'id' => $commitHash,
+                'added' => [],
+                'removed' => [],
+                'modified' => ['index.js'],
+            ]],
+            'sender' => ['html_url' => 'http://gitea:3000/' . self::GITEA_USERNAME, 'avatar_url' => ''],
+        ];
+
+        $body = \json_encode($payload, JSON_THROW_ON_ERROR);
+        $event = $this->client->call(Client::METHOD_POST, '/vcs/gitea/events', [
+            'content-type' => 'application/json',
+            'x-gitea-event' => 'push',
+            'x-gitea-signature' => \hash_hmac('sha256', $body, System::getEnv('_APP_VCS_GITEA_WEBHOOK_SECRET', '')),
+        ], $payload);
+        $this->assertSame(200, $event['headers']['status-code'], \json_encode($event['body']));
+
+        // The push is refused while the delivery is handled, so nothing of it can be built, let
+        // alone activated as the function's live deployment.
+        foreach ($this->listDeploymentsHelper($functionId) as $candidate) {
+            if (\in_array($candidate['$id'], $before, true)) {
+                continue;
+            }
+
+            $this->assertNotSame($commitHash, $candidate['providerCommitHash'] ?? '', 'The forged delivery built a revision the production branch does not point at.');
+        }
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $function['headers']['status-code'], \json_encode($function['body']));
+        $this->assertSame($liveDeploymentId, $function['body']['deploymentId'], 'The forged delivery repointed the live deployment.');
     }
 
     public function testCreateInstallationWithoutState(): void

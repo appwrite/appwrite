@@ -167,6 +167,23 @@ trait Deployment
                     throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
                 }
 
+                // A provider without an installation-scoped webhook authenticates every delivery
+                // with the one instance-wide secret Appwrite registers on each connected
+                // repository, so the body speaks for no particular repository: anyone holding it
+                // could name this repository, its production branch and any commit in it. The
+                // branch and the commit are only trusted once the provider itself reports the
+                // commit as that branch's head, which a forged delivery cannot choose.
+                if (empty($providerPullRequestId) && !\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $vcs->getSupportedWebhookScopes(), true)) {
+                    $head = $vcs->getLatestCommit($owner, $repositoryName, $providerBranch)['commitHash'] ?? '';
+
+                    if (empty($providerCommitHash) || $providerCommitHash !== $head) {
+                        Span::add("{$logBase}.build.skipped.reason", 'commit is not the branch head');
+                        Span::add("{$logBase}.build.skipped", 'true');
+                        Console::warning("Skipping repository '{$repositoryId}': pushed commit '{$providerCommitHash}' is not the head of branch '{$providerBranch}'");
+                        continue;
+                    }
+                }
+
                 $isAuthorized = !$external;
 
                 if (!$isAuthorized && !empty($providerPullRequestId)) {
