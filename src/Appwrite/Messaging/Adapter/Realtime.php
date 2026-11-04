@@ -1067,6 +1067,9 @@ class Realtime extends MessagingAdapter
         $roles = [];
         $permissionsChanged = false;
         $projectId = null;
+        // The part of a `users.{userId}.…` event after the id; set in the users case, where a
+        // dotted id spans more than one dot so part indices cannot delimit it.
+        $suffix = [];
         // TODO: add method here to remove all the magic index accesses
         $parts = explode('.', $event);
 
@@ -1274,12 +1277,13 @@ class Realtime extends MessagingAdapter
         // like `users.U.sessions.S.create` or `users.U.challenges.C.create` would
         // otherwise be suffixed as `account.create` — making a subscription to
         // `account.create` receive unrelated session/challenge/recovery/verification
-        // events. Restrict suffixing to top-level user events where the action sits
-        // at parts[2] (`users.U.create`, `users.U.update.email`, etc.).
+        // events. Restrict suffixing to top-level user events where the action is the first
+        // segment after the id (`users.U.create`, `users.U.update.email`, etc.). The parsed
+        // suffix is used rather than parts[2] so a dotted user id does not shift its position.
         if (
             $action !== null
             && $parts[0] === 'users'
-            && ($parts[2] ?? null) !== $action
+            && ($suffix[0] ?? null) !== $action
         ) {
             $action = null;
         }
@@ -1291,8 +1295,11 @@ class Realtime extends MessagingAdapter
                 $segCount = \count($segments);
                 $leafIsResource = \in_array($segments[$segCount - 1], self::RESOURCE_LEAF_NAMES, true);
                 $parentIsResource = $segCount >= 2 && \in_array($segments[$segCount - 2], self::RESOURCE_LEAF_NAMES, true);
+                // An account channel's id (the userId) may span several segments when it holds
+                // dots, pushing `account` out of the leaf/parent window; it is still suffixable.
+                $isAccountChannel = $segments[0] === 'account';
 
-                if ($leafIsResource || $parentIsResource) {
+                if ($leafIsResource || $parentIsResource || $isAccountChannel) {
                     $augmented[] = $channel. '.' .$action;
                 }
             }

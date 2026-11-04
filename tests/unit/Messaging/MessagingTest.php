@@ -1398,6 +1398,19 @@ final class MessagingTest extends TestCase
 
         // The suffix (sessions.*.create) still changes access, so the resolve flag holds.
         $this->assertTrue($result['permissionsChanged']);
+
+        // A top-level create on a dotted id must still emit the action channels, keyed on the
+        // whole id — the top-level check keys off the parsed suffix, not a fixed part index.
+        $create = Realtime::fromPayload(
+            event: 'users.john.doe.create',
+            payload: new Document(['$id' => Id::custom('john.doe')]),
+            userId: 'john.doe',
+        );
+
+        $this->assertContains('account.create', $create['channels']);
+        $this->assertContains('account.john.doe', $create['channels']);
+        $this->assertContains('account.john.doe.create', $create['channels']);
+        $this->assertNotContains('account.john.create', $create['channels']);
     }
 
     public function testMembershipDeleteReachesSubjectAfterTeamRoleIsRevoked(): void
