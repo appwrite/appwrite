@@ -404,6 +404,44 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(200, $head['headers']['status-code']);
     }
 
+    public function testPutObjectOverwriteInvalidatesPreviewCache(): void
+    {
+        $bucketId = $this->setupBucket();
+
+        // Create through the Storage API so the test holds the file id; the S3 gateway addresses
+        // the object by name, so a later PutObject to the same key overwrites this same file.
+        $key = Id::unique() . '.png';
+        $created = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(\realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', $key),
+        ]);
+        $this->assertSame(201, $created['headers']['status-code'], \json_encode($created['body']));
+        $fileId = $created['body']['$id'];
+
+        // Prime the image-transformation cache for this file.
+        $previewBefore = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', \array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), ['width' => 64]);
+        $this->assertSame(200, $previewBefore['headers']['status-code']);
+        $this->assertNotEmpty($previewBefore['body']);
+
+        // Overwrite the object's bytes with a different image through the S3 gateway.
+        $overwrite = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, body: (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/logo-after.png')), headers: ['content-type' => 'image/png']);
+        $this->assertSame(200, $overwrite['headers']['status-code'], $overwrite['body']);
+
+        // The overwrite drops the file's cached preview, so /preview stops serving the old image.
+        $this->assertEventually(function () use ($bucketId, $fileId, $previewBefore) {
+            $previewAfter = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', \array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), ['width' => 64]);
+            $this->assertSame(200, $previewAfter['headers']['status-code']);
+            $this->assertNotSame($previewBefore['body'], $previewAfter['body']);
+        }, 20000, 500);
+    }
+
     #[Group('antivirus')]
     #[Group('s3')]
     public function testWriteAntivirusBucket(): void

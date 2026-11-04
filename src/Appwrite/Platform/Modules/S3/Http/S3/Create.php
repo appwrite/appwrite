@@ -168,6 +168,12 @@ class Create extends Base
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
             [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $publisherForDeletes, $deviceForFiles, $bucket, $upload, $selected);
             if ($event !== null) {
+                // Overwriting an existing key keeps the file id but changes its bytes, so the
+                // image-transformation cache keyed on that id must be dropped or /preview keeps
+                // serving the old image.
+                if ($event === 'update') {
+                    $this->enqueueFileCacheDelete($publisherForDeletes, $queueForEvents, $bucket, $file);
+                }
                 $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
                 $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
             }
@@ -211,6 +217,9 @@ class Create extends Base
                 $metadata = $this->requestObjectMetadata($request);
             }
             [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, (string) $deviceForFiles->read($sourceFile->getAttribute('path', '')), $sourceFile->getAttribute('mimeType', 'application/octet-stream'), $metadata);
+            if ($event === 'update') {
+                $this->enqueueFileCacheDelete($publisherForDeletes, $queueForEvents, $bucket, $file);
+            }
             $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
             $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
             $this->sendXml($response, S3Xml::copyObject($file->getAttribute('signature', ''), $file->getUpdatedAt() ?: $file->getCreatedAt()));
@@ -218,6 +227,9 @@ class Create extends Base
         }
 
         [$file, $event] = $this->putObjectLocked($locks, $dbForProject, $project, $publisherForDeletes, $deviceForFiles, $bucket, $key, $this->requestBody($request), $request->getHeaderLine('content-type', 'application/octet-stream'), $this->requestObjectMetadata($request));
+        if ($event === 'update') {
+            $this->enqueueFileCacheDelete($publisherForDeletes, $queueForEvents, $bucket, $file);
+        }
         $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
         $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
         $response
