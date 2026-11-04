@@ -426,7 +426,7 @@ export function View() {
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
