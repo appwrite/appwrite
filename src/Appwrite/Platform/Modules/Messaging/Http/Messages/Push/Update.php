@@ -185,6 +185,14 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
+        // The update re-mints the image's signed URL below, which requires files.read. Check it
+        // here, before the schedule or message is mutated, so a refused request leaves no schedule
+        // a worker could act on. The image is the stored one unless the request replaces it.
+        $hasImage = !\is_null($image) || !empty($message->getAttribute('data', [])['image'] ?? null);
+        if ($hasImage && !\in_array('files.read', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
+        }
+
         // Drafts created with a scheduledAt have no schedule document yet, so create one on demand.
         if (
             (\is_null($currentScheduledAt) || \is_null($message->getAttribute('scheduleId')))
@@ -319,13 +327,8 @@ class Update extends Action
         }
 
         if (!empty($pushData['image'])) {
-            // A stored image reaches this mint even when the request omits one, so the scope is
-            // checked here, on the effective image, not only when a new reference is supplied.
-            if (!\in_array('files.read', $request->getScopes(), true)) {
-                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
-            }
-
             // Reissue on every update so the token tracks the current delivery time.
+            // files.read for this image was already enforced before any mutation above.
             $scheduleTime = $scheduledAt ?? $currentScheduledAt;
             $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
 
