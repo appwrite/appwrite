@@ -90,6 +90,7 @@ export function View() {
     data: domainsData,
     isLoading: domainsLoading,
     isFetching: domainsFetching,
+    refetch: refetchDomains,
   } = useFunctionDomains(
     projectId,
     functionId,
@@ -426,18 +427,10 @@ export function View() {
             open={verifyOpen}
             onOpenChange={setVerifyOpen}
             projectId={projectId ?? ''}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => setSelectedRule(null)}
-            onReconfigure={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/functions/$functionId/domains/add',
-                params: { projectId: projectId!, functionId: functionId! },
-              })
-            }}
           />
           <DeleteDomainDialog
             open={deleteDomainOpen}
@@ -461,6 +454,8 @@ export function View() {
             if (!open) setViewLogsRule(null)
           }}
           rule={rules.find((r) => r.$id === viewLogsRule.$id) ?? viewLogsRule}
+          onRefresh={() => void refetchDomains()}
+          isRefreshing={domainsFetching}
         />
       )}
     </>
