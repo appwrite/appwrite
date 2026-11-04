@@ -33,6 +33,26 @@ describe('resolveConsoleImpersonationRedirect', () => {
       resolveConsoleImpersonationRedirect('/impersonate/user123?email=a'),
     ).toBe(ACCOUNT_PATH_AFTER_IMPERSONATION)
   })
+
+  // The URL parser treats a backslash as a slash and strips ASCII tab, LF and
+  // CR before parsing, so these resolve to another origin in the browser.
+  test('rejects paths browsers resolve to another origin', () => {
+    expect(resolveConsoleImpersonationRedirect('/\\evil.example/x')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('/\t/evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('/\n/evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('/\r/evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('/%09/evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+  })
 })
 
 describe('buildConsoleImpersonationShareUrl', () => {
