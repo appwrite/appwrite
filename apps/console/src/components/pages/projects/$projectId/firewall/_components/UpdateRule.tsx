@@ -20,6 +20,7 @@ import { PriorityHint } from './PriorityHint'
 import { FunctionSelector } from '@/components/global/shared/FunctionSelector'
 import { SiteSelector } from '@/components/global/shared/SiteSelector'
 import { RuleImpactPreview } from './RuleImpactPreview'
+import { RuleSchedule } from './RuleSchedule'
 import { useUpdateFirewallRule } from '@/lib/react-query/hooks'
 import {
   type FirewallCreatableAction,
@@ -51,6 +52,14 @@ import {
   type FirewallConditionDraft,
   type FirewallResourceType,
 } from '@/lib/firewall/conditions'
+import {
+  defaultScheduleDraft,
+  isScheduleDraftComplete,
+  scheduleDraftFromRule,
+  scheduleUpdatePayload,
+  todayIn,
+} from '@/lib/firewall/schedule'
+import { getUserTimeZone } from '@/lib/timezones'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
@@ -92,6 +101,9 @@ export function UpdateRule({
   const [conditions, setConditions] = useState<FirewallConditionDraft[]>([
     createEmptyConditionDraft(),
   ])
+  const [schedule, setSchedule] = useState(() =>
+    defaultScheduleDraft('UTC', todayIn('UTC')),
+  )
 
   useEffect(() => {
     if (!open || !rule) return
@@ -122,6 +134,10 @@ export function UpdateRule({
     setConditions(
       draftsFromParsedConditions(parseFirewallConditions(rule.conditions)),
     )
+    const timeZone = getUserTimeZone()
+    setSchedule(
+      scheduleDraftFromRule(rule.schedule, timeZone, todayIn(timeZone)),
+    )
   }, [open, rule])
 
   if (!rule) return null
@@ -144,7 +160,11 @@ export function UpdateRule({
         ttl >= CHALLENGE_TTL_MIN &&
         ttl <= CHALLENGE_TTL_MAX)) &&
     (action !== WafRuleAction.Redirect ||
-      (location.trim().length > 0 && statusCode > 0))
+      (location.trim().length > 0 && statusCode > 0)) &&
+    isScheduleDraftComplete(schedule)
+
+  // Switching the schedule off removes it only when the rule has one.
+  const hadSchedule = scheduleDraftFromRule(rule.schedule, 'UTC', '').enabled
 
   const handleSubmit = async () => {
     if (!canSubmit) return
@@ -168,6 +188,7 @@ export function UpdateRule({
         ttl,
         location: location.trim(),
         statusCode,
+        schedule: scheduleUpdatePayload(schedule, hadSchedule),
       })
       toast.success(t('Firewall rule updated'))
       onOpenChange(false)
@@ -444,6 +465,12 @@ export function UpdateRule({
                   disabled={updateMutation.isPending}
                 />
               </div>
+
+              <RuleSchedule
+                value={schedule}
+                onChange={setSchedule}
+                disabled={updateMutation.isPending}
+              />
 
               <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
                 <div>
