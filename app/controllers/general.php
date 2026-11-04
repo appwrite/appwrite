@@ -584,7 +584,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             && !$isPreview
             && System::getEnv('_APP_COMPUTE_STREAMING', 'enabled') === 'enabled';
 
-        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView): void {
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView, $type): void {
             if ($name !== 'body') {
                 // Only the parts read below, and only while they still can be.
                 if ($streamed === null) {
@@ -606,7 +606,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $streamed = $statusCode < 400;
 
                 if ($streamed) {
-                    $headers['x-appwrite-log-id'] = $execution->getId();
+                    $headers[$type === 'function' ? 'x-appwrite-execution-id' : 'x-appwrite-log-id'] = $execution->getId();
 
                     $contentType = 'text/plain';
 
