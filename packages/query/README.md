@@ -969,7 +969,7 @@ $result = (new Builder())
 
 ### Debugging
 
-`toRawSql()` inlines bindings for inspection (not for execution):
+`toRawSql()` inlines bindings for inspection (not for execution). Strings are quoted for the dialect: MySQL, MariaDB and ClickHouse escape `\` as well as `'`; PostgreSQL and SQLite, which read `\` literally, double `'` only.
 
 ```php
 $sql = (new Builder())
@@ -1396,6 +1396,8 @@ $result = (new Builder())
     ->deleteUsing('old_users', '"users"."id" = "old_users"."id"')
     ->delete();
 ```
+
+Both conditions are enclosed in parentheses and ANDed after the WHERE clause, like `whereRaw()`.
 
 **Sequences** — native sequence support via `nextVal()` / `currVal()` (see [Sequences](#sequences)).
 
@@ -2788,6 +2790,8 @@ $ast = $builder->toAst();               // AST\Statement\Select
 $rebuilt = Builder::fromAst($ast);      // static
 $rebuilt->build()->query;               // SELECT `id`, `name` FROM `users` WHERE `status` IN (?)
 ```
+
+The AST holds the query as written. Filter and join-filter hooks are applied when a builder compiles, so they are not in it: `Builder::fromAst()` returns a builder without them, and an AST serialized directly is unscoped. Add the hooks to the rebuilt builder, or AND the scope in with `FilterInjector`.
 
 ## Wire Protocol Classifiers
 

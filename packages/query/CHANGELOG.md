@@ -8,7 +8,8 @@ All notable changes to `utopia-php/query` are documented in this file.
 
 - Raw conditions are enclosed in parentheses where they are ANDed with other
   conditions: `Query::raw()` filters, `whereRaw()` in SELECT, UPDATE and
-  DELETE, `havingRaw()`, `JoinBuilder::whereRaw()` and `onRaw()`, and `Raw`
+  DELETE, `havingRaw()`, `JoinBuilder::whereRaw()` and `onRaw()`, the
+  PostgreSQL builder's `updateFromWhere()` and `deleteUsing()`, and `Raw`
   operands of AND in the AST serializer (`toAst()`, `FilterInjector`). AND
   binds tighter than OR, so an OR inside one escaped the conditions beside
   it, including those filter and join-filter hooks add: `whereRaw('a = ? OR
@@ -17,10 +18,17 @@ All notable changes to `utopia-php/query` are documented in this file.
   now carries the parentheses; an empty `Query::raw()` still compiles to
   `1 = 1`. A hook's own condition is used as returned, so a hook returning an
   OR must enclose it.
+- `updateFromWhere()` and `deleteUsing()` bound their condition's values
+  ahead of the WHERE clause's, though the condition follows it in the SQL, so
+  with a filter or hook the values reached the wrong placeholders.
 - `toRawSql()` escapes backslashes as well as quotes, as the AST serializer and
   the schema builder do, so under MySQL's or ClickHouse's backslash escaping a
-  value cannot close its literal. Its output is still for logs and debugging
-  only.
+  value cannot close its literal. PostgreSQL and SQLite read a backslash
+  literally, so their builders double quotes only. Its output is still for
+  logs and debugging only.
+- The ClickHouse schema builder escapes backslashes in `ReplicatedMergeTree`'s
+  ZooKeeper path and replica name and in string skip-index arguments, as it
+  already did in its other literals.
 - The allowlists that validate names, JSON paths, types, hints and settings
   no longer accept a trailing newline, which their `$` anchors matched
   before. Among them: JSON paths in the MySQL, PostgreSQL and SQLite builders,

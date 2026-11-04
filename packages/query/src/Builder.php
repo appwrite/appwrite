@@ -1934,7 +1934,7 @@ abstract class Builder implements
      * beside a hook's `tenant_id IN (?)` would let the OR escape the tenant
      * and permission conditions.
      */
-    private function enclose(string $condition): string
+    protected function enclose(string $condition): string
     {
         return '(' . $condition . ')';
     }

@@ -32,6 +32,9 @@ use Utopia\Query\Hook\Attribute\Map;
 use Utopia\Query\Hook\Filter\Tenant;
 use Utopia\Query\Method;
 use Utopia\Query\Query;
+use Utopia\Query\Schema\ClickHouse as ClickHouseSchema;
+use Utopia\Query\Schema\ClickHouse\Engine;
+use Utopia\Query\Schema\ClickHouse\IndexAlgorithm;
 use Utopia\Query\Schema\Index;
 use Utopia\Query\Schema\MySQL as MySQLSchema;
 use Utopia\Query\Schema\ParameterDirection;
@@ -90,8 +93,13 @@ use Utopia\Query\Type;
  *      testHavingRawOrStaysInsideHavingClause
  *      testToAstEnclosesRawFilter
  *      testFilterInjectorEnclosesRawCondition
+ *      testUpdateFromWhereOrCannotEscapeTenantScope
+ *      testDeleteUsingOrCannotEscapeTenantScope
  *  - (this branch)  fix(query): escape backslashes in toRawSql()
  *      testToRawSqlEscapesBackslashBeforeQuote
+ *      testToRawSqlKeepsBackslashLiteralInStandardStrings
+ *      testClickHouseReplicatedEngineEscapesBackslash
+ *      testClickHouseSkipIndexEscapesBackslashInStringArgument
  *  - (this branch)  fix(query): reject a trailing newline in allowlisted names
  *      testJsonPathRejectsTrailingNewline
  *      testJoinBuilderRejectsTrailingNewlineInColumn
@@ -754,6 +762,44 @@ class SecurityRegressionTest extends TestCase
     }
 
     /**
+     * The UPDATE ... FROM condition followed the WHERE clause bare, as
+     * `tenant_id IN (?) AND other.id = docs.ref OR other.owner = ?`, and its
+     * bindings went in ahead of the WHERE clause's, so the tenant placeholder
+     * took 'u1'.
+     */
+    public function testUpdateFromWhereOrCannotEscapeTenantScope(): void
+    {
+        $result = new PostgreSQLBuilder()
+            ->addHook(new Tenant(['7']))
+            ->from('docs')
+            ->set(['c' => 3])
+            ->updateFrom('other')
+            ->updateFromWhere('other.id = docs.ref OR other.owner = ?', 'u1')
+            ->update();
+
+        $this->assertSame(
+            'UPDATE "docs" SET "c" = ? FROM "other" WHERE tenant_id IN (?) AND (other.id = docs.ref OR other.owner = ?)',
+            $result->query,
+        );
+        $this->assertSame([3, '7', 'u1'], $result->bindings);
+    }
+
+    public function testDeleteUsingOrCannotEscapeTenantScope(): void
+    {
+        $result = new PostgreSQLBuilder()
+            ->addHook(new Tenant(['7']))
+            ->from('docs')
+            ->deleteUsing('other', 'other.id = docs.ref OR other.owner = ?', 'u1')
+            ->delete();
+
+        $this->assertSame(
+            'DELETE FROM "docs" USING "other" WHERE tenant_id IN (?) AND (other.id = docs.ref OR other.owner = ?)',
+            $result->query,
+        );
+        $this->assertSame(['7', 'u1'], $result->bindings);
+    }
+
+    /**
      * toRawSql() doubled quotes only, so under MySQL's backslash escaping the
      * value `\' OR 1=1 -- ` closed its literal: `'\'' OR 1=1 -- '`.
      */
@@ -765,6 +811,59 @@ class SecurityRegressionTest extends TestCase
             ->toRawSql();
 
         $this->assertSame("SELECT * FROM `t` WHERE `name` IN ('\\\\'' OR 1=1 -- ')", $sql);
+    }
+
+    /**
+     * @return array<string, array{PostgreSQLBuilder|SQLiteBuilder, string}>
+     */
+    public static function standardStringBuilderProvider(): array
+    {
+        return [
+            'postgresql' => [new PostgreSQLBuilder(), "SELECT * FROM \"t\" WHERE \"name\" IN ('a\\b''c')"],
+            'sqlite' => [new SQLiteBuilder(), "SELECT * FROM `t` WHERE `name` IN ('a\\b''c')"],
+        ];
+    }
+
+    /** PostgreSQL and SQLite read a backslash literally, so doubling it misrenders the value. */
+    #[DataProvider('standardStringBuilderProvider')]
+    public function testToRawSqlKeepsBackslashLiteralInStandardStrings(PostgreSQLBuilder|SQLiteBuilder $builder, string $sql): void
+    {
+        $raw = $builder
+            ->from('t')
+            ->filter([Query::equal('name', ["a\\b'c"])])
+            ->toRawSql();
+
+        $this->assertSame($sql, $raw);
+    }
+
+    /** ClickHouse reads a backslash as an escape, so a path ending in one closed its literal. */
+    public function testClickHouseReplicatedEngineEscapesBackslash(): void
+    {
+        $result = new ClickHouseSchema()
+            ->table('events')
+            ->integer('id')->primary()
+            ->engine(Engine::ReplicatedMergeTree, "/tables/a\\", "r\\")
+            ->create();
+
+        $this->assertSame(
+            "CREATE TABLE `events` (`id` Int32) ENGINE = ReplicatedMergeTree('/tables/a\\\\', 'r\\\\') ORDER BY (`id`)",
+            $result->query,
+        );
+    }
+
+    public function testClickHouseSkipIndexEscapesBackslashInStringArgument(): void
+    {
+        $result = new ClickHouseSchema()
+            ->table('events')
+            ->integer('id')->primary()
+            ->string('country')
+            ->index(['country'], algorithm: IndexAlgorithm::Set, algorithmArgs: ["a\\"])
+            ->create();
+
+        $this->assertSame(
+            "CREATE TABLE `events` (`id` Int32, `country` String, INDEX `idx_country` `country` TYPE set('a\\\\') GRANULARITY 1) ENGINE = MergeTree() ORDER BY (`id`)",
+            $result->query,
+        );
     }
 
     /**

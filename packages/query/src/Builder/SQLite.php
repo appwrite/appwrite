@@ -320,4 +320,10 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         // so emit the bare SELECT and rely on the UNION keyword alone.
         return $sql;
     }
+
+    #[\Override]
+    protected function quoteString(string $value): string
+    {
+        return "'" . \str_replace("'", "''", $value) . "'";
+    }
 }
