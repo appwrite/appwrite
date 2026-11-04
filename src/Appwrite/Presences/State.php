@@ -580,8 +580,9 @@ class State
             $queries[] = Query::equal('hostname', [$hostname]);
         } else {
             $queries[] = Query::isNotNull('hostname');
-            if (!empty($liveHosts)) {
-                $queries[] = Query::notEqual('hostname', $liveHosts);
+            // One notEqual per host: it takes a single value.
+            foreach ($liveHosts as $liveHost) {
+                $queries[] = Query::notEqual('hostname', $liveHost);
             }
         }
 

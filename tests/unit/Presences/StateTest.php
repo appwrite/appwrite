@@ -403,6 +403,26 @@ final class StateTest extends TestCase
         $this->assertSame(['after-boot', 'live-peer', 'no-host'], $this->userIds());
     }
 
+    public function testDeleteOrphanedKeepsEveryLivePeersPresences(): void
+    {
+        $this->presence('dead-peer', 'realtime', 'host-d');
+        $this->presence('live-peer-b', 'realtime', 'host-b');
+        $this->presence('live-peer-c', 'realtime', 'host-c');
+
+        $deleted = (new State())->deleteOrphaned(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            ['host-b', 'host-c'],
+            self::BOOTED_AT,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+        );
+
+        $this->assertSame(1, $deleted);
+        $this->assertSame(['live-peer-b', 'live-peer-c'], $this->userIds());
+    }
+
     public function testGetLiveHostsHonoursWindowAndSkipsThisHost(): void
     {
         $platform = $this->platform([
