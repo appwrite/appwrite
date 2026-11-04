@@ -675,10 +675,24 @@ readonly class Deployments
 
     /**
      * The jobs-service job id for a deployment build (used to submit and cancel).
+     *
+     * The Kubernetes backend names the Job "job-<id>", and Kubernetes copies
+     * that name into a pod label capped at 63 bytes, so an id over 59 chars
+     * is refused and the build never starts. A project id of 33-36 chars (or
+     * 30+ when hyphenated, which adds a length suffix) gets there, so those
+     * ids are replaced by a hash. It has one hyphen, where a hyphen-free pair
+     * has two and a hyphenated one at least four, so it never equals an id
+     * that fits. Ids that fit are unchanged, so running builds stay cancellable.
      */
     public static function id(string $projectId, string $deploymentId): string
     {
-        return Executor::runtimeId($projectId, $deploymentId) . '-build';
+        $id = Executor::runtimeId($projectId, $deploymentId) . '-build';
+
+        if (\strlen($id) > 59) {
+            $id = \substr(\hash('sha256', $id), 0, 32) . '-build';
+        }
+
+        return $id;
     }
 
     /**
