@@ -439,11 +439,17 @@ final class S3CustomServerTest extends Scope
         $this->assertSame(200, $source['headers']['status-code'], $source['body']);
         $copy = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, headers: ['x-amz-copy-source' => '/' . $bucketId . '/' . $sourceKey]);
         $this->assertSame(200, $copy['headers']['status-code'], $copy['body']);
-        $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline);
+        $baseline = $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline);
 
-        // The multipart-complete overwrite path shares this same enqueueFileCacheDelete call; the
-        // e2e client cannot faithfully upload a binary image as multipart parts (it would mangle the
-        // body and break the per-part ETag), so that path is covered by review, not exercised here.
+        // 3) Multipart-complete overwrite. The part is sent as image/png so the client passes the
+        // bytes through unmodified (otherwise it would mangle them and break the per-part ETag).
+        $partBody = (string) \file_get_contents(\realpath(__DIR__ . '/../../../resources/file.png'));
+        $uploadId = $this->createMultipartUpload($bucketId, $key, ['content-type' => 'image/png']);
+        $part = $this->call(Client::METHOD_PUT, '/' . $bucketId . '/' . $key, ['partNumber' => '1', 'uploadId' => $uploadId], $partBody, ['content-type' => 'image/png']);
+        $this->assertSame(200, $part['headers']['status-code'], $part['body']);
+        $complete = $this->completeMultipartUpload($bucketId, $key, $uploadId, [1 => \md5($partBody)]);
+        $this->assertSame(200, $complete['headers']['status-code'], $complete['body']);
+        $this->assertPreviewEventuallyChanges($bucketId, $fileId, $baseline);
     }
 
     /**
