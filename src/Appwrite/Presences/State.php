@@ -324,20 +324,28 @@ class State
                     fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
                 );
                 if ($existingPresence->isEmpty()) {
-                    $presenceCreated = true;
+                    // Create, not upsert, so a row another request inserts concurrently collides here
+                    // (duplicate) instead of being silently overwritten by this write. A genuine first
+                    // insert only adds a row and cannot leak one under a former ACL, so it never purges.
+                    try {
+                        $presence = $dbForProject->createDocument(self::COLLECTION_ID, $presenceDocument);
+                        $presenceCreated = true;
+                    } catch (DuplicateException) {
+                        // Lost the create race: the row exists now. Re-read it, upsert over it, and
+                        // purge on a real permission change so a narrowing cannot keep being served
+                        // from a page cached under the former ACL.
+                        $raced = $dbForProject->getAuthorization()->skip(
+                            fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
+                        );
+                        $previousHash = $raced->getAttribute('permissionsHash');
+                        $presenceDocument->setAttribute('$id', $raced->getId());
+                        $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
+                        $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
+                    }
                 } else {
                     $previousHash = $existingPresence->getAttribute('permissionsHash');
                     $presenceDocument->setAttribute('$id', $existingPresence->getId());
-                }
-                $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
-
-                // The unique-index upsert overwrites a row another request inserted after the lookup
-                // above found none, so a "create" here is not provably a first insert -- it may have
-                // narrowed a row that was briefly cached under its former ACL. Purge unless we
-                // confirmed an existing row whose permissions did not change.
-                if ($presenceCreated) {
-                    $this->purgeListCache($dbForProject);
-                } else {
+                    $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
                     $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
                 }
             } else {
