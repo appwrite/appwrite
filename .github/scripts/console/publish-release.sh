@@ -12,9 +12,23 @@ if gh release view "$TAG" >/dev/null 2>&1; then
   exit 0
 fi
 
+# Notes are best effort: a commit whose PRs can't be listed after a few
+# tries is left out rather than failing a release for a deploy already live.
+pulls() {
+  local sha=$1 attempt
+  for attempt in 1 2 3; do
+    if gh api "repos/$GH_REPO/commits/$sha/pulls" \
+      --jq '.[] | select(.merged_at != null) | "* \(.title) by @\(.user.login) in \(.html_url)"'; then
+      return 0
+    fi
+    sleep $((attempt * 5))
+  done
+  echo "::warning::Could not list the pull requests for $sha; leaving it out of the notes" >&2
+}
+
 previous=$(git tag --list 'apps/console/*' \
   | sed 's#^apps/console/##' \
-  | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+  | { grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' || true; } \
   | sort -V \
   | awk -v version="$VERSION" '$0 == version { print previous; exit } { previous = $0 }')
 
@@ -24,10 +38,7 @@ if [[ -n "$previous" ]]; then
   # First-parent commits on main that touched the console, as their PRs, so
   # the server and package changes between the two tags stay out.
   changes=$(git log --first-parent --format=%H "apps/console/$previous..$TAG" -- apps/console \
-    | while read -r sha; do
-        gh api "repos/$GH_REPO/commits/$sha/pulls" \
-          --jq '.[] | select(.merged_at != null) | "* \(.title) by @\(.user.login) in \(.html_url)"'
-      done \
+    | while read -r sha; do pulls "$sha"; done \
     | awk '!seen[$0]++')
   {
     echo "## What's Changed"

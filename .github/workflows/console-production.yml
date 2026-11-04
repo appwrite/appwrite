@@ -370,6 +370,7 @@ jobs:
         timeout-minutes: 10
         permissions:
             contents: write
+            pull-requests: read
         env:
             TAG: ${{ github.ref_name }}
             VERSION: ${{ needs.version.outputs.tag }}
