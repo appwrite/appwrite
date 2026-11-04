@@ -10,6 +10,7 @@ import type { Models } from '@appwrite.io/console'
 import { Copy, Check, Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -135,16 +136,31 @@ export function DnsRecordsTable({
               </span>
             </TableCell>
             <TableCell
-              className="px-4 py-3 font-mono text-[12px] truncate max-w-[180px]"
-              title={r.name || '-'}
+              className="px-4 py-3 font-mono text-[12px]"
+              title={r.name || undefined}
             >
-              {r.name || '-'}
+              {r.name ? (
+                <CopyableId
+                  id={r.name}
+                  variant="inline"
+                  size="md"
+                  maxWidth={180}
+                  showCopyOnHover={false}
+                  className="-my-1.5 -ms-2.5"
+                />
+              ) : (
+                '-'
+              )}
             </TableCell>
-            <TableCell
-              className="px-4 py-3 font-mono text-[12px] truncate max-w-[200px]"
-              title={r.value}
-            >
-              {r.value}
+            <TableCell className="px-4 py-3" title={r.value}>
+              <CopyableId
+                id={r.value}
+                variant="inline"
+                size="md"
+                maxWidth={200}
+                showCopyOnHover={false}
+                className="-my-1.5 -ms-2.5"
+              />
             </TableCell>
             {showPriority && (
               <TableCell className="px-4 py-3 text-end text-[12px] text-muted-foreground">
