@@ -9,6 +9,7 @@ use Utopia\NATS\Exception\JetStreamException;
 use Utopia\NATS\Exception\ObjectStoreException;
 use Utopia\NATS\Headers;
 use Utopia\NATS\JetStream\AckPolicy;
+use Utopia\NATS\JetStream\ApiError;
 use Utopia\NATS\JetStream\ConsumerConfig;
 use Utopia\NATS\JetStream\DeliverPolicy;
 use Utopia\NATS\JetStream\JetStream;
@@ -59,9 +60,23 @@ final class ObjectStore
 
         $chunks = 0;
         $length = \strlen($data);
-        for ($offset = 0; $offset < $length; $offset += self::CHUNK_SIZE) {
-            $this->js->publish($chunkSubject, substr($data, $offset, self::CHUNK_SIZE));
-            $chunks++;
+        try {
+            for ($offset = 0; $offset < $length; $offset += self::CHUNK_SIZE) {
+                $this->js->publish($chunkSubject, substr($data, $offset, self::CHUNK_SIZE));
+                $chunks++;
+            }
+        } catch (\Throwable $e) {
+            // A chunk write that fails part way through leaves the chunks before it
+            // in the stream under a NUID no meta record will ever name, so neither
+            // delete() nor a later put() of this object can reclaim them. On a
+            // bucket limited by max_bytes (discard=New) those orphans hold the byte
+            // budget forever and every later put is rejected the same way, so the
+            // failure has to be compensated here. No meta record names this NUID yet,
+            // so purging is safe even when the failure is an ambiguous one -- unlike
+            // at the meta publish below, where an ambiguous failure may have committed
+            // a record that now names these chunks.
+            $this->purgeChunks($nuid);
+            throw $e;
         }
 
         $meta = new ObjectMeta(
@@ -90,15 +105,24 @@ final class ObjectStore
                 expectedLastSubjectSeq: $expectedSeq,
             );
         } catch (JetStreamException $e) {
-            // Purge only when the server actually rejected the CAS publish. On a
-            // transport failure the meta publish is ambiguous -- it may well have
-            // landed -- and purging here would delete the chunks this put just
-            // wrote successfully.
-            if ($e->apiError?->errCode !== JetStream::ERR_WRONG_LAST_SEQUENCE) {
+            // An exception carrying an ApiError is the server's decoded answer: it
+            // evaluated the publish and refused to store it, so the meta record
+            // definitely does not exist and this put's chunks are already orphaned.
+            // Reclaim them whatever the reason for the refusal -- a CAS conflict, or
+            // a bucket at max_bytes, which would otherwise keep the bytes of every
+            // failed put forever and reject every later one for the same reason.
+            // Without an ApiError the publish is ambiguous (it may well have landed),
+            // and purging would delete the chunks of a meta record that now names them.
+            if (!$e->apiError instanceof ApiError) {
                 throw $e;
             }
 
             $this->purgeChunks($nuid);
+
+            if ($e->apiError->errCode !== JetStream::ERR_WRONG_LAST_SEQUENCE) {
+                throw $e;
+            }
+
             throw new ObjectStoreException("conflicting concurrent write for object: {$name}", $e->getCode(), previous: $e);
         }
 
