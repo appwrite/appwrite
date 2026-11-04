@@ -16,6 +16,7 @@ import { DomainTargetCard } from '../../shared/DomainTargetCard'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import {
@@ -183,8 +184,8 @@ export function AddDomainWizard() {
           params: { projectId: projectId!, siteId: siteId! },
         })
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
