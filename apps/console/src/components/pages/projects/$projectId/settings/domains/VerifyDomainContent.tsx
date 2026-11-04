@@ -1,7 +1,11 @@
 import { useState, useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
-import { getApexDomain, isCloud as isCloudEndpoint } from '@/lib/utils/proxy-domains'
+import {
+  getApexDomain,
+  getRecordName,
+  isCloud as isCloudEndpoint,
+} from '@/lib/utils/proxy-domains'
 import type { Models } from '@appwrite.io/console'
 import { Copy, Check, Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -383,16 +387,11 @@ export function VerifyDomainContent({
     </Alert>
   )
 
-  const getCnameRecordName = (domain: string): string => {
-    const parts = domain.split('.')
-    return parts.length > 2 ? parts[0] : '@'
-  }
-
   const getCnameRecords = (): DnsRecord[] => {
     const rows: DnsRecord[] = [
       {
         type: 'CNAME',
-        name: getCnameRecordName(rule.domain),
+        name: getRecordName(rule.domain),
         value: cname!,
         ttl: 3600,
       },
