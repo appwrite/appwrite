@@ -503,16 +503,7 @@ class V25 extends Migration
                     // the attribute-add then covers installs that have it from V24 without the column.
                     // A Duplicate means createCollection already made the row with connections; any
                     // other failure propagates so the version is not recorded with a missing attribute.
-                    // On shared tables the collection is global, as for reviews below.
-                    $tenant = $this->dbForProject->getTenant();
-                    if ($this->dbForProject->hasSharedTables()) {
-                        $this->dbForProject->setTenant(null);
-                    }
-                    try {
-                        $this->createCollection($id);
-                    } finally {
-                        $this->dbForProject->setTenant($tenant);
-                    }
+                    $this->createCollection($id);
                     try {
                         $this->createAttributeFromCollection($this->dbForProject, $id, 'connections');
                     } catch (Duplicate) {

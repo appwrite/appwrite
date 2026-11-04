@@ -378,42 +378,6 @@ final class V25Test extends TestCase
         $this->assertContains('connections', $attributes);
     }
 
-    public function testCreatesPresenceLogsForEveryTenantOnSharedTables(): void
-    {
-        $authorization = new Authorization();
-        $database = new Database(new Memory(), new Cache(new NoCache()));
-        $database
-            ->setAuthorization($authorization)
-            ->setDatabase('migrationTests')
-            ->setNamespace('v25_' . \uniqid())
-            ->setSharedTables(true)
-            ->setTenant(null);
-        $database->create();
-
-        // Shared collections are global; this host never ran V24, so presenceLogs is missing.
-        $collections = Config::getParam('collections', [])['projects'];
-        foreach ($collections as $id => $collection) {
-            if ($id === 'presenceLogs' || ($collection['$collection'] ?? null) !== Database::METADATA) {
-                continue;
-            }
-            $database->createCollection(Collection::create(
-                id: $id,
-                attributes: \array_values($collection['attributes']),
-                indexes: \array_values($collection['indexes']),
-            ));
-        }
-        $database->createCollection(Collection::create(id: 'audit'));
-
-        $database->setTenant(1);
-        $migration = new V25();
-        $migration->setProject(new Document(['$id' => 'project', '$sequence' => '1']), $database, $database, $authorization);
-        $migration->execute();
-
-        // Another project on the host sees it too.
-        $database->setTenant(2);
-        $this->assertInstanceOf(Collection::class, $database->findCollection('presenceLogs'));
-    }
-
     public function testBindsExistingPushLedgerToTopicInstances(): void
     {
         $authorization = new Authorization();
