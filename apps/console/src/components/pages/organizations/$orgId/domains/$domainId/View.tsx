@@ -2085,8 +2085,8 @@ export function View({ initialData }: ViewProps = {}) {
                         </p>
                         <p className="text-[12px] text-muted-foreground">
                           {domain.nameservers?.toLowerCase() === 'appwrite'
-                            ? t('Verified')
-                            : t('Unverified')}
+                            ? t('Appwrite nameservers')
+                            : t('External nameservers')}
                         </p>
                       </div>
                     </div>
@@ -2135,8 +2135,8 @@ export function View({ initialData }: ViewProps = {}) {
                                   <p className="text-[11px] text-muted-foreground">
                                     {domain.nameservers?.toLowerCase() ===
                                     'appwrite'
-                                      ? t('Verified')
-                                      : t('Unverified')}
+                                      ? t('Appwrite nameservers')
+                                      : t('External nameservers')}
                                   </p>
                                 </div>
                               </div>
