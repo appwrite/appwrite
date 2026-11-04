@@ -92,7 +92,7 @@ class Update extends Base
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
             ->param('providerRepositoryId', null, new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the function', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the function? In silent mode, no comments or checks are posted to commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Directory(), 'Path to function code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -112,6 +112,7 @@ class Update extends Base
             ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('interval', null, new Nullable(new Range(0, Database::MAX_INT)), 'Minutes between scheduled executions. Appwrite picks when within each interval the function runs. Use 0 to disable. Cannot be combined with schedule. When omitted, the current interval is kept unless schedule is set.', true)
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the function.', true)
+            ->param('providerComments', null, new Nullable(new Boolean()), 'Post a build comment on pull requests for the repo linked to the function. Checks on commits are still reported when disabled. Ignored in silent mode.', true)
             ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
@@ -156,6 +157,7 @@ class Update extends Base
         int $deploymentRetention,
         ?int $interval,
         ?string $description,
+        ?bool $providerComments,
         Request $request,
         Response $response,
         Database $dbForProject,
@@ -364,6 +366,7 @@ class Update extends Base
             'providerBranch' => $providerBranch,
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
+            'providerComments' => $providerComments ?? $function->getAttribute('providerComments', true),
             'providerBranches' => $providerBranches ?? $function->getAttribute('providerBranches', []),
             'providerPaths' => $providerPaths ?? $function->getAttribute('providerPaths', []),
             'buildSpecification' => $buildSpecification,
