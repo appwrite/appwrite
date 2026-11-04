@@ -27,12 +27,12 @@ class Action extends PlatformAction
     {
     }
 
-    protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): Document
+    protected function createRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus, ?Database $dbForProject = null): Document
     {
         try {
             return $this->created($authorization->skip(fn () => $dbForPlatform->createDocument('rules', $rule)), $bus);
         } catch (Duplicate) {
-            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization, $bus)) {
+            if (!$this->deleteOrphanedRule($rule, $dbForPlatform, $authorization, $bus, $dbForProject)) {
                 throw new Exception(Exception::RULE_ALREADY_EXISTS);
             }
         }
@@ -51,7 +51,7 @@ class Action extends PlatformAction
         return $rule;
     }
 
-    private function deleteOrphanedRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus): bool
+    private function deleteOrphanedRule(Document $rule, Database $dbForPlatform, Authorization $authorization, Bus $bus, ?Database $dbForProject = null): bool
     {
         $existingRule = $authorization->skip(function () use ($rule, $dbForPlatform) {
             $existingRule = $dbForPlatform->findOne('rules', [
@@ -79,6 +79,29 @@ class Action extends PlatformAction
 
         $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
         if (!$project->isEmpty()) {
+            // Only clean up deployment orphans belonging to the same project
+            if ($dbForProject !== null
+                && $existingRule->getAttribute('projectId') === $rule->getAttribute('projectId')
+                && $existingRule->getAttribute('type') === 'deployment'
+            ) {
+                $collection = match ($existingRule->getAttribute('deploymentResourceType')) {
+                    'site' => 'sites',
+                    'function' => 'functions',
+                    default => null,
+                };
+
+                if ($collection !== null) {
+                    $resourceId = $existingRule->getAttribute('deploymentResourceId', '');
+                    $resource = $authorization->skip(fn () => $dbForProject->getDocument($collection, $resourceId));
+
+                    if ($resource->isEmpty()) {
+                        $authorization->skip(fn () => $dbForPlatform->deleteDocument('rules', $existingRule->getId()));
+                        $bus->dispatch(new RuleDeleted($existingRule->getArrayCopy()));
+                        return true;
+                    }
+                }
+            }
+
             return false;
         }
 
