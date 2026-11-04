@@ -500,7 +500,7 @@ class State
 
                 return ['deleted' => $deleted, 'projects' => $projects, 'failed' => $failed, 'outcome' => $finished ? 'done' : 'timeout'];
             } catch (Throwable $th) {
-                // Platform database or schema not ready yet.
+                // Usually the database or schema isn't ready yet; a lasting error is retried until the deadline and set on the span.
                 $error = $th;
                 \sleep($retrySeconds);
             }

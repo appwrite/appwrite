@@ -13,6 +13,7 @@ use Tests\Unit\Presences\Mock\ConflictingMemory;
 use Tests\Unit\Presences\Mock\FailingDeleteMemory;
 use Tests\Unit\Presences\Mock\FailingRealtime;
 use Tests\Unit\Presences\Mock\RecordingRealtime;
+use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
@@ -292,6 +293,46 @@ final class StateTest extends TestCase
         $this->assertSame([], $queueForRealtime->triggered);
     }
 
+    public function testDeleteOrphanedPurgesPresenceListCache(): void
+    {
+        $this->database = $this->presenceDatabase(new ConflictingMemory(), new Cache(new MemoryCache()));
+        $this->presence('orphan', 'realtime', 'host-a');
+        $state = new State();
+        $state->setListCacheField($this->database, ['any'], [], 'documents', ['cached']);
+
+        $state->deleteOrphaned(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            null,
+            self::BOOTED_AT,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+        );
+
+        $this->assertEmpty($state->getListCacheField($this->database, ['any'], [], 'documents', 3600));
+    }
+
+    public function testDeleteOrphanedWithNothingToDeleteKeepsPresenceListCache(): void
+    {
+        $this->database = $this->presenceDatabase(new ConflictingMemory(), new Cache(new MemoryCache()));
+        $this->presence('other-host', 'realtime', 'host-b');
+        $state = new State();
+        $state->setListCacheField($this->database, ['any'], [], 'documents', ['cached']);
+
+        $state->deleteOrphaned(
+            $this->database,
+            new Document(['$id' => 'project-1', '$sequence' => '1']),
+            'host-a',
+            null,
+            self::BOOTED_AT,
+            new UsagePublisher(new MockPublisher(), new Queue('usage')),
+            new RecordingRealtime(),
+        );
+
+        $this->assertSame(['cached'], $state->getListCacheField($this->database, ['any'], [], 'documents', 3600));
+    }
+
     public function testDeleteOrphanedSkipsProjectWithoutPresences(): void
     {
         $this->database->deleteCollection(State::COLLECTION_ID);
@@ -529,12 +570,12 @@ final class StateTest extends TestCase
         );
     }
 
-    private function presenceDatabase(Memory $adapter): Database
+    private function presenceDatabase(Memory $adapter, ?Cache $cache = null): Database
     {
         $authorization = new Authorization();
         $authorization->addRole(Role::any()->toString());
 
-        $database = new Database($adapter, new Cache(new NoCache()));
+        $database = new Database($adapter, $cache ?? new Cache(new NoCache()));
         $database
             ->setAuthorization($authorization)
             ->setDatabase('presences')
