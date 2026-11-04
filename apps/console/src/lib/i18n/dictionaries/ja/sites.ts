@@ -91,6 +91,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
   'Renewal blocked': '証明書の更新が保留中',
+  'Certificate renewal started': '証明書の更新を開始しました',
   'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
   "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
     'この証明書は期限切れです。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',

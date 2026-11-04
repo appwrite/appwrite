@@ -356,7 +356,6 @@ export function Domains({
             rule={selectedRule}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onRetrySuccess={() => {
-              toast.success(t('Verification in progress'))
               setRetryDomainOpen(false)
               setSelectedRule(null)
             }}

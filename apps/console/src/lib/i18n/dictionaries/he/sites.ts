@@ -177,6 +177,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Renewal blocked': 'חידוש התעודה חסום',
+  'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
   "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
     'תוקף התעודה פג. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
