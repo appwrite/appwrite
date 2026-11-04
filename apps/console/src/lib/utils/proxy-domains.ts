@@ -48,6 +48,7 @@ import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
+import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -96,6 +97,17 @@ export function getClaimRecord(domain: string, projectId: string) {
     value: projectId,
     ttl: 3600,
   }
+}
+
+/**
+ * Whether a rule create was refused until the project proves it owns the
+ * domain with the claim record. Cloud answers 400 `rule_verification_failed`
+ * for a domain that already points to Appwrite (self-hosted never does on a
+ * create), and 409 `rule_claim_required` for one another project holds.
+ */
+export function isDomainClaimError(error: unknown): boolean {
+  const { type } = getAppwriteErrorInfo(error)
+  return type === 'rule_verification_failed' || type === 'rule_claim_required'
 }
 
 /**
