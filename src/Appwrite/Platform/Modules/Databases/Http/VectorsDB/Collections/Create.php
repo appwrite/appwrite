@@ -122,8 +122,6 @@ class Create extends CollectionAction
 
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException());
-        } catch (LimitException) {
-            throw new Exception($this->getLimitException());
         } catch (NotFoundException) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
@@ -209,8 +207,10 @@ class Create extends CollectionAction
             throw new Exception($this->getDuplicateException());
         } catch (IndexException) {
             throw new Exception($this->getInvalidIndexException());
-        } catch (LimitException) {
-            throw new Exception($this->getLimitException());
+        } catch (LimitException $e) {
+            // Carries the limit the collection's attributes hit, which for a vector
+            // collection is the row width its dimension decides.
+            throw new Exception($this->getColumnLimitException(), $e->getMessage());
         }
 
         $queueForEvents
