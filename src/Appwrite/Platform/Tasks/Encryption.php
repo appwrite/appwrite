@@ -94,8 +94,11 @@ class Encryption extends Action
             }
 
             foreach ($dbForProject->cursor('databases', batchSize: $batch) as $database) {
-                if (\in_array($database->getAttribute('type', ''), [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB], true)) {
-                    continue; // Schemaless and vector collections have no encrypted columns
+                // Only legacy and TablesDB databases hold their tables as `database_<sequence>` collections that
+                // can have encrypted columns. Schemaless and vector collections have none, and a dedicated engine
+                // (a type such as `postgresql` on Cloud) keeps its tables outside Appwrite's metadata entirely.
+                if (!\in_array($database->getAttribute('type', ''), ['', DATABASE_TYPE_LEGACY, DATABASE_TYPE_TABLESDB], true)) {
+                    continue;
                 }
 
                 $dbForDatabase = $databaseFactory->tenant($databaseFactory->overlayLiveDedicatedDsn($database, $project), $project, preserveDates: true);

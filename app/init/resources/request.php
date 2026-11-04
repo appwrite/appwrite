@@ -803,7 +803,10 @@ return function (Container $context): void {
                 return $over;
             }
 
-            return \min($complexity * $limit, $over);
+            // graphql-php still runs the list resolver (a REST find() + count()) when @skip/@include
+            // removes every selected field and the child complexity is 0, so charge at least one unit
+            // per row; otherwise the same field aliased many times repeats unbounded work at no cost.
+            return \min(\max($complexity, 1) * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {

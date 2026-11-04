@@ -292,14 +292,15 @@ export function View({ initialData }: ViewProps = {}) {
       ? (recordsTotalFromHook ?? initialData.records.total)
       : (recordsTotalFromHook ?? 0)
 
-  // Get verification status
+  // Nameserver delegation of the zone, not a project domain's verification;
+  // short enough for one metadata column
   const verificationStatus = useMemo(() => {
     if (!domain) return null
     const isVerified = domain.nameservers?.toLowerCase() === 'appwrite'
     return {
       isVerified,
       icon: isVerified ? CheckCircle2 : AlertCircle,
-      label: isVerified ? 'Verified' : 'Unverified',
+      label: isVerified ? 'Appwrite DNS' : 'External DNS',
       className: isVerified
         ? 'text-green-600 dark:text-green-500'
         : 'text-yellow-600 dark:text-yellow-500',
@@ -936,7 +937,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <div className="flex flex-1 items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                          {t('Domain not verified')}
+                          {t('Nameservers not pointed to Appwrite')}
                         </AlertTitle>
                         <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                           <span className="inline">
@@ -988,7 +989,7 @@ export function View({ initialData }: ViewProps = {}) {
                             <>
                               <code
                                 className={cn(
-                                  'text-[12px] font-mono font-medium',
+                                  'text-[12px] font-mono font-medium truncate',
                                   verificationStatus.isVerified
                                     ? 'text-green-600 dark:text-green-500'
                                     : 'text-yellow-600 dark:text-yellow-500',
@@ -2084,8 +2085,8 @@ export function View({ initialData }: ViewProps = {}) {
                         </p>
                         <p className="text-[12px] text-muted-foreground">
                           {domain.nameservers?.toLowerCase() === 'appwrite'
-                            ? t('Verified')
-                            : t('Unverified')}
+                            ? t('Appwrite nameservers')
+                            : t('External nameservers')}
                         </p>
                       </div>
                     </div>
@@ -2134,8 +2135,8 @@ export function View({ initialData }: ViewProps = {}) {
                                   <p className="text-[11px] text-muted-foreground">
                                     {domain.nameservers?.toLowerCase() ===
                                     'appwrite'
-                                      ? t('Verified')
-                                      : t('Unverified')}
+                                      ? t('Appwrite nameservers')
+                                      : t('External nameservers')}
                                   </p>
                                 </div>
                               </div>
