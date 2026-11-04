@@ -43,7 +43,7 @@ export function Trace({ projectId, reviewId, running }: TraceProps) {
           {t('No steps recorded yet.')}
         </p>
       ) : (
-        <ol className="divide-y divide-border">
+        <ol className="divide-y divide-border font-mono text-[12px]">
           {events.map((event) => (
             <Step key={event.$id} event={event} start={start} />
           ))}
@@ -58,32 +58,24 @@ function Step({ event, start }: { event: ReviewEvent; start: number }) {
     'error' in event.data ||
     event.type.endsWith('.failed') ||
     event.type.endsWith('.unavailable')
-  const details = Object.entries(event.data).filter(
-    ([, value]) => value !== null && value !== undefined && value !== '',
-  )
+  const hasData = Object.keys(event.data).length > 0
 
   return (
-    <li className="flex gap-4 px-6 py-2.5 text-[12px]">
-      <span className="w-16 shrink-0 text-end font-mono tabular-nums text-muted-foreground">
+    <li className="flex flex-col gap-1 px-6 py-2 sm:flex-row sm:gap-4">
+      <span
+        className={cn(
+          'shrink-0 sm:w-48',
+          failed ? 'text-destructive' : 'text-muted-foreground',
+        )}
+      >
+        {event.type}
+      </span>
+      <span className="min-w-0 flex-1 break-all text-foreground">
+        {hasData ? JSON.stringify(event.data) : ''}
+      </span>
+      <span className="shrink-0 tabular-nums text-muted-foreground sm:w-14 sm:text-end">
         +{formatOffset(Date.parse(event.time) - start)}
       </span>
-      <div className="min-w-0 flex-1">
-        <span
-          className={cn(
-            'font-mono',
-            failed ? 'text-destructive' : 'text-foreground',
-          )}
-        >
-          {event.type}
-        </span>
-        {details.length > 0 && (
-          <p className="mt-0.5 break-words font-mono text-muted-foreground">
-            {details
-              .map(([key, value]) => `${key}=${formatValue(value)}`)
-              .join('  ')}
-          </p>
-        )}
-      </div>
     </li>
   )
 }
@@ -94,9 +86,4 @@ function formatOffset(ms: number): string {
   const minutes = Math.floor(ms / 60_000)
   const seconds = Math.floor((ms % 60_000) / 1000)
   return `${minutes}m${String(seconds).padStart(2, '0')}s`
-}
-
-function formatValue(value: unknown): string {
-  if (typeof value === 'string') return value
-  return JSON.stringify(value)
 }
