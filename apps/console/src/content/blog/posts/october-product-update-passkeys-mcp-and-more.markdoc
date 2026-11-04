@@ -137,7 +137,7 @@ The Appwrite MCP server now supports MCP Events, allowing compatible AI agents t
 Agents can receive notifications when:
 
 * New users register
-* Function executions fail or finish
+* Function executions fail
 * Functions and Sites finish deploying
 * New database rows are created
 * Files are uploaded to Storage
