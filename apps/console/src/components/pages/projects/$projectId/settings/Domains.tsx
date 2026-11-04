@@ -343,7 +343,7 @@ export function Domains({
             onOpenChange={setRetryDomainOpen}
             projectId={projectId}
             region={region}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onRetrySuccess={() => {
               toast.success(t('Verification in progress'))
