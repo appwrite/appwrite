@@ -6,6 +6,7 @@ import { useCountryLookups } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import {
   ANALYTICS_FILTER_COLUMNS,
+  analyticsPropKeyOf,
   trafficKindOfFilterKey,
 } from '@/lib/analytics/analytics-filters'
 import { useAnalyticsFilters } from './analytics-filters-context'
@@ -52,9 +53,16 @@ export function ActiveFilterChips() {
         // The humans/bots filter is an empty-category query underneath; show
         // what it means rather than `Bot category is ""`.
         const trafficKind = trafficKindOfFilterKey(key)
+        const propKey = analyticsPropKeyOf(String(key.c))
+        const columns = propKey
+          ? [
+              ...ANALYTICS_FILTER_COLUMNS,
+              { id: String(key.c), title: propKey, type: 'string' as const },
+            ]
+          : ANALYTICS_FILTER_COLUMNS
         const tag = trafficKind
           ? `**${trafficKind === 'human' ? t('Humans') : t('Bots')}** ${t('only')}`
-          : buildFilterTagFromCompactKey(displayKey, ANALYTICS_FILTER_COLUMNS).tag
+          : buildFilterTagFromCompactKey(displayKey, columns).tag
         return (
           <span
             key={`${key.c}:${key.o}:${String(key.v)}`}

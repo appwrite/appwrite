@@ -23,7 +23,7 @@ import { useAnalyticsFilters } from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
 import {
   ANALYTICS_FILTER_UNSUPPORTED_MESSAGE,
-  analyticsFilterAttributeForDimension,
+  analyticsFilterAttributeForTab,
   isAnalyticsFilterShapeSupported,
 } from '@/lib/analytics/analytics-filters'
 import { BreakdownMessage, BreakdownSkeleton } from './BreakdownPanel'
@@ -108,7 +108,7 @@ export function BreakdownDialog({
   const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0]
 
   const { filters, addEqualFilter, isFilterActive } = useAnalyticsFilters()
-  const filterAttribute = analyticsFilterAttributeForDimension(active.dimension)
+  const filterAttribute = analyticsFilterAttributeForTab(active)
   const unsupported = !isAnalyticsFilterShapeSupported(filters, {
     kind: 'breakdown',
     dimension: active.dimension,
@@ -122,14 +122,21 @@ export function BreakdownDialog({
     limit,
     true,
     filters,
+    active.propKey,
   )
   const { data, isLoading, isFetching, error } = useQuery({
     ...baseOptions,
     // Keep the rows on screen while the next page loads, but never carry rows
-    // across a tab switch (a different dimension). Key index 4 is the
-    // dimension in analyticsBreakdownQueryOptions.
-    placeholderData: (previous, previousQuery) =>
-      previousQuery?.queryKey[4] === active.dimension ? previous : undefined,
+    // across a tab switch. Key index 4 is the dimension in
+    // analyticsBreakdownQueryOptions; prop tabs share `props` and end the key
+    // with their prop key.
+    placeholderData: (previous, previousQuery) => {
+      const key = previousQuery?.queryKey
+      if (key?.[4] !== active.dimension) return undefined
+      return !active.propKey || key.at(-1) === active.propKey
+        ? previous
+        : undefined
+    },
   })
 
   // Raw rows from the API, before `rowFilter`: paging decides on these, since
@@ -316,6 +323,7 @@ export function BreakdownDialog({
                   <AnalyticsValueMenu
                     key={`${entry.value}-${index}`}
                     dimension={active.dimension}
+                    attribute={filterAttribute}
                     value={entry.value}
                     label={labelFor(entry)}
                     href={rowHref?.(entry.value, active.id)}

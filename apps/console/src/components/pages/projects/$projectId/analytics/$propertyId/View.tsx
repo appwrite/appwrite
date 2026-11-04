@@ -53,10 +53,13 @@ import { ExportMenu } from '../_components/ExportMenu'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
+  EventPropertiesPanel,
   LocationsPanel,
   PagesPanel,
   TechnologyPanel,
   TrafficSourcesPanel,
+  UsersPanel,
+  useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
 import { TrafficSplit } from '../_components/TrafficSplit'
@@ -283,6 +286,10 @@ export function View({
   const range = useMemo(
     () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
     [dateRange],
+  )
+  const showUsersPanel = useShowUsersPanel(
+    { projectId, propertyId, range },
+    filters,
   )
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
@@ -628,6 +635,21 @@ export function View({
                   propertyId={propertyId}
                   range={range}
                 />
+                {showUsersPanel ? (
+                  <UsersPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {/* Full width when it has no Users card beside it. */}
+                <div className={showUsersPanel ? undefined : 'lg:col-span-2'}>
+                  <EventPropertiesPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                </div>
                 {/* Custom events close the page at full width: it's the card
                   most specific to the product, and its empty state carries
                   the how-to CTA. */}

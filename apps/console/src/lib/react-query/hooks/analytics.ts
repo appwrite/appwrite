@@ -1017,6 +1017,7 @@ export async function fetchAnalyticsBreakdown(
   range: AnalyticsRange = getDefaultAnalyticsRange(),
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const response = await withReadTimeout(
     'breakdown',
@@ -1027,6 +1028,7 @@ export async function fetchAnalyticsBreakdown(
       startAt: range.startAt,
       endAt: range.endAt,
       limit,
+      propKey,
     }),
   )
 
@@ -1044,6 +1046,7 @@ export function analyticsBreakdownQueryOptions(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const queryKey = [
     'analytics',
@@ -1054,6 +1057,7 @@ export function analyticsBreakdownQueryOptions(
     analyticsRangeKey(range),
     limit,
     ...analyticsFiltersKey(filters),
+    ...(propKey ? ['propKey', propKey] : []),
   ]
   return queryOptions({
     queryKey,
@@ -1069,6 +1073,7 @@ export function analyticsBreakdownQueryOptions(
         range,
         limit,
         filters,
+        propKey,
       ),
     // Panels only request the dimension of their visible tab, so 21 dimensions
     // never fan out into 21 requests on mount.
@@ -1098,6 +1103,7 @@ export function useAnalyticsBreakdown(
   limit: number = ANALYTICS_BREAKDOWN_LIMIT,
   enabled: boolean = true,
   filters: readonly AnalyticsFilter[] = NO_FILTERS,
+  propKey?: string,
 ) {
   const { data, isLoading, isFetching, error, refetch } = useQuery(
     analyticsBreakdownQueryOptions(
@@ -1108,6 +1114,7 @@ export function useAnalyticsBreakdown(
       limit,
       enabled,
       filters,
+      propKey,
     ),
   )
 
@@ -1169,6 +1176,7 @@ export type UpdateAnalyticsPropertyInput = {
   domain?: string
   enabled?: boolean
   allowedOrigins?: string[]
+  identifyUsers?: boolean
 }
 
 export function useUpdateAnalyticsProperty(
@@ -1187,6 +1195,9 @@ export function useUpdateAnalyticsProperty(
         ...(input.enabled !== undefined && { enabled: input.enabled }),
         ...(input.allowedOrigins !== undefined && {
           allowedOrigins: input.allowedOrigins,
+        }),
+        ...(input.identifyUsers !== undefined && {
+          identifyUsers: input.identifyUsers,
         }),
       })
     },
