@@ -141,6 +141,7 @@ class State
     ): array {
         $created = false;
         $counted = false;
+        $previousHash = null;
         try {
             if ($sequence !== null) {
                 $existing = $dbForProject->getAuthorization()->skip(
@@ -149,6 +150,7 @@ class State
                 if (!$existing->isEmpty() && (string) $existing->getSequence() === $sequence) {
                     $presenceDocument->setAttribute('$id', $existing->getId());
                     $presence = $dbForProject->updateDocument(self::COLLECTION_ID, $existing->getId(), $presenceDocument);
+                    $this->purgeListCacheOnPermissionChange($dbForProject, $existing->getAttribute('permissionsHash'), $presence);
 
                     return ['presence' => $presence, 'created' => false, 'counted' => false];
                 }
@@ -159,11 +161,12 @@ class State
             $duplicate = null;
             for ($attempt = 1; $attempt <= 5; $attempt++) {
                 try {
-                    $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created, &$counted) {
+                    $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $userId, &$created, &$counted, &$previousHash) {
                         // Reset per attempt: a prior attempt that set $created then lost the create
                         // race must not report a creation when this retry only increments.
                         $created = false;
                         $counted = false;
+                        $previousHash = null;
 
                         $existing = $dbForProject->getAuthorization()->skip(
                             fn () => $dbForProject->findOne(self::COLLECTION_ID, [Query::equal('userId', [$userId])])
@@ -187,12 +190,15 @@ class State
                             throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existing->getId()]);
                         }
 
+                        $previousHash = $current->getAttribute('permissionsHash');
                         $presenceDocument->setAttribute('$id', $current->getId());
                         $presenceDocument->setAttribute('connections', Operator::increment(1));
                         $counted = true;
 
                         return $dbForProject->updateDocument(self::COLLECTION_ID, $current->getId(), $presenceDocument);
                     });
+
+                    $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
 
                     return ['presence' => $presence, 'created' => $created, 'counted' => $counted];
                 } catch (DuplicateException $e) {
@@ -306,6 +312,7 @@ class State
         $presenceDocument->setAttribute('$id', $presenceId);
 
         $presenceCreated = false;
+        $previousHash = null;
         $userId = $presenceDocument->getAttribute('userId');
         $existingQuery = \is_string($userId) && $userId !== ''
             ? [Query::equal('userId', [$userId])]
@@ -319,11 +326,12 @@ class State
                 if ($existingPresence->isEmpty()) {
                     $presenceCreated = true;
                 } else {
+                    $previousHash = $existingPresence->getAttribute('permissionsHash');
                     $presenceDocument->setAttribute('$id', $existingPresence->getId());
                 }
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
             } else {
-                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated) {
+                $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated, &$previousHash) {
                     $existingPresence = $dbForProject->getAuthorization()->skip(
                         fn () => $dbForProject->findOne(self::COLLECTION_ID, $existingQuery)
                     );
@@ -339,6 +347,7 @@ class State
                         throw new Exception(Exception::DOCUMENT_NOT_FOUND, params: [$existingPresence->getId()]);
                     }
 
+                    $previousHash = $currentPresence->getAttribute('permissionsHash');
                     $presenceDocument->setAttribute('$id', $currentPresence->getId());
 
                     return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
@@ -348,6 +357,8 @@ class State
             if ($presenceCreated && $onPresenceCreated !== null) {
                 call_user_func($onPresenceCreated);
             }
+
+            $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
 
             return $presence;
         } catch (DuplicateException $e) {
@@ -710,6 +721,20 @@ class State
         [$collectionKey] = $dbForProject->getCacheKeys(self::COLLECTION_ID);
 
         return $dbForProject->getCache()->purge($collectionKey);
+    }
+
+    /**
+     * Drop the list cache when a presence's effective permissions changed, so a page that was
+     * cached while the row was readable stops being served after it is narrowed. `$previousHash`
+     * is the stored row's `permissionsHash` before the write, or null when the row was just
+     * created -- a creation only adds a row, it cannot leak one to a reader who lost access, and
+     * purging on every create would drop the cache on each realtime connect and heartbeat-create.
+     */
+    private function purgeListCacheOnPermissionChange(Database $dbForProject, ?string $previousHash, Document $presence): void
+    {
+        if ($previousHash !== null && $previousHash !== $presence->getAttribute('permissionsHash')) {
+            $this->purgeListCache($dbForProject);
+        }
     }
 
     public function triggerUsage(
