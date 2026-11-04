@@ -107,6 +107,8 @@ class Realtime extends Event
         // Can be Tables API or Collections API; generated channels include both!
         $tableOrCollection = $this->getContext('table') ?? $this->getContext('collection');
 
+        $userId = $this->getParam('userId');
+
         $target = RealtimeAdapter::fromPayload(
             event: $allEvents[0],
             payload: $payload,
@@ -114,6 +116,7 @@ class Realtime extends Event
             database: $db,
             collection: $tableOrCollection,
             bucket: $bucket,
+            userId: \is_string($userId) ? $userId : null,
         );
 
         $projectIds = !empty($this->getSubscribers())
