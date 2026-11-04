@@ -155,7 +155,7 @@ class Get extends Base
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
-            if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
+            if ($end === null || ($end - $start + 1)> APP_STORAGE_READ_BUFFER) {
                 // A suffix asks for the tail, so the cap moves the start and
                 // keeps the end at the segment boundary.
                 if ($suffixed) {
