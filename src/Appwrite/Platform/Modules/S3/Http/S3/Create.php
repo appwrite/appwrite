@@ -167,13 +167,15 @@ class Create extends Base
             $selected = CompleteMultipartUpload::parts($this->requestBody($request));
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
             [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $publisherForDeletes, $deviceForFiles, $bucket, $upload, $selected);
+            // Overwriting an existing key keeps the file id but changes its bytes, so the
+            // image-transformation cache keyed on that id must be dropped or /preview keeps serving
+            // the old image. A retry that finds the object already committed returns a null event
+            // and may have overwritten before the first attempt could purge, so treat anything that
+            // is not a fresh create as an overwrite; the purge is a no-op for a brand-new file.
+            if ($event !== 'create') {
+                $this->enqueueFileCacheDelete($publisherForDeletes, $queueForEvents, $bucket, $file);
+            }
             if ($event !== null) {
-                // Overwriting an existing key keeps the file id but changes its bytes, so the
-                // image-transformation cache keyed on that id must be dropped or /preview keeps
-                // serving the old image.
-                if ($event === 'update') {
-                    $this->enqueueFileCacheDelete($publisherForDeletes, $queueForEvents, $bucket, $file);
-                }
                 $this->queueFileEvent($queueForEvents, $response, $bucket, $file, $event);
                 $this->enqueueAudit($publisherForAudits, $request, $project, $user, 'file.' . $event, $file, 'file');
             }
