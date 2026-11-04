@@ -937,7 +937,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <div className="flex flex-1 items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                          {t('Domain not verified')}
+                          {t('Nameservers not pointed to Appwrite')}
                         </AlertTitle>
                         <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                           <span className="inline">
