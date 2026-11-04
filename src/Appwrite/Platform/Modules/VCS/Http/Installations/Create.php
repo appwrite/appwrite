@@ -13,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Id;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -75,7 +75,7 @@ class Create extends Action
     ) {
         $source = $dbForPlatform->getDocument('installations', $installationId);
 
-        // GitLab, Gitea and Bitbucket rotate the refresh token copied below, so a second copy would revoke the first
+        // GitLab, Gitea and Bitbucket need the source's OAuth pair on every call, and a copy of a rotating refresh token revokes the original
         if ($source->isEmpty() || $source->getAttribute('provider') !== 'github') {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
@@ -91,26 +91,34 @@ class Create extends Action
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
+        $providerInstallationId = $source->getAttribute('providerInstallationId');
+
+        // One row per project and installation, so concurrent requests collide instead of creating duplicates
+        $id = \substr(\hash('sha256', $project->getSequence() . ':' . $providerInstallationId), 0, 32);
+
         $installation = $dbForPlatform->findOne('installations', [
-            Query::equal('providerInstallationId', [$source->getAttribute('providerInstallationId')]),
+            Query::equal('providerInstallationId', [$providerInstallationId]),
             Query::equal('projectInternalId', [$project->getSequence()]),
-            Query::equal('provider', [$source->getAttribute('provider')]),
+            Query::equal('provider', ['github']),
         ]);
 
         if ($installation->isEmpty()) {
-            $installation = $dbForPlatform->createDocument('installations', new Document([
-                '$id' => Id::unique(),
-                '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
-                'providerInstallationId' => $source->getAttribute('providerInstallationId'),
-                'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
-                'provider' => $source->getAttribute('provider'),
-                'organization' => $source->getAttribute('organization'),
-                'personal' => $source->getAttribute('personal', false),
-                'personalRefreshToken' => $source->getAttribute('personalRefreshToken'),
-                'personalAccessToken' => $source->getAttribute('personalAccessToken'),
-                'personalAccessTokenExpiry' => $source->getAttribute('personalAccessTokenExpiry'),
-            ]));
+            // The OAuth pair is not copied: repository creation refreshes it, and the rotation would revoke the source's copy.
+            // Without it, personal installations fall back to the caller's GitHub identity.
+            try {
+                $installation = $dbForPlatform->createDocument('installations', new Document([
+                    '$id' => $id,
+                    '$permissions' => $this->getPermissions($project->getAttribute('teamId', ''), $project->getId()),
+                    'providerInstallationId' => $providerInstallationId,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
+                    'provider' => 'github',
+                    'organization' => $source->getAttribute('organization'),
+                    'personal' => $source->getAttribute('personal', false),
+                ]));
+            } catch (Duplicate) {
+                $installation = $dbForPlatform->getDocument('installations', $id);
+            }
         }
 
         $provider = $installation->getAttribute('provider', '');
