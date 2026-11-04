@@ -689,6 +689,7 @@
         "POST /v1/vcs/github/installations/:installationId/detections",
         "POST /v1/vcs/github/installations/:installationId/providerRepositories",
         "POST /v1/vcs/gitlab/events",
+        "POST /v1/vcs/installations",
         "POST /v1/vcs/origin/events",
         "POST /v1/vectorsdb",
         "POST /v1/vectorsdb/:databaseId/collections",
