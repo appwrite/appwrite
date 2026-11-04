@@ -436,9 +436,10 @@ class Certificates extends Action
             }
 
             if ($awaitingProvider && $attempts < self::MAX_GENERATION_ATTEMPTS) {
-                // Nothing retries 'unverified', so keep the rule generating while attempts remain.
-                // The interval retries it, so this is a wait, not a worker error.
-                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+                // Nothing retries 'unverified', so keep the rule generating while attempts remain, for the
+                // interval to retry. A renewal stays verified, since its certificate still serves, for
+                // maintenance to retry. This is a wait, not a worker error.
+                $rule->setAttribute('status', $renewing ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATING);
                 Console::warning('Certificate for ' . $domain->get() . ' will be retried: ' . $e->getMessage());
             } else {
                 // A failed renewal stays verified: 'unverified' rules are never renewed again

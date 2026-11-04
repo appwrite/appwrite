@@ -12,6 +12,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
+use Utopia\Cdn\Certificates\Status;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -47,7 +48,7 @@ class Update extends Action
                 group: 'rules',
                 name: 'updateRuleStatus',
                 description: <<<EOT
-                If not succeeded yet, retry verification process of a proxy rule domain. This endpoint triggers domain verification by checking DNS records. If verification is successful, a TLS certificate will be automatically provisioned for the domain asynchronously in the background.
+                If not succeeded yet, retry verification process of a proxy rule domain. This endpoint triggers domain verification by checking DNS records. If verification is successful, a TLS certificate will be automatically provisioned for the domain asynchronously in the background. A verified rule whose certificate renewal failed or is blocked, or whose certificate expired, is checked the same way, and its certificate renewed in the background.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -86,9 +87,16 @@ class Update extends Action
 
         $queueForEvents->setParam('ruleId', $rule->getId());
 
+        $certificate = $authorization->skip(fn () => $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', '')));
+        $expireDate = $certificate->getAttribute('expireDate');
+
+        // A verified rule whose renewal failed or is blocked, or whose certificate expired, is checked again.
+        // Maintenance stops after 5 failed attempts, so once DNS is fixed nothing else would renew it.
+        $renewal = $rule->getAttribute('status') === RULE_STATUS_VERIFIED
+            && (\in_array($certificate->getAttribute('status'), [Status::FAILED, Status::BLOCKED], true) || (!empty($expireDate) && \strtotime($expireDate) <= \time()));
+
         // If rule is already verified or in certificate generation state, don't queue for verification again
-        if ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING) {
-            $certificate = $authorization->skip(fn () => $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId', '')));
+        if (!$renewal && ($rule->getAttribute('status') === RULE_STATUS_VERIFIED || $rule->getAttribute('status') === RULE_STATUS_CERTIFICATE_GENERATING)) {
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
             $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
             $rule->setAttribute('certificateStatus', $certificate->getAttribute('status', ''));
@@ -98,11 +106,14 @@ class Update extends Action
         }
 
         try {
-            $this->verifyRule($rule);
-            // Reset logs and status for the rule
+            // Appwrite-owned subdomains ride a wildcard record, so the worker never checks their DNS either
+            if ($rule->getAttribute('owner') !== 'Appwrite') {
+                $this->verifyRule($rule);
+            }
+            // Reset logs and status for the rule. A renewal stays verified: its current certificate keeps serving.
             $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => '',
-                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+                'status' => $renewal ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATING,
             ])));
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
@@ -134,11 +145,9 @@ class Update extends Action
             skipDomainValidation: true,
         ));
 
-        if (!empty($certificate)) {
-            $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
-            $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
-            $rule->setAttribute('certificateStatus', $certificate->getAttribute('status', ''));
-        }
+        $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+        $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
+        $rule->setAttribute('certificateStatus', $certificate->getAttribute('status', ''));
 
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     }
