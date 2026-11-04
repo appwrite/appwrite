@@ -315,6 +315,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
   'Create organization': 'יצירת ארגון',
   'Create project': 'יצירת פרויקט',
+  'My first project': 'הפרויקט הראשון שלי',
   'Advanced security': 'אבטחה מתקדמת',
   'Security add-on': 'תוסף אבטחה',
   '+ more': '+ עוד',
