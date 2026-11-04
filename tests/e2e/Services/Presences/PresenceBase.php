@@ -414,7 +414,7 @@ trait PresenceBase
      */
     private function listPresencesCached(array $query): array
     {
-        return $this->client->call(
+        $response = $this->client->call(
             Client::METHOD_GET,
             '/presences',
             \array_merge(['content-type' => 'application/json'], $this->getPresenceServerHeaders()),
@@ -423,6 +423,10 @@ trait PresenceBase
                 'ttl' => 3600,
             ]
         );
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+        $this->assertArrayHasKey('presences', $response['body'], 'list body: ' . \json_encode($response['body']));
+
+        return $response;
     }
 
     public function testClientPresenceCustomPermissionsForOtherUser(): void
