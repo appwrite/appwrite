@@ -17,8 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
   ExternalLink,
   Loader2,
@@ -45,6 +44,7 @@ import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
+import { RuleStatusBadge } from './domains/RuleStatusBadge'
 import { useVisitUrl } from '@/hooks/use-visit-url'
 
 interface DomainsProps {
@@ -94,24 +94,6 @@ export function Domains({
     }
     return map
   }, [orgDomains])
-
-  const getStatusBadge = (status: string) => {
-    const config = getDomainStatusBadgeConfig(status)
-    return (
-      <Badge
-        variant={config.variant}
-        className="text-[10px] shrink-0 gap-1.5"
-        title={
-          status === 'verifying'
-            ? t('SSL certificate is being issued. This usually takes a couple of minutes.')
-            : undefined
-        }
-      >
-        {status === 'verifying' && <Loader2 className="h-3 w-3 animate-spin" />}
-        {t(config.label)}
-      </Badge>
-    )
-  }
 
   const handleRetry = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
@@ -228,18 +210,20 @@ export function Domains({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(rule.status)}
-                          {rule.status !== 'verified' && (
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="h-auto p-0 text-[13px]"
-                              onClick={() => handleViewLogs(rule)}
-                            >
-                              {t('View logs')}
-                            </Button>
-                          )}
-                          {canRetryRule(rule.status) && (
+                          <RuleStatusBadge rule={rule} />
+                          {getRuleStatusBadgeConfig(rule).variant !==
+                            'success' &&
+                            canViewRuleLogs(rule) && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-[13px]"
+                                onClick={() => handleViewLogs(rule)}
+                              >
+                                {t('View logs')}
+                              </Button>
+                            )}
+                          {canRetryRule(rule) && (
                             <Button
                               variant="link"
                               size="sm"
@@ -271,7 +255,7 @@ export function Domains({
                                   <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
-                              {canRetryRule(rule.status) && (
+                              {canRetryRule(rule) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
@@ -346,7 +330,6 @@ export function Domains({
             rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onRetrySuccess={() => {
-              toast.success(t('Verification in progress'))
               setRetryDomainOpen(false)
               setSelectedRule(null)
             }}

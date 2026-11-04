@@ -59,7 +59,11 @@ export function RetryDomainDialog({
       ) {
         setVerificationError(dnsPendingVerificationError(t))
       } else if (updatedRule.status === 'verified') {
-        toast.success(`${rule.domain} ${t('has been verified')}`)
+        toast.success(
+          rule.status === 'verified'
+            ? t('Certificate renewal started')
+            : `${rule.domain} ${t('has been verified')}`,
+        )
         onRetrySuccess()
       } else {
         toast.success(t('Verification in progress'))

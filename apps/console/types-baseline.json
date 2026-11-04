@@ -880,9 +880,6 @@
     "TS18046: 'deployment' is of type 'unknown'.": 6,
     "TS2571: Object is of type 'unknown'.": 8
   },
-  "src/components/pages/projects/$projectId/sites/SiteDomains.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 2
-  },
   "src/components/pages/projects/$projectId/sites/SiteOverview.tsx": {
     "TS2339: Property 'data' does not exist on type '{ deployments: Deployment[]; total: number; isLoading: boolean; isFetching: boolean; error: Error | null; refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{ deployments: Deployment[]; total: number; }, Error>>; }'.": 2,
     "TS7006: Parameter 'd' implicitly has an 'any' type.": 1,
