@@ -290,6 +290,30 @@ class Create extends Action
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
+
+            foreach ([MESSAGE_TYPE_EMAIL => $email, MESSAGE_TYPE_SMS => $phone] as $providerType => $identifier) {
+                if (empty($identifier)) {
+                    continue;
+                }
+
+                try {
+                    $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($invitee->getId())),
+                            Permission::update(Role::user($invitee->getId())),
+                            Permission::delete(Role::user($invitee->getId())),
+                        ],
+                        'userId' => $invitee->getId(),
+                        'userInternalId' => $invitee->getSequence(),
+                        'providerType' => $providerType,
+                        'identifier' => $identifier,
+                    ])));
+                } catch (Duplicate) {
+                    // Another user already owns this identifier as a target
+                }
+            }
+
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
         }
 
         $membership = $dbForProject->findOne('memberships', [
