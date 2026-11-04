@@ -330,6 +330,16 @@ class State
                     $presenceDocument->setAttribute('$id', $existingPresence->getId());
                 }
                 $presence = $dbForProject->upsertDocument(self::COLLECTION_ID, $presenceDocument);
+
+                // The unique-index upsert overwrites a row another request inserted after the lookup
+                // above found none, so a "create" here is not provably a first insert -- it may have
+                // narrowed a row that was briefly cached under its former ACL. Purge unless we
+                // confirmed an existing row whose permissions did not change.
+                if ($presenceCreated) {
+                    $this->purgeListCache($dbForProject);
+                } else {
+                    $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
+                }
             } else {
                 $presence = $dbForProject->withTransaction(function () use ($dbForProject, $presenceDocument, $existingQuery, &$presenceCreated, &$previousHash) {
                     $existingPresence = $dbForProject->getAuthorization()->skip(
@@ -352,13 +362,16 @@ class State
 
                     return $dbForProject->updateDocument(self::COLLECTION_ID, $currentPresence->getId(), $presenceDocument);
                 });
+
+                // The transactional path holds the row for update and a racing insert fails with a
+                // duplicate rather than being silently overwritten, so a create cannot hide a prior
+                // row: purge only on a real permission change.
+                $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
             }
 
             if ($presenceCreated && $onPresenceCreated !== null) {
                 call_user_func($onPresenceCreated);
             }
-
-            $this->purgeListCacheOnPermissionChange($dbForProject, $previousHash, $presence);
 
             return $presence;
         } catch (DuplicateException $e) {
