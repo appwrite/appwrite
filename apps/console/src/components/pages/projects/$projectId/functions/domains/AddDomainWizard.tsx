@@ -76,6 +76,40 @@ export function AddDomainWizard() {
 
   const hasRepo = !!(func?.installationId && func?.providerRepositoryId)
 
+  const createRule = async (d: string) => {
+    const created = await createMutation.mutateAsync({
+      domain: d,
+      functionId: functionId!,
+      behaviour,
+      ...(behaviour === 'branch' && { branch }),
+      ...(behaviour === 'redirect' && {
+        redirectUrl: redirectUrl.trim(),
+        statusCode,
+      }),
+    })
+    if (created.status === 'verified') {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
+      toast.success(t('Domain verified'))
+      navigate({
+        to: '/projects/$projectId/functions/$functionId/domains',
+        params: { projectId: projectId!, functionId: functionId! },
+      })
+    } else if (created.status === 'verifying') {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
+      toast.success(t('Verification in progress'))
+      navigate({
+        to: '/projects/$projectId/functions/$functionId/domains',
+        params: { projectId: projectId!, functionId: functionId! },
+      })
+    } else {
+      setRule(created)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (isPending) return
@@ -128,37 +162,7 @@ export function AddDomainWizard() {
     }
 
     try {
-      const created = await createMutation.mutateAsync({
-        domain: d,
-        functionId: functionId!,
-        behaviour,
-        ...(behaviour === 'branch' && { branch }),
-        ...(behaviour === 'redirect' && {
-          redirectUrl: redirectUrl.trim(),
-          statusCode,
-        }),
-      })
-      if (created.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
-        toast.success(t('Domain verified'))
-        navigate({
-          to: '/projects/$projectId/functions/$functionId/domains',
-          params: { projectId: projectId!, functionId: functionId! },
-        })
-      } else if (created.status === 'verifying') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
-        toast.success(t('Verification in progress'))
-        navigate({
-          to: '/projects/$projectId/functions/$functionId/domains',
-          params: { projectId: projectId!, functionId: functionId! },
-        })
-      } else {
-        setRule(created)
-      }
+      await createRule(d)
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : t('Failed to add domain'),
