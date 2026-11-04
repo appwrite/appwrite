@@ -287,6 +287,17 @@ export function View({
     () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
     [dateRange],
   )
+  // A sideways trackpad or touch swipe over the chart brush, tab bars or
+  // tables would otherwise fire the browser's swipe-back navigation.
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.style.overscrollBehaviorX
+    root.style.overscrollBehaviorX = 'none'
+    return () => {
+      root.style.overscrollBehaviorX = previous
+    }
+  }, [])
+
   const showUsersPanel = useShowUsersPanel(
     { projectId, propertyId, range },
     filters,
