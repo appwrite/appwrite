@@ -370,7 +370,7 @@ $bootCleanupFinished = new Atomic(0);
 // No presence is written before this, so newer rows belong to live sockets, even past the timeout.
 $bootedAt = DateTime::now();
 // One deadline for the cleanup, the presence gate and the heartbeat, so none outlasts the others.
-$bootDeadline = \microtime(true) + REALTIME_BOOT_TIMEOUT_SECONDS;
+$bootDeadline = \microtime(true) + \max(0, (int) System::getEnv('_APP_REALTIME_BOOT_TIMEOUT', REALTIME_BOOT_TIMEOUT_SECONDS));
 
 if (System::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted') {
     $bootCleanupFinished->set(1);

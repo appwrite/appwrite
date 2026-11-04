@@ -521,7 +521,7 @@ const REALTIME_CONCURRENCY_INTERVAL = '5m';
 // sampled is lost for good.
 const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
-// Longest a realtime presence write waits at boot for the self-hosted presence cleanup before going ahead.
+// Default for _APP_REALTIME_BOOT_TIMEOUT: longest a presence write waits at boot for the self-hosted cleanup.
 const REALTIME_BOOT_TIMEOUT_SECONDS = 30;
 
 // A realtime process whose heartbeat (every 5s) is older than this counts as gone.
