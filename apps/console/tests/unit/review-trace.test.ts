@@ -72,6 +72,17 @@ describe('traceItem', () => {
     expect(item.summary).toBe('Since 1b4fb50, incrementally')
   })
 
+  test('marks a step that reports an error as failed', () => {
+    const read = traceItem(
+      t,
+      event('tool.read_file', { path: 'a.ts', error: 'not found' }),
+      0,
+    )
+    const unavailable = traceItem(t, event('models.unavailable', {}), 0)
+    expect(read.tone).toBe('error')
+    expect(unavailable.tone).toBe('error')
+  })
+
   test('falls back to the plain fields for an unknown event type', () => {
     const item = traceItem(
       t,

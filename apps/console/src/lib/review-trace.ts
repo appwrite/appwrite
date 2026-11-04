@@ -439,12 +439,17 @@ export function traceItem(
   const data = event.data ?? {}
   const described = describe(t, event.type, data)
   const label = labels[event.type]
+  // Any step that reports an error reads as failed, unless its own rendering says otherwise.
+  const failed =
+    Boolean(data.error) ||
+    event.type.endsWith('.failed') ||
+    event.type.endsWith('.unavailable')
   return {
     id: event.$id,
     type: event.type,
     label: label ? t(label) : event.type,
     mono: false,
-    tone: 'default',
+    tone: failed ? 'error' : 'default',
     ...described,
     meta: (described.meta ?? []).filter(Boolean),
     offset: Math.max(
