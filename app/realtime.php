@@ -367,13 +367,13 @@ $server->error(function (Throwable $error): void {
  * everything else is served from boot. The cleanup runs in its own process, as a worker coroutine
  * cannot fork. It is only read with get(): Atomic::wait() would consume the 1 and close it again.
  */
-$booted = new Atomic(0);
+$bootCleanupFinished = new Atomic(0);
 // No presence is written before this, so newer rows belong to live sockets, even past the timeout.
 $bootedAt = DateTime::now();
 
 if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
-    $adapter->getNative()->addProcess(new Process(function () use ($booted, $bootedAt, $container, $containerId, $presenceState): void {
-        if ($booted->get() === 0) {
+    $adapter->getNative()->addProcess(new Process(function () use ($bootCleanupFinished, $bootedAt, $container, $containerId, $presenceState): void {
+        if ($bootCleanupFinished->get() === 0) {
             $span = Span::init('realtime.presences.cleanup');
             $started = \microtime(true);
             $hostname = \gethostname();
@@ -419,7 +419,7 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
 
                 Span::add('duration_ms', (int) ((\microtime(true) - $started) * 1000));
                 $span->finish();
-                $booted->set(1);
+                $bootCleanupFinished->set(1);
             }
 
             // Finish what the boot sweep left while serving: rows written since boot are never deleted.
@@ -453,26 +453,26 @@ if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
         }
 
         // Swoole restarts a process that exits, so idle until shutdown.
-        while ($booted->get() === 1) {
+        while ($bootCleanupFinished->get() === 1) {
             \sleep(3600);
         }
     }, false, 0, true));
 } else {
-    $booted->set(1);
+    $bootCleanupFinished->set(1);
 }
 
-$server->onStart(function () use ($stats, $containerId, $booted, &$statsDocument) {
+$server->onStart(function () use ($stats, $containerId, $bootCleanupFinished, &$statsDocument) {
     sleep(5); // wait for the initial database schema to be ready
     Console::success('Server started successfully');
 
     /**
      * Create document for this worker to share stats across Containers.
      */
-    go(function () use ($containerId, $booted, &$statsDocument) {
+    go(function () use ($containerId, $bootCleanupFinished, &$statsDocument) {
         // The document is also this host's heartbeat, so not before the boot cleanup is done,
         // unless presence writes are already allowed past the boot timeout.
         $deadline = \microtime(true) + REALTIME_BOOT_TIMEOUT_SECONDS;
-        while ($booted->get() === 0 && \microtime(true) < $deadline) {
+        while ($bootCleanupFinished->get() === 0 && \microtime(true) < $deadline) {
             Coroutine::sleep(0.1);
         }
 
@@ -1226,7 +1226,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $booted, $bootedAt, $messageDispatcher, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
+$server->onMessage(function (int $connection, string $message) use ($container, $server, $realtime, $containerId, $register, $presenceState, $bootCleanupFinished, $bootedAt, $messageDispatcher, $eventTailRegistry, $usage, $unauthorized, $unauthorizedPayloadJson) {
     $project = null;
     $authorization = null;
     $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -1357,8 +1357,8 @@ $server->onMessage(function (int $connection, string $message) use ($container, 
         $messageContainer->set('register', fn () => $register);
         $messageContainer->set('response', fn () => $response);
         $messageContainer->set('presenceState', fn () => $presenceState);
-        $messageContainer->set('presenceBooted', fn () => $booted);
-        $messageContainer->set('presenceBootedAt', fn () => $bootedAt);
+        $messageContainer->set('bootCleanupFinished', fn () => $bootCleanupFinished);
+        $messageContainer->set('bootedAt', fn () => $bootedAt);
         $messageContainer->set('database', fn () => $database);
         $messageContainer->set('authorization', fn () => $authorization);
         $messageContainer->set('project', fn () => $project);

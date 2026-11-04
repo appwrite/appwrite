@@ -20,6 +20,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Platform\Action;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -40,8 +41,8 @@ class Presence extends Action
             ->inject('database')
             ->inject('authorization')
             ->inject('presenceState')
-            ->inject('presenceBooted')
-            ->inject('presenceBootedAt')
+            ->inject('bootCleanupFinished')
+            ->inject('bootedAt')
             ->inject('project')
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
@@ -63,8 +64,8 @@ class Presence extends Action
         Database $database,
         Authorization $authorization,
         PresenceState $presenceState,
-        Atomic $presenceBooted,
-        string $presenceBootedAt,
+        Atomic $bootCleanupFinished,
+        string $bootedAt,
         ?Document $project,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
@@ -112,7 +113,9 @@ class Presence extends Action
             : null;
 
         // Held until the boot cleanup has removed rows left by gone processes, so it can't add to one.
-        $this->waitForBootCleanup($presenceBooted, $presenceBootedAt);
+        if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
+            $this->waitForBootCleanup($bootCleanupFinished, $bootedAt);
+        }
 
         $write = $presenceState->upsertForUserWithConnections($database, $presenceDocument, $userId, $sequence);
         $presence = $write['presence'];
@@ -187,16 +190,16 @@ class Presence extends Action
     /**
      * Waits until the boot cleanup has finished, or the boot timeout has passed.
      */
-    private function waitForBootCleanup(Atomic $booted, string $bootedAt): void
+    private function waitForBootCleanup(Atomic $bootCleanupFinished, string $bootedAt): void
     {
         $deadline = (new \DateTime($bootedAt))->getTimestamp() + REALTIME_BOOT_TIMEOUT_SECONDS;
         // Read with get() only: Atomic::wait() would consume the 1 and close the gate again.
-        while ($booted->get() === 0 && \time() < $deadline) {
+        while ($bootCleanupFinished->get() === 0 && \time() < $deadline) {
             // A hooked sleep: only this message waits, the worker keeps serving others.
             \usleep(50_000);
         }
 
-        if ($booted->get() === 0) {
+        if ($bootCleanupFinished->get() === 0) {
             Span::add('presence.boot_gate', 'timeout');
         }
     }
