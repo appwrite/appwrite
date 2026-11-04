@@ -188,13 +188,6 @@ class Upsert extends PlatformAction
             $userInternalId,
             fn () => $usage->addMetric(METRIC_USERS_PRESENCE, 1)
         );
-
-        // Explicit permissions can narrow who may read this presence; the list cache serves rows
-        // verbatim, so drop it rather than keep serving the presence to a reader who just lost access.
-        if ($permissions !== null) {
-            $presenceState->purgeListCache($dbForProject);
-        }
-
         $queueForEvents->setParam('presenceId', $presence->getId());
 
         $response->dynamic($presence, Response::MODEL_PRESENCE);

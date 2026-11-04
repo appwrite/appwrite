@@ -162,12 +162,6 @@ class Presence extends Action
             $presenceState->triggerUsage($publisherForUsage, $project, 1);
         }
 
-        // Explicit permissions can narrow who may read this presence; the list cache serves rows
-        // verbatim, so drop it rather than keep serving the presence to a reader who lost access.
-        if ($permissions !== null) {
-            $presenceState->purgeListCache($database);
-        }
-
         $presence->removeAttribute('$collection');
         $presence->removeAttribute('$tenant');
         $presence->removeAttribute('hostname');
