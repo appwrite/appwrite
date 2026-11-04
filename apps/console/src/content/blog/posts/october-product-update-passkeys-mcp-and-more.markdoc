@@ -1,0 +1,260 @@
+---
+layout: post
+title: "October product update: Passkeys, MCP and more"
+description: See what's new in Appwrite with passkeys, new OAuth2 providers,
+  email triggers for Functions, MCP Events, a Helm chart, Premium Geo DB, and more.
+date: 2026-11-04
+timeToRead: 6
+author: aishwari
+category: products
+featured: false
+unlisted: false
+cover: /images/blog/october-product-update-passkeys-mcp-and-more/cover.avif
+faqs:
+  - question: What did Appwrite release in October 2026?
+    answer: Appwrite released updates across Auth, Functions, MCP, Storage,
+      performance, and self-hosting in October 2026. Major releases included
+      passkeys, six new OAuth2 providers, six-digit verification and recovery
+      codes, email triggers and interval scheduling for Functions, MCP Events,
+      Git deployments from Entire, an official Helm chart, Premium Geo DB, a
+      faster binary cache format, and R8 support in the Android SDK.
+  - question: Does Appwrite support passkeys?
+    answer: Yes. Appwrite Auth supports passkeys, so users can sign up and sign
+      in with Face ID, Touch ID, a fingerprint, or their device PIN. A single
+      passkey works across web, Android, and iOS apps, and passkey sessions
+      satisfy multi-factor authentication. Passkeys are available on Appwrite
+      Cloud and self-hosted Appwrite 2.5 or later.
+  - question: Can Appwrite Functions run when an email arrives?
+    answer: Yes. Each Appwrite Function gets a built-in email address, and you
+      can connect a custom domain using MX and TXT records. Appwrite parses
+      incoming emails and passes the content as JSON, with attachments as files,
+      to your function. Email triggers are available on Appwrite Cloud.
+  - question: Can I self-host Appwrite on Kubernetes?
+    answer: Yes. Appwrite provides an official Helm chart for self-hosting on
+      Kubernetes. You can install Appwrite with `helm install` and manage
+      upgrades with `helm upgrade`, with support for built-in or managed
+      PostgreSQL, Redis, and ClickHouse, and S3-compatible object storage.
+---
+October brought new ways to authenticate users, automate backend workflows, and deploy applications with Appwrite.
+
+We introduced passkeys, expanded OAuth2 support, added email triggers for Functions, and brought real-time events to the Appwrite MCP server.
+
+We also shipped improvements across Storage, caching, self-hosting, and the Android SDK.
+
+Here's everything new in Appwrite this October.
+
+# Passwordless authentication with passkeys
+
+![Passwordless authentication with passkeys](/images/blog/october-product-update-passkeys-mcp-and-more/passkeys.avif)
+
+Appwrite Auth now supports passkeys, allowing users to sign up and sign in without passwords.
+
+Users can authenticate using Face ID, Touch ID, a fingerprint, or their device PIN. A single passkey works across your website and Android and iOS apps, including Flutter and React Native.
+
+Passkey sessions also satisfy multi-factor authentication (MFA), giving users a simpler sign-in experience without compromising security.
+
+You can enable passkeys directly from your project's Auth settings in the Appwrite Console.
+
+Available on Appwrite Cloud and self-hosted Appwrite 2.5 or later.
+
+[Read more about passkeys](/blog/post/announcing-passkeys)
+
+# Six new OAuth2 login providers
+
+![Six new OAuth2 login providers](/images/blog/october-product-update-passkeys-mcp-and-more/new-oauth2-providers.avif)
+
+Appwrite Auth now supports six additional OAuth2 providers:
+
+* Hugging Face
+* Resend
+* Cloudflare
+* TikTok
+* Kakao
+* Webflow
+
+All six work with Appwrite's existing OAuth2 authentication flow, so you can integrate them without building or maintaining a separate authentication system.
+
+These providers give developers more ways to support users signing in with their existing accounts, particularly when building AI tools, developer platforms, or region-specific applications.
+
+All six are available on Appwrite Cloud and in self-hosted Appwrite 2.4 or later.
+
+[Explore the new OAuth2 providers](/blog/post/announcing-new-oauth2-providers)
+
+# Six-digit codes for email verification and password recovery
+
+![Six-digit codes for email verification and password recovery](/images/blog/october-product-update-passkeys-mcp-and-more/verification-and-recovery-codes.avif)
+
+Email verification and password recovery can now happen entirely inside your application.
+
+Appwrite Auth supports six-digit verification and recovery codes as an alternative to email links.
+
+Each code expires after 15 minutes, can only be used once, and supports an optional security phrase.
+
+This removes the need to configure redirect pages or deep links, particularly for mobile and desktop applications.
+
+Available on Appwrite Cloud and self-hosted Appwrite 2.3 or later.
+
+[Read more about verification and recovery codes](/blog/post/announcing-verification-and-recovery-codes)
+
+# Email triggers for Appwrite Functions
+
+![Email triggers for Appwrite Functions](/images/blog/october-product-update-passkeys-mcp-and-more/function-email-triggers.avif)
+
+Appwrite Functions can now execute automatically when an email arrives.
+
+Each function gets a built-in email address, with the option to connect a custom domain using MX and TXT records.
+
+Appwrite handles incoming email parsing and passes the email content as JSON, along with attachments as files, directly to your function.
+
+You can use email triggers to automate workflows such as processing support requests, extracting invoice information, or handling monitoring alerts without setting up a separate inbound email provider or webhook endpoint.
+
+Email triggers are available on Appwrite Cloud.
+
+[Learn more about email triggers](/blog/post/announcing-function-email-triggers)
+
+# Schedule Functions with intervals
+
+![Schedule Functions with intervals](/images/blog/october-product-update-passkeys-mcp-and-more/function-intervals.avif)
+
+Appwrite Functions now support interval-based scheduling alongside existing cron expressions.
+
+Instead of specifying the exact time a function should run, you can define how frequently it should execute, such as every 15 minutes or every hour.
+
+Appwrite automatically distributes executions across their intervals rather than starting every scheduled function simultaneously.
+
+This is useful for recurring workflows such as data synchronization, cache refreshes, background processing, and cleanup jobs.
+
+Cron scheduling remains available for tasks that need to run at specific times.
+
+[Read more about Function intervals](/blog/post/announcing-function-intervals)
+
+# Real-time events for the Appwrite MCP server
+
+![Real-time events for the Appwrite MCP server](/images/blog/october-product-update-passkeys-mcp-and-more/mcp-events.avif)
+
+The Appwrite MCP server now supports MCP Events, allowing compatible AI agents to subscribe to changes in your Appwrite projects.
+
+Agents can receive notifications when:
+
+* New users register
+* Function executions fail or finish
+* Functions and Sites finish deploying
+* New database rows are created
+* Files are uploaded to Storage
+
+Instead of repeatedly checking for changes, agents can react as events happen.
+
+MCP Events supports both streaming for locally running agents and signed webhooks for hosted agents, making it possible to build more responsive agent-driven workflows.
+
+[Explore Appwrite MCP Events](/blog/post/announcing-mcp-events)
+
+# Appwrite partners with Entire to simplify deployments
+
+![Appwrite partners with Entire to simplify deployments](/images/blog/october-product-update-passkeys-mcp-and-more/appwrite-entire-partnership.avif)
+
+Appwrite partnered with Entire to bring Git-based deployments to agent-driven development workflows.
+
+Entire is now supported as a Git provider on Appwrite Cloud, allowing developers to connect their Entire repositories and deploy Appwrite Sites and Functions directly from them.
+
+With this integration, you can:
+
+* Automatically build and deploy changes from your production branch
+* Generate private preview links for Sites deployed from other branches
+* View deployment results directly on Entire commits
+* Configure branch and path filters to control builds
+
+Entire keeps coding-agent sessions connected to the commits they produce, while Appwrite handles building and deploying the application.
+
+The integration is available on Appwrite Cloud.
+
+[Read more about the Appwrite and Entire partnership](/blog/post/announcing-appwrite-entire-partnership)
+
+# Self-host Appwrite on Kubernetes with Helm
+
+![Self-host Appwrite on Kubernetes with Helm](/images/blog/october-product-update-passkeys-mcp-and-more/appwrite-helm-chart.avif)
+
+Developers can now self-host Appwrite on Kubernetes using the official Appwrite Helm chart.
+
+The chart provides a Kubernetes-native deployment setup with support for:
+
+* Built-in or managed PostgreSQL, Redis, and ClickHouse
+* S3-compatible object storage
+* Functions and Sites running inside your Kubernetes cluster
+* Multiple worker configurations for background workloads
+* Automated data migrations during upgrades
+
+You can install Appwrite with `helm install` and manage upgrades using `helm upgrade`, without maintaining your own Kubernetes manifests for the platform.
+
+[Explore the official Appwrite Helm chart](/blog/post/announcing-appwrite-helm-chart)
+
+# More precise IP geolocation with Premium Geo DB
+
+![More precise IP geolocation with Premium Geo DB](/images/blog/october-product-update-passkeys-mcp-and-more/premium-geo-db.avif)
+
+Premium Geo DB is a new add-on for Appwrite Cloud projects, providing more detailed IP geolocation and network information.
+
+It adds data such as city, state, postal code, time zone, ISP, autonomous system number, and connection type.
+
+This additional information is available across Appwrite Firewall, the Locale API, project usage statistics, and authentication sessions.
+
+Premium Geo DB also introduces 13 additional Firewall condition attributes and a preset to block API traffic from hosting and datacenter networks.
+
+The add-on is available on the Pro plan for $10 per project per month.
+
+[Read more about Premium Geo DB](/blog/post/announcing-premium-geo-db)
+
+# Faster list queries with more efficient caching
+
+![Faster list queries with more efficient caching](/images/blog/october-product-update-passkeys-mcp-and-more/faster-list-caching.avif)
+
+Appwrite now uses compact binary serialization for its key-value cache instead of JSON.
+
+In benchmarks, the new format delivered:
+
+* Up to **69% less memory usage** for cached pages
+* Up to **29% more cached list requests per second**
+* Lower latency when retrieving cached query results
+
+The improvements also extend to cached sessions, API keys, and table schemas.
+
+The binary cache format ships with self-hosted Appwrite 2.3 and requires no code changes or manual migration.
+
+[Read more about faster list caching](/blog/post/faster-list-caching-binary-format)
+
+# Android SDK now supports R8 code shrinking
+
+![Android SDK now supports R8 code shrinking](/images/blog/october-product-update-passkeys-mcp-and-more/android-sdk-r8-support.avif)
+
+Appwrite Android SDK 29.0.0 now supports R8 full mode, allowing developers to optimize Android release builds without breaking essential SDK functionality.
+
+The update ensures that database queries, Realtime events, and saved authentication sessions continue working correctly in shrunk builds.
+
+The SDK also includes its own R8 rules, reducing the need for manual configuration.
+
+This update helps Android developers prepare for Google Play's February 2027 code optimization requirements.
+
+[Read more about Android R8 support](/blog/post/android-sdk-r8-support)
+
+# Changes to default deployment retention
+
+![Changes to default deployment retention](/images/blog/october-product-update-passkeys-mcp-and-more/default-deployment-retention.avif)
+
+Starting November 5, 2026, inactive Appwrite Cloud Sites and Functions deployments will be automatically cleaned up after 30 days by default.
+
+This helps prevent old deployments from consuming unnecessary project storage, especially on the Free plan.
+
+Active deployments and deployments connected to custom domains will remain available regardless of their age.
+
+Developers who need longer deployment history can configure retention settings, with maximum periods depending on their plan.
+
+**If you want to retain inactive deployments for longer than 30 days, update your retention settings before November 5.**
+
+[Learn more about deployment retention](/blog/post/default-deployment-retention)
+
+# What's next
+
+October brought updates across Appwrite Auth, Functions, MCP, Storage, performance, and self-hosting, giving developers more ways to build and manage their applications.
+
+We'll keep improving the platform and introducing new capabilities in the coming months.
+
+For the latest releases, explore the [Appwrite Changelog](/changelog), or head to the [Appwrite Console](https://cloud.appwrite.io/) to try out what's new.
