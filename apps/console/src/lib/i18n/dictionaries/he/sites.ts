@@ -176,10 +176,10 @@ export const heSitesDictionary: Record<string, string> = {
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
-  'Renewal blocked': 'חידוש התעודה חסום',
-  "The certificate is waiting on a DNS record. Add the record named in the logs below where your domain's DNS is managed, and the certificate is issued once it exists.":
-    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים למטה במקום שבו מנוהל ה-DNS של הדומיין, והתעודה תונפק ברגע שהיא קיימת.',
   'Certificate blocked': 'הנפקת התעודה חסומה',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים ולאחר מכן נסו שוב.',
+  'Renewal blocked': 'חידוש התעודה חסום',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
   "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
@@ -188,8 +188,6 @@ export const heSitesDictionary: Record<string, string> = {
     'צפו בלוגים לפרטים נוספים. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
   'Renewal is waiting on a DNS record. View logs to see which record to add.':
     'חידוש התעודה ממתין לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
-  'The certificate is waiting on a DNS record. View logs to see which record to add.':
-    'הנפקת התעודה ממתינה לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
 
   // Site layout and settings shell
   Deployments: 'פריסות',

@@ -322,8 +322,8 @@ export function getDomainStatusBadgeConfig(status: string): {
 }
 
 /**
- * Get proxy rule status badge config for rendering. A first certificate
- * blocked on a DNS record shows as a warning. A verified rule shows its
+ * Get proxy rule status badge config for rendering. A certificate that failed
+ * because it waits on a DNS record shows as blocked. A verified rule shows its
  * certificate only when the developer has to act on it: the renewal failed,
  * is blocked on a DNS record, or the certificate expired. A healthy
  * certificate keeps the plain Verified badge, and so does a rule from a
@@ -341,11 +341,11 @@ export function getRuleStatusBadgeConfig(
   expireAt?: Date
 } {
   const config = getDomainStatusBadgeConfig(rule.status)
-  if (rule.status === 'verifying' && rule.certificateStatus === 'blocked') {
+  if (rule.status === 'unverified' && rule.certificateStatus === 'blocked') {
     return {
       variant: 'warning',
       label: 'Certificate blocked',
-      hint: 'The certificate is waiting on a DNS record. View logs to see which record to add.',
+      hint: 'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.',
     }
   }
   if (rule.status !== 'verified') return config

@@ -6,10 +6,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { BuildLogsCard } from '@/components/global/shared/BuildLogsCard'
 import { useT } from '@/lib/i18n/translate'
-import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
 import type { Models } from '@appwrite.io/console'
 
 function normalizeLogs(logs: unknown): string {
@@ -36,10 +35,6 @@ export function ViewLogsDialog({
 }: ViewLogsDialogProps) {
   const t = useT()
   const buildLogs = normalizeLogs(rule.logs)
-  // Issuance waiting on a DNS record is not in progress
-  const blocked =
-    rule.status === 'verifying' &&
-    getRuleStatusBadgeConfig(rule).variant === 'warning'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -50,20 +45,7 @@ export function ViewLogsDialog({
         <div className="border-t border-border" />
 
         <div className="px-6 py-4 overflow-y-auto flex-1 min-h-0 space-y-4">
-          {blocked && (
-            <Alert
-              variant="default"
-              className="border-amber-500/30 bg-amber-500/10 [&>svg]:text-amber-500"
-            >
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-[13px] text-muted-foreground">
-                {t(
-                  "The certificate is waiting on a DNS record. Add the record named in the logs below where your domain's DNS is managed, and the certificate is issued once it exists.",
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-          {rule.status === 'verifying' && !blocked && (
+          {rule.status === 'verifying' && (
             <Alert
               variant="default"
               className="border-blue-500/30 bg-blue-500/5 [&>svg]:text-blue-500"
