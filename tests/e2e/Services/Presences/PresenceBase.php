@@ -358,8 +358,9 @@ trait PresenceBase
             $this->markTestSkipped('Presence list cache invalidation is exercised on the server side.');
         }
 
-        $userOne = Id::unique();
-        $userTwo = Id::unique();
+        // A presence must reference a real user, so create two.
+        $userOne = $this->createPresenceUser();
+        $userTwo = $this->createPresenceUser();
         $presenceOne = $this->setupPresence(['userId' => $userOne, 'status' => 'online']);
         $query = [Query::equal('userId', [$userOne, $userTwo])->toString()];
 
@@ -385,6 +386,26 @@ trait PresenceBase
         // The cache is gone, so the fresh list now reflects the second presence too.
         $fresh = $this->listPresencesCached($query);
         $this->assertContains($presenceTwo['$id'], \array_column($fresh['body']['presences'], '$id'));
+    }
+
+    private function createPresenceUser(): string
+    {
+        $user = $this->client->call(
+            Client::METHOD_POST,
+            '/users',
+            \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()),
+            [
+                'userId' => Id::unique(),
+                'email' => \uniqid() . '@example.com',
+                'password' => 'password',
+            ]
+        );
+        $this->assertSame(201, $user['headers']['status-code'], \json_encode($user['body']));
+
+        return $user['body']['$id'];
     }
 
     /**
