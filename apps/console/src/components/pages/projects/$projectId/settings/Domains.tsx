@@ -77,7 +77,7 @@ export function Domains({
     null,
   )
 
-  const { rules, isLoading } = useProjectDomains(
+  const { rules, isLoading, isFetching, refetch } = useProjectDomains(
     projectId,
     region,
     searchValueProp,
@@ -356,6 +356,8 @@ export function Domains({
             open={viewLogsOpen}
             onOpenChange={setViewLogsOpen}
             rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            onRefresh={() => void refetch()}
+            isRefreshing={isFetching}
           />
 
           <DeleteDomainDialog
