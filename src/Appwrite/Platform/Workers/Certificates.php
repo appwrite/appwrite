@@ -450,8 +450,11 @@ class Certificates extends Action
                     $certificate->setAttribute('status', Status::FAILED);
                 }
 
-                // Send email to security email
-                $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
+                // Send email to security email. Past the attempts maintenance retries, a certificate
+                // about to expire is checked twice a day: one more email for that, not one per check.
+                if ($attempts <= self::MAX_GENERATION_ATTEMPTS + 1) {
+                    $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
+                }
 
                 throw $e;
             }
