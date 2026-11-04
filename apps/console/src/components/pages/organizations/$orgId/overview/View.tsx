@@ -1915,7 +1915,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Signup no longer creates a project, so an organization without one opens
   // the create dialog, where the region closest to the visitor is preselected.
   // Once per organization per visit: dismissing it leaves the empty state.
-  const firstProjectPromptedOrgRef = useRef<string | null>(null)
+  const firstProjectPromptedOrgsRef = useRef(new Set<string>())
   useEffect(() => {
     if (
       !orgId ||
@@ -1924,11 +1924,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       !showsFirstRunProjectsEmptyState ||
       !canManageProjects ||
       zeroAccount ||
-      firstProjectPromptedOrgRef.current === orgId
+      firstProjectPromptedOrgsRef.current.has(orgId)
     ) {
       return
     }
-    firstProjectPromptedOrgRef.current = orgId
+    firstProjectPromptedOrgsRef.current.add(orgId)
     setCreateProjectDialogOpen(true)
   }, [
     activeTab,
