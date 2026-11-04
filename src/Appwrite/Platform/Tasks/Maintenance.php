@@ -19,6 +19,13 @@ use Utopia\Validator\WhiteList;
 
 class Maintenance extends Action
 {
+    /**
+     * How close to expiry a certificate is checked whatever its renew date or
+     * attempts say. LetsEncrypt renews from 30 days before expiry and Fastly from
+     * about ten, so a certificate this close has stopped renewing.
+     */
+    private const CERTIFICATE_RENEWAL_DEADLINE = 60 * 60 * 24 * 7;
+
     public static function getName(): string
     {
         return 'maintenance';
@@ -135,6 +142,24 @@ class Maintenance extends Action
             Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
+
+        // Out of attempts or without a renew date, a renewal is never scheduled
+        // again and its certificate would expire silently. One about to expire is
+        // checked regardless, so the worker renews it or reports why it cannot.
+        $due = \array_map(fn (Document $certificate) => $certificate->getId(), $documents);
+        $expiring = $dbForPlatform->find('certificates', [
+            Query::greaterThan('expireDate', $time),
+            Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
+            Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
+            Query::orderAsc('expireDate'),
+            Query::limit(100),
+        ]);
+
+        foreach ($expiring as $certificate) {
+            if (!\in_array($certificate->getId(), $due, true)) {
+                $documents[] = $certificate;
+            }
+        }
 
         if (\count($documents) === 0) {
             Console::info("[{$time}] No certificates for renewal.");

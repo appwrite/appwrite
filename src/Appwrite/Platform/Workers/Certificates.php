@@ -356,6 +356,8 @@ class Certificates extends Action
 
                 // The provider owns the renewal and has not finished it; issuing again would not help
                 if ($status === Status::EXPIRING) {
+                    // It still serves, so a rule a renewal left generating is verified again, and renewal checks report it
+                    $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                     $expireDate = $this->getExpireDate($certificates, $domain->get(), $domainType, $certificate);
                     $date = \date('H:i:s');
                     if ($expireDate !== null && \strtotime($expireDate) <= \time()) {
