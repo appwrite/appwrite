@@ -20,10 +20,18 @@ export function canViewRuleLogs(rule: {
 }
 
 /**
- * Whether verification of a rule can be retried
+ * Whether a rule can be retried: its verification has not succeeded, or it is
+ * verified and its certificate needs action, as its status badge shows: the
+ * renewal failed or is blocked, or the certificate expired.
  */
-export function canRetryRule(status: string): boolean {
-  return status === 'created' || status === 'unverified'
+export function canRetryRule(
+  rule: { status: string; expireAt?: string; certificateStatus?: string },
+  now: Date = new Date(),
+): boolean {
+  if (rule.status === 'created' || rule.status === 'unverified') return true
+  if (rule.status !== 'verified') return false
+  if (['failed', 'blocked'].includes(rule.certificateStatus ?? '')) return true
+  return !!rule.expireAt && new Date(rule.expireAt).getTime() < now.getTime()
 }
 
 /**

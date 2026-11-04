@@ -105,7 +105,8 @@ export function VerifyDomain({
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end gap-2">
-          {onReconfigure && (
+          {/* Changing a verified domain would delete one that still serves */}
+          {onReconfigure && rule.status !== 'verified' && (
             <Button
               type="button"
               variant="outline"

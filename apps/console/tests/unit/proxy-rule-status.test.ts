@@ -144,10 +144,49 @@ describe('canViewRuleLogs', () => {
 })
 
 describe('canRetryRule', () => {
-  test('retries only a rule whose verification or certificate failed', () => {
-    expect(canRetryRule('created')).toBe(true)
-    expect(canRetryRule('unverified')).toBe(true)
-    expect(canRetryRule('verifying')).toBe(false)
-    expect(canRetryRule('verified')).toBe(false)
+  test('retries a rule whose verification has not succeeded', () => {
+    expect(canRetryRule({ status: 'created' }, NOW)).toBe(true)
+    expect(canRetryRule({ status: 'unverified' }, NOW)).toBe(true)
+    expect(canRetryRule({ status: 'verifying' }, NOW)).toBe(false)
+  })
+
+  test('retries a verified rule whose renewal failed or is blocked, or whose certificate expired', () => {
+    for (const certificateStatus of ['failed', 'blocked']) {
+      expect(
+        canRetryRule(
+          {
+            status: 'verified',
+            expireAt: expiresIn(DAY_MS),
+            certificateStatus,
+          },
+          NOW,
+        ),
+      ).toBe(true)
+    }
+    expect(
+      canRetryRule(
+        { status: 'verified', expireAt: expiresIn(-1), certificateStatus: '' },
+        NOW,
+      ),
+    ).toBe(true)
+  })
+
+  test('does not retry a healthy certificate', () => {
+    for (const certificateStatus of ['issued', 'renewing', 'expiring', '']) {
+      expect(
+        canRetryRule(
+          {
+            status: 'verified',
+            expireAt: expiresIn(DAY_MS),
+            certificateStatus,
+          },
+          NOW,
+        ),
+      ).toBe(false)
+    }
+    expect(canRetryRule({ status: 'verified' }, NOW)).toBe(false)
+    expect(
+      canRetryRule({ status: 'verified', expireAt: 'not a date' }, NOW),
+    ).toBe(false)
   })
 })

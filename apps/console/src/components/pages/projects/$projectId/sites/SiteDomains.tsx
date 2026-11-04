@@ -25,7 +25,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
-import { canViewRuleLogs, getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import {
   useSiteDomains,
   useProject,
@@ -201,8 +205,7 @@ export function SiteDomainsView() {
                                   {t('View logs')}
                                 </Button>
                               )}
-                            {(ruleData.status === 'created' ||
-                              ruleData.status === 'unverified') && (
+                            {canRetryRule(ruleData) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -233,8 +236,7 @@ export function SiteDomainsView() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {(ruleData.status === 'created' ||
-                                  ruleData.status === 'unverified') && (
+                                {canRetryRule(ruleData) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(ruleData)}
                                   >

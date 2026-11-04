@@ -252,7 +252,7 @@ export function View() {
                                   {t('View logs')}
                                 </Button>
                               )}
-                            {canRetryRule(rule.status) && (
+                            {canRetryRule(rule) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -286,7 +286,7 @@ export function View() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {canRetryRule(rule.status) && (
+                                {canRetryRule(rule) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(rule)}
                                   >

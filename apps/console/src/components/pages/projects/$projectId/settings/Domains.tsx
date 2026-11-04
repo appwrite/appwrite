@@ -225,7 +225,7 @@ export function Domains({
                                 {t('View logs')}
                               </Button>
                             )}
-                          {canRetryRule(rule.status) && (
+                          {canRetryRule(rule) && (
                             <Button
                               variant="link"
                               size="sm"
@@ -257,7 +257,7 @@ export function Domains({
                                   <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
-                              {canRetryRule(rule.status) && (
+                              {canRetryRule(rule) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
