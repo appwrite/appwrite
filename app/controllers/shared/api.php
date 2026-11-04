@@ -604,9 +604,11 @@ Http::init()
         $request->setUser($user);
 
         $roles = $authorization->getRoles();
-        $shouldCheckAbuse = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled'
-            && ! $user->isKey($roles)
-            && ! $user->isPrivileged($roles);
+        $abuseEnabled = System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+        // A key or a privileged console caller is trusted with throughput, so the limits that only pace legitimate
+        // work are read for its headers and never counted. A limit declared for everyone still counts for it:
+        // being trusted to call an endpoint is not the same as being trusted to guess the secret it takes.
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
 
         $increasedLimitProjects = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS', ''))));
         $multiplier = \in_array($project->getId(), $increasedLimitProjects, true) ? 100 : 1;
@@ -619,6 +621,7 @@ Http::init()
 
         foreach ($limits as $limit) {
             $max = $limit->limit * $multiplier;
+            $shouldCheckAbuse = $abuseEnabled && $limit->counts($trusted);
 
             try {
                 $isRateLimited = $timelimit($limit->key($values), $max, $limit->seconds, function (TimeLimit $timeLimit) use ($response, $shouldCheckAbuse, &$closestLimit): bool {
@@ -1009,13 +1012,16 @@ Http::shutdown()
     ->action(function (Route $route, Request $request, Document $project, User $user, callable $timelimit, Authorization $authorization, array $pathParams) {
         // Shutdown hooks run only when the request did not throw, so it is not a failure: give back the hits its
         // failure limits reserved on arrival. A request that failed never gets here and keeps them.
-        $roles = $authorization->getRoles();
-        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled' || $user->isKey($roles) || $user->isPrivileged($roles)) {
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
             return;
         }
 
+        $roles = $authorization->getRoles();
+        $trusted = $user->isKey($roles) || $user->isPrivileged($roles);
+
+        // Only the limits init counted for this caller reserved anything, so only those have a hit to give back.
         /** @var list<Limit> $limits */
-        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures);
+        $limits = \array_filter($route->getLabel('abuse', []), fn (Limit $limit): bool => $limit->failures && $limit->counts($trusted));
         if ($limits === []) {
             return;
         }
