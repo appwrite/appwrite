@@ -14,6 +14,7 @@ import type { Models } from '@appwrite.io/console'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from './VerifyDomainContent'
 
@@ -64,8 +65,8 @@ export function RetryDomainDialog({
         toast.success(t('Verification in progress'))
         onRetrySuccess()
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
