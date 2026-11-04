@@ -13,6 +13,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -126,10 +127,11 @@ class Update extends Action
             ->inject('publisherForMessaging')
             ->inject('response')
             ->inject('platform')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform, Request $request)
     {
         $data = $this->normalizeJsonObject($data);
 
@@ -294,6 +296,10 @@ class Update extends Action
         }
 
         if (!\is_null($image)) {
+            if (!\in_array('files.read', $request->getScopes(), true)) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
+            }
+
             [$bucketId, $fileId] = CompoundUID::parse($image);
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);

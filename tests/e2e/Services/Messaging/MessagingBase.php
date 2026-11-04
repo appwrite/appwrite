@@ -2577,6 +2577,40 @@ trait MessagingBase
 
         $fileId = $file['body']['$id'];
 
+        // The image mints a signed download URL for a project file, so a messages.write key that
+        // cannot read files must be refused rather than have its scope widened to Storage reads.
+        $withoutFilesRead = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $withoutFilesRead['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $withoutFilesRead['body']['type']);
+
+        // Holding files.read opens the gate.
+        $withFilesRead = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write', 'files.read']),
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $withFilesRead['headers']['status-code']);
+
         // Create Push
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
             'content-type' => 'application/json',
@@ -2632,6 +2666,19 @@ trait MessagingBase
         $this->assertEqualsWithDelta(\time() + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
 
         $scheduledAt = \time() + 60 * 60 * 24 * 2;
+
+        // The update path mints the same signed URL, so it enforces files.read too.
+        $updateWithoutFilesRead = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $updateWithoutFilesRead['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $updateWithoutFilesRead['body']['type']);
 
         $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
             'content-type' => 'application/json',
