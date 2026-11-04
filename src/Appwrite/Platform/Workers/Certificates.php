@@ -318,7 +318,7 @@ class Certificates extends Action
         // Set once DNS has passed on a delayed provider, so a failure after that can be retried
         $awaitingProvider = false;
 
-        // A renewal: the domain already serves a certificate that is still valid
+        // A renewal: the domain already serves a certificate. Retries keep the rule verified, so this holds on every attempt
         $renewing = $rule->getAttribute('status') === RULE_STATUS_VERIFIED;
 
         try {
@@ -409,11 +409,11 @@ class Certificates extends Action
             if ($awaitingProvider && $attempts < self::MAX_GENERATION_ATTEMPTS) {
                 // Nothing retries 'unverified', so keep the rule generating while attempts remain.
                 // The interval retries it, so this is a wait, not a worker error.
-                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
+                $rule->setAttribute('status', $renewing ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATING);
                 Console::warning('Certificate for ' . $domain->get() . ' will be retried: ' . $e->getMessage());
             } else {
-                // A failed renewal stays verified: 'unverified' rules are never renewed again
-                $rule->setAttribute('status', $renewing ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+                // A failed renewal stays verified while maintenance retries it, then shows as failed
+                $rule->setAttribute('status', $renewing && $attempts < self::MAX_GENERATION_ATTEMPTS ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
 
                 // Send email to security email
                 $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
