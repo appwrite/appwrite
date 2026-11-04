@@ -312,6 +312,11 @@ abstract class Response
     private mixed $brotliEncoder = null;
 
     /**
+     * Incremental zstd context a streamed body was negotiated to
+     */
+    private ?\Zstd\Compress\Context $zstdEncoder = null;
+
+    /**
      * Response constructor.
      *
      * @param  float  $time response start time
@@ -764,6 +769,7 @@ abstract class Response
         $body = match (true) {
             $this->brotliEncoder !== null => \brotli_compress_add($this->brotliEncoder, $body, $end ? BROTLI_FINISH : BROTLI_FLUSH),
             $this->deflateEncoder !== null => \deflate_add($this->deflateEncoder, $body, $end ? ZLIB_FINISH : ZLIB_SYNC_FLUSH),
+            $this->zstdEncoder !== null => \zstd_compress_add($this->zstdEncoder, $body, $end),
             default => $body,
         };
 
@@ -798,9 +804,9 @@ abstract class Response
             return;
         }
 
-        // Only the encoders with an incremental API (zstd's is too new to rely on); the library fills in the rest of what is supported
+        // Only the encoders with an incremental API; the library fills in the rest of what is supported
         $accepted = \array_filter(\explode(',', $this->acceptEncoding), fn (string $encoding): bool => match (\strtolower(\trim(\explode(';', $encoding)[0]))) {
-            Compression::ZSTD => false,
+            Compression::ZSTD => \function_exists('zstd_compress_init'),
             'br', Compression::BROTLI => \function_exists('brotli_compress_init'),
             default => true,
         });
@@ -809,6 +815,7 @@ abstract class Response
 
         $encoder = match (true) {
             $algorithm instanceof Brotli => \brotli_compress_init(Http::COMPRESSION_BROTLI_LEVEL_DEFAULT),
+            $algorithm instanceof Zstd => \zstd_compress_init(Http::COMPRESSION_ZSTD_LEVEL_DEFAULT),
             $algorithm instanceof GZIP => \deflate_init(ZLIB_ENCODING_GZIP),
             $algorithm instanceof Deflate => \deflate_init(ZLIB_ENCODING_RAW),
             default => false,
@@ -820,6 +827,8 @@ abstract class Response
 
         if ($encoder instanceof \DeflateContext) {
             $this->deflateEncoder = $encoder;
+        } elseif ($encoder instanceof \Zstd\Compress\Context) {
+            $this->zstdEncoder = $encoder;
         } else {
             $this->brotliEncoder = $encoder;
         }
