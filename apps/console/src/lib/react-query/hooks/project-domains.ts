@@ -107,7 +107,7 @@ export function useProjectDomains(
   region?: string,
   search?: string,
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
     projectDomainsQueryOptions(projectId, region, search),
   )
 
@@ -115,6 +115,7 @@ export function useProjectDomains(
     rules: data?.rules || [],
     total: data?.total || 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }
