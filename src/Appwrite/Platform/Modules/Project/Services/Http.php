@@ -269,6 +269,6 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
-        $this->addAction('updateProjectOAuth2Vipps', UpdateOAuth2Vipps::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
     }
 }
