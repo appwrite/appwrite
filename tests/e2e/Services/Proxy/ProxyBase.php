@@ -581,6 +581,130 @@ trait ProxyBase
         $this->cleanupFunction($functionId);
     }
 
+    public function testUpdateSiteRule(): void
+    {
+        $first = $this->setupSite();
+        $second = $this->setupSite();
+        $ruleId = $this->setupSiteRule(\uniqid() . '-site-update.custom.localhost', $first['siteId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $rule = $this->updateSiteRule($ruleId, $second['siteId']);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame($second['siteId'], $rule['body']['deploymentResourceId']);
+        $this->assertSame($second['deploymentId'], $rule['body']['deploymentId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->updateSiteRule($ruleId, $second['siteId'], 'dev');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $rule['body']['type']);
+        $this->assertSame($second['deploymentId'], $this->getRule($ruleId)['body']['deploymentId']);
+
+        $rule = $this->updateSiteRule($ruleId, 'missing');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_resource_not_found', $rule['body']['type']);
+
+        $rule = $this->updateFunctionRule($ruleId, $second['siteId']);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $rule = $this->updateSiteRule('missing', $second['siteId']);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $this->cleanupSite($first['siteId']);
+        $this->cleanupSite($second['siteId']);
+    }
+
+    public function testUpdateFunctionRule(): void
+    {
+        $first = $this->setupFunction();
+        $second = $this->setupFunction();
+        $domain = \uniqid() . '-function-update.custom.localhost';
+        $ruleId = $this->setupFunctionRule($domain, $first['functionId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $rule = $this->updateFunctionRule($ruleId, $second['functionId']);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame($second['functionId'], $rule['body']['deploymentResourceId']);
+        $this->assertSame($second['deploymentId'], $rule['body']['deploymentId']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+        $this->assertEventually(function () use ($proxyClient, $second) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/ping');
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($second['functionId'], $response['body']['APPWRITE_FUNCTION_ID']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->updateFunctionRule($ruleId, $second['functionId'], 'dev');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $rule['body']['type']);
+
+        $rule = $this->updateFunctionRule($ruleId, 'missing');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_resource_not_found', $rule['body']['type']);
+
+        $rule = $this->updateSiteRule($ruleId, $second['functionId']);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $this->cleanupFunction($first['functionId']);
+        $this->cleanupFunction($second['functionId']);
+    }
+
+    public function testUpdateRedirectRule(): void
+    {
+        $siteId = $this->setupSite()['siteId'];
+        $domain = \uniqid() . '-redirect-update.custom.localhost';
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
+
+        /**
+         * Test for SUCCESS
+         */
+        $rule = $this->updateRedirectRule($ruleId, 'https://jsonplaceholder.typicode.com/todos/2', 307, 'site', $siteId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('https://jsonplaceholder.typicode.com/todos/2', $rule['body']['redirectUrl']);
+        $this->assertSame(307, $rule['body']['redirectStatusCode']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+            $this->assertSame(307, $response['headers']['status-code']);
+            $this->assertSame('https://jsonplaceholder.typicode.com/todos/2', $response['headers']['location']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->updateRedirectRule($ruleId, 'https://jsonplaceholder.typicode.com/todos/2', 307, 'function', 'missing');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_resource_not_found', $rule['body']['type']);
+
+        $rule = $this->updateRedirectRule($ruleId, 'https://jsonplaceholder.typicode.com/todos/2', 303, 'site', $siteId);
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        $rule = $this->updateSiteRule($ruleId, $siteId);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $this->cleanupSite($siteId);
+    }
+
     public function testUpdateRule(): void
     {
         // Create function appwrite-network domain

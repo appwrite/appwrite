@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { AgentMarks } from '@/components/global/shared/connect-agent-cta/primitives'
+import { McpIcon } from '@/components/global/shared/McpIcon'
 import { MCPSection } from '@/components/pages/projects/$projectId/shared/MCPSection'
 import { useProjectConnectDialog } from '@/components/pages/projects/$projectId/shared/ProjectConnectDialogContext'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
@@ -27,7 +29,7 @@ import {
   analyticsAttrs,
   getSidebarNavAnalyticsAction,
 } from '@/lib/analytics-actions'
-import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { formatApiEndpointDisplay, getApiEndpoint } from '@/lib/appwrite/sdk'
 import {
   canSeeProjectNavItem,
   canShowAgentMcpConnectCta,
@@ -132,6 +134,73 @@ function ExploreAppwrite({ projectId }: { projectId: string }) {
   )
 }
 
+function ProjectIdEndpointChips({
+  projectId,
+  endpoint,
+}: {
+  projectId: string
+  endpoint: string
+}) {
+  const t = useT()
+  const [copiedField, setCopiedField] = useState<string | null>(null)
+  const endpointDisplay = formatApiEndpointDisplay(endpoint)
+
+  const copyToClipboard = (text: string, field: string) => {
+    void navigator.clipboard.writeText(text)
+    setCopiedField(field)
+    window.setTimeout(() => setCopiedField(null), 2000)
+  }
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <div className="flex items-center gap-2 overflow-hidden">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => copyToClipboard(projectId, 'projectId')}
+              className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <span className="max-w-[120px] truncate sm:max-w-[180px]">
+                {projectId}
+              </span>
+              {copiedField === 'projectId' ? (
+                <Check className="h-3 w-3 shrink-0 text-emerald-500" />
+              ) : (
+                <Copy className="h-3 w-3 shrink-0" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>{t('Copy project ID')}</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={() => copyToClipboard(endpoint, 'endpoint')}
+              className="flex min-w-0 cursor-pointer items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <span className="max-w-[100px] truncate sm:max-w-[160px]">
+                {endpointDisplay}
+              </span>
+              {copiedField === 'endpoint' ? (
+                <Check className="h-3 w-3 shrink-0 text-emerald-500" />
+              ) : (
+                <Copy className="h-3 w-3 shrink-0" />
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>{t('Copy API endpoint')}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
+  )
+}
+
 export function View() {
   const t = useT()
   const navigate = useNavigate()
@@ -154,14 +223,18 @@ export function View() {
 
   const connected = hasAccountMcpAgentConnected(consents)
   const projectName = project?.name ?? projectId ?? ''
+  const endpoint = useMemo(
+    () => getApiEndpoint(project?.region),
+    [project?.region],
+  )
   const connectPrompt = useMemo(
     () =>
       buildConnectMcpPrompt({
         projectId: projectId ?? '',
         projectName,
-        endpoint: getApiEndpoint(project?.region),
+        endpoint,
       }),
-    [projectId, projectName, project?.region],
+    [projectId, projectName, endpoint],
   )
 
   if (!canShow || !projectConnect || !projectId) {
@@ -181,6 +254,15 @@ export function View() {
 
   return (
     <div className="relative flex h-full min-h-0 flex-col">
+      <div className="legacy-theme-header">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+          <h1 className="min-w-0 truncate text-[17px] font-medium text-foreground">
+            {t('Agents')}
+          </h1>
+          <ProjectIdEndpointChips projectId={projectId} endpoint={endpoint} />
+        </div>
+        <div className="border-b border-border" />
+      </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-12 sm:pb-14">
         <div className="mx-auto my-auto flex w-full max-w-3xl flex-col items-center px-4 py-12 sm:px-6 sm:py-20">
           <AgentMarks size="lg" />
@@ -200,29 +282,34 @@ export function View() {
               'Paste this prompt into any coding agent. It follows a public setup page to install Appwrite MCP for this project.',
             )}
           </p>
-          <Button
-            type="button"
-            variant="brandCta"
-            size="lg"
-            className="mt-10 h-11 min-w-[14rem] px-6 text-[15px]"
-            onClick={() => void handleCopyPrompt()}
-            {...analyticsAttrs('copy-connect-agent-mcp-prompt')}
-          >
-            {copied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-            {t('Copy prompt')}
-          </Button>
-          <button
-            type="button"
-            className="mt-4 cursor-pointer text-[11px] text-muted-foreground/80 underline-offset-2 hover:text-muted-foreground hover:underline"
-            onClick={() => projectConnect.openConnect('mcp')}
-            {...analyticsAttrs('connect-agent-mcp-cta')}
-          >
-            {t('Or install Appwrite MCP manually')}
-          </button>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Button
+              type="button"
+              variant="brandCta"
+              size="lg"
+              className="h-11 min-w-[14rem] px-6 text-[15px]"
+              onClick={() => void handleCopyPrompt()}
+              {...analyticsAttrs('copy-connect-agent-mcp-prompt')}
+            >
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {t('Copy prompt')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              className="h-11 px-6 text-[15px]"
+              onClick={() => projectConnect.openConnect('mcp')}
+              {...analyticsAttrs('connect-agent-mcp-cta')}
+            >
+              <McpIcon className="h-4 w-4" />
+              {t('Install Appwrite MCP')}
+            </Button>
+          </div>
           <div className="mt-16 w-full">
             <MCPSection
               compact
