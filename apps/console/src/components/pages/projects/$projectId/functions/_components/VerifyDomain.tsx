@@ -13,6 +13,7 @@ import {
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import { toast } from 'sonner'
@@ -81,8 +82,8 @@ export function VerifyDomain({
         onOpenChange(false)
         onVerifySuccess()
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
