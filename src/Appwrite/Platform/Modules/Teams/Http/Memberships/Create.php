@@ -363,6 +363,9 @@ class Create extends Action
                         ], 1)
                     );
                     if ($membershipCount === 0) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocuments('targets', [
+                            Query::equal('userInternalId', [$invitee->getSequence()]),
+                        ]));
                         $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
                     }
                 }
