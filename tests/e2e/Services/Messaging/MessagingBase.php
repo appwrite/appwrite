@@ -2680,6 +2680,20 @@ trait MessagingBase
         $this->assertEquals(401, $updateWithoutFilesRead['headers']['status-code']);
         $this->assertEquals('general_unauthorized_scope', $updateWithoutFilesRead['body']['type']);
 
+        // The stored image is re-minted on any update, so a PATCH that omits image but changes
+        // another field on a message that already has one is refused the same way.
+        $updateStoredImage = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'body' => 'Updated body without resending the image',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $updateStoredImage['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $updateStoredImage['body']['type']);
+
         $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

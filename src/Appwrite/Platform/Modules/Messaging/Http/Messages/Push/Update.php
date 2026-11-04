@@ -296,10 +296,6 @@ class Update extends Action
         }
 
         if (!\is_null($image)) {
-            if (!\in_array('files.read', $request->getScopes(), true)) {
-                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
-            }
-
             [$bucketId, $fileId] = CompoundUID::parse($image);
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -323,6 +319,12 @@ class Update extends Action
         }
 
         if (!empty($pushData['image'])) {
+            // A stored image reaches this mint even when the request omits one, so the scope is
+            // checked here, on the effective image, not only when a new reference is supplied.
+            if (!\in_array('files.read', $request->getScopes(), true)) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
+            }
+
             // Reissue on every update so the token tracks the current delivery time.
             $scheduleTime = $scheduledAt ?? $currentScheduledAt;
             $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
