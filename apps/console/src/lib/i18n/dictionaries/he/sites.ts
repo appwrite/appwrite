@@ -177,6 +177,8 @@ export const heSitesDictionary: Record<string, string> = {
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Renewal blocked': 'חידוש התעודה חסום',
+  "The certificate is waiting on a DNS record. Add the record named in the logs below where your domain's DNS is managed, and the certificate is issued once it exists.":
+    'התעודה ממתינה לרשומת DNS. הוסיפו את הרשומה שמופיעה ביומנים למטה במקום שבו מנוהל ה-DNS של הדומיין, והתעודה תונפק ברגע שהיא קיימת.',
   'Certificate blocked': 'הנפקת התעודה חסומה',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
