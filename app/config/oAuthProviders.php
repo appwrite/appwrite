@@ -478,6 +478,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Twitch',
     ],
+    'vipps' => [
+        'name' => 'Vipps MobilePay',
+        'developers' => 'https://developer.vippsmobilepay.com/docs/APIs/login-api/',
+        'icon' => 'icon-vipps',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\Vipps',
+    ],
     'webflow' => [
         'name' => 'Webflow',
         'developers' => 'https://developers.webflow.com/data/reference/oauth-app',

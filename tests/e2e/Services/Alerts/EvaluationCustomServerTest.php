@@ -20,6 +20,7 @@ use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Messaging\Provider;
+use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Modules\Alerts\Workers\Alerts;
 use Appwrite\Platform\Workers\Notifications;
@@ -87,7 +88,7 @@ final class EvaluationCustomServerTest extends Scope
         $name = 'Egress ' . \uniqid();
         $webhook = $this->createAlertWebhook();
         // The owner signed in on a phone too.
-        $device = $this->createDevice($this->getRoot()['email'], 'password', 'phone-' . \uniqid());
+        $device = $this->createDevice($this->getRoot()['email'], 'password', \bin2hex(\random_bytes(32)));
 
         // Traffic for the project, so network.outbound has something to sum.
         for ($i = 0; $i < 5; $i++) {
@@ -231,7 +232,8 @@ final class EvaluationCustomServerTest extends Scope
         $teamId = $this->teamId();
         $projectId = $this->getProject()['$id'];
 
-        // One owner signed in on several phones, and owners who set their alert push prefs.
+        // One owner signed in on several phones, iPhones and Android phones (an FCM token is not hex),
+        // and owners who set their alert push prefs.
         $owner = $this->createMember($teamId);
         $first = $owner['device'];
         $second = $this->createDevice($owner['email'], $owner['password'], 'second-' . \uniqid());
@@ -263,15 +265,25 @@ final class EvaluationCustomServerTest extends Scope
         $this->deliverPushes($monitorId, $members, 20, $at, 2);
         $tag = 'alert:' . $this->getMonitorBody($monitorId)['alertId'];
 
-        // Every device gets one push, with the critical sound of a critical monitor.
+        // Every device gets one push through its own service: an iPhone with APNs' critical sound,
+        // an Android phone on the channel that rings through Do Not Disturb.
         foreach ([$first, $second, $removed, $quiet['device']] as $device) {
             $pushes = $this->pushes($device['token'], $tag);
             $this->assertCount(1, $pushes, $device['token']);
             $this->assertSame('Firing: ' . $name, $pushes[0]['title']);
-            $this->assertTrue($pushes[0]['critical']);
-            $this->assertSame('siren.caf', $pushes[0]['sound']);
             $this->assertSame('high', $pushes[0]['priority']);
             $this->assertSame($tag, $pushes[0]['tag']);
+            if (\ctype_xdigit($device['token'])) {
+                $this->assertSame(PushService::APNS->value, $pushes[0]['service']);
+                $this->assertTrue($pushes[0]['critical']);
+                $this->assertSame('siren.caf', $pushes[0]['sound']);
+                $this->assertArrayNotHasKey('channelId', $pushes[0]);
+            } else {
+                $this->assertSame(PushService::FCM->value, $pushes[0]['service']);
+                $this->assertSame('critical', $pushes[0]['channelId']);
+                $this->assertArrayNotHasKey('critical', $pushes[0]);
+                $this->assertArrayNotHasKey('sound', $pushes[0]);
+            }
         }
         // Owners who muted the organization or the project get none.
         $this->assertSame([], $this->pushes($organizationMuted['device']['token'], $tag));
@@ -291,6 +303,8 @@ final class EvaluationCustomServerTest extends Scope
             $this->assertArrayNotHasKey('critical', $resolved[0]);
             $this->assertArrayNotHasKey('sound', $resolved[0]);
         }
+        // A resolved push on Android goes on the normal channel.
+        $this->assertSame('alerts', \array_values(\array_filter($this->pushes($second['token'], $tag), fn (array $push) => $push['data']['status'] === 'resolved'))[0]['channelId']);
         $this->assertCount(1, $this->pushes($quiet['device']['token'], $tag));
 
         // Signing out of a phone, or removing its target, stops its pushes.
@@ -2045,7 +2059,7 @@ final class EvaluationCustomServerTest extends Scope
     {
         $password = 'password-' . \uniqid(); // pragma: allowlist secret
         $user = $this->createConsoleUser($password);
-        $device = $this->createDevice($user['email'], $password, 'phone-' . \uniqid());
+        $device = $this->createDevice($user['email'], $password, \bin2hex(\random_bytes(32)));
         // Accepted while signed in: accepting signed out proves the email and revokes the password.
         $this->addMember($teamId, ['owner'], $user['email'], $device['headers']);
 
@@ -2065,10 +2079,13 @@ final class EvaluationCustomServerTest extends Scope
     private function pushes(string $token, string $tag): array
     {
         $pushes = [];
-        foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode('/mock-push')), true) ?: [] as $request) {
-            $push = \json_decode($request['data'] ?? '{}', true) ?: [];
-            if (\in_array($token, $push['to'] ?? [], true) && ($push['tag'] ?? $push['data']['tag'] ?? null) === $tag) {
-                $pushes[] = $push;
+        // The .env points APNs and FCM at separate mock paths, so each push says which service carried it.
+        foreach ([PushService::APNS->value => '/mock-push', PushService::FCM->value => '/mock-fcm'] as $service => $path) {
+            foreach (\json_decode((string) \file_get_contents('http://request-catcher-webhook:5000/__find_request__?url=' . \urlencode($path)), true) ?: [] as $request) {
+                $push = \json_decode($request['data'] ?? '{}', true) ?: [];
+                if (\in_array($token, $push['to'] ?? [], true) && ($push['tag'] ?? $push['data']['tag'] ?? null) === $tag) {
+                    $pushes[] = [...$push, 'service' => $service];
+                }
             }
         }
 
@@ -2109,8 +2126,12 @@ final class EvaluationCustomServerTest extends Scope
             $this->evaluateMonitor($this->platform(), $monitorId, $value, messages: $messages, now: $at);
 
             $publicHostname = new PublicHostname(new PublicInternet(), new FixedLookup());
-            $adapter = (new Provider(new NoTelemetry(), $publicHostname))->internalPush();
-            $this->assertInstanceOf(PushAdapter::class, $adapter, '_APP_NOTIFICATIONS_PUSH_APNS is not set');
+            $adapters = [];
+            foreach (PushService::cases() as $service) {
+                $adapter = (new Provider(new NoTelemetry(), $publicHostname))->internalPush($service);
+                $this->assertInstanceOf(PushAdapter::class, $adapter, $service->variable() . ' is not set');
+                $adapters[$service->value] = $adapter;
+            }
             $project = $this->platform()->getDocument('projects', $this->getProject()['$id']);
 
             foreach ($messages as $message) {
@@ -2133,7 +2154,7 @@ final class EvaluationCustomServerTest extends Scope
                         new HttpClient(new CurlAdapter()),
                         $publicHostname,
                         new NoTelemetry(),
-                        $adapter,
+                        $adapters,
                     );
                 }
             }
