@@ -72,6 +72,19 @@ export function getApexDomain(domain: string): string | null {
 }
 
 /**
+ * DNS provider "Name" for a domain: `@` for an apex domain, otherwise the
+ * labels in front of the registrable domain (`mail` for `mail.example.com`).
+ * Providers append the zone themselves, so a full hostname here would end up
+ * as `mail.example.com.example.com`.
+ */
+export function getRecordName(domain: string): string {
+  const normalized = domain.trim().toLowerCase()
+  const apex = getApexDomain(normalized)
+  if (!apex || apex === normalized) return '@'
+  return normalized.slice(0, -(apex.length + 1))
+}
+
+/**
  * Check if domain is Appwrite Cloud (isCloud)
  */
 export function isCloud(): boolean {
