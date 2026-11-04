@@ -10,9 +10,6 @@ permissions:
 jobs:
   tests:
     name: Release
-    # Console deploys publish apps/console/<version> releases; only server
-    # versions build the server image.
-    if: ${{ !startsWith(github.event.release.tag_name, 'apps/') }}
     runs-on: ubuntu-24.04
 
     steps:
