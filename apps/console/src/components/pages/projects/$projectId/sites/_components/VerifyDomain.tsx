@@ -89,10 +89,17 @@ export function VerifyDomain({
             verificationError={verificationError}
           />
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end gap-2">
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
-            size="sm"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={verifyMutation.isPending}
+          >
+            {t('Cancel')}
+          </Button>
+          <Button
+            type="button"
             onClick={handleVerify}
             disabled={verifyMutation.isPending}
           >
