@@ -459,7 +459,12 @@ export function VerifyDomainContent({
             {tabOptions[0].id === 'a' && (
               <DnsRecordsTable
                 records={[
-                  { type: 'A', name: rule.domain, value: a!, ttl: 3600 },
+                  {
+                    type: 'A',
+                    name: getRecordName(rule.domain),
+                    value: a!,
+                    ttl: 3600,
+                  },
                 ]}
                 onCopy={handleCopy}
                 copiedField={copiedField}
@@ -469,7 +474,12 @@ export function VerifyDomainContent({
             {tabOptions[0].id === 'aaaa' && (
               <DnsRecordsTable
                 records={[
-                  { type: 'AAAA', name: rule.domain, value: aaaa!, ttl: 3600 },
+                  {
+                    type: 'AAAA',
+                    name: getRecordName(rule.domain),
+                    value: aaaa!,
+                    ttl: 3600,
+                  },
                 ]}
                 onCopy={handleCopy}
                 copiedField={copiedField}
@@ -520,7 +530,12 @@ export function VerifyDomainContent({
                   {tab.id === 'a' && (
                     <DnsRecordsTable
                       records={[
-                        { type: 'A', name: rule.domain, value: a!, ttl: 3600 },
+                        {
+                          type: 'A',
+                          name: getRecordName(rule.domain),
+                          value: a!,
+                          ttl: 3600,
+                        },
                       ]}
                       onCopy={handleCopy}
                       copiedField={copiedField}
@@ -532,7 +547,7 @@ export function VerifyDomainContent({
                       records={[
                         {
                           type: 'AAAA',
-                          name: rule.domain,
+                          name: getRecordName(rule.domain),
                           value: aaaa!,
                           ttl: 3600,
                         },
