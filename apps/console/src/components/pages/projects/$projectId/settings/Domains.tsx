@@ -41,7 +41,6 @@ import {
 } from '@/lib/utils/proxy-domains'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { VerifyDomainDialog } from './domains/VerifyDomain'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
@@ -71,7 +70,6 @@ export function Domains({
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
-  const [verifyDomainOpen, setVerifyDomainOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [retryDomainOpen, setRetryDomainOpen] = useState(false)
@@ -340,30 +338,6 @@ export function Domains({
 
       {selectedRule && (
         <>
-          <VerifyDomainDialog
-            open={verifyDomainOpen}
-            onOpenChange={setVerifyDomainOpen}
-            projectId={projectId}
-            region={region}
-            rule={selectedRule}
-            organizationDomainId={getOrganizationDomainId(selectedRule)}
-            onReconfigure={(reconfigureDomain) => {
-              setVerifyDomainOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/settings/domains/add',
-                params: { projectId },
-                search: reconfigureDomain
-                  ? { domain: reconfigureDomain }
-                  : undefined})
-            }}
-            onVerifySuccess={() => {
-              toast.success(t('Domain verified successfully'))
-              setVerifyDomainOpen(false)
-              setSelectedRule(null)
-            }}
-          />
-
           <RetryDomainDialog
             open={retryDomainOpen}
             onOpenChange={setRetryDomainOpen}
