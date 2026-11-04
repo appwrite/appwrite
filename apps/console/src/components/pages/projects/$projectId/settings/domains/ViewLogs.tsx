@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2 } from 'lucide-react'
 import { BuildLogsCard } from '@/components/global/shared/BuildLogsCard'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
@@ -47,8 +48,9 @@ export function ViewLogsDialog({
           {rule.status === 'verifying' && (
             <Alert
               variant="default"
-              className="border-blue-500/30 bg-blue-500/5"
+              className="border-blue-500/30 bg-blue-500/5 [&>svg]:text-blue-500"
             >
+              <Loader2 className="h-4 w-4 animate-spin" />
               <AlertDescription className="text-[13px] text-muted-foreground">
                 {t(
                   "SSL certificate is being issued. This usually takes a few minutes. If the logs ask for a DNS record, add it where your domain's DNS is managed.",
