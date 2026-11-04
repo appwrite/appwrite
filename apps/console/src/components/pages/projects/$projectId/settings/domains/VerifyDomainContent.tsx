@@ -7,8 +7,7 @@ import {
   isCloud as isCloudEndpoint,
 } from '@/lib/utils/proxy-domains'
 import type { Models } from '@appwrite.io/console'
-import { Copy, Check, Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,7 +20,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { toast } from 'sonner'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { useT } from '@/lib/i18n/translate'
 
@@ -81,14 +79,10 @@ export type DnsRecord = {
 
 export function DnsRecordsTable({
   records,
-  onCopy,
-  copiedField,
   showTtl,
   showPriority = false,
 }: {
   records: DnsRecord[]
-  onCopy: (text: string, field: string) => void
-  copiedField: string | null
   showTtl: boolean
   showPriority?: boolean
 }) {
@@ -116,7 +110,6 @@ export function DnsRecordsTable({
               TTL
             </TableHead>
           )}
-          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-end w-[60px]" />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -172,20 +165,6 @@ export function DnsRecordsTable({
                 {r.ttl ?? '-'}
               </TableCell>
             )}
-            <TableCell className="px-4 py-3 text-end">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0"
-                onClick={() => onCopy(r.value, `${r.type}-${i}`)}
-              >
-                {copiedField === `${r.type}-${i}` ? (
-                  <Check className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-              </Button>
-            </TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -254,7 +233,6 @@ export function VerifyDomainContent({
   verificationError,
 }: VerifyDomainContentProps) {
   const t = useT()
-  const [copiedField, setCopiedField] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string | null>(null)
   const {
     cname: rawCname,
@@ -296,13 +274,6 @@ export function VerifyDomainContent({
     functionsDomain,
     sitesDomain,
   ])
-
-  const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedField(field)
-    toast.success(t('Copied'))
-    setTimeout(() => setCopiedField(null), 2000)
-  }
 
   const hasCname = !!cname
   const hasNameservers = isCloud && nameservers.length > 0
@@ -449,8 +420,6 @@ export function VerifyDomainContent({
               <div className="space-y-3">
                 <DnsRecordsTable
                   records={getCnameRecords()}
-                  onCopy={handleCopy}
-                  copiedField={copiedField}
                   showTtl={true}
                 />
                 {isApex && apexCnameNote}
@@ -459,8 +428,6 @@ export function VerifyDomainContent({
             {tabOptions[0].id === 'nameservers' && (
               <DnsRecordsTable
                 records={getNameserverRecords()}
-                onCopy={handleCopy}
-                copiedField={copiedField}
                 showTtl={false}
               />
             )}
@@ -474,8 +441,6 @@ export function VerifyDomainContent({
                     ttl: 3600,
                   },
                 ]}
-                onCopy={handleCopy}
-                copiedField={copiedField}
                 showTtl={true}
               />
             )}
@@ -489,8 +454,6 @@ export function VerifyDomainContent({
                     ttl: 3600,
                   },
                 ]}
-                onCopy={handleCopy}
-                copiedField={copiedField}
                 showTtl={true}
               />
             )}
@@ -520,8 +483,6 @@ export function VerifyDomainContent({
                     <div className="space-y-3">
                       <DnsRecordsTable
                         records={getCnameRecords()}
-                        onCopy={handleCopy}
-                        copiedField={copiedField}
                         showTtl={true}
                       />
                       {isApex && apexCnameNote}
@@ -530,8 +491,6 @@ export function VerifyDomainContent({
                   {tab.id === 'nameservers' && (
                     <DnsRecordsTable
                       records={getNameserverRecords()}
-                      onCopy={handleCopy}
-                      copiedField={copiedField}
                       showTtl={false}
                     />
                   )}
@@ -545,8 +504,6 @@ export function VerifyDomainContent({
                           ttl: 3600,
                         },
                       ]}
-                      onCopy={handleCopy}
-                      copiedField={copiedField}
                       showTtl={true}
                     />
                   )}
@@ -560,8 +517,6 @@ export function VerifyDomainContent({
                           ttl: 3600,
                         },
                       ]}
-                      onCopy={handleCopy}
-                      copiedField={copiedField}
                       showTtl={true}
                     />
                   )}
