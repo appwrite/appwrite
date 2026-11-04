@@ -19,6 +19,7 @@ import {
   domainVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import { ClaimDomainContent } from '@/components/pages/projects/$projectId/settings/domains/ClaimDomainContent'
 import {
   useCreateSiteDomainRule,
   useProjectSite,
@@ -28,6 +29,7 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
+  isDomainClaimError,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
@@ -58,6 +60,8 @@ export function AddDomainWizard() {
   const [statusCode, setStatusCode] = useState('302')
   const [error, setError] = useState('')
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
+  // Set while the create waits for the domain's ownership TXT record
+  const [claimDomain, setClaimDomain] = useState<string | null>(null)
   const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/sites/${siteId}/domains`
@@ -80,6 +84,7 @@ export function AddDomainWizard() {
         statusCode,
       }),
     })
+    setClaimDomain(null)
     if (created.status === 'verified') {
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules', 'site', projectId, siteId],
@@ -159,9 +164,23 @@ export function AddDomainWizard() {
     try {
       await createRule(d)
     } catch (err) {
+      if (isDomainClaimError(err)) {
+        setClaimDomain(d)
+        return
+      }
       toast.error(
         err instanceof Error ? err.message : t('Failed to add domain'),
       )
+    }
+  }
+
+  const handleClaim = async () => {
+    if (!claimDomain) return
+    setVerificationError(null)
+    try {
+      await createRule(claimDomain)
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
@@ -232,6 +251,42 @@ export function AddDomainWizard() {
           rule={rule}
           region={project?.region}
           resourceType="site"
+          verificationError={verificationError}
+        />
+      </WizardLayout>
+    )
+  }
+
+  // Ownership claim
+  if (claimDomain) {
+    return (
+      <WizardLayout
+        title={t('Verify domain ownership')}
+        fallbackPath={fallbackPath}
+        fullscreen
+        useSidebar={false}
+        maxWidth="max-w-4xl"
+        footer={
+          <div className="flex gap-2 justify-end w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setClaimDomain(null)
+                setVerificationError(null)
+              }}
+              disabled={isPending}
+            >
+              {t('Back')}
+            </Button>
+            <Button onClick={handleClaim} disabled={isPending}>
+              {t('Verify')}
+            </Button>
+          </div>
+        }
+      >
+        <ClaimDomainContent
+          domain={claimDomain}
+          projectId={projectId!}
           verificationError={verificationError}
         />
       </WizardLayout>
