@@ -1085,6 +1085,30 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
     }
 
+    public function testRuleVerificationOfDomainAssignedToAnotherProject(): void
+    {
+        $fixture = \uniqid($this->getSide() . '-');
+
+        // The domain resolves to the instance, which every project on it shares, so
+        // that alone cannot say whose domain it is. Its owner published an ownership
+        // proof naming a different project, which settles it against this one.
+        $rule = $this->createAPIRule("{$fixture}.claimed.webapp.com");
+        $this->assertEquals(201, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+        $this->assertStringContainsString('is assigned to another project', $rule['body']['logs']);
+
+        $ruleId = $rule['body']['$id'];
+        $rule = $this->updateRuleStatus($ruleId);
+        $this->assertEquals(400, $rule['headers']['status-code']);
+        $this->assertStringContainsString('is assigned to another project', $rule['body']['message']);
+
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEquals('unverified', $rule['body']['status']);
+
+        $this->cleanupRule($ruleId);
+    }
+
     public function testUpdateRuleVerificationWithSameDataUpdatesTimestamp(): void
     {
         $domain = \uniqid() . '-timestamp-test.webapp.com';

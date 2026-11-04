@@ -32,6 +32,15 @@ class DNS extends BaseDNS
      */
     public function isValid(mixed $value): bool
     {
+        // Every record below is checked by agreement between the resolvers, so with
+        // none of them nothing is checked. Reporting success on that would accept
+        // every domain this validator is ever asked about.
+        if ($this->dnsServers === []) {
+            $this->reason = 'DNS verification failed as no DNS resolver is configured.';
+
+            return false;
+        }
+
         $wg = new WaitGroup();
         $failedValidator = null;
 
