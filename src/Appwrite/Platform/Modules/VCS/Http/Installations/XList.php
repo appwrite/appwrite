@@ -87,18 +87,31 @@ class XList extends Action
         }
 
         if ($shared) {
-            $projects = $dbForPlatform->find('projects', [
-                Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
-                Query::notEqual('$sequence', $project->getSequence()),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]);
-
             // Admin requests run with authorization disabled, so keep only projects the caller can read
             $roles = $user->getRoles($authorization);
-            $projects = \array_filter($projects, fn (Document $sibling) => !empty(\array_intersect($sibling->getPermissionsByType(PermissionType::Read), $roles)));
+            $projectInternalIds = [];
+            $cursor = null;
+
+            do {
+                $projects = $dbForPlatform->find('projects', \array_filter([
+                    Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+                    Query::notEqual('$sequence', $project->getSequence()),
+                    Query::orderAsc('$sequence'),
+                    Query::limit(APP_LIMIT_SUBQUERY),
+                    $cursor === null ? null : Query::cursorAfter($cursor),
+                ]));
+
+                foreach ($projects as $sibling) {
+                    if (!empty(\array_intersect($sibling->getPermissionsByType(PermissionType::Read), $roles))) {
+                        $projectInternalIds[] = $sibling->getSequence();
+                    }
+                }
+
+                $cursor = \end($projects) ?: null;
+            } while (\count($projects) === APP_LIMIT_SUBQUERY);
 
             $queries[] = Query::equal('provider', ['github']);
-            $queries[] = Query::equal('projectInternalId', \array_values(\array_map(fn (Document $sibling) => $sibling->getSequence(), $projects)) ?: ['']);
+            $queries[] = Query::equal('projectInternalId', $projectInternalIds ?: ['']);
         } else {
             $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
         }
