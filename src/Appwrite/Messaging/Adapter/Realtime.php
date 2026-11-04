@@ -1061,7 +1061,7 @@ class Realtime extends MessagingAdapter
      * @return array
      * @throws \Exception
      */
-    public static function fromPayload(string $event, Document $payload, ?Document $project = null, ?Document $database = null, ?Document $collection = null, ?Document $bucket = null): array
+    public static function fromPayload(string $event, Document $payload, ?Document $project = null, ?Document $database = null, ?Document $collection = null, ?Document $bucket = null, ?string $userId = null): array
     {
         $channels = [];
         $roles = [];
@@ -1072,14 +1072,24 @@ class Realtime extends MessagingAdapter
 
         switch ($parts[0]) {
             case 'users':
+                // A custom user id may contain dots, so it cannot be read from the split event
+                // name without truncating at the first dot (addressing another user's account).
+                // The authoritative id is the event's userId param; fall back to parts[1] only
+                // when it is absent (e.g. a direct caller that does not pass it).
+                $accountUserId = ($userId !== null && $userId !== '') ? $userId : ($parts[1] ?? '');
                 $channels[] = 'account';
-                $channels[] = 'account.' . $parts[1];
-                $roles = [Role::user(Id::custom($parts[1]))->toString()];
+                $channels[] = 'account.' . $accountUserId;
+                $roles = [Role::user(Id::custom($accountUserId))->toString()];
                 // Roles come from the user document (verification, labels, status,
                 // sessions), so the user's open connections re-resolve when it changes,
                 // as they already do for memberships.
                 $permissionsChanged = true;
-                $suffix = \array_slice($parts, 2);
+                // The suffix is what follows `users.{userId}.`; slicing by dot count would
+                // mis-split a dotted id, so strip the known prefix instead.
+                $prefix = 'users.' . $accountUserId . '.';
+                $suffix = \str_starts_with($event, $prefix)
+                    ? \explode('.', \substr($event, \strlen($prefix)))
+                    : \array_slice($parts, 2);
                 foreach (self::USER_EVENTS_WITHOUT_ACCESS_CHANGE as $pattern) {
                     $segments = \explode('.', $pattern);
                     if (\count($segments) !== \count($suffix)) {
