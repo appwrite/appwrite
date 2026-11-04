@@ -217,7 +217,7 @@ trait Deployment
 
                 $latestCommentId = '';
 
-                if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
+                if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false && $resource->getAttribute('providerComments', true) !== false) {
                     $latestComment = $authorization->skip(fn () => $dbForPlatform->findOne('vcsComments', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::equal('providerPullRequestId', [$providerPullRequestId]),
