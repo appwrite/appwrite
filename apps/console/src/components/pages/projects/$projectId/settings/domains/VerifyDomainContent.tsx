@@ -5,7 +5,12 @@ import {
   getApexDomain,
   getRecordName,
   isCloud as isCloudEndpoint,
+  isDomainClaimError,
 } from '@/lib/utils/proxy-domains'
+import {
+  getAppwriteErrorInfo,
+  getErrorMessage,
+} from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { Loader2, ExternalLink, Info, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +48,28 @@ export function dnsPendingVerificationError(
       'DNS changes can take up to 48 hours to propagate. Confirm the records below at your DNS provider, wait a bit, then try again.',
     ),
     pending: true,
+  }
+}
+
+/**
+ * Alert for a failed verify call. A failed DNS check or a refused ownership
+ * claim keeps the amber pending style and leads with the API's reason;
+ * anything else is a hard failure.
+ */
+export function domainVerificationError(
+  t: (text: string) => string,
+  error: unknown,
+): DomainVerificationError {
+  const pending = dnsPendingVerificationError(t)
+  if (isDomainClaimError(error)) {
+    const { message } = getAppwriteErrorInfo(error)
+    return message
+      ? { ...pending, message: `${message} ${pending.message}` }
+      : pending
+  }
+  return {
+    title: t('Verification failed'),
+    message: getErrorMessage(error, t('Failed to verify domain')),
   }
 }
 
