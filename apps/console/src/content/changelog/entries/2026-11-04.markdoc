@@ -1,0 +1,30 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.7.1 for self-hosted deployments
+date: 2026-11-04
+cover: /images/changelog/2026-11-04.avif
+tags: security, functions, sites, infrastructure
+---
+
+Appwrite 2.7.1 is now available for self-hosting. This is a security release for the 2.7 line. We strongly recommend upgrading your instance to apply the fix.
+
+This release includes:
+
+- The Open Runtimes executor updated from `1.1.2` to `1.3.1`. The old executor followed symlinks that a function or site planted in its logs, build output or build cache, so a deployment could read files from the executor container, including `_APP_EXECUTOR_SECRET`. With that secret, code in a function can call the executor directly, and the executor controls Docker on the host.
+- Executor support for rotating its secret without downtime through `OPR_EXECUTOR_SECRET_PREVIOUS`, a storage DSN check that is off by default, and an opt-in streamed response format. None of these change existing behavior.
+
+You are affected if anyone you don't fully trust can deploy functions or sites on your instance. Upgrade, then rotate `_APP_EXECUTOR_SECRET` by setting a new value in `.env` and running `docker compose up -d`.
+
+2.7.1 keeps the same 1.2.138 Console as 2.7.0 and doesn't change the database schema, so upgrading from 2.7.0 only replaces the images. If you maintain your own `docker-compose.yml`, set the `openruntimes-executor` image to `openruntimes/executor:1.3.1`.
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.7.1
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.7.1" %}
+View the release notes on GitHub
+{% /arrow_link %}
