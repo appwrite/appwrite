@@ -428,6 +428,14 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Name must be no longer than': '名前は次より長くできません',
   'Need 24/7 or enterprise support?':
     '24時間365日またはエンタープライズサポートが必要ですか?',
+  'Need SSO or custom organization roles?':
+    'SSO やカスタム組織ロールが必要ですか?',
+  'Need a custom SLA or a private Slack channel?':
+    'カスタム SLA やプライベート Slack チャンネルが必要ですか?',
+  'Running Appwrite at scale?': '大規模に Appwrite を運用していますか?',
+  'Get a custom SLA, a private Slack channel, and SOC 2 and HIPAA without add-ons.':
+    'カスタム SLA、プライベート Slack チャンネル、アドオン不要の SOC 2 と HIPAA をご利用いただけます。',
+  'Talk to sales': '営業に相談',
   'Next page': '次のページ',
   'Next payment of': '次回の支払い額',
   'Next projects page': '次のプロジェクトページ',
@@ -779,6 +787,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
     'バックアップの支払い方法を設定しておくと、主要な支払い方法が失敗した場合でもサービスが中断されません。',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.':
     '前回の試行でカード情報が入力されています。以下の詳細を入力して追加を完了してください。',
+  'Use a different card': '別のカードを使用',
   'A new payment method has been added to your account':
     '新しい支払い方法がアカウントに追加されました',
   'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':
@@ -1619,4 +1628,10 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'Appwrite の上に構築する',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'API キーを貼り付ける代わりに、同意に基づくスコープ付きのアクセスで Appwrite ユーザーがプロジェクトを接続できる OAuth2 アプリを作成できます。マーケットプレイスに公開して、あらゆる組織に見つけてもらいましょう。',
+  'Set up auto-pay': '自動支払いを設定',
+  'Auto-pay is set up': '自動支払いを設定しました',
+  'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
+  'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
+    'このカードでは、自動支払いのたびに銀行が OTP を求めます。自動支払いを設定すると、$150 までの支払いは OTP なしで処理されます。',
+  'Only the card owner can set up auto-pay': 'カードの所有者のみが自動支払いを設定できます',
 }

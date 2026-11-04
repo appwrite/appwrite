@@ -180,6 +180,7 @@ class Create extends Action
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
                 'labels' => [],
+                'prefs' => new \stdClass(),
                 'status' => PROJECT_STATUS_ACTIVE,
             ]));
         } catch (Duplicate) {

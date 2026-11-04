@@ -145,6 +145,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 import {
   useState,
   useEffect,
@@ -177,11 +178,13 @@ import {
   getPlanDisplayName,
 } from '@/lib/utils/plan-badge'
 import {
+  isSelfServiceProPlan,
   resolveOrganizationCanonicalPlan,
   resolveOrganizationPlanDisplayLabel,
-  type CanonicalPlanId} from '@/lib/utils/plan-filter'
+} from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
 import { ComplianceTab } from '../settings/ComplianceTab'
+import { EnterpriseCard } from '../settings/EnterpriseCard'
 import { View as DomainsView } from '../domains/View'
 import { useOrganizationDomainsPlanLimit } from '../domains/_components/useOrganizationDomainsPlanLimit'
 import { View as MarketplaceView } from '../marketplace/View'
@@ -232,10 +235,13 @@ import {
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import { EnterpriseBadge } from '@/components/global/shared/EnterpriseBadge'
 import { GripVertical } from 'lucide-react'
 import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { ServiceListViewToggle } from '@/components/pages/projects/$projectId/shared/ServiceListViewToggle'
 import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
 
 /** Organization routes the overview navigates between; keeps `navigate` and `Link` typed. */
 type OrgRoutePath =
@@ -249,6 +255,9 @@ type OrgRoutePath =
   | '/organizations/$orgId/settings/oauth-apps'
   | '/organizations/$orgId/settings/partners'
 import { analyticsAttrs, getOrgTabAnalyticsAction } from '@/lib/analytics-actions'
+
+/** Pro orgs with at least this many members see the Enterprise access line. */
+const ENTERPRISE_NOTE_MIN_MEMBERS = 5
 
 function DomainsPlanLimitAlert({ orgId }: { orgId: string | undefined }) {
   const { currentCount, limit, plan, planName } =
@@ -422,6 +431,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   )
   const supportsMultiTenancy = features.multiTenancy
   const { access, isLoading: orgScopesLoading } = useOrganizationScopes(orgId)
+  const zeroAccount = useIsZeroAccount()
+  const canCreateOrganization = supportsMultiTenancy && !zeroAccount
   const { viewMode: projectsViewMode, setViewMode: setProjectsViewMode } =
     useServiceListViewMode('projects')
 
@@ -876,14 +887,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ...(canShowOrgComplianceNav(access, features)
         ? { 'g c': () => handleOrgNavigate('settings/compliance') }
         : {}),
-      ...(canCreateProject(access, features)
+      ...(canCreateProject(access, features) && !zeroAccount
         ? {
             'c p': () => {
               handleOrgNavigate('projects')
               setCreateProjectDialogOpen(true)
             }}
         : {}),
-      ...(supportsMultiTenancy
+      ...(canCreateOrganization
         ? { 'c t': () => handleOpenCreateOrganization() }
         : {}),
       ...(canInviteOrgMember(access, features)
@@ -2116,7 +2127,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }
 
   if (showNoOrganizationsEmptyState) {
-    const showCreateOrganization = supportsMultiTenancy
+    const showCreateOrganization = canCreateOrganization
     return (
       <>
         <ConsoleLayout
@@ -2191,7 +2202,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       <ConsoleLayout
         header={{
           onCommandCenterOpen: openOrgCommandCenter,
-          onCreateOrganization: supportsMultiTenancy
+          onCreateOrganization: canCreateOrganization
             ? handleOpenCreateOrganization
             : undefined}}
         headerBanner={
@@ -2304,7 +2315,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           </button>
                         ))}
                       </div>
-                      {supportsMultiTenancy && (
+                      {canCreateOrganization && (
                         <div className="border-t border-border p-2">
                           <button
                             type="button"
@@ -2345,25 +2356,44 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )}
                 </div>
               ) : null}
-              {supportsMultiTenancy && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
+              {supportsMultiTenancy &&
+                (zeroAccount ? (
+                  <ClaimToUnlock
+                    locked
+                    reason={t('Claim this project to create organizations')}
+                    className="inline-flex"
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
                       aria-label={t('Create organization')}
                       onClick={handleOpenCreateOrganization}
+                      disabled
                       {...analyticsAttrs('create-organization')}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('Create organization')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
+                  </ClaimToUnlock>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 shrink-0 p-0 rounded-lg hover:bg-accent"
+                        aria-label={t('Create organization')}
+                        onClick={handleOpenCreateOrganization}
+                        {...analyticsAttrs('create-organization')}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{t('Create organization')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
             </div>
 
             {/* Right: same fixed h-8 band as left; hide members + invite on small screens */}
@@ -2778,7 +2808,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             />
                           )}
                           {(() => {
-                            if (!canCreateProject(access, features)) {
+                            if (
+                              !canCreateProject(access, features) ||
+                              zeroAccount
+                            ) {
                               return (
                                 <TooltipProvider delayDuration={0}>
                                   <Tooltip>
@@ -2797,9 +2830,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     </TooltipTrigger>
                                     <TooltipContent>
                                       <p>
-                                        {t(
-                                          "You don't have permission to create projects.",
-                                        )}
+                                        {zeroAccount
+                                          ? t(
+                                              'Claim this project to create more projects',
+                                            )
+                                          : t(
+                                              "You don't have permission to create projects.",
+                                            )}
                                       </p>
                                     </TooltipContent>
                                   </Tooltip>
@@ -3402,6 +3439,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         : item,
                     )}
                     activeSectionId={settingsSubTab}
+                    navFooter={
+                      isSelfServiceProPlan(organizationPlan) ? (
+                        <EnterpriseCard orgId={orgId} />
+                      ) : undefined
+                    }
                     cardIndex={orgSettingsCardIndex}
                     searchQuery={settingsNavSearch}
                     onSearchQueryChange={setSettingsNavSearch}
@@ -3935,6 +3977,25 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                     itemLabel={t('members')}
                                   />
                                 )}
+                                {isSelfServiceProPlan(organizationPlan) &&
+                                  (selectedOrg?.members ?? 0) >=
+                                    ENTERPRISE_NOTE_MIN_MEMBERS && (
+                                    <div className="rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+                                      <p className="text-[12px] text-muted-foreground">
+                                        <EnterpriseBadge />
+                                        {t(
+                                          'Need SSO or custom organization roles?',
+                                        )}{' '}
+                                        <ContactSalesLink
+                                          source="members"
+                                          orgId={orgId}
+                                          className="font-medium text-foreground underline hover:no-underline"
+                                        >
+                                          {t('Contact sales')}
+                                        </ContactSalesLink>
+                                      </p>
+                                    </div>
+                                  )}
                               </>
                             ) : (
                               <EmptyState
@@ -4353,7 +4414,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             : undefined
         }
         onOrgCreateProject={
-          canCreateProject(access, features)
+          canCreateProject(access, features) && !zeroAccount
             ? () => {
                 handleOrgNavigate('projects')
                 setCreateProjectDialogOpen(true)

@@ -73,6 +73,47 @@ class Base extends Action
     }
 
     /**
+     * Specifications this instance can run, flagged by the plan's `$planKey`
+     * list. Ones larger than the plan's largest stay with `enabled` false so
+     * clients can show what a higher plan unlocks. Smaller ones are left out:
+     * builds have a floor, and no plan change makes those selectable.
+     *
+     * @return array<array<string, mixed>>
+     */
+    protected function getPlanSpecifications(array $plan, string $planKey): array
+    {
+        $maxCpus = System::getEnv('_APP_COMPUTE_CPUS', 0);
+        $maxMemory = System::getEnv('_APP_COMPUTE_MEMORY', 0);
+        $limited = \array_key_exists($planKey, $plan);
+
+        $specifications = [];
+        foreach (Config::getParam('specifications', []) as $specification) {
+            // Treat 0 as no limit
+            if ((!empty($maxCpus) && $specification['cpus'] > $maxCpus) || (!empty($maxMemory) && $specification['memory'] > $maxMemory)) {
+                continue;
+            }
+
+            $specification['enabled'] = !$limited || \in_array($specification['slug'], $plan[$planKey], true);
+            $specifications[] = $specification;
+        }
+
+        if (!$limited) {
+            return $specifications;
+        }
+
+        $enabled = \array_filter($specifications, fn (array $specification) => $specification['enabled']);
+        $planCpus = \max([0, ...\array_column($enabled, 'cpus')]);
+        $planMemory = \max([0, ...\array_column($enabled, 'memory')]);
+
+        return \array_values(\array_filter(
+            $specifications,
+            fn (array $specification) => $specification['enabled']
+                || $specification['cpus'] > $planCpus
+                || $specification['memory'] > $planMemory
+        ));
+    }
+
+    /**
      * Builds key their cache by runtime image, so a runtime change leaves the
      * previous image's cache where no later build or delete looks for it.
      */

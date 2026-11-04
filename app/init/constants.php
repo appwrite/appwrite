@@ -41,9 +41,13 @@ const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
+const APP_LIMIT_AUDIT_REASON_LENGTH = 256; // Maximum length of the X-Appwrite-Reason header kept on an audit log
 const APP_LIMIT_ROLE_LENGTH = 81; // Maximum length of a team role: `project-<projectId>-<role>` is 9 template characters around two 36-character IDs
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+const APP_LIMIT_REVIEWS_PULL = 100; // Reviews of one pull request the review service reads back, newest first
+const APP_LIMIT_REVIEW_FINDINGS = 1000; // Findings of one pull request the review service reads back at once
+const APP_LIMIT_REVIEW_LEARNINGS = 100; // Learnings of a repository a review is given, oldest first
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // MQTT keep-alive in seconds for a client that disables it, and the longest an MQTT 5.0 client is granted
@@ -108,7 +112,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.6.2';
+const APP_VERSION_STABLE = '2.7.0';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -318,6 +322,7 @@ const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
+const DELETE_TYPE_ALERTS = 'alerts';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
 const DELETE_TYPE_REPORT = 'report';
 
@@ -374,6 +379,8 @@ const NOTIFICATION_TYPE_PUSH = MESSAGE_TYPE_PUSH;
 const NOTIFICATION_TYPE_CONSOLE = 'console';
 const NOTIFICATION_TYPE_WEBHOOK = 'webhook';
 const NOTIFICATION_TRACKING_JWT_TTL = 60 * 60 * 24 * 7;
+const ALERT_UNSUBSCRIBE_TTL = 60 * 60 * 24 * 90; // An alert email's unsubscribe links work as long as its alert is kept
+const MAIL_TEMPLATE_ALERT = 'alert';
 const MAIL_TEMPLATE_CERTIFICATE_FAILED = 'certificate-failed';
 const MAIL_TEMPLATE_DATA_EXPORT = 'data-export';
 const MAIL_TEMPLATE_INVITATION = 'invitation';
@@ -542,6 +549,8 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_REVIEWS = 'reviews';
+const RESOURCE_TYPE_MONITORS = 'monitors';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.
 const ADVISOR_INSIGHT_TYPES = [
@@ -600,6 +609,21 @@ const TOKENS_RESOURCE_TYPE_DATABASES = 'databases';
 const SCHEDULE_RESOURCE_TYPE_EXECUTION = 'execution';
 const SCHEDULE_RESOURCE_TYPE_FUNCTION = 'function';
 const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
+const SCHEDULE_RESOURCE_TYPE_MONITOR = 'monitor';
+
+// Monitor types, the kind of check a monitor runs; see `types` in app/config/alerts.php
+const MONITOR_TYPE_USAGE = 'usage';
+
+// Usage monitors read usage this many seconds old or older, so events still in
+// flight are not missed: StatsUsage writes a batch 5 seconds after it opens and
+// retries a failed one 5 seconds later, and a backed-up queue adds its own delay.
+// `_APP_ALERTS_USAGE_LAG` overrides it.
+const ALERTS_USAGE_LAG_SECONDS = 120;
+
+// A gauge sample older than this is no reading at all: the resource sweep runs
+// every `_APP_STATS_RESOURCES_INTERVAL` (an hour by default), so a day without a
+// sample means the sweep, not the metric, has stopped.
+const ALERTS_GAUGE_MAX_AGE_SECONDS = 86400;
 
 /** Preview cookie */
 const COOKIE_NAME_PREVIEW = 'a_jwt_console';

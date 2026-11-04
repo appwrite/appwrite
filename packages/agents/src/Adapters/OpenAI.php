@@ -4,589 +4,349 @@ namespace Utopia\Agents\Adapters;
 
 use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
+use Utopia\Agents\Effort;
+use Utopia\Agents\Event;
+use Utopia\Agents\Events\ReasoningDelta;
+use Utopia\Agents\Events\TextDelta;
+use Utopia\Agents\Events\ToolCall as ToolCallEvent;
+use Utopia\Agents\Events\ToolInputDelta;
+use Utopia\Agents\Exception\Api;
+use Utopia\Agents\Exception\Unsupported;
+use Utopia\Agents\FinishReason;
 use Utopia\Agents\Message;
-use Utopia\Agents\Schema;
+use Utopia\Agents\Model;
+use Utopia\Agents\Part;
+use Utopia\Agents\Parts\File;
+use Utopia\Agents\Parts\Image;
+use Utopia\Agents\Parts\Reasoning;
+use Utopia\Agents\Parts\Text;
+use Utopia\Agents\Parts\ToolCall;
+use Utopia\Agents\Request;
+use Utopia\Agents\Response;
+use Utopia\Agents\Role;
+use Utopia\Agents\Tool;
+use Utopia\Agents\ToolChoice;
+use Utopia\Agents\Usage;
 use Utopia\Client\Psr18\StreamingClientInterface;
 
-class OpenAI extends Adapter
+/**
+ * OpenAI Chat Completions, and the providers that speak the same protocol.
+ *
+ * Streams every request with usage reporting, assembles tool calls from their
+ * deltas and reads reasoning from the "reasoning_content" or "reasoning"
+ * delta fields that compatible providers use.
+ */
+class OpenAI extends Adapter implements Model
 {
-    protected const MAX_ATTACHMENTS_PER_MESSAGE = 10;
-
-    protected const MAX_ATTACHMENT_BYTES = 5000000;
-
-    protected const MAX_TOTAL_ATTACHMENT_BYTES = 20000000;
-
-    /**
-     * @var list<string>
-     */
-    protected const ALLOWED_ATTACHMENT_MIME_TYPES = [
-        'image/png',
-        'image/jpeg',
-        'image/webp',
-        'image/gif',
-    ];
-
-    /**
-     * GPT-5 Nano - Small GPT-5 variant optimized for low latency and cost-sensitive workloads
-     */
-    public const MODEL_GPT_5_NANO = 'gpt-5-nano';
-
-    /**
-     * GPT-4.5 Preview - OpenAI's most advanced model with enhanced reasoning, broader knowledge, and improved instruction following
-     */
-    public const MODEL_GPT_4_5_PREVIEW = 'gpt-4.5-preview';
-
-    /**
-     * GPT-4.1 - Advanced large language model with strong reasoning capabilities and improved context handling
-     */
-    public const MODEL_GPT_4_1 = 'gpt-4.1';
-
-    /**
-     * GPT-4o - Multimodal model optimized for both text and image processing with faster response times
-     */
-    public const MODEL_GPT_4O = 'gpt-4o';
-
-    /**
-     * o4-mini - Compact version of GPT-4o offering good performance with higher throughput and lower latency
-     */
-    public const MODEL_O4_MINI = 'o4-mini';
-
-    /**
-     * o3 - Balanced model offering good performance for general language tasks with efficient resource usage
-     */
-    public const MODEL_O3 = 'o3';
-
-    /**
-     * o3-mini - Streamlined model optimized for speed and efficiency while maintaining good capabilities for routine tasks
-     */
-    public const MODEL_O3_MINI = 'o3-mini';
-
-    /**
-     * Default OpenAI API endpoint
-     */
-    protected const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
-
-    protected string $apiKey;
-
-    protected string $model;
-
-    protected int $maxTokens;
-
-    protected float $temperature;
+    protected const string ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
     protected string $endpoint;
 
-    protected int $timeout;
-
-    protected bool $hasWarnedTemperatureOverride = false;
-
-    /**
-     * Create a new OpenAI adapter
-     *
-     *
-     * @throws \Exception
-     */
     public function __construct(
-        string $apiKey,
-        string $model = self::MODEL_O3_MINI,
-        int $maxTokens = 1024,
-        float $temperature = 1.0,
+        protected string $apiKey,
+        protected string $model,
         ?string $endpoint = null,
         int $timeout = 90000,
-        (ClientInterface&StreamingClientInterface)|null $client = null
+        (ClientInterface&StreamingClientInterface)|null $client = null,
     ) {
-        $this->apiKey = $apiKey;
-        $this->maxTokens = $maxTokens;
-        $this->temperature = $temperature;
-        $this->endpoint = $endpoint ?? self::ENDPOINT;
+        $this->endpoint = $endpoint ?? static::ENDPOINT;
         $this->timeout = $timeout;
         $this->client = $client;
-        $this->setModel($model);
     }
 
-    /**
-     * Check if the model supports JSON schema
-     */
-    public function isSchemaSupported(): bool
-    {
-        return true;
-    }
-
-    /**
-     * Send a message to the API
-     *
-     * @param  array<Message>  $messages
-     *
-     * @throws \Exception
-     */
-    public function send(array $messages, ?callable $listener = null): Message
-    {
-        $agent = $this->getAgent();
-        if ($agent === null) {
-            throw new \Exception('Agent not set');
-        }
-
-        $formattedMessages = [];
-        foreach ($messages as $message) {
-            if (! $this->isMessageValid($message)) {
-                throw new \Exception('Invalid message format');
-            }
-            $formattedMessages[] = [
-                'role' => $message->getRole(),
-                'content' => $this->formatMessageContent($message),
-            ];
-        }
-
-        $instructions = [];
-        foreach ($agent->getInstructions() as $name => $content) {
-            $text = is_array($content) ? implode("\n", $content) : $content;
-            $instructions[] = '# '.$name."\n\n".$text;
-        }
-
-        $systemMessage = $agent->getDescription().
-            (empty($instructions) ? '' : "\n\n".implode("\n\n", $instructions));
-
-        if (! empty($systemMessage)) {
-            array_unshift($formattedMessages, [
-                'role' => 'system',
-                'content' => $systemMessage,
-            ]);
-        }
-
-        $payload = [
-            'model' => $this->model,
-            'messages' => $formattedMessages,
-        ];
-        $temperature = $this->temperature;
-        if ($this->usesDefaultTemperatureOnly()) {
-            $temperature = 1.0;
-        }
-        $payload['temperature'] = $temperature;
-
-        $schema = $agent->getSchema();
-        if ($schema !== null) {
-            $payload['response_format'] = [
-                'type' => 'json_schema',
-                'json_schema' => [
-                    'name' => $schema->getName(),
-                    'strict' => true,
-                    'schema' => [
-                        'type' => 'object',
-                        'properties' => $schema->getProperties(),
-                        'required' => $schema->getRequired(),
-                        'additionalProperties' => false,
-                    ],
-                ],
-            ];
-            $payload['stream'] = false;
-        } else {
-            $payload['stream'] = true;
-        }
-
-        if ($this->usesMaxCompletionTokens()) {
-            $payload['max_completion_tokens'] = $this->maxTokens;
-        } else {
-            $payload['max_tokens'] = $this->maxTokens;
-        }
-
-        $content = '';
-
-        if ($payload['stream']) {
-            $this->beginStreamProcessing();
-            try {
-                $response = $this->post(
-                    $this->endpoint,
-                    $payload,
-                    $this->headers(),
-                    function (string $chunk) use (&$content, $listener): void {
-                        $content .= $this->process($chunk, $listener);
-                    }
-                );
-                $content .= $this->flushBufferedStreamData($listener);
-
-                if ($response->getStatusCode() >= 400) {
-                    throw new \Exception(
-                        ucfirst($this->getName()).' API error: '.$content,
-                        $response->getStatusCode()
-                    );
-                }
-            } finally {
-                $this->endStreamProcessing();
-            }
-        } else {
-            $response = $this->post($this->endpoint, $payload, $this->headers());
-            $body = (string) $response->getBody();
-
-            if ($response->getStatusCode() >= 400) {
-                $json = json_decode($body, true);
-                $content = $this->formatErrorMessage($json);
-                throw new \Exception(
-                    ucfirst($this->getName()).' API error: '.$content,
-                    $response->getStatusCode()
-                );
-            }
-
-            $json = json_decode($body, true);
-            $choices = is_array($json) && isset($json['choices']) && is_array($json['choices']) ? $json['choices'] : [];
-            $firstChoice = isset($choices[0]) && is_array($choices[0]) ? $choices[0] : [];
-            $message = isset($firstChoice['message']) && is_array($firstChoice['message']) ? $firstChoice['message'] : [];
-            if (isset($message['content']) && is_string($message['content'])) {
-                $content = $message['content'];
-            } else {
-                throw new \Exception('Invalid response format received from the API');
-            }
-        }
-
-        return new Message($content);
-    }
-
-    /**
-     * Process a stream chunk from the OpenAI API
-     *
-     *
-     * @throws \Exception
-     */
-    protected function process(string $chunk, ?callable $listener): string
-    {
-        [$data, $lines] = $this->prepareStreamLines($chunk);
-
-        $json = $this->decodeJsonObject(trim($chunk)) ?? $this->decodeJsonObject($data);
-        if (is_array($json) && isset($json['error'])) {
-            return $this->formatErrorMessage($json);
-        }
-
-        return $this->processStreamLines($lines, $listener);
-    }
-
-    /**
-     * @param  array<int, string>  $lines
-     */
-    protected function processStreamLines(array $lines, ?callable $listener): string
-    {
-        $block = '';
-
-        foreach ($lines as $line) {
-            $json = $this->decodeSseJsonLine($line);
-            if (! is_array($json)) {
-                continue;
-            }
-
-            // Extract content from the choices array
-            $choices = isset($json['choices']) && is_array($json['choices']) ? $json['choices'] : [];
-            $firstChoice = isset($choices[0]) && is_array($choices[0]) ? $choices[0] : [];
-            $delta = isset($firstChoice['delta']) && is_array($firstChoice['delta']) ? $firstChoice['delta'] : [];
-            if (isset($delta['content']) && is_string($delta['content'])) {
-                $this->appendStreamToken($block, $delta['content'], $listener);
-            }
-        }
-
-        return $block;
-    }
-
-    protected function flushBufferedStreamData(?callable $listener): string
-    {
-        $line = $this->consumeStreamBufferLine();
-        if ($line === null) {
-            return '';
-        }
-
-        return $this->processStreamLines([$line], $listener);
-    }
-
-    /**
-     * Get available models
-     *
-     * @return array<string>
-     */
-    public function getModels(): array
-    {
-        return [
-            self::MODEL_GPT_5_NANO,
-            self::MODEL_GPT_4_5_PREVIEW,
-            self::MODEL_GPT_4_1,
-            self::MODEL_GPT_4O,
-            self::MODEL_O4_MINI,
-            self::MODEL_O3,
-            self::MODEL_O3_MINI,
-        ];
-    }
-
-    /**
-     * OpenAI expects max_completion_tokens for these models.
-     */
-    protected function usesMaxCompletionTokens(): bool
-    {
-        $model = $this->normalizeModelForCompatibilityChecks();
-
-        return in_array($model, [
-            self::MODEL_GPT_5_NANO,
-            self::MODEL_O4_MINI,
-            self::MODEL_O3,
-            self::MODEL_O3_MINI,
-        ], true);
-    }
-
-    /**
-     * Some models only accept the default temperature (1).
-     */
-    protected function usesDefaultTemperatureOnly(): bool
-    {
-        $model = $this->normalizeModelForCompatibilityChecks();
-        $usesDefaultTemperatureOnly = in_array($model, [
-            self::MODEL_GPT_5_NANO,
-        ], true);
-
-        if ($usesDefaultTemperatureOnly && $this->temperature !== 1.0 && ! $this->hasWarnedTemperatureOverride) {
-            $this->hasWarnedTemperatureOverride = true;
-            error_log(
-                "OpenAI adapter warning: model '{$this->model}' only supports temperature=1.0. "
-                ."Overriding provided value {$this->temperature}. "
-                .'Set temperature to 1.0 to remove this warning.'
-            );
-        }
-
-        return $usesDefaultTemperatureOnly;
-    }
-
-    protected function isMessageValid(Message $message): bool
-    {
-        return ! empty($message->getRole()) && $this->hasTextOrImageContent($message);
-    }
-
-    protected function hasTextOrImageContent(Message $message): bool
-    {
-        if ($message->getContent() !== '') {
-            return true;
-        }
-
-        foreach ($message->getAttachments() as $attachment) {
-            if ($this->isImageAttachment($attachment)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @return string|array<int, array<string, mixed>>
-     */
-    protected function formatMessageContent(Message $message): string|array
-    {
-        $parts = [];
-
-        if ($message->getContent() !== '') {
-            $parts[] = [
-                'type' => 'text',
-                'text' => $message->getContent(),
-            ];
-        }
-
-        foreach ($message->getAttachments() as $attachment) {
-            if (! $this->isImageAttachment($attachment)) {
-                continue;
-            }
-
-            $parts[] = $this->buildImagePart($attachment);
-        }
-
-        if (empty($parts)) {
-            return $message->getContent();
-        }
-
-        if (count($parts) === 1 && isset($parts[0]['type']) && $parts[0]['type'] === 'text') {
-            $text = $parts[0]['text'] ?? '';
-
-            return is_string($text) ? $text : '';
-        }
-
-        return $parts;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function buildImagePart(Message $image): array
-    {
-        $mimeType = $image->getMimeType() ?? 'application/octet-stream';
-        $base64 = base64_encode($image->getContent());
-
-        return [
-            'type' => 'image_url',
-            'image_url' => [
-                'url' => 'data:'.$mimeType.';base64,'.$base64,
-            ],
-        ];
-    }
-
-    /**
-     * Headers every API request carries.
-     *
-     * @return array<string, string>
-     */
-    protected function headers(): array
-    {
-        return [
-            'authorization' => 'Bearer '.$this->apiKey,
-        ];
-    }
-
-    /**
-     * Allow subclasses to normalize routed model IDs.
-     */
-    protected function normalizeModelForCompatibilityChecks(): string
-    {
-        return $this->model;
-    }
-
-    /**
-     * Get current model
-     */
-    public function getModel(): string
-    {
-        return $this->model;
-    }
-
-    /**
-     * Set model to use
-     */
-    public function setModel(string $model): self
-    {
-        $this->model = $model;
-
-        return $this;
-    }
-
-    /**
-     * Set max tokens
-     */
-    public function setMaxTokens(int $maxTokens): self
-    {
-        $this->maxTokens = $maxTokens;
-
-        return $this;
-    }
-
-    /**
-     * Set temperature
-     */
-    public function setTemperature(float $temperature): self
-    {
-        $this->temperature = $temperature;
-
-        return $this;
-    }
-
-    /**
-     * Get the API endpoint
-     */
-    public function getEndpoint(): string
-    {
-        return $this->endpoint;
-    }
-
-    /**
-     * Set the API endpoint
-     */
-    public function setEndpoint(string $endpoint): self
-    {
-        $this->endpoint = $endpoint;
-
-        return $this;
-    }
-
-    /**
-     * Get the adapter name
-     */
     public function getName(): string
     {
         return 'openai';
     }
 
-    public function supportsAttachments(): bool
+    public function getModel(): string
     {
-        return true;
+        return $this->model;
     }
 
-    public function supportsAttachment(Message $attachment): bool
+    public function getEndpoint(): string
     {
-        return $this->isImageAttachment($attachment);
+        return $this->endpoint;
     }
 
-    public function getMaxAttachmentsPerMessage(): ?int
+    public function generate(Request $request): Response
     {
-        return self::MAX_ATTACHMENTS_PER_MESSAGE;
+        return $this->stream($request, static function (Event $event): void {
+        });
     }
 
-    public function getMaxAttachmentBytes(): ?int
+    public function stream(Request $request, callable $listener): Response
     {
-        return self::MAX_ATTACHMENT_BYTES;
-    }
+        $text = '';
+        $reasoning = '';
+        /** @var array<int, array{id: string, name: string, arguments: string}> $calls */
+        $calls = [];
+        /** @var FinishReason|null $finish */
+        $finish = null;
+        $usage = new Usage();
+        $id = '';
+        $model = $this->model;
 
-    public function getMaxTotalAttachmentBytes(): ?int
-    {
-        return self::MAX_TOTAL_ATTACHMENT_BYTES;
-    }
+        $this->events($this->endpoint, $this->payload($request), function (string $name, array $chunk) use (&$text, &$reasoning, &$calls, &$finish, &$usage, &$id, &$model, $listener): void {
+            if (isset($chunk['error'])) {
+                [$type, $message] = $this->describe(json_encode($chunk) ?: '');
+                throw new Api(ucfirst($this->getName())." API error ({$type}): {$message}", $this->getName(), type: $type);
+            }
 
-    /**
-     * @return list<string>|null
-     */
-    public function getAllowedAttachmentMimeTypes(): ?array
-    {
-        return self::ALLOWED_ATTACHMENT_MIME_TYPES;
-    }
+            if (isset($chunk['id']) && \is_string($chunk['id'])) {
+                $id = $chunk['id'];
+            }
+            if (isset($chunk['model']) && \is_string($chunk['model'])) {
+                $model = $chunk['model'];
+            }
+            if (isset($chunk['usage']) && \is_array($chunk['usage'])) {
+                $usage = $this->usage($chunk['usage']);
+            }
 
-    /**
-     * Extract and format error information from API response
-     *
-     * @param  mixed  $json
-     */
-    protected function formatErrorMessage($json): string
-    {
-        if (! is_array($json)) {
-            return '(unknown_error) Unknown error';
+            $choices = \is_array($chunk['choices'] ?? null) ? $chunk['choices'] : [];
+            $choice = $choices[0] ?? null;
+            if (! \is_array($choice)) {
+                return;
+            }
+
+            $delta = \is_array($choice['delta'] ?? null) ? $choice['delta'] : [];
+
+            foreach (['reasoning_content', 'reasoning'] as $key) {
+                if (isset($delta[$key]) && \is_string($delta[$key]) && $delta[$key] !== '') {
+                    $reasoning .= $delta[$key];
+                    $listener(new ReasoningDelta($delta[$key]));
+                    break;
+                }
+            }
+
+            if (isset($delta['content']) && \is_string($delta['content']) && $delta['content'] !== '') {
+                $text .= $delta['content'];
+                $listener(new TextDelta($delta['content']));
+            }
+
+            $toolCalls = \is_array($delta['tool_calls'] ?? null) ? $delta['tool_calls'] : [];
+            foreach ($toolCalls as $toolCall) {
+                if (! \is_array($toolCall)) {
+                    continue;
+                }
+                $index = \is_int($toolCall['index'] ?? null) ? $toolCall['index'] : \count($calls);
+                $calls[$index] ??= ['id' => '', 'name' => '', 'arguments' => ''];
+                if (isset($toolCall['id']) && \is_string($toolCall['id']) && $toolCall['id'] !== '') {
+                    $calls[$index]['id'] = $toolCall['id'];
+                }
+                $function = \is_array($toolCall['function'] ?? null) ? $toolCall['function'] : [];
+                if (isset($function['name']) && \is_string($function['name']) && $function['name'] !== '') {
+                    $calls[$index]['name'] = $function['name'];
+                }
+                if (isset($function['arguments']) && \is_string($function['arguments']) && $function['arguments'] !== '') {
+                    $calls[$index]['arguments'] .= $function['arguments'];
+                    $listener(new ToolInputDelta($calls[$index]['id'], $calls[$index]['name'], $function['arguments']));
+                }
+            }
+
+            if (isset($choice['finish_reason']) && \is_string($choice['finish_reason'])) {
+                $finish = $this->finish($choice['finish_reason']);
+            }
+        });
+
+        $parts = [];
+        if ($reasoning !== '') {
+            $parts[] = new Reasoning($reasoning);
+        }
+        if ($text !== '') {
+            $parts[] = new Text($text);
         }
 
-        $error = isset($json['error']) && is_array($json['error']) ? $json['error'] : [];
-        $errorType = isset($error['code']) && is_scalar($error['code']) ? (string) $error['code'] : 'unknown_error';
-        $errorMessage = isset($error['message']) && is_string($error['message']) ? $error['message'] : 'Unknown error';
+        ksort($calls);
+        foreach ($calls as $index => $call) {
+            $part = new ToolCall($call['id'] !== '' ? $call['id'] : 'call_'.$index, $call['name'], $this->arguments($call['arguments']));
+            $parts[] = $part;
+            $listener(new ToolCallEvent($part));
+        }
 
-        return '('.$errorType.') '.$errorMessage;
-    }
+        if ($calls !== [] && ($finish === null || $finish === FinishReason::Stop)) {
+            $finish = FinishReason::ToolCalls;
+        }
 
-    public function getSupportForEmbeddings(): bool
-    {
-        return false;
-    }
-
-    /**
-     * @return array{
-     *     embedding: array<int, float>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null ,
-     *     modelLoadingDuration: int|null
-     * }
-     */
-    public function embed(string $text): array
-    {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        return new Response($parts, $finish ?? FinishReason::Other, $usage, $id, $model);
     }
 
     /**
-     * @param  array<int, string>  $texts
-     * @return array{
-     *     embeddings: array<int, array<int, float>>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null
-     * }
+     * @return array<string, mixed>
      */
-    public function bulkEmbed(array $texts): array
+    protected function payload(Request $request): array
     {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        $payload = [
+            'model' => $this->model,
+            'messages' => $this->messages($request->messages),
+            'stream' => true,
+            'stream_options' => ['include_usage' => true],
+        ];
+
+        if ($request->tools !== []) {
+            $payload['tools'] = array_map(fn (Tool $tool) => [
+                'type' => 'function',
+                'function' => [
+                    'name' => $tool->name,
+                    'description' => $tool->description,
+                    'parameters' => $tool->input->toArray(),
+                ],
+            ], $request->tools);
+        }
+
+        if ($request->toolChoice !== null) {
+            $payload['tool_choice'] = match ($request->toolChoice->type) {
+                ToolChoice::TOOL => ['type' => 'function', 'function' => ['name' => $request->toolChoice->name]],
+                default => $request->toolChoice->type,
+            };
+        }
+
+        if ($request->schema !== null) {
+            $payload['response_format'] = [
+                'type' => 'json_schema',
+                'json_schema' => [
+                    'name' => 'response',
+                    'strict' => true,
+                    'schema' => $request->schema->toArray(),
+                ],
+            ];
+        }
+
+        $sampling = $this->samples($request);
+        $settings = [
+            $this->tokens() => $request->maxTokens,
+            'temperature' => $sampling ? $request->temperature : null,
+            'top_p' => $sampling ? $request->topP : null,
+            'seed' => $request->seed,
+            'stop' => $request->stop === [] ? null : $request->stop,
+            'reasoning_effort' => $request->effort?->value,
+        ];
+
+        /** @var array<string, mixed> $merged */
+        $merged = array_replace_recursive(
+            $payload,
+            array_filter($settings, fn ($value) => $value !== null),
+            $request->options($this->getName()),
+        );
+
+        return $merged;
     }
 
-    public function getEmbeddingDimension(): int
+    /**
+     * Whether the model accepts temperature and top_p. GPT-6 models reject
+     * them unless reasoning is off, and reasoning is on by default.
+     */
+    protected function samples(Request $request): bool
     {
-        throw new \Exception('Embeddings are not supported for this adapter.');
+        if (! str_starts_with($this->model, 'gpt-6')) {
+            return true;
+        }
+
+        return $request->effort === Effort::None;
+    }
+
+    /**
+     * Name of the output token limit parameter.
+     */
+    protected function tokens(): string
+    {
+        return 'max_completion_tokens';
+    }
+
+    /**
+     * @param  list<Message>  $messages
+     * @return list<array<string, mixed>>
+     */
+    protected function messages(array $messages): array
+    {
+        $formatted = [];
+
+        foreach ($messages as $message) {
+            switch ($message->role) {
+                case Role::System:
+                    $formatted[] = ['role' => 'system', 'content' => $message->text()];
+                    break;
+
+                case Role::User:
+                    $formatted[] = ['role' => 'user', 'content' => $this->content($message)];
+                    break;
+
+                case Role::Assistant:
+                    $entry = ['role' => 'assistant', 'content' => $message->text() !== '' ? $message->text() : null];
+                    $calls = array_map(fn (ToolCall $call) => [
+                        'id' => $call->id,
+                        'type' => 'function',
+                        'function' => [
+                            'name' => $call->name,
+                            'arguments' => json_encode($this->object($call->arguments)) ?: '{}',
+                        ],
+                    ], $message->toolCalls());
+                    if ($calls !== []) {
+                        $entry['tool_calls'] = $calls;
+                    }
+                    $formatted[] = $entry;
+                    break;
+
+                case Role::Tool:
+                    foreach ($message->toolResults() as $result) {
+                        $formatted[] = ['role' => 'tool', 'tool_call_id' => $result->id, 'content' => $result->text()];
+                    }
+                    break;
+            }
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * User content: plain text when there is only text, content parts otherwise.
+     *
+     * @return string|list<array<string, mixed>>
+     */
+    protected function content(Message $message): string|array
+    {
+        $media = array_filter($message->parts, fn (Part $part) => ! $part instanceof Text);
+        if ($media === []) {
+            return $message->text();
+        }
+
+        return array_map(fn (Part $part) => match (true) {
+            $part instanceof Text => ['type' => 'text', 'text' => $part->text],
+            $part instanceof Image => ['type' => 'image_url', 'image_url' => ['url' => $part->url ?? 'data:'.$part->mimeType.';base64,'.$part->base64()]],
+            $part instanceof File && $part->url === null => ['type' => 'file', 'file' => ['filename' => $part->name ?? 'file', 'file_data' => 'data:'.$part->mimeType.';base64,'.$part->base64()]],
+            default => throw new Unsupported(ucfirst($this->getName()).' does not accept '.$part::class.' in user messages'),
+        }, $message->parts);
+    }
+
+    /**
+     * @param  array<mixed>  $usage
+     */
+    protected function usage(array $usage): Usage
+    {
+        $prompt = \is_array($usage['prompt_tokens_details'] ?? null) ? $usage['prompt_tokens_details'] : [];
+        $completion = \is_array($usage['completion_tokens_details'] ?? null) ? $usage['completion_tokens_details'] : [];
+
+        return new Usage(
+            input: \is_int($usage['prompt_tokens'] ?? null) ? $usage['prompt_tokens'] : 0,
+            output: \is_int($usage['completion_tokens'] ?? null) ? $usage['completion_tokens'] : 0,
+            cacheRead: \is_int($prompt['cached_tokens'] ?? null) ? $prompt['cached_tokens'] : 0,
+            reasoning: \is_int($completion['reasoning_tokens'] ?? null) ? $completion['reasoning_tokens'] : 0,
+        );
+    }
+
+    protected function finish(string $reason): FinishReason
+    {
+        return match ($reason) {
+            'stop' => FinishReason::Stop,
+            'length' => FinishReason::Length,
+            'tool_calls', 'function_call' => FinishReason::ToolCalls,
+            'content_filter' => FinishReason::ContentFilter,
+            default => FinishReason::Other,
+        };
+    }
+
+    protected function headers(): array
+    {
+        return ['authorization' => 'Bearer '.$this->apiKey];
     }
 }

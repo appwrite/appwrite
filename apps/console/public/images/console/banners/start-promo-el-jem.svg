@@ -1,0 +1,22 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="elJemGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="elJem">
+<path d="M96 296V128H292L300 142L310 150L318 168L332 172L344 184H386V296Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#elJem" fill="#19191C"/>
+<use href="#elJem" fill="url(#elJemGrad)"/>
+<use href="#elJem" stroke="#FD366E" stroke-width="1.36239"/>
+<g fill="#19191C" stroke="#FD366E" stroke-width="1.36239"><path d="M104 290V258C104 245.99 122 245.99 122 258V290Z"/><path d="M134 290V258C134 245.99 152 245.99 152 258V290Z"/><path d="M164 290V258C164 245.99 182 245.99 182 258V290Z"/><path d="M194 290V258C194 245.99 212 245.99 212 258V290Z"/><path d="M224 290V258C224 245.99 242 245.99 242 258V290Z"/><path d="M254 290V258C254 245.99 272 245.99 272 258V290Z"/><path d="M284 290V258C284 245.99 302 245.99 302 258V290Z"/><path d="M314 290V258C314 245.99 332 245.99 332 258V290Z"/><path d="M344 290V258C344 245.99 362 245.99 362 258V290Z"/><path d="M374 290V258C374 245.99 392 245.99 392 258V290Z"/><path d="M104 230V204C104 191.99 122 191.99 122 204V230Z"/><path d="M134 230V204C134 191.99 152 191.99 152 204V230Z"/><path d="M164 230V204C164 191.99 182 191.99 182 204V230Z"/><path d="M194 230V204C194 191.99 212 191.99 212 204V230Z"/><path d="M224 230V204C224 191.99 242 191.99 242 204V230Z"/><path d="M254 230V204C254 191.99 272 191.99 272 204V230Z"/><path d="M284 230V204C284 191.99 302 191.99 302 204V230Z"/><path d="M314 230V204C314 191.99 332 191.99 332 204V230Z"/><path d="M107 146H119V160H107Z"/><path d="M137 146H149V160H137Z"/><path d="M167 146H179V160H167Z"/><path d="M197 146H209V160H197Z"/><path d="M227 146H239V160H227Z"/><path d="M257 146H269V160H257Z"/><path d="M287 146H299V160H287Z"/></g>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M96 236H386"/><path d="M96 176H344"/><path d="M96 134H292"/></g>
+</svg>

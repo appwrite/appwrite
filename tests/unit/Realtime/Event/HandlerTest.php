@@ -12,6 +12,7 @@ use Appwrite\Realtime\Usage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Table;
+use Utopia\Telemetry\Counter;
 use Utopia\WebSocket\Server;
 
 final class HandlerTest extends TestCase
@@ -35,12 +36,16 @@ final class HandlerTest extends TestCase
         $this->dropped = new RecordingCounter();
         $this->failed = new RecordingCounter();
         $this->stage = new RecordingGauge();
+        $this->handler = $this->makeHandler($this->received);
+    }
 
+    private function makeHandler(Counter $eventsReceived): Handler
+    {
         $stats = new Table(16);
         $stats->column('messages', Table::TYPE_INT);
         $stats->create();
 
-        $this->handler = new Handler(
+        return new Handler(
             server: new Server(new RecordingAdapter()),
             realtime: new Realtime(),
             stats: $stats,
@@ -51,7 +56,7 @@ final class HandlerTest extends TestCase
             deliveryDelay: new RecordingHistogram(),
             messagesSent: new RecordingCounter(),
             outboundBytes: new RecordingCounter(),
-            eventsReceived: $this->received,
+            eventsReceived: $eventsReceived,
             eventsDropped: $this->dropped,
             eventsFailed: $this->failed,
             eventStage: $this->stage,
@@ -63,6 +68,18 @@ final class HandlerTest extends TestCase
             workerId: 0,
             traceProjectId: 'traced',
         );
+    }
+
+    public function testNeverThrowsWhenTelemetryFails(): void
+    {
+        // An exception escaping handle() reaches phpredis, which keeps reading but never calls back again.
+        $handler = $this->makeHandler(new ThrowingCounter());
+
+        $outcome = $handler->handle(null, 'realtime', $this->payload(\date(DATE_ATOM)));
+
+        $this->assertSame('failed', $outcome['result']);
+        $this->assertInstanceOf(\RuntimeException::class, $outcome['error']);
+        $this->assertSame([[1, ['stage' => 'decode']]], $this->failed->added);
     }
 
     public function testReturnsTheOutcomeForTheEntrypointSpan(): void
@@ -114,6 +131,21 @@ final class HandlerTest extends TestCase
 
         $this->assertSame([[1, ['stage' => 'arrival']]], $this->failed->added);
         $this->assertSame([], $this->arrivalDelay->recorded);
+    }
+
+    public function testSkipsTransferOfProjectWithoutConnectionsOnThisPod(): void
+    {
+        // Console events reach the console region only; a project hosted elsewhere has no connections or database here.
+        $event = \json_decode($this->payload(\date(DATE_ATOM)), true);
+        $event['project'] = 'console';
+        $event['permissionsChanged'] = true;
+        $event['data']['events'] = ['projects.remote.update.team'];
+        $event['data']['channels'] = ['console', 'projects.remote'];
+
+        $outcome = $this->handler->handle(null, 'realtime', \json_encode($event));
+
+        $this->assertSame('no_subscriber', $outcome['result']);
+        $this->assertSame([], $this->failed->added);
     }
 
     public function testDropsPayloadThatIsNotAnEvent(): void

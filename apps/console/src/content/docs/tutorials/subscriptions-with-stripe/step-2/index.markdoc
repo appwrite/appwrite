@@ -1,53 +1,49 @@
 ---
 layout: tutorial
-title: Setup Stripe
+title: Set up Stripe
 description: Add paid app subscription plans to your app with Stripe and Appwrite Functions.
 step: 2
 ---
 
-Start by visiting [Stripe](https://stripe.com/) and creating an account. When successful, you will see Stripe Dashboard.
+Start by visiting [Stripe](https://stripe.com/) and creating an account. When successful, you will see the Stripe Dashboard.
 
-This quick start will use test mode, but the same steps will also work for live mode.
-
-{% only_dark %}
-![Stripe dashboard](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe-dashboard.avif)
-{% /only_dark %}
-{% only_light %}
-![Stripe dashboard](/images/docs/tutorials/subscriptions-with-stripe/stripe-dashboard.avif)
-{% /only_light %}
+This tutorial uses a [sandbox](https://docs.stripe.com/sandboxes), Stripe's isolated test environment, so no real money moves. To switch to one, open the account picker in the Dashboard and select **Sandboxes**. The same steps also work in live mode when you're ready to accept real payments.
 
 ## API key {% #api-key %}
 
-In the header, you can switch to the **Developers** page, where you can head to the **API Keys** section. On this page, reveal and copy the **Secret key**. Note it down, as you will need it later when setting the `STRIPE_SECRET_KEY` environment variable.
+Open the [API keys](https://dashboard.stripe.com/apikeys) page while viewing your sandbox. Under **Standard keys**, reveal and copy the **Secret key**, which starts with `sk_test_`. Note it down, as you will need it later when setting the `STRIPE_SECRET_KEY` environment variable.
 
 {% only_dark %}
-![Stripe API key screen](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe-api-key.avif)
+![Stripe API keys page](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe-api-key.avif)
 {% /only_dark %}
 {% only_light %}
-![Stripe API key screen](/images/docs/tutorials/subscriptions-with-stripe/stripe-api-key.avif)
+![Stripe API keys page](/images/docs/tutorials/subscriptions-with-stripe/stripe-api-key.avif)
 {% /only_light %}
 
 ## Webhooks {% #webhooks %}
 
-Go to the **Webhooks** section and click the button to **Add an endpoint**.
+Next, create a webhook so Stripe can notify your function when a subscription starts or ends. You will use a placeholder URL for now in order to get a signing secret. Later, when you set up the Appwrite Function, you will update this webhook with the function's domain.
 
-Let's add a fake endpoint for now in order to get a webhook secret. Later, when you set up the Appwrite Function, you will update this endpoint with the Function's endpoint.
+Open the [Webhooks](https://dashboard.stripe.com/webhooks) tab in Workbench and click **Add destination**. If you haven't created any destinations yet, the button reads **Create an event destination**. Then, complete the form:
 
-Enter `https://temporary-endpoint/` as **Endpoint URL** and feel free to write some **Description** for yourself. 
-Leave everything else as is, and continue down to **Select events**. 
-You need to toggle events `customer.subscription.created` and `customer.subscription.deleted`. 
-You can use the search bar to your advantage. By searching for `subscription`, you should easily find those two events. 
+1. If you're asked where to listen for events, select **Your account**.
+1. Under the payload format, select **Snapshot**, then leave the **API version** as is.
+1. Search for `subscription` and select the `customer.subscription.created` and `customer.subscription.deleted` events. Click **Continue**.
+1. Select **Webhook endpoint** as the destination type and click **Continue**.
+1. Enter `https://example.com/webhook` as the **Endpoint URL**. Optionally, give the destination a name and description.
+1. Click **Create destination**.
 
-Once both are selected, you can click a button to **Add events**. Finish off the form by clicking the **Add endpoint** button.
+{% info title="Select Snapshot, not Thin" %}
+Stripe recommends **Thin** events for new integrations, but the template reads the subscription details from each event's payload, which only **Snapshot** events include. With a **Thin** destination, the function can't tell which user subscribed, and the `subscriber` label is never added.
+{% /info %}
 
+Once created, Stripe opens the destination's details page. Reveal the **Signing secret**, which starts with `whsec_`, and copy it. Note it down, as you will need it later when setting the `STRIPE_WEBHOOK_SECRET` environment variable.
 
 {% only_dark %}
-![Stripe webhook setup screen](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe-webhook-subscription.avif)
+![Stripe webhook destination details](/images/docs/tutorials/subscriptions-with-stripe/dark/stripe-webhook-subscription.avif)
 {% /only_dark %}
 {% only_light %}
-![Stripe webhook setup screen](/images/docs/tutorials/subscriptions-with-stripe/stripe-webhook-subscription.avif)
+![Stripe webhook destination details](/images/docs/tutorials/subscriptions-with-stripe/stripe-webhook-subscription.avif)
 {% /only_light %}
 
-Once created, click **Reveal** under **Signing secret** and copy the secret. Note it down, as you will need it later when setting the `STRIPE_WEBHOOK_SECRET` environment variable.
-
-Keep this page open, as you will need it soon to update the endpoint with the real Function's endpoint.
+Keep this page open, as you will need it soon to replace the placeholder URL with your function's domain.

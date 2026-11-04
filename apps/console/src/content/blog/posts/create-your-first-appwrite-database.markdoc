@@ -1,0 +1,160 @@
+---
+layout: post
+title: "Create your first Appwrite database and add your first row"
+description: "Create a TablesDB database in Appwrite, add a table with typed columns, choose who can read and write, then add your first row and use it from your app."
+date: 2026-11-03
+cover: /images/blog/create-your-first-appwrite-database/cover.avif
+timeToRead: 4
+author: atharva
+category: tutorials
+featured: false
+faqs:
+  - question: "Which Appwrite database type should I start with?"
+    answer: "Start with [TablesDB](/docs/products/databases/tablesdb). It runs on every plan, including Free, with no compute fee, and your app reads it directly with Appwrite permissions. Pick DocumentsDB for records whose fields vary, VectorsDB for embeddings, and PostgreSQL or MySQL when you want a dedicated SQL engine."
+  - question: "Can I use DocumentsDB, VectorsDB, PostgreSQL, or MySQL on the Free plan?"
+    answer: "They run on dedicated compute, which comes with the Pro and Enterprise plans, from $10 a month per database. The Pro plan includes $10 a month in database compute credits, which covers one database on the smallest tier. See [pricing](/pricing) for the tiers."
+  - question: "How do I make a table's rows readable by everyone?"
+    answer: "Open the table's **Security** tab, click **Add role**, choose **Any**, tick **Read**, and click **Update**. Every visitor can then read every row, signed in or not."
+  - question: "Can my AI coding agent create the table for me?"
+    answer: "Yes. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe the table, its columns, and who can read and write it. Your agent creates the database, the table, and its permissions."
+---
+
+An Appwrite database stores your app's data and serves it straight to your users, with permissions that decide who sees what. You set it up in the Console, and your app reads and writes it through the Appwrite SDK.
+
+In this guide, you create a TablesDB database with a `tasks` table, set it up so each user keeps their own tasks, and add and list tasks from your app. Everything here works on the Free plan.
+
+{% info title="Building with an AI coding agent?" %}
+Your agent can do every step in this guide for you through the Appwrite MCP server. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite), then describe what you want in the chat.
+{% /info %}
+
+You need an Appwrite project. If you don't have one yet, [create one in the Console](/sign-in).
+
+# Step 1: Create a TablesDB database {% #create-database %}
+
+{% only_dark %}
+![The Create database wizard showing the five database types: TablesDB, DocumentsDB, and VectorsDB under Appwrite databases, PostgreSQL and MySQL under native databases](/images/blog/create-your-first-appwrite-database/dark/database-type.avif)
+{% /only_dark %}
+{% only_light %}
+![The Create database wizard showing the five database types: TablesDB, DocumentsDB, and VectorsDB under Appwrite databases, PostgreSQL and MySQL under native databases](/images/blog/create-your-first-appwrite-database/database-type.avif)
+{% /only_light %}
+
+Appwrite offers five database types. TablesDB fits most apps, so this guide uses it.
+
+| Type | Use it for |
+| --- | --- |
+| [TablesDB](/docs/products/databases/tablesdb) | App data in tables with typed columns, with permissions down to each row |
+| [DocumentsDB](/docs/products/databases/documentsdb) | Flexible JSON records whose fields vary from one to the next |
+| [VectorsDB](/docs/products/databases/vectorsdb) | Embeddings for semantic search and AI features |
+| [PostgreSQL](/docs/products/databases/postgresql) | A dedicated PostgreSQL engine for SQL tools, ORMs, and extensions like pgvector |
+| [MySQL](/docs/products/databases/mysql) | A dedicated MySQL engine for existing MySQL apps |
+
+TablesDB runs on Serverless compute on every plan, with no compute fee. The other four run on dedicated compute on the Pro and Enterprise plans, from $10 a month per database, and Pro includes $10 a month in database compute credits.
+
+1. Open your project in the [Console](/sign-in), go to **Databases**, and click **Create database**.
+2. Choose **TablesDB** and enter a **Name**, such as `Main`.
+3. Under **Database ID**, click **Auto-generated** and enter `main`. Your code uses this ID.
+4. Keep the **Serverless** specification and click **Create database**.
+
+# Step 2: Create a table {% #create-table %}
+
+{% only_dark %}
+![The Columns tab of the Tasks table listing title as varchar size 255 and required, done as boolean with an index, and notes as text](/images/blog/create-your-first-appwrite-database/dark/table-columns.avif)
+{% /only_dark %}
+{% only_light %}
+![The Columns tab of the Tasks table listing title as varchar size 255 and required, done as boolean with an index, and notes as text](/images/blog/create-your-first-appwrite-database/table-columns.avif)
+{% /only_light %}
+
+A table holds rows of one shape, and its columns define that shape. This guide uses a `tasks` table with three columns:
+
+| Key | Type | Settings |
+| --- | --- | --- |
+| `title` | Varchar | Size 255, required |
+| `done` | Boolean | Default `false` |
+| `notes` | Text | Optional |
+
+1. Open your database and click **Create table**. Enter the **Name** `Tasks`, click **Auto-generated** under **Table ID** and enter `tasks`, then click **Create**.
+2. In the **Columns** tab, click **Create column**. Enter the **Key**, pick the **Type**, fill in the settings from the table above, and click **Create Column**. Repeat for each column.
+3. In the **Indexes** tab, click **Create index**. Enter the **Index Key** `done_index`, select the `done` column, and click **Create Index**. Your app filters on `done`, and the index keeps that fast.
+
+{% info title="Let your agent create it" %}
+Your AI coding agent can also create the table for you through the Appwrite MCP server. Describe the table and its columns in the chat, and your agent builds it in your project. [Connect your AI coding agent to Appwrite](/blog/post/connect-ai-coding-assistant-to-appwrite) to set it up.
+{% /info %}
+
+# Step 3: Choose who can read and write {% #permissions %}
+
+{% only_dark %}
+![The Security tab of the Tasks table with All users allowed to create rows and Row level security (RLS) turned on](/images/blog/create-your-first-appwrite-database/dark/table-security.avif)
+{% /only_dark %}
+{% only_light %}
+![The Security tab of the Tasks table with All users allowed to create rows and Row level security (RLS) turned on](/images/blog/create-your-first-appwrite-database/table-security.avif)
+{% /only_light %}
+
+Permissions decide what your users can do with a table. In a task list, each user adds their own tasks and sees only those.
+
+1. Open the table's **Security** tab.
+2. Under **Permissions**, click **Add role**, choose **All users**, tick **Create**, and click **Update**.
+3. Turn on **Row level security (RLS)** and click **Update** in that section.
+
+Now any signed-in user can add tasks. Each task belongs to the user who created it, and only that user can read, update, or delete it.
+
+{% info title="Data everyone can see?" %}
+For data every visitor reads, like a product catalog, grant **Read** to **Any** instead. The [permissions guide](/docs/products/databases/tablesdb/permissions) covers teams and other roles.
+{% /info %}
+
+# Step 4: Add a test row {% #create-row %}
+
+{% only_dark %}
+![The Create row drawer for the Tasks table with title set to Write the first row and done left at False](/images/blog/create-your-first-appwrite-database/dark/create-row.avif)
+{% /only_dark %}
+{% only_light %}
+![The Create row drawer for the Tasks table with title set to Write the first row and done left at False](/images/blog/create-your-first-appwrite-database/create-row.avif)
+{% /only_light %}
+
+In the table's **Rows** tab, click **Create row**. Enter a `title`, leave `done` as it is, and click **Create row**.
+
+The row appears in the **Rows** tab with its own `$id`, and `done` is `false` from the column default. Rows you add in the Console are handy for testing, and in the next step your app adds rows that belong to each signed-in user.
+
+# Step 5: Read and write rows from your app {% #connect-app %}
+
+Your app works with the table as a signed-in user. If it doesn't have sign-in yet, add it with [Appwrite Auth](/docs/products/auth/quick-start).
+
+Add your app under **Apps** in your project, with the hostname it runs on, such as `localhost`. Then install the SDK with `npm install appwrite`, and copy the **API Endpoint** and **Project ID** from your project's **Settings**.
+
+This adds a task for the signed-in user, then lists their open tasks, newest first:
+
+```js
+import { Client, TablesDB, ID, Query } from 'appwrite';
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // API Endpoint
+  .setProject('<PROJECT_ID>'); // Project ID
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.createRow({
+  databaseId: 'main',
+  tableId: 'tasks',
+  rowId: ID.unique(),
+  data: { title: 'Ship my first feature' }
+});
+
+const { rows } = await tablesDB.listRows({
+  databaseId: 'main',
+  tableId: 'tasks',
+  queries: [
+    Query.equal('done', [false]),
+    Query.orderDesc('$createdAt')
+  ]
+});
+```
+
+`rows` holds the task you just added. Each user gets back only their own tasks.
+
+# Keep building {% #keep-building %}
+
+Your app now has a table it can write and query, with permissions set for your users. Next, put your own code next to that data: [deploy your first Appwrite function and site](/blog/post/deploy-your-first-appwrite-function-and-site).
+
+- [TablesDB documentation](/docs/products/databases/tablesdb)
+- [Queries](/docs/products/databases/tablesdb/queries)
+- [Realtime documentation](/docs/apis/realtime)
+- [Native databases vs Appwrite databases](/blog/post/native-databases-vs-appwrite-databases)

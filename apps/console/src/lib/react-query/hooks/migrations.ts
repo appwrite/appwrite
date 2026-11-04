@@ -365,11 +365,23 @@ export function useCsvImportMigrations(
  * The latest Appwrite to Appwrite migrations of a project. In an environment the
  * newest one is its copy from the project it belongs to.
  */
-export async function fetchEnvironmentCopyMigrations(projectId: string) {
+export async function fetchEnvironmentCopyMigrations(
+  projectId: string,
+  region?: string,
+  environmentId?: string,
+) {
   if (!projectId) {
     return { migrations: [] as Models.Migration[] }
   }
-  const projectSdk = sdk.forProject(projectId)
+  // The copy is a migration of the environment, read inside it: the environment
+  // the Console is in, or the one a caller names (the wizard, from the project).
+  // A caller that knows the region passes it, as the project's region is the
+  // environment's and may not be cached yet.
+  const projectSdk = sdk.forProject(
+    projectId,
+    region,
+    environmentId === undefined ? {} : { environment: environmentId },
+  )
   const response = await projectSdk.migrations.list({
     queries: [
       Query.equal('source', 'Appwrite'),

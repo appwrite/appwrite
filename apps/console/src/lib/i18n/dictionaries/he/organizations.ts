@@ -28,6 +28,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
     'אמצעי תשלום גיבוי מבטיח שירות רציף אם אמצעי התשלום הראשי נכשל.',
   'A card was entered in a previous attempt. Complete the details below to finish adding it.':
     'כרטיס הוזן בניסיון קודם. השלימו את הפרטים למטה כדי לסיים את ההוספה.',
+  'Use a different card': 'שימוש בכרטיס אחר',
   'A new payment method has been added to your account':
     'אמצעי תשלום חדש נוסף לחשבון שלכם',
   'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':
@@ -718,6 +719,14 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Nameservers updated. Please wait for DNS propagation.':
     'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
   'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
+  'Need SSO or custom organization roles?':
+    'זקוקים ל-SSO או לתפקידי ארגון מותאמים?',
+  'Need a custom SLA or a private Slack channel?':
+    'זקוקים ל-SLA מותאם או לערוץ Slack פרטי?',
+  'Running Appwrite at scale?': 'מריצים את Appwrite בקנה מידה גדול?',
+  'Get a custom SLA, a private Slack channel, and SOC 2 and HIPAA without add-ons.':
+    'קבלו SLA מותאם, ערוץ Slack פרטי, ו-SOC 2 ו-HIPAA ללא תוספות.',
+  'Talk to sales': 'שיחה עם מכירות',
   'Need compliance, custom SLAs, or volume pricing?':
     'זקוקים לציות, הסכמי SLA מותאמים או תמחור לפי היקף?',
   Network: 'רשת',
@@ -1605,4 +1614,10 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Build on top of Appwrite': 'בנו על גבי Appwrite',
   'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
     'צרו אפליקציות OAuth2 שמאפשרות למשתמשי Appwrite לחבר את הפרויקטים שלהם עם גישה מבוססת הסכמה ומוגבלת בהרשאות, במקום מפתחות API שמודבקים ידנית. פרסמו אותן במרקטפלייס כדי שכל ארגון יוכל למצוא אותן.',
+  'Set up auto-pay': 'הגדרת תשלום אוטומטי',
+  'Auto-pay is set up': 'התשלום האוטומטי הוגדר',
+  'Failed to set up auto-pay': 'הגדרת התשלום האוטומטי נכשלה',
+  'The bank asks for an OTP on automatic payments with this card. Set up auto-pay so payments up to $150 go through without one.':
+    'הבנק מבקש OTP בתשלומים אוטומטיים בכרטיס הזה. הגדירו תשלום אוטומטי כדי שתשלומים של עד $150 יעברו בלי OTP.',
+  'Only the card owner can set up auto-pay': 'רק בעל הכרטיס יכול להגדיר תשלום אוטומטי',
 }
