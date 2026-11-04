@@ -3917,4 +3917,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'これらのアラートは引き続きコンソール通知に表示されます。',
   'Saving...': '保存中...',
+  // Firewall rule schedules
+  'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
+    '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
+  Repeat: '繰り返し',
+  'Selected days every week': '毎週の選択した曜日',
+  'Selected days every other week': '隔週の選択した曜日',
+  'Weekends (Sat and Sun)': '週末（土・日）',
+  'Every few days': '数日ごと',
+  'Days of the week': '曜日',
+  'Select at least one day.': '曜日を 1 つ以上選択してください。',
+  'Repeat every (days)': '繰り返し間隔（日）',
+  'Starting on': '開始日',
+  'The week of this date is the first active week.':
+    'この日付を含む週が最初の有効な週になります。',
+  'The first active day. The rule is never active before it.':
+    '最初の有効日です。この日より前はルールが有効になりません。',
+  'All day': '終日',
+  'Start and end times must differ. Turn on All day for the whole day.':
+    '開始時刻と終了時刻は異なる値にしてください。1 日中有効にするには「終日」をオンにします。',
+  'This window crosses midnight: it starts on each selected day and ends the next morning.':
+    'この時間帯は午前 0 時をまたぎます。選択した各曜日に始まり、翌朝に終わります。',
+  "Days and times follow this time zone's clock, including daylight saving.":
+    '曜日と時刻は、夏時間を含めこのタイムゾーンの時計に従います。',
 }
