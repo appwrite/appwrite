@@ -237,6 +237,19 @@ export function useVerifyDomain(
         predicate: (query) => query.queryKey[2] === projectId,
       })
     },
+    // The nameserver check runs even when the rule check fails, so the
+    // organization domain can change either way.
+    onSettled: (_data, _error, input) => {
+      const organizationDomainId =
+        typeof input === 'string' ? undefined : input.organizationDomainId
+      if (!organizationDomainId) return
+      void queryClient.refetchQueries({
+        queryKey: ['domain', organizationDomainId],
+      })
+      void queryClient.refetchQueries({
+        queryKey: ['domains', 'organization'],
+      })
+    },
   })
 }
 
