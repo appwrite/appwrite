@@ -36,50 +36,28 @@ describe('getRuleStatusBadgeConfig', () => {
     ).toEqual({ variant: 'success', label: 'Verified' })
   })
 
-  test('keeps Verified with the expiry of a healthy certificate', () => {
-    const expireAt = expiresIn(20 * DAY_MS)
-    for (const certificateStatus of ['issued', 'renewing', 'unknown', '']) {
-      const config = getRuleStatusBadgeConfig(
-        { status: 'verified', expireAt, certificateStatus },
-        NOW,
-      )
-      expect(config.variant).toBe('success')
-      expect(config.label).toBe('Verified')
-      expect(config.hint).toBeUndefined()
-      expect(config.expireAt?.toISOString()).toBe(expireAt)
+  test('keeps a plain Verified badge for a healthy certificate, even close to expiry', () => {
+    // Renewal is Appwrite's job: nothing to act on, so no warning and no date.
+    for (const certificateStatus of [
+      'issued',
+      'renewing',
+      'expiring',
+      'unknown',
+      '',
+    ]) {
+      for (const remaining of [20 * DAY_MS, DAY_MS]) {
+        expect(
+          getRuleStatusBadgeConfig(
+            {
+              status: 'verified',
+              expireAt: expiresIn(remaining),
+              certificateStatus,
+            },
+            NOW,
+          ),
+        ).toEqual({ variant: 'success', label: 'Verified' })
+      }
     }
-  })
-
-  test('warns from 7 days before the certificate expires', () => {
-    const outside = getRuleStatusBadgeConfig(
-      { status: 'verified', expireAt: expiresIn(7 * DAY_MS + 1) },
-      NOW,
-    )
-    expect(outside.label).toBe('Verified')
-
-    for (const remaining of [7 * DAY_MS, DAY_MS, 0]) {
-      const config = getRuleStatusBadgeConfig(
-        { status: 'verified', expireAt: expiresIn(remaining) },
-        NOW,
-      )
-      expect(config.variant).toBe('warning')
-      expect(config.label).toBe('Expires soon')
-      expect(config.hint).toBeDefined()
-      expect(config.expireAt).toBeUndefined()
-    }
-  })
-
-  test('warns when the provider has not renewed the certificate yet', () => {
-    const config = getRuleStatusBadgeConfig(
-      {
-        status: 'verified',
-        expireAt: expiresIn(20 * DAY_MS),
-        certificateStatus: 'expiring',
-      },
-      NOW,
-    )
-    expect(config.variant).toBe('warning')
-    expect(config.label).toBe('Expires soon')
   })
 
   test('shows an expired certificate as an error, over any other state', () => {
@@ -94,36 +72,39 @@ describe('getRuleStatusBadgeConfig', () => {
     }
   })
 
-  test('shows a failed renewal over a blocked or expiring one', () => {
-    expect(
-      getRuleStatusBadgeConfig(
-        {
-          status: 'verified',
-          expireAt: expiresIn(DAY_MS),
-          certificateStatus: 'failed',
-        },
-        NOW,
-      ),
-    ).toMatchObject({ variant: 'error', label: 'Renewal failed' })
-    expect(
-      getRuleStatusBadgeConfig(
-        { status: 'verified', certificateStatus: 'failed' },
-        NOW,
-      ),
-    ).toMatchObject({ variant: 'error', label: 'Renewal failed' })
+  test('shows a failed renewal with when the certificate expires', () => {
+    const expireAt = expiresIn(DAY_MS)
+    const config = getRuleStatusBadgeConfig(
+      { status: 'verified', expireAt, certificateStatus: 'failed' },
+      NOW,
+    )
+    expect(config).toMatchObject({ variant: 'error', label: 'Renewal failed' })
+    expect(config.hint).toBeDefined()
+    expect(config.expireAt?.toISOString()).toBe(expireAt)
+
+    const unknownExpiry = getRuleStatusBadgeConfig(
+      { status: 'verified', certificateStatus: 'failed' },
+      NOW,
+    )
+    expect(unknownExpiry).toMatchObject({
+      variant: 'error',
+      label: 'Renewal failed',
+    })
+    expect(unknownExpiry.expireAt).toBeUndefined()
   })
 
-  test('shows a blocked renewal over an expiring one', () => {
-    expect(
-      getRuleStatusBadgeConfig(
-        {
-          status: 'verified',
-          expireAt: expiresIn(DAY_MS),
-          certificateStatus: 'blocked',
-        },
-        NOW,
-      ),
-    ).toMatchObject({ variant: 'warning', label: 'Renewal blocked' })
+  test('shows a blocked renewal with when the certificate expires', () => {
+    const expireAt = expiresIn(20 * DAY_MS)
+    const config = getRuleStatusBadgeConfig(
+      { status: 'verified', expireAt, certificateStatus: 'blocked' },
+      NOW,
+    )
+    expect(config).toMatchObject({
+      variant: 'warning',
+      label: 'Renewal blocked',
+    })
+    expect(config.hint).toBeDefined()
+    expect(config.expireAt?.toISOString()).toBe(expireAt)
   })
 
   test('keeps the domain status badge for a rule that is not verified', () => {

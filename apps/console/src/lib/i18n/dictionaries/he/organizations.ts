@@ -481,7 +481,7 @@ export const heOrganizationsDictionary: Record<string, string> = {
   'Estimated total': 'סכום משוער',
   Expired: 'פג תוקף',
   Expires: 'בתוקף עד',
-  'Expires soon': 'התוקף יפוג בקרוב',
+  'Expires soon': 'יפוג בקרוב',
   'Expiring soon': 'יפוג בקרוב',
   'Expiry date': 'תאריך תפוגה',
   Explore: 'סקירה',

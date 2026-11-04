@@ -321,14 +321,12 @@ export function getDomainStatusBadgeConfig(status: string): {
   }
 }
 
-/** A certificate is at risk this long before it expires. */
-const CERTIFICATE_EXPIRY_WARNING_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
-
 /**
- * Get proxy rule status badge config for rendering. A verified rule shows the
- * state of its certificate, so a renewal problem is visible before the
- * certificate expires. A rule without certificate state, for example from a
- * server that does not report it, keeps the domain status badge.
+ * Get proxy rule status badge config for rendering. A verified rule shows its
+ * certificate only when the developer has to act on it: the renewal failed,
+ * is blocked on a DNS record, or the certificate expired. A healthy
+ * certificate keeps the plain Verified badge, and so does a rule from a
+ * server that reports no certificate state.
  */
 export function getRuleStatusBadgeConfig(
   rule: { status: string; expireAt?: string; certificateStatus?: string },
@@ -338,19 +336,17 @@ export function getRuleStatusBadgeConfig(
   label: string
   /** What to do about the certificate, for the badge tooltip */
   hint?: string
-  /** When the certificate of a healthy verified rule expires */
+  /** When a certificate whose renewal is stuck expires */
   expireAt?: Date
 } {
   const config = getDomainStatusBadgeConfig(rule.status)
   if (rule.status !== 'verified') return config
 
-  const expireAt = rule.expireAt ? new Date(rule.expireAt) : null
-  const remaining =
-    expireAt && !Number.isNaN(expireAt.getTime())
-      ? expireAt.getTime() - now.getTime()
-      : null
+  const parsed = rule.expireAt ? new Date(rule.expireAt) : undefined
+  const expireAt =
+    parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined
 
-  if (remaining !== null && remaining < 0) {
+  if (expireAt && expireAt.getTime() < now.getTime()) {
     return {
       variant: 'error',
       label: 'Certificate expired',
@@ -362,6 +358,7 @@ export function getRuleStatusBadgeConfig(
       variant: 'error',
       label: 'Renewal failed',
       hint: "View logs for details. Check that the domain's DNS still points to Appwrite.",
+      ...(expireAt && { expireAt }),
     }
   }
   if (rule.certificateStatus === 'blocked') {
@@ -369,18 +366,9 @@ export function getRuleStatusBadgeConfig(
       variant: 'warning',
       label: 'Renewal blocked',
       hint: 'Renewal is waiting on a DNS record. View logs to see which record to add.',
-    }
-  }
-  if (
-    rule.certificateStatus === 'expiring' ||
-    (remaining !== null && remaining <= CERTIFICATE_EXPIRY_WARNING_MS)
-  ) {
-    return {
-      variant: 'warning',
-      label: 'Expires soon',
-      hint: "This certificate has not renewed yet. Check that the domain's DNS still points to Appwrite.",
+      ...(expireAt && { expireAt }),
     }
   }
 
-  return remaining !== null && expireAt ? { ...config, expireAt } : config
+  return config
 }

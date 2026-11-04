@@ -15,22 +15,18 @@ interface RuleStatusBadgeProps {
 }
 
 /**
- * Status badge of a proxy rule. A verified rule shows the state of its
- * certificate, and its tooltip says what to do about a problem, or when a
- * healthy certificate expires.
+ * Status badge of a proxy rule. A verified rule shows its certificate only
+ * when the developer has to act; the tooltip then says what to do and, for a
+ * stuck renewal, when the certificate expires.
  */
 export function RuleStatusBadge({ rule }: RuleStatusBadgeProps) {
   const t = useT()
   const { formatDateShort } = useLocalizedDateFormat()
   const config = getRuleStatusBadgeConfig(rule)
-  const hint = config.hint
-    ? t(config.hint)
-    : config.expireAt
-      ? t('Certificate expires on {date}.').replace(
-          '{date}',
-          formatDateShort(config.expireAt),
-        )
-      : undefined
+  const expiry = config.expireAt
+    ? ` ${t('Certificate expires on {date}.').replace('{date}', formatDateShort(config.expireAt))}`
+    : ''
+  const hint = config.hint ? `${t(config.hint)}${expiry}` : undefined
 
   return (
     <Tooltip>

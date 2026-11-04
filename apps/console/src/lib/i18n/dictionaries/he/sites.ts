@@ -184,8 +184,6 @@ export const heSitesDictionary: Record<string, string> = {
     'צפו בלוגים לפרטים נוספים. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
   'Renewal is waiting on a DNS record. View logs to see which record to add.':
     'חידוש התעודה ממתין לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
-  "This certificate has not renewed yet. Check that the domain's DNS still points to Appwrite.":
-    'התעודה עדיין לא חודשה. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
 
   // Site layout and settings shell
   Deployments: 'פריסות',

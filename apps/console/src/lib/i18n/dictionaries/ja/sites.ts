@@ -98,8 +98,6 @@ export const jaSitesDictionary: Record<string, string> = {
     '詳細はログを確認してください。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
   'Renewal is waiting on a DNS record. View logs to see which record to add.':
     '証明書の更新は DNS レコードの追加を待っています。追加するレコードはログで確認できます。',
-  "This certificate has not renewed yet. Check that the domain's DNS still points to Appwrite.":
-    'この証明書はまだ更新されていません。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
   'Back to sites': 'サイト一覧に戻る',
   'Your site is currently being deployed.': 'サイトは現在デプロイ中です。',
   'Filters coming soon': 'フィルターは近日公開',
