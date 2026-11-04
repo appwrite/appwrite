@@ -111,6 +111,11 @@ class Update extends Action
                 Query::orderDesc('$sequence'),
             ]);
 
+        // Unlike create, the rule may already be serving: never swap it onto a branch with nothing to serve.
+        if ($branch !== '' && $deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND, 'No ready deployment found for branch: ' . $branch);
+        }
+
         $rule = $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
             'deploymentId' => $deployment->isEmpty() ? '' : $deployment->getId(),
             'deploymentInternalId' => $deployment->isEmpty() ? '' : $deployment->getSequence(),

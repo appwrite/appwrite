@@ -595,14 +595,14 @@ trait ProxyBase
         $this->assertSame($second['siteId'], $rule['body']['deploymentResourceId']);
         $this->assertSame($second['deploymentId'], $rule['body']['deploymentId']);
 
-        $rule = $this->updateSiteRule($ruleId, $second['siteId'], 'dev');
-        $this->assertSame(200, $rule['headers']['status-code']);
-        $this->assertSame('dev', $rule['body']['deploymentVcsProviderBranch']);
-        $this->assertEmpty($rule['body']['deploymentId']);
-
         /**
          * Test for FAILURE
          */
+        $rule = $this->updateSiteRule($ruleId, $second['siteId'], 'dev');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $rule['body']['type']);
+        $this->assertSame($second['deploymentId'], $this->getRule($ruleId)['body']['deploymentId']);
+
         $rule = $this->updateSiteRule($ruleId, 'missing');
         $this->assertSame(404, $rule['headers']['status-code']);
         $this->assertSame('rule_resource_not_found', $rule['body']['type']);
@@ -647,6 +647,10 @@ trait ProxyBase
         /**
          * Test for FAILURE
          */
+        $rule = $this->updateFunctionRule($ruleId, $second['functionId'], 'dev');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $rule['body']['type']);
+
         $rule = $this->updateFunctionRule($ruleId, 'missing');
         $this->assertSame(404, $rule['headers']['status-code']);
         $this->assertSame('rule_resource_not_found', $rule['body']['type']);
