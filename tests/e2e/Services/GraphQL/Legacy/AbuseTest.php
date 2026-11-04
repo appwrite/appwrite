@@ -117,7 +117,7 @@ final class AbuseTest extends Scope
         ], $this->getHeaders()), ['query' => $query]);
 
         $this->assertArrayHasKey('errors', $response['body']);
-        $this->assertStringContainsString('Max query complexity should be', $response['body']['errors'][0]['message']);
+        $this->assertStringContainsString('Max query complexity should be', (string) $response['body']['errors'][0]['message']);
     }
 
     public function testTooManyQueriesBlocked()
