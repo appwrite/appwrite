@@ -3,6 +3,21 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "october-product-update-passkeys-mcp-and-more",
+    "href": "/blog/post/october-product-update-passkeys-mcp-and-more",
+    "title": "October product update: Passkeys, MCP and more",
+    "description": "See what's new in Appwrite with passkeys, new OAuth2 providers, email triggers for Functions, MCP Events, a Helm chart, Premium Geo DB, and more.",
+    "date": "2026-11-04",
+    "lastUpdated": "2026-11-04",
+    "timeToRead": 6,
+    "author": "aishwari",
+    "category": "products",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/october-product-update-passkeys-mcp-and-more/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-your-first-appwrite-firewall-rules",
     "href": "/blog/post/add-your-first-appwrite-firewall-rules",
     "title": "Add your first Appwrite Firewall rules to a new project",
