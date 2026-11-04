@@ -585,10 +585,9 @@ class State
             }
         }
 
-        /** @var array<Document> $presences */
-        $presences = [];
+        $deleted = 0;
         try {
-            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $queries, &$presences): void {
+            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $queries, $project, $queueForRealtime, &$deleted): void {
                 if ($dbForProject->findCollection(self::COLLECTION_ID) === null) {
                     return;
                 }
@@ -596,34 +595,32 @@ class State
                 $dbForProject->deleteDocuments(
                     self::COLLECTION_ID,
                     $queries,
-                    onNext: function (Document $presence) use (&$presences): void {
-                        $presences[] = $presence;
+                    // Announced as each row is deleted, so nothing is buffered and a later failure can't silence it.
+                    onNext: function (Document $presence) use ($project, $queueForRealtime, &$deleted): void {
+                        $deleted++;
+
+                        foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                            $presence->removeAttribute($attribute);
+                        }
+
+                        try {
+                            $queueForRealtime
+                                ->reset()
+                                ->setProject($project)
+                                ->setEvent('presences.[presenceId].delete')
+                                ->setParam('presenceId', $presence->getId())
+                                ->setPayload($presence->getArrayCopy())
+                                ->trigger();
+                        } catch (Throwable $th) {
+                            Span::current()?->setError($th)->set('presence.id', $presence->getId());
+                        }
                     },
                 );
             });
         } finally {
-            // Batches deleted before a failure are gone too, so report them either way.
-            // Each step is guarded so one failure cannot silence the rest.
-            if (!empty($presences)) {
-                $this->triggerUsage($publisherForUsage, $project, -\count($presences));
-
-                foreach ($presences as $presence) {
-                    foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
-                        $presence->removeAttribute($attribute);
-                    }
-
-                    try {
-                        $queueForRealtime
-                            ->reset()
-                            ->setProject($project)
-                            ->setEvent('presences.[presenceId].delete')
-                            ->setParam('presenceId', $presence->getId())
-                            ->setPayload($presence->getArrayCopy())
-                            ->trigger();
-                    } catch (Throwable $th) {
-                        Span::current()?->setError($th)->set('presence.id', $presence->getId());
-                    }
-                }
+            // Rows deleted before a failure are gone too, so count and purge them either way.
+            if ($deleted > 0) {
+                $this->triggerUsage($publisherForUsage, $project, -$deleted);
 
                 try {
                     $this->purgeListCache($dbForProject);
@@ -633,7 +630,7 @@ class State
             }
         }
 
-        return \count($presences);
+        return $deleted;
     }
 
     private function checkPermissions(array $permissions, Authorization $authorization): void
