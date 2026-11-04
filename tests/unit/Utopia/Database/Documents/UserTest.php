@@ -8,11 +8,20 @@ use Appwrite\Auth\MFA\Type;
 use Appwrite\Utopia\Database\Documents\User;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tests\Unit\Utopia\Database\Documents\Fakes\RacingDatabase;
 use Utopia\Auth\Proofs\Code;
 use Utopia\Auth\Proofs\Token;
+use Utopia\Cache\Adapter\Memory as MemoryCache;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Collection;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
@@ -20,6 +29,15 @@ use Utopia\Database\Validator\Roles;
 final class UserTest extends TestCase
 {
     private $authorization;
+
+    private string|false $key;
+
+    protected function setUp(): void
+    {
+        // The identities collection runs its tokens through the encrypt filter on every write
+        $this->key = \getenv('_APP_OPENSSL_KEY_V1');
+        \putenv('_APP_OPENSSL_KEY_V1=unit-test-key');
+    }
 
     public function getAuthorization(): Authorization
     {
@@ -36,6 +54,8 @@ final class UserTest extends TestCase
      */
     public function tearDown(): void
     {
+        \putenv($this->key === false ? '_APP_OPENSSL_KEY_V1' : '_APP_OPENSSL_KEY_V1=' . $this->key);
+
         $this->getAuthorization()->cleanRoles();
         $this->getAuthorization()->addRole(Role::any()->toString());
     }
@@ -678,5 +698,122 @@ final class UserTest extends TestCase
         $this->assertContains(Role::team(Id::custom('def'), 'guest')->toString(), $roles);
         $this->assertContains(Role::member(Id::custom('def'))->toString(), $roles);
         $this->assertContains(Role::member(Id::custom('abc'))->toString(), $roles);
+    }
+
+    /**
+     * An `identities` collection on an in-memory database, holding `$existing` already.
+     *
+     * @param  list<Document>  $existing
+     */
+    private function identities(array $existing = []): RacingDatabase
+    {
+        $authorization = new Authorization();
+        $authorization->disable();
+
+        $database = (new RacingDatabase(new Memory(), new Cache(new MemoryCache())))
+            ->setDatabase('appwrite')
+            ->setNamespace('_identities')
+            ->setAuthorization($authorization);
+
+        $database->create();
+
+        $collection = Config::getParam('collections', [])['projects']['identities'];
+        $database->createCollection(Collection::create(
+            id: 'identities',
+            attributes: $collection['attributes'],
+            indexes: $collection['indexes'],
+        ));
+
+        foreach ($existing as $identity) {
+            $database->createDocument('identities', $identity);
+        }
+
+        return $database;
+    }
+
+    private function identity(string $userId, string $sequence, string $provider, string $providerUid, string $providerEmail): Document
+    {
+        return new Document([
+            '$id' => Id::unique(),
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ],
+            'userInternalId' => $sequence,
+            'userId' => $userId,
+            'provider' => $provider,
+            'providerUid' => $providerUid,
+            'providerEmail' => $providerEmail,
+        ]);
+    }
+
+    /** @return list<string> the userIds whose identities hold $providerEmail */
+    private function holders(Database $database, string $providerEmail): array
+    {
+        $identities = $database->find('identities', [
+            Query::equal('providerEmail', [$providerEmail]),
+        ]);
+
+        return \array_values(\array_unique(\array_map(
+            fn (Document $identity): string => $identity->getAttribute('userId'),
+            $identities,
+        )));
+    }
+
+    public function testLinkIdentityRefusesAnEmailAnotherUserHolds(): void
+    {
+        $database = $this->identities([
+            $this->identity('alice', '1', 'google', 'google-alice', 'shared@example.com'),
+        ]);
+
+        $linked = User::linkIdentity($database, $this->identity('bob', '2', 'github', 'github-bob', 'shared@example.com'));
+
+        $this->assertFalse($linked);
+        $this->assertSame(['alice'], $this->holders($database, 'shared@example.com'));
+    }
+
+    public function testLinkIdentityRefusesAnEmailTakenSinceItWasChecked(): void
+    {
+        $database = $this->identities();
+
+        // Alice links the same verified address while Bob's link is in flight: her insert
+        // commits after Bob's own check came up clean and after Bob's row went in.
+        $database->interleave('identities', 1, function () use ($database): void {
+            $database->createDocument('identities', $this->identity('alice', '1', 'google', 'google-alice', 'shared@example.com'));
+        });
+
+        $linked = User::linkIdentity($database, $this->identity('bob', '2', 'github', 'github-bob', 'shared@example.com'));
+
+        $this->assertFalse($linked, 'the link that lost the race is refused');
+        $this->assertSame(['alice'], $this->holders($database, 'shared@example.com'), 'one user holds the email');
+        $this->assertCount(1, $database->find('identities'), 'the refused link left no identity behind');
+    }
+
+    public function testLinkIdentityKeepsSeveralIdentitiesOfOneUserOnOneEmail(): void
+    {
+        $database = $this->identities([
+            $this->identity('alice', '1', 'google', 'google-alice', 'shared@example.com'),
+        ]);
+
+        $linked = User::linkIdentity($database, $this->identity('alice', '1', 'github', 'github-alice', 'shared@example.com'));
+
+        $this->assertTrue($linked);
+        $this->assertSame(['alice'], $this->holders($database, 'shared@example.com'));
+        $this->assertCount(2, $database->find('identities', [
+            Query::equal('providerEmail', ['shared@example.com']),
+        ]));
+    }
+
+    public function testLinkIdentityWithoutAProviderEmailIsNeverRefused(): void
+    {
+        $database = $this->identities([
+            $this->identity('alice', '1', 'google', 'google-alice', ''),
+        ]);
+
+        $linked = User::linkIdentity($database, $this->identity('bob', '2', 'github', 'github-bob', ''));
+
+        $this->assertTrue($linked);
+        $this->assertCount(2, $database->find('identities'));
     }
 }

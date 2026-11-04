@@ -12,6 +12,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Roles;
@@ -381,5 +382,63 @@ class User extends Document
             ->setAttribute('challenges', [])
             ->setAttribute('authenticators', [])
             ->setAttribute('targets', []);
+    }
+
+    /**
+     * Attach a provider identity to the user it names, keeping the invariant that a
+     * provider email is only ever held by the identities of a single user.
+     *
+     * The invariant cannot be a unique index, because one user may hold several
+     * identities reporting the same email, and reading before the insert is a
+     * time-of-check race: two users linking the same verified address at the same
+     * moment both pass the read and both write. So the row goes in first and the
+     * ownership is read again afterwards. Each of those reads happens after its own
+     * commit, so two racers can never both come up clean, and whichever sees a
+     * foreign identity drops the row it just wrote. A dead heat refuses both links
+     * rather than leaving the email with two owners.
+     *
+     * @return bool false when another user's identity holds the provider email, in
+     *              which case nothing of this link was persisted
+     * @throws Duplicate when (provider, providerUid) is already linked to a user
+     */
+    public static function linkIdentity(Database $dbForProject, Document $identity): bool
+    {
+        $providerEmail = (string) $identity->getAttribute('providerEmail', '');
+        $userInternalId = $identity->getAttribute('userInternalId');
+
+        // Reject the ordinary conflict without writing a row at all
+        if (self::identityEmailTaken($dbForProject, $providerEmail, $userInternalId)) {
+            return false;
+        }
+
+        $created = $dbForProject->createDocument('identities', $identity);
+
+        if (self::identityEmailTaken($dbForProject, $providerEmail, $userInternalId)) {
+            // Authorization is skipped so a lost race always cleans up after itself
+            $dbForProject->getAuthorization()->skip(
+                fn () => $dbForProject->deleteDocument('identities', $created->getId())
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Whether an identity of a user other than $userInternalId already holds $providerEmail.
+     *
+     * @phpstan-impure the answer changes as concurrent requests write their own identities
+     */
+    private static function identityEmailTaken(Database $dbForProject, string $providerEmail, ?string $userInternalId): bool
+    {
+        if ($providerEmail === '') {
+            return false;
+        }
+
+        return !$dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$providerEmail]),
+            Query::notEqual('userInternalId', $userInternalId),
+        ])->isEmpty();
     }
 }

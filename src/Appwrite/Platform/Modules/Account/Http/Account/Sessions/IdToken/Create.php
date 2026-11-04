@@ -610,20 +610,10 @@ class Create extends Action
         ]);
 
         if ($identity->isEmpty()) {
-            // Before creating the identity, check if the email is already associated with another user
-            if (!empty($providerEmail)) {
-                $identitiesWithMatchingEmail = $dbForProject->find('identities', [
-                    Query::equal('providerEmail', [$providerEmail]),
-                    Query::notEqual('userInternalId', $user->getSequence()),
-                ]);
-                if (!empty($identitiesWithMatchingEmail)) {
-                    throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                    /** Return a generic bad request to prevent exposing existing accounts */
-                }
-            }
+            $conflict = null;
 
             try {
-                $dbForProject->createDocument('identities', new Document([
+                $linked = User::linkIdentity($dbForProject, new Document([
                     '$id' => Id::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -641,9 +631,18 @@ class Create extends Action
                     'providerIdToken' => $idToken,
                     'photo' => $photo ?: null,
                 ]));
+
+                if (!$linked) {
+                    /** Return a generic bad request to prevent exposing existing accounts */
+                    $conflict = Exception::GENERAL_BAD_REQUEST;
+                }
             } catch (Duplicate) {
-                // The (provider, providerUid) unique index guards the same identity being connected to two users.
-                // A request that lost the race must not leave behind the user it just created.
+                // The (provider, providerUid) unique index guards the same identity being connected to two users
+                $conflict = Exception::USER_ALREADY_EXISTS;
+            }
+
+            if ($conflict !== null) {
+                // A request whose link did not hold must not leave behind the user it just created
                 if ($newUser !== null) {
                     $authorization->skip(function () use ($dbForProject, $newUser, $newTarget) {
                         if ($newTarget !== null) {
@@ -652,8 +651,9 @@ class Create extends Action
                         $dbForProject->deleteDocument('users', $newUser->getId());
                     });
                 }
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception($conflict);
             }
+
             return;
         }
 
