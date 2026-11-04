@@ -107,6 +107,19 @@ describe('getRuleStatusBadgeConfig', () => {
     expect(config.expireAt?.toISOString()).toBe(expireAt)
   })
 
+  test('shows a blocked first certificate as a warning', () => {
+    const config = getRuleStatusBadgeConfig(
+      { status: 'verifying', certificateStatus: 'blocked' },
+      NOW,
+    )
+    expect(config).toMatchObject({
+      variant: 'warning',
+      label: 'Certificate blocked',
+    })
+    expect(config.hint).toBeDefined()
+    expect(config.expireAt).toBeUndefined()
+  })
+
   test('keeps the domain status badge for a rule that is not verified', () => {
     for (const status of ['verifying', 'created', 'unverified']) {
       expect(

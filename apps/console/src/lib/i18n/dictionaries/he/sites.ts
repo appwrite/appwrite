@@ -177,6 +177,7 @@ export const heSitesDictionary: Record<string, string> = {
   'Certificate expired': 'פג תוקף התעודה',
   'Renewal failed': 'חידוש התעודה נכשל',
   'Renewal blocked': 'חידוש התעודה חסום',
+  'Certificate blocked': 'הנפקת התעודה חסומה',
   'Certificate renewal started': 'חידוש התעודה התחיל',
   'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
   "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
@@ -185,6 +186,8 @@ export const heSitesDictionary: Record<string, string> = {
     'צפו בלוגים לפרטים נוספים. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
   'Renewal is waiting on a DNS record. View logs to see which record to add.':
     'חידוש התעודה ממתין לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
+  'The certificate is waiting on a DNS record. View logs to see which record to add.':
+    'הנפקת התעודה ממתינה לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
 
   // Site layout and settings shell
   Deployments: 'פריסות',

@@ -17,7 +17,8 @@ interface RuleStatusBadgeProps {
 /**
  * Status badge of a proxy rule. A verified rule shows its certificate only
  * when the developer has to act; the tooltip then says what to do and, for a
- * stuck renewal, when the certificate expires.
+ * stuck renewal, when the certificate expires. The spinner shows only while
+ * a certificate is being issued, not while it is blocked.
  */
 export function RuleStatusBadge({ rule }: RuleStatusBadgeProps) {
   const t = useT()
@@ -27,6 +28,7 @@ export function RuleStatusBadge({ rule }: RuleStatusBadgeProps) {
     ? ` ${t('Certificate expires on {date}.').replace('{date}', formatDateShort(config.expireAt))}`
     : ''
   const hint = config.hint ? `${t(config.hint)}${expiry}` : undefined
+  const issuing = rule.status === 'verifying' && config.variant === 'processing'
 
   return (
     <Tooltip>
@@ -36,16 +38,14 @@ export function RuleStatusBadge({ rule }: RuleStatusBadgeProps) {
           className="text-[10px] shrink-0 gap-1.5"
           tabIndex={hint ? 0 : undefined}
           title={
-            rule.status === 'verifying'
+            issuing
               ? t(
                   'SSL certificate is being issued. This usually takes a couple of minutes.',
                 )
               : undefined
           }
         >
-          {rule.status === 'verifying' && (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          )}
+          {issuing && <Loader2 className="h-3 w-3 animate-spin" />}
           {t(config.label)}
         </Badge>
       </TooltipTrigger>
