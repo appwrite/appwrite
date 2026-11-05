@@ -568,7 +568,7 @@
       "compose_profiles": "s3",
       "wait": "executor",
       "storage_device": "s3",
-      "services": ["Functions", "Project", "Storage"]
+      "services": ["Functions", "Project", "Storage", "Videos"]
     },
     {
       "label": "Usage Outage",
