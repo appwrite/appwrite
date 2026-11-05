@@ -129,14 +129,14 @@ export function BreakdownDialog({
     ...baseOptions,
     // Keep the rows on screen while the next page loads, but never carry rows
     // across a tab switch. Key index 4 is the dimension in
-    // analyticsBreakdownQueryOptions; prop tabs share `props` and end the key
-    // with their prop key.
+    // analyticsBreakdownQueryOptions; prop tabs share `props` and differ by
+    // the value after the `propKey` marker.
     placeholderData: (previous, previousQuery) => {
       const key = previousQuery?.queryKey
       if (key?.[4] !== active.dimension) return undefined
-      return !active.propKey || key.at(-1) === active.propKey
-        ? previous
-        : undefined
+      const marker = key.indexOf('propKey')
+      const previousPropKey = marker === -1 ? undefined : key[marker + 1]
+      return previousPropKey === active.propKey ? previous : undefined
     },
   })
 

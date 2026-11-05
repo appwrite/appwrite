@@ -341,7 +341,7 @@ export function PropertySettings({
             <div className="flex items-center gap-3">
               <Switch
                 id="property-identify-users"
-                checked={property.identifyUsers}
+                checked={!!property.identifyUsers}
                 disabled={isBusy}
                 onCheckedChange={(checked) =>
                   applyUpdate(
