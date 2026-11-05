@@ -56,6 +56,7 @@ import {
   defaultScheduleDraft,
   isScheduleDraftComplete,
   scheduleDraftFromRule,
+  isScheduleUnreadable,
   scheduleUpdatePayload,
   todayIn,
 } from '@/lib/firewall/schedule'
@@ -167,11 +168,8 @@ export function UpdateRule({
       (location.trim().length > 0 && statusCode > 0)) &&
     isScheduleDraftComplete(schedule)
 
-  // Switching the schedule off removes it only when the rule has one this form can show. A
-  // stored schedule it cannot read is kept unless the user explicitly removes it.
-  const hadSchedule = scheduleDraftFromRule(rule.schedule, 'UTC', '').enabled
-  const hasUnreadableSchedule =
-    !hadSchedule && typeof rule.schedule === 'object' && rule.schedule !== null
+  // A stored schedule the form cannot show is kept on save unless the user removes it.
+  const hasUnreadableSchedule = isScheduleUnreadable(rule.schedule)
 
   const handleSubmit = async () => {
     if (!canSubmit) return
@@ -197,7 +195,8 @@ export function UpdateRule({
         statusCode,
         schedule: scheduleUpdatePayload(
           schedule,
-          hadSchedule || removeUnreadableSchedule,
+          rule.schedule,
+          removeUnreadableSchedule,
         ),
       })
       toast.success(t('Firewall rule updated'))

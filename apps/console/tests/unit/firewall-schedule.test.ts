@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   defaultScheduleDraft,
   isScheduleDraftComplete,
+  isScheduleUnreadable,
   scheduleDraftFromRule,
   schedulePayload,
   scheduleUpdatePayload,
@@ -96,23 +97,69 @@ describe('schedulePayload', () => {
 })
 
 describe('scheduleUpdatePayload', () => {
+  const stored = { mode: 'weekly', days: [5], timezone: 'UTC' }
+  // A mode added after this Console was built: the form cannot show it.
+  const unknown = { mode: 'monthly', dayOfMonth: 1, timezone: 'UTC' }
+
   test('removes a stored schedule with an empty object when switched off', () => {
-    expect(scheduleUpdatePayload(draft({ enabled: false }), true)).toEqual({})
+    expect(scheduleUpdatePayload(draft({ enabled: false }), stored)).toEqual({})
   })
 
   test('sends nothing when there was no schedule and it stays off', () => {
     expect(
-      scheduleUpdatePayload(draft({ enabled: false }), false),
+      scheduleUpdatePayload(draft({ enabled: false }), null),
+    ).toBeUndefined()
+    expect(
+      scheduleUpdatePayload(draft({ enabled: false }), undefined),
     ).toBeUndefined()
   })
 
   test('sends the schedule when it is on', () => {
-    expect(scheduleUpdatePayload(draft({ mode: 'daily' }), true)).toEqual({
+    expect(scheduleUpdatePayload(draft({ mode: 'daily' }), stored)).toEqual({
       mode: 'daily',
       startTime: '09:00',
       endTime: '17:00',
       timezone: 'Asia/Kolkata',
     })
+  })
+
+  test('keeps a schedule the form cannot show when the rule is saved', () => {
+    expect(
+      scheduleUpdatePayload(draft({ enabled: false }), unknown),
+    ).toBeUndefined()
+  })
+
+  test('removes a schedule the form cannot show only when the user removes it', () => {
+    expect(
+      scheduleUpdatePayload(draft({ enabled: false }), unknown, true),
+    ).toEqual({})
+  })
+
+  test('replaces a schedule the form cannot show with a new one', () => {
+    expect(
+      scheduleUpdatePayload(draft({ mode: 'weekends', allDay: true }), unknown),
+    ).toEqual({ mode: 'weekends', timezone: 'Asia/Kolkata' })
+  })
+
+  test('the remove flag never drops a schedule the form can show while it is on', () => {
+    expect(
+      scheduleUpdatePayload(draft({ mode: 'daily' }), stored, true),
+    ).toEqual({
+      mode: 'daily',
+      startTime: '09:00',
+      endTime: '17:00',
+      timezone: 'Asia/Kolkata',
+    })
+  })
+})
+
+describe('isScheduleUnreadable', () => {
+  test('is true only for a stored object whose mode the form does not know', () => {
+    expect(isScheduleUnreadable({ mode: 'monthly' })).toBe(true)
+    expect(isScheduleUnreadable({})).toBe(true)
+    expect(isScheduleUnreadable({ mode: 'weekends' })).toBe(false)
+    expect(isScheduleUnreadable(null)).toBe(false)
+    expect(isScheduleUnreadable(undefined)).toBe(false)
   })
 })
 

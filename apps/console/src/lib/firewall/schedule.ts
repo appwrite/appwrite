@@ -218,15 +218,31 @@ export function schedulePayload(
 }
 
 /**
+ * A stored schedule this form cannot show: an object whose mode it does not know, such as one
+ * added after this Console was built.
+ */
+export function isScheduleUnreadable(stored: unknown): boolean {
+  return (
+    typeof stored === 'object' &&
+    stored !== null &&
+    !scheduleDraftFromRule(stored, 'UTC', '').enabled
+  )
+}
+
+/**
  * The `schedule` param on update. Leaving it out keeps the stored schedule, so a rule that had
  * one and is switched off sends an empty object, which removes it. (`null` would not work: most
- * SDKs drop null params, which the API reads as "keep".)
+ * SDKs drop null params, which the API reads as "keep".) A stored schedule the form cannot show
+ * is kept unless `removeUnreadable` says the user removed it, so an unrelated edit never drops it.
  */
 export function scheduleUpdatePayload(
   draft: FirewallScheduleDraft,
-  hadSchedule: boolean,
+  stored: unknown,
+  removeUnreadable = false,
 ): FirewallSchedulePayload | Record<string, never> | undefined {
   if (draft.enabled) return schedulePayload(draft)
+  if (scheduleDraftFromRule(stored, 'UTC', '').enabled) return {}
+  if (removeUnreadable && isScheduleUnreadable(stored)) return {}
 
-  return hadSchedule ? {} : undefined
+  return undefined
 }
