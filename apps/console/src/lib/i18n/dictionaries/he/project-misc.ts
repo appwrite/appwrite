@@ -3620,8 +3620,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קישורים שעדיין לא מומשו. לא ניתן לממש קישורים שפג תוקפם. מחקו קישור כדי שיפסיק לפעול מוקדם יותר.',
   'The project already belongs to this organization.':
     'הפרויקט כבר שייך לארגון זה.',
-  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.':
-    'רק חברי ארגון שהתפקיד שלהם מאפשר לנהל פרויקטים יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
+  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.':
+    'רק בעלים של הארגון יכולים להעביר את הפרויקט. בקשו מבעלים של הארגון להעביר אותו או לעדכן את התפקיד שלכם.',
   'No permission': 'אין הרשאה',
   "You don't have permission to transfer projects in this organization.":
     'אין לכם הרשאה להעביר פרויקטים בארגון זה.',

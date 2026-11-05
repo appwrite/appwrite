@@ -344,7 +344,7 @@ export function TransferProjectCard({
               <Info className="h-4 w-4" />
               <AlertDescription className="text-[13px]">
                 {t(
-                  'Only organization members whose role can manage projects can transfer this project. Ask an organization owner to transfer it or to update your role.',
+                  'Only organization owners can transfer this project. Ask an organization owner to transfer it or to update your role.',
                 )}
               </AlertDescription>
             </Alert>
