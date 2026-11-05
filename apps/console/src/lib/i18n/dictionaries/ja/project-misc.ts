@@ -823,15 +823,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '選択した期間のすべてのイベントの合計',
   Visits: '訪問数',
   'Engagement time': 'エンゲージメント時間',
-  'Screen views': '画面ビュー',
-  'Screens per session': 'セッションあたりの画面数',
-  'Session duration': 'セッション時間',
-  'Screens viewed, including repeat views of the same screen.':
-    '表示された画面の数です。同じ画面の再表示も含みます。',
-  'Average screen views per session (screen views ÷ sessions).':
-    'セッションあたりの平均画面ビュー数 (画面ビュー ÷ セッション) です。',
-  'Average time the app was in the foreground per session. Sessions with no engagement are excluded.':
-    'セッションごとにアプリがフォアグラウンドにあった平均時間です。エンゲージメントのないセッションは除外されます。',
   'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
     'このエンドポイントは公開されているため、クライアント側の計測に API キーは不要です。サーバー側の上書きフィールド (userId、ip、userAgent) のみ、analytics.write スコープを持つ API キーが必要です。',
   Flutter: 'Flutter',

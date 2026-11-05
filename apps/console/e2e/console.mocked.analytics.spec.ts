@@ -279,6 +279,13 @@ function card(page: Page, title: string) {
     .filter({ has: cardHeading(page, title) })
 }
 
+/** Overview metric tabs; the interval toggle is pressable too, without an info hint. */
+function overviewMetrics(page: Page) {
+  return page
+    .locator('[role="button"][aria-pressed]')
+    .filter({ has: page.getByRole('button', { name: 'More info' }) })
+}
+
 async function attachScreenshot(page: Page, name: string) {
   await test.info().attach(name, {
     body: await page.screenshot({ animations: 'disabled', fullPage: true }),
@@ -380,37 +387,32 @@ test.describe('analytics property (mocked API)', () => {
     })
   })
 
-  test('picks overview tiles for a mobile property', async ({ page }) => {
+  test('leaves pageview metrics off a mobile property', async ({ page }) => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
     await openProperty(page)
 
-    const tiles = page.locator('[role="button"][aria-pressed]')
-    await expect(tiles.getByText('Screen views', { exact: true })).toBeVisible({
+    const metrics = overviewMetrics(page)
+    await expect(metrics.first()).toContainText('Unique visitors', {
       timeout: 30_000,
     })
-    await expect(
-      tiles.getByText('Session duration', { exact: true }),
-    ).toBeVisible()
-    await expect(tiles.getByText('Pageviews', { exact: true })).toHaveCount(0)
-    await expect(tiles.getByText('Bounce rate', { exact: true })).toHaveCount(0)
+    await expect(metrics).toHaveText([
+      /^Unique visitors/,
+      /^Visits/,
+      /^Events/,
+      /^Visit duration/,
+      /^Engagement time/,
+    ])
   })
 
-  test('leads with events for an agent property', async ({ page }) => {
+  test('leads with events on an agent property', async ({ page }) => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Agent })
     await openProperty(page)
 
-    // Metric tiles carry an info hint; the interval toggle is also pressable.
-    const tiles = page
-      .locator('[role="button"][aria-pressed]')
-      .filter({ has: page.getByRole('button', { name: 'More info' }) })
-    await expect(tiles.first()).toContainText('Events', { timeout: 30_000 })
-    await expect(tiles.first()).toHaveAttribute('aria-pressed', 'true')
-    await expect(tiles).toHaveText([
-      /^Events/,
-      /^Sessions/,
-      /^Session duration/,
-    ])
-    await attachScreenshot(page, 'property-agent-tiles')
+    const metrics = overviewMetrics(page)
+    await expect(metrics.first()).toContainText('Events', { timeout: 30_000 })
+    await expect(metrics.first()).toHaveAttribute('aria-pressed', 'true')
+    await expect(metrics).toHaveText([/^Events/, /^Visits/, /^Visit duration/])
+    await attachScreenshot(page, 'property-agent-metrics')
   })
 
   test('turns user identification on', async ({ page }) => {
