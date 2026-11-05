@@ -32,6 +32,12 @@ export async function readCoverPublicAssetBuffer(
   relativePath: string,
 ): Promise<Buffer | null> {
   const normalized = relativePath.replace(/^\/+/, '')
+  // The path comes from an attacker-controlled image field, so a ".." segment
+  // would escape the public asset root (or the site origin on the fallback)
+  // and read arbitrary files. Only bundled, contained asset paths are allowed.
+  if (normalized.split('/').includes('..')) {
+    return null
+  }
   for (const root of getCoverPublicAssetRoots()) {
     const filepath = join(root, normalized)
     try {

@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+import { assertPublicCoverImageUrl } from '@/lib/cover-generator/image-url-guard'
 import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
 import { buildCoverExportFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 export { buildCoverExportFontStyleBlock, buildCoverFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
@@ -159,7 +160,10 @@ export async function loadCoverImageBuffer(
     return Buffer.from(match[1], 'base64')
   }
   try {
-    const response = await fetch(href)
+    // Attacker-controlled href: block internal/link-local targets (SSRF) and do
+    // not follow redirects, which could otherwise bounce a public host to one.
+    await assertPublicCoverImageUrl(href)
+    const response = await fetch(href, { redirect: 'error' })
     if (!response.ok) return null
     return Buffer.from(await response.arrayBuffer())
   } catch {
