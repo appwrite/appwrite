@@ -297,6 +297,85 @@ final class PresenceRealtimeClientTest extends Scope
         ];
     }
 
+    /**
+     * @param array<string, string> $headers
+     * @param array<string> $query
+     * @return array<string, mixed>
+     */
+    private function listPresencesCached(array $headers, array $query): array
+    {
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            $headers,
+            [
+                'queries' => $query,
+                'ttl' => 3600,
+            ]
+        );
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    private function presenceStatusFor(array $response, string $presenceId): ?string
+    {
+        foreach ($response['body']['presences'] ?? [] as $presence) {
+            if (($presence['$id'] ?? null) === $presenceId) {
+                return $presence['status'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    public function testRealtimePermissionChangeInvalidatesListCache(): void
+    {
+        // A realtime upsert narrows permissions through the same State::setPermissions as the REST
+        // paths, so it must purge the list cache too. The server key always sees the row (API keys
+        // bypass document permissions), so staleness is anchored on the cached status: a heartbeat
+        // that only changes status must not purge, a permission change must.
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = Id::unique();
+        $metadata = ['case' => 'cache-invalidation'];
+        $serverHeaders = $this->getServerHeaders($project);
+        $query = [Query::equal('userId', [$user['$id']])->toString()];
+
+        $publisher = $this->connectRealtimeAndSubscribe(
+            $project,
+            $headers,
+            ['presences', 'presences.' . $presenceId],
+            timeout: 2
+        );
+
+        try {
+            $this->sendPresenceMessage($publisher, $presenceId, 'online', $metadata, $this->getPresencePermissions(Role::any()));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+
+            $cached = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('online', $this->presenceStatusFor($cached, $presenceId));
+
+            // Status-only heartbeat keeps the same permissions, so the hash is unchanged and the
+            // cache is not purged: the cached page still reads 'online', proving it is serving.
+            $this->sendPresenceMessage($publisher, $presenceId, 'away', $metadata, $this->getPresencePermissions(Role::any()));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'away', $metadata, $user['$id']);
+            $stale = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('online', $this->presenceStatusFor($stale, $presenceId));
+
+            // Narrowing the read role changes the permissionsHash, which must purge the cache; the
+            // fresh list then reflects the latest status.
+            $this->sendPresenceMessage($publisher, $presenceId, 'busy', $metadata, $this->getPresencePermissions(Role::user($user['$id'])));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'busy', $metadata, $user['$id']);
+            $fresh = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('busy', $this->presenceStatusFor($fresh, $presenceId));
+        } finally {
+            $publisher->close();
+        }
+    }
+
     public function testPresenceUpsertSenderGetsResponseAndEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
