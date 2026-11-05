@@ -15,8 +15,6 @@ enum StringLiteral
 
     private const string BACKSLASH = '\\';
 
-    private const string DOUBLED_QUOTE_PATTERN = "/''|'/";
-
     public function quote(string $value): string
     {
         if ($this->refusesNul() && \str_contains($value, "\0")) {
@@ -29,7 +27,7 @@ enum StringLiteral
             return self::QUOTE . $doubled . self::QUOTE;
         }
 
-        if ($this->refusesBackslashAfterHighByte() && \preg_match('/[\x80-\xFF]\\\\/', $value) === 1) {
+        if ($this->refusesBackslashAfterHighByte() && self::hasBackslashAfterHighByte($value)) {
             throw new ValidationException('String literal has a backslash after a byte of 0x80 or above, which a multibyte connection charset can read as part of the preceding character');
         }
 
@@ -50,17 +48,7 @@ enum StringLiteral
             throw new ValidationException('Malformed string literal');
         }
 
-        $body = \substr($literal, 1, -1);
-
-        $value = \preg_replace_callback(
-            $escaped ? $this->escapePattern() : self::DOUBLED_QUOTE_PATTERN,
-            fn (array $match): string => $this->decode($match),
-            $body,
-        );
-
-        if ($value === null) {
-            throw new ValidationException('Malformed string literal');
-        }
+        $value = $this->decodeBody(\substr($literal, 1, -1), $escaped);
 
         if ($this->refusesNul() && \str_contains($value, "\0")) {
             throw new ValidationException('String literal contains a NUL byte');
@@ -109,31 +97,107 @@ enum StringLiteral
         };
     }
 
-    private function escapePattern(): string
+    private static function hasBackslashAfterHighByte(string $value): bool
     {
+        $position = \strpos($value, self::BACKSLASH, 1);
+
+        while ($position !== false) {
+            if (\ord($value[$position - 1]) >= 0x80) {
+                return true;
+            }
+
+            $position = \strpos($value, self::BACKSLASH, $position + 1);
+        }
+
+        return false;
+    }
+
+    private function decodeBody(string $body, bool $escaped): string
+    {
+        $value = '';
+        $length = \strlen($body);
+        $position = 0;
+
+        while ($position < $length) {
+            $character = $body[$position];
+
+            if ($character === self::QUOTE) {
+                if ($position + 1 >= $length || $body[$position + 1] !== self::QUOTE) {
+                    throw new ValidationException('Malformed string literal');
+                }
+
+                $value .= self::QUOTE;
+                $position += 2;
+
+                continue;
+            }
+
+            if ($escaped && $character === self::BACKSLASH) {
+                if ($position + 1 >= $length) {
+                    throw new ValidationException('Malformed string literal');
+                }
+
+                $escape = $this->readEscape($body, $position + 1);
+                $value .= $this->decode($escape);
+                $position += 1 + \strlen($escape);
+
+                continue;
+            }
+
+            $value .= $character;
+            $position++;
+        }
+
+        return $value;
+    }
+
+    private function readEscape(string $body, int $position): string
+    {
+        $character = $body[$position];
+
         return match ($this) {
-            self::Backslash => "/\\\\(.)?|''|'/s",
-            self::BackslashUtf8 => "/\\\\(x[0-9A-Fa-f]{2}|.)?|''|'/s",
-            self::Extended => "/\\\\([0-7]{1,3}|x[0-9A-Fa-f]{1,2}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}|.)?|''|'/s",
-            self::Standard => self::DOUBLED_QUOTE_PATTERN,
+            self::BackslashUtf8 => $character === 'x'
+                ? self::readHex($body, $position, 2, 2)
+                : $character,
+            self::Extended => match ($character) {
+                '0', '1', '2', '3', '4', '5', '6', '7' => self::readOctal($body, $position),
+                'x' => self::readHex($body, $position, 1, 2),
+                'u' => self::readHex($body, $position, 4, 4),
+                'U' => self::readHex($body, $position, 8, 8),
+                default => $character,
+            },
+            self::Backslash, self::Standard => $character,
         };
     }
 
-    /**
-     * @param array<int|string, string> $match
-     */
-    private function decode(array $match): string
+    private static function readOctal(string $body, int $position): string
     {
-        if ($match[0] === self::QUOTE . self::QUOTE) {
-            return self::QUOTE;
+        $length = 1;
+
+        while ($length < 3 && $position + $length < \strlen($body) && $body[$position + $length] >= '0' && $body[$position + $length] <= '7') {
+            $length++;
         }
 
-        $escape = $match[1] ?? '';
+        return \substr($body, $position, $length);
+    }
 
-        if ($match[0] === self::QUOTE || $escape === '') {
-            throw new ValidationException('Malformed string literal');
+    private static function readHex(string $body, int $position, int $minimum, int $maximum): string
+    {
+        $length = 0;
+
+        while ($length < $maximum && $position + 1 + $length < \strlen($body) && \ctype_xdigit($body[$position + 1 + $length])) {
+            $length++;
         }
 
+        if ($length < $minimum) {
+            return $body[$position];
+        }
+
+        return \substr($body, $position, 1 + $length);
+    }
+
+    private function decode(string $escape): string
+    {
         if (\strlen($escape) > 1) {
             return $this->decodeNumeric($escape);
         }
