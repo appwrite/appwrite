@@ -2423,6 +2423,10 @@ export const DOCS_SECTION_NAVS: DocsSectionNavConfig[] = [
             href: '/docs/quick-starts/android',
           },
           {
+            label: 'Android (Java)',
+            href: '/docs/quick-starts/android-java',
+          },
+          {
             label: 'Apple',
             href: '/docs/quick-starts/apple',
           },
