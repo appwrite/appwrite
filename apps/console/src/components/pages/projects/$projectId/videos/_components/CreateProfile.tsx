@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import type { Models } from '@appwrite.io/console'
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -28,7 +29,6 @@ import {
   PROFILE_PRESETS,
   type ProfilePreset,
 } from '@/lib/videos/profile-presets'
-import type { VideoProfile } from '@/lib/appwrite/videos'
 
 const LIMITS = {
   width: { min: 16, max: 4320 },
@@ -52,7 +52,7 @@ const EMPTY_FORM: FormState = {
 }
 
 function toForm(
-  profile: VideoProfile | ProfilePreset | null | undefined,
+  profile: Models.VideoProfile | ProfilePreset | null | undefined,
 ): FormState {
   if (!profile) return EMPTY_FORM
   return {
@@ -74,7 +74,7 @@ type CreateProfileProps = {
   onOpenChange: (open: boolean) => void
   projectId: string
   /** When set, the dialog updates this profile instead of creating one. */
-  profile?: VideoProfile | null
+  profile?: Models.VideoProfile | null
 }
 
 export function CreateProfile({

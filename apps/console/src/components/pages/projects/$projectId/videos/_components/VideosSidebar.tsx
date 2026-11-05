@@ -7,6 +7,7 @@ import {
   useSearch,
 } from '@tanstack/react-router'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { ChevronLeft, ChevronRight, Layers, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -55,7 +56,6 @@ import { CreateVideo } from './CreateVideo'
 import { VideoContextMenu } from './VideoContextMenu'
 import { VideoTermHint } from './VideoTermHint'
 import { VideoThumb } from './VideoThumb'
-import type { Video } from '@/lib/appwrite/videos'
 
 type SortOrder = 'asc' | 'desc'
 type SortField =
@@ -150,7 +150,7 @@ export function VideosSidebar() {
     placeholderData: keepPreviousData,
   })
   const videos = useMemo(
-    () => (data?.videos ?? []) as Video[],
+    () => (data?.videos ?? []) as Models.Video[],
     [data?.videos],
   )
   const total = data?.total ?? 0
@@ -472,7 +472,7 @@ function SidebarTabs() {
   )
 }
 
-function VideoListMeta({ video }: { video: Video }) {
+function VideoListMeta({ video }: { video: Models.Video }) {
   const parts = [video.videoCodec, video.audioCodec].filter(Boolean)
   if (parts.length === 0) return null
   return (

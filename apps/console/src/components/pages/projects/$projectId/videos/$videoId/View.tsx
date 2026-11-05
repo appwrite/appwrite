@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 import { Check, ChevronDown, Circle, Info } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import {
@@ -36,12 +37,11 @@ import {
 } from '@/lib/utils/video-format'
 import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 import { useT } from '@/lib/i18n/translate'
-import type { Video, VideoRendition, VideoRenditionList, VideoSubtitle, VideoSubtitleList } from '@/lib/appwrite/videos'
 
 export type VideoOverviewInitialData = {
-  video: Video
-  renditions: VideoRenditionList
-  subtitles: VideoSubtitleList
+  video: Models.Video
+  renditions: Models.VideoRenditionList
+  subtitles: Models.VideoSubtitleList
 }
 
 type ViewProps = {
@@ -170,7 +170,7 @@ function SourcePopover({
   video,
 }: {
   projectId: string
-  video: Video
+  video: Models.Video
 }) {
   const t = useT()
 
@@ -338,7 +338,7 @@ type DetailPath =
   | '/projects/$projectId/videos/$videoId/timeline'
   | '/projects/$projectId/videos/$videoId/streaming'
 
-function formatResolutionAndAspectRatio(video: Video): string {
+function formatResolutionAndAspectRatio(video: Models.Video): string {
   const resolution =
     video.width > 0 ? formatResolution(video.width, video.height) : ''
   const ratio = video.aspectRatio?.trim() ?? ''
@@ -412,9 +412,9 @@ function SetupChecklist({
   subtitles,
 }: {
   projectId: string
-  video: Video
-  renditions: VideoRendition[]
-  subtitles: VideoSubtitle[]
+  video: Models.Video
+  renditions: Models.VideoRendition[]
+  subtitles: Models.VideoSubtitle[]
 }) {
   const t = useT()
   const { openCreateRenditions, openCreateSubtitle, writeDisabledReason } =

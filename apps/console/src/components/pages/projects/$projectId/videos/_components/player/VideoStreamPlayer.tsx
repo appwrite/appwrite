@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import type { Models } from '@appwrite.io/console'
 import { Info, Loader2, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
@@ -31,14 +32,13 @@ import {
   useVideoInspector,
 } from './VideoInspectorContext'
 import { useQoeTracker } from './useQoeTracker'
-import type { Video, VideoRendition } from '@/lib/appwrite/videos'
 
 const FULLSCREEN_CONTROLS_IDLE_MS = 2500
 
 export interface VideoStreamPlayerProps {
   projectId: string
-  video: Video
-  renditions: VideoRendition[]
+  video: Models.Video
+  renditions: Models.VideoRendition[]
   /** Rendition progress card above the player. */
   showProcessing?: boolean
   /** Overview layout: slightly shorter max height. */

@@ -1,8 +1,8 @@
-import type { VideoProfile } from '@/lib/appwrite/videos'
+import type { Models } from '@appwrite.io/console'
 
 /** Flat record for client-side FiltersPopover matching. */
 export function profileToFilterRecord(
-  profile: VideoProfile,
+  profile: Models.VideoProfile,
 ): Record<string, unknown> {
   return { ...profile }
 }
@@ -19,8 +19,8 @@ export type ProfileSortColumn =
 
 /** Client-side sort for profiles (API returns an unsorted list). */
 export function compareVideoProfiles(
-  a: VideoProfile,
-  b: VideoProfile,
+  a: Models.VideoProfile,
+  b: Models.VideoProfile,
   sortBy: string,
   sortOrder: 'asc' | 'desc',
 ): number {

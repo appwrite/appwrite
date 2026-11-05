@@ -30,7 +30,6 @@ import {
   type ProjectResourceHit,
   type ProjectResourceKind,
 } from '@/lib/command-center/resource-search'
-import type { Video } from '@/lib/appwrite/videos'
 
 export interface CommandCenterResourceSearchOptions {
   projectId: string | null | undefined
@@ -210,7 +209,7 @@ export function useCommandCenterResourceSearch({
           break
         }
         case 'video': {
-          const videos = (data as { videos?: Video[] }).videos
+          const videos = (data as { videos?: Models.Video[] }).videos
           if (videos?.length) {
             groups.push(buildVideoHits(trimmedQuery, videos))
           }

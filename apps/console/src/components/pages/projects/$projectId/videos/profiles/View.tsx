@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 import { AlertCircle, Layers } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProfilesEmptyState } from './_components/ProfilesEmptyState'
@@ -40,7 +41,6 @@ import {
   PROFILES_DEFAULT_SORT_ORDER,
   type ProfileSortColumn,
 } from '@/lib/videos/profile-list-filters'
-import type { VideoProfile } from '@/lib/appwrite/videos'
 
 export function View() {
   const t = useT()
@@ -64,9 +64,9 @@ export function View() {
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProfile, setEditingProfile] =
-    useState<VideoProfile | null>(null)
+    useState<Models.VideoProfile | null>(null)
   const [deletingProfile, setDeletingProfile] =
-    useState<VideoProfile | null>(null)
+    useState<Models.VideoProfile | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   const { data, isLoading, isFetching, error, refetch } =
@@ -219,7 +219,7 @@ export function View() {
     setDialogOpen(true)
   }
 
-  const openUpdate = (profile: VideoProfile) => {
+  const openUpdate = (profile: Models.VideoProfile) => {
     setEditingProfile(profile)
     setDialogOpen(true)
   }
