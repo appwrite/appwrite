@@ -28,6 +28,7 @@ import {
 } from '@/lib/analytics/analytics-filters'
 import { BreakdownMessage, BreakdownSkeleton } from './BreakdownPanel'
 import type { BreakdownTab } from './BreakdownPanel'
+import { breakdownTabLabel } from './BreakdownTabBar'
 
 /** Rows added per "Load more". */
 export const BREAKDOWN_DIALOG_PAGE_SIZE = 50
@@ -227,7 +228,7 @@ export function BreakdownDialog({
 
         {/* Column header */}
         <div className="flex items-center justify-between px-7 pt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          <span>{t(active.label)}</span>
+          <span>{breakdownTabLabel(t, active)}</span>
           <span className="flex items-center gap-3">
             <span>{t('Share')}</span>
             <span className="min-w-[50px] text-end">
