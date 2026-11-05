@@ -203,6 +203,11 @@ final class StorageCustomServerTest extends Scope
         $this->assertEventually(fn () => $this->assertSame('hit', $preview($fileId)['headers']['x-appwrite-cache']));
         $this->assertSame(1, $stored());
 
+        // At 100 percent the entry is on the device, not the filesystem.
+        if ($connection !== '' && System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0') === '100') {
+            $this->assertCount(1, $devices[1]->listFiles($devices[1]->getRoot())->files);
+        }
+
         // A purge clears where the API wrote.
         $delete = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $fileId, $headers);
         $this->assertSame(204, $delete['headers']['status-code']);
