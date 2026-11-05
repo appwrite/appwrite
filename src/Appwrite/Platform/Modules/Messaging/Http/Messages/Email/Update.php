@@ -140,7 +140,12 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
+        // A draft's scheduledAt is only a suggestion until it is scheduled
+        if (
+            $message->getAttribute('status') !== MessageStatus::DRAFT
+            && !\is_null($currentScheduledAt)
+            && new \DateTime($currentScheduledAt) < new \DateTime()
+        ) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 

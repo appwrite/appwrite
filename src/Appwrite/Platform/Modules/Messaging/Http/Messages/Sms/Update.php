@@ -142,11 +142,20 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
+        // A draft's scheduledAt is only a suggestion until it is scheduled
+        if (
+            $message->getAttribute('status') !== MessageStatus::DRAFT
+            && !\is_null($currentScheduledAt)
+            && new \DateTime($currentScheduledAt) < new \DateTime()
+        ) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        // Drafts created with a scheduledAt have no schedule document yet, so create one on demand.
+        if (
+            (\is_null($currentScheduledAt) || \is_null($message->getAttribute('scheduleId')))
+            && !\is_null($scheduledAt ?? $currentScheduledAt)
+        ) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -155,14 +164,12 @@ class Update extends Action
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
-                'schedule' => $scheduledAt,
+                'schedule' => $scheduledAt ?? $currentScheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
 
             $message->setAttribute('scheduleId', $schedule->getId());
-        }
-
-        if (!\is_null($currentScheduledAt)) {
+        } elseif (!\is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
