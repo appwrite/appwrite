@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { Link, type LinkProps } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import {
+  ArrowRight,
   Bell,
   Fingerprint,
   FileArchive,
@@ -15,6 +16,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
+import { BitbucketIcon, GitHubIcon, GitLabIcon } from '@/lib/vcs/providers'
 import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
@@ -59,9 +61,9 @@ const FUNCTION_RUNTIMES = [
 const FUNCTION_STARTER_TEMPLATE_ID = 'starter'
 
 // English source copy; translated at render.
-const PITCH: Record<OverviewResourceId, string> = {
+// Sites lead with the Git import instead.
+const PITCH: Record<Exclude<OverviewResourceId, 'sites'>, string> = {
   databases: 'Store, query, and sync your app data with a managed database.',
-  sites: 'Deploy a web app from Git, or start from a ready-made template.',
   functions: 'Run backend code on HTTP requests, events, or a schedule.',
   storage:
     'Upload and serve files with permissions, encryption, and image previews.',
@@ -90,19 +92,74 @@ export function ResourceQuickStart({
 
   return (
     <div className="flex flex-1 flex-col gap-3 px-2.5 pb-1.5 pt-2">
-      <p className="line-clamp-2 text-[12px] leading-5 text-muted-foreground">
-        {t(PITCH[id])}
-      </p>
+      {id === 'sites' ? (
+        <GitImport projectId={projectId} disabled={!canStart} />
+      ) : (
+        <p className="line-clamp-2 text-[12px] leading-5 text-muted-foreground">
+          {t(PITCH[id])}
+        </p>
+      )}
       <div className="mt-auto grid grid-cols-3 gap-2">
         {tiles.map((tile) => (
-          <QuickStartTileLink
-            key={tile.key}
-            tile={tile}
-            disabled={!canStart}
-          />
+          <QuickStartTileLink key={tile.key} tile={tile} disabled={!canStart} />
         ))}
       </div>
     </div>
+  )
+}
+
+/**
+ * Sites deploy best from Git, so the card leads with importing a repository
+ * and offers the templates below it.
+ */
+function GitImport({
+  projectId,
+  disabled,
+}: {
+  projectId: string
+  disabled: boolean
+}) {
+  const t = useT()
+  const content = (
+    <>
+      <span className="flex shrink-0 items-center -space-x-1.5">
+        {[GitHubIcon, GitLabIcon, BitbucketIcon].map((Icon, index) => (
+          <span
+            key={index}
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-foreground"
+          >
+            <Icon className="h-3.5 w-3.5" />
+          </span>
+        ))}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13px] font-medium text-foreground">
+          {t('Import from Git')}
+        </span>
+        <span className="block truncate text-[12px] text-muted-foreground">
+          {t('Auto-deploy on every push')}
+        </span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover/git:translate-x-0.5 group-hover/git:text-foreground rtl:-scale-x-100" />
+    </>
+  )
+  const className =
+    'group/git flex min-h-14 items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2 text-start transition-colors'
+  if (disabled) {
+    return <div className={cn(className, 'opacity-60')}>{content}</div>
+  }
+  return (
+    <Link
+      to="/projects/$projectId/sites/create"
+      params={{ projectId }}
+      className={cn(
+        className,
+        'hover:border-foreground/25 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+      )}
+      {...analyticsAttrs('overview-quick-start')}
+    >
+      {content}
+    </Link>
   )
 }
 

@@ -3891,8 +3891,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Failed to load topics': 'טעינת הנושאים נכשלה',
   'Store, query, and sync your app data with a managed database.':
     'אחסון, שאילתות וסנכרון של נתוני האפליקציה שלכם במסד נתונים מנוהל.',
-  'Deploy a web app from Git, or start from a ready-made template.':
-    'פרסו אפליקציית Web מ-Git, או התחילו מתבנית מוכנה.',
   'Run backend code on HTTP requests, events, or a schedule.':
     'הריצו קוד צד שרת בתגובה לבקשות HTTP, לאירועים או לפי תזמון.',
   'Keep data apart by environment, customer, or workload.':
@@ -3919,4 +3917,5 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'אפשרו למשתמשים להתחבר עם אימייל, ספקי OAuth, טלפון או מפתחות גישה.',
   'Send email, SMS, and push notifications to your users.':
     'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
+  'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
 }

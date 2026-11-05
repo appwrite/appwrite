@@ -3967,8 +3967,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Failed to load topics': 'トピックの読み込みに失敗しました',
   'Store, query, and sync your app data with a managed database.':
     'マネージドデータベースで、アプリのデータを保存、クエリ、同期できます。',
-  'Deploy a web app from Git, or start from a ready-made template.':
-    'Git からウェブアプリをデプロイするか、既製のテンプレートから始められます。',
   'Run backend code on HTTP requests, events, or a schedule.':
     'HTTP リクエスト、イベント、スケジュールに応じてバックエンドのコードを実行します。',
   'Keep data apart by environment, customer, or workload.':
@@ -3995,4 +3993,5 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'メール、OAuth プロバイダー、電話番号、パスキーでユーザーをサインインさせます。',
   'Send email, SMS, and push notifications to your users.':
     'ユーザーにメール、SMS、プッシュ通知を送信します。',
+  'Auto-deploy on every push': 'push のたびに自動デプロイ',
 }
