@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
+import { getCoverRenderSiteOrigin } from '@/lib/cover-generator/render-context'
 import { buildCoverExportFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 export { buildCoverExportFontStyleBlock, buildCoverFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 import {
@@ -137,11 +138,23 @@ export async function resolveCoverImageHref(
                 : 'application/octet-stream'
     return readCoverPublicAssetDataUri(value, mime)
   }
-  // Only inline uploads (data:) and bundled public assets (/) are rendered. A
-  // caller-supplied remote URL is refused rather than fetched server-side,
-  // which would be an SSRF vector (the render endpoint is unauthenticated when
-  // the marketing profile is active).
+  // A remote URL is fetched server-side, so only the site's own origin is
+  // allowed (diagram nodes reference site-hosted screenshots). Any other host
+  // — including internal/link-local targets — is refused, which closes the
+  // SSRF without a fragile address denylist. The render endpoint is
+  // unauthenticated when the marketing profile is active.
+  if (isAllowedRemoteCoverImageUrl(value)) return value
   return null
+}
+
+function isAllowedRemoteCoverImageUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    return url.origin === new URL(getCoverRenderSiteOrigin()).origin
+  } catch {
+    return false
+  }
 }
 
 export async function loadCoverImageBuffer(
@@ -155,10 +168,21 @@ export async function loadCoverImageBuffer(
   }
 
   const href = await resolveCoverImageHref(source)
-  if (!href?.startsWith('data:')) return null
-  const match = href.match(/^data:[^;]+;base64,(.+)$/)
-  if (!match?.[1]) return null
-  return Buffer.from(match[1], 'base64')
+  if (!href) return null
+  if (href.startsWith('data:')) {
+    const match = href.match(/^data:[^;]+;base64,(.+)$/)
+    if (!match?.[1]) return null
+    return Buffer.from(match[1], 'base64')
+  }
+  // Only a site-origin URL reaches here (see resolveCoverImageHref). redirect:
+  // 'error' keeps an open redirect on the site from bouncing the fetch off it.
+  try {
+    const response = await fetch(href, { redirect: 'error' })
+    if (!response.ok) return null
+    return Buffer.from(await response.arrayBuffer())
+  } catch {
+    return null
+  }
 }
 
 /** Breathing room so icon artwork is not flush against the export slot edge. */
