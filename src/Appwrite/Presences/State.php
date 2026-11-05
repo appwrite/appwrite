@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Documents\User;
 use Throwable;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -411,6 +412,227 @@ class State
                 ->set('project.id', $project->getId())
                 ->set('user.id', $user->getId());
         }
+    }
+
+    /**
+     * Hostnames of the other realtime processes that sent a heartbeat within `$window` seconds
+     * of `$before`. Null when a live heartbeat does not name its host (written by an older
+     * version), as then no other host can be called dead. This host never counts as live: the
+     * hostname is ours now, so any earlier heartbeat under it came from a run that is gone.
+     *
+     * @return list<string>|null
+     */
+    public function getLiveHosts(
+        Database $dbForPlatform,
+        string $hostname,
+        string $before,
+        int $window = REALTIME_HEARTBEAT_WINDOW_SECONDS,
+    ): ?array {
+        $since = DateTime::addSeconds(new \DateTime($before), -$window);
+
+        return $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $hostname, $since): ?array {
+            $hosts = [];
+            foreach ($dbForPlatform->cursor('realtime', [Query::greaterThan('timestamp', $since)]) as $heartbeat) {
+                // `container` is `<process id>@<hostname>`.
+                $container = (string) $heartbeat->getAttribute('container', '');
+                $separator = \strrpos($container, '@');
+                if ($separator === false) {
+                    return null;
+                }
+
+                $host = \substr($container, $separator + 1);
+                if ($host !== $hostname) {
+                    $hosts[] = $host;
+                }
+            }
+
+            return \array_values(\array_unique($hosts));
+        });
+    }
+
+    /**
+     * Runs {@see deleteOrphaned} on every project until done or `$deadline` (unix seconds).
+     * Retries while the platform database is not ready; a failing project is recorded on the
+     * current span and skipped.
+     *
+     * @param callable(Document): Database $getProjectDB
+     * @return array{deleted: int, projects: int, failed: int, outcome: 'done'|'timeout'|'failed'}
+     */
+    public function deleteOrphanedInProjects(
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        string $hostname,
+        string $before,
+        float $deadline,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+        int $retrySeconds = DATABASE_RECONNECT_SLEEP,
+    ): array {
+        $deleted = 0;
+        $projects = 0;
+        $failed = 0;
+        $error = null;
+
+        while (\microtime(true) < $deadline) {
+            $projects = 0;
+            $failed = 0;
+
+            try {
+                $liveHosts = $this->getLiveHosts($dbForPlatform, $hostname, $before);
+
+                $finished = $dbForPlatform->getAuthorization()->skip(function () use ($dbForPlatform, $getProjectDB, $hostname, $liveHosts, $before, $deadline, $publisherForUsage, $queueForRealtime, &$deleted, &$projects, &$failed): bool {
+                    foreach ($dbForPlatform->cursor('projects', batchSize: 25) as $project) {
+                        if (\microtime(true) >= $deadline) {
+                            return false;
+                        }
+
+                        $projects++;
+                        try {
+                            $deleted += $this->deleteOrphaned($getProjectDB($project), $project, $hostname, $liveHosts, $before, $publisherForUsage, $queueForRealtime);
+                        } catch (Throwable $th) {
+                            $failed++;
+                            Span::current()?->setError($th)->set('project.id', $project->getId());
+                        }
+                    }
+
+                    return true;
+                });
+
+                return ['deleted' => $deleted, 'projects' => $projects, 'failed' => $failed, 'outcome' => $finished ? 'done' : 'timeout'];
+            } catch (Throwable $th) {
+                // Usually the database or schema isn't ready yet; a lasting error is retried until the deadline and set on the span.
+                $error = $th;
+                \sleep($retrySeconds);
+            }
+        }
+
+        if ($error !== null) {
+            Span::current()?->setError($error);
+        }
+
+        return ['deleted' => $deleted, 'projects' => $projects, 'failed' => $failed, 'outcome' => $error === null ? 'timeout' : 'failed'];
+    }
+
+    /**
+     * Finishes a sweep that {@see deleteOrphanedInProjects} left undone (timed out, failed or
+     * with failed projects), while serving. Safe then: rows written since `$before` are never
+     * deleted. Rescans every project per attempt, up to `$attempts`, with doubling backoff.
+     *
+     * @param callable(Document): Database $getProjectDB
+     * @return array{deleted: int, projects: int, failed: int, outcome: 'done'|'timeout'|'failed', attempts: int}
+     */
+    public function resumeOrphanedInProjects(
+        Database $dbForPlatform,
+        callable $getProjectDB,
+        string $hostname,
+        string $before,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+        int $attempts = 5,
+        int $attemptSeconds = 600,
+        int $retrySeconds = DATABASE_RECONNECT_SLEEP,
+    ): array {
+        $deleted = 0;
+        $result = ['deleted' => 0, 'projects' => 0, 'failed' => 0, 'outcome' => 'failed'];
+
+        for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+            if ($attempt > 1) {
+                \sleep($retrySeconds * 2 ** ($attempt - 2));
+            }
+
+            $result = $this->deleteOrphanedInProjects($dbForPlatform, $getProjectDB, $hostname, $before, \microtime(true) + $attemptSeconds, $publisherForUsage, $queueForRealtime, $retrySeconds);
+            $deleted += $result['deleted'];
+
+            if ($result['outcome'] === 'done' && $result['failed'] === 0) {
+                break;
+            }
+        }
+
+        return [...$result, 'deleted' => $deleted, 'attempts' => \min($attempt, $attempts)];
+    }
+
+    /**
+     * Deletes the realtime presences in one project whose host is no longer running: this
+     * host's earlier runs and any host not in `$liveHosts` (only this host's when null). Rows
+     * without a hostname are kept, as their host is unknown. Only rows untouched since
+     * `$before` go, so a socket served meanwhile keeps its presence. Purges the list cache,
+     * decrements usage and sends a realtime delete event per presence, as a socket closing
+     * does (realtime only, no webhooks or functions; no user lookup, as delivery uses the payload).
+     * Returns how many were deleted.
+     *
+     * @param list<string>|null $liveHosts
+     */
+    public function deleteOrphaned(
+        Database $dbForProject,
+        Document $project,
+        string $hostname,
+        ?array $liveHosts,
+        string $before,
+        UsagePublisher $publisherForUsage,
+        QueueRealtime $queueForRealtime,
+    ): int {
+        // deleteDocuments() re-applies these filters in the DELETE itself, so a row a socket
+        // updates after it was read is no longer older than `$before` and is kept.
+        $queries = [
+            Query::equal('source', ['realtime']),
+            Query::lessThan('$updatedAt', $before),
+        ];
+        if ($liveHosts === null) {
+            $queries[] = Query::equal('hostname', [$hostname]);
+        } else {
+            $queries[] = Query::isNotNull('hostname');
+            // One notEqual per host: it takes a single value.
+            foreach ($liveHosts as $liveHost) {
+                $queries[] = Query::notEqual('hostname', $liveHost);
+            }
+        }
+
+        $deleted = 0;
+        try {
+            $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $queries, $project, $queueForRealtime, &$deleted): void {
+                if ($dbForProject->findCollection(self::COLLECTION_ID) === null) {
+                    return;
+                }
+
+                $dbForProject->deleteDocuments(
+                    self::COLLECTION_ID,
+                    $queries,
+                    // Announced as each row is deleted, so nothing is buffered and a later failure can't silence it.
+                    onNext: function (Document $presence) use ($project, $queueForRealtime, &$deleted): void {
+                        $deleted++;
+
+                        foreach (['$collection', '$tenant', 'hostname', 'permissionsHash', 'userInternalId', 'connections'] as $attribute) {
+                            $presence->removeAttribute($attribute);
+                        }
+
+                        try {
+                            $queueForRealtime
+                                ->reset()
+                                ->setProject($project)
+                                ->setEvent('presences.[presenceId].delete')
+                                ->setParam('presenceId', $presence->getId())
+                                ->setPayload($presence->getArrayCopy())
+                                ->trigger();
+                        } catch (Throwable $th) {
+                            Span::current()?->setError($th)->set('presence.id', $presence->getId());
+                        }
+                    },
+                );
+            });
+        } finally {
+            // Rows deleted before a failure are gone too, so count and purge them either way.
+            if ($deleted > 0) {
+                $this->triggerUsage($publisherForUsage, $project, -$deleted);
+
+                try {
+                    $this->purgeListCache($dbForProject);
+                } catch (Throwable $th) {
+                    Span::current()?->setError($th)->set('project.id', $project->getId());
+                }
+            }
+        }
+
+        return $deleted;
     }
 
     private function checkPermissions(array $permissions, Authorization $authorization): void

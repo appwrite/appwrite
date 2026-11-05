@@ -171,6 +171,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM',
+                'description' => "Push service that delivers alerts to the Android devices console users sign in on. Use the following format: 'fcm://[FIREBASE_PROJECT_ID]', with the service account JSON in _APP_NOTIFICATIONS_PUSH_FCM_KEY. Leave empty to disable alert pushes to Android.",
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM_KEY',
+                'description' => 'Firebase service account JSON that _APP_NOTIFICATIONS_PUSH_FCM signs with; it has to belong to the project _APP_NOTIFICATIONS_PUSH_FCM names.',
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN',
                 'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
@@ -624,6 +642,15 @@ return [
                 'default' => 'postgresql',
                 'required' => true,
                 'question' => 'Choose your database (postgresql|mariadb|mongodb)',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REALTIME_BOOT_TIMEOUT',
+                'description' => 'Seconds a realtime server waits at boot for the cleanup of presences left by stopped realtime servers. Presence updates wait for the cleanup until this passes, then go ahead, and the cleanup carries on in the background. Set it to 0 to never wait; a user who reconnects during the cleanup may then keep showing as online until the next cleanup. Applies to self-hosted only. Default value is: 30.',
+                'introduction' => '2.7.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
                 'filter' => ''
             ],
             [
@@ -1660,7 +1687,7 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_STREAMING',
-                'description' => 'Allows a site to send its response in chunks as the runtime produces it, so a progressively rendered page reaches the visitor before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
+                'description' => 'Allows a function or site served on its domain to send its response in chunks as the runtime produces it, so a progressively rendered page or an event stream reaches the client before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
                 'introduction' => '2.7.0',
                 'default' => 'enabled',
                 'required' => false,

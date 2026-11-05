@@ -112,7 +112,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.7.0';
+const APP_VERSION_STABLE = '2.7.1';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -534,6 +534,12 @@ const REALTIME_CONCURRENCY_INTERVAL = '5m';
 // forward and never recomputed, so a delta arriving after its bucket was
 // sampled is lost for good.
 const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
+
+// Default for _APP_REALTIME_BOOT_TIMEOUT: longest a presence write waits at boot for the self-hosted cleanup.
+const REALTIME_BOOT_TIMEOUT_SECONDS = 30;
+
+// A realtime process whose heartbeat (every 5s) is older than this counts as gone.
+const REALTIME_HEARTBEAT_WINDOW_SECONDS = 60;
 
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';

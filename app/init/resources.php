@@ -29,6 +29,7 @@ use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Messaging\PushService;
 use Appwrite\Network\Validator\DeploymentHostname;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Network\Validator\PublicURL;
@@ -58,7 +59,6 @@ use Utopia\DI\Container;
 use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
-use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Group;
@@ -208,13 +208,21 @@ $container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname 
     }
 }, ['telemetry', 'publicHostname']);
 
-$container->set('adapterForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): ?PushAdapter {
-    try {
-        return (new MessagingProvider($telemetry, $publicHostname))->internalPush();
-    } catch (\Throwable $error) {
-        Console::error('Ignoring _APP_NOTIFICATIONS_PUSH_APNS: ' . $error->getMessage());
-        return null;
+$container->set('adaptersForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): array {
+    $adapters = [];
+    foreach (PushService::cases() as $service) {
+        try {
+            $adapter = (new MessagingProvider($telemetry, $publicHostname))->internalPush($service);
+        } catch (\Throwable $error) {
+            Console::error('Ignoring ' . $service->variable() . ': ' . $error->getMessage());
+            continue;
+        }
+        if ($adapter !== null) {
+            $adapters[$service->value] = $adapter;
+        }
     }
+
+    return $adapters;
 }, ['telemetry', 'publicHostname']);
 
 $container->set('authorization', fn () => new Authorization(), []);
