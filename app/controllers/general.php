@@ -617,8 +617,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                             continue;
                         }
 
-                        // Length and framing describe the buffered response, not the chunked one.
-                        if ($lowercased === 'content-length' || $lowercased === 'transfer-encoding') {
+                        // Framing describes the buffered response, not the chunked one.
+                        if ($lowercased === 'transfer-encoding') {
                             continue;
                         }
 
