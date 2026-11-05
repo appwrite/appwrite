@@ -309,7 +309,24 @@ class Create extends Action
                         'identifier' => $identifier,
                     ])));
                 } catch (Duplicate) {
-                    // Another user already owns this identifier as a target
+                    // A deleted user's target lingers until the deletes worker removes it
+                    $existing = $authorization->skip(fn () => $dbForProject->findOne('targets', [
+                        Query::equal('identifier', [$identifier]),
+                    ]));
+                    $owner = $authorization->skip(fn () => $dbForProject->getDocument('users', $existing->getAttribute('userId', '')));
+
+                    if (!$existing->isEmpty() && $owner->isEmpty()) {
+                        $authorization->skip(fn () => $dbForProject->updateDocument('targets', $existing->getId(), new Document([
+                            '$permissions' => [
+                                Permission::read(Role::user($invitee->getId())),
+                                Permission::update(Role::user($invitee->getId())),
+                                Permission::delete(Role::user($invitee->getId())),
+                            ],
+                            'userId' => $invitee->getId(),
+                            'userInternalId' => $invitee->getSequence(),
+                            'providerType' => $providerType,
+                        ])));
+                    }
                 }
             }
 
