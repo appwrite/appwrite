@@ -53,10 +53,13 @@ import { ExportMenu } from '../_components/ExportMenu'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
+  EventPropertiesPanel,
   LocationsPanel,
   PagesPanel,
   TechnologyPanel,
   TrafficSourcesPanel,
+  UsersPanel,
+  useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
 import { TrafficSplit } from '../_components/TrafficSplit'
@@ -67,7 +70,7 @@ import {
   type AnalyticsFiltersContextValue,
 } from '../_components/analytics-filters-context'
 import {
-  ANALYTICS_FILTER_COLUMNS,
+  analyticsFilterColumns,
   analyticsFiltersFromMap,
   equalFilterEntry,
   trafficKindFilterEntry,
@@ -143,6 +146,7 @@ export function View({
     [filterQuery],
   )
   const filters = useMemo(() => analyticsFiltersFromMap(filterMap), [filterMap])
+  const filterColumns = useMemo(() => analyticsFilterColumns(filters), [filters])
 
   const commitFilterMap = useCallback(
     (next: FilterMap) => {
@@ -283,6 +287,21 @@ export function View({
   const range = useMemo(
     () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
     [dateRange],
+  )
+  // A sideways trackpad or touch swipe over the chart brush, tab bars or
+  // tables would otherwise fire the browser's swipe-back navigation.
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.style.overscrollBehaviorX
+    root.style.overscrollBehaviorX = 'none'
+    return () => {
+      root.style.overscrollBehaviorX = previous
+    }
+  }, [])
+
+  const showUsersPanel = useShowUsersPanel(
+    { projectId, propertyId, range },
+    filters,
   )
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
@@ -483,7 +502,7 @@ export function View({
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}
-                columns={ANALYTICS_FILTER_COLUMNS}
+                columns={filterColumns}
                 filterMap={filterMap}
                 onRemoveFilter={filtersContext.onRemoveFilter}
                 onClearAll={filtersContext.onClearAllFilters}
@@ -587,6 +606,7 @@ export function View({
               compareMode={compareMode}
               comparisonRange={comparisonRange}
               onRefresh={handleRefresh}
+              showUsers={showUsersPanel}
             />
 
             <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
@@ -628,6 +648,21 @@ export function View({
                   propertyId={propertyId}
                   range={range}
                 />
+                {showUsersPanel ? (
+                  <UsersPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {/* Full width when it has no Users card beside it. */}
+                <div className={showUsersPanel ? undefined : 'lg:col-span-2'}>
+                  <EventPropertiesPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                </div>
                 {/* Custom events close the page at full width: it's the card
                   most specific to the product, and its empty state carries
                   the how-to CTA. */}

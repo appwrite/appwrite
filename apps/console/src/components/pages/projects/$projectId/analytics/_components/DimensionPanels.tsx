@@ -1,11 +1,25 @@
 import { AnalyticsDimension } from '@appwrite.io/console'
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
+  analyticsBreakdownQueryOptions,
   useAnalyticsProperty,
   useCountryLookups,
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
-import { BreakdownPanel, type BreakdownTab } from './BreakdownPanel'
+import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
+import { useT } from '@/lib/i18n/translate'
+import {
+  BreakdownBody,
+  BreakdownHeader,
+  BreakdownMessage,
+  BreakdownPanel,
+  BreakdownSkeleton,
+  type BreakdownTab,
+} from './BreakdownPanel'
+import { useAnalyticsFilters } from './analytics-filters-context'
+import type { AnalyticsFilter } from '@/lib/analytics/analytics-filters'
 import { BrowserIcon, ChannelIcon, CountryFlag, SourceFavicon } from './BreakdownRow'
 
 // Bars stay neutral (the BreakdownRow default), like Usage's breakdowns:
@@ -189,6 +203,18 @@ const TECH_TABS: BreakdownTab[] = [
     label: 'Screen sizes',
     dimension: AnalyticsDimension.ScreenSize,
   },
+  {
+    id: 'browser-versions',
+    label: 'Browser versions',
+    dimension: AnalyticsDimension.BrowserVersion,
+    group: 'Versions',
+  },
+  {
+    id: 'os-versions',
+    label: 'OS versions',
+    dimension: AnalyticsDimension.OperatingSystemVersion,
+    group: 'Versions',
+  },
 ]
 
 export function TechnologyPanel(props: PanelProps) {
@@ -231,5 +257,137 @@ export function BotsPanel(props: PanelProps) {
       tabs={BOT_TABS}
       emptyLabel="No bot traffic in this range"
     />
+  )
+}
+
+const USER_TABS: BreakdownTab[] = [
+  { id: 'users', label: 'Users', dimension: AnalyticsDimension.UserId },
+]
+
+/** Keeps a query's previous result across filter changes, never across properties. */
+function samePropertyPlaceholder<T>(propertyId: string) {
+  // Key index 3 is the property in analyticsBreakdownQueryOptions.
+  return (previous: T | undefined, previousQuery?: { queryKey: readonly unknown[] }) =>
+    previousQuery?.queryKey[3] === propertyId ? previous : undefined
+}
+
+/**
+ * Shown when the property identifies users, or when user IDs arrive anyway
+ * (sent by a server with an API key while the setting is off). Drives both the
+ * Users card and the overview's Users tab.
+ */
+export function useShowUsersPanel(
+  { projectId, propertyId, range }: PanelProps,
+  filters: readonly AnalyticsFilter[],
+) {
+  const { property } = useAnalyticsProperty(projectId, propertyId)
+  // Same key as the panel's own query, so it is one request. The previous
+  // answer is kept while a new filter loads so the card doesn't blink out.
+  const { data } = useQuery({
+    ...analyticsBreakdownQueryOptions(
+      projectId,
+      propertyId,
+      AnalyticsDimension.UserId,
+      range,
+      undefined,
+      true,
+      filters,
+    ),
+    placeholderData: samePropertyPlaceholder(propertyId),
+  })
+  return !!property?.identifyUsers || (data?.breakdown.length ?? 0) > 0
+}
+
+export function UsersPanel(props: PanelProps) {
+  // No link to the user: an ID sent with an API key may not be a project user.
+  return (
+    <BreakdownPanel
+      {...props}
+      title="Users"
+      description="Identified users, ranked by visitors"
+      info="users"
+      tabs={USER_TABS}
+      mono
+      emptyLabel="No identified users in this range"
+    />
+  )
+}
+
+/** Prop keys shown as tabs before the rest move under "More". */
+const PROP_TABS_INLINE = 4
+
+/**
+ * Custom event props: one tab per prop key (ranked by visitors), each ranking
+ * that key's values. Clicking a value filters on `props.<key>`.
+ */
+export function EventPropertiesPanel(props: PanelProps) {
+  const t = useT()
+  const { filters } = useAnalyticsFilters()
+  // The previous keys stay while a new filter loads, so the tabs (and the
+  // selected one) survive a click on a value.
+  const { data, isLoading, error } = useQuery({
+    ...analyticsBreakdownQueryOptions(
+      props.projectId,
+      props.propertyId,
+      AnalyticsDimension.Props,
+      props.range,
+      undefined,
+      true,
+      filters,
+    ),
+    placeholderData: samePropertyPlaceholder(props.propertyId),
+  })
+  const keys = data?.breakdown
+
+  const tabs = useMemo(
+    () =>
+      (keys ?? [])
+        .filter((entry) => isKnownBreakdownValue(entry.value))
+        .map(
+          (entry, index): BreakdownTab => ({
+            id: `prop:${entry.value}`,
+            label: entry.value!,
+            dimension: AnalyticsDimension.Props,
+            propKey: entry.value!,
+            group: index >= PROP_TABS_INLINE ? 'More' : undefined,
+          }),
+        ),
+    [keys],
+  )
+
+  const title = 'Event properties'
+  const description = 'Values of the props sent with your events'
+
+  if (tabs.length > 0) {
+    return (
+      <BreakdownPanel
+        {...props}
+        title={title}
+        description={description}
+        tabs={tabs}
+        mono
+      />
+    )
+  }
+
+  return (
+    <div className="flex flex-col rounded-lg border border-border bg-card">
+      <BreakdownHeader title={title} description={description} />
+      <BreakdownBody canShowMore={false} onShowMore={() => {}}>
+        {error ? (
+          <BreakdownMessage>
+            {error instanceof Error
+              ? error.message
+              : t('Could not load analytics data')}
+          </BreakdownMessage>
+        ) : isLoading ? (
+          <BreakdownSkeleton />
+        ) : (
+          <BreakdownMessage>
+            {t('No event props in this range')}
+          </BreakdownMessage>
+        )}
+      </BreakdownBody>
+    </div>
   )
 }
