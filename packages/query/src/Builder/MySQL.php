@@ -2,6 +2,8 @@
 
 namespace Utopia\Query\Builder;
 
+use Utopia\Query\AST\Serializer;
+use Utopia\Query\AST\Serializer\MySQL as MySQLSerializer;
 use Utopia\Query\Builder\Feature\ConditionalAggregates;
 use Utopia\Query\Builder\Feature\FullTextSearch;
 use Utopia\Query\Builder\Feature\Hints;
@@ -16,6 +18,8 @@ use Utopia\Query\Builder\Feature\Upsert;
 use Utopia\Query\Builder\Feature\UpsertSelect;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
+use Utopia\Query\Tokenizer\MySQL as MySQLTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class MySQL extends SQL implements
     Json,
@@ -42,6 +46,10 @@ class MySQL extends SQL implements
     use Trait\Upsert;
     use Trait\UpsertSelect;
 
+    protected const string LIKE_ESCAPE = '!';
+
+    protected const bool DECLARES_LIKE_ESCAPE = true;
+
     private const int FULL_TEXT_MINIMUM_WORD_LENGTH = 3;
 
     private const array FULL_TEXT_STOPWORDS = [
@@ -65,6 +73,18 @@ class MySQL extends SQL implements
     protected string $deleteJoinLeft = '';
 
     protected string $deleteJoinRight = '';
+
+    #[\Override]
+    protected function createAstSerializer(): Serializer
+    {
+        return new MySQLSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new MySQLTokenizer($this->literal);
+    }
 
     #[\Override]
     protected function compileRandom(): string
@@ -209,9 +229,10 @@ class MySQL extends SQL implements
     #[\Override]
     public function setJsonRemove(string $column, mixed $value): static
     {
+        $wrapped = $this->resolveAndWrap($column);
         $this->jsonSets[$column] = new Condition(
-            'JSON_REMOVE(' . $this->resolveAndWrap($column) . ', JSON_UNQUOTE(JSON_SEARCH(' . $this->resolveAndWrap($column) . ', \'one\', ?)))',
-            [$value],
+            'COALESCE(JSON_REMOVE(' . $wrapped . ', JSON_UNQUOTE(JSON_SEARCH(' . $wrapped . ', \'one\', ?, ' . $this->literal->quote(static::LIKE_ESCAPE) . '))), ' . $wrapped . ')',
+            [$this->escapeLikeValue($value)],
         );
 
         return $this;

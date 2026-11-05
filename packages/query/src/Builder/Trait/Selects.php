@@ -270,7 +270,7 @@ trait Selects
 
         foreach ($result->bindings as $binding) {
             if (\is_string($binding)) {
-                $value = $this->quoteString($binding);
+                $value = $this->literal->quote($binding);
             } elseif (\is_int($binding) || \is_float($binding)) {
                 $value = (string) $binding;
             } elseif (\is_bool($binding)) {
@@ -287,11 +287,6 @@ trait Selects
         }
 
         return $sql;
-    }
-
-    protected function quoteString(string $value): string
-    {
-        return "'" . \str_replace(['\\', "'"], ['\\\\', "''"], $value) . "'";
     }
 
     /**

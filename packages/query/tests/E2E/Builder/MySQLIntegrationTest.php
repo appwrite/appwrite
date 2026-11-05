@@ -2,6 +2,7 @@
 
 namespace Utopia\Query\Tests\E2E\Builder;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Utopia\Query\Builder\Case\Expression as CaseExpression;
 use Utopia\Query\Builder\Case\Operator;
 use Utopia\Query\Builder\MySQL as Builder;
@@ -11,6 +12,8 @@ use Utopia\Query\Tests\E2E\IntegrationTestCase;
 
 class MySQLIntegrationTest extends IntegrationTestCase
 {
+    use LikeEscapeCases;
+
     private Builder $builder;
 
     protected function setUp(): void
@@ -1027,5 +1030,53 @@ class MySQLIntegrationTest extends IntegrationTestCase
         $rows = $this->executeOnMysql($builder->sortAsc('id')->build());
 
         return \array_column($rows, 'search');
+    }
+
+    /**
+     * @param  list<string>  $expected
+     */
+    #[DataProvider('likePatterns')]
+    public function testLikePatternMatchesLiterally(bool $noBackslashEscapes, Query $query, array $expected): void
+    {
+        $pdo = $this->connectMysql();
+        $this->trackMysqlTable('patterns');
+        $this->seedPatterns($pdo);
+
+        $result = $this->fresh()
+            ->from('patterns')
+            ->select(['value'])
+            ->filter([$query])
+            ->sortAsc('id')
+            ->build();
+
+        $rows = $this->inSqlMode($pdo, $noBackslashEscapes, fn (): array => $this->executeOnMysql($result));
+
+        $this->assertSame($expected, \array_column($rows, 'value'));
+    }
+
+    /**
+     * @param  list<mixed>  $expected
+     */
+    #[DataProvider('jsonRemovals')]
+    public function testJsonSetRemoveMatchesLiterally(bool $noBackslashEscapes, string $tags, mixed $value, array $expected): void
+    {
+        $pdo = $this->connectMysql();
+        $this->trackMysqlTable('tagged');
+        $this->seedTags($pdo, $tags);
+
+        $update = $this->fresh()
+            ->from('tagged')
+            ->setJsonRemove('tags', $value)
+            ->filter([Query::equal('id', [1])])
+            ->update();
+
+        $this->inSqlMode($pdo, $noBackslashEscapes, fn (): array => $this->executeOnMysql($update));
+
+        $this->assertSame($expected, $this->storedTags($pdo));
+    }
+
+    protected static function jsonSearchMatchesNumbers(): bool
+    {
+        return false;
     }
 }

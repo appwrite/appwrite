@@ -2,10 +2,12 @@
 
 namespace Utopia\Query\Tokenizer;
 
+use Utopia\Query\StringLiteral;
+
 class SQLite extends Tokenizer
 {
-    protected function getIdentifierQuoteChar(): string
+    public function __construct(StringLiteral $literal = StringLiteral::Standard)
     {
-        return '"';
+        parent::__construct($literal);
     }
 }

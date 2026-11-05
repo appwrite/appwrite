@@ -4,8 +4,44 @@ All notable changes to `utopia-php/query` are documented in this file.
 
 ## 0.7.3
 
+### Changed
+
+- String literals in `toRawSql()`, the schema builder and the AST serializer
+  are quoted by the new `StringLiteral` enum, one case per dialect:
+  `Backslash` (MySQL, MariaDB), `Extended` (PostgreSQL), `Standard` (SQLite)
+  and `BackslashUtf8` (ClickHouse). `unquote()` reads a literal back. MySQL,
+  MariaDB and PostgreSQL throw `ValidationException` for a value with a
+  backslash right after a byte of `0x80` or above, which a GBK, BIG5,
+  SJIS/CP932 or GB18030 connection reads as the lead byte of a character that
+  absorbs the escaping backslash. PostgreSQL and SQLite throw for a NUL byte.
+  The ClickHouse schema builder's `Enum8` values double quotes like its other
+  literals instead of escaping them with a backslash.
+  The MySQL and MariaDB literals assume the server's default `sql_mode`:
+  under `NO_BACKSLASH_ESCAPES` a backslash is an ordinary character, so a
+  comment or default `C:\x` is stored as `C:\\x`. Doubled quotes hold in both
+  modes, so a value still cannot close its literal.
+- `Tokenizer` and `AST\Parser` take a `StringLiteral`; each dialect tokenizer
+  defaults to its dialect's case and `Parser` to `Backslash`. The SQLite
+  tokenizer also reads backtick-quoted identifiers, which its builder emits.
+- MySQL and MariaDB LIKE predicates compile to `col LIKE ? ESCAPE '!'` (and
+  `NOT LIKE`) with `!`-escaped bindings, SQLite's to `col LIKE ? ESCAPE '\'`,
+  and MySQL's `setJsonRemove()` to `JSON_SEARCH(col, 'one', ?, '!')`.
+  Statement text and bindings matched in tests or caches change accordingly.
+- `AST\Parser::parse()` requires the statement to end the input, after at most
+  one `;`, and throws `ValidationException` for any token left over. It
+  stopped at the first token it did not expect, so a clause it did not know,
+  or a second statement, was silently dropped from the tree.
+- `AST\Expression\Binary` takes an optional `escape` expression, which the
+  parser reads from `LIKE`, `ILIKE`, `NOT LIKE` and `NOT ILIKE` followed by
+  `ESCAPE`, and the serializer and `Walker` carry.
+
 ### Fixed
 
+- MySQL and MariaDB `setJsonRemove()` leaves the column unchanged when the
+  value is not in the array. `JSON_SEARCH()` returned NULL for a missing value,
+  and for any non-string value on MySQL, and `JSON_REMOVE()` with a NULL path
+  set the whole column to NULL, or failed on a `NOT NULL` column in strict
+  mode. The statement is now wrapped in `COALESCE(..., col)`.
 - Raw conditions are enclosed in parentheses where they are ANDed with other
   conditions: `Query::raw()` filters, `whereRaw()` in SELECT, UPDATE and
   DELETE, `havingRaw()`, `JoinBuilder::whereRaw()` and `onRaw()`, the
@@ -23,9 +59,26 @@ All notable changes to `utopia-php/query` are documented in this file.
   with a filter or hook the values reached the wrong placeholders.
 - `toRawSql()` escapes backslashes as well as quotes, as the AST serializer and
   the schema builder do, so under MySQL's or ClickHouse's backslash escaping a
-  value cannot close its literal. PostgreSQL and SQLite read a backslash
-  literally, so their builders double quotes only. Its output is still for
-  logs and debugging only.
+  value cannot close its literal. SQLite reads a backslash literally, so its
+  builder doubles quotes only; PostgreSQL's uses `E''` for a value with a
+  backslash. Its output is still for logs and debugging only.
+- The PostgreSQL and SQLite schema builders doubled backslashes in comments,
+  defaults, enum and type values, collation options and `nextVal()` names,
+  which SQLite, and PostgreSQL under its default `standard_conforming_strings`,
+  read literally, so the stored value gained a backslash. SQLite now keeps them; PostgreSQL emits
+  `E''` with escaped backslashes for a value that has one.
+- The AST serializer escaped backslashes for every dialect, so `fromAst()` on
+  the PostgreSQL and SQLite builders doubled them in string literals. Each
+  dialect's serializer, and `Serializer` given a `StringLiteral`, now quotes
+  as its builder does.
+- The tokenizer and parser read string literals as the serializer writes
+  them. The tokenizer treated `\` as an escape in every dialect, so SQLite's
+  `'C:\'` was reported unterminated and PostgreSQL's `E'..'` was not one
+  string; the parser undid `''` and `\'` but not `\\`, so `parse()` of a
+  serialized `a\b` re-serialized with its backslash doubled. MySQL, MariaDB
+  and ClickHouse now decode backslash escapes, SQLite reads `\` literally, and
+  PostgreSQL decodes them only inside `E''`. `toAst()` parses CTE bodies with
+  its dialect's tokenizer and literal.
 - The ClickHouse schema builder escapes backslashes in `ReplicatedMergeTree`'s
   ZooKeeper path and replica name and in string skip-index arguments, as it
   already did in its other literals.
@@ -33,6 +86,31 @@ All notable changes to `utopia-php/query` are documented in this file.
   no longer accept a trailing newline, which their `$` anchors matched
   before. Among them: JSON paths in the MySQL, PostgreSQL and SQLite builders,
   `JoinBuilder::on()` and `where()` columns, and the `Tenant` hook's column.
+- The MySQL and MariaDB builders escape LIKE wildcards with `!` and declare it
+  with `ESCAPE '!'`. They escaped with a backslash, which under
+  `NO_BACKSLASH_ESCAPES` is no escape character, so `contains('50%')` also
+  matched `500`. A backslash in a value is now matched as itself.
+- The SQLite builder declares `ESCAPE '\'`. SQLite's LIKE has no escape
+  character by default, so the backslash-escaped `%` and `_` matched a
+  backslash followed by any characters instead of themselves.
+- The MySQL builder's `setJsonRemove()` escapes the LIKE pattern
+  `JSON_SEARCH()` matches its value with and passes `!` as the escape
+  character, so a value containing `%` or `_` removes only the element equal
+  to it.
+- `toAst()` keeps the `ESCAPE` clause of LIKE predicates in CTE bodies. The
+  parser stopped at `ESCAPE`, so on MySQL, MariaDB and SQLite the tree
+  serialized `a LIKE ?` while the binding stayed `!`- or `\`-escaped, and
+  `startsWith('a', '50%')` matched any value starting with `50!`. LIKE
+  filters `toAst()` builds itself escape the value and declare the dialect's
+  escape character, as `build()` does, so `startsWith('a', '50%')` no longer
+  serializes to `a LIKE '50%%'`. `fromAst()` reads the pattern back with its
+  declared escape character, or the dialect's implicit one, into
+  `startsWith()`, `endsWith()` and `contains()` with the unescaped value; a
+  pattern with other wildcards, or whose escape character is `%` or `_`,
+  stays raw with its `ESCAPE` clause.
+- `fromAst()` keeps an OR operand it cannot map to a `Query` as a raw
+  condition. It dropped it, so `a LIKE 'x%' ESCAPE '' OR id = 1` read back as
+  `id = 1` alone.
 
 ## 0.7.2
 
