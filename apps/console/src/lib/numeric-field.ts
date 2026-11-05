@@ -40,6 +40,35 @@ export function parseNumericField(field: string): number | undefined {
 }
 
 /**
+ * Parses a numeric input string from database row form inputs.
+ * Returns `null` when empty or invalid, or the parsed integer/float/bigint, preserving numeric 0.
+ */
+export function parseRowNumericInput(
+  value: string,
+  fieldType: 'integer' | 'bigint' | 'double' | 'number' | string,
+): number | bigint | null {
+  if (value === '' || value.trim() === '') {
+    return null
+  }
+
+  if (fieldType === 'bigint') {
+    try {
+      return BigInt(value.trim())
+    } catch {
+      return null
+    }
+  }
+
+  if (fieldType === 'integer') {
+    const parsed = parseInt(value, 10)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+
+  const parsed = parseFloat(value)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
+/**
  * The value a numeric field settles on when editing ends: what the user typed, held within
  * `min`/`max`, falling back to the previous value when the field was left empty or unreadable.
  */

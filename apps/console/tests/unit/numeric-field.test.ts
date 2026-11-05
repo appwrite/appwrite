@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'bun:test'
-import { parseNumericField, settleNumericField } from '@/lib/numeric-field'
+import {
+  parseNumericField,
+  parseRowNumericInput,
+  settleNumericField,
+} from '@/lib/numeric-field'
 
 describe('parseNumericField', () => {
   test('reports an empty field as nothing typed yet', () => {
@@ -19,6 +23,39 @@ describe('parseNumericField', () => {
     expect(parseNumericField('2')).toBe(2)
     expect(parseNumericField(' 250 ')).toBe(250)
     expect(parseNumericField('-5')).toBe(-5)
+  })
+})
+
+describe('parseRowNumericInput', () => {
+  test('converts empty or whitespace strings to null', () => {
+    expect(parseRowNumericInput('', 'integer')).toBeNull()
+    expect(parseRowNumericInput('   ', 'integer')).toBeNull()
+    expect(parseRowNumericInput('', 'double')).toBeNull()
+    expect(parseRowNumericInput('', 'bigint')).toBeNull()
+  })
+
+  test('preserves numeric zero across all numeric types', () => {
+    expect(parseRowNumericInput('0', 'integer')).toBe(0)
+    expect(parseRowNumericInput('0', 'double')).toBe(0)
+    expect(parseRowNumericInput('0.0', 'double')).toBe(0)
+    expect(parseRowNumericInput('0', 'number')).toBe(0)
+    expect(parseRowNumericInput('0', 'bigint')).toBe(BigInt(0))
+  })
+
+  test('parses integers, floats and bigints correctly', () => {
+    expect(parseRowNumericInput('42', 'integer')).toBe(42)
+    expect(parseRowNumericInput('-10', 'integer')).toBe(-10)
+    expect(parseRowNumericInput('3.14', 'double')).toBe(3.14)
+    expect(parseRowNumericInput('-0.5', 'double')).toBe(-0.5)
+    expect(parseRowNumericInput('9007199254740991000', 'bigint')).toBe(
+      BigInt('9007199254740991000'),
+    )
+  })
+
+  test('returns null on invalid input', () => {
+    expect(parseRowNumericInput('abc', 'integer')).toBeNull()
+    expect(parseRowNumericInput('xyz', 'double')).toBeNull()
+    expect(parseRowNumericInput('invalid', 'bigint')).toBeNull()
   })
 })
 
