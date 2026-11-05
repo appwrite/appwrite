@@ -369,7 +369,6 @@
         "src/Appwrite/Utopia/Database/Validator/Queries/Videos.php",
         "src/Appwrite/Usage/Video.php",
         "src/Appwrite/Messaging/Adapter/Realtime.php",
-        "src/Appwrite/Migration/Version/V26.php",
         "app/views/videos/",
         "app/config/videos-"
       ]
