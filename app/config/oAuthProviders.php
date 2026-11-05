@@ -489,6 +489,17 @@ return [
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Vipps',
     ],
+    'vippsSandbox' => [
+        'name' => 'Vipps MobilePay Sandbox',
+        'developers' => 'https://developer.vippsmobilepay.com/docs/knowledge-base/test-environment/',
+        'icon' => 'icon-vipps',
+        'enabled' => true,
+        'sandbox' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\VippsSandbox',
+    ],
     'webflow' => [
         'name' => 'Webflow',
         'developers' => 'https://developers.webflow.com/data/reference/oauth-app',
