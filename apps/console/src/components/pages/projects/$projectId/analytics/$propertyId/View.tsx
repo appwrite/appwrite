@@ -3,6 +3,7 @@ import type { DateRange } from 'react-day-picker'
 import { differenceInHours } from 'date-fns'
 import { AlertTriangle, Download } from 'lucide-react'
 import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
+import { propertyType } from '@/lib/analytics-wizard/property-types'
 import { Button } from '@/components/ui/button'
 import { InstallTrackingDialog } from '../_components/InstallTrackingDialog'
 import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
@@ -486,8 +487,8 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
-  const propertyType = property?.type ?? AnalyticsPropertyType.Web
-  const panels = PANELS_BY_TYPE[propertyType]
+  const resolvedType = propertyType(property)
+  const panels = PANELS_BY_TYPE[resolvedType]
   const breakdownCount = [...panels].filter(
     (panel) => panel !== 'users' && panel !== 'eventProps',
   ).length
@@ -679,7 +680,7 @@ export function View({
                     projectId={projectId}
                     propertyId={propertyId}
                     range={range}
-                    screens={propertyType === AnalyticsPropertyType.Mobile}
+                    screens={resolvedType === AnalyticsPropertyType.Mobile}
                   />
                 ) : null}
                 {panels.has('locations') ? (

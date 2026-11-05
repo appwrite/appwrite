@@ -27,6 +27,7 @@ import {
 import {
   ANALYTICS_PROPERTY_TYPES,
   ANALYTICS_PROPERTY_TYPE_META,
+  propertyType,
 } from '@/lib/analytics-wizard/property-types'
 import { DeleteProperty } from './DeleteProperty'
 import { InstallTrackingDialog } from './InstallTrackingDialog'
@@ -312,7 +313,7 @@ export function PropertySettings({
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <Select
-              value={property.type}
+              value={propertyType(property)}
               onValueChange={(next) =>
                 applyUpdate(
                   { type: next as AnalyticsPropertyType },

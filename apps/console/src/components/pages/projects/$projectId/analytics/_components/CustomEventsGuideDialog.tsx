@@ -20,7 +20,10 @@ import {
   buildCustomEventSnippets,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
-import { ANALYTICS_PROPERTY_TYPE_META } from '@/lib/analytics-wizard/property-types'
+import {
+  ANALYTICS_PROPERTY_TYPE_META,
+  propertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { ANALYTICS_AUTOMATIC_EVENTS } from '@/lib/react-query/hooks'
 
 type CustomEventsGuideDialogProps = {
@@ -61,7 +64,7 @@ export function CustomEventsGuideDialog({
   const t = useT()
   const [selected, setSelected] = useState<AnalyticsPlatform>()
   const platforms = property
-    ? ANALYTICS_PROPERTY_TYPE_META[property.type].platforms
+    ? ANALYTICS_PROPERTY_TYPE_META[propertyType(property)].platforms
     : ANALYTICS_PLATFORMS
   // The property can load after mount, so the default follows its type.
   const platform =

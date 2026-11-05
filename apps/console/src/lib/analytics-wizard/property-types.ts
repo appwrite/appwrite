@@ -1,4 +1,4 @@
-import { AnalyticsPropertyType } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import type { AnalyticsPlatform } from './snippets'
 
 /**
@@ -37,4 +37,15 @@ export const ANALYTICS_PROPERTY_TYPE_META: Record<
     description: 'AI agents and backend services, over the API.',
     platforms: ['rest'],
   },
+}
+
+// The console can ship to a region before its API returns `type`, or a newer
+// API can return a type this build doesn't know.
+export function propertyType(
+  property: Pick<Models.AnalyticsProperty, 'type'> | null | undefined,
+): AnalyticsPropertyType {
+  const type = property?.type
+  return type && type in ANALYTICS_PROPERTY_TYPE_META
+    ? type
+    : AnalyticsPropertyType.Web
 }
