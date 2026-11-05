@@ -7,17 +7,18 @@ use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
+use Appwrite\Platform\Modules\Messaging\Http\Messages\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -91,10 +92,11 @@ class Update extends Action
             ->inject('project')
             ->inject('publisherForMessaging')
             ->inject('response')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, Request $request)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -231,6 +233,6 @@ class Update extends Action
             ->setParam('messageId', $message->getId());
 
         $response
-            ->dynamic($message, Response::MODEL_MESSAGE);
+            ->dynamic($this->redactImageUrl($message, $request), Response::MODEL_MESSAGE);
     }
 }
