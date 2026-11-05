@@ -2,6 +2,8 @@
 
 namespace Utopia\Query\Builder;
 
+use Utopia\Query\AST\Serializer;
+use Utopia\Query\AST\Serializer\MariaDB as MariaDBSerializer;
 use Utopia\Query\Builder\Feature\MariaDB\Returning;
 use Utopia\Query\Builder\Feature\Sequences;
 use Utopia\Query\Exception\ValidationException;
@@ -13,6 +15,12 @@ class MariaDB extends MySQL implements Returning, Sequences
 {
     use Trait\MariaDB\Sequences;
     use Trait\Returning;
+
+    #[\Override]
+    protected function createAstSerializer(): Serializer
+    {
+        return new MariaDBSerializer($this->literal);
+    }
 
     #[\Override]
     public function insert(): Statement

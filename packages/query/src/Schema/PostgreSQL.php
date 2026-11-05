@@ -161,7 +161,7 @@ class PostgreSQL extends SQL implements
 
         // PostgreSQL enum emulation via CHECK constraint
         if ($column->type === ColumnType::Enum && ! empty($column->enumValues)) {
-            $values = \array_map(fn (string $v): string => $this->literal->quote($v), $column->enumValues);
+            $values = \array_map($this->literal->quote(...), $column->enumValues);
             $parts[] = 'CHECK (' . $this->quoteLiteral($column->name) . ' IN (' . \implode(', ', $values) . '))';
         }
 
@@ -560,7 +560,7 @@ class PostgreSQL extends SQL implements
 
     public function createType(string $name, array $values): Statement
     {
-        $escaped = array_map(fn (string $v): string => $this->literal->quote($v), $values);
+        $escaped = array_map($this->literal->quote(...), $values);
 
         return new Statement(
             'CREATE TYPE ' . $this->quote($name) . ' AS ENUM (' . implode(', ', $escaped) . ')',

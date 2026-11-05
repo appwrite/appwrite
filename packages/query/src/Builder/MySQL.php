@@ -2,6 +2,8 @@
 
 namespace Utopia\Query\Builder;
 
+use Utopia\Query\AST\Serializer;
+use Utopia\Query\AST\Serializer\MySQL as MySQLSerializer;
 use Utopia\Query\Builder\Feature\ConditionalAggregates;
 use Utopia\Query\Builder\Feature\FullTextSearch;
 use Utopia\Query\Builder\Feature\Hints;
@@ -69,6 +71,12 @@ class MySQL extends SQL implements
     protected string $deleteJoinLeft = '';
 
     protected string $deleteJoinRight = '';
+
+    #[\Override]
+    protected function createAstSerializer(): Serializer
+    {
+        return new MySQLSerializer($this->literal);
+    }
 
     #[\Override]
     protected function compileRandom(): string

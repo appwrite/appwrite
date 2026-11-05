@@ -2,6 +2,8 @@
 
 namespace Utopia\Query\Builder;
 
+use Utopia\Query\AST\Serializer;
+use Utopia\Query\AST\Serializer\ClickHouse as ClickHouseSerializer;
 use Utopia\Query\Builder as BaseBuilder;
 use Utopia\Query\Builder\ClickHouse\Format;
 use Utopia\Query\Builder\ClickHouse\FormattedInsertStatement;
@@ -98,6 +100,12 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
      * asynchronously) and is opt-in via `deleteMode('mutation')`.
      */
     protected string $deleteMode = self::DELETE_MODE_LIGHTWEIGHT;
+
+    #[\Override]
+    protected function createAstSerializer(): Serializer
+    {
+        return new ClickHouseSerializer($this->literal);
+    }
 
     /**
      * Add PREWHERE filters (evaluated before reading all columns — major ClickHouse optimization)

@@ -600,10 +600,10 @@ class PostgreSQL extends SQL implements
 
         $chain = $base;
         foreach ($parts as $key) {
-            $chain .= '->' . $this->quoteJsonKey($key);
+            $chain .= '->' . $this->literal->quote($key);
         }
 
-        return $chain . '->>' . $this->quoteJsonKey($lastKey);
+        return $chain . '->>' . $this->literal->quote($lastKey);
     }
 
     private function quoteArrayElement(string $element): string
@@ -617,11 +617,6 @@ class PostgreSQL extends SQL implements
         }
 
         return '"' . \str_replace(['\\', '"'], ['\\\\', '\\"'], $element) . '"';
-    }
-
-    private function quoteJsonKey(string $key): string
-    {
-        return StringLiteral::Extended->quote($key);
     }
 
     #[\Override]
