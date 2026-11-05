@@ -97,7 +97,39 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('## 5. Propose the build and check in')
     expect(markdown).toContain('| The app needs | Appwrite | Set it up with |')
     expect(markdown).toContain(
-      'Approve the sign-ins, then reply "go", or change anything above.',
+      'Approve the sign-in, then reply "go", or change anything above.',
+    )
+  })
+
+  test('asks only for the CLI sign-in before the build, and moves MCP to the hand-off', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain(
+      'MCP sign-ins, reloads, and restarts go on the hand-off list, because the build does not use MCP.',
+    )
+    expect(markdown).toContain(
+      '| Appwrite MCP | Installed, you sign in at the end |',
+    )
+    expect(markdown).not.toContain('<the MCP sign-in step for this agent')
+    expect(markdown).toContain('Nothing in between waits on you.')
+  })
+
+  test('runs the first slice on client-side sessions, which need no key', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain('- **Sessions**: client-side')
+    expect(markdown).toContain('Client-side sessions need no server key')
+    expect(markdown).toContain(
+      'The first slice runs on client-side sessions (step 5) and needs no key.',
+    )
+  })
+
+  test('deletes its own test data instead of handing cleanup to the user', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain(
+      'Once the checks pass, delete the test user and rows you created',
+    )
+    expect(markdown).toContain('appwrite users delete --user-id')
+    expect(markdown).toContain(
+      '| Test data | A test user and a few rows, created to verify the build | Deleted once the checks pass |',
     )
   })
 
@@ -138,7 +170,7 @@ describe('generateAgentSetupMarkdown', () => {
   test('keeps user-scoped SSR requests on the session, not an API key', () => {
     const markdown = generateAgentSetupMarkdown()
     expect(markdown).toContain(
-      'Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key.',
+      'Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key either.',
     )
     expect(markdown).toContain(
       'SSR sign-in handlers that create sessions (`sessions.write`)',

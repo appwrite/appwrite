@@ -106,16 +106,16 @@ For people reading along: everything the agent does, in order, and the little it
 | --- | --- | --- |
 | 1. Check | Reads the repo and what is already installed | Nothing |
 | 2. Environment | Works out which agent app and shell it runs in | Nothing |
-| 3. MCP and skills | Installs the Appwrite plugin or MCP server, plus the Appwrite skills | Approve the install, then authorize Appwrite MCP in your browser |
+| 3. MCP and skills | Installs the Appwrite plugin or MCP server, plus the Appwrite skills | Approve the install |
 | 4. CLI | Installs the latest Appwrite CLI and starts its sign-in | Approve the CLI sign-in in your browser |
 | 5. Proposal | Proposes the stack, the Appwrite services, and a first slice, then checks in | Reply "go", "setup only", or change the plan |
 | 6. Project | Scaffolds an empty repo, links or creates the project, registers your app's platforms, writes the env file | Nothing, unless you pick a project |
 | 7. SDKs | Installs the official SDKs the stack needs and adds a client module | Nothing |
 | 8. Build | Defines the schema as config, pushes it, then builds and runs the first slice | Review it |
 | 9. Ship | Deploys to Appwrite Sites or Functions, only if you said yes | Nothing |
-| 10. Hand off | Reports what works, what is left, and what to build next | Pick the next step |
+| 10. Hand off | Reports what works, what is left, and what to build next | Authorize Appwrite MCP when it suits you, pick the next step |
 
-The agent messages you twice: at the checkpoint after step 5 (two browser approvals and a "go"), and at the hand-off.
+The agent messages you twice: at the checkpoint after step 5 (one browser approval and a "go"), and at the hand-off. Nothing in between waits on you.
 
 ### What changes on your machine
 
@@ -128,13 +128,13 @@ The agent messages you twice: at the checkpoint after step 5 (two browser approv
 | \`appwrite.config.json\` | Project root: project ID, endpoint, and the schema as config | This project, safe to commit |
 | Env file | Project root: endpoint, project ID, and a server key only when server code needs one | This project, gitignored |
 | Project resources | Your Appwrite project: platforms, tables, buckets, functions, sites, and a server API key when server code needs one | Your Appwrite account |
-| Test data | A test user and a few rows, created to verify the build | Listed in the hand-off, so you can delete them |
+| Test data | A test user and a few rows, created to verify the build | Deleted once the checks pass |
 
 ### What the agent never does
 
 - Print an API key or secret, commit one, or ask you to paste one into the chat.
 - Replace a backend the project already uses, unless you ask for a migration.
-- Deploy, delete resources, or create anything billable (such as a dedicated database) without asking first.
+- Deploy, delete anything it did not create in this session, or create anything billable (such as a dedicated database) without asking first.
 - Wait silently on a sign-in, or skip a step without telling you.
 
 ## How to work
@@ -142,11 +142,11 @@ The agent messages you twice: at the checkpoint after step 5 (two browser approv
 - **Do the work yourself.** Run commands and edit config files directly. Only hand the user a step that truly needs them: a browser sign-in, a click in an app's UI, a restart, or a decision.
 - **Expect approval prompts.** Installing a plugin, editing your app's MCP config, and \`npm install -g\` write outside the project, so your app usually asks the user to approve them. Request the approval with a one-line reason. Sandboxes can also block network access (Codex does by default), so \`npm\`, \`npx\`, and \`appwrite\` calls may need an approval too. If the user declines or your environment blocks the step, add it to the user's list. Never skip a step silently.
 - **Never wait on a sign-in.** Sign-in commands such as \`appwrite login\` and \`codex mcp login\` block until the user approves in a browser. Start them in the background or add them to the user's list. Do not run them in the foreground.
-- **Batch what the user must do.** Keep a running list of what only the user can do (the user's list) and finish everything else first. The list, your questions, and the proposal go out together in one checkpoint at the end of step 5. Never ask what the repo already answers.
+- **Ask only for what the build needs.** Keep a running list of what only the user can do (the user's list) and finish everything else first. The checkpoint at the end of step 5 carries the CLI sign-in, your questions, and the proposal. MCP sign-ins, reloads, and restarts go on the hand-off list, because the build does not use MCP. Never ask what the repo already answers.
 - **Check before changing.** Skip anything already set up. Read existing config before editing it, merge instead of replacing, and keep unrelated entries.
 - **Use OAuth, not API keys.** Appwrite MCP and the CLI sign in through the browser. Only server code that acts as the app, not as the signed-in user, needs a project API key (step 6).
 - **Do not make the build wait on MCP.** MCP tools often load only after a reload or a new session. The CLI and the SDKs cover everything the build needs. Use MCP for inspection, docs search, and one-off changes once it is loaded.
-- **Keep this conversation alive.** A reload that keeps the session (such as \`/reload-plugins\` in Claude Code) can go in the checkpoint. A restart or a new session (such as a new Codex session to load the plugin) goes on the hand-off list instead, because it stops this session and any background sign-in. The resume command (\`claude --continue\`, \`codex resume --last\`) brings the conversation back.
+- **Keep this conversation alive.** A restart or a new session (such as a new Codex session to load the plugin) stops this session and any background sign-in, so it goes on the hand-off list with the resume command (\`claude --continue\`, \`codex resume --last\`) that brings the conversation back.
 - **Respect what exists.** If the project already has a backend (Firebase, Supabase, its own API), add Appwrite only where the user wants it. Each Appwrite service works on its own: auth only, storage only, or a single database is fine.
 
 ### Write for a senior developer
@@ -424,6 +424,7 @@ From step 1 and the user's words, work out:
 - **Appwrite services**: map each feature with the table below.
 - **Existing auth**: if the app keeps another auth provider (Firebase Auth, Auth0, its own), bridge it with custom tokens instead of replacing it. Server code verifies the provider's token and finds or creates the matching Appwrite user with an ID derived from the provider's user ID, so the mapping stays stable across sign-ins. Only then does it call \`users.createToken()\`, which needs an existing user, and the client exchanges the secret with \`account.createSession()\`. Mention migrating the users as the alternative, not the default.
 - **First slice**: the smallest end-to-end flow that proves the stack, usually sign-in plus create, list, and update on one screen. Add uploads or realtime only when they are the point of the app.
+- **Sessions**: client-side, through the client SDK or \`@appwrite.io/react\` without its \`ssr\` option, unless the repo already signs users in on the server. Client-side sessions need no server key, so nothing in the build waits on the user. Server-side sessions (an httpOnly cookie on the app's own domain) need a key with \`sessions.write\`: offer them in the hand-off as the step before production.
 - **Ship**: whether to deploy at the end (step 9). Default to local only, unless the user asked for a live URL.
 
 | The app needs | Appwrite | Set it up with |
@@ -460,15 +461,14 @@ End your turn with one message in this shape. Leave out the rows and sections th
 **Setup**
 | Tool | Status |
 | --- | --- |
-| Appwrite MCP | Installed, sign-in pending |
+| Appwrite MCP | Installed, you sign in at the end |
 | Appwrite skills | Installed |
 | Appwrite CLI | <version>, sign-in pending |
 | Project | <name> (<projectId>, <region>), or: created after you sign in |
 
 **Your turn**
 1. Approve the CLI sign-in: <url> (or run appwrite login in your terminal)
-2. <the MCP sign-in step for this agent, from step 3, without restarts>
-3. <only when server code needs a key and the project is known: create it from <console link> (name and scopes are filled in), then paste it after APPWRITE_API_KEY= in <env file>>
+2. <only when the first slice needs a server key and the project is known: create it from <console link> (name and scopes are filled in), then paste it after APPWRITE_API_KEY= in <env file>>
 
 **Proposed build**
 - App: <one sentence>
@@ -480,7 +480,7 @@ End your turn with one message in this shape. Leave out the rows and sections th
 **Questions** (defaults in bold)
 1. <question>? **<default>**
 
-Approve the sign-ins, then reply "go", or change anything above.
+Approve the sign-in, then reply "go", or change anything above.
 Reply "setup only" if you would rather build it yourself.
 \`\`\`
 
@@ -517,9 +517,9 @@ Client SDKs only accept requests from platforms registered on the project. A mis
 
 - Put the endpoint and project ID in the app's env file under the framework's public prefix (for example \`NEXT_PUBLIC_APPWRITE_ENDPOINT\` or \`VITE_APPWRITE_PROJECT_ID\`). Check that the env file is gitignored. Flutter and native apps have no env file: use a config constants file or build-time defines (\`--dart-define\`). The endpoint and project ID are not secrets.
 - Client SDKs need only the endpoint and project ID. Do not invent an API key, and never put one in client code.
-- Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key. A project API key is only for code that acts as the app: SSR sign-in handlers that create sessions (\`sessions.write\`), admin operations, workers, and scripts. Give it only the scopes that code uses, and keep it in a server-only variable such as \`APPWRITE_API_KEY\`, never under the public prefix.
-- The user creates that key from a Console link that opens the create form with the name and scopes filled in: \`${API_KEY_CREATE_LINK}\`. Write \`APPWRITE_API_KEY=\` into the env file first, so they only create the key, copy it, and paste it after the \`=\`. Neither the MCP sign-in (it carries no \`keys.write\`) nor the CLI can create a long-lived key, so do not try. Never echo the key in chat or commit it.
-- When the project is known before the checkpoint, put the link in it. Otherwise do not stop the build for the key: mint one that lasts an hour with \`appwrite project create-ephemeral-key\` (\`--scopes\` for each scope, \`--duration 3600\`, \`--json --show-secrets\`), pipe its \`secret\` into the env file so it never shows in your output, and put the link on the hand-off list.
+- The first slice runs on client-side sessions (step 5) and needs no key. Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key either. A project API key is only for code that acts as the app: SSR sign-in handlers that create sessions (\`sessions.write\`), admin operations, workers, and scripts. Give it only the scopes that code uses, and keep it in a server-only variable such as \`APPWRITE_API_KEY\`, never under the public prefix.
+- The user creates that key from a Console link that opens the create form with the name and scopes filled in: \`${API_KEY_CREATE_LINK}\`. Write \`APPWRITE_API_KEY=\` into the env file first, so they only create the key, copy it, and paste it after the \`=\`. Neither the MCP sign-in (it carries no \`keys.write\`) nor the CLI can create a long-lived key, and the CLI's saved session does not work for direct API calls, so do not try those or drive the Console in a browser. Never echo the key in chat or commit it.
+- When the project is known before the checkpoint, put the link in it. Otherwise do not stop the build for the key, and do not end your turn on a question about it: mint one that lasts an hour with \`appwrite project create-ephemeral-key\` (\`--scopes\` for each scope, \`--duration 3600\`, \`--json --show-secrets\`), pipe its \`secret\` into the env file so it never shows in your output, and put the link on the hand-off list.
 - Server-rendered Sites and Functions get a short-lived key on every request, in the \`x-appwrite-key\` header, carrying the scopes set on the site or function. In production, prefer it to a stored key.
 
 ## 7. Install the matching official SDKs
@@ -576,13 +576,13 @@ For TypeScript, generate typed helpers from the schema with \`appwrite generate\
 
 ### Code
 
-- Auth first: sign up, sign in, sign out, and the current user, with the session handled the way the framework expects: \`@appwrite.io/react\` or \`node-appwrite\` with cookies for SSR, the client SDK otherwise.
+- Auth first: sign up, sign in, sign out, and the current user, on client-side sessions (step 5) unless the repo already signs users in on the server.
 - Then the core flow on the main table, then uploads or realtime when the slice includes them.
 - Use \`ID.unique()\` for new IDs, \`Query\` for filters, and \`Permission\` with \`Role\` for row permissions. The skill for the language has the exact calls.
 
 ### Run and verify
 
-1. Start the app's dev server (or, for mobile, run it on a simulator or emulator) and run the slice yourself: create a test user, sign in, create a row, and read it back. Use generated test values with an easy-to-find prefix, never the user's real password, and list what you created in the hand-off. If background processes die when a command ends, start the server, run the checks, and stop it within one command.
+1. Start the app's dev server (or, for mobile, run it on a simulator or emulator) and run the slice yourself: create a test user, sign in, create a row, and read it back. Use generated test values with an easy-to-find prefix, and never the user's real password. If background processes die when a command ends, start the server, run the checks, and stop it within one command.
 2. Confirm the data landed with \`appwrite tablesdb list-rows --database-id "<databaseId>" --table-id "<tableId>" --raw\` (\`--json\` leaves out \`$permissions\`, so it cannot show row security), or with the MCP \`appwrite_show\` tool and \`view: "table"\`, which lets the user browse and edit the rows in the chat.
 3. Fix what fails before you hand off:
 
@@ -594,6 +594,8 @@ For TypeScript, generate typed helpers from the schema with \`appwrite generate\
 | \`project_not_found\` | A wrong project ID, or an endpoint in another region | Use the \`projectId\` and \`endpoint\` from \`appwrite.config.json\` |
 | \`row_invalid_structure\` | The row data does not match the columns | Match the column keys and types, or change the schema and push it |
 | \`user_session_already_exists\` | Signing in while a session is active | Read the current user first, or sign out before signing in |
+
+4. Once the checks pass, delete the test user and rows you created (\`appwrite users delete --user-id "<userId>"\`, \`appwrite tablesdb delete-row --database-id "<databaseId>" --table-id "<tableId>" --row-id "<rowId>"\`). You created them in this session, so this needs no approval, and the user gets nothing to clean up.
 
 ## 9. Ship it
 
@@ -613,8 +615,8 @@ End with one message, in this order. Leave out the sections that are empty:
 
 1. **Built**: one or two sentences on what works now and where to see it. For example: "Sign-up, sign-in, and shared lists backed by TablesDB, running at \`http://localhost:3000\`."
 2. **Setup**: the checkpoint's tool table with the final status, plus the project ID and region.
-3. **Your turn**: a short numbered list of every remaining action, in order (approvals the user declined, sign-ins, the server key from its Console link when a one-hour key stands in for it, a restart or new session with its resume command). Put the sign-ins together so they can approve them in one go.
-4. **In the repo**: three to six bullets with paths: the client module, \`appwrite.config.json\`, the env file, the new routes or screens, the commands to run the app and to push schema changes, and the test data you created.
+3. **Your turn**: a short numbered list of every remaining action, in order (the MCP sign-in for this agent from step 3, approvals the user declined, the server key from its Console link when a one-hour key stands in for it, a restart or new session with its resume command). None of them blocks what was built. Put the sign-ins together so they can approve them in one go.
+4. **In the repo**: three to six bullets with paths: the client module, \`appwrite.config.json\`, the env file, the new routes or screens, the commands to run the app and to push schema changes. Say in a few words that the test data is deleted.
 5. **Next with Appwrite**: three to five capabilities picked for this app from the reference below. One line each: what it unlocks here, and what it takes (an SDK call, a config entry and \`appwrite push\`, a Console toggle). Never a generic feature list.
 6. **Next step**: the one thing you recommend building next, as a yes or no question.
 
