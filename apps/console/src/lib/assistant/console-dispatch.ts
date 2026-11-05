@@ -13,7 +13,7 @@ import {
 } from '@/lib/assistant/console-protocol'
 
 export type ConsoleProtocolHandlers = {
-  setTheme: (theme: 'light' | 'dark' | 'system') => void
+  setTheme: (theme: 'light' | 'dark') => void
   navigate: (opts: {
     path: string
     hash?: string
@@ -125,11 +125,7 @@ export function applyConsoleAction(
 ): void {
   switch (action.type) {
     case 'set_theme': {
-      if (
-        action.theme === 'light' ||
-        action.theme === 'dark' ||
-        action.theme === 'system'
-      ) {
+      if (action.theme === 'light' || action.theme === 'dark') {
         handlers.setTheme(action.theme)
       }
       return

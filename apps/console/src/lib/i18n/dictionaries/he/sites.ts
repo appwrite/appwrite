@@ -174,6 +174,17 @@ export const heSitesDictionary: Record<string, string> = {
   'Generating certificate': 'מנפיק תעודה',
   'Verification failed': 'האימות נכשל',
   'Certificate generation failed': 'הנפקת התעודה נכשלה',
+  'Certificate expired': 'פג תוקף התעודה',
+  'Renewal failed': 'חידוש התעודה נכשל',
+  'Renewal blocked': 'חידוש התעודה חסום',
+  'Certificate renewal started': 'חידוש התעודה התחיל',
+  'Certificate expires on {date}.': 'תוקף התעודה יפוג ב-{date}.',
+  "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
+    'תוקף התעודה פג. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
+  "View logs for details. Check that the domain's DNS still points to Appwrite.":
+    'צפו בלוגים לפרטים נוספים. ודאו שה-DNS של הדומיין עדיין מפנה ל-Appwrite.',
+  'Renewal is waiting on a DNS record. View logs to see which record to add.':
+    'חידוש התעודה ממתין לרשומת DNS. צפו בלוגים כדי לראות איזו רשומה להוסיף.',
 
   // Site layout and settings shell
   Deployments: 'פריסות',
@@ -394,6 +405,9 @@ export const heSitesDictionary: Record<string, string> = {
   'Failed to remove domain': 'הסרת הדומיין נכשלה',
   'Failed to add domain': 'הוספת הדומיין נכשלה',
   'Failed to register domain': 'רישום הדומיין נכשל',
+  'Verify domain ownership': 'אימות בעלות על הדומיין',
+  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
+    'הדומיין הזה כבר מפנה ל-Appwrite. כדי להוכיח שהוא שלכם, הוסיפו את רשומת ה-TXT הזו ולאחר מכן בצעו אימות.',
   Required: 'שדה חובה',
   Invalid: 'לא תקין',
   'Invalid URL': 'כתובת URL לא תקינה',

@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import {
   getSmtpDnsRecords,
-  getSmtpRecordName,
   needsSmtpDnsVerification,
   isSmtpRule,
   type SmtpProxyRule,
@@ -30,12 +29,6 @@ function ruleStub(overrides: Partial<SmtpProxyRule> = {}): SmtpProxyRule {
 }
 
 describe('smtp domain DNS helpers', () => {
-  test('names records relative to the registrable domain', () => {
-    expect(getSmtpRecordName('example.com')).toBe('@')
-    expect(getSmtpRecordName('mail.example.com')).toBe('mail')
-    expect(getSmtpRecordName('in.mail.example.co.uk')).toBe('in.mail')
-  })
-
   test('names the TXT record for an apex domain', () => {
     expect(
       getSmtpDnsRecords({

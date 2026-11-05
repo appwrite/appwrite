@@ -3,6 +3,35 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "incident-report-sites-functions-runtime-vulnerability",
+    "href": "/blog/post/incident-report-sites-functions-runtime-vulnerability",
+    "title": "Incident report: Sites & Functions runtime vulnerability, November 1st, 2026",
+    "description": "How Appwrite detected and fixed a Sites and Functions runtime vulnerability exploited on November 1st, 2026, who is affected, and which secrets to rotate.",
+    "date": "2026-11-04",
+    "lastUpdated": "2026-11-04",
+    "timeToRead": 6,
+    "author": "luke-silver",
+    "category": "security",
+    "featured": false,
+    "cover": "/images/blog/incident-report-sites-functions-runtime-vulnerability/cover.avif",
+    "hasCover": true
+  },
+  {
+    "slug": "october-product-update-passkeys-mcp-and-more",
+    "href": "/blog/post/october-product-update-passkeys-mcp-and-more",
+    "title": "October product update: Passkeys, MCP and more",
+    "description": "See what's new in Appwrite with passkeys, new OAuth2 providers, email triggers for Functions, MCP Events, a Helm chart, Premium Geo DB, and more.",
+    "date": "2026-11-04",
+    "lastUpdated": "2026-11-04",
+    "timeToRead": 6,
+    "author": "aishwari",
+    "category": "products",
+    "featured": false,
+    "unlisted": false,
+    "cover": "/images/blog/october-product-update-passkeys-mcp-and-more/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "add-your-first-appwrite-firewall-rules",
     "href": "/blog/post/add-your-first-appwrite-firewall-rules",
     "title": "Add your first Appwrite Firewall rules to a new project",
