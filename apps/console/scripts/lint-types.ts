@@ -66,6 +66,11 @@ function isWord(char: string | undefined): boolean {
 }
 
 function sortUnion(type: string): string {
+  // tsc parenthesizes a function inside a union, so a bare ` | ` after `=>` is the return type's.
+  const { parts: signature } = split(type, [' => '])
+  if (signature.length > 1) {
+    return signature.map(sortUnion).join(' => ')
+  }
   const { parts: members } = split(type, [' | '])
   if (members.length === 1) {
     return sortBrackets(type)

@@ -38,8 +38,11 @@ describe('type error message canonical form', () => {
   })
 
   test('sorts unions at any depth', () => {
-    expect(canonical(`TS2322: Type 'Set<"b" | "a"> | () => void'.`)).toBe(
-      `TS2322: Type '() => void | Set<"a" | "b">'.`,
+    expect(canonical(`TS2322: Type 'Set<"b" | "a"> | (() => void)'.`)).toBe(
+      `TS2322: Type '(() => void) | Set<"a" | "b">'.`,
+    )
+    expect(canonical(`TS2322: Type 'Promise<() => "b" | "a">'.`)).toBe(
+      `TS2322: Type 'Promise<() => "a" | "b">'.`,
     )
 
     const before = `TS2352: Conversion of type '{ format: "png" | "jpeg"; } & { title?: string | undefined; }' to type 'Record<string, string | number>'.`
