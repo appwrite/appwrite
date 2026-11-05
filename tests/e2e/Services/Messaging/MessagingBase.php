@@ -2633,6 +2633,39 @@ trait MessagingBase
 
         $imageUrl = $message['data']['image']['url'];
 
+        // The URL redeems without credentials, so a key without files.read must not be handed it by any
+        // route that returns the message. The identifiers stay, and the stored message keeps its URL.
+        $headers = ['content-type' => 'application/json', 'x-appwrite-project' => $this->getProject()['$id']];
+        $readKey = ['x-appwrite-key' => $this->getNewKey(['messages.read'])];
+        $writeKey = ['x-appwrite-key' => $this->getNewKey(['messages.write'])];
+        $listQueries = ['queries' => [Query::equal('$id', [$message['$id']])->toString()]];
+
+        $read = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'], $headers + $readKey);
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame($bucketId, $read['body']['data']['image']['bucketId']);
+        $this->assertSame($fileId, $read['body']['data']['image']['fileId']);
+        $this->assertArrayNotHasKey('url', $read['body']['data']['image']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/messaging/messages', $headers + $readKey, $listQueries);
+        $this->assertSame(200, $list['headers']['status-code']);
+        $this->assertSame($fileId, $list['body']['messages'][0]['data']['image']['fileId']);
+        $this->assertArrayNotHasKey('url', $list['body']['messages'][0]['data']['image']);
+
+        // The email and SMS update routes accept any message ID and echo the message back.
+        foreach (['email', 'sms'] as $type) {
+            $patched = $this->client->call(Client::METHOD_PATCH, "/messaging/messages/{$type}/" . $message['$id'], $headers + $writeKey, ['draft' => true]);
+            $this->assertSame(200, $patched['headers']['status-code']);
+            $this->assertArrayNotHasKey('url', $patched['body']['data']['image']);
+        }
+
+        $fileReader = ['x-appwrite-key' => $this->getNewKey(['messages.read', 'files.read'])];
+
+        $read = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'], $headers + $fileReader);
+        $this->assertSame($imageUrl, $read['body']['data']['image']['url']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/messaging/messages', $headers + $fileReader, $listQueries);
+        $this->assertSame($imageUrl, $list['body']['messages'][0]['data']['image']['url']);
+
         $client = new Client();
         $client->setEndpoint('');
 
