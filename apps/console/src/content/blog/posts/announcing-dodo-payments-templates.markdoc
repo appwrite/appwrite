@@ -2,7 +2,7 @@
 layout: post
 title: "Introducing Dodo Payments templates for Appwrite"
 description: Sell one-time products and subscriptions with Dodo Payments and Appwrite Functions. Two new templates store paid orders and grant subscriber access for you.
-date: 2026-10-22
+date: 2026-11-05
 cover: /images/blog/announcing-dodo-payments-templates/cover.avif
 timeToRead: 4
 author: aditya-oberai

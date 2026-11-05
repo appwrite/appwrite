@@ -2,7 +2,7 @@
 layout: integration
 title: Payments with Dodo Payments
 description: Connect Dodo Payments to Appwrite to sell one-time products, store paid orders in Appwrite Databases, and hand checkout and global tax to a Merchant of Record.
-date: 2026-10-22
+date: 2026-11-05
 featured: false
 isPartner: true
 isNew: true

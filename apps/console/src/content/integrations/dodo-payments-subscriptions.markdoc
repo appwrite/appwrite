@@ -2,7 +2,7 @@
 layout: integration
 title: Subscriptions with Dodo Payments
 description: Connect Dodo Payments to Appwrite to sell recurring plans and grant subscribers extra permissions with user labels that follow the subscription's status.
-date: 2026-10-22
+date: 2026-11-05
 featured: false
 isPartner: true
 isNew: true
