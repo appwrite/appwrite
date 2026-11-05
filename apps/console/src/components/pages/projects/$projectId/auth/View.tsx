@@ -115,6 +115,10 @@ import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { formatRelativeDuration } from '@/lib/i18n/relative-time'
 import { UserContextMenu } from './_components/UserContextMenu'
+import {
+  SendMessageMenu,
+  useUsersReach,
+} from '../messaging/_components/SendMessageMenu'
 import { TeamContextMenu } from './_components/TeamContextMenu'
 import type { AuthOAuth2SettingsInitialData } from '@/lib/react-query/hooks/oauth2-providers'
 import {
@@ -431,7 +435,8 @@ export function View({
     setTeamsSearchInput(teamsUrlSearch ?? '')
   }, [teamsUrlSearch])
 
-  // Clear selection when navigating between pages/routes or when search/filters change
+  // Clear selection whenever the listed users change (route, search, filters, sort),
+  // so bulk actions only ever cover users on screen
   useEffect(() => {
     setSelectedUsers(new Set())
     setDeleteDialogOpen(false)
@@ -442,7 +447,9 @@ export function View({
     projectId,
     urlSearch,
     teamsUrlSearch,
-    usersFilterMap.size,
+    usersFilterQueryString,
+    urlSortBy,
+    urlSortOrder,
     teamsFilterMap.size,
   ])
 
@@ -869,6 +876,11 @@ export function View({
     if (selectedUsers.size === 0) return
     bulkDeleteMutation.mutate(Array.from(selectedUsers))
   }
+
+  // Selection clears whenever the listed users change, so every selected user is on this page.
+  const selectedReach = useUsersReach(
+    paginatedUsers.filter((user) => selectedUsers.has(user.$id)),
+  )
 
   const toggleUser = (userId: string) => {
     const newSelected = new Set(selectedUsers)
@@ -1567,6 +1579,7 @@ export function View({
                                 emailVerification: user.emailVerification,
                                 phoneVerification: user.phoneVerification,
                                 status: user.status as boolean | null,
+                                targets: user.targets,
                               }}
                             >
                               <TableRow
@@ -1905,6 +1918,7 @@ export function View({
                           emailVerification: user.emailVerification,
                           phoneVerification: user.phoneVerification,
                           status: user.status as boolean | null,
+                          targets: user.targets,
                         }}
                       >
                         <Link
@@ -1974,6 +1988,11 @@ export function View({
                     >
                       {t('Cancel')}
                     </Button>
+                    <SendMessageMenu
+                      projectId={projectId!}
+                      users={Array.from(selectedUsers)}
+                      reach={selectedReach}
+                    />
                     <Button
                       variant="destructive"
                       size="sm"

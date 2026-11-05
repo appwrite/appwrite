@@ -311,6 +311,7 @@ Context menus (right-click) and list row actions menus (⋯ `RowActionsMenuTrigg
 
 - **Tabs** (list the resource tabs: `Overview`, `Deployments`, `Settings`, `Security`, etc.). No verbs here.
   Tabs must be first-level context-menu items (no nested "Tabs" submenu), followed by a separator.
+- **Actions** (verbs that start work on this resource in another product, e.g. `Send message`), followed by a separator. New cross-product actions go here, never as a new header button.
 - **Copy** (submenu with `Copy ID`, `Copy value` (only for row columns), `Copy link`, `Copy as JSON`). Include `Duplicate` here only where it makes sense (single resources; never for container resources like tables, buckets, databases, etc).
 - **Links** (`Open in new tab`, `Open in new window`) for all context menus.
 - **Delete** last. No special styling in the menu itself (see destructive styling below).
@@ -365,6 +366,8 @@ Red delete styling is allowed **only** in these three places:
 Do not put a red destructive button on a form footer or list row outside those contexts (e.g. use a default/outline button that opens a confirm dialog instead).
 
 Icon-only remove controls (dismiss preset, remove tag, remove role chip, etc.) use neutral styling (`text-muted-foreground`, `hover:text-foreground`), not red hover.
+
+**Detail page ⋯ menu:** a resource's detail page puts the same Actions and Copy groups in a `RowActionsMenuTrigger` menu passed as `ServiceHeader` `titleRightContent` (`UserActionsMenu`, `TopicActionsMenu`). The title row is for the resource; the toolbar row (`beforeCreateButtons`, `createLabel`) is for the active tab only.
 
 **Other rules:**
 

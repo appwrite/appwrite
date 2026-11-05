@@ -41,6 +41,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { ID } from '@appwrite.io/console'
 import { MessagingTargetsModal } from '../../_components/MessagingTargetsModal'
+import { TopicActionsMenu } from '../../_components/TopicActionsMenu'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -345,6 +346,9 @@ export function View({
         }
         tabs={tabs}
         activeTab={activeTab}
+        titleRightContent={
+          <TopicActionsMenu projectId={projectId!} topic={topicResolved} />
+        }
         searchPlaceholder={
           activeTab === 'subscribers' ? t('Search subscribers...') : undefined
         }

@@ -6,12 +6,14 @@
 
 import {
   useQuery,
+  useMutation,
+  useQueryClient,
   queryOptions,
   keepPreviousData,
   type QueryClient,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query } from '@appwrite.io/console'
+import { ID, MessagingProviderType, Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -842,5 +844,65 @@ export function messagingTargetPickerUsersQueryOptions(
     enabled: !!projectId,
     staleTime: 30 * 1000,
     retry: false,
+  })
+}
+
+// ============================================================================
+// MUTATIONS
+// ============================================================================
+
+/**
+ * Create an empty draft message, optionally addressed to topics, users or targets.
+ * Handlers run at the mutation level so they still fire after a menu that
+ * started the draft has closed and unmounted.
+ */
+export function useCreateDraftMessage(
+  projectId: string | null | undefined,
+  handlers: {
+    onSuccess?: (message: Models.Message) => void
+    onError?: (error: Error) => void
+  } = {},
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      type: MessagingProviderType
+      topics?: string[]
+      users?: string[]
+      targets?: string[]
+    }): Promise<Models.Message> => {
+      const messaging = sdk.forProject(projectId!).messaging
+      const recipients = {
+        messageId: ID.unique(),
+        topics: input.topics ?? [],
+        users: input.users ?? [],
+        targets: input.targets ?? [],
+        draft: true,
+      }
+      switch (input.type) {
+        case MessagingProviderType.Email:
+          return messaging.createEmail({
+            ...recipients,
+            subject: 'Untitled email',
+            content: ' ',
+            html: false,
+          })
+        case MessagingProviderType.Sms:
+          return messaging.createSMS({ ...recipients, content: ' ' })
+        case MessagingProviderType.Push:
+          return messaging.createPush({
+            ...recipients,
+            title: 'Untitled notification',
+            body: ' ',
+          })
+      }
+    },
+    onSuccess: async (message) => {
+      await queryClient.refetchQueries({
+        queryKey: ['messages', 'project', projectId],
+      })
+      handlers.onSuccess?.(message)
+    },
+    onError: handlers.onError,
   })
 }
