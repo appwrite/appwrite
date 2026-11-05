@@ -8,7 +8,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Id;
 
-class AccountClientsCustomClientTest extends Scope
+class AccountDevicesCustomClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
@@ -32,7 +32,7 @@ class AccountClientsCustomClientTest extends Scope
     public function testAccountSwitching(): void
     {
         $projectId = $this->getProject()['$id'];
-        $clientKey = 'a_client_' . $projectId;
+        $deviceKey = 'a_device_' . $projectId;
         $sessionKey = 'a_session_' . $projectId;
 
         $emailOne = \uniqid() . 'switch1@localhost.test';
@@ -43,9 +43,9 @@ class AccountClientsCustomClientTest extends Scope
         $this->createUserWithPassword($emailTwo, $password);
 
         /**
-         * Test for SUCCESS - create a client
+         * Test for SUCCESS - create a device
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/clients', [
+        $response = $this->client->call(Client::METHOD_POST, '/account/devices', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -53,33 +53,33 @@ class AccountClientsCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertArrayHasKey($clientKey, $response['cookies']);
+        $this->assertArrayHasKey($deviceKey, $response['cookies']);
         $this->assertEquals('', $response['body']['activeSessionId']);
         $this->assertEquals([], $response['body']['sessions']);
 
-        $clientId = $response['body']['$id'];
-        $clientCookie = $response['cookies'][$clientKey];
+        $deviceId = $response['body']['$id'];
+        $deviceCookie = $response['cookies'][$deviceKey];
 
         /**
-         * Test for SUCCESS - calling again returns the same client with 201 (DX)
+         * Test for SUCCESS - calling again returns the same device with 201 (DX)
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/clients', [
+        $response = $this->client->call(Client::METHOD_POST, '/account/devices', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals($clientId, $response['body']['$id']);
+        $this->assertEquals($deviceId, $response['body']['$id']);
 
         /**
-         * Test for SUCCESS - first session joins the client and becomes active
+         * Test for SUCCESS - first session joins the device and becomes active
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ], [
             'email' => $emailOne,
@@ -96,7 +96,7 @@ class AccountClientsCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ], [
             'email' => $emailTwo,
@@ -109,12 +109,12 @@ class AccountClientsCustomClientTest extends Scope
         $this->assertNotEquals($userOneId, $userTwoId);
 
         /**
-         * Test for SUCCESS - the client now holds both sessions, the last one active
+         * Test for SUCCESS - the device now holds both sessions, the last one active
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/clients/current', [
+        $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ]);
 
@@ -125,10 +125,10 @@ class AccountClientsCustomClientTest extends Scope
         /**
          * Test for SUCCESS - switch the active account to the first session
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/clients/current/session', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ], [
             'sessionId' => $sessionOneId,
@@ -155,12 +155,12 @@ class AccountClientsCustomClientTest extends Scope
         $this->assertEquals($userOneId, $response['body']['$id']);
 
         /**
-         * Test for SUCCESS - client reflects the first session as active
+         * Test for SUCCESS - device reflects the first session as active
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/clients/current', [
+        $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ]);
 
@@ -168,12 +168,12 @@ class AccountClientsCustomClientTest extends Scope
         $this->assertEquals($sessionOneId, $response['body']['activeSessionId']);
 
         /**
-         * Test for FAILURE - switching to a session the client does not hold
+         * Test for FAILURE - switching to a session the device does not hold
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/clients/current/session', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/devices/current/session', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ], [
             'sessionId' => 'nonexistent',
@@ -182,9 +182,9 @@ class AccountClientsCustomClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
-         * Test for FAILURE - reading a client without a client cookie
+         * Test for FAILURE - reading a device without a device cookie
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/clients/current', [
+        $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -193,21 +193,21 @@ class AccountClientsCustomClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         /**
-         * Test for SUCCESS - deleting the active session leaves the client with none active
+         * Test for SUCCESS - deleting the active session leaves the device with none active
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionOneId, [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $sessionKey . '=' . $switchedSessionCookie . '; ' . $clientKey . '=' . $clientCookie,
+            'cookie' => $sessionKey . '=' . $switchedSessionCookie . '; ' . $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/account/clients/current', [
+        $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ]);
 
@@ -216,24 +216,24 @@ class AccountClientsCustomClientTest extends Scope
         $this->assertCount(1, $response['body']['sessions']);
 
         /**
-         * Test for SUCCESS - delete the client, signing out of everything
+         * Test for SUCCESS - delete the device, signing out of everything
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/account/clients/current', [
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/devices/current', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
         /**
-         * Test for FAILURE - the client is gone
+         * Test for FAILURE - the device is gone
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/clients/current', [
+        $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => $clientKey . '=' . $clientCookie,
+            'cookie' => $deviceKey . '=' . $deviceCookie,
             'x-appwrite-project' => $projectId,
         ]);
 

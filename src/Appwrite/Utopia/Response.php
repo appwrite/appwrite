@@ -122,7 +122,7 @@ class Response extends SwooleResponse
     public const MODEL_USER_LIST = 'userList';
     public const MODEL_SESSION = 'session';
     public const MODEL_SESSION_LIST = 'sessionList';
-    public const MODEL_CLIENT = 'client';
+    public const MODEL_DEVICE = 'device';
     public const MODEL_IDENTITY = 'identity';
     public const MODEL_IDENTITY_LIST = 'identityList';
     public const MODEL_TOKEN = 'token';

@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Account\Clients;
+namespace Appwrite\Platform\Modules\Account\Http\Account\Devices;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Detector\Detector;
@@ -31,33 +31,33 @@ class Create extends Action
 
     public static function getName(): string
     {
-        return 'createClient';
+        return 'createDevice';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/account/clients')
-            ->desc('Create client')
+            ->setHttpPath('/v1/account/devices')
+            ->desc('Create device')
             ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
-            ->label('audits.event', 'client.create')
-            ->label('audits.resource', 'client/{response.$id}')
+            ->label('audits.event', 'device.create')
+            ->label('audits.resource', 'device/{response.$id}')
             ->label('sdk', new Method(
                 namespace: 'account',
-                group: 'clients',
-                name: 'createClient',
+                group: 'devices',
+                name: 'createDevice',
                 description: <<<EOT
-                Create an account switching client. A client is a container, scoped to one device, that holds multiple sessions and tracks which one is active. Once a client exists, session creation endpoints attach the new session to it automatically, so a single device can stay signed in to several accounts and switch between them.
+                Create an account switching device. A device is a container, scoped to one browser or app install, that holds multiple sessions and tracks which one is active. Once a device exists, session creation endpoints attach the new session to it automatically, so a single browser can stay signed in to several accounts and switch between them.
 
-                The client secret is returned in a cookie. Run this on app start: if the device already has a valid client, the existing one is returned with the same status code instead of an error, so it is always safe to call.
+                The device secret is returned in a cookie. Run this on app start: if the browser already has a valid device, the existing one is returned with the same status code instead of an error, so it is always safe to call.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
-                        model: Response::MODEL_CLIENT,
+                        model: Response::MODEL_DEVICE,
                     )
                 ],
                 contentType: ContentType::JSON
@@ -68,7 +68,7 @@ class Create extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('geo')
-            ->inject('client')
+            ->inject('device')
             ->inject('locale')
             ->inject('proofForToken')
             ->inject('domainVerification')
@@ -84,7 +84,7 @@ class Create extends Action
         Document $project,
         Database $dbForProject,
         Geo $geo,
-        ?Document $client,
+        ?Document $device,
         Locale $locale,
         ProofsToken $proofForToken,
         bool $domainVerification,
@@ -96,12 +96,12 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Account switching is disabled for this project');
         }
 
-        // A device that already holds a valid client keeps it: devs call this on every app
-        // start, so returning the existing client beats an error. No new cookie is written,
-        // the device already carries it, and the secret is already gone from our side.
-        if ($client !== null) {
-            $activeSessionId = $client->getAttribute('activeSessionId', '');
-            $sessions = $client->getAttribute('sessions', []);
+        // A browser that already holds a valid device keeps it: devs call this on every app
+        // start, so returning the existing device beats an error. No new cookie is written,
+        // the browser already carries it, and the secret is already gone from our side.
+        if ($device !== null) {
+            $activeSessionId = $device->getAttribute('activeSessionId', '');
+            $sessions = $device->getAttribute('sessions', []);
             foreach ($sessions as $key => $session) {
                 /** @var Document $session */
                 $session
@@ -110,11 +110,11 @@ class Create extends Action
                     ->setAttribute('secret', $session->getAttribute('secret', ''));
                 $sessions[$key] = $session;
             }
-            $client->setAttribute('sessions', $sessions);
+            $device->setAttribute('sessions', $sessions);
 
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($client, Response::MODEL_CLIENT);
+                ->dynamic($device, Response::MODEL_DEVICE);
             return;
         }
 
@@ -126,10 +126,10 @@ class Create extends Action
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $geoRecord = $geo->get($request->getIP());
 
-        $clientId = Id::unique();
-        $client = new Document(array_merge(
+        $deviceId = Id::unique();
+        $device = new Document(array_merge(
             [
-                '$id' => $clientId,
+                '$id' => $deviceId,
                 '$permissions' => [],
                 'secret' => $proofForToken->hash($secret), // One way hash encryption to protect DB leak
                 'activeSessionId' => '',
@@ -144,12 +144,12 @@ class Create extends Action
             $detector->getDevice()
         ));
 
-        $client = $authorization->skip(fn () => $dbForProject->createDocument('clients', $client));
+        $device = $authorization->skip(fn () => $dbForProject->createDocument('devices', $device));
 
         $store = new Store();
         $store
-            ->setKey($project->getClientKey())
-            ->setProperty('id', $clientId)
+            ->setKey($project->getDeviceKey())
+            ->setProperty('id', $deviceId)
             ->setProperty('secret', $secret);
         $encoded = $store->encode();
 
@@ -162,14 +162,14 @@ class Create extends Action
             ->addCookie($store->getKey(), $encoded, (new \DateTime($expire))->getTimestamp(), '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED);
 
-        $client
+        $device
             ->setAttribute('sessions', [])
             ->setAttribute('secret', $encoded);
 
         $queueForEvents
-            ->setParam('clientId', $client->getId())
-            ->setPayload($response->output($client, Response::MODEL_CLIENT), sensitive: ['secret']);
+            ->setParam('deviceId', $device->getId())
+            ->setPayload($response->output($device, Response::MODEL_DEVICE), sensitive: ['secret']);
 
-        $response->dynamic($client, Response::MODEL_CLIENT);
+        $response->dynamic($device, Response::MODEL_DEVICE);
     }
 }

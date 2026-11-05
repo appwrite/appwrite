@@ -463,29 +463,29 @@ class V25 extends Migration
                         Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.8.0 for account switching: the client a session belongs to.
-                    $clientAttributes = ['clientInternalId', 'clientId'];
+                    // Added in 2.8.0 for account switching: the device a session belongs to.
+                    $deviceAttributes = ['deviceInternalId', 'deviceId'];
                     try {
-                        $this->createAttributesFromCollection($this->dbForProject, $id, $clientAttributes);
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $deviceAttributes);
                     } catch (Throwable $th) {
-                        Console::warning('Failed to create attributes "' . \implode(', ', $clientAttributes) . "\" in collection {$id}: {$th->getMessage()}");
+                        Console::warning('Failed to create attributes "' . \implode(', ', $deviceAttributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
                     try {
-                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_client');
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_device');
                     } catch (Throwable $th) {
-                        Console::warning("Failed to create index \"_key_client\" from {$id}: {$th->getMessage()}");
+                        Console::warning("Failed to create index \"_key_device\" from {$id}: {$th->getMessage()}");
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
-                case 'clients':
+                case 'devices':
                     // Added in 2.8.0 for account switching.
                     try {
-                        $this->createCollection('clients');
+                        $this->createCollection('devices');
                     } catch (Throwable $th) {
-                        Console::warning("Failed to create collection \"clients\": {$th->getMessage()}");
+                        Console::warning("Failed to create collection \"devices\": {$th->getMessage()}");
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);

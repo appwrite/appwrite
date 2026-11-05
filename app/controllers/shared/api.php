@@ -864,18 +864,18 @@ Http::init()
     ->groups(['session'])
     ->inject('route')
     ->inject('user')
-    ->inject('client')
-    ->action(function (Route $route, User $user, ?Document $client) {
+    ->inject('device')
+    ->action(function (Route $route, User $user, ?Document $device) {
         // Sign-ins that link to or upgrade the current account accept a caller
         // who is already logged in (e.g. converting an anonymous account)
         if ($route->getLabel('session.allowActive', false)) {
             return;
         }
 
-        // An account switching client may hold several accounts at once: creating another
-        // session adds it to the client instead of being refused, and the shutdown hook
+        // An account switching device may hold several accounts at once: creating another
+        // session adds it to the device instead of being refused, and the shutdown hook
         // below makes the new session the active one.
-        if ($client !== null) {
+        if ($device !== null) {
             return;
         }
 
@@ -936,20 +936,20 @@ Http::shutdown()
     });
 
 /**
- * Attach a newly created session to the account switching client
+ * Attach a newly created session to the account switching device
  *
- * When a session is created while a client cookie is present, the session joins the
- * client and becomes its active session. The create action has already written the
- * session cookie, so the client simply records which session is now active.
+ * When a session is created while a device cookie is present, the session joins the
+ * device and becomes its active session. The create action has already written the
+ * session cookie, so the device simply records which session is now active.
  */
 Http::shutdown()
     ->groups(['session'])
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('client')
+    ->inject('device')
     ->inject('authorization')
-    ->action(function (Response $response, Database $dbForProject, ?Document $client, Authorization $authorization) {
-        if ($client === null) {
+    ->action(function (Response $response, Database $dbForProject, ?Document $device, Authorization $authorization) {
+        if ($device === null) {
             return;
         }
 
@@ -966,17 +966,17 @@ Http::shutdown()
         }
 
         $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $session->getId(), new Document([
-            'clientId' => $client->getId(),
-            'clientInternalId' => $client->getSequence(),
+            'deviceId' => $device->getId(),
+            'deviceInternalId' => $device->getSequence(),
         ])));
 
-        $authorization->skip(fn () => $dbForProject->updateDocument('clients', $client->getId(), new Document([
+        $authorization->skip(fn () => $dbForProject->updateDocument('devices', $device->getId(), new Document([
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),
         ])));
 
         $dbForProject->purgeCachedDocument('users', $userId);
-        $dbForProject->purgeCachedDocument('clients', $client->getId());
+        $dbForProject->purgeCachedDocument('devices', $device->getId());
     });
 
 Http::shutdown()

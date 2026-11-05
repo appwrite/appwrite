@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Account\Clients;
+namespace Appwrite\Platform\Modules\Account\Http\Account\Devices;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -21,57 +21,57 @@ class Get extends Action
 
     public static function getName(): string
     {
-        return 'getClient';
+        return 'getDevice';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/account/clients/:clientId')
-            ->desc('Get client')
+            ->setHttpPath('/v1/account/devices/:deviceId')
+            ->desc('Get device')
             ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
             ->label('sdk', new Method(
                 namespace: 'account',
-                group: 'clients',
-                name: 'getClient',
+                group: 'devices',
+                name: 'getDevice',
                 description: <<<EOT
-                Get the account switching client of the current device, including every session it holds and the ID of the active session. Use the string 'current' to reference the device's own client.
+                Get the account switching device for the current browser, including every session it holds and the ID of the active session. Use the string 'current' to reference the current browser's device.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
-                        model: Response::MODEL_CLIENT,
+                        model: Response::MODEL_DEVICE,
                     )
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('clientId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Client ID. Use the string \'current\' to reference the current device client.', true, ['dbForProject'])
+            ->param('deviceId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Device ID. Use the string \'current\' to reference the device of the current browser.', true, ['dbForProject'])
             ->inject('response')
-            ->inject('client')
+            ->inject('device')
             ->inject('locale')
             ->callback($this->action(...));
     }
 
     public function action(
-        ?string $clientId,
+        ?string $deviceId,
         Response $response,
-        ?Document $client,
+        ?Document $device,
         Locale $locale,
     ): void {
-        if ($client === null) {
-            throw new Exception(Exception::CLIENT_NOT_FOUND);
+        if ($device === null) {
+            throw new Exception(Exception::DEVICE_NOT_FOUND);
         }
 
-        // A device may only read its own client, the one the cookie resolves to.
-        if ($clientId !== 'current' && $clientId !== $client->getId()) {
-            throw new Exception(Exception::CLIENT_NOT_FOUND);
+        // A caller may only read its own device, the one the cookie resolves to.
+        if ($deviceId !== 'current' && $deviceId !== $device->getId()) {
+            throw new Exception(Exception::DEVICE_NOT_FOUND);
         }
 
-        $activeSessionId = $client->getAttribute('activeSessionId', '');
-        $sessions = $client->getAttribute('sessions', []);
+        $activeSessionId = $device->getAttribute('activeSessionId', '');
+        $sessions = $device->getAttribute('sessions', []);
 
         foreach ($sessions as $key => $session) {
             /** @var Document $session */
@@ -85,8 +85,8 @@ class Get extends Action
             $sessions[$key] = $session;
         }
 
-        $client->setAttribute('sessions', $sessions);
+        $device->setAttribute('sessions', $sessions);
 
-        $response->dynamic($client, Response::MODEL_CLIENT);
+        $response->dynamic($device, Response::MODEL_DEVICE);
     }
 }

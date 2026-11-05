@@ -165,10 +165,10 @@ return [
         'attributes' => [
             Attribute::string(key: 'userInternalId', required: true),
             Attribute::string(key: 'userId'),
-            // The account-switching client this session belongs to, when it was created
-            // while a client cookie was present. At most one client owns a session.
-            Attribute::string(key: 'clientInternalId'),
-            Attribute::string(key: 'clientId'),
+            // The account-switching device this session belongs to, when it was created
+            // while a device cookie was present. At most one device owns a session.
+            Attribute::string(key: 'deviceInternalId'),
+            Attribute::string(key: 'deviceId'),
             Attribute::string(key: 'provider', size: 128),
             Attribute::string(key: 'providerUid', size: 2048),
             Attribute::string(key: 'providerAccessToken', size: 16384, filters: ['encrypt']),
@@ -211,23 +211,23 @@ return [
         'indexes' => [
             Index::key(key: '_key_provider_providerUid', attributes: ['provider', 'providerUid'], lengths: [128, 128], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_user', attributes: ['userInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
-            Index::key(key: '_key_client', attributes: ['clientInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
+            Index::key(key: '_key_device', attributes: ['deviceInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
         ],
     ],
 
-    'clients' => [
+    'devices' => [
         '$collection' => Id::custom(Database::METADATA),
-        '$id' => Id::custom('clients'),
-        'name' => 'Clients',
+        '$id' => Id::custom('devices'),
+        'name' => 'Devices',
         'attributes' => [
             // One way hash encryption to protect DB leak, mirroring sessions.secret
             Attribute::string(key: 'secret', size: 512, filters: ['encrypt']),
-            // The session, out of the ones the client holds, that is currently active. The
+            // The session, out of the ones the device holds, that is currently active. The
             // active session's secret is the one carried by the project's session cookie.
             Attribute::string(key: 'activeSessionInternalId'),
             Attribute::string(key: 'activeSessionId'),
-            // Sessions the client holds, resolved on read from the sessions collection
-            Attribute::string(key: 'sessions', size: 16384, filters: ['subQueryClientSessions']),
+            // Sessions the device holds, resolved on read from the sessions collection
+            Attribute::string(key: 'sessions', size: 16384, filters: ['subQueryDeviceSessions']),
             Attribute::string(key: 'userAgent', size: 16384),
             // https://stackoverflow.com/a/166157/2299554
             Attribute::string(key: 'ip', size: 45),

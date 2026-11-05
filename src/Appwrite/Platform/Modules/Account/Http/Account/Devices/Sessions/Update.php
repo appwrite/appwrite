@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Account\Clients\Sessions;
+namespace Appwrite\Platform\Modules\Account\Http\Account\Devices\Sessions;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
@@ -29,28 +29,28 @@ class Update extends Action
 
     public static function getName(): string
     {
-        return 'updateClientSession';
+        return 'updateDeviceSession';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/account/clients/:clientId/session')
-            ->desc('Update client session')
+            ->setHttpPath('/v1/account/devices/:deviceId/session')
+            ->desc('Update device session')
             ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
             ->label('event', 'users.[userId].sessions.[sessionId].update')
-            ->label('audits.event', 'client.updateSession')
-            ->label('audits.resource', 'client/{request.clientId}')
+            ->label('audits.event', 'device.updateSession')
+            ->label('audits.resource', 'device/{request.deviceId}')
             ->label('sdk', new Method(
                 namespace: 'account',
-                group: 'clients',
-                name: 'updateClientSession',
+                group: 'devices',
+                name: 'updateDeviceSession',
                 description: <<<EOT
-                Switch the active account on an account switching client to one of the sessions it holds. The chosen session becomes active and its secret is written to the device's session cookie, so subsequent requests authenticate as that account. Use the string 'current' to reference the device's own client.
+                Switch the active account on an account switching device to one of the sessions it holds. The chosen session becomes active and its secret is written to the browser's session cookie, so subsequent requests authenticate as that account. Use the string 'current' to reference the current browser's device.
 
-                Switching rotates the chosen session's secret. Any other holder of that session, such as a copy kept on another device, stops working, so a session should not be shared across clients.
+                Switching rotates the chosen session's secret. Any other holder of that session, such as a copy kept elsewhere, stops working, so a session should not be shared across devices.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -62,13 +62,13 @@ class Update extends Action
                 contentType: ContentType::JSON
             ))
             ->label('abuse', [Limit::attempts(['ip'], 100)])
-            ->param('clientId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Client ID. Use the string \'current\' to reference the current device client.', true, ['dbForProject'])
-            ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of the session, held by the client, to make active.', false, ['dbForProject'])
+            ->param('deviceId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Device ID. Use the string \'current\' to reference the device of the current browser.', true, ['dbForProject'])
+            ->param('sessionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of the session, held by the device, to make active.', false, ['dbForProject'])
             ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
-            ->inject('client')
+            ->inject('device')
             ->inject('locale')
             ->inject('proofForToken')
             ->inject('domainVerification')
@@ -79,13 +79,13 @@ class Update extends Action
     }
 
     public function action(
-        ?string $clientId,
+        ?string $deviceId,
         string $sessionId,
         Request $request,
         Response $response,
         Document $project,
         Database $dbForProject,
-        ?Document $client,
+        ?Document $device,
         Locale $locale,
         ProofsToken $proofForToken,
         bool $domainVerification,
@@ -93,15 +93,15 @@ class Update extends Action
         Event $queueForEvents,
         Authorization $authorization,
     ): void {
-        if ($client === null) {
-            throw new Exception(Exception::CLIENT_NOT_FOUND);
+        if ($device === null) {
+            throw new Exception(Exception::DEVICE_NOT_FOUND);
         }
 
-        if ($clientId !== 'current' && $clientId !== $client->getId()) {
-            throw new Exception(Exception::CLIENT_NOT_FOUND);
+        if ($deviceId !== 'current' && $deviceId !== $device->getId()) {
+            throw new Exception(Exception::DEVICE_NOT_FOUND);
         }
 
-        $sessions = $client->getAttribute('sessions', []);
+        $sessions = $device->getAttribute('sessions', []);
         $session = null;
         foreach ($sessions as $candidate) {
             /** @var Document $candidate */
@@ -112,7 +112,7 @@ class Update extends Action
         }
 
         if ($session === null) {
-            throw new Exception(Exception::CLIENT_SESSION_NOT_FOUND);
+            throw new Exception(Exception::DEVICE_SESSION_NOT_FOUND);
         }
 
         $protocol = $request->getProtocol();
@@ -125,7 +125,7 @@ class Update extends Action
             'secret' => $proofForToken->hash($secret),
         ])));
 
-        $authorization->skip(fn () => $dbForProject->updateDocument('clients', $client->getId(), new Document([
+        $authorization->skip(fn () => $dbForProject->updateDocument('devices', $device->getId(), new Document([
             'activeSessionId' => $session->getId(),
             'activeSessionInternalId' => $session->getSequence(),
         ])));

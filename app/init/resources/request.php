@@ -721,18 +721,18 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
-    $context->set('client', function (string $mode, Project $project, Project $console, Request $request, Database $dbForProject, Database $dbForPlatform, Token $proofForToken, $authorization): ?Document {
+    $context->set('device', function (string $mode, Project $project, Project $console, Request $request, Database $dbForProject, Database $dbForPlatform, Token $proofForToken, $authorization): ?Document {
         /**
-         * Resolves the account-switching client from the request, or null when there is none.
+         * Resolves the account-switching device from the request, or null when there is none.
          *
-         * Mirrors the session cookie flow: the client secret arrives in the a_client_<projectId>
-         * cookie (or its _legacy twin), the x-appwrite-client header for SSR clients, or the
-         * x-fallback-cookies header for clients that block third-party cookies. The client
+         * Mirrors the session cookie flow: the device secret arrives in the a_device_<projectId>
+         * cookie (or its _legacy twin), the x-appwrite-device header for SSR clients, or the
+         * x-fallback-cookies header for clients that block third-party cookies. The device
          * document is looked up by id and gated by verifying the secret, like a session.
          */
         $authorization->setStatus(true);
 
-        $key = $mode === APP_MODE_ADMIN ? $console->getClientKey() : $project->getClientKey();
+        $key = $mode === APP_MODE_ADMIN ? $console->getDeviceKey() : $project->getDeviceKey();
 
         $store = new Store();
         $store->setKey($key);
@@ -742,9 +742,9 @@ return function (Container $context): void {
         );
 
         if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
-            $clientHeader = $request->getHeaderLine('x-appwrite-client', '');
-            if (! empty($clientHeader)) {
-                $store->decode($clientHeader);
+            $deviceHeader = $request->getHeaderLine('x-appwrite-device', '');
+            if (! empty($deviceHeader)) {
+                $store->decode($deviceHeader);
             }
         }
 
@@ -753,28 +753,28 @@ return function (Container $context): void {
             $store->decode((\is_array($fallback) && isset($fallback[$key])) ? $fallback[$key] : '');
         }
 
-        $clientId = $store->getProperty('id', '');
-        $clientSecret = $store->getProperty('secret', '');
+        $deviceId = $store->getProperty('id', '');
+        $deviceSecret = $store->getProperty('secret', '');
 
-        if (empty($clientId) || empty($clientSecret)) {
+        if (empty($deviceId) || empty($deviceSecret)) {
             return null;
         }
 
         $db = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
 
-        $client = $authorization->skip(fn () => $db->getDocument('clients', $clientId));
+        $device = $authorization->skip(fn () => $db->getDocument('devices', $deviceId));
 
         if (
-            $client->isEmpty()
-            || ! $client->isSet('secret')
-            || ! $client->isSet('expire')
-            || ! $proofForToken->verify($clientSecret, $client->getAttribute('secret'))
-            || DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($client->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
+            $device->isEmpty()
+            || ! $device->isSet('secret')
+            || ! $device->isSet('expire')
+            || ! $proofForToken->verify($deviceSecret, $device->getAttribute('secret'))
+            || DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($device->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
         ) {
             return null;
         }
 
-        return $client;
+        return $device;
     }, ['mode', 'project', 'console', 'request', 'dbForProject', 'dbForPlatform', 'proofForToken', 'authorization']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {

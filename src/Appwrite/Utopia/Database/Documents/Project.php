@@ -16,12 +16,12 @@ class Project extends Document
 
     /**
      * Get the name of the cookie, and of the X-Fallback-Cookies entry, that carries the
-     * account-switching client of the project. The client is the container that holds the
+     * account-switching device of the project. The device is the container that holds the
      * project's sessions on one device and tracks which of them is active.
      */
-    public function getClientKey(): string
+    public function getDeviceKey(): string
     {
-        return 'a_client_' . $this->getId();
+        return 'a_device_' . $this->getId();
     }
 
     /**

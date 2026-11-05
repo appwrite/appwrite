@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Account\Clients;
+namespace Appwrite\Platform\Modules\Account\Http\Account\Devices;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
@@ -29,25 +29,25 @@ class Delete extends Action
 
     public static function getName(): string
     {
-        return 'deleteClient';
+        return 'deleteDevice';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_DELETE)
-            ->setHttpPath('/v1/account/clients/:clientId')
-            ->desc('Delete client')
+            ->setHttpPath('/v1/account/devices/:deviceId')
+            ->desc('Delete device')
             ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
-            ->label('audits.event', 'client.delete')
-            ->label('audits.resource', 'client/{request.clientId}')
+            ->label('audits.event', 'device.delete')
+            ->label('audits.resource', 'device/{request.deviceId}')
             ->label('sdk', new Method(
                 namespace: 'account',
-                group: 'clients',
-                name: 'deleteClient',
+                group: 'devices',
+                name: 'deleteDevice',
                 description: <<<EOT
-                Delete the account switching client of the current device. Every session the client holds is signed out, the client is removed, and both the client and session cookies are cleared. Use the string 'current' to reference the device's own client.
+                Delete the account switching device for the current browser. Every session the device holds is signed out, the device is removed, and both the device and session cookies are cleared. Use the string 'current' to reference the current browser's device.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -59,12 +59,12 @@ class Delete extends Action
                 contentType: ContentType::NONE
             ))
             ->label('abuse', [Limit::attempts(['ip'], 100)])
-            ->param('clientId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Client ID. Use the string \'current\' to reference the current device client.', true, ['dbForProject'])
+            ->param('deviceId', 'current', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Device ID. Use the string \'current\' to reference the device of the current browser.', true, ['dbForProject'])
             ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
-            ->inject('client')
+            ->inject('device')
             ->inject('domainVerification')
             ->inject('cookieDomain')
             ->inject('queueForEvents')
@@ -75,12 +75,12 @@ class Delete extends Action
     }
 
     public function action(
-        ?string $clientId,
+        ?string $deviceId,
         Request $request,
         Response $response,
         Document $project,
         Database $dbForProject,
-        ?Document $client,
+        ?Document $device,
         bool $domainVerification,
         ?string $cookieDomain,
         Event $queueForEvents,
@@ -88,16 +88,16 @@ class Delete extends Action
         Authorization $authorization,
         Mqtt $mqtt,
     ): void {
-        if ($client === null) {
-            throw new Exception(Exception::CLIENT_NOT_FOUND);
+        if ($device === null) {
+            throw new Exception(Exception::DEVICE_NOT_FOUND);
         }
 
-        if ($clientId !== 'current' && $clientId !== $client->getId()) {
-            throw new Exception(Exception::CLIENT_NOT_FOUND);
+        if ($deviceId !== 'current' && $deviceId !== $device->getId()) {
+            throw new Exception(Exception::DEVICE_NOT_FOUND);
         }
 
         $protocol = $request->getProtocol();
-        $sessions = $client->getAttribute('sessions', []);
+        $sessions = $device->getAttribute('sessions', []);
         $userIds = [];
 
         foreach ($sessions as $session) {
@@ -116,7 +116,7 @@ class Delete extends Action
             ));
         }
 
-        $authorization->skip(fn () => $dbForProject->deleteDocument('clients', $client->getId()));
+        $authorization->skip(fn () => $dbForProject->deleteDocument('devices', $device->getId()));
 
         foreach (array_keys($userIds) as $userId) {
             $dbForProject->purgeCachedDocument('users', $userId);
@@ -132,14 +132,14 @@ class Delete extends Action
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
         }
 
-        // Clear both the client cookie and the active session cookie: the device is fully signed out.
+        // Clear both the device cookie and the active session cookie: the device is fully signed out.
         $response
-            ->addCookie($project->getClientKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
-            ->addCookie($project->getClientKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie($project->getDeviceKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
+            ->addCookie($project->getDeviceKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie($project->getSessionKey() . '_legacy', '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, null)
             ->addCookie($project->getSessionKey(), '', \time() - 3600, '/', $cookieDomain, ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
-        $queueForEvents->setParam('clientId', $client->getId());
+        $queueForEvents->setParam('deviceId', $device->getId());
 
         $response->noContent();
     }
