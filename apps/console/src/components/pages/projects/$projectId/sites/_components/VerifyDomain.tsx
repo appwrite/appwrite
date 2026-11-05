@@ -53,7 +53,11 @@ export function VerifyDomain({
         organizationDomainId,
       })
       if (updated.status === 'verified') {
-        toast.success(t('Domain verified'))
+        toast.success(
+          rule.status === 'verified'
+            ? t('Certificate renewal started')
+            : t('Domain verified'),
+        )
         onOpenChange(false)
         onVerifySuccess()
       } else if (

@@ -171,6 +171,7 @@ export const jaOrganizationsDictionary: Record<string, string> = {
   'Create a project first': '先にプロジェクトを作成してください',
   'Create organization': '組織を作成',
   'Create project': 'プロジェクトを作成',
+  'My first project': '最初のプロジェクト',
   'Advanced security': '高度なセキュリティ',
   'Security add-on': 'セキュリティアドオン',
   '+ more': '+ その他',

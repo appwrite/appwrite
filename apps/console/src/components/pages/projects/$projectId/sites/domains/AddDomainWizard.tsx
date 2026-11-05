@@ -7,7 +7,6 @@
 
 import { useState } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -41,7 +40,6 @@ export function AddDomainWizard() {
   const t = useT()
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: site } = useProjectSite(projectId, siteId)
 
@@ -86,18 +84,12 @@ export function AddDomainWizard() {
     })
     setClaimDomain(null)
     if (created.status === 'verified') {
-      await queryClient.refetchQueries({
-        queryKey: ['proxy-rules', 'site', projectId, siteId],
-      })
       toast.success(t('Domain verified'))
       navigate({
         to: '/projects/$projectId/sites/$siteId/domains',
         params: { projectId: projectId!, siteId: siteId! },
       })
     } else if (created.status === 'verifying') {
-      await queryClient.refetchQueries({
-        queryKey: ['proxy-rules', 'site', projectId, siteId],
-      })
       toast.success(t('Verification in progress'))
       navigate({
         to: '/projects/$projectId/sites/$siteId/domains',
