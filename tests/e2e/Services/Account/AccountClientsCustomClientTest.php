@@ -125,7 +125,7 @@ class AccountClientsCustomClientTest extends Scope
         /**
          * Test for SUCCESS - switch the active account to the first session
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/clients/current/active-session', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/clients/current/session', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => $clientKey . '=' . $clientCookie,
@@ -170,7 +170,7 @@ class AccountClientsCustomClientTest extends Scope
         /**
          * Test for FAILURE - switching to a session the client does not hold
          */
-        $response = $this->client->call(Client::METHOD_PATCH, '/account/clients/current/active-session', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/clients/current/session', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'cookie' => $clientKey . '=' . $clientCookie,

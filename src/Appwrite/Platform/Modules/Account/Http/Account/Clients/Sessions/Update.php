@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Account\Http\Account\Clients\ActiveSession;
+namespace Appwrite\Platform\Modules\Account\Http\Account\Clients\Sessions;
 
 use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
@@ -36,8 +36,8 @@ class Update extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/account/clients/:clientId/active-session')
-            ->desc('Update client active session')
+            ->setHttpPath('/v1/account/clients/:clientId/session')
+            ->desc('Update client session')
             ->groups(['api', 'account'])
             ->label('scope', 'sessions.write')
             ->label('event', 'users.[userId].sessions.[sessionId].update')
