@@ -5,7 +5,7 @@
     "": {
       "name": "template-tanstack-start",
       "dependencies": {
-        "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@15345",
+        "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@08e40e990baa92762c11f9a199ac63def1ebdc9a",
         "@appwrite.io/specs": "github:appwrite/specs#9a50097dd538fd7663748aceed37fa05692bc5e4",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -143,7 +143,7 @@
     "use-sync-external-store": "^1.6.0",
   },
   "packages": {
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@15345", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }, "sha512-d7RoZTE9kby8pF7xelustQk4P4ExgXU6fTv54hr5qZ+o1NNUhaVSWU+zzDDO9R6fDeA8WigNPSL3hcabAY5cQw=="],
+    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@08e40e990baa92762c11f9a199ac63def1ebdc9a", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }, "sha512-d7RoZTE9kby8pF7xelustQk4P4ExgXU6fTv54hr5qZ+o1NNUhaVSWU+zzDDO9R6fDeA8WigNPSL3hcabAY5cQw=="],
 
     "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#9a50097", {}, "appwrite-specs-9a50097", "sha512-NHRJ+TCF1+Y2BM4KfOvbgJz9Z20KxdB6Bw7/6ljngSgvtufrM+dbeqIpQ/ZAFdmX8ViRx52nwxsh6BeRdxZi5A=="],
 
