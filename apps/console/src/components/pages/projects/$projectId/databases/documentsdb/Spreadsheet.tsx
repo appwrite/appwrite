@@ -538,10 +538,7 @@ function getRelationshipTableId(columnInfo?: unknown): string | undefined {
   return col?.relatedTableId || col?.relatedTable || undefined
 }
 
-function getRelationshipRowLabel(
-  row: Record<string, unknown>,
-  columns: unknown[],
-): string {
+function getRelationshipLabelKey(columns: unknown[]): string | null {
   const labelColumn = columns.find((column) => {
     const col = column as { type?: string } | undefined
     const key = getTableColumnKey(column)
@@ -559,7 +556,14 @@ function getRelationshipRowLabel(
     )
   })
 
-  const labelKey = labelColumn ? getTableColumnKey(labelColumn) : null
+  return labelColumn ? getTableColumnKey(labelColumn) : null
+}
+
+function getRelationshipRowLabel(
+  row: Record<string, unknown>,
+  columns: unknown[],
+): string {
+  const labelKey = getRelationshipLabelKey(columns)
   const labelValue =
     labelKey && typeof row[labelKey] === 'string' ? row[labelKey] : null
 
@@ -606,6 +610,17 @@ function RelationshipField({
       'desc',
       '$createdAt',
     )
+  const { columns: relatedColumns } = useProjectCollectionAttributes(
+    projectId,
+    databaseId,
+    DB_KIND,
+    relatedTableId,
+    undefined,
+    0,
+    100,
+  )
+
+  const labelKey = getRelationshipLabelKey(relatedColumns)
   // Rows outside the first page are only found by asking the API for them
   const { rows: searchedRows, isFetching: searchFetching } =
     useProjectTableRows(
@@ -618,17 +633,15 @@ function RelationshipField({
       undefined,
       'desc',
       '$createdAt',
-      [Query.startsWith('$id', searchTerm)],
+      labelKey
+        ? [
+            Query.or([
+              Query.startsWith('$id', searchTerm),
+              Query.contains(labelKey, [searchTerm]),
+            ]),
+          ]
+        : [Query.startsWith('$id', searchTerm)],
     )
-  const { columns: relatedColumns } = useProjectCollectionAttributes(
-    projectId,
-    databaseId,
-    DB_KIND,
-    relatedTableId,
-    undefined,
-    0,
-    100,
-  )
 
   // Values arrive as populated rows: ids drive the selection, the rows label
   // entries that are outside the related table's first page.
