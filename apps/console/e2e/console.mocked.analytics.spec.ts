@@ -102,7 +102,7 @@ type MockOptions = {
   /** User IDs present in the data (sent by a server with an API key). */
   hasUsers?: boolean
   type?: AnalyticsPropertyType
-  /** Prop keys an agent sends with its llm_call and tool_call events. */
+  /** Prop keys an agent sends with its model_called and tool_called events. */
   agentProps?: boolean
 }
 
@@ -431,16 +431,16 @@ test.describe('analytics property (mocked API)', () => {
     })
     await openProperty(page)
 
-    const usage = card(page, 'Models and tools')
-    await expect(usage).toBeVisible({ timeout: 30_000 })
+    const models = card(page, 'Models and tools')
+    await expect(models).toBeVisible({ timeout: 30_000 })
     // Only keys that arrived get a tab, and a single tab shows no tab bar.
-    await expect(usage.getByRole('tab')).toHaveCount(0)
-    await expect(usage.getByText(/^(gpt-5|claude-sonnet-5-5)$/)).toHaveText([
+    await expect(models.getByRole('tab')).toHaveCount(0)
+    await expect(models.getByText(/^(gpt-5|claude-sonnet-5-5)$/)).toHaveText([
       'claude-sonnet-5-5',
       'gpt-5',
     ])
-    await expect(usage).toContainText('900')
-    await attachScreenshot(page, 'property-agent-usage')
+    await expect(models).toContainText('900')
+    await attachScreenshot(page, 'property-agent-models')
   })
 
   test('hides models and tools without agent props', async ({ page }) => {

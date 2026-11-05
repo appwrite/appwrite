@@ -337,7 +337,7 @@ export function UsersPanel(props: PanelProps) {
   )
 }
 
-const AGENT_USAGE_TABS: BreakdownTab[] = [
+const MODEL_TABS: BreakdownTab[] = [
   {
     id: 'models',
     label: 'Models',
@@ -353,10 +353,10 @@ const AGENT_USAGE_TABS: BreakdownTab[] = [
 ]
 
 /**
- * The `model` and `tool` props of an agent's `llm_call` and `tool_call`
- * events, counted in calls. Hidden until either key arrives.
+ * The `model` and `tool` props of an agent's `model_called` and
+ * `tool_called` events, counted in calls. Hidden until either key arrives.
  */
-export function AgentUsagePanel(props: PanelProps) {
+export function ModelsPanel(props: PanelProps) {
   const { filters } = useAnalyticsFilters()
   // Same key as the Event properties card's query, so it is one request.
   const { data } = useQuery({
@@ -373,7 +373,7 @@ export function AgentUsagePanel(props: PanelProps) {
   })
   const tabs = useMemo(() => {
     const keys = new Set(data?.breakdown.map((entry) => entry.value))
-    return AGENT_USAGE_TABS.filter((tab) => keys.has(tab.propKey!))
+    return MODEL_TABS.filter((tab) => keys.has(tab.propKey!))
   }, [data])
 
   if (tabs.length === 0) return null
@@ -383,7 +383,7 @@ export function AgentUsagePanel(props: PanelProps) {
   return (
     <BreakdownPanel
       {...props}
-      cardId="agent-usage"
+      cardId="models"
       title="Models and tools"
       description="Calls by model and by tool"
       tabs={tabs}

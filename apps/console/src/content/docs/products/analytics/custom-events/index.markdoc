@@ -174,14 +174,14 @@ Appwrite stores props with the event. Don't put personal data such as email addr
 On an **Agent** property, send one event per model call and one per tool call. The **Models and tools** card counts them by the `model` and `tool` props:
 
 | Event | Props |
-|---|---|
-| `llm_call` | `model`, such as `gpt-5` or `claude-sonnet-5-5`. Optionally `provider`. |
-| `tool_call` | `tool`, such as `web_search`. |
+| --- | --- |
+| `model_called` | `model`, such as `gpt-5` or `claude-sonnet-5-5`. Optionally `provider`. |
+| `tool_called` | `tool`, such as `web_search`. |
 
 ```server-nodejs
 await analytics.createEvent({
     propertyId: '<PROPERTY_ID>',
-    name: 'llm_call',
+    name: 'model_called',
     url: 'https://agent.example.com/run',
     props: ['model', 'gpt-5', 'provider', 'openai'],
     userId: '<USER_ID>',

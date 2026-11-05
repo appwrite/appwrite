@@ -53,10 +53,10 @@ import {
 import { ExportMenu } from '../_components/ExportMenu'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
-  AgentUsagePanel,
   BotsPanel,
   EventPropertiesPanel,
   LocationsPanel,
+  ModelsPanel,
   PagesPanel,
   TechnologyPanel,
   TrafficSourcesPanel,
@@ -117,7 +117,7 @@ type DimensionPanel =
   | 'bots'
   | 'users'
   | 'eventProps'
-  | 'agentUsage'
+  | 'models'
 
 // Overview, custom events, users and event properties apply to every type. Mobile
 // apps have no referrers or crawlers; agents only send their own events.
@@ -142,7 +142,7 @@ const PANELS_BY_TYPE: Record<
     'users',
     'eventProps',
   ]),
-  [AnalyticsPropertyType.Agent]: new Set(['agentUsage', 'users', 'eventProps']),
+  [AnalyticsPropertyType.Agent]: new Set(['models', 'users', 'eventProps']),
 }
 
 function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
@@ -493,7 +493,7 @@ export function View({
   const panels = PANELS_BY_TYPE[resolvedType]
   const breakdownCount = [...panels].filter(
     (panel) =>
-      panel !== 'users' && panel !== 'eventProps' && panel !== 'agentUsage',
+      panel !== 'users' && panel !== 'eventProps' && panel !== 'models',
   ).length
 
   if (!property && !propertyLoading) {
@@ -715,9 +715,9 @@ export function View({
                     range={range}
                   />
                 ) : null}
-                {panels.has('agentUsage') ? (
+                {panels.has('models') ? (
                   <div className="lg:col-span-2">
-                    <AgentUsagePanel
+                    <ModelsPanel
                       projectId={projectId}
                       propertyId={propertyId}
                       range={range}
