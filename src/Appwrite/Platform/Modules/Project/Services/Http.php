@@ -61,6 +61,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
@@ -103,6 +105,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionInvalidation\
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\SessionLimit\Update as UpdateSessionLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\UserLimit\Update as UpdateUserLimitPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\XList as ListPolicies;
+use Appwrite\Platform\Modules\Project\Http\Project\Prefs\Get as GetPrefs;
+use Appwrite\Platform\Modules\Project\Http\Project\Prefs\Update as UpdatePrefs;
 use Appwrite\Platform\Modules\Project\Http\Project\Protocols\Update as UpdateProjectProtocol;
 use Appwrite\Platform\Modules\Project\Http\Project\Services\Update as UpdateProjectService;
 use Appwrite\Platform\Modules\Project\Http\Project\Sessions\Delete as DeleteSessions;
@@ -125,142 +129,148 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Hooks
-        $this->addAction(Init::getName(), new Init());
+        $this->addAction('init', Init::class);
 
         // Project
-        $this->addAction(DeleteProject::getName(), new DeleteProject());
-        $this->addAction(GetProject::getName(), new GetProject());
-        $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
-        $this->addAction(UpdateProjectProtocol::getName(), new UpdateProjectProtocol());
-        $this->addAction(UpdateProjectService::getName(), new UpdateProjectService());
+        $this->addAction('deleteProject', DeleteProject::class);
+        $this->addAction('getProject', GetProject::class);
+        $this->addAction('updateProjectLabels', UpdateProjectLabels::class);
+        $this->addAction('updateProjectProtocol', UpdateProjectProtocol::class);
+        $this->addAction('updateProjectService', UpdateProjectService::class);
+
+        // Prefs
+        $this->addAction('getPrefs', GetPrefs::class);
+        $this->addAction('updatePrefs', UpdatePrefs::class);
 
         // Sessions
-        $this->addAction(DeleteSessions::getName(), new DeleteSessions());
+        $this->addAction('deleteProjectSessions', DeleteSessions::class);
 
         // SMTP
-        $this->addAction(UpdateSMTP::getName(), new UpdateSMTP());
-        $this->addAction(CreateSMTPTest::getName(), new CreateSMTPTest());
+        $this->addAction('updateProjectSMTP', UpdateSMTP::class);
+        $this->addAction('createProjectSMTPTest', CreateSMTPTest::class);
 
         // Templates
-        $this->addAction(ListTemplates::getName(), new ListTemplates());
-        $this->addAction(GetTemplate::getName(), new GetTemplate());
-        $this->addAction(UpdateTemplate::getName(), new UpdateTemplate());
+        $this->addAction('listProjectEmailTemplates', ListTemplates::class);
+        $this->addAction('getProjectEmailTemplate', GetTemplate::class);
+        $this->addAction('updateProjectEmailTemplate', UpdateTemplate::class);
 
         // Variables
-        $this->addAction(CreateVariable::getName(), new CreateVariable());
-        $this->addAction(ListVariables::getName(), new ListVariables());
-        $this->addAction(GetVariable::getName(), new GetVariable());
-        $this->addAction(DeleteVariable::getName(), new DeleteVariable());
-        $this->addAction(UpdateVariable::getName(), new UpdateVariable());
+        $this->addAction('createProjectVariable', CreateVariable::class);
+        $this->addAction('listProjectVariables', ListVariables::class);
+        $this->addAction('getProjectVariable', GetVariable::class);
+        $this->addAction('deleteProjectVariable', DeleteVariable::class);
+        $this->addAction('updateProjectVariable', UpdateVariable::class);
 
         // Keys
         // TODO: Remove once the Console, CLI and SDKs use the Organization API instead
-        $this->addAction(CreateKey::getName(), new CreateKey());
-        $this->addAction(CreateEphemeralKey::getName(), new CreateEphemeralKey());
-        $this->addAction(ListKeys::getName(), new ListKeys());
-        $this->addAction(GetKey::getName(), new GetKey());
-        $this->addAction(DeleteKey::getName(), new DeleteKey());
-        $this->addAction(UpdateKey::getName(), new UpdateKey());
+        $this->addAction('createProjectKey', CreateKey::class);
+        $this->addAction('createEphemeralProjectKey', CreateEphemeralKey::class);
+        $this->addAction('listProjectKeys', ListKeys::class);
+        $this->addAction('getProjectKey', GetKey::class);
+        $this->addAction('deleteProjectKey', DeleteKey::class);
+        $this->addAction('updateProjectKey', UpdateKey::class);
 
         // Platforms
-        $this->addAction(ListPlatforms::getName(), new ListPlatforms());
-        $this->addAction(GetPlatform::getName(), new GetPlatform());
-        $this->addAction(CreateWebPlatform::getName(), new CreateWebPlatform());
-        $this->addAction(CreateApplePlatform::getName(), new CreateApplePlatform());
-        $this->addAction(CreateAndroidPlatform::getName(), new CreateAndroidPlatform());
-        $this->addAction(CreateWindowsPlatform::getName(), new CreateWindowsPlatform());
-        $this->addAction(CreateLinuxPlatform::getName(), new CreateLinuxPlatform());
-        $this->addAction(UpdateWebPlatform::getName(), new UpdateWebPlatform());
-        $this->addAction(UpdateApplePlatform::getName(), new UpdateApplePlatform());
-        $this->addAction(UpdateAndroidPlatform::getName(), new UpdateAndroidPlatform());
-        $this->addAction(UpdateWindowsPlatform::getName(), new UpdateWindowsPlatform());
-        $this->addAction(UpdateLinuxPlatform::getName(), new UpdateLinuxPlatform());
-        $this->addAction(DeletePlatform::getName(), new DeletePlatform());
+        $this->addAction('listProjectPlatforms', ListPlatforms::class);
+        $this->addAction('getProjectPlatform', GetPlatform::class);
+        $this->addAction('createProjectWebPlatform', CreateWebPlatform::class);
+        $this->addAction('createProjectApplePlatform', CreateApplePlatform::class);
+        $this->addAction('createProjectAndroidPlatform', CreateAndroidPlatform::class);
+        $this->addAction('createProjectWindowsPlatform', CreateWindowsPlatform::class);
+        $this->addAction('createProjectLinuxPlatform', CreateLinuxPlatform::class);
+        $this->addAction('updateProjectWebPlatform', UpdateWebPlatform::class);
+        $this->addAction('updateProjectApplePlatform', UpdateApplePlatform::class);
+        $this->addAction('updateProjectAndroidPlatform', UpdateAndroidPlatform::class);
+        $this->addAction('updateProjectWindowsPlatform', UpdateWindowsPlatform::class);
+        $this->addAction('updateProjectLinuxPlatform', UpdateLinuxPlatform::class);
+        $this->addAction('deleteProjectPlatform', DeletePlatform::class);
 
         // Mock Phones
-        $this->addAction(CreateMockPhone::getName(), new CreateMockPhone());
-        $this->addAction(ListMockPhones::getName(), new ListMockPhones());
-        $this->addAction(GetMockPhone::getName(), new GetMockPhone());
-        $this->addAction(UpdateMockPhone::getName(), new UpdateMockPhone());
-        $this->addAction(DeleteMockPhone::getName(), new DeleteMockPhone());
+        $this->addAction('createProjectMockPhone', CreateMockPhone::class);
+        $this->addAction('listProjectMockPhones', ListMockPhones::class);
+        $this->addAction('getProjectMockPhone', GetMockPhone::class);
+        $this->addAction('updateProjectMockPhone', UpdateMockPhone::class);
+        $this->addAction('deleteProjectMockPhone', DeleteMockPhone::class);
 
         // Policies
-        $this->addAction(ListPolicies::getName(), new ListPolicies());
-        $this->addAction(GetPolicy::getName(), new GetPolicy());
-        $this->addAction(UpdateMembershipPrivacyPolicy::getName(), new UpdateMembershipPrivacyPolicy());
-        $this->addAction(UpdateMFAFactorsPolicy::getName(), new UpdateMFAFactorsPolicy());
-        $this->addAction(UpdatePasskeyPolicy::getName(), new UpdatePasskeyPolicy());
-        $this->addAction(UpdatePasswordDictionaryPolicy::getName(), new UpdatePasswordDictionaryPolicy());
-        $this->addAction(UpdatePasswordHistoryPolicy::getName(), new UpdatePasswordHistoryPolicy());
-        $this->addAction(UpdatePasswordStrengthPolicy::getName(), new UpdatePasswordStrengthPolicy());
-        $this->addAction(UpdatePasswordPersonalDataPolicy::getName(), new UpdatePasswordPersonalDataPolicy());
-        $this->addAction(UpdatePasswordPwnedPolicy::getName(), new UpdatePasswordPwnedPolicy());
-        $this->addAction(UpdatePasswordRotationPolicy::getName(), new UpdatePasswordRotationPolicy());
-        $this->addAction(UpdateSessionAlertPolicy::getName(), new UpdateSessionAlertPolicy());
-        $this->addAction(UpdateSessionDurationPolicy::getName(), new UpdateSessionDurationPolicy());
-        $this->addAction(UpdateSessionInvalidationPolicy::getName(), new UpdateSessionInvalidationPolicy());
-        $this->addAction(UpdateSessionLimitPolicy::getName(), new UpdateSessionLimitPolicy());
-        $this->addAction(UpdateUserLimitPolicy::getName(), new UpdateUserLimitPolicy());
-        $this->addAction(UpdateDenyAliasedEmailPolicy::getName(), new UpdateDenyAliasedEmailPolicy());
-        $this->addAction(UpdateDenyDisposableEmailPolicy::getName(), new UpdateDenyDisposableEmailPolicy());
-        $this->addAction(UpdateDenyFreeEmailPolicy::getName(), new UpdateDenyFreeEmailPolicy());
-        $this->addAction(UpdateDenyCorporateEmailPolicy::getName(), new UpdateDenyCorporateEmailPolicy());
-        $this->addAction(UpdateDenyRealtimeGuestsPolicy::getName(), new UpdateDenyRealtimeGuestsPolicy());
+        $this->addAction('listPolicies', ListPolicies::class);
+        $this->addAction('getProjectPolicy', GetPolicy::class);
+        $this->addAction('updateProjectMembershipPrivacyPolicy', UpdateMembershipPrivacyPolicy::class);
+        $this->addAction('updateProjectMFAFactorsPolicy', UpdateMFAFactorsPolicy::class);
+        $this->addAction('updateProjectPasskeyPolicy', UpdatePasskeyPolicy::class);
+        $this->addAction('updateProjectPasswordDictionaryPolicy', UpdatePasswordDictionaryPolicy::class);
+        $this->addAction('updateProjectPasswordHistoryPolicy', UpdatePasswordHistoryPolicy::class);
+        $this->addAction('updateProjectPasswordStrengthPolicy', UpdatePasswordStrengthPolicy::class);
+        $this->addAction('updateProjectPasswordPersonalDataPolicy', UpdatePasswordPersonalDataPolicy::class);
+        $this->addAction('updateProjectPasswordPwnedPolicy', UpdatePasswordPwnedPolicy::class);
+        $this->addAction('updatePasswordRotationPolicy', UpdatePasswordRotationPolicy::class);
+        $this->addAction('updateProjectSessionAlertPolicy', UpdateSessionAlertPolicy::class);
+        $this->addAction('updateProjectSessionDurationPolicy', UpdateSessionDurationPolicy::class);
+        $this->addAction('updateProjectSessionInvalidationPolicy', UpdateSessionInvalidationPolicy::class);
+        $this->addAction('updateProjectSessionLimitPolicy', UpdateSessionLimitPolicy::class);
+        $this->addAction('updateProjectUserLimitPolicy', UpdateUserLimitPolicy::class);
+        $this->addAction('updateProjectDenyAliasedEmailPolicy', UpdateDenyAliasedEmailPolicy::class);
+        $this->addAction('updateProjectDenyDisposableEmailPolicy', UpdateDenyDisposableEmailPolicy::class);
+        $this->addAction('updateProjectDenyFreeEmailPolicy', UpdateDenyFreeEmailPolicy::class);
+        $this->addAction('updateProjectDenyCorporateEmailPolicy', UpdateDenyCorporateEmailPolicy::class);
+        $this->addAction('updateProjectDenyRealtimeGuestsPolicy', UpdateDenyRealtimeGuestsPolicy::class);
 
         // Auth Methods
-        $this->addAction(UpdateAuthMethod::getName(), new UpdateAuthMethod());
+        $this->addAction('updateProjectAuthMethod', UpdateAuthMethod::class);
 
         // OAuth2
-        $this->addAction(ListOAuth2Providers::getName(), new ListOAuth2Providers());
-        $this->addAction(GetOAuth2Provider::getName(), new GetOAuth2Provider());
-        $this->addAction(UpdateOAuth2GitHub::getName(), new UpdateOAuth2GitHub());
-        $this->addAction(UpdateOAuth2Discord::getName(), new UpdateOAuth2Discord());
-        $this->addAction(UpdateOAuth2Figma::getName(), new UpdateOAuth2Figma());
-        $this->addAction(UpdateOAuth2Dropbox::getName(), new UpdateOAuth2Dropbox());
-        $this->addAction(UpdateOAuth2Dailymotion::getName(), new UpdateOAuth2Dailymotion());
-        $this->addAction(UpdateOAuth2Bitbucket::getName(), new UpdateOAuth2Bitbucket());
-        $this->addAction(UpdateOAuth2Bitly::getName(), new UpdateOAuth2Bitly());
-        $this->addAction(UpdateOAuth2Box::getName(), new UpdateOAuth2Box());
-        $this->addAction(UpdateOAuth2Autodesk::getName(), new UpdateOAuth2Autodesk());
-        $this->addAction(UpdateOAuth2Google::getName(), new UpdateOAuth2Google());
-        $this->addAction(UpdateOAuth2Zoom::getName(), new UpdateOAuth2Zoom());
-        $this->addAction(UpdateOAuth2Zoho::getName(), new UpdateOAuth2Zoho());
-        $this->addAction(UpdateOAuth2Yandex::getName(), new UpdateOAuth2Yandex());
-        $this->addAction(UpdateOAuth2X::getName(), new UpdateOAuth2X());
-        $this->addAction(UpdateOAuth2WordPress::getName(), new UpdateOAuth2WordPress());
-        $this->addAction(UpdateOAuth2Webflow::getName(), new UpdateOAuth2Webflow());
-        $this->addAction(UpdateOAuth2Twitch::getName(), new UpdateOAuth2Twitch());
-        $this->addAction(UpdateOAuth2Stripe::getName(), new UpdateOAuth2Stripe());
-        $this->addAction(UpdateOAuth2Spotify::getName(), new UpdateOAuth2Spotify());
-        $this->addAction(UpdateOAuth2Slack::getName(), new UpdateOAuth2Slack());
-        $this->addAction(UpdateOAuth2Podio::getName(), new UpdateOAuth2Podio());
-        $this->addAction(UpdateOAuth2Notion::getName(), new UpdateOAuth2Notion());
-        $this->addAction(UpdateOAuth2Salesforce::getName(), new UpdateOAuth2Salesforce());
-        $this->addAction(UpdateOAuth2Yahoo::getName(), new UpdateOAuth2Yahoo());
-        $this->addAction(UpdateOAuth2Linkedin::getName(), new UpdateOAuth2Linkedin());
-        $this->addAction(UpdateOAuth2Disqus::getName(), new UpdateOAuth2Disqus());
-        $this->addAction(UpdateOAuth2Amazon::getName(), new UpdateOAuth2Amazon());
-        $this->addAction(UpdateOAuth2Etsy::getName(), new UpdateOAuth2Etsy());
-        $this->addAction(UpdateOAuth2Facebook::getName(), new UpdateOAuth2Facebook());
-        $this->addAction(UpdateOAuth2Tradeshift::getName(), new UpdateOAuth2Tradeshift());
-        $this->addAction(UpdateOAuth2TradeshiftSandbox::getName(), new UpdateOAuth2TradeshiftSandbox());
-        $this->addAction(UpdateOAuth2Paypal::getName(), new UpdateOAuth2Paypal());
-        $this->addAction(UpdateOAuth2PaypalSandbox::getName(), new UpdateOAuth2PaypalSandbox());
-        $this->addAction(UpdateOAuth2Gitlab::getName(), new UpdateOAuth2Gitlab());
-        $this->addAction(UpdateOAuth2Appwrite::getName(), new UpdateOAuth2Appwrite());
-        $this->addAction(UpdateOAuth2Authentik::getName(), new UpdateOAuth2Authentik());
-        $this->addAction(UpdateOAuth2Auth0::getName(), new UpdateOAuth2Auth0());
-        $this->addAction(UpdateOAuth2FusionAuth::getName(), new UpdateOAuth2FusionAuth());
-        $this->addAction(UpdateOAuth2Keycloak::getName(), new UpdateOAuth2Keycloak());
-        $this->addAction(UpdateOAuth2Oidc::getName(), new UpdateOAuth2Oidc());
-        $this->addAction(UpdateOAuth2Okta::getName(), new UpdateOAuth2Okta());
-        $this->addAction(UpdateOAuth2Kick::getName(), new UpdateOAuth2Kick());
-        $this->addAction(UpdateOAuth2Apple::getName(), new UpdateOAuth2Apple());
-        $this->addAction(UpdateOAuth2Microsoft::getName(), new UpdateOAuth2Microsoft());
-        $this->addAction(UpdateOAuth2HuggingFace::getName(), new UpdateOAuth2HuggingFace());
-        $this->addAction(UpdateOAuth2Resend::getName(), new UpdateOAuth2Resend());
-        $this->addAction(UpdateOAuth2TikTok::getName(), new UpdateOAuth2TikTok());
-        $this->addAction(UpdateOAuth2Kakao::getName(), new UpdateOAuth2Kakao());
-        $this->addAction(UpdateOAuth2Cloudflare::getName(), new UpdateOAuth2Cloudflare());
+        $this->addAction('listProjectOAuth2', ListOAuth2Providers::class);
+        $this->addAction('getProjectOAuth2', GetOAuth2Provider::class);
+        $this->addAction('updateProjectOAuth2GitHub', UpdateOAuth2GitHub::class);
+        $this->addAction('updateProjectOAuth2Discord', UpdateOAuth2Discord::class);
+        $this->addAction('updateProjectOAuth2Figma', UpdateOAuth2Figma::class);
+        $this->addAction('updateProjectOAuth2Dropbox', UpdateOAuth2Dropbox::class);
+        $this->addAction('updateProjectOAuth2Dailymotion', UpdateOAuth2Dailymotion::class);
+        $this->addAction('updateProjectOAuth2Bitbucket', UpdateOAuth2Bitbucket::class);
+        $this->addAction('updateProjectOAuth2Bitly', UpdateOAuth2Bitly::class);
+        $this->addAction('updateProjectOAuth2Box', UpdateOAuth2Box::class);
+        $this->addAction('updateProjectOAuth2Autodesk', UpdateOAuth2Autodesk::class);
+        $this->addAction('updateProjectOAuth2Google', UpdateOAuth2Google::class);
+        $this->addAction('updateProjectOAuth2Zoom', UpdateOAuth2Zoom::class);
+        $this->addAction('updateProjectOAuth2Zoho', UpdateOAuth2Zoho::class);
+        $this->addAction('updateProjectOAuth2Yandex', UpdateOAuth2Yandex::class);
+        $this->addAction('updateProjectOAuth2X', UpdateOAuth2X::class);
+        $this->addAction('updateProjectOAuth2WordPress', UpdateOAuth2WordPress::class);
+        $this->addAction('updateProjectOAuth2Webflow', UpdateOAuth2Webflow::class);
+        $this->addAction('updateProjectOAuth2Twitch', UpdateOAuth2Twitch::class);
+        $this->addAction('updateProjectOAuth2Stripe', UpdateOAuth2Stripe::class);
+        $this->addAction('updateProjectOAuth2Spotify', UpdateOAuth2Spotify::class);
+        $this->addAction('updateProjectOAuth2Slack', UpdateOAuth2Slack::class);
+        $this->addAction('updateProjectOAuth2Podio', UpdateOAuth2Podio::class);
+        $this->addAction('updateProjectOAuth2Notion', UpdateOAuth2Notion::class);
+        $this->addAction('updateProjectOAuth2Salesforce', UpdateOAuth2Salesforce::class);
+        $this->addAction('updateProjectOAuth2Yahoo', UpdateOAuth2Yahoo::class);
+        $this->addAction('updateProjectOAuth2Linkedin', UpdateOAuth2Linkedin::class);
+        $this->addAction('updateProjectOAuth2Disqus', UpdateOAuth2Disqus::class);
+        $this->addAction('updateProjectOAuth2Amazon', UpdateOAuth2Amazon::class);
+        $this->addAction('updateProjectOAuth2Etsy', UpdateOAuth2Etsy::class);
+        $this->addAction('updateProjectOAuth2Facebook', UpdateOAuth2Facebook::class);
+        $this->addAction('updateProjectOAuth2Tradeshift', UpdateOAuth2Tradeshift::class);
+        $this->addAction('updateProjectOAuth2Tradeshift Sandbox', UpdateOAuth2TradeshiftSandbox::class);
+        $this->addAction('updateProjectOAuth2Paypal', UpdateOAuth2Paypal::class);
+        $this->addAction('updateProjectOAuth2PaypalSandbox', UpdateOAuth2PaypalSandbox::class);
+        $this->addAction('updateProjectOAuth2Gitlab', UpdateOAuth2Gitlab::class);
+        $this->addAction('updateProjectOAuth2Appwrite', UpdateOAuth2Appwrite::class);
+        $this->addAction('updateProjectOAuth2Authentik', UpdateOAuth2Authentik::class);
+        $this->addAction('updateProjectOAuth2Auth0', UpdateOAuth2Auth0::class);
+        $this->addAction('updateProjectOAuth2FusionAuth', UpdateOAuth2FusionAuth::class);
+        $this->addAction('updateProjectOAuth2Keycloak', UpdateOAuth2Keycloak::class);
+        $this->addAction('updateProjectOAuth2Oidc', UpdateOAuth2Oidc::class);
+        $this->addAction('updateProjectOAuth2Okta', UpdateOAuth2Okta::class);
+        $this->addAction('updateProjectOAuth2Kick', UpdateOAuth2Kick::class);
+        $this->addAction('updateProjectOAuth2Apple', UpdateOAuth2Apple::class);
+        $this->addAction('updateProjectOAuth2Microsoft', UpdateOAuth2Microsoft::class);
+        $this->addAction('updateProjectOAuth2Hugging Face', UpdateOAuth2HuggingFace::class);
+        $this->addAction('updateProjectOAuth2Resend', UpdateOAuth2Resend::class);
+        $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
+        $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
+        $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);
     }
 }

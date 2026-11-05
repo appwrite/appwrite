@@ -1,0 +1,33 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="maqamGrad" x1="241" y1="26" x2="241" y2="381" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.17" stop-color="#2F1820"/>
+<stop offset="0.34" stop-color="#531A2C"/>
+<stop offset="0.51" stop-color="#9F1D42"/>
+<stop offset="0.68" stop-color="#FD366E"/>
+<stop offset="0.85" stop-color="#FEAFC5"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+<g id="maqamBack">
+<path d="M110 284H372V296H110Z"/>
+</g>
+<g id="maqam">
+<path d="M146 284C166 214 198 132 232 72L240 77C214 140 190 214 174 284Z"/>
+<path d="M336 284C316 214 284 132 250 72L242 77C268 140 292 214 308 284Z"/>
+<path d="M226 284L233 80H249L256 284Z"/>
+<path d="M224 70H258V77H224Z"/>
+<path d="M228 70C228 56 254 56 254 70Z"/>
+<path d="M239.25 40H242.75V60H239.25Z"/>
+<path d="M96 296H386V310H96Z"/>
+</g>
+</defs>
+<use href="#maqamBack" fill="#19191C"/>
+<use href="#maqamBack" fill="url(#maqamGrad)"/>
+<use href="#maqamBack" stroke="#FD366E" stroke-width="1.36239"/>
+<use href="#maqam" fill="#19191C"/>
+<use href="#maqam" fill="url(#maqamGrad)"/>
+<use href="#maqam" stroke="#FD366E" stroke-width="1.36239"/>
+<g fill="#19191C" stroke="#FD366E" stroke-width="1.36239"><path d="M232 262H250V284H232Z"/></g>
+<g stroke="#FD366E" stroke-width="1.36239" stroke-linecap="round" fill="none"><path d="M241 100L236 110"/><path d="M241 100L246 110"/><path d="M241 122L236 132"/><path d="M241 122L246 132"/><path d="M241 144L236 154"/><path d="M241 144L246 154"/><path d="M241 166L236 176"/><path d="M241 166L246 176"/><path d="M241 188L236 198"/><path d="M241 188L246 198"/><path d="M241 210L236 220"/><path d="M241 210L246 220"/><path d="M241 232L236 242"/><path d="M241 232L246 242"/><path d="M241 254L236 264"/><path d="M241 254L246 264"/><path d="M241 84V262"/></g>
+</svg>

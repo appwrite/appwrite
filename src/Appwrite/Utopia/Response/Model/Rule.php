@@ -105,6 +105,18 @@ class Rule extends Model
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
             ])
+            ->addRule('expireAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Certificate expiry date in ISO 8601 format. Empty when unknown or not checked yet.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('certificateStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate status, as last reported by the certificate provider. Possible values are "pending", "processing", "issued", "renewing", "expiring", "blocked", "failed", or "unknown". "expiring" means the certificate expires soon, or has already expired, and the provider has not renewed it yet, "blocked" means the provider waits on a DNS record from the domain owner, and "failed" means the provider stopped trying or the last issuance or renewal attempt failed. Empty until the certificate is next checked.',
+                'default' => '',
+                'example' => 'issued',
+            ])
         ;
     }
 

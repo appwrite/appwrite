@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Authorize;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -103,10 +104,10 @@ abstract class Base extends Action
         $hostname = $platform['consoleHostname'] ?? '';
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $key . '/callback';
 
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $signingKey = EncryptionKey::current();
 
         if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V' . EncryptionKey::version() . ' in .env file.');
         }
 
         // The callback endpoint is public, so it verifies this signature and

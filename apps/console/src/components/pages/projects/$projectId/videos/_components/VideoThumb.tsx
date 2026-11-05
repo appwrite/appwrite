@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
 import { sdk } from '@/lib/appwrite/sdk'
 import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
 import { cn } from '@/lib/utils'
 import { formatVideoDuration } from '@/lib/utils/video-format'
+import type { Video } from '@/lib/appwrite/videos'
 
 /** Poster from the sprite timeline (`previewId`), or a neutral placeholder. */
 export function VideoThumb({
@@ -15,7 +15,7 @@ export function VideoThumb({
   showDuration = false,
 }: {
   projectId: string
-  video: Pick<Models.Video, '$id' | 'previewId' | 'name' | 'duration'>
+  video: Pick<Video, '$id' | 'previewId' | 'name' | 'duration'>
   width?: number
   className?: string
   showDuration?: boolean

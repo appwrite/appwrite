@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Realtime;
 
-use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use Swoole\Coroutine;
 use Tests\E2E\Client;
@@ -232,7 +231,7 @@ trait RealtimeBase
         $currentRegion = System::getEnv('_APP_REGION', 'default');
         $wrongRegion = $currentRegion === 'default' ? 'fra' : 'default';
 
-        $this->withDatabaseFactory(function (DatabaseFactory $factory) use ($projectId, $wrongRegion): void {
+        $this->withDatabaseFactory(function ($factory) use ($projectId, $wrongRegion): void {
             $factory->platform()->updateDocument('projects', $projectId, new Document([
                 'region' => $wrongRegion,
             ]));
@@ -255,7 +254,7 @@ trait RealtimeBase
             $this->expectException(ConnectionException::class);
             $client->close();
         } finally {
-            $this->withDatabaseFactory(function (DatabaseFactory $factory) use ($projectId, $currentRegion): void {
+            $this->withDatabaseFactory(function ($factory) use ($projectId, $currentRegion): void {
                 $factory->platform()->updateDocument('projects', $projectId, new Document([
                     'region' => $currentRegion,
                 ]));
@@ -313,7 +312,7 @@ trait RealtimeBase
     }
 
     /**
-     * @param callable(DatabaseFactory): void $callback
+     * @param callable(mixed): void $callback receives the server's database factory, untyped as an edition may register its own
      */
     private function withDatabaseFactory(callable $callback): void
     {

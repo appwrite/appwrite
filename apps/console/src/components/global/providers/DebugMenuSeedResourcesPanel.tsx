@@ -103,10 +103,10 @@ const SEED_FILE_KINDS = [
   },
 ] as const
 const MOCK_MODEL_PROVIDERS = [
-  { provider: 'openai', model: 'gpt-4o' },
-  { provider: 'anthropic', model: 'claude-sonnet-4-5' },
-  { provider: 'google', model: 'gemini-2.5-flash' },
-  { provider: 'openrouter', model: 'openai/gpt-4o-mini' },
+  { provider: 'openai', model: 'gpt-6.1-terra' },
+  { provider: 'anthropic', model: 'claude-sonnet-5-5' },
+  { provider: 'google', model: 'gemini-3.7-flash' },
+  { provider: 'openrouter', model: 'openai/gpt-6.1-terra' },
   { provider: 'custom', model: 'mock-model' },
 ] as const
 const RESOURCE_LABELS: Record<

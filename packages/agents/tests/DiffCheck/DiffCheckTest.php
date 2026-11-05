@@ -1,13 +1,16 @@
 <?php
 
-namespace Tests\Utopia\Agents\DiffCheck;
+namespace Utopia\Agents\Tests\DiffCheck;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Agents\Adapter;
 use Utopia\Agents\Agent;
 use Utopia\Agents\DiffCheck\DiffCheck;
 use Utopia\Agents\DiffCheck\Options;
-use Utopia\Agents\Message;
+use Utopia\Agents\FinishReason;
+use Utopia\Agents\Parts\Text;
+use Utopia\Agents\Response;
+use Utopia\Agents\Schema;
+use Utopia\Agents\Tests\Fakes\Model;
 
 class DiffCheckTest extends TestCase
 {
@@ -38,7 +41,7 @@ class DiffCheckTest extends TestCase
             'README.md' => "Hello\n",
         ]);
 
-        $adapter = new FakeAdapter('should-not-be-called');
+        $adapter = $this->model('should-not-be-called');
         $result = (new DiffCheck())->run(
             runner: $adapter,
             base: $base,
@@ -49,7 +52,7 @@ class DiffCheckTest extends TestCase
 
         $this->assertFalse($result['hasChanges']);
         $this->assertSame('', $result['response']);
-        $this->assertSame(0, $adapter->sendCalls);
+        $this->assertSame(0, \count($adapter->requests));
     }
 
     public function testRunReturnsResponseWhenDiffExists(): void
@@ -61,7 +64,7 @@ class DiffCheckTest extends TestCase
             'README.md' => "Hello world\n",
         ]);
 
-        $adapter = new FakeAdapter('{"version":"1.2.3"}');
+        $adapter = $this->model('{"version":"1.2.3"}');
         $result = (new DiffCheck())->run(
             runner: $adapter,
             base: $base,
@@ -72,9 +75,8 @@ class DiffCheckTest extends TestCase
 
         $this->assertTrue($result['hasChanges']);
         $this->assertSame('{"version":"1.2.3"}', $result['response']);
-        $this->assertSame(1, $adapter->sendCalls);
-        $this->assertNotNull($adapter->lastUserPrompt);
-        $this->assertStringContainsString('Hello world', $adapter->lastUserPrompt ?? '');
+        $this->assertSame(1, \count($adapter->requests));
+        $this->assertStringContainsString('Hello world', $adapter->requests[0]->messages[0]->text());
     }
 
     public function testRunSupportsAgentRunner(): void
@@ -86,11 +88,9 @@ class DiffCheckTest extends TestCase
             'a.txt' => "two\n",
         ]);
 
-        $adapter = new FakeAdapter('agent-runner-ok');
+        $adapter = $this->model('agent-runner-ok');
         $agent = new Agent($adapter);
-        $agent->setInstructions([
-            'description' => 'Return the raw result',
-        ]);
+        $agent->setInstructions('Return the raw result');
 
         $result = (new DiffCheck())->run(
             runner: $agent,
@@ -102,7 +102,8 @@ class DiffCheckTest extends TestCase
 
         $this->assertTrue($result['hasChanges']);
         $this->assertSame('agent-runner-ok', $result['response']);
-        $this->assertSame(1, $adapter->sendCalls);
+        $this->assertSame(1, \count($adapter->requests));
+        $this->assertSame('Return the raw result', $adapter->requests[0]->system());
     }
 
     public function testRunTruncatesDiffByLineCount(): void
@@ -121,7 +122,7 @@ class DiffCheckTest extends TestCase
             'long.txt' => implode("\n", $targetLines)."\n",
         ]);
 
-        $adapter = new FakeAdapter('ok');
+        $adapter = $this->model('ok');
         $options = (new Options())
             ->setMaxDiffLines(8);
 
@@ -135,8 +136,7 @@ class DiffCheckTest extends TestCase
 
         $this->assertTrue($result['hasChanges']);
         $this->assertSame('ok', $result['response']);
-        $this->assertNotNull($adapter->lastUserPrompt);
-        $this->assertStringContainsString('[Diff truncated to 8 lines.]', $adapter->lastUserPrompt ?? '');
+        $this->assertStringContainsString('[Diff truncated to 8 lines.]', $adapter->requests[0]->messages[0]->text());
     }
 
     public function testRunCanExcludePathsFromDiff(): void
@@ -150,7 +150,7 @@ class DiffCheckTest extends TestCase
             'src/main.txt' => "same\n",
         ]);
 
-        $adapter = new FakeAdapter('should-not-run');
+        $adapter = $this->model('should-not-run');
         $options = (new Options())
             ->setExcludePaths(['.github']);
 
@@ -164,7 +164,39 @@ class DiffCheckTest extends TestCase
 
         $this->assertFalse($result['hasChanges']);
         $this->assertSame('', $result['response']);
-        $this->assertSame(0, $adapter->sendCalls);
+        $this->assertSame(0, \count($adapter->requests));
+    }
+
+    public function testRunDecodesStructuredOutput(): void
+    {
+        $base = $this->createFixtureDirectory('base-schema', [
+            'composer.json' => "{\"version\": \"1.0.0\"}\n",
+        ]);
+        $target = $this->createFixtureDirectory('target-schema', [
+            'composer.json' => "{\"version\": \"1.1.0\"}\n",
+        ]);
+
+        $adapter = $this->model('{"bump":"minor"}');
+        $options = (new Options())
+            ->setInstructions('Classify the version bump')
+            ->setSchema(Schema::object(['bump' => Schema::enum(['major', 'minor', 'patch'])]));
+
+        $result = (new DiffCheck())->run(
+            runner: $adapter,
+            base: $base,
+            target: $target,
+            prompt: 'Analyze {{diff}}',
+            options: $options
+        );
+
+        $this->assertSame(['bump' => 'minor'], $result['output']);
+        $this->assertNotNull($adapter->requests[0]->schema);
+        $this->assertSame('Classify the version bump', $adapter->requests[0]->system());
+    }
+
+    private function model(string $text): Model
+    {
+        return new Model([new Response([new Text($text)], FinishReason::Stop)]);
     }
 
     /**
@@ -214,91 +246,5 @@ class DiffCheckTest extends TestCase
         }
 
         @rmdir($path);
-    }
-}
-
-class FakeAdapter extends Adapter
-{
-    public int $sendCalls = 0;
-
-    public ?string $lastUserPrompt = null;
-
-    private string $response;
-
-    public function __construct(string $response)
-    {
-        $this->response = $response;
-    }
-
-    public function getName(): string
-    {
-        return 'fake';
-    }
-
-    /**
-     * @param  array<Message>  $messages
-     */
-    public function send(array $messages, ?callable $listener = null): Message
-    {
-        $this->sendCalls++;
-        $last = end($messages);
-        if ($last instanceof Message) {
-            $this->lastUserPrompt = $last->getContent();
-        }
-
-        return new Message($this->response);
-    }
-
-    public function getModels(): array
-    {
-        return ['fake-model'];
-    }
-
-    public function getModel(): string
-    {
-        return 'fake-model';
-    }
-
-    public function setModel(string $model): self
-    {
-        return $this;
-    }
-
-    public function isSchemaSupported(): bool
-    {
-        return true;
-    }
-
-    public function getSupportForEmbeddings(): bool
-    {
-        return false;
-    }
-
-    public function embed(string $text): array
-    {
-        throw new \Exception('Embeddings not supported by fake adapter');
-    }
-
-    /**
-     * @param  array<int, string>  $texts
-     * @return array{
-     *     embeddings: array<int, array<int, float>>,
-     *     tokensProcessed: int|null,
-     *     totalDuration: int|null
-     * }
-     */
-    public function bulkEmbed(array $texts): array
-    {
-        throw new \Exception('Embeddings not supported by fake adapter');
-    }
-
-    public function getEmbeddingDimension(): int
-    {
-        return 0;
-    }
-
-    protected function formatErrorMessage($json): string
-    {
-        return 'fake error';
     }
 }

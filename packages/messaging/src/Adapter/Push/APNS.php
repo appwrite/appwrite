@@ -135,6 +135,12 @@ class APNS extends PushAdapter
         if (!\is_null($priority)) {
             $headers[] = 'apns-priority: ' . $priority;
         }
+        // A later push with the same tag replaces the earlier one on the device. APNs refuses a
+        // collapse ID over 64 bytes, so a longer tag is left out rather than failing the push.
+        $tag = $message->getTag();
+        if ($tag !== null && \strlen($tag) <= 64) {
+            $headers[] = 'apns-collapse-id: ' . $tag;
+        }
 
         $response = new Response($this->getType());
 
@@ -153,7 +159,8 @@ class APNS extends PushAdapter
                     return;
                 }
 
-                $error = ($result['response']['reason'] ?? null) === 'ExpiredToken' || ($result['response']['reason'] ?? null) === 'BadDeviceToken'
+                // Unregistered: the app was removed from the device, or the token is no longer valid for it.
+                $error = \in_array($result['response']['reason'] ?? null, ['ExpiredToken', 'BadDeviceToken', 'Unregistered'], true)
                     ? $this->getExpiredErrorMessage()
                     : ($result['response']['reason'] ?? ($result['error'] ?: 'Unknown error'));
 
