@@ -1025,11 +1025,11 @@ class Install extends Action
             $account = [];
         }
 
-        try {
-            $cpus = System::getCPUCores() ?: null;
-        } catch (\Throwable) {
-            $cpus = null;
-        }
+        // nproc counts the processing units this process may use, which a container can
+        // limit. The report is best effort: a host without nproc reports no count.
+        $stdout = '';
+        $stderr = '';
+        $cpus = @Console::execute(new Command('nproc'), '', $stdout, $stderr) === 0 ? ((int) \trim($stdout) ?: null) : null;
         try {
             $ram = System::getMemoryTotal() ?: null;
         } catch (\Throwable) {
