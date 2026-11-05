@@ -90,6 +90,9 @@ export const jaSitesDictionary: Record<string, string> = {
   'Certificate generation failed': '証明書の発行に失敗しました',
   'Certificate expired': '証明書の期限切れ',
   'Renewal failed': '証明書の更新に失敗しました',
+  'Certificate blocked': '証明書の発行が保留中',
+  'The certificate is waiting on a DNS record. Add the record shown in View logs, then Retry.':
+    '証明書は DNS レコードを待っています。ログに表示されたレコードを追加してから、再試行してください。',
   'Renewal blocked': '証明書の更新が保留中',
   'Certificate renewal started': '証明書の更新を開始しました',
   'Certificate expires on {date}.': '証明書の有効期限は{date}です。',

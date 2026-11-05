@@ -85,8 +85,9 @@ interface VerifyDomainContentProps {
    * - 'api' → use `_APP_DOMAIN_TARGET_CNAME` from console variables (project endpoint host).
    * - 'function' / 'site' → when the active profile has `edgeNetwork` enabled,
    *   use the edge network CNAME (`appwrite.network`) instead of the project
-   *   endpoint host. When edge network is off (self-hosted), use
-   *   `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES`.
+   *   endpoint host. When edge network is off (self-hosted), functions use
+   *   `_APP_DOMAIN_TARGET_CNAME` like API domains and sites use `_APP_DOMAIN_SITES`,
+   *   matching the targets the server verifies against.
    * Defaults to 'api' for backward compatibility.
    */
   resourceType?: 'api' | 'function' | 'site'
@@ -267,7 +268,6 @@ export function VerifyDomainContent({
     aaaa,
     caa,
     nameservers,
-    functionsDomain,
     sitesDomain,
     isLoading,
     error,
@@ -283,24 +283,19 @@ export function VerifyDomainContent({
   // (`appwrite.network`) - not the project endpoint host returned by
   // `_APP_DOMAIN_TARGET_CNAME` (which only applies to custom API domains).
   // For region-pinned routing users can use `<region>.appwrite.run`.
-  // Self-hosted uses `_APP_DOMAIN_FUNCTIONS` / `_APP_DOMAIN_SITES` instead.
+  // Self-hosted verifies function domains against `_APP_DOMAIN_TARGET_CNAME`
+  // (same as API domains) and site domains against `_APP_DOMAIN_SITES`.
   const cname = useMemo(() => {
     if (resourceType === 'function' || resourceType === 'site') {
       if (edgeNetworkEnabled) {
         return 'appwrite.network'
       }
-      const serviceDomain =
-        resourceType === 'function' ? functionsDomain : sitesDomain
-      return serviceDomain || rawCname
+      if (resourceType === 'site') {
+        return sitesDomain || rawCname
+      }
     }
     return rawCname
-  }, [
-    edgeNetworkEnabled,
-    resourceType,
-    rawCname,
-    functionsDomain,
-    sitesDomain,
-  ])
+  }, [edgeNetworkEnabled, resourceType, rawCname, sitesDomain])
 
   const hasCname = !!cname
   const hasNameservers = isCloud && nameservers.length > 0
