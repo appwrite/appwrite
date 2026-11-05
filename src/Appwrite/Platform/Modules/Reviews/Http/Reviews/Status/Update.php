@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Reviews\Http\Reviews\Status;
 
 use Appwrite\Abuse\Limit;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Reviews\Base;
 use Appwrite\Utopia\Request;
@@ -66,6 +67,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('authorization')
+            ->inject('publisherForUsage')
             ->callback($this->action(...));
     }
 
@@ -88,6 +90,7 @@ class Update extends Base
         Database $dbForPlatform,
         callable $getProjectDB,
         Authorization $authorization,
+        UsagePublisher $publisherForUsage,
     ): void {
         $this->authenticate($request);
 
@@ -124,6 +127,17 @@ class Update extends Base
 
             $dbForProject->updateDocument('reviews', $review->getId(), $update);
         }));
+
+        // Completed reviews are what a project is billed for; skipped ones are not counted. The model
+        // tokens any review spent are metered separately, as the service reports them.
+        $metric = match ($status) {
+            'completed' => METRIC_REVIEWS,
+            'failed' => METRIC_REVIEWS_FAILED,
+            default => null,
+        };
+        if ($metric !== null) {
+            $this->publishUsage($project, $this->getRepositoryUsage($review)->addMetric($metric, 1), $publisherForUsage);
+        }
 
         $response->noContent();
     }

@@ -15,6 +15,7 @@ use Utopia\Bus\Bus;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Id;
@@ -471,6 +472,7 @@ class Create extends Action
                     $project,
                     $repository,
                     $getProjectDB($project),
+                    $dbForPlatform,
                     $authorization,
                     $publisherForReviews,
                     $platform,
@@ -541,6 +543,7 @@ class Create extends Action
                         $project,
                         $repository,
                         $dbForProject,
+                        $dbForPlatform,
                         $authorization,
                         $publisherForReviews,
                         $platform,
@@ -555,6 +558,15 @@ class Create extends Action
 
                 $unmentioned = $intent === null;
                 if ($unmentioned && !($isReviewThread ? $replyToId > 0 : $this->hasOpenBodyFindings($repository, $pullNumber, $dbForProject, $authorization))) {
+                    continue;
+                }
+
+                // An answer is a model run too, so it is refused like a review. Nothing is recorded:
+                // a chat has no status for the project to see.
+                try {
+                    $this->beforeQueueReview($project, $repository, $dbForPlatform, $authorization);
+                } catch (Exception $error) {
+                    Console::warning("Skipped comment for repository '{$repository->getId()}': " . $error->getMessage());
                     continue;
                 }
 
@@ -620,6 +632,7 @@ class Create extends Action
         Document $project,
         Document $repository,
         Database $dbForProject,
+        Database $dbForPlatform,
         Authorization $authorization,
         ReviewPublisher $publisherForReviews,
         array $platform,
@@ -683,6 +696,19 @@ class Create extends Action
             }
         }
 
+        // A refused review ends here as failed, with the reason the project's users see.
+        try {
+            $this->beforeQueueReview($project, $repository, $dbForPlatform, $authorization);
+        } catch (Exception $error) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), new Document([
+                'status' => 'failed',
+                'reason' => $error->getMessage(),
+                'completedAt' => DateTime::now(),
+            ])));
+
+            return;
+        }
+
         try {
             $queued = $publisherForReviews->enqueue(new ReviewMessage(
                 reviewId: $review->getId(),
@@ -703,6 +729,16 @@ class Create extends Action
 
             throw $error;
         }
+    }
+
+    /**
+     * Whether the project may run a review or answer a comment, checked before either is queued.
+     * Self-hosted has no plans, so everything runs; Cloud refuses with its billing limits.
+     *
+     * @throws Exception when the project may not, with the reason shown to its users
+     */
+    protected function beforeQueueReview(Document $project, Document $repository, Database $dbForPlatform, Authorization $authorization): void
+    {
     }
 
     /**

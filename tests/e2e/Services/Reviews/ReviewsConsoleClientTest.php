@@ -210,6 +210,28 @@ final class ReviewsConsoleClientTest extends Scope
         $this->assertSame('src/index.ts', $review['body']['findings'][0]['path']);
         $this->assertSame(12, $review['body']['findings'][0]['startLine']);
 
+        // The completed review and its tokens are metered for the project, on its repository
+        $usageHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getNewKey(['usage.read']),
+        ];
+        $this->assertEventually(function () use ($usageHeaders, $repositoryId) {
+            $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                'metrics' => ['reviews', 'reviews.tokens.input', 'reviews.tokens.output', 'reviews.tokens.claude.input'],
+                'queries' => [Query::equal('resourceId', [$repositoryId])->toString()],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $totals = [];
+            foreach ($response['body']['metrics'] as $series) {
+                $totals[$series['metric']] = \array_sum(\array_column($series['points'], 'value'));
+            }
+            $this->assertEquals(1, $totals['reviews']);
+            $this->assertEquals(1200, $totals['reviews.tokens.input']);
+            $this->assertEquals(300, $totals['reviews.tokens.output']);
+            $this->assertEquals(1200, $totals['reviews.tokens.claude.input']);
+        }, 60_000, 500);
+
         // The service reads the findings back, settles one and regrades the review
         $findings = $this->callService(Client::METHOD_GET, '/reviews/repositories/' . $repositoryId . '/pulls/' . $pullRequest . '/findings', [
             'projectId' => $projectId,
