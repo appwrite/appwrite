@@ -275,6 +275,39 @@ final class ReconcileTest extends TestCase
         $this->assertSame('the row payload', $seen->data);
     }
 
+    public function testNullEntriesNeverDispatchAndRemovePreviouslyLoadedSchedules(): void
+    {
+        $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30'));
+        $rows = new RowSet([new Row('healthy', 'v1'), new Row('removed', 'v1'), new Row('orphan', 'v1')]);
+        $errors = [];
+        $scheduler = new Scheduler(
+            source: new IncrementalSource(
+                snapshot: $rows->list(...),
+                make: fn (Row $row): ?Entry => $row->id === 'orphan' || $row->version === 'v2'
+                    ? null
+                    : new Entry(new Interval(60)),
+                since: fn (\DateTimeImmutable $moment): array => $rows->list(),
+            ),
+            clock: $clock,
+            onError: function (\Throwable $error) use (&$errors): void {
+                $errors[] = $error;
+            },
+        );
+
+        $scheduler->reconcile();
+        $scheduler->tick();
+        $scheduler->commit();
+        $clock->advance(60);
+        $this->assertSame(['healthy', 'removed'], array_column($scheduler->tick(), 'id'));
+        $scheduler->commit();
+
+        $rows->rows = [new Row('removed', 'v2')];
+        $scheduler->reconcile(); // incremental: the healthy entry must remain
+        $clock->advance(60);
+        $this->assertSame(['healthy'], array_column($scheduler->tick(), 'id'));
+        $this->assertSame([], $errors);
+    }
+
     public function testARowThatFailsToMakeIsSkippedAndReported(): void
     {
         $clock = new TestClock(new \DateTimeImmutable('2026-08-18 03:00:30.000000'));

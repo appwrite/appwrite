@@ -16,7 +16,7 @@ final class IncrementalSource extends SnapshotSource implements Changes
 {
     /**
      * @param \Closure(): iterable<Row> $snapshot
-     * @param \Closure(Row): Entry $make
+     * @param \Closure(Row): ?Entry $make
      * @param \Closure(\DateTimeImmutable): iterable<Row> $since
      */
     public function __construct(
