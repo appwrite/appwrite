@@ -1,3 +1,6 @@
+import type { CodeBlockLanguage } from '@/components/global/shared/CodeBlock'
+import type { Translator } from '@/lib/i18n/translate'
+
 /**
  * Appwrite remote MCP server configuration and one-click install links.
  * Self-hosted uses a local stdio server (`uvx`) with a project API key.
@@ -23,15 +26,14 @@ export const MCP_EDITOR_CONFIG_SNIPPET = {
 } as const
 
 /**
- * Claude Desktop (and similar stdio-only clients) need `mcp-remote` to reach
- * the hosted HTTP MCP endpoint.
+ * Optional local stdio bridge for Claude Desktop when custom connectors are unavailable.
  * @see https://appwrite.io/docs/tooling/ai/vibe-coding/claude-desktop
  */
-export const MCP_CLAUDE_DESKTOP_CONFIG_SNIPPET = {
+export const MCP_CLAUDE_DESKTOP_BRIDGE_CONFIG_SNIPPET = {
   mcpServers: {
     [MCP_SERVER_NAME]: {
       command: 'npx',
-      args: ['mcp-remote', MCP_SERVER_URL],
+      args: ['-y', 'mcp-remote@0.16.0', MCP_SERVER_URL],
     },
   },
 } as const
@@ -164,4 +166,143 @@ export function openMcpInstallUrl(url: string): void {
     return
   }
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+export type McpToolId =
+  | 'claude-code'
+  | 'chatgpt'
+  | 'codex'
+  | 'cursor'
+  | 'claude-desktop'
+  | 'vscode'
+  | 'opencode'
+
+type McpToolConfig = {
+  id: McpToolId
+  name: string
+  iconPath: string
+  language: CodeBlockLanguage
+  code: string
+  installUrl?: string
+  instructions?: string
+  fallbackCode?: string
+}
+
+function jsonSnippet(value: unknown): string {
+  return JSON.stringify(value, null, 2)
+}
+
+export function getCloudMcpTools(t: Translator): McpToolConfig[] {
+  return [
+    {
+      id: 'claude-code',
+      name: 'Claude Code',
+      iconPath: '/icons/claude.svg',
+      language: 'bash',
+      code: getMcpClaudeCodeInstallCommand(
+        t('select "appwrite", then "Authenticate"'),
+      ),
+    },
+    {
+      id: 'chatgpt',
+      name: 'ChatGPT',
+      iconPath: '/icons/chatgpt.svg',
+      language: 'bash',
+      code: MCP_SERVER_URL,
+    },
+    {
+      id: 'codex',
+      name: 'Codex',
+      iconPath: '/icons/codex.svg',
+      language: 'bash',
+      code: MCP_CODEX_INSTALL_COMMAND,
+    },
+    {
+      id: 'cursor',
+      name: 'Cursor',
+      iconPath: '/icons/cursor-ai.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
+      installUrl: getCursorMcpInstallUrl(),
+    },
+    {
+      id: 'claude-desktop',
+      name: 'Claude Desktop',
+      iconPath: '/icons/claude.svg',
+      language: 'plaintext',
+      code: MCP_SERVER_URL,
+      instructions: t(
+        'In Claude Desktop, open Customize > Connectors, add a custom connector with this URL, and sign in to Appwrite.',
+      ),
+      fallbackCode: jsonSnippet(MCP_CLAUDE_DESKTOP_BRIDGE_CONFIG_SNIPPET),
+    },
+    {
+      id: 'vscode',
+      name: 'VS Code',
+      iconPath: '/icons/vscode.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_EDITOR_CONFIG_SNIPPET),
+      installUrl: getVscodeMcpInstallUrl(),
+    },
+    {
+      id: 'opencode',
+      name: 'OpenCode',
+      iconPath: '/icons/opencode.svg',
+      language: 'json',
+      code: jsonSnippet(MCP_OPENCODE_CONFIG_SNIPPET),
+    },
+  ]
+}
+
+export function getSelfHostedMcpTools(
+  projectId: string,
+  endpoint: string,
+): McpToolConfig[] {
+  const editorConfig = jsonSnippet(
+    getSelfHostedMcpEditorConfig(projectId, endpoint),
+  )
+  return [
+    {
+      id: 'claude-code',
+      name: 'Claude Code',
+      iconPath: '/icons/claude.svg',
+      language: 'bash',
+      code: getSelfHostedClaudeCodeInstallCommand(projectId, endpoint),
+    },
+    {
+      id: 'codex',
+      name: 'Codex',
+      iconPath: '/icons/codex.svg',
+      language: 'toml',
+      code: getSelfHostedCodexConfig(projectId, endpoint),
+    },
+    {
+      id: 'cursor',
+      name: 'Cursor',
+      iconPath: '/icons/cursor-ai.svg',
+      language: 'json',
+      code: editorConfig,
+    },
+    {
+      id: 'claude-desktop',
+      name: 'Claude Desktop',
+      iconPath: '/icons/claude.svg',
+      language: 'json',
+      code: editorConfig,
+    },
+    {
+      id: 'vscode',
+      name: 'VS Code',
+      iconPath: '/icons/vscode.svg',
+      language: 'json',
+      code: editorConfig,
+    },
+    {
+      id: 'opencode',
+      name: 'OpenCode',
+      iconPath: '/icons/opencode.svg',
+      language: 'json',
+      code: jsonSnippet(getSelfHostedOpencodeConfig(projectId, endpoint)),
+    },
+  ]
 }
