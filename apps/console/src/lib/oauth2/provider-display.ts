@@ -44,6 +44,7 @@ const ICON_FILENAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.Huggingface]: 'hugging-face.svg',
   [OAuthProvider.PaypalSandbox]: 'paypal.svg',
   [OAuthProvider.TradeshiftBox]: 'tradeshift.svg',
+  [OAuthProvider.VippsSandbox]: 'vipps.svg',
 }
 
 /** Map provider id to the matching `/public/icons/*.svg` asset. */
