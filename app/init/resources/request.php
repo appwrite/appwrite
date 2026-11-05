@@ -721,6 +721,62 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
+    $context->set('client', function (string $mode, Project $project, Project $console, Request $request, Database $dbForProject, Database $dbForPlatform, Token $proofForToken, $authorization): ?Document {
+        /**
+         * Resolves the account-switching client from the request, or null when there is none.
+         *
+         * Mirrors the session cookie flow: the client secret arrives in the a_client_<projectId>
+         * cookie (or its _legacy twin), the x-appwrite-client header for SSR clients, or the
+         * x-fallback-cookies header for clients that block third-party cookies. The client
+         * document is looked up by id and gated by verifying the secret, like a session.
+         */
+        $authorization->setStatus(true);
+
+        $key = $mode === APP_MODE_ADMIN ? $console->getClientKey() : $project->getClientKey();
+
+        $store = new Store();
+        $store->setKey($key);
+
+        $store->decode(
+            $request->getCookie($key, $request->getCookie($key . '_legacy', ''))
+        );
+
+        if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+            $clientHeader = $request->getHeaderLine('x-appwrite-client', '');
+            if (! empty($clientHeader)) {
+                $store->decode($clientHeader);
+            }
+        }
+
+        if (empty($store->getProperty('id', '')) && empty($store->getProperty('secret', ''))) {
+            $fallback = \json_decode($request->getHeaderLine('x-fallback-cookies', ''), true);
+            $store->decode((\is_array($fallback) && isset($fallback[$key])) ? $fallback[$key] : '');
+        }
+
+        $clientId = $store->getProperty('id', '');
+        $clientSecret = $store->getProperty('secret', '');
+
+        if (empty($clientId) || empty($clientSecret)) {
+            return null;
+        }
+
+        $db = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
+
+        $client = $authorization->skip(fn () => $db->getDocument('clients', $clientId));
+
+        if (
+            $client->isEmpty()
+            || ! $client->isSet('secret')
+            || ! $client->isSet('expire')
+            || ! $proofForToken->verify($clientSecret, $client->getAttribute('secret'))
+            || DatabaseDateTime::formatTz(DatabaseDateTime::format(new \DateTime($client->getAttribute('expire')))) < DatabaseDateTime::formatTz(DatabaseDateTime::now())
+        ) {
+            return null;
+        }
+
+        return $client;
+    }, ['mode', 'project', 'console', 'request', 'dbForProject', 'dbForPlatform', 'proofForToken', 'authorization']);
+
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service
         $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));

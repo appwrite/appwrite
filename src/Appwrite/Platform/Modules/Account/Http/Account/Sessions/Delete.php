@@ -114,6 +114,21 @@ class Delete extends Action
 
             $dbForProject->deleteDocument('sessions', $session->getId());
 
+            // If the session was the active one on an account switching client, the client is
+            // left with no active session. The caller picks one again with updateClientSession.
+            $clientId = $session->getAttribute('clientId', '');
+            if (!empty($clientId)) {
+                $dbForProject->getAuthorization()->skip(function () use ($dbForProject, $clientId, $session) {
+                    $client = $dbForProject->getDocument('clients', $clientId);
+                    if (!$client->isEmpty() && $client->getAttribute('activeSessionId') === $session->getId()) {
+                        $dbForProject->updateDocument('clients', $clientId, new Document([
+                            'activeSessionId' => '',
+                            'activeSessionInternalId' => '',
+                        ]));
+                    }
+                });
+            }
+
             unset($sessions[$key]);
 
             $session->setAttribute('current', $session->getId() === $current?->getId());

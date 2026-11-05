@@ -193,6 +193,10 @@ class XList extends Action
                 'rpId' => $auths['passkeyRpId'] ?? '',
                 'origins' => Ceremony::getOrigins($project),
             ]),
+            new Document([
+                '$id' => 'account-switching',
+                'enabled' => $auths['accountSwitching'] ?? true,
+            ]),
         ];
     }
 }

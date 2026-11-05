@@ -864,10 +864,18 @@ Http::init()
     ->groups(['session'])
     ->inject('route')
     ->inject('user')
-    ->action(function (Route $route, User $user) {
+    ->inject('client')
+    ->action(function (Route $route, User $user, ?Document $client) {
         // Sign-ins that link to or upgrade the current account accept a caller
         // who is already logged in (e.g. converting an anonymous account)
         if ($route->getLabel('session.allowActive', false)) {
+            return;
+        }
+
+        // An account switching client may hold several accounts at once: creating another
+        // session adds it to the client instead of being refused, and the shutdown hook
+        // below makes the new session the active one.
+        if ($client !== null) {
             return;
         }
 
@@ -925,6 +933,50 @@ Http::shutdown()
         } catch (\Throwable $error) {
             Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
         }
+    });
+
+/**
+ * Attach a newly created session to the account switching client
+ *
+ * When a session is created while a client cookie is present, the session joins the
+ * client and becomes its active session. The create action has already written the
+ * session cookie, so the client simply records which session is now active.
+ */
+Http::shutdown()
+    ->groups(['session'])
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('client')
+    ->inject('authorization')
+    ->action(function (Response $response, Database $dbForProject, ?Document $client, Authorization $authorization) {
+        if ($client === null) {
+            return;
+        }
+
+        $payload = $response->getPayload();
+        $sessionId = $payload['$id'] ?? '';
+        $userId = $payload['userId'] ?? '';
+        if (empty($sessionId) || empty($userId)) {
+            return;
+        }
+
+        $session = $authorization->skip(fn () => $dbForProject->getDocument('sessions', $sessionId));
+        if ($session->isEmpty()) {
+            return;
+        }
+
+        $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $session->getId(), new Document([
+            'clientId' => $client->getId(),
+            'clientInternalId' => $client->getSequence(),
+        ])));
+
+        $authorization->skip(fn () => $dbForProject->updateDocument('clients', $client->getId(), new Document([
+            'activeSessionId' => $session->getId(),
+            'activeSessionInternalId' => $session->getSequence(),
+        ])));
+
+        $dbForProject->purgeCachedDocument('users', $userId);
+        $dbForProject->purgeCachedDocument('clients', $client->getId());
     });
 
 Http::shutdown()

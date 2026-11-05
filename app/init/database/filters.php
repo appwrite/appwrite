@@ -200,6 +200,19 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'subQueryClientSessions',
+    function (mixed $value) {
+        return;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return  $database->getAuthorization()->skip(fn () => $database->find('sessions', [
+            Query::equal('clientInternalId', [$document->getSequence()]),
+            Query::limit(APP_LIMIT_SUBQUERY),
+        ]));
+    }
+);
+
+Database::addFilter(
     'subQueryTokens',
     function (mixed $value) {
         return;

@@ -15,6 +15,16 @@ class Project extends Document
     }
 
     /**
+     * Get the name of the cookie, and of the X-Fallback-Cookies entry, that carries the
+     * account-switching client of the project. The client is the container that holds the
+     * project's sessions on one device and tracks which of them is active.
+     */
+    public function getClientKey(): string
+    {
+        return 'a_client_' . $this->getId();
+    }
+
+    /**
      * Get the custom URL scheme a native app of the project is sent back to after an OAuth2 sign-in.
      */
     public function getCallbackScheme(): string

@@ -463,6 +463,31 @@ class V25 extends Migration
                         Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
                     }
 
+                    // Added in 2.8.0 for account switching: the client a session belongs to.
+                    $clientAttributes = ['clientInternalId', 'clientId'];
+                    try {
+                        $this->createAttributesFromCollection($this->dbForProject, $id, $clientAttributes);
+                    } catch (Throwable $th) {
+                        Console::warning('Failed to create attributes "' . \implode(', ', $clientAttributes) . "\" in collection {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->dbForProject, $id, '_key_client');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create index \"_key_client\" from {$id}: {$th->getMessage()}");
+                    }
+
+                    $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'clients':
+                    // Added in 2.8.0 for account switching.
+                    try {
+                        $this->createCollection('clients');
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to create collection \"clients\": {$th->getMessage()}");
+                    }
+
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
