@@ -2997,7 +2997,8 @@ trait MessagingBase
             'phone' => '+1' . \random_int(2000000000, 9999999999),
         ]);
 
-        $scheduledAt = DateTime::addSeconds(new \DateTime(), 5);
+        // Far enough ahead to draft it first, close enough to wait past it
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 20);
 
         $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
             'content-type' => 'application/json',
@@ -3020,6 +3021,7 @@ trait MessagingBase
             'draft' => true,
         ]);
 
+        $this->assertEquals(200, $draft['headers']['status-code']);
         $this->assertEquals(MessageStatus::DRAFT, $draft['body']['status']);
 
         // Still a draft once the original schedule time has passed
@@ -3033,7 +3035,7 @@ trait MessagingBase
             ]);
 
             $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
-        }, 30000, 1000);
+        }, 60000, 1000);
     }
 
     public function testDraftToScheduledMessage(): void
