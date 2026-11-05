@@ -39,23 +39,56 @@ final class ConnectionTest extends TestCase
         $this->assertTrue(Connection::fromUsage($usage)->isReady());
     }
 
-    public function testHealthCheckProbesThroughAnEmptyTenantInsteadOfScanningAllTenants(): void
+    public function testHealthCheckProbesEveryTableWithoutReadingAcrossTenants(): void
     {
-        $usage = new RecordingUsage();
+        $usage = new class (new ClickHouse('clickhouse')) extends Usage {
+            /** @var list<string> */
+            public array $probes = [];
+
+            public function healthCheck(): array
+            {
+                return ['healthy' => true];
+            }
+
+            public function find(string $tenant, array $queries = [], ?string $type = null): array
+            {
+                $this->probes[] = (string) $type;
+
+                return [];
+            }
+
+            public function findAcrossTenants(array $queries = [], ?string $type = null): array
+            {
+                throw new \LogicException('A cross-tenant probe scans purged rows');
+            }
+
+            public function findDaily(string $tenant, array $queries = []): array
+            {
+                $this->probes[] = 'daily';
+
+                return [];
+            }
+        };
 
         $health = Connection::fromUsage($usage)->healthCheck();
 
         $this->assertTrue($health['schemaReady']);
-        $this->assertSame([
-            ['tenant' => '__health__', 'type' => Usage::TYPE_EVENT],
-            ['tenant' => '__health__', 'type' => Usage::TYPE_GAUGE],
-            ['tenant' => '__health__', 'type' => 'daily'],
-        ], $usage->reads, 'A tenant-less read starts at the head of the table and steps over every purged row, so every readiness probe must stay scoped to one tenant');
+        $this->assertEqualsCanonicalizing([Usage::TYPE_EVENT, Usage::TYPE_GAUGE, 'daily'], $usage->probes);
     }
 
     public function testHealthCheckReportsTheSchemaAsNotReadyWhenAProbeFails(): void
     {
-        $usage = new RecordingUsage(new \RuntimeException('Unknown identifier: service'));
+        $usage = new class (new ClickHouse('clickhouse')) extends Usage {
+            public function healthCheck(): array
+            {
+                return ['healthy' => true];
+            }
+
+            public function find(string $tenant, array $queries = [], ?string $type = null): array
+            {
+                throw new \RuntimeException('Unknown identifier: service');
+            }
+        };
 
         $health = Connection::fromUsage($usage)->healthCheck();
 

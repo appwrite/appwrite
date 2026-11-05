@@ -20,10 +20,6 @@ class Connection
 {
     private const int READY_TTL_SECONDS = 15;
 
-    /**
-     * Tenant the schema probes run against. It owns no rows, so every probe
-     * is answered from the primary index instead of reading table data.
-     */
     private const string HEALTH_TENANT = '__health__';
 
     private ?Usage $usage = null;
@@ -113,10 +109,7 @@ class Connection
         }
 
         try {
-            // Probe through a tenant-scoped read. A tenant-less read starts at
-            // the head of the (tenant, metric, time, id) primary key and has to
-            // step over every lightweight-deleted row left by purged projects
-            // before it finds a live one, so its cost grows with the table.
+            // A tenant with no rows lets ClickHouse skip purged rows through the primary key.
             $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_EVENT);
             $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_GAUGE);
             $usage->findDaily(self::HEALTH_TENANT, [Query::limit(1)]);
@@ -138,11 +131,8 @@ class Connection
             return true;
         }
 
-        if (
-            $this->ready
-            && (microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS
-        ) {
-            return true;
+        if ((microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS) {
+            return $this->ready;
         }
 
         $this->ready = ($this->healthCheck()['schemaReady'] ?? false) === true;
