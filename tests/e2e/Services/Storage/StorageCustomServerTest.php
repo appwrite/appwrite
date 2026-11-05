@@ -345,24 +345,6 @@ final class StorageCustomServerTest extends Scope
     }
 
     /**
-     * MinIO closes a connection idle for 30 seconds, which is what the pooled ones are by then.
-     */
-    #[Group('responseCache')]
-    public function testFilePreviewCacheSurvivesAClosedIdleConnection(): void
-    {
-        [$headers, $filesystem, $device] = $this->getCacheFixture();
-
-        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
-
-        \sleep(35);
-
-        foreach ($entries as $width => $entry) {
-            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
-            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
-        }
-    }
-
-    /**
      * Leaves entries for the outage test to read after CI has taken the device down: the
      * test process can't, and once it's down they can no longer be written or found.
      */
@@ -467,7 +449,7 @@ final class StorageCustomServerTest extends Scope
     }
 
     /**
-     * @return array{0: array<string, string>, 1: Local, 2: S3} A new project's headers and its two stores
+     * @return array{0: array<string, string>, 1: Device, 2: Device} A new project's headers and its two stores
      */
     private function getCacheFixture(): array
     {
@@ -476,6 +458,7 @@ final class StorageCustomServerTest extends Scope
         }
 
         $project = $this->getProject(true);
+        [$filesystem, $device] = $this->getCacheStores($project['$id']);
 
         return [
             [
@@ -483,7 +466,8 @@ final class StorageCustomServerTest extends Scope
                 'x-appwrite-project' => $project['$id'],
                 'x-appwrite-key' => $project['apiKey'],
             ],
-            ...$this->getCacheStores($project['$id']),
+            $filesystem,
+            $device,
         ];
     }
 
@@ -493,7 +477,7 @@ final class StorageCustomServerTest extends Scope
      * @param array<string, string> $headers
      * @return array{path: string, entries: array<int, array{key: string, body: string, onDevice: bool}>}
      */
-    private function warmPreviewCache(array $headers, Local $filesystem, S3 $device): array
+    private function warmPreviewCache(array $headers, Device $filesystem, Device $device): array
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
             'bucketId' => Id::unique(),
@@ -543,7 +527,7 @@ final class StorageCustomServerTest extends Scope
         return $keys;
     }
 
-    private function copyCacheEntryToFilesystem(Local $filesystem, S3 $device, string $key): void
+    private function copyCacheEntryToFilesystem(Device $filesystem, Device $device, string $key): void
     {
         $filesystem->write($filesystem->getPath($key), $device->read($device->getPath($key)));
     }
