@@ -1140,6 +1140,13 @@
             "queries",
             "total"
         ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -2822,6 +2829,36 @@
         "migrations.retry": [
             "migrationId"
         ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
         "notifications.list": [
             "queries",
             "total"
@@ -3366,6 +3403,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -3542,8 +3584,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -5276,6 +5358,13 @@
             "queries",
             "total"
         ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -6934,6 +7023,36 @@
         "migrations.retry": [
             "migrationId"
         ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
         "organization.createEphemeralProjectKey": [
             "projectId",
             "scopes",
@@ -7436,6 +7555,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -7582,8 +7706,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",

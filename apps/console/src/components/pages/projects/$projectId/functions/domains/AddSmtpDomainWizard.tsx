@@ -16,6 +16,7 @@ import { DomainTypeCard } from './DomainTypeCard'
 import {
   VerifySmtpDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
 } from './VerifySmtpDomainContent'
 import type { DomainVerificationError } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
 import {
@@ -157,8 +158,8 @@ export function AddSmtpDomainWizard() {
         setRule(updated)
         setVerificationError(dnsPendingVerificationError(t))
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 

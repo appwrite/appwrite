@@ -12,6 +12,7 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\System\System;
@@ -19,6 +20,13 @@ use Utopia\Validator\WhiteList;
 
 class Maintenance extends Action
 {
+    /**
+     * How close to expiry a certificate is checked whatever its renew date or
+     * attempts say. LetsEncrypt renews from 30 days before expiry and Fastly from
+     * about ten, so a certificate this close has stopped renewing.
+     */
+    private const CERTIFICATE_RENEWAL_DEADLINE = 60 * 60 * 24 * 7;
+
     public static function getName(): string
     {
         return 'maintenance';
@@ -45,6 +53,7 @@ class Maintenance extends Action
         $interval = (int) System::getEnv('_APP_MAINTENANCE_INTERVAL', '86400'); // 1 day
         $cacheRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
+        $alertsRetention = (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ALERTS', '7776000'); // 90 days
         $jobInitTime = System::getEnv('_APP_MAINTENANCE_START_TIME', '00:00'); // (hour:minutes)
 
         $now = new \DateTime();
@@ -52,7 +61,7 @@ class Maintenance extends Action
         $next = new Grid($jobInitTime, $interval)->next($now);
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
-        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
+        $action = function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $alertsRetention, $dbForPlatform, $console, $publisherForDeletes, $publisherForCertificates, $certificateIssuer) {
             $time = DatabaseDateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
@@ -67,6 +76,7 @@ class Maintenance extends Action
             $this->renewCertificates($dbForPlatform, $publisherForCertificates, $certificateIssuer);
             $this->notifyDeleteCache($cacheRetention, $console, $publisherForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
+            $this->notifyDeleteAlerts($alertsRetention, $publisherForDeletes);
             $this->notifyDeleteCSVExports($publisherForDeletes);
         };
 
@@ -134,6 +144,30 @@ class Maintenance extends Action
             Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
         ]);
 
+        // Out of attempts or without a renew date, a renewal is never scheduled
+        // again and its certificate would expire silently. One about to expire is
+        // checked regardless, so the worker renews it or reports why it cannot.
+        $due = \array_map(fn (Document $certificate) => $certificate->getId(), $documents);
+        try {
+            $expiring = $dbForPlatform->find('certificates', [
+                Query::greaterThan('expireDate', $time),
+                Query::lessThanEqual('expireDate', DatabaseDateTime::addSeconds(new \DateTime(), self::CERTIFICATE_RENEWAL_DEADLINE)),
+                Query::lessThan('$updatedAt', DatabaseDateTime::addSeconds(new \DateTime(), -60 * 60 * 12)), // At most twice a day, however often maintenance runs
+                Query::orderAsc('expireDate'),
+                Query::limit(100),
+            ]);
+        } catch (QueryException $e) {
+            // A schema without expireDate (the migration has not run yet) must not stop the renewals above
+            Console::warning("[{$time}] Skipping certificates about to expire: " . $e->getMessage());
+            $expiring = [];
+        }
+
+        foreach ($expiring as $certificate) {
+            if (!\in_array($certificate->getId(), $due, true)) {
+                $documents[] = $certificate;
+            }
+        }
+
         if (\count($documents) === 0) {
             Console::info("[{$time}] No certificates for renewal.");
             return;
@@ -192,6 +226,14 @@ class Maintenance extends Action
         $publisherForDeletes->enqueue(new DeleteMessage(
             type: DELETE_TYPE_SCHEDULES,
             datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $interval),
+        ));
+    }
+
+    private function notifyDeleteAlerts(int $retention, DeletePublisher $publisherForDeletes): void
+    {
+        $publisherForDeletes->enqueue(new DeleteMessage(
+            type: DELETE_TYPE_ALERTS,
+            datetime: DatabaseDateTime::addSeconds(new \DateTime(), -1 * $retention),
         ));
     }
 }

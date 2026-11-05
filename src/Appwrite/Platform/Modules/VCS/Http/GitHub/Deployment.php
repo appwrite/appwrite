@@ -411,8 +411,11 @@ trait Deployment
                     'repositoryId' => $repositoryId,
                     'repositoryInternalId' => $repositoryInternalId,
                     'providerBranchUrl' => $providerBranchUrl,
-                    'providerRepositoryName' => $providerRepositoryName,
-                    'providerRepositoryOwner' => $providerRepositoryOwner,
+                    // Owner and name are resolved from the installation and the stored repository, not the
+                    // delivery body: on providers with an instance-wide webhook secret a forged push must not
+                    // redirect a tenant's build to a repository the sender controls.
+                    'providerRepositoryName' => $repositoryName,
+                    'providerRepositoryOwner' => $owner,
                     'providerRepositoryUrl' => $providerRepositoryUrl,
                     'providerCommitHash' => $providerCommitHash,
                     'providerCommitAuthorUrl' => $providerCommitAuthorUrl,
@@ -433,8 +436,8 @@ trait Deployment
                             $deployment,
                             $timeout,
                             $vcs,
-                            $providerRepositoryOwner,
-                            $providerRepositoryName,
+                            $owner,
+                            $repositoryName,
                             $providerCommitHash,
                             $resource->getAttribute('providerRootDirectory', ''),
                         ));

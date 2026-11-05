@@ -1257,7 +1257,6 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
   'Close panel': 'パネルを閉じる',
   'Switch to dark mode': 'ダークモードに切り替え',
   'Switch to light mode': 'ライトモードに切り替え',
-  'Use system theme': 'システムテーマを使用',
 
   // GitHub Education program sign-up flow (/education/join)
   'Appwrite and GitHub': 'Appwrite と GitHub',
@@ -1408,6 +1407,9 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'ブラウザーから、このデバイスまたはパスワードマネージャーにパスキーを作成するよう求められます。',
   'You will no longer be able to sign in with this passkey. This action cannot be undone.':
     'このパスキーではサインインできなくなります。この操作は元に戻せません。',
+  'Set up auto-pay': '自動支払いを設定',
+  'Auto-pay is set up': '自動支払いを設定しました',
+  'Failed to set up auto-pay': '自動支払いの設定に失敗しました',
 
   // Zero projects
   'Build window ended': 'ビルド期間が終了しました',

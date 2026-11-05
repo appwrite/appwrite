@@ -221,6 +221,7 @@ export const enCatalog = {
         functions: 'Functions',
         messaging: 'Messaging',
         videos: 'Videos',
+        reviews: 'Review',
         sites: 'Sites',
         distribution: 'Distribution',
         activity: 'Activity',

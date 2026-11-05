@@ -248,9 +248,6 @@
   "src/components/pages/organizations/$orgId/billing/PlanSummary.tsx": {
     "TS2571: Object is of type 'unknown'.": 1
   },
-  "src/components/pages/organizations/$orgId/billing/ReplaceAddressModal.tsx": {
-    "TS6133: 'Models' is declared but its value is never read.": 1
-  },
   "src/components/pages/organizations/$orgId/billing/change-plan/PlanSummaryCard.tsx": {
     "TS18046: 'charge' is of type 'unknown'.": 4,
     "TS18046: 'item' is of type 'unknown'.": 3,
@@ -260,7 +257,7 @@
     "TS2339: Property 'totalDue' does not exist on type '{}'.": 2
   },
   "src/components/pages/organizations/$orgId/overview/CreateProjectDialog.tsx": {
-    "TS18046: 'r' is of type 'unknown'.": 2,
+    "TS18046: 'r' is of type 'unknown'.": 1,
     "TS18046: 'region' is of type 'unknown'.": 13,
     "TS2339: Property 'message' does not exist on type '{}'.": 1
   },
@@ -281,7 +278,6 @@
     "TS2571: Object is of type 'unknown'.": 4
   },
   "src/components/pages/projects/$projectId/activity/ActivityLogDrawer.tsx": {
-    "TS2304: Cannot find name 'Globe'.": 1,
     "TS2339: Property 'clientCode' does not exist on type 'ActivityEvent'.": 3,
     "TS2339: Property 'clientEngine' does not exist on type 'ActivityEvent'.": 1,
     "TS2339: Property 'clientEngineVersion' does not exist on type 'ActivityEvent'.": 1,
@@ -852,9 +848,6 @@
   "src/components/pages/projects/$projectId/settings/domains/RetryDomain.tsx": {
     "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
   },
-  "src/components/pages/projects/$projectId/settings/domains/VerifyDomain.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
-  },
   "src/components/pages/projects/$projectId/shared/ConnectProject.tsx": {
     "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined | { prefs?: Record<string, unknown> | undefined; }'.": 1
   },
@@ -886,9 +879,6 @@
   "src/components/pages/projects/$projectId/sites/SiteDeployments.tsx": {
     "TS18046: 'deployment' is of type 'unknown'.": 6,
     "TS2571: Object is of type 'unknown'.": 8
-  },
-  "src/components/pages/projects/$projectId/sites/SiteDomains.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 2
   },
   "src/components/pages/projects/$projectId/sites/SiteOverview.tsx": {
     "TS2339: Property 'data' does not exist on type '{ deployments: Deployment[]; total: number; isLoading: boolean; isFetching: boolean; error: Error | null; refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{ deployments: Deployment[]; total: number; }, Error>>; }'.": 2,

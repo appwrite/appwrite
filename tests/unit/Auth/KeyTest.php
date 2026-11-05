@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Auth;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
@@ -592,6 +593,35 @@ final class KeyTest extends TestCase
         $this->assertFalse($caller->mayGrant(['users.read', 'users.write']));
     }
 
+    public function testDecodeRefusesEphemeralKeySignedWithRetiredKey(): void
+    {
+        $variables = ['_APP_OPENSSL_KEY_V2', '_APP_OPENSSL_KEY_CURRENT', '_APP_OPENSSL_KEY_OLDEST'];
+        $previous = \array_map(\getenv(...), $variables);
+        $project = new Document(['$id' => 'test']);
+        $old = self::generateKey('test', false, ['documents.read']);
+
+        try {
+            \putenv('_APP_OPENSSL_KEY_V2=unit-test-next-key');
+            \putenv('_APP_OPENSSL_KEY_CURRENT=2');
+
+            $this->assertSame('test', Key::decode($project, new Document(), new Document(), $old)->getProjectId(), 'The old key is accepted during the grace window');
+            $this->assertSame('test', Key::decode($project, new Document(), new Document(), self::generateKey('test', false, ['documents.read']))->getProjectId());
+
+            \putenv('_APP_OPENSSL_KEY_OLDEST=2');
+
+            try {
+                Key::decode($project, new Document(), new Document(), $old);
+                $this->fail('An ephemeral key signed with the retired key was accepted');
+            } catch (Exception $exception) {
+                $this->assertSame(Exception::USER_UNAUTHORIZED, $exception->getType());
+            }
+        } finally {
+            foreach ($variables as $i => $name) {
+                \putenv($previous[$i] === false ? $name : $name . '=' . $previous[$i]);
+            }
+        }
+    }
+
     private static function generateKey(
         string $projectId,
         bool $usage,
@@ -601,7 +631,7 @@ final class KeyTest extends TestCase
         array $extra = []
     ): string {
         $jwt = new JWT(
-            key: System::getEnv('_APP_OPENSSL_KEY_V1'),
+            key: EncryptionKey::current(),
             algo: 'HS256',
             maxAge: $maxAge,
             leeway: 0,

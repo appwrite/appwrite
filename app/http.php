@@ -33,7 +33,7 @@ use Utopia\System\System;
 try {
     EncryptionKey::assertProduction(
         System::getEnv('_APP_ENV', 'production'),
-        System::getEnv('_APP_OPENSSL_KEY_V1')
+        EncryptionKey::current()
     );
 } catch (\RuntimeException $exception) {
     Console::error($exception->getMessage());

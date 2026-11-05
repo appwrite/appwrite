@@ -5,6 +5,7 @@ namespace Appwrite\Utopia\Database\Documents;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Deletes\Targets;
 use Appwrite\Hooks\Hooks;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
@@ -286,6 +287,24 @@ class User extends Document
     }
 
     /**
+     * Delete the user's pending recovery links and codes. Each was issued to reset the
+     * password as it stood, so once the password changes none of them is needed.
+     * The caller purges the cached user document, which lists the tokens.
+     */
+    public static function deleteRecoveryTokens(Database $dbForProject, Document $user): void
+    {
+        $sequence = $user->getSequence();
+        if ($sequence === '' || $sequence === null) {
+            return;
+        }
+
+        $dbForProject->deleteDocuments('tokens', [
+            Query::equal('userInternalId', [$sequence]),
+            Query::equal('type', [TOKEN_TYPE_RECOVERY, TOKEN_TYPE_RECOVERY_OTP]),
+        ]);
+    }
+
+    /**
      * Revoke every way into the account other than the address just proven: password,
      * sessions, tokens, MFA factors, passkeys, identities, account keys, the other
      * address and every target not on the proven channel.
@@ -295,7 +314,7 @@ class User extends Document
      * `$proven` is the channel of the proven address, MESSAGE_TYPE_EMAIL or MESSAGE_TYPE_SMS.
      * Persists the revocation in one transaction and mirrors it on `$user`.
      */
-    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL): void
+    public static function revokeCredentials(Database $dbForProject, Document $user, Document $project, string $proven = MESSAGE_TYPE_EMAIL, ?Mqtt $mqtt = null): void
     {
         $sequence = $user->getSequence();
         if ($sequence === '' || $sequence === null || $user->getAttribute('status') === false) {
@@ -330,7 +349,7 @@ class User extends Document
                 'phoneVerification' => false,
             ];
 
-        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven) {
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven, $mqtt) {
             // A locking read first, so the snapshot follows any issuance that committed under the same lock
             $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
 
@@ -350,7 +369,7 @@ class User extends Document
             Targets::delete($dbForProject, Query::and([
                 Query::equal('userInternalId', [$sequence]),
                 Query::notEqual('providerType', $proven),
-            ]));
+            ]), $mqtt, $project->getId());
 
             // Editions revoke the credentials they keep in their own collections
             (new Hooks())->trigger('credentialsRevoked', [$dbForProject, $user, $project]);

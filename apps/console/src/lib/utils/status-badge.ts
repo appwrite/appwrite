@@ -320,3 +320,55 @@ export function getDomainStatusBadgeConfig(status: string): {
       return { variant: 'processing', label: status }
   }
 }
+
+/**
+ * Get proxy rule status badge config for rendering. A verified rule shows its
+ * certificate only when the developer has to act on it: the renewal failed,
+ * is blocked on a DNS record, or the certificate expired. A healthy
+ * certificate keeps the plain Verified badge, and so does a rule from a
+ * server that reports no certificate state.
+ */
+export function getRuleStatusBadgeConfig(
+  rule: { status: string; expireAt?: string; certificateStatus?: string },
+  now: Date = new Date(),
+): {
+  variant: DomainStatusBadgeVariant | 'success' | 'warning'
+  label: string
+  /** What to do about the certificate, for the badge tooltip */
+  hint?: string
+  /** When a certificate whose renewal is stuck expires */
+  expireAt?: Date
+} {
+  const config = getDomainStatusBadgeConfig(rule.status)
+  if (rule.status !== 'verified') return config
+
+  const parsed = rule.expireAt ? new Date(rule.expireAt) : undefined
+  const expireAt =
+    parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined
+
+  if (expireAt && expireAt.getTime() < now.getTime()) {
+    return {
+      variant: 'error',
+      label: 'Certificate expired',
+      hint: "This certificate has expired. Check that the domain's DNS still points to Appwrite.",
+    }
+  }
+  if (rule.certificateStatus === 'failed') {
+    return {
+      variant: 'error',
+      label: 'Renewal failed',
+      hint: "View logs for details. Check that the domain's DNS still points to Appwrite.",
+      ...(expireAt && { expireAt }),
+    }
+  }
+  if (rule.certificateStatus === 'blocked') {
+    return {
+      variant: 'warning',
+      label: 'Renewal blocked',
+      hint: 'Renewal is waiting on a DNS record. View logs to see which record to add.',
+      ...(expireAt && { expireAt }),
+    }
+  }
+
+  return config
+}

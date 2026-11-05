@@ -18,7 +18,7 @@ rules:
       exclude:
         # Frozen upgrade history and test-only mock routes.
         - "**/src/Appwrite/Migration/Version/**"
-        - "**/app/controllers/mock.php"
+        - "**/src/Appwrite/Platform/Modules/Mock/**"
     pattern-either:
       - pattern: Permission::write(Role::any())
       - pattern: Permission::update(Role::any())

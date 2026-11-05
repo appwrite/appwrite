@@ -70,6 +70,11 @@ import {
   setInitialLoaderShellGate,
 } from '@/lib/initial-loader/shell-gates'
 import { ProjectEnvironmentBanner } from '@/components/pages/projects/$projectId/shared/ProjectEnvironmentBanner'
+import {
+  getActiveEnvironmentId,
+  restoreActiveEnvironment,
+  setActiveEnvironment,
+} from '@/lib/active-environment'
 /** Tab segment for routes under `.../tables/:tableId/<tab>` or `.../collections/:id/<tab>` */
 const DATABASE_TABLE_VIEW_TABS = new Set([
   'rows',
@@ -227,6 +232,12 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
       return EMPTY_PROJECT_LAYOUT_CONTEXT
     }
 
+    // Before anything is fetched: the environment the Console is in for this
+    // project decides what every project request below and in the child loaders
+    // acts on, and which cache it fills. Restored from session storage so a reload
+    // and a fresh navigation both land in the same environment.
+    restoreActiveEnvironment(projectId)
+
     // Region lookup may fail with 402 when budget-locked; ignore and continue.
     await ensureProjectRegion(context.queryClient, projectId).catch(() => {})
 
@@ -246,13 +257,29 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     // Always resolve the project first. Throwing on access errors stops the
     // rest of the match (child beforeLoad + loaders) so nested pages cannot
     // re-fetch project.get and hang the fullscreen loader.
-    let projectData: Awaited<ReturnType<typeof fetchProject>>
-    try {
-      projectData = await context.queryClient.ensureQueryData({
+    const ensureProject = () =>
+      context.queryClient.ensureQueryData({
         queryKey: ['project', projectId],
         queryFn: () => fetchProject(projectId),
         staleTime: 5 * 60 * 1000,
         retry: false,
+      })
+    let projectData: Awaited<ReturnType<typeof fetchProject>>
+    try {
+      // The restored environment may have been deleted while this tab was
+      // elsewhere, which fails the fetch with the header set. Leave it, which
+      // drops the failed query, and load the project itself rather than carry a
+      // dead environment on every request. Other errors are handled below.
+      projectData = await ensureProject().catch((projectError: unknown) => {
+        if (
+          !getActiveEnvironmentId(projectId) ||
+          getAppwriteErrorInfo(projectError).type !==
+            'project_environment_not_found'
+        ) {
+          throw projectError
+        }
+        setActiveEnvironment(projectId, null)
+        return ensureProject()
       })
       registerProjectRegionFromProject(projectData)
 

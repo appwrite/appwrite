@@ -1,3 +1,5 @@
+import { PROJECT_ID_MAX_LENGTH } from '@/lib/project-id'
+
 /**
  * A row in the environment switcher: either the project itself (production,
  * which has no environment document of its own and is always labeled
@@ -86,6 +88,37 @@ export function suggestProjectEnvironmentName(
   }
 
   return ''
+}
+
+/**
+ * The environment a project document answers as, or null for production: while
+ * the Console is in an environment, the project answers as that environment.
+ * The pinned Console SDK's `Models.Project` does not carry `environmentId` yet.
+ */
+export function projectEnvironmentId(
+  project: object | null | undefined,
+): string | null {
+  return (
+    (project as { environmentId?: string | null } | null | undefined)
+      ?.environmentId || null
+  )
+}
+
+/**
+ * The environment ID to offer for a name, as the ID the environment is addressed
+ * by in `X-Appwrite-Environment`: the name lowercased, with everything that is
+ * not a letter or a digit folded into single hyphens, no hyphen at either end
+ * and at most the project ID length. 'Stage' gives 'stage', 'QA / Beta 2'
+ * gives 'qa-beta-2', a name of symbols alone gives '' and leaves generation to
+ * the server.
+ */
+export function suggestProjectEnvironmentId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, PROJECT_ID_MAX_LENGTH)
+    .replace(/-+$/g, '')
 }
 
 /**
