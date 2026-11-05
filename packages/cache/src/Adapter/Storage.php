@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Cache\Adapter;
 
+use InvalidArgumentException;
 use RuntimeException;
 use Utopia\Cache\Adapter;
 use Utopia\Psr7\Stream;
@@ -11,45 +12,60 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Exception\StorageException;
 
 /**
- * Stores each entry as one object on a storage device, under the device's root.
- * Requires utopia-php/storage. The root must not be empty: a device refuses to
- * flush a whole bucket.
+ * Stores each entry as one object on a storage device, under the device's root:
+ * an 8-byte write time followed by the data. Keeping the time in the object lets
+ * a load check age from a single read, since the device API returns no metadata
+ * with the bytes. Requires utopia-php/storage.
  */
 class Storage implements Adapter
 {
     private const string CONTENT_TYPE = 'application/octet-stream';
 
+    private const int HEADER_SIZE = 8;
+
+    /**
+     * Takes a built device, so a caller decides its client and connection reuse.
+     *
+     * @throws InvalidArgumentException When the device has no root, which a flush would delete wholesale
+     */
     public function __construct(protected readonly Device $device)
     {
+        if (trim($device->getAbsolutePath($device->getRoot()), '/') === '') {
+            throw new InvalidArgumentException('The cache device needs a root');
+        }
     }
 
     /**
-     * Age comes from the object's last modified time. On S3 a hit costs a HEAD and
-     * a GET, and a miss or an expired entry costs the HEAD alone. A device failure
-     * reads as a miss.
+     * One read on every path: a GET on S3, with no request before it. An expired
+     * entry still downloads its body. A device failure reads as a miss.
      *
      * @param  int  $ttl time in seconds
      * @param  string  $hash optional
      */
     public function load(string $key, int $ttl, string $hash = ''): mixed
     {
-        $path = $this->getPath($key);
-
         try {
-            $modifiedAt = $this->device->getFileInfo($path)->modifiedAt;
+            $stream = $this->device->read($this->getPath($key));
+            $header = $stream->read(self::HEADER_SIZE);
 
-            if ($modifiedAt === null || $modifiedAt->getTimestamp() + $ttl <= time()) {
+            if (\strlen($header) !== self::HEADER_SIZE) {
                 return false;
             }
 
-            return $this->device->read($path)->getContents();
+            /** @var array{1: int} $time */
+            $time = unpack('J', $header);
+            $now = time();
+
+            // A time in the future means the object was not written by this adapter.
+            return $time[1] <= $now && $time[1] + $ttl > $now ? $stream->getContents() : false;
         } catch (StorageException | RuntimeException) {
             return false;
         }
     }
 
     /**
-     * Writing also resets the entry's age. On S3 this is one PUT.
+     * Writing resets the entry's age. On S3 this is one PUT. An array is stored as
+     * its values joined, as Filesystem does, and one holding a non-scalar is refused.
      *
      * @param  array<int|string, mixed>|string  $data
      * @param  string  $hash optional
@@ -62,12 +78,17 @@ class Storage implements Adapter
             return false;
         }
 
-        $body = \is_array($data)
-            ? implode('', array_map(static fn (mixed $value): string => \is_scalar($value) ? (string) $value : '', $data))
-            : $data;
+        $body = '';
+        foreach (\is_array($data) ? $data : [$data] as $value) {
+            if (! \is_scalar($value)) {
+                return false;
+            }
+
+            $body .= (string) $value;
+        }
 
         try {
-            $this->device->write($this->getPath($key), new Stream($body), self::CONTENT_TYPE);
+            $this->device->write($this->getPath($key), new Stream($this->header() . $body), self::CONTENT_TYPE);
 
             return $data;
         } catch (StorageException | RuntimeException) {
@@ -76,9 +97,9 @@ class Storage implements Adapter
     }
 
     /**
-     * Objects have no writable modified time, so this rewrites the object: a HEAD,
-     * a GET and a conditional PUT on S3. The condition stops it bringing back an
-     * entry purged or replaced meanwhile, which returns false.
+     * Rewrites the object with a new write time: a HEAD, a GET and a conditional PUT
+     * on S3. The condition stops it bringing back an entry purged or replaced
+     * meanwhile, which returns false.
      *
      * @param  string  $hash optional
      */
@@ -93,7 +114,10 @@ class Storage implements Adapter
                 return false;
             }
 
-            $this->device->replace($path, $this->device->read($path, etag: $etag), $etag, self::CONTENT_TYPE);
+            $stream = $this->device->read($path, etag: $etag);
+            $stream->read(self::HEADER_SIZE);
+
+            $this->device->replace($path, new Stream($this->header() . $stream->getContents()), $etag, self::CONTENT_TYPE);
 
             return true;
         } catch (StorageException | RuntimeException) {
@@ -174,6 +198,11 @@ class Storage implements Adapter
             '..' => '%2E%2E',
             default => $name,
         });
+    }
+
+    private function header(): string
+    {
+        return pack('J', time());
     }
 
     public function getName(?string $key = null): string

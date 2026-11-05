@@ -6,6 +6,7 @@ namespace Utopia\Cache\Tests;
 
 use Override;
 use Psr\Http\Message\StreamInterface;
+use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Adapter\Storage;
 use Utopia\Cache\Cache;
 use Utopia\Storage\Device\Local;
@@ -36,6 +37,30 @@ final class StorageTest extends Base
 
         $this->assertSame($data, self::$cache->save('binary', $data));
         $this->assertSame($data, self::$cache->load('binary', 60));
+    }
+
+    public function testArrayIsStoredAsItsValuesJoined(): void
+    {
+        $this->assertSame(['a', 'b'], self::$cache->save('array', ['a', 'b']));
+        $this->assertSame('ab', self::$cache->load('array', 60));
+    }
+
+    public function testArrayHoldingANonScalarIsRefused(): void
+    {
+        $this->assertFalse(self::$cache->save('nested', ['a', ['b']]));
+        $this->assertFalse(self::$cache->load('nested', 60));
+    }
+
+    public function testDeviceWithoutARootIsRefused(): void
+    {
+        foreach (['', '/', '/.', 'a/..'] as $root) {
+            try {
+                new Storage(new Local($root));
+                $this->fail('A flush on this device would delete from the filesystem root: ' . $root);
+            } catch (\InvalidArgumentException $error) {
+                $this->assertStringContainsString('needs a root', $error->getMessage());
+            }
+        }
     }
 
     public function testMissingKeyIsAMiss(): void
@@ -116,6 +141,63 @@ final class StorageTest extends Base
         $adapter->save('key', 'value');
 
         $this->assertFalse($adapter->load('key', 60));
+    }
+
+    public function testLoadMakesOneReadAndNoOtherRequest(): void
+    {
+        $device = new class (self::scratch('storage-requests')) extends Local {
+            public int $reads = 0;
+
+            public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
+            {
+                $this->reads++;
+
+                return parent::read($path, $offset, $length, $etag);
+            }
+
+            public function getFileInfo(string $path): FileInfo
+            {
+                throw new TransportException('A load must not ask for metadata');
+            }
+        };
+        $adapter = new Storage($device);
+
+        $this->assertFalse($adapter->load('key', 60));
+        $this->assertSame(1, $device->reads);
+
+        $adapter->save('key', 'value');
+
+        $this->assertSame('value', $adapter->load('key', 60));
+        $this->assertSame(2, $device->reads);
+    }
+
+    public function testObjectNotWrittenByTheAdapterIsAMiss(): void
+    {
+        $path = self::scratch('storage-foreign');
+        $adapter = new Storage(new Local($path));
+
+        foreach (['short', 'written by something else', "\x89PNG\r\n\x1a\n\x00\xff"] as $body) {
+            file_put_contents($path . '/key', $body);
+
+            $this->assertFalse($adapter->load('key', 60), $body);
+        }
+    }
+
+    public function testRunsBesideFilesystemWithTheSameKeys(): void
+    {
+        $filesystem = new Cache(new Filesystem(self::scratch('storage-beside-filesystem')));
+        $storage = new Cache(new Storage(new Local(self::scratch('storage-beside-device'))));
+
+        $filesystem->save('key', 'on disk');
+        $storage->save('key', 'on device');
+
+        $this->assertSame('on disk', $filesystem->load('key', 60));
+        $this->assertSame('on device', $storage->load('key', 60));
+
+        $storage->purge('key');
+
+        $this->assertSame('on disk', $filesystem->load('key', 60));
+        $this->assertFalse($storage->load('key', 60));
     }
 
     public function testPurgeThatFailsThrows(): void
