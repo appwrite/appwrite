@@ -105,11 +105,11 @@ export function View({ projectId, search }: ViewProps) {
     step === 'setup' ? search.propertyId : undefined,
   )
 
-  // A setup deep link without ?type= takes the created property's type.
-  const type = isAnalyticsPropertyType(search.type)
-    ? search.type
-    : property
-      ? analyticsPropertyType(property)
+  // Only the setup step loads the property; there its saved type beats ?type=.
+  const type = property
+    ? analyticsPropertyType(property)
+    : isAnalyticsPropertyType(search.type)
+      ? search.type
       : 'web'
   const typePlatforms = ANALYTICS_PROPERTY_TYPE_META[type].platforms
   // A platform the type doesn't offer (stale or hand-edited URL) falls back
@@ -333,15 +333,8 @@ export function View({ projectId, search }: ViewProps) {
           {type !== 'agent' ? (
             <div className="space-y-2">
               <Label htmlFor="add-property-domain">
-                {t('Domain')}
-                {type === 'mobile' ? (
-                  <>
-                    {' '}
-                    <span className="text-muted-foreground">
-                      ({t('optional')})
-                    </span>
-                  </>
-                ) : null}
+                {t('Domain')}{' '}
+                <span className="text-muted-foreground">({t('optional')})</span>
               </Label>
               <Input
                 id="add-property-domain"
@@ -361,20 +354,24 @@ export function View({ projectId, search }: ViewProps) {
             </div>
           ) : null}
 
-          <section className="space-y-3">
-            <div>
-              <Label>{t('SDK')}</Label>
-              <p className="mt-1 text-[12px] text-muted-foreground">
-                {t('Decides which install snippet you get next. You can switch any time.')}
-              </p>
-            </div>
-            <PlatformCards
-              platforms={typePlatforms}
-              value={platform}
-              onChange={(next) => updateSearch({ platform: next })}
-              disabled={createMutation.isPending}
-            />
-          </section>
+          {typePlatforms.length > 1 ? (
+            <section className="space-y-3">
+              <div>
+                <Label>{t('SDK')}</Label>
+                <p className="mt-1 text-[12px] text-muted-foreground">
+                  {t(
+                    'Decides which install snippet you get next. You can switch any time.',
+                  )}
+                </p>
+              </div>
+              <PlatformCards
+                platforms={typePlatforms}
+                value={platform}
+                onChange={(next) => updateSearch({ platform: next })}
+                disabled={createMutation.isPending}
+              />
+            </section>
+          ) : null}
 
           {/* Same pattern as the other create forms: label + collapsed ID chip. */}
           <div className="space-y-2">
