@@ -180,9 +180,13 @@ export function useCreateDomain(
         domain: domain.toLowerCase().trim(),
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
         queryKey: ['proxy-rules', 'project', projectId],
+        type: 'all',
       })
       queryClient.invalidateQueries({
         queryKey: Dependencies.DOMAINS,

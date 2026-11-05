@@ -1667,9 +1667,13 @@ export function useCreateSiteDomainRule(projectId: string | null | undefined) {
         siteId,
       })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch, not invalidate: the domains list is unmounted behind the
+      // add route and uses refetchOnMount: false, so it would stay stale
+      // when the wizard is left on its verify step.
+      await queryClient.refetchQueries({
         queryKey: ['proxy-rules'],
+        type: 'all',
       })
     },
   })
