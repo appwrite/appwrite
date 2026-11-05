@@ -840,8 +840,11 @@ Http::init()
                     $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
                         'accessedAt' => DateTime::now(),
                     ])));
-                    // Refresh the entry's modified time so TTL-based expiry in cache->load() stays valid
-                    $cache->save($key, $data);
+                    // Refresh the file's mtime so TTL-based expiry in cache->load() stays valid.
+                    // A device entry isn't rewritten: if it expires, it misses and refills once.
+                    if ($fallback === null) {
+                        $cache->save($key, $data);
+                    }
                 }
 
                 $response
@@ -1127,7 +1130,7 @@ Http::shutdown()
         }
 
         $key = $request->cacheIdentifier();
-        [$cache] = $responseCache($key);
+        [$cache, $fallback] = $responseCache($key);
         $signature = md5($data['payload']);
         $now = DateTime::now();
         $cacheLog = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -1169,8 +1172,8 @@ Http::shutdown()
         }
 
         // Existing entry: refresh the access time once per APP_CACHE_UPDATE window
-        // (keeps the modified time current for TTL checks) and re-persist on content change,
-        // or when the load missed, so an emptied store refills instead of waiting out the window.
+        // (on the filesystem, also the file mtime for TTL checks) and re-persist on content
+        // change, or when the load missed, so an emptied store refills instead of waiting.
         $stale = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $cacheLog->getAttribute('accessedAt', 0);
         if ($stale) {
             $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), new Document([
@@ -1179,7 +1182,7 @@ Http::shutdown()
         }
 
         $missed = \in_array('miss', $response->getHeaders()['x-appwrite-cache'] ?? [], true);
-        if ($stale || $missed || $signature !== $cacheLog->getAttribute('signature')) {
+        if (($stale && $fallback === null) || $missed || $signature !== $cacheLog->getAttribute('signature')) {
             $cache->save($key, $data['payload']);
         }
     });

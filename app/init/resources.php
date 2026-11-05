@@ -48,6 +48,7 @@ use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Decorator\Retry;
 use Utopia\Client\Destinations\IPRange;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Pool as HttpClientPool;
@@ -75,6 +76,7 @@ use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
+use Utopia\Storage\Device\S3\RetryStrategy;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
@@ -516,12 +518,17 @@ function getDevice(string $root, string $connection = '', (ClientInterface&Strea
 }
 
 // Read by the response cache only. Reused connections keep a read near the cost of a
-// local file, and the short timeouts turn an outage into a quick miss.
+// local file, and the short timeouts turn an outage into a quick miss. A small pool, since
+// reconnecting many at once is slow. A provider closes idle connections, so one retry
+// keeps a dropped connection from reading as a miss.
 $container->set('cacheClient', fn () => new HttpClientPool(new Connections(
     new SwoolePoolAdapter(),
     'cache.storage',
-    64,
-    fn () => new Client((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(3)->withConnectTimeout(1)),
+    4,
+    fn () => new Retry(
+        new Client((new SwooleClientAdapter())->withConnectionReuse()->withTimeout(3)->withConnectTimeout(1)),
+        new RetryStrategy(retries: 1, delay: 0.05, maxDelay: 0.05),
+    ),
     timeout: 1.0,
 )), []);
 
