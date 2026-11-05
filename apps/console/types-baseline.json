@@ -1233,9 +1233,6 @@
     "TS2345: Argument of type 'DedicatedDatabaseOperation' is not assignable to parameter of type 'Updater<DedicatedDatabase | null | undefined, DedicatedDatabase | null | undefined>'.": 1,
     "TS6133: 'PostgresListTablesOptions' is declared but its value is never read.": 1
   },
-  "src/lib/react-query/hooks/project-domains.ts": {
-    "TS2769: No overload matches this call.": 1
-  },
   "src/lib/react-query/hooks/sites.ts": {
     "TS2322: Type 'string | undefined' is not assignable to type 'string'.": 1,
     "TS2322: Type 'unknown' is not assignable to type 'TemplateReferenceType'.": 1,
