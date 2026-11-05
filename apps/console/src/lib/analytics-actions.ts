@@ -258,6 +258,11 @@ export const ANALYTICS_ACTIONS = {
   // Messaging
   'messaging-quick-setup-resend': 'Messaging One-Click Setup Resend Clicked',
 
+  // Project dashboard
+  'overview-resource-open': 'Overview Resource Opened',
+  'overview-resource-view-all': 'Overview Resource View All Clicked',
+  'overview-quick-start': 'Overview Quick Start Clicked',
+
   // Resource creation
   'create-project': 'Create Project Clicked',
   'create-organization': 'Create Organization Clicked',

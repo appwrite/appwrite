@@ -3950,4 +3950,43 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'これらのアラートは引き続きコンソール通知に表示されます。',
   'Saving...': '保存中...',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'プロジェクトのリソース',
+  'View all databases': 'すべてのデータベースを表示',
+  'View all sites': 'すべてのサイトを表示',
+  'View all functions': 'すべての関数を表示',
+  'View all buckets': 'すべてのバケットを表示',
+  'View all users': 'すべてのユーザーを表示',
+  'View all topics': 'すべてのトピックを表示',
+  'View all API keys': 'すべての API キーを表示',
+  'Failed to load sites': 'サイトの読み込みに失敗しました',
+  'Failed to load functions': '関数の読み込みに失敗しました',
+  'Failed to load buckets': 'バケットの読み込みに失敗しました',
+  'Failed to load users': 'ユーザーの読み込みに失敗しました',
+  'Failed to load topics': 'トピックの読み込みに失敗しました',
+  'Store, query, and sync your app data with a managed database.':
+    'マネージドデータベースで、アプリのデータを保存、クエリ、同期できます。',
+  'Deploy a web app from Git, or start from a ready-made template.':
+    'Git からウェブアプリをデプロイするか、既製のテンプレートから始められます。',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'HTTP リクエスト、イベント、スケジュールに応じてバックエンドのコードを実行します。',
+  'Keep data apart by environment, customer, or workload.':
+    '環境、顧客、ワークロードごとにデータを分けて管理できます。',
+  'Deploy another app, a landing page, or your docs.':
+    '別のアプリ、ランディングページ、ドキュメントをデプロイできます。',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'Webhook、スケジュールジョブ、イベントハンドラーを追加できます。',
+  'Group files with their own permissions and limits.':
+    '権限と制限を個別に設定して、ファイルをまとめられます。',
+  'Add a user by hand, or let people sign up from your app.':
+    'ユーザーを手動で追加するか、アプリからサインアップしてもらえます。',
+  'Group subscribers to message them all at once.':
+    'サブスクライバーをまとめて、一度にメッセージを送信できます。',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'このプロジェクトを呼び出すウェブ、モバイル、デスクトップアプリをそれぞれ追加します。',
+  'Give your servers and scripts scoped access to this project.':
+    'サーバーやスクリプトに、スコープを限定したこのプロジェクトへのアクセスを付与します。',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'サーバーや環境ごとにキーを分け、必要なスコープだけを付与しましょう。',
 }
