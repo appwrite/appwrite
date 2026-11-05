@@ -55,7 +55,7 @@ export function View() {
     () => renditionsData?.renditions ?? [],
     [renditionsData],
   )
-  const subtitles = subtitlesData?.subtitles ?? []
+  const subtitles = subtitlesData?.captions ?? []
 
   const readyByOutput = useMemo(() => {
     const counts: Record<string, number> = { hls: 0, dash: 0, cmaf: 0 }
@@ -166,7 +166,7 @@ function SubtitleUrlsCard({
 }: {
   projectId: string
   videoId: string
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const [output, setOutput] = useState<SubtitleOutput>('hls')
@@ -243,7 +243,7 @@ function AdvancedUrlsCard({
   projectId: string
   videoId: string
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const [renditionId, setRenditionId] = useState('')

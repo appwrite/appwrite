@@ -181,7 +181,7 @@ export function Layout() {
   }
 
   const renditions = renditionsData?.renditions ?? []
-  const subtitles = subtitlesData?.subtitles ?? []
+  const subtitles = subtitlesData?.captions ?? []
   const encodingStatus = getVideoEncodingStatus(renditions)
 
   return (
@@ -369,7 +369,7 @@ function SubnavLink({
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null
@@ -485,7 +485,7 @@ function SubnavTrailing({
   tab: VideoTab
   video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
   timeline:
     | { url: string; vtt: string; cues: VideoTimelineCue[] }
     | null

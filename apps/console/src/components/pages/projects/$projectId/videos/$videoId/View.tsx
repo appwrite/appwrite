@@ -41,7 +41,7 @@ import { useT } from '@/lib/i18n/translate'
 export type VideoOverviewInitialData = {
   video: Models.Video
   renditions: Models.VideoRenditionList
-  subtitles: Models.VideoSubtitleList
+  subtitles: Models.VideoCaptionList
 }
 
 type ViewProps = {
@@ -62,7 +62,7 @@ export function View({ initialData }: ViewProps = {}) {
   const renditions =
     renditionsFromHook?.renditions ?? initialData?.renditions.renditions ?? []
   const subtitles =
-    subtitlesFromHook?.subtitles ?? initialData?.subtitles.subtitles ?? []
+    subtitlesFromHook?.captions ?? initialData?.subtitles.captions ?? []
 
   if (!video) return null
 
@@ -414,7 +414,7 @@ function SetupChecklist({
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  subtitles: Models.VideoSubtitle[]
+  subtitles: Models.VideoCaption[]
 }) {
   const t = useT()
   const { openCreateRenditions, openCreateSubtitle, writeDisabledReason } =

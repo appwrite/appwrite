@@ -41,7 +41,7 @@ type CreateSubtitleProps = {
   projectId: string
   videoId: string
   /** When set, the dialog updates this subtitle instead of creating one. */
-  subtitle?: Models.VideoSubtitle | null
+  subtitle?: Models.VideoCaption | null
 }
 
 export function CreateSubtitle({

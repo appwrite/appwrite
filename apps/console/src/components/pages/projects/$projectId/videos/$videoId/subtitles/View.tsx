@@ -73,7 +73,7 @@ const SUBTITLE_OUTPUTS = [
 ] as const
 
 type ViewProps = {
-  initialData?: { subtitles: Models.VideoSubtitleList }
+  initialData?: { subtitles: Models.VideoCaptionList }
 }
 
 export function View({ initialData }: ViewProps = {}) {
@@ -87,12 +87,12 @@ export function View({ initialData }: ViewProps = {}) {
   const { data } = useVideoSubtitles(projectId, videoId)
   const updateMutation = useUpdateVideoSubtitle(projectId, videoId)
   const deleteMutation = useDeleteVideoSubtitle(projectId, videoId)
-  const [editing, setEditing] = useState<Models.VideoSubtitle | null>(null)
-  const [deleting, setDeleting] = useState<Models.VideoSubtitle | null>(null)
+  const [editing, setEditing] = useState<Models.VideoCaption | null>(null)
+  const [deleting, setDeleting] = useState<Models.VideoCaption | null>(null)
 
-  const subtitles = data?.subtitles ?? initialData?.subtitles.subtitles ?? []
+  const subtitles = data?.captions ?? initialData?.subtitles.captions ?? []
 
-  const setDefault = (subtitle: Models.VideoSubtitle, isDefault: boolean) => {
+  const setDefault = (subtitle: Models.VideoCaption, isDefault: boolean) => {
     updateMutation.mutate(
       { subtitleId: subtitle.$id, isDefault },
       {

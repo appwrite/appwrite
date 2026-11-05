@@ -164,9 +164,8 @@ export async function fetchVideoRenditions(
 export async function fetchVideoSubtitles(
   projectId: string,
   videoId: string,
-): Promise<Models.VideoSubtitleList> {
-  const res = await sdk.forProject(projectId).videos.listCaptions({ videoId })
-  return { total: res.total ?? 0, subtitles: res.captions ?? [] }
+): Promise<Models.VideoCaptionList> {
+  return await sdk.forProject(projectId).videos.listCaptions({ videoId })
 }
 
 export async function fetchVideoProfiles(
