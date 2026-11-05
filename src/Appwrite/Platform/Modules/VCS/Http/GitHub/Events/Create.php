@@ -662,6 +662,26 @@ class Create extends Action
             return;
         }
 
+        // Checked before anything is written, so a refusal leaves the pull request's queued reviews
+        // alone and an error in the check leaves no review behind. A refused review is recorded as
+        // failed, with the reason the project's users see.
+        try {
+            $this->beforeQueueReview($project, $repository, $dbForPlatform, $authorization);
+        } catch (Exception $error) {
+            $review
+                ->setAttribute('status', 'failed')
+                ->setAttribute('reason', $error->getMessage())
+                ->setAttribute('completedAt', DateTime::now());
+
+            try {
+                $authorization->skip(fn () => $dbForProject->createDocument('reviews', $review));
+            } catch (DuplicateException) {
+                // A redelivery of a comment whose review was refused before.
+            }
+
+            return;
+        }
+
         // Older queued reviews of the pull request are superseded before this one is created, as
         // hansi.codes does: two overlapping deliveries then both stay queued, and the worker skips
         // the one that resolves to an already reviewed head, instead of superseding each other.
@@ -694,19 +714,6 @@ class Create extends Action
             if ($review === null) {
                 return;
             }
-        }
-
-        // A refused review ends here as failed, with the reason the project's users see.
-        try {
-            $this->beforeQueueReview($project, $repository, $dbForPlatform, $authorization);
-        } catch (Exception $error) {
-            $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $review->getId(), new Document([
-                'status' => 'failed',
-                'reason' => $error->getMessage(),
-                'completedAt' => DateTime::now(),
-            ])));
-
-            return;
         }
 
         try {
