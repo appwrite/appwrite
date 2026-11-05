@@ -1064,6 +1064,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'No identified users in this range':
     'אין משתמשים מזוהים בטווח הזה',
   'Event properties': 'מאפייני אירועים',
+  'Models and tools': 'מודלים וכלים',
+  'Calls by model and by tool': 'קריאות לפי מודל ולפי כלי',
+  'No calls in this range': 'אין קריאות בטווח הזה',
   'Values of the props sent with your events':
     'ערכי ה-props שנשלחו עם האירועים',
   'No event props in this range': 'אין props של אירועים בטווח הזה',

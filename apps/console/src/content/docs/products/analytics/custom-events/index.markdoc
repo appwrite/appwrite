@@ -169,6 +169,27 @@ The Web and Flutter helpers take props as a map and turn each value into text. `
 
 Appwrite stores props with the event. Don't put personal data such as email addresses or names in props.
 
+# Track an AI agent {% #agents %}
+
+On an **Agent** property, send one event per model call and one per tool call. The **Models and tools** card counts them by the `model` and `tool` props:
+
+| Event | Props |
+|---|---|
+| `llm_call` | `model`, such as `gpt-5` or `claude-sonnet-5-5`. Optionally `provider`. |
+| `tool_call` | `tool`, such as `web_search`. |
+
+```server-nodejs
+await analytics.createEvent({
+    propertyId: '<PROPERTY_ID>',
+    name: 'llm_call',
+    url: 'https://agent.example.com/run',
+    props: ['model', 'gpt-5', 'provider', 'openai'],
+    userId: '<USER_ID>',
+});
+```
+
+The card appears once either prop arrives. Click a model or tool to filter the whole dashboard to it. Props are stored as text, so token counts can't be added up yet.
+
 # Track a virtual pageview {% #virtual-pageviews %}
 
 Some steps don't change the URL, such as the steps of a checkout form or a modal that works like a page. On the web, record them as pageviews with a URL of your own.

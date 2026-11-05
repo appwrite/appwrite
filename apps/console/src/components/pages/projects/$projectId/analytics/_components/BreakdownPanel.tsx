@@ -216,6 +216,8 @@ type BreakdownPanelProps = {
   emptyLabel?: string
   /** External URL for a row (pages, hostnames): adds an open-in-new icon. */
   rowHref?: (value: string, tabId: string) => string | undefined
+  /** Which measure ranks and sizes the rows. */
+  valueKey?: 'visitors' | 'events'
 }
 
 /**
@@ -241,6 +243,7 @@ export function BreakdownPanel({
   mono = false,
   emptyLabel,
   rowHref,
+  valueKey = 'visitors',
 }: BreakdownPanelProps) {
   const t = useT()
   const tabIds = useMemo(() => tabs.map((tab) => tab.id), [tabs])
@@ -270,14 +273,19 @@ export function BreakdownPanel({
 
   // Unknown rows (no referrer, unparseable agent, unknown location) are
   // dropped, and shares are computed among the known values.
+  // The API ranks by visitors; re-rank when the card measures events.
   const { rows, columnTotal, max } = useMemo(() => {
     const known = breakdown.filter((entry) => isKnownBreakdownValue(entry.value))
+    const ranked =
+      valueKey === 'visitors'
+        ? known
+        : [...known].sort((a, b) => b[valueKey] - a[valueKey])
     return {
-      rows: known,
-      columnTotal: known.reduce((sum, entry) => sum + entry.visitors, 0),
-      max: known.reduce((m, entry) => Math.max(m, entry.visitors), 0),
+      rows: ranked,
+      columnTotal: ranked.reduce((sum, entry) => sum + entry[valueKey], 0),
+      max: ranked.reduce((m, entry) => Math.max(m, entry[valueKey]), 0),
     }
-  }, [breakdown])
+  }, [breakdown, valueKey])
 
   const visible = rows.slice(0, BREAKDOWN_COLLAPSED_ROWS)
 
@@ -371,11 +379,11 @@ export function BreakdownPanel({
               <BreakdownRow
                 // Rows are known values only (see isKnownBreakdownValue).
                 label={formatLabel?.(entry.value!, active.id) ?? entry.value!}
-                value={entry.visitors}
+                value={entry[valueKey]}
                 share={
-                  columnTotal > 0 ? (entry.visitors / columnTotal) * 100 : 0
+                  columnTotal > 0 ? (entry[valueKey] / columnTotal) * 100 : 0
                 }
-                barPercent={max > 0 ? (entry.visitors / max) * 100 : 0}
+                barPercent={max > 0 ? (entry[valueKey] / max) * 100 : 0}
                 leading={
                   ranked ? (
                     <RowRank index={index} />
@@ -407,6 +415,7 @@ export function BreakdownPanel({
           description={description}
           tabs={listTabs}
           initialTabId={dialogTabId}
+          valueKey={valueKey}
           renderLeading={renderLeading}
           rowColor={rowColor}
           formatLabel={formatLabel}

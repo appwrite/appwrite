@@ -337,6 +337,63 @@ export function UsersPanel(props: PanelProps) {
   )
 }
 
+const AGENT_USAGE_TABS: BreakdownTab[] = [
+  {
+    id: 'models',
+    label: 'Models',
+    dimension: AnalyticsDimension.Props,
+    propKey: 'model',
+  },
+  {
+    id: 'tools',
+    label: 'Tools',
+    dimension: AnalyticsDimension.Props,
+    propKey: 'tool',
+  },
+]
+
+/**
+ * The `model` and `tool` props of an agent's `llm_call` and `tool_call`
+ * events, counted in calls. Hidden until either key arrives.
+ */
+export function AgentUsagePanel(props: PanelProps) {
+  const { filters } = useAnalyticsFilters()
+  // Same key as the Event properties card's query, so it is one request.
+  const { data } = useQuery({
+    ...analyticsBreakdownQueryOptions(
+      props.projectId,
+      props.propertyId,
+      AnalyticsDimension.Props,
+      props.range,
+      undefined,
+      true,
+      filters,
+    ),
+    placeholderData: samePropertyPlaceholder(props.propertyId),
+  })
+  const tabs = useMemo(() => {
+    const keys = new Set(data?.breakdown.map((entry) => entry.value))
+    return AGENT_USAGE_TABS.filter((tab) => keys.has(tab.propKey!))
+  }, [data])
+
+  if (tabs.length === 0) return null
+
+  // The API returns its top rows by visitors, which an agent barely has, so a
+  // busy model can fall outside them until the API can order by events.
+  return (
+    <BreakdownPanel
+      {...props}
+      cardId="agent-usage"
+      title="Models and tools"
+      description="Calls by model and by tool"
+      tabs={tabs}
+      valueKey="events"
+      mono
+      emptyLabel="No calls in this range"
+    />
+  )
+}
+
 /** Prop keys shown as tabs before the rest move under "More". */
 const PROP_TABS_INLINE = 4
 
