@@ -602,6 +602,30 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Connection IDs of every connection in a project that still holds a team's role.
+     * Deleting the team ends them so a reconnect rebuilds the roles without it, instead
+     * of the socket keeping the team role and its access until it happens to reconnect.
+     *
+     * @return array<int, mixed>
+     */
+    public function getTeamConnections(string $projectId, string $teamId): array
+    {
+        if ($teamId === '') {
+            return [];
+        }
+
+        $role = Role::team($teamId)->toString();
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) === $projectId && \in_array($role, $connection['roles'] ?? [], true)) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
      * Sends an event to the Realtime Server
      * @param string $projectId
      * @param array $payload
