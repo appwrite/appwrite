@@ -353,31 +353,36 @@ const MODEL_TABS: BreakdownTab[] = [
 ]
 
 /**
- * The `model` and `tool` props of an agent's `model_called` and
- * `tool_called` events, counted in calls. Hidden until either key arrives.
+ * Tabs for the agent's `model` and `tool` props, once either key arrives.
+ * Same key as the Event properties card's query, so it is one request.
  */
-export function ModelsPanel(props: PanelProps) {
-  const { filters } = useAnalyticsFilters()
-  // Same key as the Event properties card's query, so it is one request.
+export function useModelTabs(
+  { projectId, propertyId, range }: PanelProps,
+  filters: readonly AnalyticsFilter[],
+) {
   const { data } = useQuery({
     ...analyticsBreakdownQueryOptions(
-      props.projectId,
-      props.propertyId,
+      projectId,
+      propertyId,
       AnalyticsDimension.Props,
-      props.range,
+      range,
       undefined,
       true,
       filters,
     ),
-    placeholderData: samePropertyPlaceholder(props.propertyId),
+    placeholderData: samePropertyPlaceholder(propertyId),
   })
-  const tabs = useMemo(() => {
+  return useMemo(() => {
     const keys = new Set(data?.breakdown.map((entry) => entry.value))
     return MODEL_TABS.filter((tab) => keys.has(tab.propKey!))
   }, [data])
+}
 
-  if (tabs.length === 0) return null
-
+/** The `model_called` and `tool_called` events, counted in calls. */
+export function ModelsPanel({
+  tabs,
+  ...props
+}: PanelProps & { tabs: BreakdownTab[] }) {
   // The API returns its top rows by visitors, which an agent barely has, so a
   // busy model can fall outside them until the API can order by events.
   return (

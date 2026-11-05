@@ -61,6 +61,7 @@ import {
   TechnologyPanel,
   TrafficSourcesPanel,
   UsersPanel,
+  useModelTabs,
   useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
@@ -342,6 +343,7 @@ export function View({
     { projectId, propertyId, range },
     filters,
   )
+  const modelTabs = useModelTabs({ projectId, propertyId, range }, filters)
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
   // day, same rules as the Usage charts.
@@ -715,12 +717,13 @@ export function View({
                     range={range}
                   />
                 ) : null}
-                {panels.has('models') ? (
+                {panels.has('models') && modelTabs.length > 0 ? (
                   <div className="lg:col-span-2">
                     <ModelsPanel
                       projectId={projectId}
                       propertyId={propertyId}
                       range={range}
+                      tabs={modelTabs}
                     />
                   </div>
                 ) : null}
