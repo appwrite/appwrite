@@ -53,10 +53,13 @@ import { ExportMenu } from '../_components/ExportMenu'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
   BotsPanel,
+  EventPropertiesPanel,
   LocationsPanel,
   PagesPanel,
   TechnologyPanel,
   TrafficSourcesPanel,
+  UsersPanel,
+  useShowUsersPanel,
 } from '../_components/DimensionPanels'
 import { EventsPanel } from '../_components/EventsPanel'
 import { TrafficSplit } from '../_components/TrafficSplit'
@@ -67,7 +70,7 @@ import {
   type AnalyticsFiltersContextValue,
 } from '../_components/analytics-filters-context'
 import {
-  ANALYTICS_FILTER_COLUMNS,
+  analyticsFilterColumns,
   analyticsFiltersFromMap,
   equalFilterEntry,
   trafficKindFilterEntry,
@@ -110,9 +113,11 @@ type DimensionPanel =
   | 'locations'
   | 'technology'
   | 'bots'
+  | 'users'
+  | 'eventProps'
 
-// The overview and custom events apply to every type. Mobile apps have no
-// referrers or crawlers; agents only send their own events.
+// Overview, custom events, users and event properties apply to every type. Mobile
+// apps have no referrers or crawlers; agents only send their own events.
 const PANELS_BY_TYPE: Record<
   AnalyticsPropertyType,
   ReadonlySet<DimensionPanel>
@@ -124,9 +129,17 @@ const PANELS_BY_TYPE: Record<
     'locations',
     'technology',
     'bots',
+    'users',
+    'eventProps',
   ]),
-  [AnalyticsPropertyType.Mobile]: new Set(['pages', 'locations', 'technology']),
-  [AnalyticsPropertyType.Agent]: new Set(),
+  [AnalyticsPropertyType.Mobile]: new Set([
+    'pages',
+    'locations',
+    'technology',
+    'users',
+    'eventProps',
+  ]),
+  [AnalyticsPropertyType.Agent]: new Set(['users', 'eventProps']),
 }
 
 function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
@@ -169,6 +182,7 @@ export function View({
     [filterQuery],
   )
   const filters = useMemo(() => analyticsFiltersFromMap(filterMap), [filterMap])
+  const filterColumns = useMemo(() => analyticsFilterColumns(filters), [filters])
 
   const commitFilterMap = useCallback(
     (next: FilterMap) => {
@@ -309,6 +323,21 @@ export function View({
   const range = useMemo(
     () => toAnalyticsRange(dateRange) ?? getDefaultAnalyticsRange(),
     [dateRange],
+  )
+  // A sideways trackpad or touch swipe over the chart brush, tab bars or
+  // tables would otherwise fire the browser's swipe-back navigation.
+  useEffect(() => {
+    const root = document.documentElement
+    const previous = root.style.overscrollBehaviorX
+    root.style.overscrollBehaviorX = 'none'
+    return () => {
+      root.style.overscrollBehaviorX = previous
+    }
+  }, [])
+
+  const showUsersPanel = useShowUsersPanel(
+    { projectId, propertyId, range },
+    filters,
   )
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
@@ -459,6 +488,9 @@ export function View({
 
   const propertyType = property?.type ?? AnalyticsPropertyType.Web
   const panels = PANELS_BY_TYPE[propertyType]
+  const breakdownCount = [...panels].filter(
+    (panel) => panel !== 'users' && panel !== 'eventProps',
+  ).length
 
   if (!property && !propertyLoading) {
     return (
@@ -512,7 +544,7 @@ export function View({
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}
-                columns={ANALYTICS_FILTER_COLUMNS}
+                columns={filterColumns}
                 filterMap={filterMap}
                 onRemoveFilter={filtersContext.onRemoveFilter}
                 onClearAll={filtersContext.onClearAllFilters}
@@ -616,6 +648,7 @@ export function View({
               compareMode={compareMode}
               comparisonRange={comparisonRange}
               onRefresh={handleRefresh}
+              showUsers={showUsersPanel}
             />
 
             <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-6 sm:px-6">
@@ -660,7 +693,7 @@ export function View({
                   // With an odd panel count (mobile) it would sit alone on its row.
                   <div
                     className={
-                      panels.size % 2 === 1 ? 'lg:col-span-2' : 'contents'
+                      breakdownCount % 2 === 1 ? 'lg:col-span-2' : 'contents'
                     }
                   >
                     <TechnologyPanel
@@ -676,6 +709,29 @@ export function View({
                     propertyId={propertyId}
                     range={range}
                   />
+                ) : null}
+                {panels.has('users') && showUsersPanel ? (
+                  <UsersPanel
+                    projectId={projectId}
+                    propertyId={propertyId}
+                    range={range}
+                  />
+                ) : null}
+                {panels.has('eventProps') ? (
+                  // Full width when it has no Users card beside it.
+                  <div
+                    className={
+                      panels.has('users') && showUsersPanel
+                        ? undefined
+                        : 'lg:col-span-2'
+                    }
+                  >
+                    <EventPropertiesPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                  </div>
                 ) : null}
                 {/* Custom events close the page at full width: it's the card
                   most specific to the product, and its empty state carries

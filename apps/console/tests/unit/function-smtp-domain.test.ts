@@ -5,11 +5,7 @@ import {
   isSmtpRule,
   type SmtpProxyRule,
 } from '@/lib/function-smtp-domain'
-import {
-  ProxyRuleProtocol,
-  ProxyRuleStatus,
-  type Models,
-} from '@appwrite.io/console'
+import { ProxyRuleProtocol, ProxyRuleStatus, type Models } from '@appwrite.io/console'
 
 function ruleStub(overrides: Partial<SmtpProxyRule> = {}): SmtpProxyRule {
   return {
@@ -108,9 +104,7 @@ describe('smtp domain DNS helpers', () => {
 describe('smtp rule detection', () => {
   test('tells SMTP rules apart from HTTP rules', () => {
     expect(isSmtpRule(ruleStub())).toBe(true)
-    expect(isSmtpRule(ruleStub({ protocol: ProxyRuleProtocol.Http }))).toBe(
-      false,
-    )
+    expect(isSmtpRule(ruleStub({ protocol: ProxyRuleProtocol.Http }))).toBe(false)
     expect(isSmtpRule(ruleStub({ protocol: undefined }))).toBe(false)
   })
 })

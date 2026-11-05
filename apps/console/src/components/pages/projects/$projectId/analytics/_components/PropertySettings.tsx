@@ -371,6 +371,44 @@ export function PropertySettings({
           </div>
         </div>
 
+        {/* User identification */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {t('User identification')}
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              {t(
+                "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.",
+              )}
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="property-identify-users"
+                checked={!!property.identifyUsers}
+                disabled={isBusy}
+                onCheckedChange={(checked) =>
+                  applyUpdate(
+                    { identifyUsers: checked },
+                    checked
+                      ? t('User identification enabled')
+                      : t('User identification disabled'),
+                  )
+                }
+              />
+              <Label
+                htmlFor="property-identify-users"
+                className="text-[13px] text-foreground"
+              >
+                {t('Identify signed-in users')}
+              </Label>
+            </div>
+          </div>
+        </div>
+
         {/* Domain */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">

@@ -697,6 +697,26 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'このプロパティがイベントを受け付けるかどうかを設定します。',
   'Tracking enabled': '計測を有効にしました',
   'Tracking disabled': '計測を無効にしました',
+  'Browser versions': 'ブラウザのバージョン',
+  'OS versions': 'OS のバージョン',
+  'Versions': 'バージョン',
+  'Browser version': 'ブラウザのバージョン',
+  'OS version': 'OS のバージョン',
+  'Identified users, ranked by visitors': '識別されたユーザー (訪問者数順)',
+  'No identified users in this range': 'この期間に識別されたユーザーはいません',
+  'Event properties': 'イベントの属性',
+  'Values of the props sent with your events':
+    'イベントと一緒に送信された props の値',
+  'No event props in this range': 'この期間にイベントの props はありません',
+  'Not available with this filter': 'このフィルターでは利用できません',
+  'User identification': 'ユーザーの識別',
+  'Identify signed-in users': 'サインイン中のユーザーを識別する',
+  'User identification enabled': 'ユーザーの識別を有効にしました',
+  'User identification disabled': 'ユーザーの識別を無効にしました',
+  'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.':
+    '識別されたユーザーの数 (重複なし)。ユーザー ID を含むイベントのみを数え、匿名の訪問者は含みません。',
+  "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
+    'クライアントセッションから送信されたイベントに、サインイン中のユーザーの ID を記録します。これにより、ユーザー単位でトラフィックを集計・内訳表示できます。匿名の訪問者には影響しません。ID はプロジェクトのユーザー ID で、メールアドレスや名前は記録されません。プライバシーポリシーでアナリティクスとユーザーアカウントの紐付けを扱っている場合にのみ有効にしてください。',
   'Tracking is enabled': '計測は有効です',
   'Primary domain being tracked. May be empty for mobile and agent properties.':
     '計測対象の主要ドメインです。モバイルとエージェントのプロパティでは空欄でもかまいません。',
