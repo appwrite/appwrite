@@ -167,7 +167,11 @@
     "@tanstack/react-store": "^0.11.2",
     "@tanstack/store": "^0.11.2",
     "dompurify": "^3.4.17",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "glob": "^14.0.2",
+    "ip-address": "^10.7.4",
+    "seroval": "^1.6.11",
+    "seroval-plugins": "^1.6.11"
   },
   "pnpm": {
     "overrides": {
@@ -176,7 +180,11 @@
       "@tanstack/react-store": "^0.11.2",
       "@tanstack/store": "^0.11.2",
       "dompurify": "^3.4.17",
-      "sharp": "^0.35.5"
+      "sharp": "^0.35.5",
+      "glob": "^14.0.2",
+      "ip-address": "^10.7.4",
+      "seroval": "^1.6.11",
+      "seroval-plugins": "^1.6.11"
     }
   },
   "devDependencies": {
