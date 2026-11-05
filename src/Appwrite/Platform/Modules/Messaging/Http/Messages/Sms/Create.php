@@ -154,6 +154,7 @@ class Create extends Action
                 'content' => $content,
             ],
             'status' => $status,
+            'scheduledAt' => $scheduledAt,
         ]);
         try {
             $message = $dbForProject->createDocument('messages', $message);
@@ -182,9 +183,7 @@ class Create extends Action
                     'active' => true,
                 ]));
 
-                $message
-                    ->setAttribute('scheduleId', $schedule->getId())
-                    ->setAttribute('scheduledAt', $scheduledAt);
+                $message->setAttribute('scheduleId', $schedule->getId());
 
                 $dbForProject->updateDocument(
                     'messages',
