@@ -12,6 +12,7 @@ use Appwrite\Realtime\Usage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Table;
+use Utopia\Database\Role;
 use Utopia\Telemetry\Counter;
 use Utopia\WebSocket\Server;
 
@@ -27,6 +28,10 @@ final class HandlerTest extends TestCase
 
     private RecordingGauge $stage;
 
+    private Realtime $realtime;
+
+    private RecordingAdapter $adapter;
+
     private Handler $handler;
 
     protected function setUp(): void
@@ -36,6 +41,8 @@ final class HandlerTest extends TestCase
         $this->dropped = new RecordingCounter();
         $this->failed = new RecordingCounter();
         $this->stage = new RecordingGauge();
+        $this->realtime = new Realtime();
+        $this->adapter = new RecordingAdapter();
         $this->handler = $this->makeHandler($this->received);
     }
 
@@ -46,8 +53,8 @@ final class HandlerTest extends TestCase
         $stats->create();
 
         return new Handler(
-            server: new Server(new RecordingAdapter()),
-            realtime: new Realtime(),
+            server: new Server($this->adapter),
+            realtime: $this->realtime,
             stats: $stats,
             eventTailRegistry: new EventTailRegistry(),
             usage: new Usage(function (): void {
@@ -169,6 +176,26 @@ final class HandlerTest extends TestCase
         }
 
         $this->assertSame([[0.0, ['workerId' => '0', 'stage' => 'idle']]], $observed);
+    }
+
+    public function testDeletingAProjectTeamEndsOnlyItsMemberSockets(): void
+    {
+        // A member of the deleted team, and a connection in the same project that is not.
+        $this->realtime->subscribe('project1', 101, 'member', [Role::team('team1')->toString()], ['account']);
+        $this->realtime->subscribe('project1', 102, 'bystander', [Role::user('user2')->toString()], ['account']);
+
+        $event = \json_decode($this->payload(\date(DATE_ATOM)), true);
+        $event['project'] = 'project1';
+        $event['data']['events'] = ['teams.team1.delete'];
+        $event['data']['channels'] = ['account'];
+
+        $this->handler->handle(null, 'realtime', \json_encode($event));
+
+        // The stale team role is evicted by closing the socket, so a reconnect rebuilds roles
+        // without the gone team; a connection that never held the role is left alone.
+        $closed = \array_column($this->adapter->closed, 0);
+        $this->assertContains(101, $closed);
+        $this->assertNotContains(102, $closed);
     }
 
     private function payload(string $timestamp): string

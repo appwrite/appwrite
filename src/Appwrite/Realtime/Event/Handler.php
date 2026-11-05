@@ -584,23 +584,32 @@ class Handler
     }
 
     /**
-     * Deleting an organization names no user, so its admin-mode connections end here.
+     * Ends the sockets a team deletion revokes. Deleting a console organization names no user,
+     * so its admin-mode connections end here; deleting a team inside a project ends the member
+     * sockets still holding its role, so a reconnect rebuilds their roles without the gone team
+     * instead of keeping its access until the client happens to reconnect.
      *
      * @return array<int, true> connections to close
      */
     private function endDeletedTeams(array $event): array
     {
         $closing = [];
-        if (($event['project'] ?? '') !== 'console') {
+        $projectId = $event['project'] ?? '';
+        if ($projectId === '') {
             return $closing;
         }
 
         foreach (($event['data']['events'] ?? []) as $name) {
             $parts = \explode('.', $name);
-            if (\count($parts) === 3 && $parts[0] === 'teams' && $parts[1] !== '*' && $parts[2] === 'delete') {
-                foreach ($this->realtime->getTeamAdminConnections($parts[1]) as $connection) {
-                    $closing[$connection] = true;
-                }
+            if (\count($parts) !== 3 || $parts[0] !== 'teams' || $parts[1] === '*' || $parts[2] !== 'delete') {
+                continue;
+            }
+
+            $connections = $projectId === 'console'
+                ? $this->realtime->getTeamAdminConnections($parts[1])
+                : $this->realtime->getTeamConnections($projectId, $parts[1]);
+            foreach ($connections as $connection) {
+                $closing[$connection] = true;
             }
         }
 
