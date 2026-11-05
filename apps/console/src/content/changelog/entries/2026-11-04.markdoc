@@ -14,6 +14,8 @@ Run `appwrite init apns` in your iOS project and the [Appwrite CLI](/docs/toolin
 - Checks with Apple that your App ID has Push Notifications on.
 - Creates the APNs key for you with `--create-key`, so you can skip the Apple Developer portal.
 
+The CLI reads the bundle ID, team ID, and key ID from your project, so there's nothing to copy by hand, and you can safely run the command again at any time.
+
 {% arrow_link href="/blog/post/announcing-apns-one-click-setup" %}
 Read the announcement
 {% /arrow_link %}
