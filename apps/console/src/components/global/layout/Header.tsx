@@ -105,6 +105,7 @@ import { useOrganizationPlan } from '@/lib/react-query/hooks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useDebugOverrides } from '@/lib/debug-overrides'
 import { isPreLaunchModeEnabled } from '@/lib/pre-launch'
+import { ConsoleAccountSwitcherDialog } from '@/components/global/shared/ConsoleAccountSwitcherDialog'
 import { ImpersonateConsoleUserDialog } from '@/components/global/shared/ImpersonateConsoleUserDialog'
 import { isOperatorAccount, type OperatorAccount } from '@/lib/operator-account'
 import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
@@ -446,6 +447,7 @@ export function ConsoleHeader({
   const params = useParams({ strict: false })
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false)
+  const [switchAccountDialogOpen, setSwitchAccountDialogOpen] = useState(false)
   const projectConnectDialog = useProjectConnectDialog()
   const [themeMounted, setThemeMounted] = useState(false)
   const { theme, resolvedTheme } = useTheme()
@@ -519,7 +521,10 @@ export function ConsoleHeader({
     if (item.href === '/blog/categories/customer-stories') {
       return {
         ...item,
-        href: getBlogPageUrl('/blog/categories/customer-stories', inAppMarketingNav),
+        href: getBlogPageUrl(
+          '/blog/categories/customer-stories',
+          inAppMarketingNav,
+        ),
       }
     }
     if (item.href === '/docs') {
@@ -797,7 +802,9 @@ export function ConsoleHeader({
                 aria-label="Appwrite"
                 className={cn(
                   'group inline-flex shrink-0 items-center justify-center rounded-lg transition-transform duration-150 ease-out active:scale-[0.94] active:bg-muted/40 motion-reduce:active:scale-100 motion-reduce:active:bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                  showMarketingNav ? 'h-10 w-auto px-0 @[390px]:px-2' : 'size-10',
+                  showMarketingNav
+                    ? 'h-10 w-auto px-0 @[390px]:px-2'
+                    : 'size-10',
                   childClassName,
                 )}
               >
@@ -1442,675 +1449,716 @@ export function ConsoleHeader({
                   'animate-in fade-in-0 duration-700 ease-out motion-reduce:animate-none',
               )}
             >
-          {showGuestHeader ? (
-            <>
-              {showCenterSearch ? (
-                <button
-                  type="button"
-                  {...analyticsAttrs('command-center')}
-                  onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
-                  aria-label={resolvedCenterSearchPlaceholder}
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              ) : null}
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-              >
-                <Link
-                  to="/sign-in"
-                  search={authRedirect ? { redirect: authRedirect } : undefined}
-                  {...analyticsAttrs('auth-sign-in')}
-                >
-                  {headerCopy.actions.signIn}
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="sm"
-                variant="brandCta"
-                className="h-9 px-2 text-[13px] @[390px]:px-3"
-              >
-                <Link
-                  to="/sign-up"
-                  search={authRedirect ? { redirect: authRedirect } : undefined}
-                  {...analyticsAttrs('auth-sign-up')}
-                >
-                  {headerCopy.actions.signUp}
-                </Link>
-              </Button>
-            </>
-          ) : (
-            <>
-              {/* Search - full pill in console; compact Search+kbd on marketing so
-                  both auth states keep a true-centered nav without collisions. */}
-              {showRightSearch ? (
-                showMarketingLinks ? (
-                  <>
-                    <button
-                      type="button"
-                      {...analyticsAttrs('command-center')}
-                      onClick={openCommandCenter}
-                      className="hidden h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-accent/50 px-2.5 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
-                      aria-label={headerCopy.search.compactPlaceholder}
-                    >
-                      <Search className="h-3.5 w-3.5 shrink-0" />
-                      {searchModKey ? (
-                        <kbd
-                          dir="ltr"
-                          className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85"
-                        >
-                          {searchModKey}K
-                        </kbd>
-                      ) : null}
-                    </button>
-                    <button
-                      type="button"
-                      {...analyticsAttrs('command-center')}
-                      onClick={openCommandCenter}
-                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
-                      aria-label={headerCopy.search.compactPlaceholder}
-                    >
-                      <Search className="h-4 w-4" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      {...analyticsAttrs('command-center')}
-                      onClick={openCommandCenter}
-                      className="hidden h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
-                    >
-                      <Search className="h-3.5 w-3.5 shrink-0" />
-                      <span className="hidden @[850px]:inline">
-                        {headerCopy.search.compactPlaceholder}
-                      </span>
-                      {searchModKey ? (
-                        <span className="ms-2 hidden shrink-0 @[850px]:inline">
-                          <kbd
-                            dir="ltr"
-                            className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85"
-                          >
-                            {searchModKey}K
-                          </kbd>
-                        </span>
-                      ) : null}
-                    </button>
-
-                    <button
-                      type="button"
-                      {...analyticsAttrs('command-center')}
-                      onClick={openCommandCenter}
-                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
-                      aria-label={headerCopy.search.compactPlaceholder}
-                    >
-                      <Search className="h-4 w-4" />
-                    </button>
-                  </>
-                )
-              ) : showCenterSearch ? (
-                <button
-                  type="button"
-                  {...analyticsAttrs('command-center')}
-                  onClick={openCommandCenter}
-                  className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
-                  aria-label={resolvedCenterSearchPlaceholder}
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              ) : null}
-
-              {/* Docs / Feedback / Support - console tools; on marketing only at
-                  very wide widths so they cannot crowd the centered Changelog / stars. */}
-              {!preLaunch ? (
+              {showGuestHeader ? (
                 <>
-                  {!showMarketingLinks ? (
-                    <div className="hidden shrink-0 @[800px]:flex">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          {marketingNavLinksExternal ? (
-                            <a
-                              href={docsHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              aria-label={headerCopy.actions.docs}
-                              className={HEADER_ICON_LINK_CLASS}
-                              {...analyticsAttrs('header-docs')}
+                  {showCenterSearch ? (
+                    <button
+                      type="button"
+                      {...analyticsAttrs('command-center')}
+                      onClick={openCommandCenter}
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
+                      aria-label={resolvedCenterSearchPlaceholder}
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-[13px]"
+                  >
+                    <Link
+                      to="/sign-in"
+                      search={
+                        authRedirect ? { redirect: authRedirect } : undefined
+                      }
+                      {...analyticsAttrs('auth-sign-in')}
+                    >
+                      {headerCopy.actions.signIn}
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="brandCta"
+                    className="h-9 px-2 text-[13px] @[390px]:px-3"
+                  >
+                    <Link
+                      to="/sign-up"
+                      search={
+                        authRedirect ? { redirect: authRedirect } : undefined
+                      }
+                      {...analyticsAttrs('auth-sign-up')}
+                    >
+                      {headerCopy.actions.signUp}
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {/* Search - full pill in console; compact Search+kbd on marketing so
+                  both auth states keep a true-centered nav without collisions. */}
+                  {showRightSearch ? (
+                    showMarketingLinks ? (
+                      <>
+                        <button
+                          type="button"
+                          {...analyticsAttrs('command-center')}
+                          onClick={openCommandCenter}
+                          className="hidden h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-accent/50 px-2.5 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
+                          aria-label={headerCopy.search.compactPlaceholder}
+                        >
+                          <Search className="h-3.5 w-3.5 shrink-0" />
+                          {searchModKey ? (
+                            <kbd
+                              dir="ltr"
+                              className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85"
                             >
-                              <BookOpen className="h-4 w-4" />
-                            </a>
-                          ) : (
-                            <Link
-                              to="/docs"
-                              aria-label={headerCopy.actions.docs}
-                              className={HEADER_ICON_LINK_CLASS}
-                              {...analyticsAttrs('header-docs')}
-                            >
-                              <BookOpen className="h-4 w-4" />
-                            </Link>
-                          )}
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{headerCopy.actions.docs}</p>
-                        </TooltipContent>
-                      </Tooltip>
+                              {searchModKey}K
+                            </kbd>
+                          ) : null}
+                        </button>
+                        <button
+                          type="button"
+                          {...analyticsAttrs('command-center')}
+                          onClick={openCommandCenter}
+                          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                          aria-label={headerCopy.search.compactPlaceholder}
+                        >
+                          <Search className="h-4 w-4" />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          {...analyticsAttrs('command-center')}
+                          onClick={openCommandCenter}
+                          className="hidden h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
+                        >
+                          <Search className="h-3.5 w-3.5 shrink-0" />
+                          <span className="hidden @[850px]:inline">
+                            {headerCopy.search.compactPlaceholder}
+                          </span>
+                          {searchModKey ? (
+                            <span className="ms-2 hidden shrink-0 @[850px]:inline">
+                              <kbd
+                                dir="ltr"
+                                className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground/85"
+                              >
+                                {searchModKey}K
+                              </kbd>
+                            </span>
+                          ) : null}
+                        </button>
+
+                        <button
+                          type="button"
+                          {...analyticsAttrs('command-center')}
+                          onClick={openCommandCenter}
+                          className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                          aria-label={headerCopy.search.compactPlaceholder}
+                        >
+                          <Search className="h-4 w-4" />
+                        </button>
+                      </>
+                    )
+                  ) : showCenterSearch ? (
+                    <button
+                      type="button"
+                      {...analyticsAttrs('command-center')}
+                      onClick={openCommandCenter}
+                      className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[900px]:hidden"
+                      aria-label={resolvedCenterSearchPlaceholder}
+                    >
+                      <Search className="h-4 w-4" />
+                    </button>
+                  ) : null}
+
+                  {/* Docs / Feedback / Support - console tools; on marketing only at
+                  very wide widths so they cannot crowd the centered Changelog / stars. */}
+                  {!preLaunch ? (
+                    <>
+                      {!showMarketingLinks ? (
+                        <div className="hidden shrink-0 @[800px]:flex">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              {marketingNavLinksExternal ? (
+                                <a
+                                  href={docsHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={headerCopy.actions.docs}
+                                  className={HEADER_ICON_LINK_CLASS}
+                                  {...analyticsAttrs('header-docs')}
+                                >
+                                  <BookOpen className="h-4 w-4" />
+                                </a>
+                              ) : (
+                                <Link
+                                  to="/docs"
+                                  aria-label={headerCopy.actions.docs}
+                                  className={HEADER_ICON_LINK_CLASS}
+                                  {...analyticsAttrs('header-docs')}
+                                >
+                                  <BookOpen className="h-4 w-4" />
+                                </Link>
+                              )}
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{headerCopy.actions.docs}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      ) : null}
+
+                      <div
+                        className={cn(
+                          'hidden shrink-0',
+                          showMarketingLinks
+                            ? '@[1720px]:flex'
+                            : '@[800px]:flex',
+                        )}
+                      >
+                        <FeedbackPopover
+                          source="navbar"
+                          orgId={orgId}
+                          projectId={projectId ?? ''}
+                        />
+                      </div>
+
+                      <div
+                        className={cn(
+                          'hidden shrink-0',
+                          showMarketingLinks
+                            ? '@[1720px]:flex'
+                            : '@[900px]:flex',
+                        )}
+                      >
+                        <SupportPopover orgId={orgId} />
+                      </div>
+                    </>
+                  ) : null}
+
+                  {showExperiments ? (
+                    <div className="flex shrink-0">
+                      <ExperimentsPopover />
                     </div>
                   ) : null}
 
-                  <div
-                    className={cn(
-                      'hidden shrink-0',
-                      showMarketingLinks ? '@[1720px]:flex' : '@[800px]:flex',
-                    )}
-                  >
-                    <FeedbackPopover
-                      source="navbar"
-                      orgId={orgId}
-                      projectId={projectId ?? ''}
-                    />
-                  </div>
-
-                  <div
-                    className={cn(
-                      'hidden shrink-0',
-                      showMarketingLinks ? '@[1720px]:flex' : '@[900px]:flex',
-                    )}
-                  >
-                    <SupportPopover orgId={orgId} />
-                  </div>
-                </>
-              ) : null}
-
-              {showExperiments ? (
-                <div className="flex shrink-0">
-                  <ExperimentsPopover />
-                </div>
-              ) : null}
-
-              {/* Notifications - gated by the notifications profile feature */}
-              {showNotifications && (
-                <div className="flex shrink-0">
-                  <NotificationCenterPopover />
-                </div>
-              )}
-
-              {/* Help/Agent - hidden on small containers; gated by the agent profile feature */}
-              {showAgent && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label={headerCopy.actions.assistant}
-                      onClick={(event) => {
-                        // Safari can leave the trigger focused after a tooltip
-                        // open, which makes the next click feel like a no-op.
-                        event.currentTarget.blur()
-                        toggleChat()
-                      }}
-                      {...analyticsAttrs('ai-agent-open')}
-                      className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
-                    >
-                      <BotMessageSquare className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="flex items-center gap-1.5">
-                      <span>{headerCopy.actions.assistant}</span>
-                      <kbd className="pointer-events-none inline-flex items-center rounded bg-background/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-background">
-                        <ShortcutGlyphs keys={agentToggleShortcutKeys} />
-                      </kbd>
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-
-              {/* Divider before Upgrade Button - hidden on small containers */}
-              {showUpgradeButton && (
-                <div
-                  className={cn(
-                    'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
-                    showMarketingLinks ? '@[1720px]:block' : '@[850px]:block',
+                  {/* Notifications - gated by the notifications profile feature */}
+                  {showNotifications && (
+                    <div className="flex shrink-0">
+                      <NotificationCenterPopover />
+                    </div>
                   )}
-                />
-              )}
 
-              {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
-              {showUpgradeButton && (
-                <div
-                  className={cn(
-                    'hidden shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background',
-                    showMarketingLinks ? '@[1720px]:flex' : '@[850px]:flex',
+                  {/* Help/Agent - hidden on small containers; gated by the agent profile feature */}
+                  {showAgent && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={headerCopy.actions.assistant}
+                          onClick={(event) => {
+                            // Safari can leave the trigger focused after a tooltip
+                            // open, which makes the next click feel like a no-op.
+                            event.currentTarget.blur()
+                            toggleChat()
+                          }}
+                          {...analyticsAttrs('ai-agent-open')}
+                          className="hidden h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
+                        >
+                          <BotMessageSquare className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="flex items-center gap-1.5">
+                          <span>{headerCopy.actions.assistant}</span>
+                          <kbd className="pointer-events-none inline-flex items-center rounded bg-background/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-background">
+                            <ShortcutGlyphs keys={agentToggleShortcutKeys} />
+                          </kbd>
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
-                >
-                  <div className="upgrade-button-wrapper">
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="brandCta"
-                      className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
-                    >
-                      <Link
-                        to="/upgrade"
-                        search={{ orgId }}
-                        {...analyticsAttrs('upgrade-clicked')}
-                      >
-                        <ArrowUpCircle className="h-4 w-4" />
-                        {headerCopy.actions.upgrade}
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              )}
 
-              {/* Divider - hidden on small containers and in pre-launch
-                  (no neighboring console actions to separate from). */}
-              {!preLaunch ? (
-                <div
-                  className={cn(
-                    'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
-                    showMarketingLinks ? '@[1280px]:block' : '@[700px]:block',
-                  )}
-                />
-              ) : null}
-
-              {/* User Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    {...analyticsAttrs('user-menu')}
-                    className="flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent min-w-0"
-                  >
-                    <PhotoAvatar
-                      userId={accountId}
-                      name={displayName}
-                      isCurrentUser
-                      size="sm"
-                      className="shrink-0"
-                    />
+                  {/* Divider before Upgrade Button - hidden on small containers */}
+                  {showUpgradeButton && (
                     <div
                       className={cn(
-                        'hidden min-w-0 text-start',
+                        'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
                         showMarketingLinks
-                          ? '@[1600px]:block'
-                          : '@[800px]:block',
-                      )}
-                    >
-                      <p className="text-[13px] font-medium text-foreground truncate">
-                        {displayName}
-                      </p>
-                    </div>
-                    <ChevronDown
-                      className={cn(
-                        'hidden h-3.5 w-3.5 shrink-0 text-muted-foreground',
-                        showMarketingLinks
-                          ? '@[1600px]:block'
-                          : '@[800px]:block',
+                          ? '@[1720px]:block'
+                          : '@[850px]:block',
                       )}
                     />
-                  </button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent
-                  align="end"
-                  className="w-64 border-border bg-popover p-1"
-                >
-                  <div className="px-3 py-3 text-start">
-                    <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
-                      <span className="truncate">{displayName}</span>
-                      {isPasswordPwned && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <TriangleAlert
-                              aria-label={
-                                headerCopy.accountMenu.passwordBreached
-                              }
-                              className="h-3.5 w-3.5 shrink-0 text-red-500"
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">
-                              {headerCopy.accountMenu.passwordBreached}
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </p>
-                    {userEmail && (
-                      <p className="text-[12px] text-muted-foreground">
-                        {userEmail}
-                      </p>
-                    )}
-                  </div>
-
-                  <DropdownMenuSeparator className="my-1 bg-border" />
-
-                  {preLaunch ? null : (
-                    <>
-                      <DropdownMenuItem asChild>
-                        <Link to="/account" className={ACCOUNT_MENU_ITEM_CLASS}>
-                          <User className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.account}</span>
-                        </Link>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem asChild>
-                        <Link
-                          {...(orgId
-                            ? {
-                                to: '/organizations/$orgId',
-                                params: { orgId },
-                              }
-                            : { to: '/' })}
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                        >
-                          <FolderOpen className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.projects}</span>
-                        </Link>
-                      </DropdownMenuItem>
-
-                      {showOrgDomainsLink && orgId ? (
-                        <DropdownMenuItem asChild>
-                          <Link
-                            to="/organizations/$orgId/domains"
-                            params={{ orgId }}
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                          >
-                            <Globe className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.domains}</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      ) : null}
-
-                      <DropdownMenuSeparator className="my-1 bg-border" />
-                    </>
                   )}
 
-                  {/* Account Details */}
-                  <div className="px-3 py-2 space-y-4 text-start">
-                    {/* Member Since */}
-                    {headerAccount?.registration && (
-                      <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
-                          {headerCopy.accountMenu.memberSince}
-                        </p>
-                        <p className="text-[14px] text-foreground">
-                          {memberSince}
-                        </p>
+                  {/* Upgrade Button - hidden on small containers; only when plan cost is 0 */}
+                  {showUpgradeButton && (
+                    <div
+                      className={cn(
+                        'hidden shrink-0 rounded-md focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-1 focus-within:ring-offset-background',
+                        showMarketingLinks ? '@[1720px]:flex' : '@[850px]:flex',
+                      )}
+                    >
+                      <div className="upgrade-button-wrapper">
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="brandCta"
+                          className="h-9 shrink-0 cursor-pointer gap-1.5 px-3 text-[12px] font-semibold relative z-10 rounded-[calc(0.375rem-1px)]"
+                        >
+                          <Link
+                            to="/upgrade"
+                            search={{ orgId }}
+                            {...analyticsAttrs('upgrade-clicked')}
+                          >
+                            <ArrowUpCircle className="h-4 w-4" />
+                            {headerCopy.actions.upgrade}
+                          </Link>
+                        </Button>
                       </div>
-                    )}
-
-                    {/* Account status: activity and 2FA in one list */}
-                    <div>
-                      <p className="text-[11px] text-muted-foreground mb-1.5">
-                        {headerCopy.accountMenu.accountStatus}
-                      </p>
-                      <ul className="space-y-1.5">
-                        <li className="flex items-center gap-2">
-                          <span className="flex h-3.5 w-3.5 items-center justify-center">
-                            <span
-                              className={cn(
-                                'h-2 w-2 rounded-full',
-                                headerAccount
-                                  ? 'bg-emerald-500'
-                                  : 'bg-muted-foreground',
-                              )}
-                            />
-                          </span>
-                          <p className="text-[14px] text-foreground">
-                            {accountStatus}
-                          </p>
-                        </li>
-                        {features.accountMfa && (
-                          <li className="flex items-center gap-2">
-                            <Shield
-                              className={cn(
-                                'h-3.5 w-3.5',
-                                is2FAEnabled
-                                  ? 'text-emerald-500'
-                                  : 'text-muted-foreground',
-                              )}
-                            />
-                            <p
-                              className={cn(
-                                'text-[14px]',
-                                is2FAEnabled
-                                  ? 'text-foreground'
-                                  : 'text-muted-foreground',
-                              )}
-                            >
-                              {is2FAEnabled
-                                ? headerCopy.accountMenu.twoFactorEnabled
-                                : headerCopy.accountMenu.twoFactorDisabled}
-                            </p>
-                          </li>
-                        )}
-                      </ul>
                     </div>
-
-                    {/* Account ID */}
-                    {accountId && (
-                      <div>
-                        <p className="text-[11px] text-muted-foreground mb-1.5">
-                          {headerCopy.accountMenu.accountId}
-                        </p>
-                        <TooltipProvider delayDuration={0}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={() =>
-                                  copyToClipboard(accountId, 'accountId')
-                                }
-                                className="flex cursor-pointer items-center gap-1.5 group"
-                              >
-                                <p className="text-[14px] text-foreground font-mono">
-                                  {accountId}
-                                </p>
-                                {copiedField === 'accountId' ? (
-                                  <Check className="h-3.5 w-3.5 text-emerald-500" />
-                                ) : (
-                                  <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                )}
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left">
-                              <p>
-                                {copiedField === 'accountId'
-                                  ? headerCopy.accountMenu.copied
-                                  : headerCopy.accountMenu.copyAccountId}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    )}
-                  </div>
-
-                  {preLaunch ? null : (
-                    <>
-                      <DropdownMenuSeparator className="my-1 bg-border" />
-
-                      {accountMenuLinks.includes('home') && (
-                        <DropdownMenuItem asChild>
-                          {marketingNavLinksExternal ? (
-                            <a
-                              href={homeHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={ACCOUNT_MENU_ITEM_CLASS}
-                              {...analyticsAttrs('header-home')}
-                            >
-                              <Home className="h-4 w-4" />
-                              <span>{headerCopy.accountMenu.home}</span>
-                            </a>
-                          ) : (
-                            <Link
-                              to="/home"
-                              className={ACCOUNT_MENU_ITEM_CLASS}
-                              {...analyticsAttrs('header-home')}
-                            >
-                              <Home className="h-4 w-4" />
-                              <span>{headerCopy.accountMenu.home}</span>
-                            </Link>
-                          )}
-                        </DropdownMenuItem>
-                      )}
-
-                      {accountMenuLinks.includes('console') && (
-                        <DropdownMenuItem asChild>
-                          <Link
-                            {...(orgId
-                              ? {
-                                  to: '/organizations/$orgId',
-                                  params: { orgId },
-                                }
-                              : { to: '/' })}
-                            className={ACCOUNT_MENU_ITEM_CLASS}
-                            {...analyticsAttrs('header-console')}
-                          >
-                            <LayoutDashboard className="h-4 w-4" />
-                            <span>{headerCopy.accountMenu.console}</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-
-                      {accountMenuLinks.includes('docs') && (
-                        <DropdownMenuItem asChild>
-                          {marketingNavLinksExternal ? (
-                            <a
-                              href={docsHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={ACCOUNT_MENU_ITEM_CLASS}
-                              {...analyticsAttrs('header-docs')}
-                            >
-                              <BookOpen className="h-4 w-4" />
-                              <span>{headerCopy.accountMenu.docs}</span>
-                            </a>
-                          ) : (
-                            <Link
-                              to="/docs"
-                              className={ACCOUNT_MENU_ITEM_CLASS}
-                              {...analyticsAttrs('header-docs')}
-                            >
-                              <BookOpen className="h-4 w-4" />
-                              <span>{headerCopy.accountMenu.docs}</span>
-                            </Link>
-                          )}
-                        </DropdownMenuItem>
-                      )}
-
-                      {accountMenuLinks.includes('changelog') && (
-                        <DropdownMenuItem asChild>
-                          {marketingNavLinksExternal ? (
-                            <a
-                              href={changelogHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={ACCOUNT_MENU_ITEM_CLASS}
-                              {...(showChangelogBadge
-                                ? {
-                                    'aria-label':
-                                      headerCopy.marketingNav
-                                        .changelogNewUpdatesAria,
-                                  }
-                                : {})}
-                            >
-                              <Clock className="h-4 w-4" />
-                              <span>{headerCopy.accountMenu.changelog}</span>
-                            </a>
-                          ) : (
-                            <Link
-                              to="/changelog"
-                              className={ACCOUNT_MENU_ITEM_CLASS}
-                              {...(showChangelogBadge
-                                ? {
-                                    'aria-label':
-                                      headerCopy.marketingNav
-                                        .changelogNewUpdatesAria,
-                                  }
-                                : {})}
-                            >
-                              <Clock className="h-4 w-4" />
-                              <span>{headerCopy.accountMenu.changelog}</span>
-                            </Link>
-                          )}
-                        </DropdownMenuItem>
-                      )}
-                    </>
                   )}
 
-                  {showAdminSection && !preLaunch && (
-                    <>
+                  {/* Divider - hidden on small containers and in pre-launch
+                  (no neighboring console actions to separate from). */}
+                  {!preLaunch ? (
+                    <div
+                      className={cn(
+                        'mx-1 hidden h-5 w-px shrink-0 bg-border @[640px]:mx-2',
+                        showMarketingLinks
+                          ? '@[1280px]:block'
+                          : '@[700px]:block',
+                      )}
+                    />
+                  ) : null}
+
+                  {/* User Menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        {...analyticsAttrs('user-menu')}
+                        className="flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 transition-colors hover:bg-accent min-w-0"
+                      >
+                        <PhotoAvatar
+                          userId={accountId}
+                          name={displayName}
+                          isCurrentUser
+                          size="sm"
+                          className="shrink-0"
+                        />
+                        <div
+                          className={cn(
+                            'hidden min-w-0 text-start',
+                            showMarketingLinks
+                              ? '@[1600px]:block'
+                              : '@[800px]:block',
+                          )}
+                        >
+                          <p className="text-[13px] font-medium text-foreground truncate">
+                            {displayName}
+                          </p>
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            'hidden h-3.5 w-3.5 shrink-0 text-muted-foreground',
+                            showMarketingLinks
+                              ? '@[1600px]:block'
+                              : '@[800px]:block',
+                          )}
+                        />
+                      </button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-64 border-border bg-popover p-1"
+                    >
+                      <div className="px-3 py-3 text-start">
+                        <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                          <span className="truncate">{displayName}</span>
+                          {isPasswordPwned && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <TriangleAlert
+                                  aria-label={
+                                    headerCopy.accountMenu.passwordBreached
+                                  }
+                                  className="h-3.5 w-3.5 shrink-0 text-red-500"
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">
+                                  {headerCopy.accountMenu.passwordBreached}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </p>
+                        {userEmail && (
+                          <p className="text-[12px] text-muted-foreground">
+                            {userEmail}
+                          </p>
+                        )}
+                      </div>
+
                       <DropdownMenuSeparator className="my-1 bg-border" />
 
-                      <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                        {headerCopy.accountMenu.admin}
-                      </DropdownMenuLabel>
+                      {preLaunch ? null : (
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/account"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                            >
+                              <User className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.account}</span>
+                            </Link>
+                          </DropdownMenuItem>
 
-                      <DropdownMenuItem asChild>
-                        <Link to="/cache" className={ACCOUNT_MENU_ITEM_CLASS}>
-                          <DatabaseZap className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.cache}</span>
-                        </Link>
-                      </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              {...(orgId
+                                ? {
+                                    to: '/organizations/$orgId',
+                                    params: { orgId },
+                                  }
+                                : { to: '/' })}
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                            >
+                              <FolderOpen className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.projects}</span>
+                            </Link>
+                          </DropdownMenuItem>
 
-                      <DropdownMenuItem asChild>
-                        <Link to="/blocks" className={ACCOUNT_MENU_ITEM_CLASS}>
-                          <ShieldAlert className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.blocks}</span>
-                        </Link>
-                      </DropdownMenuItem>
+                          {showOrgDomainsLink && orgId ? (
+                            <DropdownMenuItem asChild>
+                              <Link
+                                to="/organizations/$orgId/domains"
+                                params={{ orgId }}
+                                className={ACCOUNT_MENU_ITEM_CLASS}
+                              >
+                                <Globe className="h-4 w-4" />
+                                <span>{headerCopy.accountMenu.domains}</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          ) : null}
 
-                      <DropdownMenuItem asChild>
-                        <Link
-                          to="/generator"
-                          className={ACCOUNT_MENU_ITEM_CLASS}
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          <span>{headerCopy.accountMenu.generator}</span>
-                        </Link>
-                      </DropdownMenuItem>
+                          <DropdownMenuSeparator className="my-1 bg-border" />
+                        </>
+                      )}
+
+                      {/* Account Details */}
+                      <div className="px-3 py-2 space-y-4 text-start">
+                        {/* Member Since */}
+                        {headerAccount?.registration && (
+                          <div>
+                            <p className="text-[11px] text-muted-foreground mb-1.5">
+                              {headerCopy.accountMenu.memberSince}
+                            </p>
+                            <p className="text-[14px] text-foreground">
+                              {memberSince}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Account status: activity and 2FA in one list */}
+                        <div>
+                          <p className="text-[11px] text-muted-foreground mb-1.5">
+                            {headerCopy.accountMenu.accountStatus}
+                          </p>
+                          <ul className="space-y-1.5">
+                            <li className="flex items-center gap-2">
+                              <span className="flex h-3.5 w-3.5 items-center justify-center">
+                                <span
+                                  className={cn(
+                                    'h-2 w-2 rounded-full',
+                                    headerAccount
+                                      ? 'bg-emerald-500'
+                                      : 'bg-muted-foreground',
+                                  )}
+                                />
+                              </span>
+                              <p className="text-[14px] text-foreground">
+                                {accountStatus}
+                              </p>
+                            </li>
+                            {features.accountMfa && (
+                              <li className="flex items-center gap-2">
+                                <Shield
+                                  className={cn(
+                                    'h-3.5 w-3.5',
+                                    is2FAEnabled
+                                      ? 'text-emerald-500'
+                                      : 'text-muted-foreground',
+                                  )}
+                                />
+                                <p
+                                  className={cn(
+                                    'text-[14px]',
+                                    is2FAEnabled
+                                      ? 'text-foreground'
+                                      : 'text-muted-foreground',
+                                  )}
+                                >
+                                  {is2FAEnabled
+                                    ? headerCopy.accountMenu.twoFactorEnabled
+                                    : headerCopy.accountMenu.twoFactorDisabled}
+                                </p>
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+
+                        {/* Account ID */}
+                        {accountId && (
+                          <div>
+                            <p className="text-[11px] text-muted-foreground mb-1.5">
+                              {headerCopy.accountMenu.accountId}
+                            </p>
+                            <TooltipProvider delayDuration={0}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    onClick={() =>
+                                      copyToClipboard(accountId, 'accountId')
+                                    }
+                                    className="flex cursor-pointer items-center gap-1.5 group"
+                                  >
+                                    <p className="text-[14px] text-foreground font-mono">
+                                      {accountId}
+                                    </p>
+                                    {copiedField === 'accountId' ? (
+                                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                    ) : (
+                                      <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    )}
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">
+                                  <p>
+                                    {copiedField === 'accountId'
+                                      ? headerCopy.accountMenu.copied
+                                      : headerCopy.accountMenu.copyAccountId}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        )}
+                      </div>
+
+                      {preLaunch ? null : (
+                        <>
+                          <DropdownMenuSeparator className="my-1 bg-border" />
+
+                          {accountMenuLinks.includes('home') && (
+                            <DropdownMenuItem asChild>
+                              {marketingNavLinksExternal ? (
+                                <a
+                                  href={homeHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={ACCOUNT_MENU_ITEM_CLASS}
+                                  {...analyticsAttrs('header-home')}
+                                >
+                                  <Home className="h-4 w-4" />
+                                  <span>{headerCopy.accountMenu.home}</span>
+                                </a>
+                              ) : (
+                                <Link
+                                  to="/home"
+                                  className={ACCOUNT_MENU_ITEM_CLASS}
+                                  {...analyticsAttrs('header-home')}
+                                >
+                                  <Home className="h-4 w-4" />
+                                  <span>{headerCopy.accountMenu.home}</span>
+                                </Link>
+                              )}
+                            </DropdownMenuItem>
+                          )}
+
+                          {accountMenuLinks.includes('console') && (
+                            <DropdownMenuItem asChild>
+                              <Link
+                                {...(orgId
+                                  ? {
+                                      to: '/organizations/$orgId',
+                                      params: { orgId },
+                                    }
+                                  : { to: '/' })}
+                                className={ACCOUNT_MENU_ITEM_CLASS}
+                                {...analyticsAttrs('header-console')}
+                              >
+                                <LayoutDashboard className="h-4 w-4" />
+                                <span>{headerCopy.accountMenu.console}</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+
+                          {accountMenuLinks.includes('docs') && (
+                            <DropdownMenuItem asChild>
+                              {marketingNavLinksExternal ? (
+                                <a
+                                  href={docsHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={ACCOUNT_MENU_ITEM_CLASS}
+                                  {...analyticsAttrs('header-docs')}
+                                >
+                                  <BookOpen className="h-4 w-4" />
+                                  <span>{headerCopy.accountMenu.docs}</span>
+                                </a>
+                              ) : (
+                                <Link
+                                  to="/docs"
+                                  className={ACCOUNT_MENU_ITEM_CLASS}
+                                  {...analyticsAttrs('header-docs')}
+                                >
+                                  <BookOpen className="h-4 w-4" />
+                                  <span>{headerCopy.accountMenu.docs}</span>
+                                </Link>
+                              )}
+                            </DropdownMenuItem>
+                          )}
+
+                          {accountMenuLinks.includes('changelog') && (
+                            <DropdownMenuItem asChild>
+                              {marketingNavLinksExternal ? (
+                                <a
+                                  href={changelogHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={ACCOUNT_MENU_ITEM_CLASS}
+                                  {...(showChangelogBadge
+                                    ? {
+                                        'aria-label':
+                                          headerCopy.marketingNav
+                                            .changelogNewUpdatesAria,
+                                      }
+                                    : {})}
+                                >
+                                  <Clock className="h-4 w-4" />
+                                  <span>
+                                    {headerCopy.accountMenu.changelog}
+                                  </span>
+                                </a>
+                              ) : (
+                                <Link
+                                  to="/changelog"
+                                  className={ACCOUNT_MENU_ITEM_CLASS}
+                                  {...(showChangelogBadge
+                                    ? {
+                                        'aria-label':
+                                          headerCopy.marketingNav
+                                            .changelogNewUpdatesAria,
+                                      }
+                                    : {})}
+                                >
+                                  <Clock className="h-4 w-4" />
+                                  <span>
+                                    {headerCopy.accountMenu.changelog}
+                                  </span>
+                                </Link>
+                              )}
+                            </DropdownMenuItem>
+                          )}
+                        </>
+                      )}
+
+                      {showAdminSection && !preLaunch && (
+                        <>
+                          <DropdownMenuSeparator className="my-1 bg-border" />
+
+                          <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                            {headerCopy.accountMenu.admin}
+                          </DropdownMenuLabel>
+
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/cache"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                            >
+                              <DatabaseZap className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.cache}</span>
+                            </Link>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/blocks"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                            >
+                              <ShieldAlert className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.blocks}</span>
+                            </Link>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/generator"
+                              className={ACCOUNT_MENU_ITEM_CLASS}
+                            >
+                              <Sparkles className="h-4 w-4" />
+                              <span>{headerCopy.accountMenu.generator}</span>
+                            </Link>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            onSelect={() => {
+                              window.setTimeout(() => {
+                                setImpersonateDialogOpen(true)
+                              }, 0)
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span>{headerCopy.accountMenu.impersonate}</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            className={ACCOUNT_MENU_ITEM_CLASS}
+                            onSelect={() => {
+                              window.setTimeout(() => {
+                                setSwitchAccountDialogOpen(true)
+                              }, 0)
+                            }}
+                          >
+                            <Users className="h-4 w-4" />
+                            <span>{t('Switch account')}</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      <DropdownMenuSeparator className="my-1 bg-border" />
+
+                      <ThemeToggle />
+
+                      <DropdownMenuSeparator className="my-1 bg-border" />
 
                       <DropdownMenuItem
+                        onClick={() => signOut()}
                         className={ACCOUNT_MENU_ITEM_CLASS}
-                        onSelect={() => {
-                          window.setTimeout(() => {
-                            setImpersonateDialogOpen(true)
-                          }, 0)
-                        }}
                       >
-                        <Eye className="h-4 w-4" />
-                        <span>{headerCopy.accountMenu.impersonate}</span>
+                        <LogOut className="h-4 w-4" />
+                        <span>{headerCopy.actions.signOut}</span>
                       </DropdownMenuItem>
-                    </>
-                  )}
-
-                  <DropdownMenuSeparator className="my-1 bg-border" />
-
-                  <ThemeToggle />
-
-                  <DropdownMenuSeparator className="my-1 bg-border" />
-
-                  <DropdownMenuItem
-                    onClick={() => signOut()}
-                    className={ACCOUNT_MENU_ITEM_CLASS}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>{headerCopy.actions.signOut}</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <ImpersonateConsoleUserDialog
-                open={impersonateDialogOpen}
-                onOpenChange={setImpersonateDialogOpen}
-              />
-            </>
-          )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <ImpersonateConsoleUserDialog
+                    open={impersonateDialogOpen}
+                    onOpenChange={setImpersonateDialogOpen}
+                  />
+                  <ConsoleAccountSwitcherDialog
+                    open={switchAccountDialogOpen}
+                    onOpenChange={setSwitchAccountDialogOpen}
+                  />
+                </>
+              )}
             </div>
           )}
         </div>
