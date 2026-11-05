@@ -226,6 +226,14 @@ trait ProxyBase
         $rule = $this->createAPIRule('nested.' . \uniqid() . '.fallback.localhost');
         $this->assertSame(400, $rule['headers']['status-code']);
 
+        // A sibling name that merely ends with the platform domain string is not a subdomain of it
+        // (here the second label is 'xfallback', not 'fallback'), so it must not be claimed as
+        // Appwrite-owned and auto-verified; it takes the normal DNS path like any custom domain.
+        $lookalike = $this->createAPIRule(\uniqid() . '.xfallback.localhost');
+        $this->assertSame(201, $lookalike['headers']['status-code']);
+        $this->assertNotSame('verified', $lookalike['body']['status']);
+        $this->cleanupRule($lookalike['body']['$id']);
+
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://appwrite.test');
         $proxyClient->addHeader('x-appwrite-hostname', 'fallback.localhost');
@@ -764,6 +772,11 @@ trait ProxyBase
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
+        // No certificate was requested for an unverified domain
+        $this->assertArrayHasKey('expireAt', $rule['body']);
+        $this->assertSame('', $rule['body']['expireAt']);
+        $this->assertArrayHasKey('certificateStatus', $rule['body']);
+        $this->assertSame('', $rule['body']['certificateStatus']);
 
         $this->cleanupRule($ruleId);
     }
@@ -804,6 +817,10 @@ trait ProxyBase
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('logs', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('renewAt', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('expireAt', $rules['body']['rules'][0]);
+        $this->assertSame('', $rules['body']['rules'][0]['expireAt']);
+        $this->assertArrayHasKey('certificateStatus', $rules['body']['rules'][0]);
+        $this->assertSame('', $rules['body']['rules'][0]['certificateStatus']);
 
         $rule2Domain = \uniqid() . '-list1.custom.localhost';
         $rule2Id = $this->setupAPIRule($rule2Domain);

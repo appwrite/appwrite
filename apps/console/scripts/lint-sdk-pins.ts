@@ -3,7 +3,8 @@
  * on a branch, never on main: they ship endpoints no release carries and
  * whatever generator their Cloud branch pinned. pkg.pr.new builds of this
  * repository are fine on main: `bun run sdk:preview` builds them from a
- * release's spec plus this repository's.
+ * release's spec plus this repository's. Also fail when a bun.lock entry has no
+ * integrity hash.
  *
  * Usage:
  *   bun run lint:sdk-pins
@@ -58,6 +59,27 @@ async function main() {
       }
       findings.push({ file, line: index + 1, text: text.trim() })
     })
+  }
+
+  // Bun skips the integrity check for an entry without a hash, and drops the hash when a re-pin resolves
+  // from its cache.
+  const unverified = (await Bun.file(join(ROOT, 'bun.lock')).text())
+    .split('\n')
+    .flatMap((text, index) =>
+      /^\s+"[^"]+": \["/.test(text) && !text.includes('"sha512-')
+        ? [{ line: index + 1, text: text.trim() }]
+        : [],
+    )
+
+  if (unverified.length > 0) {
+    console.error('bun.lock entries without an integrity hash:\n')
+    for (const entry of unverified) {
+      console.error(`  bun.lock:${entry.line}  ${entry.text}`)
+    }
+    console.error(
+      '\nRe-pin with an empty cache so bun records the hash: BUN_INSTALL_CACHE_DIR=$(mktemp -d) bun install',
+    )
+    process.exit(1)
   }
 
   if (findings.length > 0) {

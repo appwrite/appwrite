@@ -20,6 +20,10 @@ import {
   buildCustomEventSnippets,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
+import {
+  ANALYTICS_PROPERTY_TYPE_META,
+  propertyType,
+} from '@/lib/analytics-wizard/property-types'
 import { ANALYTICS_AUTOMATIC_EVENTS } from '@/lib/react-query/hooks'
 
 type CustomEventsGuideDialogProps = {
@@ -58,7 +62,13 @@ export function CustomEventsGuideDialog({
   onOpenSetup,
 }: CustomEventsGuideDialogProps) {
   const t = useT()
-  const [platform, setPlatform] = useState<AnalyticsPlatform>('web')
+  const [selected, setSelected] = useState<AnalyticsPlatform>()
+  const platforms = property
+    ? ANALYTICS_PROPERTY_TYPE_META[propertyType(property)].platforms
+    : ANALYTICS_PLATFORMS
+  // The property can load after mount, so the default follows its type.
+  const platform =
+    selected && platforms.includes(selected) ? selected : platforms[0]
 
   const blocks = useMemo(
     () =>
@@ -113,9 +123,9 @@ export function CustomEventsGuideDialog({
               <p className="text-[13px] font-medium text-foreground">
                 {t('Send your first event')}
               </p>
-              <Tabs value={platform} onValueChange={(v) => setPlatform(v as AnalyticsPlatform)}>
+              <Tabs value={platform} onValueChange={(v) => setSelected(v as AnalyticsPlatform)}>
                 <TabsList>
-                  {ANALYTICS_PLATFORMS.map((id) => (
+                  {platforms.map((id) => (
                     <TabsTrigger key={id} value={id}>
                       {t(ANALYTICS_PLATFORM_META[id].label)}
                     </TabsTrigger>

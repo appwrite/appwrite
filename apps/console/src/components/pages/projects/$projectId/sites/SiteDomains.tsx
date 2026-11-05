@@ -24,16 +24,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
-import { canViewRuleLogs, getApexDomain } from '@/lib/utils/proxy-domains'
-import { Loader2 } from 'lucide-react'
+import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import {
   useSiteDomains,
   useProject,
   useOrganizationDomains} from '@/lib/react-query/hooks'
 import { DeleteDomainDialog } from '@/components/pages/projects/$projectId/settings/domains/DeleteDomain'
 import { ProxyRuleContextMenu } from '@/components/pages/projects/$projectId/settings/domains/ProxyRuleContextMenu'
+import { RuleStatusBadge } from '@/components/pages/projects/$projectId/settings/domains/RuleStatusBadge'
 import { ViewLogsDialog } from '@/components/pages/projects/$projectId/settings/domains/ViewLogs'
 import { VerifyDomain } from './_components/VerifyDomain'
 import { toast } from 'sonner'
@@ -149,9 +152,7 @@ export function SiteDomainsView() {
                 <TableBody>
                   {rules.map((rule) => {
                     const ruleData = rule as Models.ProxyRule
-                    const statusConfig = getDomainStatusBadgeConfig(
-                      ruleData.status,
-                    )
+                    const statusConfig = getRuleStatusBadgeConfig(ruleData)
 
                     return (
                       <ProxyRuleContextMenu
@@ -192,34 +193,19 @@ export function SiteDomainsView() {
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <Badge
-                              variant={statusConfig.variant}
-                              className="text-[10px] shrink-0 gap-1.5"
-                              title={
-                                ruleData.status === 'verifying'
-                                  ? t(
-                                      'SSL certificate is being issued. This usually takes a couple of minutes.',
-                                    )
-                                  : undefined
-                              }
-                            >
-                              {ruleData.status === 'verifying' && (
-                                <Loader2 className="h-3 w-3 animate-spin" />
+                            <RuleStatusBadge rule={ruleData} />
+                            {statusConfig.variant !== 'success' &&
+                              canViewRuleLogs(ruleData) && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  className="h-auto p-0 text-[13px]"
+                                  onClick={() => handleViewLogs(ruleData)}
+                                >
+                                  {t('View logs')}
+                                </Button>
                               )}
-                              {t(statusConfig.label)}
-                            </Badge>
-                            {ruleData.status !== 'verified' && (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                className="h-auto p-0 text-[13px]"
-                                onClick={() => handleViewLogs(ruleData)}
-                              >
-                                {t('View logs')}
-                              </Button>
-                            )}
-                            {(ruleData.status === 'created' ||
-                              ruleData.status === 'unverified') && (
+                            {canRetryRule(ruleData) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -250,8 +236,7 @@ export function SiteDomainsView() {
                                     </MenuItemContent>
                                   </DropdownMenuItem>
                                 )}
-                                {(ruleData.status === 'created' ||
-                                  ruleData.status === 'unverified') && (
+                                {canRetryRule(ruleData) && (
                                   <DropdownMenuItem
                                     onClick={() => handleRetry(ruleData)}
                                   >
@@ -349,10 +334,6 @@ export function SiteDomainsView() {
             region={project?.region}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onVerifySuccess={() => {
-              setVerifyOpen(false)
-              setSelectedRule(null)
-            }}
-            onReconfigure={() => {
               setVerifyOpen(false)
               setSelectedRule(null)
             }}
