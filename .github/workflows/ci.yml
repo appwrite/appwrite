@@ -892,7 +892,7 @@ jobs:
           _APP_STORAGE_S3_REGION: us-east-1
           _APP_STORAGE_S3_ENDPOINT: http://minio:9000
           _APP_EXECUTOR_CONNECTION_STORAGE: ${{ matrix.config.storage_device == 's3' && 's3://minio:minio12345@localhost?region=us-east-1&url=http%3A%2F%2Fminio%3A9000' || 'local://localhost' }}
-          _APP_CONNECTIONS_STORAGE_CACHE: ${{ matrix.config.storage_cache }}
+          _APP_CONNECTIONS_STORAGE_CACHE: ${{ matrix.config.storage_cache_percent && 's3://minio:minio12345@minio/appwrite?region=us-east-1' || '' }}
           _APP_STORAGE_CACHE_PERCENT: ${{ matrix.config.storage_cache_percent || '0' }}
           # Few enough workers for the outage test to run each one out of device connections.
           _APP_WORKER_PER_CORE: ${{ matrix.config.worker_per_core || '6' }}
