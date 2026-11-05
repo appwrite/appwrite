@@ -1,5 +1,5 @@
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
-import { isValidRelativeRedirect } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 
 /**
  * Console operator impersonation (Console Auth users via console SDK - not project Auth users).
