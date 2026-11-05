@@ -721,7 +721,7 @@ return function (Container $context): void {
         return;
     }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
 
-    $context->set('device', function (string $mode, Project $project, Project $console, Request $request, Database $dbForProject, Database $dbForPlatform, Token $proofForToken, $authorization): ?Document {
+    $context->set('device', function (Project $project, Request $request, Database $dbForProject, Token $proofForToken, $authorization): ?Document {
         /**
          * Resolves the account-switching device from the request, or null when there is none.
          *
@@ -729,10 +729,14 @@ return function (Container $context): void {
          * cookie (or its _legacy twin), the x-appwrite-device header for SSR clients, or the
          * x-fallback-cookies header for clients that block third-party cookies. The device
          * document is looked up by id and gated by verifying the secret, like a session.
+         *
+         * Keyed and stored by the request's project, the same as the create/update/delete
+         * actions and the session-attach hook, so a device resolves in every mode (dbForProject
+         * already maps the console project to the platform database).
          */
         $authorization->setStatus(true);
 
-        $key = $mode === APP_MODE_ADMIN ? $console->getDeviceKey() : $project->getDeviceKey();
+        $key = $project->getDeviceKey();
 
         $store = new Store();
         $store->setKey($key);
@@ -760,9 +764,7 @@ return function (Container $context): void {
             return null;
         }
 
-        $db = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
-
-        $device = $authorization->skip(fn () => $db->getDocument('devices', $deviceId));
+        $device = $authorization->skip(fn () => $dbForProject->getDocument('devices', $deviceId));
 
         if (
             $device->isEmpty()
@@ -775,7 +777,7 @@ return function (Container $context): void {
         }
 
         return $device;
-    }, ['mode', 'project', 'console', 'request', 'dbForProject', 'dbForPlatform', 'proofForToken', 'authorization']);
+    }, ['project', 'request', 'dbForProject', 'proofForToken', 'authorization']);
 
     $context->set('pwnedPasswords', function (Cache $cache) {
         // Nothing is asked until an operator points this at a service

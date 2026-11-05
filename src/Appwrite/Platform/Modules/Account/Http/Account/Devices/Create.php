@@ -75,6 +75,7 @@ class Create extends Action
             ->inject('cookieDomain')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('session')
             ->callback($this->action(...));
     }
 
@@ -91,6 +92,7 @@ class Create extends Action
         ?string $cookieDomain,
         Event $queueForEvents,
         Authorization $authorization,
+        ?Document $current,
     ): void {
         if (($project->getAttribute('auths', [])['accountDevices'] ?? true) === false) {
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Account devices are disabled for this project');
@@ -146,6 +148,31 @@ class Create extends Action
 
         $device = $authorization->skip(fn () => $dbForProject->createDocument('devices', $device));
 
+        // Adopt the caller's current session so the account they are already signed in as is
+        // in the device and switchable, not just sessions created after the device exists.
+        $sessions = [];
+        if ($current instanceof Document && empty($current->getAttribute('deviceId', ''))) {
+            $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $current->getId(), new Document([
+                'deviceId' => $device->getId(),
+                'deviceInternalId' => $device->getSequence(),
+            ])));
+            $authorization->skip(fn () => $dbForProject->updateDocument('devices', $device->getId(), new Document([
+                'activeSessionId' => $current->getId(),
+                'activeSessionInternalId' => $current->getSequence(),
+            ])));
+            $dbForProject->purgeCachedDocument('users', $current->getAttribute('userId'));
+
+            $device
+                ->setAttribute('activeSessionId', $current->getId())
+                ->setAttribute('activeSessionInternalId', $current->getSequence());
+
+            $current
+                ->setAttribute('current', true)
+                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($current->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
+                ->setAttribute('secret', $current->getAttribute('secret', ''));
+            $sessions = [$current];
+        }
+
         $store = new Store();
         $store
             ->setKey($project->getDeviceKey())
@@ -163,7 +190,7 @@ class Create extends Action
             ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $device
-            ->setAttribute('sessions', [])
+            ->setAttribute('sessions', $sessions)
             ->setAttribute('secret', $encoded);
 
         $queueForEvents

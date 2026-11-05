@@ -482,10 +482,18 @@ class V25 extends Migration
 
                 case 'devices':
                     // Added in 2.8.0 for account switching.
+                    // On shared tables the collection is global: created with a project's tenant, its
+                    // metadata row would belong to that project only and be missing for every other one.
+                    $tenant = $this->dbForProject->getTenant();
+                    if ($this->dbForProject->hasSharedTables()) {
+                        $this->dbForProject->setTenant(null);
+                    }
                     try {
                         $this->createCollection('devices');
                     } catch (Throwable $th) {
                         Console::warning("Failed to create collection \"devices\": {$th->getMessage()}");
+                    } finally {
+                        $this->dbForProject->setTenant($tenant);
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
