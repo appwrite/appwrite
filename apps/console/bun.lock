@@ -5,7 +5,7 @@
     "": {
       "name": "template-tanstack-start",
       "dependencies": {
-        "@appwrite.io/console": "https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@a332e2676382f53c73af93bf30a1156bb1d648c6",
+        "@appwrite.io/console": "20.1.0-rc.3",
         "@appwrite.io/specs": "github:appwrite/specs#9a50097dd538fd7663748aceed37fa05692bc5e4",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -143,7 +143,7 @@
     "use-sync-external-store": "^1.6.0",
   },
   "packages": {
-    "@appwrite.io/console": ["@appwrite.io/console@https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@a332e2676382f53c73af93bf30a1156bb1d648c6", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }],
+    "@appwrite.io/console": ["@appwrite.io/console@20.1.0-rc.3", "", { "dependencies": { "buffer": "6.0.3", "json-bigint": "1.0.0", "mqtt": "5.16.1" } }, "sha512-pN8xVe+kJuBd3a7mmPMs6rLOdI/EVjdbF9RFK4uFF2nXiRDhpEVPY/ygK7RX+WgtBWXAhuEVVNm70fJyy7jQMQ=="],
 
     "@appwrite.io/specs": ["@appwrite.io/specs@github:appwrite/specs#9a50097", {}, "appwrite-specs-9a50097"],
 
