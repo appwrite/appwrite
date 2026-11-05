@@ -113,13 +113,33 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('Nothing in between waits on you.')
   })
 
-  test('runs the first slice on client-side sessions, which need no key', () => {
+  test('defaults to TanStack Start and deploys web apps to Appwrite Sites', () => {
     const markdown = generateAgentSetupMarkdown()
-    expect(markdown).toContain('- **Sessions**: client-side')
-    expect(markdown).toContain('Client-side sessions need no server key')
     expect(markdown).toContain(
-      'The first slice runs on client-side sessions (step 5) and needs no key.',
+      'recommend TanStack Start with TypeScript for web',
     )
+    expect(markdown).toContain(
+      '- **Ship**: deploy web apps to Appwrite Sites (step 9)',
+    )
+    expect(markdown).toContain('Deploy unless the user chose local only.')
+  })
+
+  test('never asks the user for a server key up front', () => {
+    const markdown = generateAgentSetupMarkdown()
+    expect(markdown).toContain(
+      'Client-only apps (mobile, single-page apps) use client-side sessions and need no key.',
+    )
+    expect(markdown).toContain(
+      '**On Appwrite Sites**, every server-rendered request carries a short-lived key in the `x-appwrite-key` header',
+    )
+    expect(markdown).toContain(
+      'appwrite project create-ephemeral-key --scopes <scope> --duration 3600 --json --show-secrets',
+    )
+    expect(markdown).toContain(
+      'apiKey: request.headers.get("x-appwrite-key") ?? process.env.APPWRITE_API_KEY!',
+    )
+    expect(markdown).toContain('--scopes sessions.write')
+    expect(markdown).toContain('Never set `APPWRITE_API_KEY` on the site')
   })
 
   test('deletes its own test data instead of handing cleanup to the user', () => {
@@ -129,7 +149,7 @@ describe('generateAgentSetupMarkdown', () => {
     )
     expect(markdown).toContain('appwrite users delete --user-id')
     expect(markdown).toContain(
-      '| Test data | A test user and a few rows, created to verify the build | Deleted once the checks pass |',
+      '| Test data | A test user and rows, to verify the build | Deleted once the checks pass |',
     )
   })
 
@@ -151,12 +171,13 @@ describe('generateAgentSetupMarkdown', () => {
     expect(markdown).toContain('x-appwrite-key')
   })
 
-  test('gets server keys from a prefilled Console link, not MCP or the CLI', () => {
+  test('saves the prefilled key link for code that runs outside Sites', () => {
     const markdown = generateAgentSetupMarkdown()
     expect(API_KEY_CREATE_LINK).toBe(
       'https://appwrite.io/projects/<projectId>/api-keys?name=<App>%20server&scopes=<scope>,<scope>',
     )
     expect(markdown).toContain(API_KEY_CREATE_LINK)
+    expect(markdown).toContain('Only then, and only on the hand-off list')
     expect(markdown).toContain('it carries no `keys.write`')
     expect(markdown).not.toContain('project_create_key')
   })
@@ -170,7 +191,7 @@ describe('generateAgentSetupMarkdown', () => {
   test('keeps user-scoped SSR requests on the session, not an API key', () => {
     const markdown = generateAgentSetupMarkdown()
     expect(markdown).toContain(
-      'Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key either.',
+      'Server code that acts as the signed-in user uses a session client with the session secret from the cookie, and needs no key.',
     )
     expect(markdown).toContain(
       'SSR sign-in handlers that create sessions (`sessions.write`)',
