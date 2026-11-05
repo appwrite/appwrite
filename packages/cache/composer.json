@@ -34,13 +34,15 @@
         "utopia-php/telemetry": "^0.4"
     },
     "require-dev": {
-        "swoole/ide-helper": "^6.0"
+        "swoole/ide-helper": "^6.0",
+        "utopia-php/storage": "^4.5"
     },
     "suggest": {
         "ext-redis": "Required for the Redis, RedisCluster and Sharding adapters.",
         "ext-memcached": "Required for the Memcached and Hazelcast adapters.",
         "ext-swoole": "Required for the multiplexing Redis adapter (>=6.0).",
-        "ext-igbinary": "Required for the Igbinary codec."
+        "ext-igbinary": "Required for the Igbinary codec.",
+        "utopia-php/storage": "Version ^4.5 is needed to support the Storage adapter."
     },
     "scripts": {
         "test": "phpunit --testsuite unit",
