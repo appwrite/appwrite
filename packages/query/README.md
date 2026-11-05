@@ -969,7 +969,7 @@ $result = (new Builder())
 
 ### Debugging
 
-`toRawSql()` inlines bindings for inspection (not for execution). Strings are quoted for the dialect: MySQL, MariaDB and ClickHouse escape `\` as well as `'`; PostgreSQL and SQLite, which read `\` literally, double `'` only.
+`toRawSql()` inlines bindings for inspection (not for execution). Strings are quoted as the schema builder quotes them (see [String literals](#schema-builder)).
 
 ```php
 $sql = (new Builder())
@@ -1995,7 +1995,7 @@ use Utopia\Query\Schema\Table;
 // or: PostgreSQL, ClickHouse, SQLite, MongoDB
 ```
 
-> **String literals.** DDL takes no bound parameters, so comments, defaults, enum values and the schema builder's other string literals are inlined with `\` and `'` escaped, as are the AST serializer's. MySQL reads `\` as an escape, so this relies on a connection charset in which byte `0x5C` cannot occur inside a multibyte character, such as `utf8mb4` or `latin1`. Under GBK, BIG5, SJIS/CP932 or GB18030 it can: a character ending in `0x5C` absorbs the escaping backslash and the value closes its literal. Do not pass untrusted text into these literals over such a connection.
+> **String literals.** DDL takes no bound parameters, so comments, defaults, enum values and the schema builder's other string literals are inlined, as are the AST serializer's and `toRawSql()`'s, quoted for the dialect. All double `'`. MySQL and MariaDB also escape `\`; PostgreSQL uses the `E''` form, escaping `\`, when a value contains one, and a plain literal otherwise; SQLite never escapes `\`; ClickHouse escapes `\`. Under GBK, BIG5, SJIS/CP932 or GB18030 a byte of `0x80` or above can begin a character that absorbs the escaping backslash, so MySQL, MariaDB and PostgreSQL refuse a value with a backslash right after such a byte, throwing `ValidationException`. PostgreSQL and SQLite refuse a NUL byte.
 
 ### Creating Tables
 

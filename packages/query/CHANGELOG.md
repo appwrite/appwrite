@@ -4,6 +4,17 @@ All notable changes to `utopia-php/query` are documented in this file.
 
 ## 0.7.3
 
+### Changed
+
+- String literals in `toRawSql()`, the schema builder and the AST serializer
+  are quoted by the new `StringLiteral` enum, one case per dialect. MySQL,
+  MariaDB and PostgreSQL throw `ValidationException` for a value with a
+  backslash right after a byte of `0x80` or above, which a GBK, BIG5,
+  SJIS/CP932 or GB18030 connection reads as the lead byte of a character that
+  absorbs the escaping backslash. PostgreSQL and SQLite throw for a NUL byte.
+  The ClickHouse schema builder's `Enum8` values double quotes like its other
+  literals instead of escaping them with a backslash.
+
 ### Fixed
 
 - Raw conditions are enclosed in parentheses where they are ANDed with other
@@ -23,9 +34,18 @@ All notable changes to `utopia-php/query` are documented in this file.
   with a filter or hook the values reached the wrong placeholders.
 - `toRawSql()` escapes backslashes as well as quotes, as the AST serializer and
   the schema builder do, so under MySQL's or ClickHouse's backslash escaping a
-  value cannot close its literal. PostgreSQL and SQLite read a backslash
-  literally, so their builders double quotes only. Its output is still for
-  logs and debugging only.
+  value cannot close its literal. SQLite reads a backslash literally, so its
+  builder doubles quotes only; PostgreSQL's uses `E''` for a value with a
+  backslash. Its output is still for logs and debugging only.
+- The PostgreSQL and SQLite schema builders doubled backslashes in comments,
+  defaults, enum and type values, collation options and `nextVal()` names,
+  which SQLite, and PostgreSQL under its default `standard_conforming_strings`,
+  read literally, so the stored value gained a backslash. SQLite now keeps them; PostgreSQL emits
+  `E''` with escaped backslashes for a value that has one.
+- The AST serializer escaped backslashes for every dialect, so `fromAst()` on
+  the PostgreSQL and SQLite builders doubled them in string literals. Each
+  dialect's serializer, and `Serializer` given a `StringLiteral`, now quotes
+  as its builder does.
 - The ClickHouse schema builder escapes backslashes in `ReplicatedMergeTree`'s
   ZooKeeper path and replica name and in string skip-index arguments, as it
   already did in its other literals.

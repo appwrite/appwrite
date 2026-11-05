@@ -26,6 +26,7 @@ use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Query;
 use Utopia\Query\QuotesIdentifiers;
+use Utopia\Query\StringLiteral;
 
 class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, TableSampling, FullOuterJoins, StringAggregates, StatisticalAggregates, BitwiseAggregates, LimitBy, ArrayJoins, AsofJoins, WithFill, Rollup, Cube, Totals, ApproximateAggregates, RawSql, CrossJoins
 {
@@ -42,6 +43,8 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     use Trait\RawSql;
     use Trait\StatisticalAggregates;
     use Trait\StringAggregates;
+
+    protected StringLiteral $literal = StringLiteral::Unicode;
 
     /**
      * @var array<Query>

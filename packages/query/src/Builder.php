@@ -79,6 +79,8 @@ abstract class Builder implements
 
     protected const string CURSOR_COLUMN = '_cursor';
 
+    protected StringLiteral $literal = StringLiteral::Backslash;
+
     protected string $table = '';
 
     protected string $alias = '';
@@ -2399,7 +2401,7 @@ abstract class Builder implements
 
     protected function createAstSerializer(): Serializer
     {
-        return new Serializer();
+        return new Serializer($this->literal);
     }
 
     public static function fromAst(Select $ast): static
