@@ -1,34 +1,28 @@
-import { afterAll, beforeAll, describe, expect, mock, test } from 'bun:test'
-import * as actualSdk from '@/lib/appwrite/sdk'
+import { afterEach, beforeEach, describe, expect, spyOn, test } from 'bun:test'
+import { sdk } from '@/lib/appwrite/sdk'
+import { fetchProjectDomains } from '@/lib/react-query/hooks/project-domains'
 
 describe('project domains list', () => {
   const requests: Record<string, unknown>[] = []
+  let forProject: ReturnType<typeof spyOn>
 
-  beforeAll(() => {
-    mock.module('@/lib/appwrite/sdk', () => ({
-      ...actualSdk,
-      sdk: {
-        forProject: () => ({
-          proxy: {
-            listRules: async (params: Record<string, unknown>) => {
-              requests.push(params)
-              return { rules: [], total: 30 }
-            },
-          },
-        }),
+  beforeEach(() => {
+    requests.length = 0
+    forProject = spyOn(sdk, 'forProject').mockReturnValue({
+      proxy: {
+        listRules: async (params: Record<string, unknown>) => {
+          requests.push(params)
+          return { rules: [], total: 30 }
+        },
       },
-    }))
+    } as unknown as ReturnType<typeof sdk.forProject>)
   })
 
-  afterAll(() => {
-    mock.module('@/lib/appwrite/sdk', () => actualSdk)
+  afterEach(() => {
+    forProject.mockRestore()
   })
 
   async function listQueries(page: number, limit: number, search?: string) {
-    const { fetchProjectDomains } = await import(
-      '@/lib/react-query/hooks/project-domains'
-    )
-    requests.length = 0
     const result = await fetchProjectDomains(
       'project',
       'fra',
