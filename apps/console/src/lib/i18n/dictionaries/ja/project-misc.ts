@@ -3989,4 +3989,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'サーバーやスクリプトに、スコープを限定したこのプロジェクトへのアクセスを付与します。',
   'Use a key per server or environment, with only the scopes it needs.':
     'サーバーや環境ごとにキーを分け、必要なスコープだけを付与しましょう。',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    '権限、暗号化、画像プレビューを備えたファイルのアップロードと配信ができます。',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'メール、OAuth プロバイダー、電話番号、パスキーでユーザーをサインインさせます。',
+  'Send email, SMS, and push notifications to your users.':
+    'ユーザーにメール、SMS、プッシュ通知を送信します。',
 }

@@ -3913,4 +3913,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'העניקו לשרתים ולסקריפטים שלכם גישה לפרויקט הזה עם הרשאות מוגדרות.',
   'Use a key per server or environment, with only the scopes it needs.':
     'השתמשו במפתח נפרד לכל שרת או סביבה, עם ההרשאות הנחוצות בלבד.',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    'העלו והגישו קבצים עם הרשאות, הצפנה ותצוגות מקדימות לתמונות.',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'אפשרו למשתמשים להתחבר עם אימייל, ספקי OAuth, טלפון או מפתחות גישה.',
+  'Send email, SMS, and push notifications to your users.':
+    'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
 }

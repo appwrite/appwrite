@@ -36,6 +36,8 @@ import {
   canCreateSite,
   canCreateUser,
   canSeeProjectNavItem,
+  canShowAuthSecuritySettings,
+  canWriteProviders,
   canWriteTopics,
 } from '@/lib/console-access-checks'
 import {
@@ -51,9 +53,9 @@ import { getDatabaseTypeDisplayLabel } from '@/lib/databases/database-type-displ
 import { useT } from '@/lib/i18n/translate'
 import {
   OVERVIEW_PRIMARY_RESOURCES,
+  OVERVIEW_RESOURCE_CARD_LIMIT,
   OVERVIEW_RESOURCE_ITEM_LIMIT,
   OVERVIEW_SECONDARY_RESOURCES,
-  needsOverviewSecondaryResources,
   pickOverviewResources,
   type OverviewResourceId,
 } from '@/lib/overview-resources'
@@ -94,6 +96,8 @@ type ResourceConfig = {
   fillerHint: string
   loadError: string
   analytics: AnalyticsActionId
+  /** First step of an empty card when it is not `create`. */
+  start?: { label: string; analytics: AnalyticsActionId }
 }
 
 // English source copy; translated at render.
@@ -157,6 +161,8 @@ const RESOURCES: Record<OverviewResourceId, ResourceConfig> = {
     fillerHint: 'Group subscribers to message them all at once.',
     loadError: 'Failed to load topics',
     analytics: 'create-topic',
+    // Nothing reaches a topic until a provider can deliver it.
+    start: { label: 'Add provider', analytics: 'create-provider' },
   },
 }
 
@@ -230,6 +236,13 @@ export function ProjectResources({
     auth: canCreateUser(access, features),
     messaging: canWriteTopics(access, features),
   }
+  // An empty card's quick starts go one step further than `create` for Auth
+  // (sign-in settings) and Messaging (providers).
+  const canStart: Record<OverviewResourceId, boolean> = {
+    ...canCreate,
+    auth: canShowAuthSecuritySettings(access, features),
+    messaging: canWriteProviders(access, features),
+  }
 
   const databasesQuery = useQuery({
     ...overviewDatabasesQueryOptions(projectId),
@@ -271,26 +284,17 @@ export function ProjectResources({
     ),
   }
 
-  const primaryTotals = {
-    databases: states.databases?.total,
-    sites: states.sites?.total,
-    functions: states.functions?.total,
-  }
-  // Secondary lists only matter when a main service has nothing to show.
-  const loadSecondary =
-    scopesReady && needsOverviewSecondaryResources(primaryTotals, visible)
-
   const bucketsQuery = useQuery({
     ...overviewBucketsQueryOptions(projectId),
-    enabled: loadSecondary && visible.includes('storage'),
+    enabled: enabled('storage'),
   })
   const usersQuery = useQuery({
     ...overviewUsersQueryOptions(projectId),
-    enabled: loadSecondary && visible.includes('auth'),
+    enabled: enabled('auth'),
   })
   const topicsQuery = useQuery({
     ...overviewTopicsQueryOptions(projectId),
-    enabled: loadSecondary && visible.includes('messaging'),
+    enabled: enabled('messaging'),
   })
 
   states.storage = resourceState(
@@ -318,15 +322,9 @@ export function ProjectResources({
     () => void topicsQuery.refetch(),
   )
 
-  const primarySettled = OVERVIEW_PRIMARY_RESOURCES.every(
-    (id) => !visible.includes(id) || states[id]?.settled,
-  )
-  const secondarySettled =
-    !loadSecondary ||
-    OVERVIEW_SECONDARY_RESOURCES.every(
-      (id) => !visible.includes(id) || states[id]?.settled,
-    )
-  const isLoading = !scopesReady || !primarySettled || !secondarySettled
+  const isLoading =
+    !scopesReady ||
+    !ALL_RESOURCES.every((id) => !visible.includes(id) || states[id]?.settled)
 
   const slots = isLoading
     ? []
@@ -343,7 +341,9 @@ export function ProjectResources({
 
   if (!isLoading && slots.length === 0) return null
 
-  const columns = isLoading ? 3 : slots.length
+  const cards = isLoading
+    ? Math.min(OVERVIEW_RESOURCE_CARD_LIMIT, Math.max(visible.length, 1))
+    : slots.length
 
   return (
     <section aria-labelledby="overview-resources-title" className={className}>
@@ -354,18 +354,15 @@ export function ProjectResources({
         {t('Your resources')}
       </h2>
       <div
-        className={cn(
-          'grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0',
-          columns >= 3
-            ? '@[880px]:grid-cols-3'
-            : columns === 2
-              ? '@[640px]:grid-cols-2'
-              : null,
-        )}
+        className={cn('grid min-w-0 grid-cols-1 gap-3 [&>*]:min-w-0', {
+          '@[640px]:grid-cols-2': cards === 2 || cards === 4 || cards > 4,
+          '@[880px]:grid-cols-3': cards === 3,
+          '@[960px]:grid-cols-3': cards > 4,
+        })}
       >
         {isLoading
-          ? OVERVIEW_PRIMARY_RESOURCES.map((id) => (
-              <OverviewListCardSkeleton key={id} bodyHeight={BODY_HEIGHT} />
+          ? Array.from({ length: cards }, (_, index) => (
+              <OverviewListCardSkeleton key={index} bodyHeight={BODY_HEIGHT} />
             ))
           : slots.map((id) => (
               <ResourceCard
@@ -374,6 +371,7 @@ export function ProjectResources({
                 projectId={projectId}
                 state={states[id]!}
                 canCreate={canCreate[id]}
+                canStart={canStart[id]}
               />
             ))}
       </div>
@@ -386,39 +384,48 @@ function ResourceCard({
   projectId,
   state,
   canCreate,
+  canStart,
 }: {
   id: OverviewResourceId
   projectId: string
   state: ResourceState
   canCreate: boolean
+  canStart: boolean
 }) {
   const t = useT()
   const config = RESOURCES[id]
   const createLink = resourceCreateLink(id, projectId)
   const noPermission = t("You don't have permission to perform this action.")
 
-  if (state.total === 0 && isPrimary(id)) {
+  if (state.total === 0) {
     return (
       <OverviewListCard
         icon={config.icon}
         title={t(config.title)}
         bodyHeight={BODY_HEIGHT}
         footer={
-          <OverviewListFooter
-            variant="action"
-            label={t(config.create)}
-            link={createLink}
-            disabled={!canCreate}
-            disabledTooltip={noPermission}
-            analytics={config.analytics}
-          />
+          config.start ? (
+            <OverviewListFooter
+              variant="action"
+              label={t(config.start.label)}
+              link={resourceStartLink(id, projectId) ?? createLink}
+              disabled={!canStart}
+              disabledTooltip={noPermission}
+              analytics={config.start.analytics}
+            />
+          ) : (
+            <OverviewListFooter
+              variant="action"
+              label={t(config.create)}
+              link={createLink}
+              disabled={!canCreate}
+              disabledTooltip={noPermission}
+              analytics={config.analytics}
+            />
+          )
         }
       >
-        <ResourceQuickStart
-          id={id}
-          projectId={projectId}
-          canCreate={canCreate}
-        />
+        <ResourceQuickStart id={id} projectId={projectId} canStart={canStart} />
       </OverviewListCard>
     )
   }
@@ -509,10 +516,18 @@ function ResourceLoadError({
   )
 }
 
-function isPrimary(
+/** Where an empty card's `start` action goes. */
+function resourceStartLink(
   id: OverviewResourceId,
-): id is (typeof OVERVIEW_PRIMARY_RESOURCES)[number] {
-  return (OVERVIEW_PRIMARY_RESOURCES as readonly string[]).includes(id)
+  projectId: string,
+): LinkProps | null {
+  if (id === 'messaging') {
+    return {
+      to: '/projects/$projectId/messaging/providers/create',
+      params: { projectId },
+    }
+  }
+  return null
 }
 
 function resourceListLink(

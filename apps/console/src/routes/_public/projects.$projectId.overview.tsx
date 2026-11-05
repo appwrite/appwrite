@@ -15,6 +15,9 @@ import {
   overviewDatabasesQueryOptions,
   overviewSitesQueryOptions,
   overviewFunctionsQueryOptions,
+  overviewBucketsQueryOptions,
+  overviewUsersQueryOptions,
+  overviewTopicsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { hasAccountMcpAgentConnected } from '@/lib/mcp-adoption'
 import { consoleAccountQueryOptions } from '@/lib/react-query/hooks/auth'
@@ -142,6 +145,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/overview')({
         .catch(() => undefined)
       void queryClient
         .prefetchQuery(overviewFunctionsQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewBucketsQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewUsersQueryOptions(projectId))
+        .catch(() => undefined)
+      void queryClient
+        .prefetchQuery(overviewTopicsQueryOptions(projectId))
         .catch(() => undefined)
 
       if (usageStatsEnabled) {
