@@ -1054,6 +1054,28 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קבעו אם הנכס הזה מקבל אירועים.',
   'Tracking enabled': 'המעקב הופעל',
   'Tracking disabled': 'המעקב הושבת',
+  'Browser versions': 'גרסאות דפדפן',
+  'OS versions': 'גרסאות מערכת הפעלה',
+  'Versions': 'גרסאות',
+  'Browser version': 'גרסת דפדפן',
+  'OS version': 'גרסת מערכת הפעלה',
+  'Identified users, ranked by visitors':
+    'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range':
+    'אין משתמשים מזוהים בטווח הזה',
+  'Event properties': 'מאפייני אירועים',
+  'Values of the props sent with your events':
+    'ערכי ה-props שנשלחו עם האירועים',
+  'No event props in this range': 'אין props של אירועים בטווח הזה',
+  'Not available with this filter': 'לא זמין עם המסנן הזה',
+  'User identification': 'זיהוי משתמשים',
+  'Identify signed-in users': 'זיהוי משתמשים מחוברים',
+  'User identification enabled': 'זיהוי המשתמשים הופעל',
+  'User identification disabled': 'זיהוי המשתמשים הושבת',
+  'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.':
+    'משתמשים מזוהים ייחודיים. נספרים רק אירועים שכוללים מזהה משתמש; מבקרים אנונימיים אינם נכללים.',
+  "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
+    'תיעוד מזהה המשתמש המחובר באירועים שנשלחים מסשן לקוח, כדי לספור ולפלח תנועה לפי משתמש. מבקרים אנונימיים אינם מושפעים. המזהים הם מזהי המשתמשים של הפרויקט, לעולם לא כתובות אימייל או שמות. יש להפעיל זאת רק אם מדיניות הפרטיות מכסה קישור של נתוני אנליטיקס לחשבונות משתמשים.',
   'Tracking is enabled': 'המעקב פעיל',
   'Primary domain being tracked. Optional for native apps.':
     'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',

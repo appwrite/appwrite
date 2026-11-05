@@ -1,4 +1,4 @@
-import { Query, type Models } from '@appwrite.io/console'
+import { ProxyRuleProtocol, Query, type Models } from '@appwrite.io/console'
 import { isCloudProfile } from '@/lib/console-profiles'
 import { getClaimRecord, getRecordName } from '@/lib/utils/proxy-domains'
 
@@ -11,9 +11,7 @@ import { getClaimRecord, getRecordName } from '@/lib/utils/proxy-domains'
  *   (the same ownership record HTTP domain claims use).
  */
 
-export type SmtpProxyRule = Models.ProxyRule & {
-  protocol?: string
-}
+export type SmtpProxyRule = Models.ProxyRule
 
 export type SmtpDnsRecord = {
   type: 'MX' | 'TXT'
@@ -35,8 +33,8 @@ export function webDomainQueries(): string[] {
 }
 
 /** SMTP rules share the HTTP rules list; `protocol` tells them apart. */
-export function isSmtpRule(rule: Models.ProxyRule): rule is SmtpProxyRule {
-  return (rule as SmtpProxyRule).protocol === 'smtp'
+export function isSmtpRule(rule: Models.ProxyRule): boolean {
+  return rule.protocol === ProxyRuleProtocol.Smtp
 }
 
 export function needsSmtpDnsVerification(
