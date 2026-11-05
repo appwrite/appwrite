@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: utopia-queue-keda
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: utopia-queue-keda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: utopia-queue-keda
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+---
+# KEDA scales worker Jobs off the Redis queue depth (up to maxReplicaCount);
+# each Job pulls from Redis and drains messages until the queue is empty, then
+# exits. No payload is carried on any Kubernetes object.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata:
+  name: queue-worker
+  namespace: utopia-queue-keda
+spec:
+  pollingInterval: 5
+  maxReplicaCount: 5
+  successfulJobsHistoryLimit: 20
+  failedJobsHistoryLimit: 20
+  jobTargetRef:
+    parallelism: 1
+    completions: 1
+    # The worker always exits 0 (it rejects failed messages and continues), so
+    # backoffLimit rarely fires. Note: if a pod is hard-killed after receive()
+    # claims a message but before commit/reject, that message is stranded in the
+    # broker's processing list (not the main queue), so KEDA won't re-trigger it;
+    # production needs a periodic reaper (Publisher::retry) to requeue stale
+    # processing entries. See servers/Keda/README.md.
+    backoffLimit: 0
+    template:
+      spec:
+        restartPolicy: Never
+        containers:
+          - name: worker
+            image: utopia-queue-keda-worker:e2e
+            imagePullPolicy: Never
+            env:
+              - name: REDIS_HOST
+                value: redis
+              - name: QUEUE_NAME
+                value: keda
+              - name: QUEUE_NAMESPACE
+                value: utopia-queue
+  triggers:
+    - type: redis
+      metadata:
+        # FQDN: KEDA evaluates the trigger from the keda namespace, so a short
+        # name won't resolve to this namespace's Redis Service.
+        address: redis.utopia-queue-keda.svc.cluster.local:6379
+        listName: utopia-queue.queue.keda
+        listLength: "1"

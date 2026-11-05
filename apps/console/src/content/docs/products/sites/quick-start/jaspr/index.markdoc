@@ -1,0 +1,63 @@
+---
+layout: article
+title: Deploy a Jaspr app to Appwrite Sites
+description: Learn how to set up and deploy Jaspr apps with server-side rendering on Appwrite Sites.
+---
+
+{% section #step-1 step=1 title="Create Jaspr app" %}
+
+[Jaspr](https://jaspr.site) is a web framework for Dart that renders HTML and CSS from Dart components. Appwrite Sites runs Jaspr apps in **server mode**, which pre-renders your components on the server for each incoming request.
+
+Open your terminal, install the Jaspr CLI, and create a project in server mode.
+
+```bash
+dart pub global activate jaspr_cli
+jaspr create --mode server --routing multi-page my_site
+```
+
+In case you have an existing Jaspr app, confirm that the `jaspr` section of your `pubspec.yaml` file sets server mode:
+
+```yaml
+jaspr:
+  mode: server
+```
+
+Appwrite builds Jaspr sites on the Flutter 3.44 runtime, which ships with the Jaspr CLI installed, so you don't need to add `jaspr_cli` to your `pubspec.yaml` file. The installed CLI requires version 0.23.0 or later of the core Jaspr packages, such as `jaspr` and `jaspr_builder`.
+
+Push this project to a [GitHub repository](https://github.com/new).
+{% /section %}
+
+{% section #step-2 step=2 title="Create Appwrite project" %}
+Head to the [Appwrite Console](https://cloud.appwrite.io).
+
+{% only_dark %}
+![Create Appwrite project](/images/docs/quick-starts/dark/create-project.avif)
+{% /only_dark %}
+{% only_light %}
+![Create Appwrite project](/images/docs/quick-starts/create-project.avif)
+{% /only_light %}
+
+If this is your first time using Appwrite, create an account and create your first project.
+{% /section %}
+
+{% section #step-3 step=3 title="Create site" %}
+Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**.
+
+Connect your GitHub account and select the repository you intend to deploy (or allow all repositories, for future ease).
+
+1. Select the **production branch** and **root directory** from your repo.
+2. Verify that the **correct framework** is selected. Jaspr and Flutter projects both use a `pubspec.yaml` file, so if **Flutter** is selected, pick **Jaspr** from the drop-down list.
+3. Confirm the **install command**, **build command**, and **output directory** in the build settings. The default build settings for Jaspr are:
+    - **Install command:** `dart pub get`
+    - **Build command:** `jaspr build`
+    - **Output directory:** `./build/jaspr`
+4. Add any **environment variables** required by the site.
+
+Click on the **Deploy** button.
+{% /section %}
+
+{% section #step-4 step=4 title="Visit site" %}
+After successful deployment, click on the **Visit site** button.
+
+To call Appwrite from your server-rendered components, read the [ephemeral API key](/docs/products/sites/develop#use-the-ephemeral-api-key) from the `x-appwrite-key` request header.
+{% /section %}

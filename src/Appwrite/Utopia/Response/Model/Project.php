@@ -50,15 +50,6 @@ class Project extends Model
                 'example' => 'fra',
             ])
 
-            // Resource: Dev Keys
-            ->addRule('devKeys', [
-                'type' => Response::MODEL_DEV_KEY,
-                'description' => 'Deprecated since 1.9.5: List of dev keys.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
-            ])
-
             // Resource: SMTP
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
@@ -144,6 +135,15 @@ class Project extends Model
                 'default' => [],
                 'example' => ['vip'],
                 'array' => true,
+            ])
+
+            // Resource: Preferences
+            ->addRule('prefs', [
+                'type' => Response::MODEL_PREFERENCES,
+                'description' => 'Project preferences as a key-value object',
+                'required' => false,
+                'default' => new \stdClass(),
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
             ])
 
             // Resource: Billing
@@ -247,6 +247,11 @@ class Project extends Model
             $document->setAttribute('onboarding', new \stdClass());
         }
 
+        $prefs = $document->getAttribute('prefs', []);
+        if (\is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('prefs', new \stdClass());
+        }
+
         return $document;
     }
 
@@ -317,7 +322,7 @@ class Project extends Model
         foreach (Config::getParam('auth', []) as $id => $method) {
             $authMethods[] = new Document([
                 '$id' => $id,
-                'enabled' => $values[$method['key']] ?? true
+                'enabled' => $values[$method['key']] ?? $method['enabled'] ?? true,
             ]);
         }
 

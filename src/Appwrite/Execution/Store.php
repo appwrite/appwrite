@@ -4,7 +4,6 @@ namespace Appwrite\Execution;
 
 use Psr\Http\Client\ClientInterface;
 use Throwable;
-use Utopia\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
@@ -15,7 +14,7 @@ use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Query\Builder\ClickHouse as ClickHouseBuilder;
 use Utopia\Query\Builder\ClickHouse\Format;
 use Utopia\Query\Builder\Statement;
-use Utopia\Span\Span;
+use Utopia\Query\Method as QueryMethod;
 
 /**
  * ClickHouse persistence for function and site executions.
@@ -29,8 +28,6 @@ class Store
     private const string TABLE = 'executions';
 
     private const int READY_TTL_SECONDS = 15;
-
-    private const int REPORT_TTL_SECONDS = 60;
 
     private const int VERSION_SHIFT = 60;
 
@@ -86,6 +83,14 @@ class Store
         'requestPath' => ['requestPath', 'String'],
     ];
 
+    private const array WINDOW_METHODS = [
+        QueryMethod::LessThan,
+        QueryMethod::LessThanEqual,
+        QueryMethod::GreaterThan,
+        QueryMethod::GreaterThanEqual,
+        QueryMethod::Between,
+    ];
+
     private readonly RequestFactory $requestFactory;
 
     private ?string $host = null;
@@ -107,11 +112,7 @@ class Store
     /** @var array<int, int> */
     private array $lastVersions = [];
 
-    /** @var array<string, int> */
-    private static array $lastReports = [];
-
     public function __construct(
-        private readonly bool $enabled,
         private readonly string $dsn,
         private readonly ?ClientInterface $client,
         private readonly int $retention = 1_209_600,
@@ -119,17 +120,8 @@ class Store
         $this->requestFactory = new RequestFactory();
     }
 
-    public function isEnabled(): bool
-    {
-        return $this->enabled;
-    }
-
     public function setup(): void
     {
-        if (!$this->enabled) {
-            return;
-        }
-
         $this->connect();
         $database = $this->identifier($this->database);
         $table = $this->table();
@@ -186,10 +178,6 @@ class Store
     /** @return array<string, mixed> */
     public function healthCheck(): array
     {
-        if (!$this->enabled) {
-            return ['healthy' => true, 'enabled' => false, 'schemaReady' => false];
-        }
-
         try {
             $rows = $this->rows($this->query(
                 'SELECT count() AS tables FROM system.tables WHERE database = {database:String} AND name = {table:String} FORMAT JSON',
@@ -205,14 +193,12 @@ class Store
 
             return [
                 'healthy' => true,
-                'enabled' => true,
                 'schemaReady' => $ready,
                 'database' => $this->database,
             ];
         } catch (Throwable $th) {
             return [
                 'healthy' => false,
-                'enabled' => true,
                 'schemaReady' => false,
                 'error' => $th->getMessage(),
             ];
@@ -221,10 +207,6 @@ class Store
 
     public function isReady(): bool
     {
-        if (!$this->enabled) {
-            return false;
-        }
-
         if ($this->ready && (\microtime(true) - $this->checkedAt) < self::READY_TTL_SECONDS) {
             return true;
         }
@@ -253,27 +235,21 @@ class Store
     /** @param array<Document> $executions */
     public function upsertMany(string $projectId, array $executions): void
     {
-        if (!$this->enabled || $executions === []) {
+        if ($executions === []) {
             return;
         }
 
-        $this->mirror('upsert', function () use ($projectId, $executions): void {
-            $rows = [];
-            foreach ($executions as $execution) {
-                $rows[] = $this->snapshot($projectId, $execution, false);
-            }
+        $rows = [];
+        foreach ($executions as $execution) {
+            $rows[] = $this->snapshot($projectId, $execution, false);
+        }
 
-            $this->insert($rows);
-        });
+        $this->insert($rows);
     }
 
     public function delete(string $projectId, Document $execution): void
     {
-        if (!$this->enabled) {
-            return;
-        }
-
-        $this->mirror('delete', fn () => $this->insert([$this->snapshot($projectId, $execution, true)]));
+        $this->insert([$this->snapshot($projectId, $execution, true)]);
     }
 
     public function deleteProject(string $projectId): void
@@ -300,10 +276,6 @@ class Store
      */
     public function get(string $projectId, string $executionId, ?array $roles = null): Document
     {
-        if (!$this->enabled) {
-            return new Document();
-        }
-
         $params = [
             'projectId' => $projectId,
             'executionId' => $executionId,
@@ -327,10 +299,6 @@ class Store
      */
     public function find(string $projectId, array $queries, ?array $roles = null): array
     {
-        if (!$this->enabled) {
-            return [];
-        }
-
         $params = ['projectId' => $projectId];
         [$filters, $order, $limit, $offset, $cursor] = $this->compileQueries($queries, $params);
         $permission = $this->permissionSql($roles, $params);
@@ -346,7 +314,7 @@ class Store
         }
 
         $where = $filters === [] ? '' : ' WHERE ' . \implode(' AND ', $filters);
-        $before = $cursor?->getMethod() === Query::TYPE_CURSOR_BEFORE;
+        $before = $cursor?->getMethod() === QueryMethod::CursorBefore;
         $orderSql = $this->orderSql($order, $before);
         $latest = $this->latestSql($this->latestWhere($queries, $params));
         $builder = $this->builder()
@@ -381,10 +349,6 @@ class Store
      */
     public function count(string $projectId, array $queries, int $max, ?array $roles = null): int
     {
-        if (!$this->enabled) {
-            return 0;
-        }
-
         $params = ['projectId' => $projectId, 'max' => $max];
         [$filters] = $this->compileQueries($queries, $params);
         $permission = $this->permissionSql($roles, $params);
@@ -420,6 +384,14 @@ class Store
             $execution->setAttribute('$updatedAt', $updatedAt);
         }
 
+        $sequence = (int) $execution->getSequence();
+        if ($sequence <= 0) {
+            $sequence = $this->sequenceFromCreatedAt($createdAt);
+            $execution->setAttribute('$sequence', $sequence);
+        }
+
+        $this->publicTimestamps($execution);
+
         $permissions = \array_values($execution->getPermissions());
 
         $readRoles = [];
@@ -434,7 +406,7 @@ class Store
             'id' => $execution->getId(),
             'createdAt' => $this->date($createdAt),
             'updatedAt' => $this->date($updatedAt),
-            'sequence' => (int) $execution->getSequence(),
+            'sequence' => $sequence,
             'permissions' => $permissions,
             'readRoles' => \array_values(\array_unique($readRoles)),
             'resourceInternalId' => (string) $execution->getAttribute('resourceInternalId', ''),
@@ -470,7 +442,8 @@ class Store
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query]);
+        // Async inserts wait up to 200ms for a flush that batches almost nothing for one-row snapshots.
+        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query, 'async_insert' => 0]);
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 
@@ -491,40 +464,34 @@ class Store
         ?string $resourceType = null,
         ?string $createdBefore = null,
     ): void {
-        if (!$this->enabled) {
-            return;
+        $params = ['projectId' => $projectId];
+        $conditions = ['source.projectId = {projectId:String}'];
+        if ($resourceInternalId !== null) {
+            $params['resourceInternalId'] = $resourceInternalId;
+            $conditions[] = 'source.resourceInternalId = {resourceInternalId:String}';
+        }
+        if ($resourceType !== null) {
+            $params['resourceType'] = $resourceType;
+            $conditions[] = 'source.resourceType = {resourceType:String}';
+        }
+        if ($createdBefore !== null) {
+            $params['createdBefore'] = $this->date($createdBefore);
+            $conditions[] = 'source.createdAt < {createdBefore:String}';
         }
 
-        $this->mirror('delete', function () use ($projectId, $resourceInternalId, $resourceType, $createdBefore): void {
-            $params = ['projectId' => $projectId];
-            $conditions = ['source.projectId = {projectId:String}'];
-            if ($resourceInternalId !== null) {
-                $params['resourceInternalId'] = $resourceInternalId;
-                $conditions[] = 'source.resourceInternalId = {resourceInternalId:String}';
-            }
-            if ($resourceType !== null) {
-                $params['resourceType'] = $resourceType;
-                $conditions[] = 'source.resourceType = {resourceType:String}';
-            }
-            if ($createdBefore !== null) {
-                $params['createdBefore'] = $this->date($createdBefore);
-                $conditions[] = 'source.createdAt < {createdBefore:String}';
-            }
-
-            $latest = $this->latestSql(\implode(' AND ', $conditions));
-            $columns = \implode(', ', \array_filter(
-                self::COLUMNS,
-                fn (string $column) => !\in_array($column, ['expiresAt', 'deleted', 'version'], true)
-            ));
-            $deleteVersionBase = $this->versionBase(self::VERSION_DELETE_RANK);
-            $retention = \max(0, $this->retention);
-            $this->query(<<<SQL
-                INSERT INTO {$this->table()} ({$columns}, expiresAt, deleted, version)
-                SELECT {$columns}, now64(6) + INTERVAL {$retention} SECOND, 1, toUInt64({$deleteVersionBase}) + toUInt64(toUnixTimestamp64Micro(now64(6)))
-                FROM ({$latest})
-                WHERE deleted = 0
-                SQL, $params);
-        });
+        $latest = $this->latestSql(\implode(' AND ', $conditions));
+        $columns = \implode(', ', \array_filter(
+            self::COLUMNS,
+            fn (string $column) => !\in_array($column, ['expiresAt', 'deleted', 'version'], true)
+        ));
+        $deleteVersionBase = $this->versionBase(self::VERSION_DELETE_RANK);
+        $retention = \max(0, $this->retention);
+        $this->query(<<<SQL
+            INSERT INTO {$this->table()} ({$columns}, expiresAt, deleted, version)
+            SELECT {$columns}, now64(6) + INTERVAL {$retention} SECOND, 1, toUInt64({$deleteVersionBase}) + toUInt64(toUnixTimestamp64Micro(now64(6)))
+            FROM ({$latest})
+            WHERE deleted = 0
+            SQL, $params);
     }
 
     private function latestSql(string $where): string
@@ -551,14 +518,30 @@ class Store
      * the route's internal resource filters before aggregation avoids scanning
      * and grouping every execution in a large project.
      *
+     * A $createdAt window narrows the aggregation to the executions that have
+     * at least one version inside it. The window cannot filter versions
+     * directly: an execution queued through the API and finished by the
+     * functions worker gets a later createdAt on its worker-written versions,
+     * so dropping out-of-window versions could hide the latest one and return
+     * a stale status or a deleted execution. Every execution whose latest
+     * version matches has some version that matches, so the outer filter still
+     * decides on the latest snapshot.
+     *
      * @param array<Query> $queries
      * @param array<string, mixed> $params
      */
     private function latestWhere(array $queries, array &$params): string
     {
-        $conditions = ['source.projectId = {projectId:String}'];
+        $scope = ['projectId = {projectId:String}'];
+        $window = [];
         foreach ($queries as $query) {
-            if ($query->getMethod() !== Query::TYPE_EQUAL
+            if ($query->getAttribute() === '$createdAt'
+                && \in_array($query->getMethod(), self::WINDOW_METHODS, true)) {
+                $window[] = $this->filterSql($query, $params);
+                continue;
+            }
+
+            if ($query->getMethod() !== QueryMethod::Equal
                 || !\in_array($query->getAttribute(), ['resourceInternalId', 'resourceType'], true)) {
                 continue;
             }
@@ -569,8 +552,14 @@ class Store
                 $parameters[] = $this->parameter($type, $value, $params);
             }
             if ($parameters !== []) {
-                $conditions[] = "source.{$column} IN (" . \implode(', ', $parameters) . ')';
+                $scope[] = "{$column} IN (" . \implode(', ', $parameters) . ')';
             }
+        }
+
+        $conditions = \array_map(fn (string $condition) => "source.{$condition}", $scope);
+        if ($window !== []) {
+            $conditions[] = 'source.id IN (SELECT id FROM ' . $this->table()
+                . ' WHERE ' . \implode(' AND ', [...$scope, ...$window]) . ')';
         }
 
         return \implode(' AND ', $conditions);
@@ -590,28 +579,14 @@ class Store
         $cursor = null;
 
         foreach ($queries as $query) {
-            switch ($query->getMethod()) {
-                case Query::TYPE_ORDER_ASC:
-                case Query::TYPE_ORDER_DESC:
-                case Query::TYPE_ORDER_RANDOM:
-                    $order[] = $query;
-                    break;
-                case Query::TYPE_LIMIT:
-                    $limit = \max(1, (int) $query->getValue(25));
-                    break;
-                case Query::TYPE_OFFSET:
-                    $offset = \max(0, (int) $query->getValue(0));
-                    break;
-                case Query::TYPE_CURSOR_AFTER:
-                case Query::TYPE_CURSOR_BEFORE:
-                    $cursor = $query;
-                    break;
-                case Query::TYPE_SELECT:
-                    break;
-                default:
-                    $filters[] = $this->filterSql($query, $params);
-                    break;
-            }
+            match ($query->getMethod()) {
+                QueryMethod::OrderAsc, QueryMethod::OrderDesc, QueryMethod::OrderRandom => $order[] = $query,
+                QueryMethod::Limit => $limit = \max(1, (int) $query->getValue(25)),
+                QueryMethod::Offset => $offset = \max(0, (int) $query->getValue(0)),
+                QueryMethod::CursorAfter, QueryMethod::CursorBefore => $cursor = $query,
+                QueryMethod::Select => null,
+                default => $filters[] = $this->filterSql($query, $params),
+            };
         }
 
         if ($order === []) {
@@ -626,10 +601,24 @@ class Store
             $first = $order[0];
             $method = \in_array($first->getAttribute(), ['$createdAt', '$updatedAt'], true)
                 ? $first->getMethod()
-                : Query::TYPE_ORDER_ASC;
-            $order[] = $method === Query::TYPE_ORDER_DESC
+                : QueryMethod::OrderAsc;
+            $order[] = $method === QueryMethod::OrderDesc
                 ? Query::orderDesc('$sequence')
                 : Query::orderAsc('$sequence');
+        }
+
+        $hasId = false;
+        foreach ($order as $query) {
+            if ($query->getAttribute() === '$id') {
+                $hasId = true;
+                break;
+            }
+        }
+        if (!$hasId) {
+            $last = $order[\array_key_last($order)];
+            $order[] = $last->getMethod() === QueryMethod::OrderAsc
+                ? Query::orderAsc('$id')
+                : Query::orderDesc('$id');
         }
 
         return [$filters, $order, $limit, $offset, $cursor];
@@ -639,7 +628,7 @@ class Store
     private function filterSql(Query $query, array &$params): string
     {
         $method = $query->getMethod();
-        if ($method === Query::TYPE_AND || $method === Query::TYPE_OR) {
+        if ($method === QueryMethod::And || $method === QueryMethod::Or) {
             $parts = [];
             foreach ($query->getValues() as $nested) {
                 if (!$nested instanceof Query) {
@@ -650,13 +639,13 @@ class Store
             if ($parts === []) {
                 throw new \InvalidArgumentException('Empty logical execution query');
             }
-            return '(' . \implode($method === Query::TYPE_AND ? ' AND ' : ' OR ', $parts) . ')';
+            return '(' . \implode($method === QueryMethod::And ? ' AND ' : ' OR ', $parts) . ')';
         }
-        if ($method === Query::TYPE_EXISTS || $method === Query::TYPE_NOT_EXISTS) {
+        if ($method === QueryMethod::Exists || $method === QueryMethod::NotExists) {
             $parts = [];
             foreach ($query->getValues() as $attribute) {
                 [$column] = $this->column((string) $attribute);
-                $parts[] = $column . ($method === Query::TYPE_EXISTS ? " != ''" : " = ''");
+                $parts[] = $column . ($method === QueryMethod::Exists ? " != ''" : " = ''");
             }
             if ($parts === []) {
                 throw new \InvalidArgumentException('Empty execution exists query');
@@ -673,28 +662,28 @@ class Store
         }
 
         return match ($method) {
-            Query::TYPE_EQUAL => "{$column} IN (" . \implode(', ', $parameters) . ')',
-            Query::TYPE_NOT_EQUAL => "{$column} NOT IN (" . \implode(', ', $parameters) . ')',
-            Query::TYPE_LESSER => "{$column} < {$parameters[0]}",
-            Query::TYPE_LESSER_EQUAL => "{$column} <= {$parameters[0]}",
-            Query::TYPE_GREATER => "{$column} > {$parameters[0]}",
-            Query::TYPE_GREATER_EQUAL => "{$column} >= {$parameters[0]}",
-            Query::TYPE_BETWEEN => "{$column} BETWEEN {$parameters[0]} AND {$parameters[1]}",
-            Query::TYPE_NOT_BETWEEN => "{$column} NOT BETWEEN {$parameters[0]} AND {$parameters[1]}",
-            Query::TYPE_CONTAINS => $this->containsSql($column, $parameters, false),
-            Query::TYPE_CONTAINS_ANY => $this->containsSql($column, $parameters, false),
-            Query::TYPE_CONTAINS_ALL => $this->containsAllSql($column, $parameters),
-            Query::TYPE_NOT_CONTAINS => $this->containsSql($column, $parameters, true),
-            Query::TYPE_SEARCH => "positionCaseInsensitive({$column}, {$parameters[0]}) > 0",
-            Query::TYPE_NOT_SEARCH => "positionCaseInsensitive({$column}, {$parameters[0]}) = 0",
-            Query::TYPE_STARTS_WITH => "startsWith({$column}, {$parameters[0]})",
-            Query::TYPE_NOT_STARTS_WITH => "NOT startsWith({$column}, {$parameters[0]})",
-            Query::TYPE_ENDS_WITH => "endsWith({$column}, {$parameters[0]})",
-            Query::TYPE_NOT_ENDS_WITH => "NOT endsWith({$column}, {$parameters[0]})",
-            Query::TYPE_REGEX => "match({$column}, {$parameters[0]})",
-            Query::TYPE_IS_NULL => "{$column} = ''",
-            Query::TYPE_IS_NOT_NULL => "{$column} != ''",
-            default => throw new \InvalidArgumentException("Unsupported execution query method: {$method}"),
+            QueryMethod::Equal => "{$column} IN (" . \implode(', ', $parameters) . ')',
+            QueryMethod::NotEqual => "{$column} NOT IN (" . \implode(', ', $parameters) . ')',
+            QueryMethod::LessThan => "{$column} < {$parameters[0]}",
+            QueryMethod::LessThanEqual => "{$column} <= {$parameters[0]}",
+            QueryMethod::GreaterThan => "{$column} > {$parameters[0]}",
+            QueryMethod::GreaterThanEqual => "{$column} >= {$parameters[0]}",
+            QueryMethod::Between => "{$column} BETWEEN {$parameters[0]} AND {$parameters[1]}",
+            QueryMethod::NotBetween => "{$column} NOT BETWEEN {$parameters[0]} AND {$parameters[1]}",
+            QueryMethod::Contains => $this->containsSql($column, $parameters, false),
+            QueryMethod::ContainsAny => $this->containsSql($column, $parameters, false),
+            QueryMethod::ContainsAll => $this->containsAllSql($column, $parameters),
+            QueryMethod::NotContains => $this->containsSql($column, $parameters, true),
+            QueryMethod::Search => "positionCaseInsensitive({$column}, {$parameters[0]}) > 0",
+            QueryMethod::NotSearch => "positionCaseInsensitive({$column}, {$parameters[0]}) = 0",
+            QueryMethod::StartsWith => "startsWith({$column}, {$parameters[0]})",
+            QueryMethod::NotStartsWith => "NOT startsWith({$column}, {$parameters[0]})",
+            QueryMethod::EndsWith => "endsWith({$column}, {$parameters[0]})",
+            QueryMethod::NotEndsWith => "NOT endsWith({$column}, {$parameters[0]})",
+            QueryMethod::Regex => "match({$column}, {$parameters[0]})",
+            QueryMethod::IsNull => "{$column} = ''",
+            QueryMethod::IsNotNull => "{$column} != ''",
+            default => throw new \InvalidArgumentException("Unsupported execution query method: {$method->value}"),
         };
     }
 
@@ -725,12 +714,12 @@ class Store
     {
         $parts = [];
         foreach ($order as $query) {
-            if ($query->getMethod() === Query::TYPE_ORDER_RANDOM) {
+            if ($query->getMethod() === QueryMethod::OrderRandom) {
                 $parts[] = 'rand()';
                 continue;
             }
             [$column] = $this->column($query->getAttribute());
-            $ascending = $query->getMethod() === Query::TYPE_ORDER_ASC;
+            $ascending = $query->getMethod() === QueryMethod::OrderAsc;
             if ($before) {
                 $ascending = !$ascending;
             }
@@ -751,11 +740,11 @@ class Store
             return '';
         }
 
-        if ($order[0]->getMethod() === Query::TYPE_ORDER_RANDOM) {
+        if ($order[0]->getMethod() === QueryMethod::OrderRandom) {
             return '';
         }
 
-        $after = $cursor->getMethod() === Query::TYPE_CURSOR_AFTER;
+        $after = $cursor->getMethod() === QueryMethod::CursorAfter;
         $branches = [];
         $equal = [];
 
@@ -777,7 +766,7 @@ class Store
             }
 
             $parameter = $this->parameter($type, $value, $params);
-            $ascending = $query->getMethod() === Query::TYPE_ORDER_ASC;
+            $ascending = $query->getMethod() === QueryMethod::OrderAsc;
             $operator = ($ascending === $after) ? '>' : '<';
             $conditions = [...$equal, "{$column} {$operator} {$parameter}"];
             $branches[] = '(' . \implode(' AND ', $conditions) . ')';
@@ -837,7 +826,28 @@ class Store
         }
 
         $data = \json_decode($json, true);
-        return \is_array($data) ? new Document($data) : new Document();
+        if (!\is_array($data)) {
+            return new Document();
+        }
+
+        $document = new Document($data);
+        $this->publicTimestamps($document);
+
+        return $document;
+    }
+
+    private function publicTimestamps(Document $execution): void
+    {
+        foreach (['$createdAt', '$updatedAt', 'scheduledAt'] as $attribute) {
+            $value = $execution->getAttribute($attribute);
+            if (!\is_string($value) || $value === '') {
+                continue;
+            }
+            $formatted = DateTime::formatTz($value);
+            if (\is_string($formatted)) {
+                $execution->setAttribute($attribute, $formatted);
+            }
+        }
     }
 
     private function executionVersion(Document $execution, bool $deleted): int
@@ -879,40 +889,20 @@ class Store
         return $rank << self::VERSION_SHIFT;
     }
 
+    private function sequenceFromCreatedAt(string $createdAt): int
+    {
+        try {
+            $date = new \DateTime($createdAt);
+        } catch (\Throwable) {
+            $date = new \DateTime();
+        }
+
+        return ((int) $date->format('U') * 1_000_000) + (int) $date->format('u');
+    }
+
     private function builder(): ClickHouseBuilder
     {
         return (new ClickHouseBuilder())->useNamedBindings();
-    }
-
-    private function mirror(string $operation, callable $callback): void
-    {
-        try {
-            $callback();
-        } catch (Throwable $th) {
-            Console::warning("ClickHouse execution mirror {$operation} failed: {$th->getMessage()}");
-            $this->report($operation, $th);
-        }
-    }
-
-    private function report(string $operation, Throwable $th): void
-    {
-        // Nothing to record on: skip the rate-limit bookkeeping as well.
-        if (Span::current() === null) {
-            return;
-        }
-
-        $now = \time();
-        if ((self::$lastReports[$operation] ?? 0) + self::REPORT_TTL_SECONDS > $now) {
-            return;
-        }
-        self::$lastReports[$operation] = $now;
-
-        // The mirror is best effort, so the failure is recorded on the request
-        // span without failing it.
-        Span::add('executions.mirror.operation', $operation);
-        Span::add('executions.mirror.error', $th->getMessage());
-        Span::add('executions.mirror.exception', $th::class);
-        Span::add('executions.mirror.code', $th->getCode());
     }
 
     /** @param array<string, mixed> $params */

@@ -1,0 +1,31 @@
+{
+    "name": "utopia-php/detector",
+    "description": "A simple library for fast and reliable environment identification.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "php",
+        "framework",
+        "utopia",
+        "detector"
+    ],
+    "minimum-stability": "stable",
+    "scripts": {
+        "test": "phpunit"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Detector\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Detector\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "ext-yaml": "*"
+    }
+}

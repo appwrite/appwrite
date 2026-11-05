@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -24,7 +24,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => $name,
             'roles' => $roles,
         ]);
@@ -46,7 +46,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal',
             'roles' => ['player'],
         ]);
@@ -112,8 +112,8 @@ trait TeamsBase
             $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
         }
 
-        $teamId = ID::unique();
-        $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $teamId = Id::unique();
+        $response2 = $this->postTeam(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -133,7 +133,7 @@ trait TeamsBase
             ], $this->getHeaders());
             $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, []);
             $this->assertEquals(400, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            $response = $this->postTeam($headers, [
                 'teamId' => $response1['body']['$id'],
                 'name' => 'John',
             ]);
@@ -155,7 +155,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Newcastle'
         ]);
 
@@ -165,6 +165,29 @@ trait TeamsBase
         $this->assertGreaterThan(-1, $response3['body']['total']);
         $this->assertIsInt($response3['body']['total']);
         $this->assertEquals(true, $dateValidator->isValid($response3['body']['$createdAt']));
+
+        // A project-scoped role is longer than a bare ID
+        $role = 'project-' . Id::unique() . '-developer';
+        $response4 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Aston Villa',
+            'roles' => [$role],
+        ]);
+
+        $this->assertEquals(201, $response4['headers']['status-code']);
+
+        // An API key creates the team without a creator membership to read the role from
+        if ($this->getSide() !== 'server') {
+            $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $response4['body']['$id'] . '/memberships', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertContains($role, $memberships['body']['memberships'][0]['roles']);
+        }
 
         /**
          * Test for FAILURE
@@ -423,7 +446,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo'
         ]);
 
@@ -438,7 +461,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo New'
         ]);
 
@@ -471,7 +494,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo'
         ]);
 

@@ -62,7 +62,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
             // TODO: Support tag in future
             ->param('type', '', new WhiteList(['branch', 'commit']), 'Type of reference passed. Allowed values are: branch, commit', enum: new Enum(name: 'VCSReferenceType'))
             ->param('reference', '', new Text(255), 'VCS reference to create deployment from. Depending on type this can be: branch name, commit hash')
@@ -76,6 +76,7 @@ class Create extends Base
             ->inject('publisherForBuilds')
             ->inject('vcsFactory')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('platform')
             ->callback($this->action(...));
     }
@@ -94,6 +95,7 @@ class Create extends Base
         BuildPublisher $publisherForBuilds,
         VcsFactory $vcsFactory,
         Deployments $deployments,
+        int $buildTimeout,
         array $platform,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -123,7 +125,8 @@ class Create extends Base
             platform: $platform,
             reference: $reference,
             referenceType: $type,
-            deployments: $deployments
+            deployments: $deployments,
+            buildTimeout: $buildTimeout
         );
 
         $queueForEvents

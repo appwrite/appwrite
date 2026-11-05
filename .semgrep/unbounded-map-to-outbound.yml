@@ -1,0 +1,36 @@
+rules:
+  - id: php.appwrite.unbounded-map-to-outbound
+    message: >
+      Guest-reachable routes (ROLE_GUESTS scopes: public, avatars.*,
+      sessions.write, documents/files/rows read-write, locale.read,
+      executions.write, …) accept an unbounded Assoc map. If any key of
+      that map can reach an outbound HTTP or browser client, filter it
+      against a named allowlist first: a class constant ALLOWED_* or
+      FUNCTION_ALLOWLIST_HEADERS_*. Classes that declare such an
+      allowlist are treated as filtered.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+    patterns:
+      - pattern-either:
+          - pattern: $ROUTE->param($NAME, $DEFAULT, new Assoc(...), ...)
+          - pattern: $ROUTE->param($NAME, $DEFAULT, new \Utopia\Validator\Assoc(...), ...)
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: (?s).*->label\(\s*['"]scope['"]\s*,\s*['"](?:public|avatars\.(?:read|write)|sessions\.write|documents(?:db\.documents)?\.(?:read|write)|vectorsdb\.documents\.(?:read|write)|rows\.(?:read|write)|files\.(?:read|write)|embeddings\.write|locale\.read|executions\.write)['"]
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_HEADERS = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_QUERY = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_COOKIES = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_OPTIONS = $LIST; ... }
+      - pattern-not-inside: |
+          class $CLASS { ... const ALLOWED_KEYS = $LIST; ... }

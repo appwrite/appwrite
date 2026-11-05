@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Avatars\Http\Photo;
 
 use Appwrite\AvatarPhotos\Photo;
+use Appwrite\AvatarPhotos\Providers\Custom;
 use Appwrite\AvatarPhotos\Providers\Fallback;
 use Appwrite\AvatarPhotos\Providers\Gravatar;
 use Appwrite\AvatarPhotos\Providers\Initials;
@@ -20,11 +21,13 @@ use Appwrite\Utopia\Response;
 use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -51,13 +54,13 @@ class Get extends Action
                 group: null,
                 name: 'getPhoto',
                 description: <<<'EOT'
-                Returns the best available profile photo for a user. The endpoint tries each source in priority order and returns the first successful result: OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
+                Returns the best available profile photo for a user. The endpoint tries each source in priority order and returns the first successful result: a custom uploaded photo (see avatars.updatePhoto), OAuth2 identity photo, Gravatar, Libravatar, Appwrite Initials, built-in static fallback.
 
                 Passing `userId` — `current()` for the authenticated user — resolves the photo from everything known about that user: identity photos, email, and name. An explicit `emailHash` or `name` then overrides just that value, and the user's remaining sources stay in the chain. Without `userId`, passing `emailHash` and/or `name` resolves the avatar from those values alone: the hash is looked up on Gravatar and Libravatar, the name is rendered as initials, and the session user stays out of the chain so their own photo never shadows the avatar being asked for. When nothing is passed, the photo resolves for the currently authenticated user. Emails are only ever accepted pre-hashed, so no address ends up in a URL.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -71,12 +74,14 @@ class Get extends Action
             ->param('quality', 100, new Range(0, 100), 'Output image quality between 0 and 100. Defaults to 100.', true)
             ->param('output', 'png', new WhiteList(['png', 'jpg', 'webp'], true), 'Output image format. Defaults to \'png\'.', true)
             ->param('rating', 'g', new WhiteList(['g', 'pg', 'r', 'x'], true), 'Maximum image rating to fetch from Gravatar/Libravatar. Defaults to \'g\'.', true)
-            ->param('userId', '', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID to resolve the photo for. Pass \'current()\' for the currently authenticated user. When omitted, the session user is used only if no emailHash and no name is passed.', true, ['dbForProject'], example: 'current()')
+            ->param('userId', '', fn (Database $dbForProject) => new KeywordId('current()', $dbForProject->getMaxUidLength()), 'User ID to resolve the photo for. Pass \'current()\' for the currently authenticated user. When omitted, the session user is used only if no emailHash and no name is passed.', true, ['dbForProject'], example: 'current()')
             ->param('emailHash', '', new Text(64, 64, [...Text::NUMBERS, ...\range('a', 'f'), ...\range('A', 'F')]), 'SHA256 hash of the lowercase, trimmed email address to look up on Gravatar and Libravatar instead of the user\'s own email. Pass the hash, never the address itself.', true)
             ->param('name', '', new Text(128, 0), 'Name to render initials from instead of the user\'s own name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('user')
             ->inject('dbForProject')
+            ->inject('deviceForFiles')
+            ->inject('clientForAvatars')
             ->callback($this->action(...));
     }
 
@@ -92,7 +97,10 @@ class Get extends Action
         Response $response,
         Document $user,
         Database $dbForProject,
+        Device $deviceForFiles,
+        Client $clientForAvatars,
     ): void {
+        $client = $clientForAvatars;
         $emailHash = \strtolower($emailHash);
 
         // An explicit emailHash or name already identifies who is being
@@ -123,6 +131,7 @@ class Get extends Action
         if (!$photoUser->isEmpty()) {
             $userEmail = $photoUser->getAttribute('email', '');
             $userName = $photoUser->getAttribute('name', '');
+            $userPhotoId = $photoUser->getAttribute('photoId', '');
 
             $profile = $profile->setAttribute('$id', $photoUser->getId());
 
@@ -132,6 +141,10 @@ class Get extends Action
 
             if ($userEmail !== '') {
                 $profile = $profile->setAttribute('emailHash', \hash('sha256', \strtolower(\trim($userEmail))));
+            }
+
+            if ($userPhotoId !== '') {
+                $profile = $profile->setAttribute('photoId', $userPhotoId);
             }
         }
 
@@ -145,13 +158,17 @@ class Get extends Action
 
         $providers = [];
 
+        if ($profile->getAttribute('photoId', '') !== '') {
+            $providers[] = new Custom($deviceForFiles);
+        }
+
         if ($profile->getId() !== '') {
-            $providers[] = new OAuth2($dbForProject);
+            $providers[] = new OAuth2($dbForProject, $client);
         }
 
         if ($profile->getAttribute('emailHash', '') !== '') {
-            $providers[] = new Gravatar();
-            $providers[] = new Libavatar();
+            $providers[] = new Gravatar($client);
+            $providers[] = new Libavatar($client);
         }
 
         if ($profile->getAttribute('name', '') !== '') {

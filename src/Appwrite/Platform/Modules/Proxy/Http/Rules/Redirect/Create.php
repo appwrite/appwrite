@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -13,7 +14,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Enum;
@@ -62,9 +63,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'userId:{userId}, url:{url}')
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['userId', 'url'], 10, seconds: 60)])
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->param('url', null, new URL(), 'Target URL of redirection')
             ->param('statusCode', null, new WhiteList([301, 302, 307, 308]), 'Status code of redirection', enum: new Enum(
@@ -76,7 +75,7 @@ class Create extends Action
                     '308' => 'PermanentRedirect',
                 ]
             ))
-            ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of parent resource.', false, ['dbForProject'])
+            ->param('resourceId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of parent resource.', false, ['dbForProject'])
             ->param('resourceType', '', new WhiteList(['site', 'function']), 'Type of parent resource.', enum: new Enum(
                 name: 'ProxyResourceType',
                 map: [
@@ -131,7 +130,7 @@ class Create extends Action
         }
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : Id::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
@@ -178,6 +177,8 @@ class Create extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                // verifyRule() above passed, which is what put the rule in this status.
+                skipDomainValidation: true,
             ));
         }
 

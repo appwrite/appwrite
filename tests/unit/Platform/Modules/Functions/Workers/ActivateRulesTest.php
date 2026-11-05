@@ -10,6 +10,7 @@ use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Query\Method;
 
 final class ActivateRulesTest extends TestCase
 {
@@ -41,15 +42,27 @@ final class ActivateRulesTest extends TestCase
         $this->assertSame([''], $branchQuery->getValues());
     }
 
+    public function testActivateOfTemplateOnlyTouchesBranchAgnosticRules(): void
+    {
+        $captured = [];
+        $dbForPlatform = $this->platformDatabaseCapturing($captured);
+
+        $this->activate($dbForPlatform, deploymentBranch: 'main', installationId: '');
+
+        $branchQuery = $this->queryFor($captured, 'deploymentVcsProviderBranch');
+        $this->assertInstanceOf(Query::class, $branchQuery);
+        $this->assertSame([''], $branchQuery->getValues(), 'a template reuses providerBranch for its resolved ref and must not repoint a rule pinned to that branch');
+    }
+
     public function testActivateRepointsMatchedRuleAtTheNewDeployment(): void
     {
         $updated = [];
         $dispatched = 0;
 
         $dbForPlatform = $this->createStub(Database::class);
-        $dbForPlatform->method('forEach')->willReturnCallback(
-            function (string $collection, callable $callback): void {
-                $callback(new Document(['$id' => 'rule-branch', 'deploymentId' => '']));
+        $dbForPlatform->method('cursor')->willReturnCallback(
+            function (string $collection): \Generator {
+                yield new Document(['$id' => 'rule-branch', 'deploymentId' => '']);
             }
         );
         $dbForPlatform->method('updateDocument')->willReturnCallback(
@@ -72,7 +85,27 @@ final class ActivateRulesTest extends TestCase
         $this->assertSame(1, $dispatched);
     }
 
-    private function activate(Database $dbForPlatform, string $deploymentBranch, ?Bus $bus = null): void
+    public function testActivateBranchRuleTargetsOnlyThatBranch(): void
+    {
+        $rebound = [];
+        $dbForPlatform = $this->platformDatabaseApplyingQueries($rebound);
+
+        $this->activateBranchRule($dbForPlatform, deploymentBranch: 'feature');
+
+        $this->assertSame(['rule-feature'], $rebound);
+    }
+
+    public function testActivateBranchRuleSkipsTemplate(): void
+    {
+        $rebound = [];
+        $dbForPlatform = $this->platformDatabaseApplyingQueries($rebound);
+
+        $this->activateBranchRule($dbForPlatform, deploymentBranch: 'main', installationId: '');
+
+        $this->assertSame([], $rebound, 'a template deployment reuses providerBranch for its resolved ref and must not repoint a rule pinned to that branch');
+    }
+
+    private function activate(Database $dbForPlatform, string $deploymentBranch, ?Bus $bus = null, string $installationId = 'inst-1'): void
     {
         $resource = new Document([
             '$id' => 'func-1',
@@ -88,6 +121,7 @@ final class ActivateRulesTest extends TestCase
             '$id' => 'dep-active',
             '$sequence' => '55',
             'providerBranch' => $deploymentBranch,
+            'installationId' => $installationId,
         ]);
 
         (new ActivateRulesTestJobs())->exposeActivate(
@@ -100,15 +134,73 @@ final class ActivateRulesTest extends TestCase
         );
     }
 
+    private function activateBranchRule(Database $dbForPlatform, string $deploymentBranch, string $installationId = 'inst-1'): void
+    {
+        (new ActivateRulesTestJobs())->exposeActivateBranchRule(
+            $dbForPlatform,
+            new Document(['$id' => 'project-1', '$sequence' => '7']),
+            new Document(['$id' => 'func-1', '$sequence' => '100', '$collection' => 'functions']),
+            new Document([
+                '$id' => 'dep-branch',
+                '$sequence' => '56',
+                'providerBranch' => $deploymentBranch,
+                'installationId' => $installationId,
+            ]),
+            $this->createStub(Bus::class),
+        );
+    }
+
+    /**
+     * Unlike platformDatabaseCapturing(), this evaluates the queries the worker
+     * builds against real rule rows, so an assertion is about which rules were
+     * repointed rather than about the shape of a Query object.
+     *
+     * @param array<string> $rebound
+     */
+    private function platformDatabaseApplyingQueries(array &$rebound): Database
+    {
+        $rules = [
+            new Document(['$id' => 'rule-agnostic', '$sequence' => '41', 'projectInternalId' => '7', 'type' => 'deployment', 'deploymentResourceInternalId' => '100', 'deploymentResourceType' => 'function', 'trigger' => 'manual', 'deploymentVcsProviderBranch' => '']),
+            new Document(['$id' => 'rule-main', '$sequence' => '42', 'projectInternalId' => '7', 'type' => 'deployment', 'deploymentResourceInternalId' => '100', 'deploymentResourceType' => 'function', 'trigger' => 'manual', 'deploymentVcsProviderBranch' => 'main']),
+            new Document(['$id' => 'rule-feature', '$sequence' => '43', 'projectInternalId' => '7', 'type' => 'deployment', 'deploymentResourceInternalId' => '100', 'deploymentResourceType' => 'function', 'trigger' => 'manual', 'deploymentVcsProviderBranch' => 'feature']),
+        ];
+
+        $dbForPlatform = $this->createStub(Database::class);
+        $dbForPlatform->method('updateDocument')->willReturnCallback(
+            function (string $collection, string $id, Document $document) use (&$rebound): Document {
+                $rebound[] = $id;
+
+                return new Document(['$id' => $id, ...$document->getArrayCopy()]);
+            }
+        );
+        $dbForPlatform->method('cursor')->willReturnCallback(
+            static function (string $collection, array $queries = []) use ($rules): \Generator {
+                foreach ($rules as $rule) {
+                    foreach ($queries as $query) {
+                        if (!\in_array($rule->getAttribute($query->getAttribute()), $query->getValues(), true)) {
+                            continue 2;
+                        }
+                    }
+
+                    yield $rule;
+                }
+            }
+        );
+
+        return $dbForPlatform;
+    }
+
     /**
      * @param array<Query> $captured
      */
     private function platformDatabaseCapturing(array &$captured): Database
     {
         $dbForPlatform = $this->createStub(Database::class);
-        $dbForPlatform->method('forEach')->willReturnCallback(
-            function (string $collection, callable $callback, array $queries = []) use (&$captured): void {
+        $dbForPlatform->method('cursor')->willReturnCallback(
+            function (string $collection, array $queries = []) use (&$captured): \Generator {
                 $captured = $queries;
+
+                yield from [];
             }
         );
 
@@ -121,7 +213,7 @@ final class ActivateRulesTest extends TestCase
     private function queryFor(array $queries, string $attribute): ?Query
     {
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === $attribute) {
+            if ($query->getMethod() === Method::Equal && $query->getAttribute() === $attribute) {
                 return $query;
             }
         }
@@ -141,5 +233,15 @@ final class ActivateRulesTestJobs extends Jobs
         Bus $bus,
     ): void {
         $this->activate($dbForProject, $dbForPlatform, $project, $resource, $deployment, $bus);
+    }
+
+    public function exposeActivateBranchRule(
+        Database $dbForPlatform,
+        Document $project,
+        Document $resource,
+        Document $deployment,
+        Bus $bus,
+    ): void {
+        $this->activateBranchRule($dbForPlatform, $project, $resource, $deployment, $bus);
     }
 }

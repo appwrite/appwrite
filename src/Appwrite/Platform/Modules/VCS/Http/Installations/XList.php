@@ -9,6 +9,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
@@ -16,6 +17,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -53,6 +55,7 @@ class XList extends Action
             ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
+            ->inject('vcsFactory')
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')
@@ -63,6 +66,7 @@ class XList extends Action
         array $queries,
         string $search,
         bool $includeTotal,
+        VcsFactory $vcsFactory,
         Response $response,
         Document $project,
         Database $dbForPlatform
@@ -83,7 +87,7 @@ class XList extends Action
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+            return \in_array($query->getMethod(), [QueryMethod::CursorAfter, QueryMethod::CursorBefore]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -104,12 +108,19 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
         try {
             $results = $dbForPlatform->find('installations', $queries);
             $total = $includeTotal ? $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
+        foreach ($results as $installation) {
+            $provider = $installation->getAttribute('provider', '');
+            if ($vcsFactory->isConfigured($provider)) {
+                $installation->setAttribute('organizationUrl', $vcsFactory->fromProviderForBrowser($provider)->getOrganizationUrl($installation->getAttribute('organization', '')));
+            }
         }
 
         $response->dynamic(new Document([

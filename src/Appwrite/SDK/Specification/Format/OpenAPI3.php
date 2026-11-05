@@ -2,6 +2,10 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
+use Appwrite\Abuse\Limit;
+use Appwrite\Auth\Validator\Hash\Argon2;
+use Appwrite\Auth\Validator\Hash\Bcrypt;
+use Appwrite\Auth\Validator\Hash\PHPass;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -12,21 +16,28 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Queries;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Queries\Base;
 use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
+use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
-use Utopia\Validator;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
+    private const array HASH_EXAMPLES = [
+        Argon2::class => '$argon2id$v=19$m=65536,t=4,p=1$NC8xaW1CVXlIZXFSQi9FRg$0bd4pLo1ytyqvCwl5NSijpm5OIe8J6CjZ1vFemKAg+o',
+        Bcrypt::class => '$2y$10$vBiMe4NOvlbYL1iJUNdqkO.QJy17fvslZQ5oiqKq1G4uwyRWvdrXC',
+        PHPass::class => '$P$BrOEFP1YR5W1yHpvvGuoeVUDPmw9ra/',
+    ];
+
     public function getName(): string
     {
         return 'Open API 3';
@@ -199,6 +210,16 @@ class OpenAPI3 extends Format
     public function parse(): array
     {
         $schemes = $this->getSecuritySchemes();
+
+        // Keys binding a route to a path parameter, not to a credential.
+        $pathConfigs = [];
+        foreach ($this->keys as $platformSchemes) {
+            foreach ($platformSchemes as $name => $scheme) {
+                if (($scheme['location'] ?? '') === ParameterLocation::PATH->value) {
+                    $pathConfigs[$name] = [$scheme['param'] => $scheme['config']];
+                }
+            }
+        }
         /**
          * Specifications (v3.0.0):
          * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md
@@ -250,7 +271,6 @@ class OpenAPI3 extends Format
 
         foreach ([
             'Project' => '<YOUR_PROJECT_ID>',
-            'ProjectPath' => '<YOUR_PROJECT_ID>',
             'Key' => '<YOUR_API_KEY>',
             'Organization' => '<YOUR_ORGANIZATION_ID>',
             'JWT' => '<YOUR_JWT>',
@@ -306,6 +326,18 @@ class OpenAPI3 extends Format
 
             $descContents = $this->getDescriptionContents($desc);
 
+            /** @var list<Limit> $limits */
+            // The spec states one limit and window for all of its keys, so list only the limits that share the first one's.
+            $limits = $route->getLabel('abuse', []);
+            $limits = \array_values(\array_filter($limits, fn (Limit $limit): bool => $limit->limit === $limits[0]->limit && $limit->seconds === $limits[0]->seconds));
+            // The spec has always described a key as `name:{placeholder}` pairs.
+            $rateKey = fn (Limit $limit): string => \implode(',', \array_map(
+                fn (string $part): string => \str_starts_with($part, 'param.')
+                    ? \substr($part, 6) . ':{param-' . \substr($part, 6) . '}'
+                    : $part . ':{' . $part . '}',
+                $limit->by,
+            ));
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $namespace . ucfirst($methodName),
@@ -316,9 +348,13 @@ class OpenAPI3 extends Format
                 'x-appwrite' => [ // Appwrite related metadata
                     'group' => $sdk->getGroup(),
                     'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
-                    'rate-limit' => $route->getLabel('abuse-limit', 0),
-                    'rate-time' => $route->getLabel('abuse-time', 3600),
-                    'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
+                    'rate-limit' => $limits[0]->limit ?? 0,
+                    'rate-time' => $limits[0]->seconds ?? 3600,
+                    'rate-key' => match (\count($limits)) {
+                        0 => 'url:{url},ip:{ip}',
+                        1 => $rateKey($limits[0]),
+                        default => \array_map($rateKey, $limits),
+                    },
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
                     'packaging' => $sdk->isPackaging(),
@@ -356,7 +392,7 @@ class OpenAPI3 extends Format
                         'name' => $methodObj->getMethodName(),
                         'namespace' => $methodObj->getNamespace(),
                         'platforms' => $methodSdkPlatforms,
-                        'desc' => $methodObj->getDesc(),
+                        'summary' => $methodObj->getSummary(),
                         'auth' => $this->getExampleAuth($methodSecurities, [], $methodSdkPlatforms),
                         'parameters' => [],
                         'required' => [],
@@ -544,19 +580,29 @@ class OpenAPI3 extends Format
             }
 
             if (!empty($scope)) {
-                $securities = [($sdk->getLocationAuth()[0] ?? 'Project') => []];
+                // A path binding is not a credential, so it stays out of
+                // `security`; examples still configure it on the client.
+                $binding = $sdk->getLocationAuth()[0] ?? 'Project';
+                $pathConfig = $pathConfigs[$binding] ?? null;
+                if ($pathConfig !== null) {
+                    $temp['x-appwrite']['config'] = $pathConfig;
+                }
+
+                $securities = $pathConfig === null ? [$binding => []] : [];
+                $exampleSecurities = $pathConfig === null ? $securities : ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
                     /** @var AuthType $security */
                     if (\array_key_exists($security->value, $schemes)) {
                         $securities[$security->value] = [];
+                        $exampleSecurities[$security->value] = [];
                     }
                 }
 
                 $locationKeys = $sdk->getType() === MethodType::LOCATION
                     ? \array_values(\array_filter($sdk->getLocationAuth(), fn (string $key) => \array_key_exists($key, $schemes)))
                     : [];
-                $temp['x-appwrite']['auth'] = $this->getExampleAuth($securities, $locationKeys, $sdkPlatforms);
+                $temp['x-appwrite']['auth'] = $this->getExampleAuth($exampleSecurities, $locationKeys, $sdkPlatforms);
 
                 $temp['security'][] = $securities;
                 // Location credentials supplement the base authentication. The
@@ -571,6 +617,20 @@ class OpenAPI3 extends Format
                 }
             }
 
+            $requestExamples = [];
+            foreach ($additionalMethods ?? [$sdk] as $method) {
+                $platforms = $method->getPlatforms();
+                if ($this->platform === null ? $platforms === [] : !\in_array($this->platform, $platforms, true)) {
+                    continue;
+                }
+                foreach ($method->getRequestExamples() as $name => $example) {
+                    if (isset($requestExamples[$name]) && $requestExamples[$name] !== $example) {
+                        throw new \RuntimeException("Conflicting request example '{$name}' for route '{$url}'.");
+                    }
+                    $requestExamples[$name] = $example;
+                }
+            }
+
             $parameterNodes = [];
 
             $parameters = $this->getMethodParameters($route, $sdk);
@@ -581,7 +641,7 @@ class OpenAPI3 extends Format
                 }
 
                 /**
-                 * @var \Utopia\Validator $validator
+                 * @var \Utopia\Validator\Validator $validator
                  */
                 $validator = $this->getValidator($param);
 
@@ -610,8 +670,8 @@ class OpenAPI3 extends Format
 
                 // Every Queries validator serialises to an array of query strings, so
                 // normalise the whole hierarchy instead of enumerating each subclass.
-                if (\is_subclass_of($class, Queries::class)) {
-                    $class = Queries::class;
+                if (\is_subclass_of($class, Base::class)) {
+                    $class = Base::class;
                 }
 
                 $openEnum = false;
@@ -650,11 +710,12 @@ class OpenAPI3 extends Format
                     case \Appwrite\Utopia\Database\Validator\ProjectId::class:
                     case \Appwrite\Platform\Modules\Compute\Validator\VariableKey::class:
                     case \Utopia\Validator\Text::class:
+                    case \Appwrite\Vcs\Validator\Directory::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Utopia\Database\Validator\BigInt::class:
-                        // BigInt validator reports Database::VAR_BIGINT, but OpenAPI expects scalar types.
+                        // BigInt validator reports ColumnType::BigInteger, but OpenAPI expects scalar types.
                         // We expose it as int64 to keep schema consistent with Column/Attribute models.
                         $node['schema']['type'] = 'integer';
                         $node['schema']['format'] = 'int64';
@@ -668,9 +729,6 @@ class OpenAPI3 extends Format
                         break;
                     case \Appwrite\Utopia\Database\Validator\CustomId::class:
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-appwrite'] = [
-                            'idGenerator' => 'ID.unique',
-                        ];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case \Appwrite\Task\Validator\Cron::class:
@@ -700,18 +758,18 @@ class OpenAPI3 extends Format
                         /** @var Spatial $validator */
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => [
+                            ColumnType::Point->value => [
                                 'type' => 'number',
                                 'format' => 'double',
                             ],
-                            Database::VAR_LINESTRING => [
+                            ColumnType::Linestring->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'number',
                                     'format' => 'double',
                                 ],
                             ],
-                            Database::VAR_POLYGON => [
+                            ColumnType::Polygon->value => [
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'array',
@@ -730,9 +788,9 @@ class OpenAPI3 extends Format
                             ],
                         };
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : match ($validator->getSpatialType()) {
-                            Database::VAR_POINT => '[1, 2]',
-                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
-                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                            ColumnType::Point->value => '[1, 2]',
+                            ColumnType::Linestring->value => '[[1, 2], [3, 4], [5, 6]]',
+                            ColumnType::Polygon->value => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                             default => '',
                         };
                         break;
@@ -744,6 +802,7 @@ class OpenAPI3 extends Format
                     case \Utopia\Validator\Host::class:
                     case \Utopia\Validator\URL::class:
                     case \Appwrite\Network\Validator\Redirect::class:
+                    case \Appwrite\Network\Validator\PublicURL::class:
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : 'https://example.com';
@@ -780,11 +839,26 @@ class OpenAPI3 extends Format
                             $node['schema']['example'] = $param['example'];
                         }
                         break;
-                    case Queries::class:
+                    case Base::class:
+                        // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
+                    case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
+                        break;
+                    case \Utopia\Validator\Multiple::class:
+                        // Its rules check the whole value, so an array-typed Multiple declares no
+                        // item type; its items are taken to be strings.
+                        $node['schema']['type'] = $validator->getType();
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['items'] = [
+                                'type' => 'string',
+                            ];
+                        }
+                        if (($param['example'] ?? '') !== '') {
+                            $node['schema']['example'] = $param['example'];
+                        }
                         break;
                     case \Utopia\Database\Validator\Permissions::class:
                         $node['schema']['type'] = $validator->getType();
@@ -799,6 +873,13 @@ class OpenAPI3 extends Format
                             'type' => 'string',
                         ];
                         $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : '["' . Role::any()->toString() . '"]';
+                        break;
+                    case Argon2::class:
+                    case Bcrypt::class:
+                    case PHPass::class:
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['format'] = 'password';
+                        $node['schema']['example'] = ($param['example'] ?? '') !== '' ? $param['example'] : self::HASH_EXAMPLES[$validator::class];
                         break;
                     case \Appwrite\Auth\Validator\Password::class:
                     case \Appwrite\SDK\Specification\Validator\PasswordFormat::class:
@@ -967,6 +1048,16 @@ class OpenAPI3 extends Format
                             break;
                         }
 
+                        // A validator of its own that takes a whole array declares no item type.
+                        if ($validator->getType() === Validator::TYPE_ARRAY) {
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = new \stdClass();
+                            if (($param['example'] ?? '') !== '') {
+                                $node['schema']['example'] = $param['example'];
+                            }
+                            break;
+                        }
+
                         $node['schema']['type'] = 'string';
                         if (($param['example'] ?? '') !== '') {
                             $node['schema']['example'] = $param['example'];
@@ -1102,6 +1193,9 @@ class OpenAPI3 extends Format
                 }
 
                 if (!empty($body['content'][$consumes[0]]['schema']['properties'])) {
+                    if ($requestExamples !== []) {
+                        $body['content'][$consumes[0]]['examples'] = $requestExamples;
+                    }
                     $methodTemp['requestBody'] = $body;
                 }
 
@@ -1231,6 +1325,9 @@ class OpenAPI3 extends Format
                     if ($readOnly) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
+                    if (\is_array($rule['default'] ?? null) || ($rule['default'] ?? null) instanceof \stdClass) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'] === [] ? new \stdClass() : $rule['default'];
+                    }
                     continue;
                 }
 
@@ -1300,6 +1397,16 @@ class OpenAPI3 extends Format
                         ];
                     }
                 }
+                // Clients fill a field an older server omits from its default, as the server does.
+                if (
+                    isset($rule['default'])
+                    && $items === null
+                    && ($rule['type'] !== 'datetime' || $rule['default'] === '')
+                    && $this->defaultMatchesType($rule['default'], $output['components']['schemas'][$model->getType()]['properties'][$name])
+                    && $this->shouldEmitDefaultForSchema($rule['default'], $output['components']['schemas'][$model->getType()]['properties'][$name])
+                ) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'];
+                }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
@@ -1316,5 +1423,22 @@ class OpenAPI3 extends Format
         \ksort($output['paths']);
 
         return $output;
+    }
+
+    /**
+     * Typed SDK models write a default as is, so one of the wrong type, such as '' on an integer, breaks them.
+     *
+     * @param array<string, mixed> $schema
+     */
+    private function defaultMatchesType(mixed $default, array $schema): bool
+    {
+        return match ($schema['type'] ?? null) {
+            'integer' => \is_int($default),
+            'number' => \is_int($default) || \is_float($default),
+            'boolean' => \is_bool($default),
+            'string' => \is_string($default),
+            'array' => \is_array($default),
+            default => true,
+        };
     }
 }

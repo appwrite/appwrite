@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Messaging\Http\Messages\Push;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -13,12 +14,13 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
@@ -94,6 +96,17 @@ class Create extends Action
                 group: 'messages',
                 name: 'createPush',
                 description: '/docs/references/messaging/create-push.md',
+                requestExamples: [
+                    'draft' => [
+                        'summary' => 'Create a push notification draft without sending it',
+                        'value' => [
+                            'messageId' => '<MESSAGE_ID>',
+                            'title' => 'Welcome',
+                            'body' => 'Welcome to our app.',
+                            'draft' => true,
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -102,12 +115,12 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('title', '', new Text(256), 'Title for push notification.', true)
             ->param('body', '', new Text(64230), 'Body for push notification.', true)
-            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
-            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
-            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
+            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Topic IDs.', true, ['dbForProject'])
+            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of User IDs.', true, ['dbForProject'])
+            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Targets IDs.', true, ['dbForProject'])
             ->param('data', null, new Nullable(new JSONObject()), 'Additional key-value pair data for push notification.', true)
             ->param('action', '', new Text(256), 'Action for push notification.', true)
             ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage. It should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
@@ -121,6 +134,7 @@ class Create extends Action
             ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
             ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
             ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
+            ->param('channelId', '', new Text(256), 'ID of the notification channel to deliver the notification on. The app must have already created a channel with this ID, otherwise the channel from the app manifest is used. Available only for Android Platform.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -128,15 +142,16 @@ class Create extends Action
             ->inject('publisherForMessaging')
             ->inject('response')
             ->inject('platform')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform, Request $request)
     {
         $data = $this->normalizeJsonObject($data);
 
         $messageId = $messageId == 'unique()'
-            ? ID::unique()
+            ? Id::unique()
             : $messageId;
 
         if ($draft) {
@@ -170,6 +185,10 @@ class Create extends Action
         }
 
         if (!empty($image)) {
+            if (!\in_array('files.read', $request->getScopes(), true)) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
+            }
+
             [$bucketId, $fileId] = CompoundUID::parse($image);
 
             $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -189,19 +208,15 @@ class Create extends Action
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
-            $scheduleTime = $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
-            } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
-            }
+            $delivery = \is_null($scheduledAt) ? \time() : (new \DateTime($scheduledAt))->getTimestamp();
 
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
+            $encoder = new JWT(EncryptionKey::current(), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
 
             $jwt = $encoder->encode([
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
                 'projectId' => $project->getId(),
+                'exp' => $delivery + APP_PUSH_IMAGE_TOKEN_DURATION,
             ]);
 
             $image = [
@@ -251,6 +266,9 @@ class Create extends Action
         }
         if (!empty($priority)) {
             $pushData['priority'] = $priority;
+        }
+        if (!empty($channelId)) {
+            $pushData['channelId'] = $channelId;
         }
 
         $message = new Document([

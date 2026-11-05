@@ -10,17 +10,23 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
+use Tests\E2E\Services\GraphQL\QueryJoinCombos;
+use Tests\E2E\Services\GraphQL\QueryJoinPermissions;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\RelationshipDeleteAction;
+use Utopia\Database\RelationshipType;
+use Utopia\Database\Role;
 
 final class DatabaseServerTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
     use Base;
+    use QueryJoinPermissions;
+    use QueryJoinCombos;
 
     private static array $cachedDatabase = [];
     private static array $cachedTableData = [];
@@ -55,7 +61,7 @@ final class DatabaseServerTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Actors',
             ]
         ];
@@ -88,7 +94,7 @@ final class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => 'Actors',
                 'rowSecurity' => false,
                 'permissions' => [
@@ -110,7 +116,7 @@ final class DatabaseServerTest extends Scope
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'tableId' => ID::unique(),
+                'tableId' => Id::unique(),
                 'name' => 'Movies',
                 'rowSecurity' => false,
                 'permissions' => [
@@ -125,6 +131,26 @@ final class DatabaseServerTest extends Scope
         $table2 = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
         $this->assertArrayNotHasKey('errors', $table2['body']);
         $table2 = $table2['body']['data']['tablesDBCreateTable'];
+
+        $query = $this->getQuery(self::CREATE_STRING_COLUMN);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'tableId' => $table['_id'],
+                'key' => 'tags',
+                'size' => 64,
+                'required' => false,
+                'array' => true,
+            ]
+        ];
+        $column = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        $this->assertArrayNotHasKey('errors', $column['body']);
+
+        $this->assertEventually(function () use ($database, $table, $headers) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $database['_id'] . '/tables/' . $table['_id'] . '/columns/tags', $headers);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 240000, 500);
 
         self::$cachedTableData[$cacheKey] = [
             'database' => $database,
@@ -635,7 +661,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'tableId' => $data['table2']['_id'],          // Movies
                 'relatedTableId' => $data['table']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationshipType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -806,9 +832,10 @@ final class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $databaseId,
                 'tableId' => $tableId,
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -860,7 +887,7 @@ final class DatabaseServerTest extends Scope
         $payload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'Bulk',
             ],
         ];
@@ -874,7 +901,7 @@ final class DatabaseServerTest extends Scope
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
-            'tableId' => ID::unique(),
+            'tableId' => Id::unique(),
             'name' => 'Operations',
             'rowSecurity' => false,
             'permissions' => [
@@ -914,7 +941,7 @@ final class DatabaseServerTest extends Scope
         $query = $this->getQuery(self::CREATE_ROWS);
         $rows = [];
         for ($i = 1; $i <= 10; $i++) {
-            $rows[] = ['$id' => ID::unique(), 'name' => 'Row #' . $i];
+            $rows[] = ['$id' => Id::unique(), 'name' => 'Row #' . $i];
         }
 
         $payload['query'] = $query;
@@ -1520,7 +1547,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $data['database']['_id'],
                 'tableId' => $data['table2']['_id'],          // Movies
                 'relatedTableId' => $data['table']['_id'],    // Actors
-                'type' => Database::RELATION_ONE_TO_MANY,
+                'type' => RelationshipType::OneToMany->value,
                 'twoWay' => true,
                 'key' => 'actors',
                 'twoWayKey' => 'movie'
@@ -1565,7 +1592,7 @@ final class DatabaseServerTest extends Scope
                 'databaseId' => $databaseId,
                 'tableId' => $tableId,
                 'key' => 'actors',
-                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+                'onDelete' => RelationshipDeleteAction::Cascade->value,
             ]
         ];
 
@@ -1813,9 +1840,10 @@ final class DatabaseServerTest extends Scope
             'variables' => [
                 'databaseId' => $databaseId,
                 'tableId' => $tableId,
-                'rowId' => ID::unique(),
+                'rowId' => Id::unique(),
                 'data' => [
                     'name' => 'John Doe',
+                    'tags' => ['first', 'second'],
                     'email' => 'example@appwrite.io',
                     'age' => 30,
                     'alive' => true,
@@ -1841,6 +1869,7 @@ final class DatabaseServerTest extends Scope
 
         $row = $row['body']['data']['tablesDBCreateRow'];
         $this->assertIsArray($row);
+        $this->assertSame(['first', 'second'], json_decode($row['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
 
         // Store for caching
         $cacheKey = $this->getProject()['$id'] ?? 'default';
@@ -2102,7 +2131,7 @@ final class DatabaseServerTest extends Scope
      */
     public function testGetRows(): void
     {
-        $data = $this->setupTable();
+        $data = $this->setupRow();
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_ROWS);
         $gqlPayload = [
@@ -2121,6 +2150,10 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $rows['body']);
         $this->assertIsArray($rows['body']['data']);
         $this->assertIsArray($rows['body']['data']['tablesDBListRows']);
+
+        $rows = array_column($rows['body']['data']['tablesDBListRows']['rows'], null, '_id');
+        $this->assertArrayHasKey($data['row']['_id'], $rows);
+        $this->assertSame(['first', 'second'], json_decode($rows[$data['row']['_id']]['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     /**
@@ -2149,6 +2182,7 @@ final class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $row['body']);
         $this->assertIsArray($row['body']['data']);
         $this->assertIsArray($row['body']['data']['tablesDBGetRow']);
+        $this->assertSame(['first', 'second'], json_decode($row['body']['data']['tablesDBGetRow']['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
 
         $row = $row['body']['data']['tablesDBGetRow'];
         $this->assertSame($data['row']['_permissions'], $row['_permissions']);
@@ -2273,6 +2307,7 @@ final class DatabaseServerTest extends Scope
                 'rowId' => $data['row']['_id'],
                 'data' => [
                     'name' => 'New Row Name',
+                    'tags' => [],
                 ],
             ]
         ];
@@ -2287,6 +2322,7 @@ final class DatabaseServerTest extends Scope
         $row = $row['body']['data']['tablesDBUpdateRow'];
         $this->assertIsArray($row);
         $this->assertStringContainsString('New Row Name', (string) $row['data']);
+        $this->assertSame([], json_decode($row['data'], false, flags: JSON_THROW_ON_ERROR)->tags);
     }
 
     //    /**
@@ -2541,7 +2577,7 @@ final class DatabaseServerTest extends Scope
                 'tableId' => $data['tableId'],
                 'rows' => [
                     [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         'name' => 'Row #1000',
                     ],
                     [
@@ -2583,7 +2619,7 @@ final class DatabaseServerTest extends Scope
         $this->assertGreaterThanOrEqual(12, $fetched['total']);
 
         // Step 3: Upsert row with new permissions using `tablesUpsertRow`
-        $upsertRowId = ID::unique();
+        $upsertRowId = Id::unique();
         $query = $this->getQuery(self::UPSERT_ROW);
         $payload = [
             'query' => $query,

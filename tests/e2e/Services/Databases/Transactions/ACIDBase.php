@@ -5,9 +5,10 @@ namespace Tests\E2E\Services\Databases\Transactions;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Query\Schema\IndexType;
 
 trait ACIDBase
 {
@@ -23,7 +24,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'AtomicityTestDB'
         ]);
 
@@ -36,7 +37,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'AtomicityTest',
             $this->getSecurityParam() => false,
             'permissions' => [
@@ -69,7 +70,7 @@ trait ACIDBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'key' => 'unique_email',
-            'type' => Database::INDEX_UNIQUE,
+            'type' => IndexType::Unique->value,
             $this->getIndexAttributesParam() => ['email']
         ]);
 
@@ -80,7 +81,7 @@ trait ACIDBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'email' => 'existing@example.com'
             ]
@@ -110,7 +111,7 @@ trait ACIDBase
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
                     'action' => 'create',
-                    $this->getRecordIdParam() => ID::unique(),
+                    $this->getRecordIdParam() => Id::unique(),
                     'data' => [
                         'email' => 'newuser@example.com' // This should succeed
                     ]
@@ -119,7 +120,7 @@ trait ACIDBase
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
                     'action' => 'create',
-                    $this->getRecordIdParam() => ID::unique(),
+                    $this->getRecordIdParam() => Id::unique(),
                     'data' => [
                         'email' => 'existing@example.com' // This will fail - duplicate
                     ]
@@ -128,7 +129,7 @@ trait ACIDBase
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
                     'action' => 'create',
-                    $this->getRecordIdParam() => ID::unique(),
+                    $this->getRecordIdParam() => Id::unique(),
                     'data' => [
                         'email' => 'anotheruser@example.com' // This should not be created due to atomicity
                     ]
@@ -186,7 +187,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'ConsistencyTestDB'
         ]);
 
@@ -199,7 +200,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'ConsistencyTest',
             $this->getSecurityParam() => false,
             'permissions' => [
@@ -255,7 +256,7 @@ trait ACIDBase
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
                     'action' => 'create',
-                    $this->getRecordIdParam() => ID::unique(),
+                    $this->getRecordIdParam() => Id::unique(),
                     'data' => [
                         'required_field' => 'Valid User',
                         'age' => 25 // Valid age
@@ -265,7 +266,7 @@ trait ACIDBase
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
                     'action' => 'create',
-                    $this->getRecordIdParam() => ID::unique(),
+                    $this->getRecordIdParam() => Id::unique(),
                     'data' => [
                         'required_field' => 'Too Young User',
                         'age' => 10 // Below minimum - will fail constraint
@@ -275,7 +276,7 @@ trait ACIDBase
                     'databaseId' => $databaseId,
                     $this->getContainerIdParam() => $collectionId,
                     'action' => 'create',
-                    $this->getRecordIdParam() => ID::unique(),
+                    $this->getRecordIdParam() => Id::unique(),
                     'data' => [
                         'required_field' => 'Another Valid User',
                         'age' => 30 // Valid but should not be created due to transaction failure
@@ -317,7 +318,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'IsolationTestDB'
         ]);
 
@@ -330,7 +331,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'IsolationTest',
             $this->getSecurityParam() => false,
             'permissions' => [
@@ -476,7 +477,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'DurabilityTestDB'
         ]);
 
@@ -489,7 +490,7 @@ trait ACIDBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'DurabilityTest',
             $this->getSecurityParam() => false,
             'permissions' => [

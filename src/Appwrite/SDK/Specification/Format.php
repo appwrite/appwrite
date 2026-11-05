@@ -7,6 +7,7 @@ use Appwrite\Utopia\Response\Model;
 use Utopia\DI\Container;
 use Utopia\Http\Route;
 use Utopia\OpenAPI\Model\Composition;
+use Utopia\OpenAPI\Model\ParameterLocation;
 
 abstract class Format
 {
@@ -86,6 +87,9 @@ abstract class Format
             }
 
             foreach ($platformSchemes as $name => $scheme) {
+                if (($scheme['location'] ?? '') === ParameterLocation::PATH->value) {
+                    continue;
+                }
                 $schemes[$name] ??= $scheme;
                 $schemes[$name]['x-appwrite']['platforms'][] = $platform;
             }
@@ -524,19 +528,26 @@ abstract class Format
         return true;
     }
 
-    protected function getRequestParameterConfig(bool $optional, bool $nullable, mixed $default, string $methodName = '', string $paramName = '')
+    /**
+     * Whether SDKs receive the param as required. SDK signatures list required
+     * params first, so this also decides where the param sits positionally.
+     */
+    public static function isRequired(bool $optional, string $methodName, string $paramName): bool
     {
-        $required = !$optional;
-
         if (
             $paramName === 'hostname'
             && \in_array($methodName, ['project.createWebPlatform', 'project.updateWebPlatform'], true)
         ) {
-            $required = true;
+            return true;
         }
 
+        return !$optional;
+    }
+
+    protected function getRequestParameterConfig(bool $optional, bool $nullable, mixed $default, string $methodName = '', string $paramName = '')
+    {
         $config = [
-            'required' => $required,
+            'required' => static::isRequired($optional, $methodName, $paramName),
             'nullable' => $nullable,
         ];
 

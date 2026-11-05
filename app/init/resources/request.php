@@ -2,13 +2,18 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\Key;
+use Appwrite\Auth\Validator\PasswordPwned\Appwrite as PasswordPwnedAppwrite;
+use Appwrite\Auth\Validator\PasswordPwned\HIBP as PasswordPwnedHIBP;
+use Appwrite\Auth\Validator\PasswordPwned\Mock as PasswordPwnedMock;
+use Appwrite\Auth\Validator\PasswordPwned\None as PasswordPwnedNone;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Context\Audit as AuditContext;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Func as FunctionMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
@@ -16,6 +21,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Geo\Client as GeoClient;
 use Appwrite\Geo\Geo;
+use Appwrite\GraphQL\ResolverLock;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Locking\Lock;
 use Appwrite\Network\Cors;
@@ -24,14 +30,21 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
+use Appwrite\Usage\Operations;
 use Appwrite\Usage\Policy as UsagePolicy;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hook\FunctionCache;
+use Appwrite\Utopia\Database\Hook\Joins;
+use Appwrite\Utopia\Database\Hook\Metadata;
+use Appwrite\Utopia\Database\Hook\Usage;
+use Appwrite\Utopia\Database\Hook\UserEvents;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use GraphQL\Error\Error as GraphQLError;
 use OpenRuntimes\Orchestrator\Jobs;
 use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
-use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Argon2;
@@ -45,22 +58,24 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Domains\Domain;
+use Utopia\DSN\DSN;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Lock\Distributed as DistributedLock;
 use Utopia\Pools\Group;
+use Utopia\Query\Method;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
+use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
 
 /**
  * Register per-request resources on the given container.
@@ -69,6 +84,8 @@ use Utopia\Validator\WhiteList;
  */
 return function (Container $context): void {
     $context->set('utopia:graphql', fn ($utopia) => $utopia, ['utopia']);
+
+    $context->set('resolverLock', fn (): ResolverLock => new ResolverLock(), []);
 
     $context->set('lock', function (Group $pools, Telemetry $telemetry, Document $project): Lock {
         return new Lock(
@@ -142,11 +159,12 @@ return function (Container $context): void {
     $context->set('auditContext', fn () => new AuditContext(), []);
 
     $context->set('impersonatorUser', function (string $mode, Document $project, Document $user, Request $request, Database $dbForProject, Database $dbForPlatform) {
-        if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
+        // A blocked actor keeps no capability, so the blocked check sees the actor
+        if ($user->isEmpty() || !$user->getAttribute('impersonator', false) || $user->getAttribute('status') === false) {
             return new Document();
         }
 
-        // Query params mirror the header fallback pattern used by ?project= and ?devKey=,
+        // Query params mirror the header fallback pattern used by ?project=,
         // allowing Console to embed impersonation in direct file/image URLs where headers cannot be set.
         $impersonateUserId = $request->getHeaderLine('x-appwrite-impersonate-user-id', (string)($request->getParam('impersonateuserid', '') ?: $request->getParam('impersonateUserId', '')));
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
@@ -206,16 +224,17 @@ return function (Container $context): void {
     ), ['publisher']);
     // Builds a Deployments bound to a given project — webhook handlers resolve
     // their tenant projects mid-request, after this container is initialized.
-    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform) {
-        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform);
-    }, ['jobs', 'platform']);
+    $context->set('deploymentsFactory', function (Jobs $jobs, array $platform, BuildPublisher $publisherForBuilds) {
+        return fn (Database $dbForProject, Document $project): Deployments => new Deployments($jobs, $dbForProject, $project, $platform, $publisherForBuilds);
+    }, ['jobs', 'platform', 'publisherForBuilds']);
+    $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
-    $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+    $context->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
         $pools,
         $cache,
         $authorization
-    ), ['pools', 'cache', 'authorization']);
+    ), ['register', 'pools', 'cache', 'authorization']);
 
     $context->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(
         APP_DATABASE_TIMEOUT_MILLISECONDS_API,
@@ -244,33 +263,23 @@ return function (Container $context): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $context->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-
-        return function (?Document $project = null) use ($databaseFactory) {
-            return $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_API,
-                APP_DATABASE_QUERY_MAX_VALUES
-            );
-        };
-    }, ['databaseFactory']);
-
     /**
      * List of allowed request hostnames for the request.
      */
-    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Document $devKey, Request $request) {
+    $context->set('allowedHostnames', function (array $platform, Document $project, Document $rule, Request $request, string $mode) {
         $allowed = [...($platform['hostnames'] ?? [])];
 
-        /* Add platform configured hostnames */
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        /* Add the console host, the default OAuth2 redirects land on it even when _APP_CONSOLE_URL points elsewhere */
+        $consoleHostname = \parse_url($platform['consoleUrl'] ?? '', PHP_URL_HOST);
+        if (! empty($consoleHostname)) {
+            $allowed[] = $consoleHostname;
+        }
+
+        /* Add platform configured hostnames, admin mode carries the console session so only console hosts may use it */
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $platforms = $project->getAttribute('platforms', []);
             $hostnames = Platform::getHostnames($platforms);
             $allowed = [...$allowed, ...$hostnames];
-        }
-
-        /* Add the request hostname if a dev key is found */
-        if (! $devKey->isEmpty()) {
-            $allowed[] = $request->getHostname();
         }
 
         $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
@@ -286,29 +295,26 @@ return function (Container $context): void {
             $allowed[] = $hostname;
         }
 
-        /* Allow the request origin of rule */
-        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', ''))) {
+        /* Allow the request origin of rule, in admin mode only when it belongs to a trusted console project */
+        $trustedProjects = \array_filter(\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')));
+        $ruleAllowed = $mode !== APP_MODE_ADMIN || \in_array($rule->getAttribute('projectId', ''), $trustedProjects, true);
+        if (! $rule->isEmpty() && ! empty($rule->getAttribute('domain', '')) && $ruleAllowed) {
             $allowed[] = $rule->getAttribute('domain', '');
         }
 
-        /* Allow the request origin if a dev key is found */
-        if (! $devKey->isEmpty() && ! empty($hostname)) {
-            $allowed[] = $hostname;
-        }
-
         return array_unique($allowed);
-    }, ['platform', 'project', 'rule', 'devKey', 'request']);
+    }, ['platform', 'project', 'rule', 'request', 'mode']);
 
     /**
      * List of allowed request schemes for the request.
      */
-    $context->set('allowedSchemes', function (array $platform, Document $project) {
+    $context->set('allowedSchemes', function (array $platform, Project $project, string $mode) {
         $allowed = [...($platform['schemas'] ?? [])];
 
-        if (! $project->isEmpty() && $project->getId() !== 'console') {
+        if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             /* Add hardcoded schemes */
             $allowed[] = 'exp';
-            $allowed[] = 'appwrite-callback-' . $project->getId();
+            $allowed[] = $project->getCallbackScheme();
 
             /* Add platform configured schemes */
             $platforms = $project->getAttribute('platforms', []);
@@ -317,7 +323,7 @@ return function (Container $context): void {
         }
 
         return array_unique($allowed);
-    }, ['platform', 'project']);
+    }, ['platform', 'project', 'mode']);
 
     /**
      * Whether the request origin is verified against the request hostname.
@@ -432,21 +438,17 @@ return function (Container $context): void {
 
     $context->set(
         'originValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Origin($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Origin($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
     $context->set(
         'redirectValidator',
-        fn (Document $devKey, array $allowedHostnames, array $allowedSchemes) => $devKey->isEmpty()
-            ? new Redirect($allowedHostnames, $allowedSchemes)
-            : new URL(),
-        ['devKey', 'allowedHostnames', 'allowedSchemes']
+        fn (array $allowedHostnames, array $allowedSchemes) => new Redirect($allowedHostnames, $allowedSchemes),
+        ['allowedHostnames', 'allowedSchemes']
     );
 
-    $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
+    $context->set('user', function (string $mode, Project $project, Project $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
         /**
          * Handles user authentication and session validation.
          *
@@ -466,12 +468,12 @@ return function (Container $context): void {
          *    overwriting the previous value.
          * 7. If account API key is passed, use user of the account API key as long as user ID header matches too
          */
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
-        $store->setKey('a_session_' . $project->getId());
+        $store->setKey($project->getSessionKey());
 
         if ($mode === APP_MODE_ADMIN) {
-            $store->setKey('a_session_' . $console->getId());
+            $store->setKey($console->getSessionKey());
         }
 
         $store->decode(
@@ -520,10 +522,14 @@ return function (Container $context): void {
             }
         }
 
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
         if (
             ! $user ||
             $user->isEmpty() // Check a document has been found in the DB
-            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+            || ! $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt)
         ) { // Validate user has valid login token
             $user = new User([]);
         }
@@ -534,15 +540,25 @@ return function (Container $context): void {
                 throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
             }
 
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
             try {
-                $payload = $jwt->decode($authJWT);
+                $payload = EncryptionKey::decode($authJWT);
             } catch (JWTException $error) {
                 throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
             }
 
+            // Every project shares the signing key, and a user ID can be chosen at
+            // signup, so a token is only good for the project that minted it. Tokens
+            // minted before the projectId claim existed are accepted only when bound
+            // to a session, whose ID the server generated and no other project holds.
+            // An unbound token authenticates nobody rather than failing the request:
+            // a function domain resolves to the console, and clients send their
+            // project's JWT there for the function to read.
+            $jwtProjectId = $payload['projectId'] ?? '';
+            $expectedProjectId = $mode === APP_MODE_ADMIN ? $console->getId() : $project->getId();
+            $bound = $jwtProjectId !== '' ? $jwtProjectId === $expectedProjectId : ! empty($payload['sessionId']);
+
             $jwtUserId = $payload['userId'] ?? '';
-            if (! empty($jwtUserId)) {
+            if ($bound && ! empty($jwtUserId)) {
                 if ($mode === APP_MODE_ADMIN) {
                     /** @var User $user */
                     $user = $dbForPlatform->getDocument('users', $jwtUserId);
@@ -552,7 +568,7 @@ return function (Container $context): void {
                 }
             }
             $jwtSessionId = $payload['sessionId'] ?? '';
-            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId)) { // Match JWT to active session
+            if (! empty($jwtSessionId) && ! $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) { // Match JWT to active session
                 $user = new User([]);
             }
         }
@@ -567,11 +583,7 @@ return function (Container $context): void {
 
             $accountKeyUser = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
             if (! $accountKeyUser->isEmpty()) {
-                $key = $accountKeyUser->find(
-                    key: 'secret',
-                    find: $accountKey,
-                    subject: 'keys'
-                );
+                $key = Key::find($accountKeyUser->getAttribute('keys', []), $accountKey);
 
                 if (! empty($key)) {
                     $expire = $key->getAttribute('expire');
@@ -598,17 +610,22 @@ return function (Container $context): void {
 
         $path = (string) \parse_url($request->getURI(), PHP_URL_PATH);
         $segments = \array_values(\array_filter(\explode('/', $path), fn (string $segment) => $segment !== ''));
-        if (($segments[0] ?? '') !== 'v1' || ($segments[1] ?? '') !== 'projects') {
+        $isProjectPath = ($segments[1] ?? '') === 'projects';
+        $isOrganizationProjectPath = ($segments[1] ?? '') === 'organization' && ($segments[2] ?? '') === 'projects';
+        if (($segments[0] ?? '') !== 'v1' || (!$isProjectPath && !$isOrganizationProjectPath)) {
             return '';
         }
 
         return $match->params['projectId'] ?? '';
     }, ['request', 'utopia']);
 
-    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia, string $projectIdFromPath) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Utopia\Database\Database $dbForPlatform */
-        /** @var Utopia\Database\Document $console */
+    /**
+     * The ID of the project the request names: the `project` param or the X-Appwrite-Project
+     * header, else the access key of an S3 request or the path of a deprecated project alias.
+     * Empty, or `console`, for the console. Kept apart from the project document so that a
+     * comparison with what the client sent never depends on how the document was looked up.
+     */
+    $context->set('projectId', function (Request $request, Http $utopia, string $projectIdFromPath): string {
         $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
@@ -646,29 +663,50 @@ return function (Container $context): void {
         $deprecatedProjectPathPrefix = '/v1/projects/';
         if (!empty($route)) {
             $isDeprecatedAlias = $projectIdFromPath !== '' &&
-                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix);
+                !\str_starts_with($route->getPath(), $deprecatedProjectPathPrefix) &&
+                !\str_starts_with($route->getPath(), '/v1/organization/projects/');
 
             if ($isDeprecatedAlias) {
                 $projectId = $projectIdFromPath;
             }
         }
 
+        return $projectId;
+    }, ['request', 'utopia', 'projectIdFromPath']);
+
+    $context->set('project', function (string $projectId, Database $dbForPlatform, Document $console, Authorization $authorization) {
         if ($projectId === '' || $projectId === 'console') {
             return $console;
         }
 
-        $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+        return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+    }, ['projectId', 'dbForPlatform', 'console', 'authorization']);
 
-        return $project;
-    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
-
-    $context->set('session', function (User $user, Store $store, Token $proofForToken) {
+    $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request, Document $project, Document $console, string $mode) {
         if ($user->isEmpty()) {
             return;
         }
 
+        $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
+            ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
+            : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
+
         $sessions = $user->getAttribute('sessions', []);
-        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken);
+        $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $sessionsInvalidatedAt);
+
+        $authJWT = $request->getHeaderLine('x-appwrite-jwt', '');
+        if (! $sessionId && ! empty($authJWT)) {
+            try {
+                $payload = EncryptionKey::decode($authJWT);
+            } catch (JWTException) {
+                return;
+            }
+
+            $jwtSessionId = $payload['sessionId'] ?? '';
+            if (($payload['userId'] ?? '') === $user->getId() && ! empty($jwtSessionId) && $user->sessionActive($jwtSessionId, $sessionsInvalidatedAt)) {
+                $sessionId = $jwtSessionId;
+            }
+        }
 
         if (! $sessionId) {
             return;
@@ -681,7 +719,24 @@ return function (Container $context): void {
         }
 
         return;
-    }, ['user', 'store', 'proofForToken']);
+    }, ['user', 'store', 'proofForToken', 'request', 'project', 'console', 'mode']);
+
+    $context->set('pwnedPasswords', function (Cache $cache) {
+        // Nothing is asked until an operator points this at a service
+        $dsn = new DSN(System::getEnv('_APP_PWNED_PASSWORDS_DSN', 'none://localhost'));
+
+        return match ($dsn->getScheme()) {
+            'hibp' => new PasswordPwnedHIBP($cache),
+            'appwrite' => new PasswordPwnedAppwrite($dsn, $cache),
+            // Reports every password as safe by choice, for servers that cannot reach a breach service
+            'none' => new PasswordPwnedNone(),
+            // Reports almost every password as safe, so it must never be reachable on a real server
+            'mock' => Http::isProduction()
+                ? throw new Exception(Exception::GENERAL_SERVER_ERROR, 'The mock breach validator cannot be used in production.')
+                : new PasswordPwnedMock(),
+            default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unknown _APP_PWNED_PASSWORDS_DSN scheme: ' . $dsn->getScheme()),
+        };
+    }, ['cache']);
 
     $context->set('dbForProject', function (DatabaseFactory $databaseFactory, Database $dbForPlatform, Document $project, Response $response, Publisher $publisher, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, UsageContext $usage, Request $request) {
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -700,134 +755,22 @@ return function (Container $context): void {
             ['host' => \gethostname(), 'project' => $project->getId()]
         );
 
-        /**
-         * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
-         *
-         * Accounts can be created in many ways beyond `createAccount`
-         * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
-         */
-        $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, FunctionPublisher $publisherForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
-            // Only trigger events for user creation with the database listener.
-            if ($document->getCollection() !== 'users') {
-                return;
-            }
-
-            $queueForEvents
-                ->setEvent('users.[userId].create')
-                ->setParam('userId', $document->getId())
-                ->setPayload($response->output($document, Response::MODEL_USER));
-
-            // Trigger functions, webhooks, and realtime events
-            $publisherForFunctions->enqueue(FunctionMessage::fromEvent(
-                event: $queueForEvents->getEvent(),
-                params: $queueForEvents->getParams(),
-                project: $queueForEvents->getProject(),
-                user: $queueForEvents->getUser(),
-                userId: $queueForEvents->getUserId(),
-                payload: $queueForEvents->getPayload(),
-                platform: $queueForEvents->getPlatform(),
-            ));
-
-            /** Trigger webhooks events only if a project has them enabled */
-            if (! empty($project->getAttribute('webhooks'))) {
-                $queueForWebhooks
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-
-            /** Trigger realtime events only for non console events */
-            if ($queueForEvents->getProject()->getId() !== 'console') {
-                $queueForRealtime
-                    ->from($queueForEvents)
-                    ->trigger();
-            }
-        };
-
-        /**
-         * Purge function events cache when functions are created, updated or deleted.
-         */
-        $functionsEventsCacheListener = function (string $event, Document $document, Document $project, Database $dbForProject) {
-
-            if ($document->getCollection() !== 'functions') {
-                return;
-            }
-
-            if ($project->isEmpty() || $project->getId() === 'console') {
-                return;
-            }
-
-            $hostname = $dbForProject->getAdapter()->getHostname();
-            $cacheKey = \sprintf(
-                '%s-cache-%s:%s:%s:project:%s:functions:events',
-                $dbForProject->getCacheName(),
-                $hostname,
-                $dbForProject->getNamespace(),
-                $dbForProject->getTenant(),
-                $project->getId()
-            );
-
-            $dbForProject->getCache()->purge($cacheKey);
-        };
-
-        $usageDatabaseListener = function (string $event, Document $document, UsageContext $usage) {
-            $value = 1;
-
-            switch ($event) {
-                case Database::EVENT_DOCUMENT_DELETE:
-                    $value = -1;
-                    break;
-                case Database::EVENT_DOCUMENTS_DELETE:
-                    $value = -1 * $document->getAttribute('modified', 0);
-                    break;
-                case Database::EVENT_DOCUMENTS_CREATE:
-                    $value = $document->getAttribute('modified', 0);
-                    break;
-                case Database::EVENT_DOCUMENTS_UPSERT:
-                    $value = $document->getAttribute('created', 0);
-                    break;
-            }
-
-            switch (true) {
-                case $document->getCollection() === 'sessions': // sessions
-                    $usage->addMetric(METRIC_SESSIONS, $value); // per project
-                    break;
-                case $document->getCollection() === 'deployments':
-                    $resourceType = $document->getAttribute('resourceType');
-                    $usage
-                        ->setResource(rtrim($resourceType, 's'))
-                        ->setResourceInternalId((string) $document->getAttribute('resourceInternalId'))
-                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per resource type
-                        ->addMetric(str_replace(['{resourceType}'], [$resourceType], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
-                    break;
-                default:
-                    break;
-            }
-        };
-
-        // Clone the queues, to prevent events triggered by the database listener
-        // from overwriting the events that are supposed to be triggered in the shutdown hook.
         $queueForEventsClone = new Event($publisher);
         $queueForWebhooksClone = clone $queueForWebhooks;
         $queueForRealtime = new Realtime();
 
         $database
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $usage))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+            ->addHook(new Usage($usage))
+            ->addHook(new UserEvents(
                 $project,
-                $document,
                 $response,
-                $queueForEventsClone->from($queueForEvents),
+                $queueForEvents,
+                $queueForEventsClone,
                 $publisherForFunctions,
-                $queueForWebhooksClone->from($queueForEvents),
-                $queueForRealtime->from($queueForEvents)
+                $queueForWebhooksClone,
+                $queueForRealtime,
             ))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
-            ->on(Database::EVENT_DOCUMENT_UPDATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database));
+            ->addHook(new FunctionCache($project, $database));
 
         return $database;
     }, ['databaseFactory', 'dbForPlatform', 'project', 'response', 'publisher', 'queueForEvents', 'publisherForFunctions', 'queueForWebhooks', 'queueForRealtime', 'usage', 'request']);
@@ -835,11 +778,35 @@ return function (Container $context): void {
     $context->set('schema', function ($utopia, $dbForProject, $authorization) {
 
         $complexity = function (int $complexity, array $args) {
-            $queries = Query::parseQueries($args['queries'] ?? []);
-            $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
+            $rawQueries = $args['queries'] ?? [];
+
+            if (!\is_array($rawQueries)) {
+                if (\is_string($rawQueries)) {
+                    $rawQueries = [$rawQueries];
+                } else {
+                    throw new GraphQLError('Parameter "queries" must be an array of query strings.');
+                }
+            }
+
+            try {
+                $queries = Query::parseQueries($rawQueries);
+            } catch (QueryException $e) {
+                throw new GraphQLError($e->getMessage());
+            }
+
+            $query = Query::getByType($queries, [Method::Limit])[0] ?? null;
             $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
-            return $complexity * $limit;
+            // Anything past the cap fails the query either way; capping keeps the sum an int.
+            $over = (int) System::getEnv('_APP_GRAPHQL_MAX_COMPLEXITY', 250) + 1;
+            if (!\is_int($limit) || $limit < 1 || $limit >= $over) {
+                return $over;
+            }
+
+            // graphql-php still runs the list resolver (a REST find() + count()) when @skip/@include
+            // removes every selected field and the child complexity is 0, so charge at least one unit
+            // per row; otherwise the same field aliased many times repeats unbounded work at no cost.
+            return \min(\max($complexity, 1) * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
@@ -921,7 +888,7 @@ return function (Container $context): void {
 
     $context->set('audit', fn ($dbForProject) => new Audit(new AdapterDatabase($dbForProject)), ['dbForProject']);
 
-    $context->set('mode', function ($request, Document $project) {
+    $context->set('mode', function ($request, string $projectId) {
         /** @var Appwrite\Utopia\Request $request */
 
         /**
@@ -930,14 +897,25 @@ return function (Container $context): void {
          * - 'admin' => Request from the Console on non-console projects
          */
         $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
+        // Request bodies can carry their own 'mode' key
+        if (! \is_string($mode)) {
+            $mode = $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
+        }
 
-        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
-        if ($projectId !== '' && $project->getId() !== $projectId) {
+        $named = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
+        // GitLab webhook bodies carry a 'project' object, not a project ID
+        if (! \is_string($named)) {
+            $named = $request->getHeaderLine('x-appwrite-project', '');
+        }
+
+        // The request acts on a project other than the one it names, as a deprecated alias
+        // under /v1/projects/:projectId does for the console
+        if ($named !== '' && $projectId !== $named) {
             $mode = APP_MODE_ADMIN;
         }
 
         return $mode;
-    }, ['request', 'project']);
+    }, ['request', 'projectId']);
 
     $context->set('requestTimestamp', function ($request) {
         // TODO: Move this to the Request class itself
@@ -953,55 +931,6 @@ return function (Container $context): void {
 
         return $requestTimestamp;
     }, ['request']);
-
-    $context->set('devKey', function (Request $request, Document $project, array $servers, Database $dbForPlatform, Authorization $authorization) {
-        $devKey = $request->getHeaderLine('x-appwrite-dev-key', $request->getParam('devKey', ''));
-
-        // Check if given key match project's development keys
-        $key = $project->find('secret', $devKey, 'devKeys');
-        if (! $key) {
-            return new Document([]);
-        }
-
-        // check expiration
-        $expire = $key->getAttribute('expire');
-        if (! empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
-            return new Document([]);
-        }
-
-        // update access time
-        $accessedAt = $key->getAttribute('accessedAt', 0);
-        if (empty($accessedAt) || DatabaseDateTime::formatTz(DatabaseDateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-            $key->setAttribute('accessedAt', DatabaseDateTime::now());
-            $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                'accessedAt' => $key->getAttribute('accessedAt')
-            ])));
-            $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-        }
-
-        // add sdk to key
-        $sdkValidator = new WhiteList($servers, true);
-        $sdk = \strtolower($request->getHeaderLine('x-sdk-name', 'UNKNOWN'));
-
-        if ($sdk !== 'unknown' && $sdkValidator->isValid($sdk)) {
-            $sdks = $key->getAttribute('sdks', []);
-
-            if (! in_array($sdk, $sdks)) {
-                $sdks[] = $sdk;
-                $key->setAttribute('sdks', $sdks);
-
-                /** Update access time as well */
-                $key->setAttribute('accessedAt', DatabaseDateTime::now());
-                $key = $authorization->skip(fn () => $dbForPlatform->updateDocument('devKeys', $key->getId(), new Document([
-                    'sdks' => $key->getAttribute('sdks'),
-                    'accessedAt' => $key->getAttribute('accessedAt')
-                ])));
-                $dbForPlatform->purgeCachedDocument('projects', $project->getId());
-            }
-        }
-
-        return $key;
-    }, ['request', 'project', 'servers', 'dbForPlatform', 'authorization']);
 
     $context->set('team', function (Document $project, Database $dbForPlatform, Http $utopia, Request $request, Authorization $authorization, string $projectIdFromPath) {
         $teamInternalId = '';
@@ -1024,7 +953,9 @@ return function (Container $context): void {
                 $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
 
                 return $team;
-            } elseif (! empty($orgHeader)) {
+            } elseif (\in_array('organization', $route?->getGroups() ?? [], true) && ! empty($orgHeader)) {
+                // Routes in the organization group act on the organization named in the header;
+                // every other console route names its own team.
                 return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
             }
         }
@@ -1045,19 +976,19 @@ return function (Container $context): void {
     }, ['project', 'dbForPlatform', 'utopia', 'request', 'authorization', 'projectIdFromPath']);
 
     $context->set('previewHostname', function (Request $request, ?Key $apiKey) {
-        $allowed = false;
+        $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
 
-        if (Http::isDevelopment()) {
-            $allowed = true;
-        } elseif (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true) {
-            $allowed = true;
+        if (empty($host)) {
+            return '';
         }
 
-        if ($allowed) {
-            $host = $request->getQuery('appwrite-hostname', $request->getHeaderLine('x-appwrite-hostname', '')) ?? '';
-            if (! empty($host)) {
-                return $host;
-            }
+        if (Http::isDevelopment()) {
+            return $host;
+        }
+
+        // Keys may only override to the hostname they were issued for
+        if (! \is_null($apiKey) && $apiKey->getHostnameOverride() === true && $apiKey->getHostname() === $host) {
+            return $host;
         }
 
         return '';
@@ -1070,7 +1001,15 @@ return function (Container $context): void {
             return null;
         }
 
-        $key = Key::decode($project, $team, $user, $key);
+        try {
+            $key = Key::decode($project, $team, $user, $key);
+        } catch (Exception $error) {
+            if ($error->getType() === Exception::USER_UNAUTHORIZED) {
+                return null;
+            }
+
+            throw $error;
+        }
 
         $userHeader = $request->getHeaderLine('x-appwrite-user');
         $organizationHeader = $request->getHeaderLine('x-appwrite-organization');
@@ -1106,10 +1045,8 @@ return function (Container $context): void {
 
         if (! empty($tokenJWT) && ! $project->isEmpty()) { // JWT authentication
             // Use a large but reasonable maxAge to avoid auto-exp when token has no expiry
-            $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY); // Instantiate with key, algo, maxAge and leeway.
-
             try {
-                $payload = $jwt->decode($tokenJWT);
+                $payload = EncryptionKey::decode($tokenJWT, RESOURCE_TOKEN_ALGORITHM, RESOURCE_TOKEN_MAX_AGE, RESOURCE_TOKEN_LEEWAY);
             } catch (JWTException $error) {
                 return new Document([]);
             }
@@ -1172,13 +1109,19 @@ return function (Container $context): void {
         return new Document([]);
     }, ['project', 'dbForProject', 'request', 'authorization']);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request) {
+    $context->set('operations', fn (): Operations => new Operations(), []);
 
-        return function (Document $database) use ($databaseFactory, $project, $request): Database {
-            $databaseType = $database->getAttribute('type', '');
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, Operations $operations, User $user, Authorization $authorization, Http $utopia) {
+
+        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $operations, $user, $authorization, $utopia): Database {
+            $originalDatabase = $database;
+            $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
+            $publicIds = $collection === null || $collection->isEmpty()
+                ? []
+                : ['database_' . $originalDatabase->getSequence() . '_collection_' . $collection->getSequence() => $collection->getId()];
 
             $database = $databaseFactory->tenant(
-                $database,
+                $originalDatabase,
                 $project,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_API,
                 APP_DATABASE_QUERY_MAX_VALUES,
@@ -1190,6 +1133,24 @@ return function (Container $context): void {
                 $database->setTimeout($timeout);
             }
 
+            $database
+                ->addHook(new Metadata(
+                    database: $originalDatabase,
+                    context: $context,
+                    resolvePublicId: Metadata::resolver($database, $dbForProject, $publicIds),
+                    tenant: $database,
+                    operations: $operations,
+                ))
+                ->addHook(new Joins(
+                    dbForProject: $dbForProject,
+                    database: $originalDatabase,
+                    authorization: $authorization,
+                    user: $user,
+                    notFound: static fn (): string => \str_contains($utopia->context()->get('request')->getURI(), '/tablesdb/')
+                        ? Exception::TABLE_NOT_FOUND
+                        : Exception::COLLECTION_NOT_FOUND,
+                ));
+
             // Document counts and per-collection storage are produced by the
             // StatsResources full-count as ClickHouse gauges (broken down by
             // resourceId/resourceType), so no per-event usage emission here.
@@ -1197,12 +1158,12 @@ return function (Container $context): void {
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request']);
+    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'operations', 'user', 'authorization', 'utopia']);
 
     $context->set(
         'transactionState',
-        fn (Database $dbForProject, Authorization $authorization, callable $getDatabasesDB) => new TransactionState($dbForProject, $authorization, $getDatabasesDB),
-        ['dbForProject', 'authorization', 'getDatabasesDB']
+        fn (Database $dbForProject, Authorization $authorization, callable $getDatabasesDB, User $user) => new TransactionState($dbForProject, $authorization, $getDatabasesDB, $user),
+        ['dbForProject', 'authorization', 'getDatabasesDB', 'user']
     );
 
     $context->set(
@@ -1219,12 +1180,10 @@ return function (Container $context): void {
     $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
 
-    $context->set('embeddingAgent', function ($register) {
-        $adapter = new AppwriteAdapter();
-        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'));
-        $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
-        return new Agent($adapter);
-    }, ['register']);
+    $context->set('embedder', fn () => new AppwriteAdapter(
+        endpoint: System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'),
+        timeout: (int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'),
+    ));
 
     $context->set('geo', fn (Locale $locale, ?GeoClient $geoClient, Table $geoRecords) => new Geo(
         $geoClient,

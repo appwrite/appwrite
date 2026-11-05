@@ -1,0 +1,39 @@
+{
+    "name": "utopia-php/mqtt",
+    "description": "A simple abstraction for building MQTT 5.0 brokers.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "mqtt",
+        "broker"
+    ],
+    "license": "MIT",
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "tests/e2e.sh"
+    },
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Mqtt\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Mqtt\\Tests\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=8.2",
+        "utopia-php/telemetry": "^0.4"
+    },
+    "require-dev": {
+        "swoole/ide-helper": "5.1.2"
+    },
+    "suggest": {
+        "ext-swoole": "Required to use the Swoole server adapter and the client."
+    }
+}

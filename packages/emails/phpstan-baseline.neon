@@ -1,0 +1,151 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Provider\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Provider.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Provider\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Provider.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Fastmail\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Fastmail.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Fastmail\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Fastmail.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Generic\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Generic.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Generic\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Generic.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Gmail\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Gmail.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Gmail\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Gmail.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Icloud\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Icloud.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Icloud\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Icloud.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Outlook\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Outlook.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Outlook\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Outlook.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Protonmail\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Protonmail.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Protonmail\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Protonmail.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Walla\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Walla.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Walla\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Walla.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Yahoo\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Yahoo.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Yahoo\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Yahoo.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Yandex\:\:getCanonical\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Yandex.php
+
+		-
+			message: '#^Method Utopia\\Emails\\Canonicals\\Providers\\Yandex\:\:getSupportedDomains\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Canonicals/Providers/Yandex.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''@'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Email.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Email.php
+
+		-
+			message: '#^Property Utopia\\Emails\\Email\:\:\$disposableDomains type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Email.php
+
+		-
+			message: '#^Property Utopia\\Emails\\Email\:\:\$freeDomains type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Email.php
+
+		-
+			message: '#^Property Utopia\\Emails\\Email\:\:\$parts type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Email.php

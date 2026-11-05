@@ -8,6 +8,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Parameter;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Request\Filter;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Request as SwooleRequest;
 use Tests\Unit\Utopia\Request\Filters\First;
@@ -22,6 +23,95 @@ final class RequestTest extends TestCase
     public function setUp(): void
     {
         $this->request = new Request(new SwooleRequest());
+    }
+
+    protected function tearDown(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+    }
+
+    public function testGetIPIgnoresClientForwardedForWhenProxiesEmpty(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10'];
+            $swoole->header = ['x-forwarded-for' => '198.51.100.1'];
+            $request = new Request($swoole);
+
+            $this->assertSame('203.0.113.10', $request->getIP());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    #[DataProvider('forwardedForCases')]
+    public function testGetIPHonorsForwardedForFromTrustedProxy(string $forwardedFor, string $expected): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '10.0.0.2'];
+            $swoole->header = ['x-forwarded-for' => $forwardedFor];
+            $request = new Request($swoole);
+
+            $this->assertSame($expected, $request->getIP());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    public function testGetHostnameIgnoresForwardedHostFromUntrustedClient(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '203.0.113.10'];
+            $swoole->header = ['host' => 'api.example.com', 'x-forwarded-host' => 'other.example.com:8443', 'x-forwarded-port' => '8443'];
+            $request = new Request($swoole);
+
+            $this->assertSame('api.example.com', $request->getHostname());
+            $this->assertSame('', $request->getPort());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    public function testGetHostnameHonorsForwardedHostFromTrustedProxy(): void
+    {
+        $previous = getenv('_APP_TRUSTED_PROXIES');
+        putenv('_APP_TRUSTED_PROXIES=10.0.0.0/8');
+
+        try {
+            $swoole = new SwooleRequest();
+            $swoole->server = ['remote_addr' => '10.0.0.2'];
+            $swoole->header = ['host' => 'api.example.com', 'x-forwarded-host' => 'other.example.com', 'x-forwarded-port' => '8443'];
+            $request = new Request($swoole);
+
+            $this->assertSame('other.example.com', $request->getHostname());
+            $this->assertSame('8443', $request->getPort());
+        } finally {
+            putenv($previous === false ? '_APP_TRUSTED_PROXIES' : '_APP_TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: string}>
+     */
+    public static function forwardedForCases(): \Iterator
+    {
+        yield 'single client' => ['198.51.100.1', '198.51.100.1'];
+        yield 'appended chain ignores spoofed leftmost' => ['1.2.3.4, 198.51.100.1, 10.0.0.3', '198.51.100.1'];
+        yield 'invalid entries skipped' => ['not-an-ip, 198.51.100.1', '198.51.100.1'];
+        yield 'all trusted falls back to leftmost' => ['10.0.0.5, 10.0.0.3', '10.0.0.5'];
+        yield 'no valid entry uses connection' => ['not-an-ip', '10.0.0.2'];
     }
 
     public function testFilters(): void
@@ -209,6 +299,60 @@ final class RequestTest extends TestCase
         $request = new Request($swoole);
 
         $this->assertArrayNotHasKey('cookie', $request->getHeaders());
+    }
+
+    public function testGetHeadersWithoutCookiesLeavesNamedCookiesOut(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com'];
+        $swoole->cookie = ['a_jwt_console' => 'jwt', 'theme' => 'dark', 'a_session_console' => 'secret'];
+        $request = new Request($swoole);
+
+        $headers = $request->getHeadersWithoutCookies(['a_jwt_console', 'a_session_console']);
+
+        $this->assertSame(['theme=dark'], $headers['cookie']);
+        $this->assertSame(['example.com'], $headers['host']);
+    }
+
+    public function testGetHeadersWithoutCookiesOmitsCookieHeaderWhenAllLeftOut(): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['host' => 'example.com', 'cookie' => 'a_jwt_console=jwt'];
+        $swoole->cookie = ['a_jwt_console' => 'jwt'];
+        $request = new Request($swoole);
+
+        $this->assertArrayNotHasKey('cookie', $request->getHeadersWithoutCookies(['a_jwt_console']));
+    }
+
+    #[DataProvider('contentRangeCases')]
+    public function testGetContentRangeChunk(string $contentRange, ?int $start, int $chunk): void
+    {
+        $swoole = new SwooleRequest();
+        $swoole->header = ['content-range' => $contentRange];
+        $request = new Request($swoole);
+
+        $this->assertSame($start, $request->getContentRangeStart());
+        $this->assertSame($chunk, $request->getContentRangeChunk(5242880));
+    }
+
+    /**
+     * @return \Iterator<string, array{0: string, 1: ?int, 2: int}>
+     */
+    public static function contentRangeCases(): \Iterator
+    {
+        yield 'first chunk' => ['bytes 0-5242879/12582912', 0, 0];
+        yield 'second chunk' => ['bytes 5242880-10485759/12582912', 5242880, 1];
+        yield 'last chunk shorter than the rest' => ['bytes 10485760-12582911/12582912', 10485760, 2];
+        yield 'short range inside a chunk' => ['bytes 5242881-5242881/12582912', 5242881, 1];
+        yield 'end equal to size' => ['bytes 0-10/10', 0, 0];
+        yield 'bounds at the integer limit' => ['bytes 9223372036854775807-9223372036854775807/9223372036854775807', null, 0];
+        yield 'bounds past the integer limit' => ['bytes 0-99999999999999999999/99999999999999999999', null, 0];
+        yield 'size past the integer limit' => ['bytes 0-9/99999999999999999999', null, 0];
+        yield 'start after end' => ['bytes 10-5/20', null, 0];
+        yield 'end past size' => ['bytes 0-20/10', null, 0];
+        yield 'negative start' => ['bytes -1-5/10', null, 0];
+        yield 'missing size' => ['bytes 0-5', null, 0];
+        yield 'missing unit' => ['0-5/10', null, 0];
     }
 
     public function testGetParamsCachesRawParamsWhenFilterThrows4xx(): void

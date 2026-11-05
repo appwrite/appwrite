@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Embeddings\Text;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action as CreateDocumentAction;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -11,7 +12,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
-use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
@@ -49,15 +49,13 @@ class Create extends CreateDocumentAction
             ->label('audits.event', 'embedding.create')
             ->label('audits.resource', 'embeddings/text')
             ->label('usage.resource', 'database/embeddings/text')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', [
                 new Method(
                     namespace: 'embeddings',
                     group: 'embeddings',
                     name: 'createTextEmbeddings',
-                    desc: 'Create Text Embedding',
+                    summary: 'Create Text Embedding',
                     description: '/docs/references/embeddings/create-text-embeddings.md',
                     auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                     responses: [
@@ -73,20 +71,19 @@ class Create extends CreateDocumentAction
                     ]
                 )
             ])
-            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'])
+            ->param('texts', [], fn (array $plan) => new ArrayList(new Text(0), $plan['databasesMaxEmbeddingTexts'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of text to generate embeddings.', false, ['plan'], example: '["Appwrite helps developers build applications.","Find documents with semantic search."]')
             ->param('model', AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, new WhiteList([AppwriteAdapter::MODEL_NOMIC_EMBED_TEXT, AppwriteAdapter::MODEL_ALL_MINILM]), 'The embedding model to use for generating vector embeddings.', true, enum: new Enum(name: 'EmbeddingModel'))
             ->inject('response')
             ->inject('project')
-            ->inject('embeddingAgent')
+            ->inject('embedder')
             ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, Context $usage): void
+    public function action(array $texts, string $model, UtopiaResponse $response, Document $project, AppwriteAdapter $embedder, Context $usage): void
     {
-        $adapter = $embeddingAgent->getAdapter();
-        $adapter->setModel($model);
-        $dimension = $adapter->getEmbeddingDimension();
+        $embedder = $embedder->withModel($model);
+        $dimension = $embedder->getDimension();
 
         $results = [];
         $totalDuration = 0;
@@ -95,20 +92,12 @@ class Create extends CreateDocumentAction
 
         foreach (array_chunk($texts, APP_EMBEDDING_BATCH_LIMIT) as $batch) {
             try {
-                $embedResult = $embeddingAgent->bulkEmbed($batch);
-                $totalDuration += $embedResult['totalDuration'] ?? 0;
-                $totalTokens += $embedResult['tokensProcessed'] ?? 0;
+                $embeddings = $embedder->embed($batch);
+                $totalDuration += $embeddings->duration ?? 0;
+                $totalTokens += $embeddings->tokens ?? 0;
 
-                foreach ($embedResult['embeddings'] as $embedding) {
-                    $results[] = $this->embeddingResult($model, $dimension, $embedding);
-                }
-
-                // Partial success: backend returned fewer embeddings than inputs.
-                // Fill the gap with error results so the response stays 1:1 with texts.
-                $missing = \count($batch) - \count($embedResult['embeddings']);
-                for ($i = 0; $i < $missing; $i++) {
-                    $totalErrors++;
-                    $results[] = $this->embeddingResult($model, $dimension, [], 'Error while generating embedding');
+                foreach ($embeddings->vectors as $vector) {
+                    $results[] = $this->embeddingResult($model, $dimension, $vector);
                 }
             } catch (\Exception $e) {
                 $totalErrors += \count($batch);

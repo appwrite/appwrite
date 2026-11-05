@@ -6,7 +6,6 @@ use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Runtimes\Runtimes;
 use Appwrite\Usage\Context as UsageContext;
-use Appwrite\Utopia\Database\Documents\User;
 use Swoole\Runtime;
 use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
@@ -15,13 +14,11 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Adapters\Generic;
 use Utopia\CLI\CLI;
 use Utopia\Config\Config;
-use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
-use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 
@@ -75,7 +72,7 @@ $container->set('authorization', function () {
     return $authorization;
 }, []);
 
-$container->set('dbForPlatform', function ($pools, $cache, $authorization) {
+$container->set('dbForPlatform', function (DatabaseFactory $databaseFactory) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -84,23 +81,16 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
     do {
         $attempts++;
         try {
-            // Prepare database connection
-            $adapter = new DatabasePool($pools->get('console'));
-            $dbForPlatform = new Database($adapter, $cache);
-
-            $dbForPlatform
-                ->setDatabase(APP_DATABASE)
-                ->setAuthorization($authorization)
-                ->setNamespace('_console')
-                ->setMetadata('host', \gethostname())
-                ->setMetadata('project', 'console');
-            $dbForPlatform->setDocumentType('users', User::class);
+            $dbForPlatform = $databaseFactory->platform(metadata: [
+                'host' => \gethostname(),
+                'project' => 'console',
+            ]);
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (! ($dbForPlatform->exists($dbForPlatform->getDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (! ($dbForPlatform->collectionExists($last, $dbForPlatform->getDatabase()))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -116,7 +106,7 @@ $container->set('dbForPlatform', function ($pools, $cache, $authorization) {
     }
 
     return $dbForPlatform;
-}, ['pools', 'cache', 'authorization']);
+}, ['databaseFactory']);
 
 $container->set(
     'getIsResourceBlocked',
@@ -138,41 +128,6 @@ $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Data
         );
     };
 }, ['databaseFactory', 'dbForPlatform']);
-
-$container->set('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
-    $database = null;
-
-    return function (?Document $project = null) use ($pools, $cache, &$database, $authorization) {
-        if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-            return $database;
-        }
-
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-        $logsCollections = $collections['logs'] ?? [];
-        $logsCollections = array_keys($logsCollections);
-
-        $adapter = new DatabasePool($pools->get('logs'));
-        $database = new Database($adapter, $cache);
-
-        $database
-            ->setDatabase(APP_DATABASE)
-            ->setAuthorization($authorization)
-            ->setSharedTables(true)
-            ->setNamespace('logsV1')
-            ->setGlobalCollections($logsCollections)
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_TASK)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
-
-        // set tenant
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-        }
-
-        return $database;
-    };
-}, ['pools', 'cache', 'authorization']);
 
 $container->set('usage', function () {
     return new UsageContext();

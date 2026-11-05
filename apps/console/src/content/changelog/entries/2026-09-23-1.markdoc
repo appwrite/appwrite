@@ -1,0 +1,35 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.3 for self-hosted deployments
+date: 2026-09-23
+cover: /images/changelog/2026-09-23-1.avif
+tags: auth, functions, sites, console, infrastructure
+---
+
+Appwrite 2.3 is now available for self-hosting.
+
+This release includes:
+
+- Dev keys are removed. Existing dev keys stop working, and the migration drops their collection and strips their scopes from API keys, functions and sites
+- One `_APP_CONSOLE_URL` variable that every console link is built from, including OAuth2 defaults, magic URL and build emails, and VCS comments. It replaces `_APP_CONSOLE_URL_SCHEME`
+- Execution duration that includes cold starts, whether an execution is triggered through the API, asynchronously or by an event
+- Native ID token sign-in stores the verified token on the identity as `providerIdToken`, so apps can read claims such as Google's `locale`
+- Jaspr as an SSR framework for Sites, on the Flutter 3.44 runtime
+- A nightly release channel for self-hosting, with `--channel nightly` on `install` and `upgrade`
+- Appwrite Console 1.1.159, with site preview authorization, Owner and Developer roles for member invites, time zones in the datetime picker, and impersonation that loads files and avatars as the impersonated user
+
+Head over to our [migration guide](/docs/advanced/self-hosting/production/updates#upgrading-to-latest) to upgrade your instance.
+
+For the complete list of updates and fixes, check out the [release notes](https://github.com/appwrite/appwrite/releases/tag/2.3.0) on GitHub.
+
+{% arrow_link href="/docs/advanced/self-hosting/installation" %}
+Install Appwrite 2.3
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/production/updates#upgrading-to-latest" %}
+Upgrade your self-hosted instance
+{% /arrow_link %}
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.3.0" %}
+View the release notes on GitHub
+{% /arrow_link %}

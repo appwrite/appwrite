@@ -1,0 +1,23 @@
+rules:
+  - id: php.appwrite.xml-external-entities
+    message: >
+      XML parsing with external entity or DTD loading enabled (LIBXML_NOENT,
+      LIBXML_DTDLOAD, LIBXML_DTDATTR, or libxml_disable_entity_loader(false)).
+      Parse with default libxml options so entities are not expanded from
+      local files or remote hosts.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: LIBXML_NOENT
+      - pattern: LIBXML_DTDLOAD
+      - pattern: LIBXML_DTDATTR
+      - pattern: libxml_disable_entity_loader(false)
+      - pattern: \libxml_disable_entity_loader(false)

@@ -1,0 +1,21 @@
+---
+layout: article
+title: Manage users
+description: Manage user identities and profiles effectively with Appwrite. Dive into user management features, account settings, and user data customization
+---
+
+Appwrite Users API is used for managing users in server applications.
+
+Users API can only be used with an API key and the [Server SDK](/docs/sdks#server) to manage all users.
+
+If you need to act on behalf of users through an Appwrite Function or your own backend, use [JWT login](/docs/products/auth/jwt).
+
+Need to troubleshoot from a user's point of view? Use [user impersonation](/docs/products/auth/impersonation) to let trusted operators temporarily act as another user without sharing credentials.
+
+{% partial file="account-vs-user.md" /%}
+
+The users API can be used to create users, import users, update user info, get user audit logs, and remove users.
+
+{% arrow_link href="/docs/references/cloud/server-nodejs/users" %}
+Learn more in the Users API references
+{% /arrow_link %}

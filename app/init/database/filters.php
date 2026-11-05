@@ -1,11 +1,12 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Network\Platform;
 use Appwrite\OpenSSL\OpenSSL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\System\System;
+use Utopia\Query\Schema\ColumnType;
 
 Database::addFilter(
     'casting',
@@ -31,8 +32,11 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = \json_decode($attribute->getAttribute('formatOptions', '[]'), true);
-        if (isset($formatOptions['elements'])) {
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions) && isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
 
@@ -53,8 +57,11 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
-        if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions) && (isset($formatOptions['min']) || isset($formatOptions['max']))) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
                 ->setAttribute('max', $formatOptions['max']);
@@ -80,19 +87,18 @@ Database::addFilter(
             $attributeType = $attribute->getAttribute('type');
 
             switch ($attributeType) {
-                case Database::VAR_RELATIONSHIP:
+                case ColumnType::Relationship->value:
                     $options = $attribute->getAttribute('options');
                     foreach ($options as $key => $value) {
                         $attribute->setAttribute($key, $value);
                     }
-                    $attribute->removeAttribute('options');
                     break;
 
-                case Database::VAR_STRING:
-                case Database::VAR_VARCHAR:
-                case Database::VAR_TEXT:
-                case Database::VAR_MEDIUMTEXT:
-                case Database::VAR_LONGTEXT:
+                case ColumnType::String->value:
+                case ColumnType::Varchar->value:
+                case ColumnType::Text->value:
+                case ColumnType::MediumText->value:
+                case ColumnType::LongText->value:
                     $filters = $attribute->getAttribute('filters', []);
                     $attribute->setAttribute('encrypt', in_array('encrypt', $filters));
                     break;
@@ -153,17 +159,16 @@ Database::addFilter(
     }
 );
 
+// Dev keys were removed in 2.3.0, but installs that have not yet run the V25
+// migration still carry this filter on the projects collection. Without it
+// registered, every project document fails to decode.
 Database::addFilter(
     'subQueryDevKeys',
     function (mixed $value) {
         return;
     },
-    function (mixed $value, Document $document, Database $database) {
-        return $database->getAuthorization()->skip(fn () => $database
-            ->find('devKeys', [
-                Query::equal('projectInternalId', [$document->getSequence()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]));
+    function (mixed $value) {
+        return [];
     }
 );
 
@@ -277,7 +282,11 @@ Database::addFilter(
 Database::addFilter(
     'encrypt',
     function (mixed $value) {
-        $key = System::getEnv('_APP_OPENSSL_KEY_V1');
+        $version = EncryptionKey::version();
+        $key = EncryptionKey::get($version);
+        if ($key === '') {
+            throw new \RuntimeException('_APP_OPENSSL_KEY_V' . $version . ' is not configured, refusing to encrypt.');
+        }
         $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
         $tag = null;
 
@@ -286,15 +295,15 @@ Database::addFilter(
             'method' => OpenSSL::CIPHER_AES_128_GCM,
             'iv' => \bin2hex($iv),
             'tag' => \bin2hex($tag ?? ''),
-            'version' => '1',
-        ]);
+            'version' => $version,
+        ], JSON_UNESCAPED_SLASHES);
     },
     function (mixed $value) {
         if (is_null($value)) {
             return;
         }
         $value = json_decode($value, true);
-        $key = System::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $key = EncryptionKey::get((string) $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }

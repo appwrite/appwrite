@@ -228,6 +228,119 @@ final class SignatureV4Test extends TestCase
         );
     }
 
+    public function testVerifiesHeadObjectSignatureAfterProxyRewritesToGet(): void
+    {
+        $secret = 'test-api-key-secret';
+        $signed = $this->signedRequest('HEAD', '/v1/s3/bucket/object.txt', '', $secret, query: 'x-id=HeadObject');
+        $request = new TestRequest('GET', $signed->uri, $signed->headerMap, $signed->body, $signed->query);
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.read']),
+            new Document(),
+            new User(),
+            ['files.read']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+    }
+
+    public function testRejectsHeadSignatureReplayedAsGetObject(): void
+    {
+        $secret = 'test-api-key-secret';
+        $signed = $this->signedRequest('HEAD', '/v1/s3/bucket/object.txt', '', $secret);
+        $request = new TestRequest('GET', $signed->uri, $signed->headerMap, $signed->body, $signed->query);
+
+        $this->expectException(AppwriteException::class);
+        $this->expectExceptionMessage('Signature does not match.');
+
+        (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.read']),
+            new Document(),
+            new User(),
+            ['files.read']
+        );
+    }
+
+    public function testVerifiesSignedCopySourceHeaders(): void
+    {
+        $secret = 'test-api-key-secret';
+        $request = $this->signedRequest(
+            'PUT',
+            '/v1/s3/bucket/copy.txt',
+            '',
+            $secret,
+            additionalHeaders: [
+                'x-amz-copy-source' => 'bucket/object.txt',
+                'x-amz-metadata-directive' => 'REPLACE',
+            ],
+        );
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.write']),
+            new Document(),
+            new User(),
+            ['files.write']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+    }
+
+    public function testRejectsUnsignedAmzHeader(): void
+    {
+        $secret = 'test-api-key-secret';
+        $request = $this->signedRequest('PUT', '/v1/s3/bucket/copy.txt', '', $secret);
+        $request->headerMap['x-amz-copy-source'] = 'bucket/object.txt';
+
+        $this->expectException(AppwriteException::class);
+        $this->expectExceptionMessage('There were headers present in the request which were not signed.');
+
+        (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.write']),
+            new Document(),
+            new User(),
+            ['files.write']
+        );
+    }
+
+    public function testVerifiesPresignedRequest(): void
+    {
+        $secret = 'test-api-key-secret';
+        $request = $this->presignedRequestAt('PUT', '/v1/s3/bucket/object.txt', $secret, \gmdate('Ymd\THis\Z'), 60);
+        $request->headerMap['x-amz-content-sha256'] = 'UNSIGNED-PAYLOAD';
+
+        $key = (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.write']),
+            new Document(),
+            new User(),
+            ['files.write']
+        );
+
+        $this->assertSame('project-test', $key->getProjectId());
+    }
+
+    public function testRejectsPresignedRequestWithUnsignedAmzHeader(): void
+    {
+        $secret = 'test-api-key-secret';
+        $request = $this->presignedRequestAt('PUT', '/v1/s3/bucket/object.txt', $secret, \gmdate('Ymd\THis\Z'), 60);
+        $request->headerMap['x-amz-copy-source'] = 'bucket/other.txt';
+
+        $this->expectException(AppwriteException::class);
+        $this->expectExceptionMessage('There were headers present in the request which were not signed.');
+
+        (new SignatureV4())->verify(
+            $request,
+            $this->project($secret, ['files.write']),
+            new Document(),
+            new User(),
+            ['files.write']
+        );
+    }
+
     private function project(string $secret, array $scopes): Document
     {
         return new Document([
@@ -348,6 +461,19 @@ final class TestRequest extends Request
     public function getHeaderLine(string $key, string $default = ''): string
     {
         return $this->headerMap[\strtolower($key)] ?? $default;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    public function getHeaders(): array
+    {
+        $headers = [];
+        foreach ($this->headerMap as $name => $value) {
+            $headers[\strtolower($name)] = [(string) $value];
+        }
+
+        return $headers;
     }
 
     public function hasHeader(string $key): bool

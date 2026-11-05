@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Rule extends Model
 {
@@ -104,7 +105,31 @@ class Rule extends Model
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
             ])
+            ->addRule('expireAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Certificate expiry date in ISO 8601 format. Empty when unknown or not checked yet.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('certificateStatus', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate status, as last reported by the certificate provider. Possible values are "pending", "processing", "issued", "renewing", "expiring", "blocked", "failed", or "unknown". "expiring" means the certificate expires soon, or has already expired, and the provider has not renewed it yet, "blocked" means the provider waits on a DNS record from the domain owner, and "failed" means the provider stopped trying or the last issuance or renewal attempt failed. Empty until the certificate is next checked.',
+                'default' => '',
+                'example' => 'issued',
+            ])
         ;
+    }
+
+    /**
+     * Rules without a deployment store an empty resource type, which is not a valid enum value.
+     */
+    public function filter(Document $document): Document
+    {
+        if ($document->getAttribute('deploymentResourceType') === '') {
+            $document->setAttribute('deploymentResourceType', null);
+        }
+
+        return $document;
     }
 
     /**

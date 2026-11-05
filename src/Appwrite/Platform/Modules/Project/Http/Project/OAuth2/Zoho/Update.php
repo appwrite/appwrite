@@ -52,4 +52,9 @@ class Update extends Base
     {
         return 'fb5cac000000000000000000000000000000a68f6e';
     }
+
+    public static function getPromptValues(): array
+    {
+        return ['consent'];
+    }
 }

@@ -1,0 +1,33 @@
+---
+layout: article
+title: Add a custom model
+description: Register a provider API key so the Appwrite Agent can use your own LLM credentials.
+---
+
+Add a custom model when you want conversations or automations to run on a provider and model you control. Leave the picker on Appwrite default when you do not need a specific vendor. Custom models are useful when your team already has OpenAI, Anthropic, Google, OpenRouter, or Azure keys, or when you expose an OpenAI-compatible endpoint.
+
+# Add a model {% #add-a-model %}
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Go to `/agent/settings/models`, or open **Agent** > **Settings** > **Models**.
+3. Click **Add model**.
+4. Choose a provider (OpenAI, Anthropic, Google, OpenRouter, Azure, or Custom).
+5. Enter the API key and model id. Adjust the base URL if your provider requires a non-default endpoint.
+6. Save the model.
+
+Prefer a least-privilege key and a clear name so you can tell models apart in the picker later. If the model id is not in the preset list, enter it manually.
+
+# Use the model {% #use-the-model %}
+
+1. Open a conversation in the Agent panel or at `/agent`.
+2. Open the model picker.
+3. Select your custom model. The selection is saved on that conversation.
+4. Send a prompt as usual.
+
+For automations, choose the model when you [create or update the automation](/docs/products/agent/create-automation). Each run of that automation uses the model you configured.
+
+# Update or remove {% #update-or-remove %}
+
+From the models list you can enable or disable a model, update its settings, or delete it. Disabling hides it from selection without deleting the saved configuration. That is the safest option while you rotate a key: update the key, confirm a test chat works, then leave the model enabled.
+
+See [Models](/docs/products/agent/models) for supported providers and privacy notes. When you use a custom provider, that provider’s data policies apply to prompts and responses sent through the model.

@@ -25,6 +25,11 @@ class OAuth2Salesforce extends OAuth2Base
         return '3w000000000000e2';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['login', 'consent'];
+    }
+
     public function getClientIdFieldName(): string
     {
         return 'customerKey';

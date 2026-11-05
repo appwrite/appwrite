@@ -23,6 +23,10 @@ use Appwrite\Platform\Modules\Users\Http\Users\MFA\RecoveryCodes\Get as GetRecov
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\RecoveryCodes\Update as UpdateRecoveryCodes;
 use Appwrite\Platform\Modules\Users\Http\Users\MFA\Update as UpdateMFA;
 use Appwrite\Platform\Modules\Users\Http\Users\Name\Update as UpdateName;
+use Appwrite\Platform\Modules\Users\Http\Users\Passkeys\Delete as DeletePasskey;
+use Appwrite\Platform\Modules\Users\Http\Users\Passkeys\Get as GetPasskey;
+use Appwrite\Platform\Modules\Users\Http\Users\Passkeys\Update as UpdatePasskey;
+use Appwrite\Platform\Modules\Users\Http\Users\Passkeys\XList as ListPasskeys;
 use Appwrite\Platform\Modules\Users\Http\Users\Password\Update as UpdatePassword;
 use Appwrite\Platform\Modules\Users\Http\Users\Phone\Update as UpdatePhone;
 use Appwrite\Platform\Modules\Users\Http\Users\PHPass\Create as CreatePHPassUser;
@@ -54,66 +58,70 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Users
-        $this->addAction(CreateUser::getName(), new CreateUser());
-        $this->addAction(GetUser::getName(), new GetUser());
-        $this->addAction(ListUsers::getName(), new ListUsers());
-        $this->addAction(DeleteUser::getName(), new DeleteUser());
+        $this->addAction('createUser', CreateUser::class);
+        $this->addAction('getUser', GetUser::class);
+        $this->addAction('listUsers', ListUsers::class);
+        $this->addAction('deleteUser', DeleteUser::class);
 
         // Users with pre-hashed passwords
-        $this->addAction(CreateBcryptUser::getName(), new CreateBcryptUser());
-        $this->addAction(CreateMD5User::getName(), new CreateMD5User());
-        $this->addAction(CreateArgon2User::getName(), new CreateArgon2User());
-        $this->addAction(CreateSHAUser::getName(), new CreateSHAUser());
-        $this->addAction(CreatePHPassUser::getName(), new CreatePHPassUser());
-        $this->addAction(CreateScryptUser::getName(), new CreateScryptUser());
-        $this->addAction(CreateScryptModifiedUser::getName(), new CreateScryptModifiedUser());
+        $this->addAction('createBcryptUser', CreateBcryptUser::class);
+        $this->addAction('createMD5User', CreateMD5User::class);
+        $this->addAction('createArgon2User', CreateArgon2User::class);
+        $this->addAction('createSHAUser', CreateSHAUser::class);
+        $this->addAction('createPHPassUser', CreatePHPassUser::class);
+        $this->addAction('createScryptUser', CreateScryptUser::class);
+        $this->addAction('createScryptModifiedUser', CreateScryptModifiedUser::class);
 
         // Properties
-        $this->addAction(UpdateStatus::getName(), new UpdateStatus());
-        $this->addAction(UpdateLabels::getName(), new UpdateLabels());
-        $this->addAction(UpdateImpersonator::getName(), new UpdateImpersonator());
-        $this->addAction(UpdateName::getName(), new UpdateName());
-        $this->addAction(UpdatePassword::getName(), new UpdatePassword());
-        $this->addAction(UpdateEmail::getName(), new UpdateEmail());
-        $this->addAction(UpdatePhone::getName(), new UpdatePhone());
-        $this->addAction(UpdateEmailVerification::getName(), new UpdateEmailVerification());
-        $this->addAction(UpdatePhoneVerification::getName(), new UpdatePhoneVerification());
+        $this->addAction('updateUserStatus', UpdateStatus::class);
+        $this->addAction('updateUserLabels', UpdateLabels::class);
+        $this->addAction('updateUserImpersonator', UpdateImpersonator::class);
+        $this->addAction('updateUserName', UpdateName::class);
+        $this->addAction('updateUserPassword', UpdatePassword::class);
+        $this->addAction('updateUserEmail', UpdateEmail::class);
+        $this->addAction('updateUserPhone', UpdatePhone::class);
+        $this->addAction('updateUserEmailVerification', UpdateEmailVerification::class);
+        $this->addAction('updateUserPhoneVerification', UpdatePhoneVerification::class);
 
         // Preferences
-        $this->addAction(GetPrefs::getName(), new GetPrefs());
-        $this->addAction(UpdatePrefs::getName(), new UpdatePrefs());
+        $this->addAction('getUserPrefs', GetPrefs::class);
+        $this->addAction('updateUserPrefs', UpdatePrefs::class);
 
         // Targets
-        $this->addAction(CreateTarget::getName(), new CreateTarget());
-        $this->addAction(GetTarget::getName(), new GetTarget());
-        $this->addAction(ListTargets::getName(), new ListTargets());
-        $this->addAction(UpdateTarget::getName(), new UpdateTarget());
-        $this->addAction(DeleteTarget::getName(), new DeleteTarget());
+        $this->addAction('createUserTarget', CreateTarget::class);
+        $this->addAction('getUserTarget', GetTarget::class);
+        $this->addAction('listUserTargets', ListTargets::class);
+        $this->addAction('updateUserTarget', UpdateTarget::class);
+        $this->addAction('deleteUserTarget', DeleteTarget::class);
 
         // Sessions
-        $this->addAction(CreateSession::getName(), new CreateSession());
-        $this->addAction(ListSessions::getName(), new ListSessions());
-        $this->addAction(DeleteSession::getName(), new DeleteSession());
-        $this->addAction(DeleteSessions::getName(), new DeleteSessions());
+        $this->addAction('createUserSession', CreateSession::class);
+        $this->addAction('listUserSessions', ListSessions::class);
+        $this->addAction('deleteUserSession', DeleteSession::class);
+        $this->addAction('deleteUserSessions', DeleteSessions::class);
 
         // Tokens
-        $this->addAction(CreateToken::getName(), new CreateToken());
-        $this->addAction(CreateJWT::getName(), new CreateJWT());
+        $this->addAction('createUserToken', CreateToken::class);
+        $this->addAction('createUserJWT', CreateJWT::class);
 
         // Memberships
-        $this->addAction(ListMemberships::getName(), new ListMemberships());
+        $this->addAction('listUserMemberships', ListMemberships::class);
 
         // Identities
-        $this->addAction(ListIdentities::getName(), new ListIdentities());
-        $this->addAction(DeleteIdentity::getName(), new DeleteIdentity());
+        $this->addAction('listIdentities', ListIdentities::class);
+        $this->addAction('deleteIdentity', DeleteIdentity::class);
 
         // MFA
-        $this->addAction(UpdateMFA::getName(), new UpdateMFA());
-        $this->addAction(ListFactors::getName(), new ListFactors());
-        $this->addAction(GetMFAChallenge::getName(), new GetMFAChallenge());
-        $this->addAction(GetRecoveryCodes::getName(), new GetRecoveryCodes());
-        $this->addAction(CreateRecoveryCodes::getName(), new CreateRecoveryCodes());
-        $this->addAction(UpdateRecoveryCodes::getName(), new UpdateRecoveryCodes());
-        $this->addAction(DeleteAuthenticator::getName(), new DeleteAuthenticator());
+        $this->addAction('updateUserMFA', UpdateMFA::class);
+        $this->addAction('listUserMFAFactors', ListFactors::class);
+        $this->addAction('getUserMFAChallenge', GetMFAChallenge::class);
+        $this->addAction('getUserMFARecoveryCodes', GetRecoveryCodes::class);
+        $this->addAction('createUserMFARecoveryCodes', CreateRecoveryCodes::class);
+        $this->addAction('updateUserMFARecoveryCodes', UpdateRecoveryCodes::class);
+        $this->addAction('deleteUserMFAAuthenticator', DeleteAuthenticator::class);
+        $this->addAction('listUserPasskeys', ListPasskeys::class);
+        $this->addAction('getUserPasskey', GetPasskey::class);
+        $this->addAction('updateUserPasskey', UpdatePasskey::class);
+        $this->addAction('deleteUserPasskey', DeletePasskey::class);
     }
 }

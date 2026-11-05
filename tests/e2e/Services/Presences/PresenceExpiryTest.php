@@ -8,9 +8,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\DateTime;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class PresenceExpiryTest extends Scope
 {
@@ -42,7 +43,7 @@ final class PresenceExpiryTest extends Scope
 
         $createServer = $this->client->call(
             Client::METHOD_PUT,
-            '/presences/' . ID::unique(),
+            '/presences/' . Id::unique(),
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
@@ -97,7 +98,7 @@ final class PresenceExpiryTest extends Scope
 
         $stdout = '';
         $stderr = '';
-        $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
 
         $this->assertEventually(function () use ($presenceIdServer, $headers) {

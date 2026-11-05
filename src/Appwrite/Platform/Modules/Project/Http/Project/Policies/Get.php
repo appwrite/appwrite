@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Policies;
 
+use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -79,6 +80,8 @@ class Get extends Action
             'password-history' => Response::MODEL_POLICY_PASSWORD_HISTORY,
             'password-strength' => Response::MODEL_POLICY_PASSWORD_STRENGTH,
             'password-personal-data' => Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
+            'password-pwned' => Response::MODEL_POLICY_PASSWORD_PWNED,
+            'password-rotation' => Response::MODEL_POLICY_PASSWORD_ROTATION,
             'session-alert' => Response::MODEL_POLICY_SESSION_ALERT,
             'session-duration' => Response::MODEL_POLICY_SESSION_DURATION,
             'session-invalidation' => Response::MODEL_POLICY_SESSION_INVALIDATION,
@@ -86,6 +89,12 @@ class Get extends Action
             'user-limit' => Response::MODEL_POLICY_USER_LIMIT,
             'membership-privacy' => Response::MODEL_POLICY_MEMBERSHIP_PRIVACY,
             'mfa-factors' => Response::MODEL_POLICY_MFA_FACTORS,
+            'deny-aliased-email' => Response::MODEL_POLICY_DENY_ALIASED_EMAIL,
+            'deny-disposable-email' => Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
+            'deny-free-email' => Response::MODEL_POLICY_DENY_FREE_EMAIL,
+            'deny-corporate-email' => Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            'deny-realtime-guests' => Response::MODEL_POLICY_DENY_REALTIME_GUESTS,
+            'passkey' => Response::MODEL_POLICY_PASSKEY,
         ];
     }
 
@@ -101,6 +110,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-dictionary',
                     'enabled' => $auths['passwordDictionary'] ?? false,
+                    'denyList' => $auths['passwordDictionaryDenyList'] ?? [],
                 ]),
                 Response::MODEL_POLICY_PASSWORD_DICTIONARY,
             ],
@@ -127,8 +137,27 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-personal-data',
                     'enabled' => $auths['personalDataCheck'] ?? false,
+                    'denyList' => $auths['personalDataDenyList'] ?? [],
                 ]),
                 Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
+            ],
+            'password-pwned' => [
+                new Document(\array_merge([
+                    'enabled' => true,
+                    'sessions' => false,
+                    'users' => false,
+                ], $auths['passwordPwned'] ?? [], [
+                    '$id' => 'password-pwned',
+                ])),
+                Response::MODEL_POLICY_PASSWORD_PWNED,
+            ],
+            'password-rotation' => [
+                new Document([
+                    '$id' => 'password-rotation',
+                    'enabled' => $auths['passwordRotation']['enabled'] ?? false,
+                    'maxAge' => $auths['passwordRotation']['maxAge'] ?? 31536000,
+                ]),
+                Response::MODEL_POLICY_PASSWORD_ROTATION,
             ],
             'session-alert' => [
                 new Document([
@@ -187,6 +216,49 @@ class Get extends Action
                     '$id' => 'mfa-factors',
                 ])),
                 Response::MODEL_POLICY_MFA_FACTORS,
+            ],
+            'deny-aliased-email' => [
+                new Document([
+                    '$id' => 'deny-aliased-email',
+                    'enabled' => $auths['canonicalEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_ALIASED_EMAIL,
+            ],
+            'deny-disposable-email' => [
+                new Document([
+                    '$id' => 'deny-disposable-email',
+                    'enabled' => $auths['disposableEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
+            ],
+            'deny-free-email' => [
+                new Document([
+                    '$id' => 'deny-free-email',
+                    'enabled' => $auths['freeEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_FREE_EMAIL,
+            ],
+            'deny-corporate-email' => [
+                new Document([
+                    '$id' => 'deny-corporate-email',
+                    'enabled' => $auths['corporateEmails'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            ],
+            'deny-realtime-guests' => [
+                new Document([
+                    '$id' => 'deny-realtime-guests',
+                    'enabled' => $auths['realtimeGuests'] ?? false,
+                ]),
+                Response::MODEL_POLICY_DENY_REALTIME_GUESTS,
+            ],
+            'passkey' => [
+                new Document([
+                    '$id' => 'passkey',
+                    'rpId' => $auths['passkeyRpId'] ?? '',
+                    'origins' => Ceremony::getOrigins($project),
+                ]),
+                Response::MODEL_POLICY_PASSKEY,
             ],
             default => null,
         };

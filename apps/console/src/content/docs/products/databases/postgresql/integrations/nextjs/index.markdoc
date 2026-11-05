@@ -1,0 +1,150 @@
+---
+layout: article
+title: Next.js
+description: Connect a Next.js App Router application to an Appwrite native PostgreSQL database from Route Handlers, Server Actions, and Server Components, pool from serverless, and fall back to the SQL API on the Edge runtime.
+---
+
+An Appwrite native PostgreSQL database works with standard PostgreSQL drivers and ORMs, so a [Next.js](https://nextjs.org/) App Router application can query it from server-side code. Point your driver at the connection string from the [Connections](/docs/products/databases/postgresql/connections) page and keep all database access on the server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [PostgreSQL](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and Appwrite generates the database name for each database.
+{% /info %}
+
+# Where to connect {% #where %}
+
+In the App Router, every server-side execution context runs on the **Node.js runtime by default**, and the Node.js runtime can open raw TCP sockets. That means you can use a standard database driver from any of these:
+
+- **Route Handlers** (`app/api/.../route.ts`) for public endpoints, webhooks, and REST-style APIs.
+- **Server Actions** (`'use server'` functions) for form submissions and app-internal mutations.
+- **Server Components** (`async` components) for read queries that render straight into the page.
+
+Never import a database driver into a Client Component (`'use client'`) or ship the connection string to the browser. Keep all database access on the server.
+
+The one exception is the **Edge runtime** (`export const runtime = 'edge'`), which runs on a constrained environment that **cannot open TCP database sockets**. If a route opts into Edge, use the [SQL API](/docs/products/databases/postgresql/quick-start#first-queries) over HTTPS instead, see [the Edge runtime section](#edge) below.
+
+# Environment variables {% #env %}
+
+Put the connection string in your environment and never commit it. For local development, use `.env.local` (Next.js loads it automatically and it's git-ignored by default):
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+```
+
+`DATABASE_URL` points at the [connection pooler](/docs/products/databases/postgresql/connection-pooling) port (`6432`) for runtime traffic, and `DIRECT_URL` points at the PostgreSQL engine port (`5432`) for migrations. The next section explains why. The `sslmode=require` parameter is already part of the string Appwrite returns, so no extra certificate configuration is needed. For full verification (`verify-full`) or mTLS, see the [Network security](/docs/products/databases/postgresql/network-security) page.
+
+# Pool serverless connections {% #pooling %}
+
+When you deploy to Vercel, Netlify, or any serverless platform, each invocation can spin up a fresh instance with its own connection pool. Hundreds of concurrent invocations fan out into far more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) on the pooler port so it can multiplex those instances over a small number of backend connections.
+
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements, so server-side prepared statements aren't available. Reserve the engine port for migrations, which need a session-level connection. The two-URL split above (`DATABASE_URL` pooled, `DIRECT_URL` direct) is exactly what an ORM like Prisma expects.
+
+# Use a singleton client {% #singleton %}
+
+Instantiate one client per module scope and reuse it across invocations, so warm serverless instances don't reconnect on every request. In development, Next.js hot-reload re-evaluates modules, which can leak connections, so cache the client on `globalThis`.
+
+With [postgres.js](https://github.com/porsager/postgres) (note `prepare: false` for transaction-mode pooling):
+
+```ts
+// lib/db.ts
+import postgres from 'postgres';
+
+const globalForDb = globalThis as unknown as { sql?: ReturnType<typeof postgres> };
+
+export const sql =
+  globalForDb.sql ??
+  postgres(process.env.DATABASE_URL!, {
+    prepare: false, // required: pooler transaction mode has no server-side prepared statements
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForDb.sql = sql;
+```
+
+Query it from a Server Component or Route Handler:
+
+```ts
+// app/users/route.ts
+import { sql } from '@/lib/db';
+
+export async function GET() {
+  const users = await sql`SELECT id, email FROM users ORDER BY created_at DESC LIMIT 10`;
+  return Response.json(users);
+}
+```
+
+# Use Prisma or Drizzle {% #orm %}
+
+For a typed schema, migrations, and a query builder, reach for an ORM. Both integrate with the pooled `DATABASE_URL` plus direct `DIRECT_URL` pattern above.
+
+- **Prisma**: point the runtime at the pooled connection string and keep the Prisma CLI on the engine port for migrations, then run `prisma migrate deploy`. See the [Prisma](/docs/products/databases/postgresql/integrations/prisma) guide for the full config and migration flow.
+- **Drizzle**: use a pooled client (`prepare: false` on postgres.js) for runtime and the direct URL for `drizzle-kit` migrations. See the [Drizzle](/docs/products/databases/postgresql/integrations/drizzle) guide.
+
+{% arrow_link href="/docs/products/databases/postgresql/integrations/prisma" %}
+Set up Prisma against native PostgreSQL
+{% /arrow_link %}
+
+# Edge runtime: use the SQL API {% #edge %}
+
+If a Route Handler or route segment opts into the Edge runtime, it can't open a TCP socket, so no engine driver will work there:
+
+```ts
+export const runtime = 'edge'; // no TCP sockets available
+```
+
+From the Edge runtime, you can execute one parameterised SQL statement over HTTPS and get JSON back. `SELECT`, `INSERT`, `UPDATE`, and `DELETE` statements are allowed by default. Use the global `fetch` available in the Edge runtime:
+
+```ts
+// app/edge-users/route.ts
+export const runtime = 'edge';
+
+export async function GET() {
+  const response = await fetch(
+    'https://<REGION>.cloud.appwrite.io/v1/postgresql/<DATABASE_ID>/executions',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Appwrite-Project': process.env.APPWRITE_PROJECT_ID!,
+        'X-Appwrite-Key': process.env.APPWRITE_API_KEY!,
+      },
+      body: JSON.stringify({
+        sql: 'SELECT id, email FROM users WHERE created_at > $1 ORDER BY created_at DESC LIMIT $2',
+        bindings: ['2026-05-01T00:00:00Z', 10],
+      }),
+    },
+  );
+
+  const { rows } = await response.json();
+  return Response.json(rows);
+}
+```
+
+The response is `{ rows, rowCount, columns, durationMs, truncated, bytes }`. Bindings are sent separately and never interpolated into the SQL string. Add `APPWRITE_PROJECT_ID` and `APPWRITE_API_KEY` (a key with the `databases.read` scope) to your environment alongside the database URLs.
+
+{% arrow_link href="/docs/products/databases/postgresql/quick-start#first-queries" %}
+Read the SQL API reference
+{% /arrow_link %}
+
+# Local development {% #local %}
+
+`next dev` runs on the Node.js runtime, so a local server connects to the native PostgreSQL database over TLS exactly like production. Keep `DATABASE_URL` and `DIRECT_URL` in `.env.local`.
+
+For throwaway data in tests or experiments, create a [branch](/docs/products/databases/postgresql/branches), an instant, isolated copy with its own connection string, and point `.env.local` at it. Delete the branch when you're done.
+
+# Deploy {% #deploy %}
+
+When you deploy, set the same `DATABASE_URL` (pooled) and `DIRECT_URL` (direct) as environment variables on your hosting platform, run your migrations in the build step, and fall back to the SQL API from any Edge Functions.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/integrations/prisma" title="Prisma" %}
+Datasource config, pooled and direct URLs, and the migration workflow.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/quick-start#first-queries" title="SQL API" %}
+Query over HTTPS from the Edge runtime without a TCP connection.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% /cards %}

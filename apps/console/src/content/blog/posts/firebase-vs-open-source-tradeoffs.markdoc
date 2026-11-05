@@ -1,0 +1,101 @@
+---
+layout: post
+title: "Firebase vs open source: the trade-offs developers miss"
+description: "An honest look at the trade-offs developers make when choosing Firebase: vendor lock-in, pricing at scale, and data ownership versus open-source alternatives."
+date: 2026-03-20
+lastUpdated: 2026-06-29
+cover: /images/blog/firebase-vs-open-source-tradeoffs/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: products
+featured: false
+unlisted: true
+faqs:
+  - question: "What does Firebase actually do well?"
+    answer: "Firebase is fast to get started with, runs on Google Cloud, ships real-time listeners as a first-class abstraction, has a generous Spark free tier, and integrates broadly with the Google ecosystem. For many small to medium applications, this combination is genuinely productive."
+  - question: "What are the main trade-offs of building deeply on Firebase?"
+    answer: "Firebase's APIs, data models, and SDKs are proprietary, so vendor lock-in is significant. Pricing is per document read, write, and delete, which is hard to predict at scale. Data lives in Google's infrastructure with limited portability, the feature set is fixed, and Firebase cannot be self-hosted."
+  - question: "Can I self-host Firebase?"
+    answer: "No. Firebase is a fully managed, cloud-only platform. For teams that need on-premise deployment, strict data residency, or operation in regulated industries, that is a hard constraint. Open-source alternatives such as Appwrite can be self-hosted on any Docker-compatible infrastructure."
+  - question: "How does Appwrite compare to Firebase on pricing?"
+    answer: "Appwrite Cloud pricing is based on compute and storage rather than per-row operations, and self-hosted Appwrite has only the cost of the underlying infrastructure. Neither model produces per-query billing surprises that come from frequent real-time listeners or denormalized read patterns."
+  - question: "Does Appwrite cover the same surface area as Firebase?"
+    answer: "Yes, broadly. Appwrite provides authentication (email, OAuth2 with 30+ providers, phone, anonymous, MFA), a database with real-time row subscriptions, file storage with permissions and antivirus scanning, serverless functions, and messaging, plus integrated hosting for static and SSR frontends."
+  - question: "What license is Appwrite released under?"
+    answer: "Appwrite is open source under the BSD 3-Clause license. That license imposes no restrictions on commercial use and does not require you to open-source your application code, which makes it usable in commercial and proprietary projects."
+---
+
+Firebase is often the first backend platform developers reach for. The documentation is good, the quickstart experience is fast, and the combination of real-time database, authentication, and hosting in one place made it genuinely novel when it launched. Millions of applications are built on it, and for many use cases it continues to be a reasonable choice.
+
+But Firebase involves trade-offs that aren't obvious at the start, and they become more significant as applications grow. Understanding what those trade-offs actually are lets developers make informed decisions rather than discovering the costs later.
+
+# What Firebase does well
+
+It's worth being clear about Firebase's genuine strengths before cataloguing its limitations:
+
+- **Fast to get started.** The Firebase console and SDK documentation make it possible to have authentication, a database, and hosting working in under an hour.
+- **Google infrastructure.** Firebase runs on Google Cloud, which provides global scale and reliability that few organizations could replicate.
+- **Real-time by default.** Firestore's real-time listeners are a well-designed abstraction that simplifies building collaborative and live-updating applications.
+- **Generous free tier.** The Spark (free) plan covers enough usage for early-stage applications and small side projects to run indefinitely.
+- **Broad ecosystem.** Firebase integrates natively with other Google Cloud services, and there's a large community of Firebase developers.
+
+# The trade-offs
+
+## Vendor lock-in
+
+Firebase's APIs, data models, and SDKs are proprietary. Firestore's document model, security rules syntax, real-time listener API, and authentication tokens are all Firebase-specific. There is no standard interface that other databases or auth systems use.
+
+When you build deeply on Firebase, you're not building on transferable infrastructure; you're building on Firebase. Migrating away means rewriting your data access layer, your security rules, your authentication flow, and potentially your data model. For applications that have been in production for years, this migration can be a multi-month engineering project.
+
+This isn't unique to Firebase (most managed platforms involve some lock-in), but the depth of Firebase's proprietary abstractions makes it more pronounced than some alternatives.
+
+## Pricing at scale
+
+Firebase's pricing model charges per document read, write, and delete, plus for storage and bandwidth. The Spark (free) plan is limited; the Blaze (pay-as-you-go) plan charges incrementally.
+
+The problem developers encounter is that Firebase's pricing is difficult to predict when data access patterns are complex. A real-time listener on a collection that receives frequent updates can generate many more document reads than expected. Denormalized data models (which Firebase's NoSQL approach sometimes encourages) can multiply read counts.
+
+Teams that move quickly and don't model their usage have received Firebase bills that were multiples of what they anticipated. This is not unique to Firebase (all cloud services have this problem), but Firebase's pricing model is particularly sensitive to data access pattern choices made during development.
+
+## Data ownership and Google's history of product discontinuation
+
+Firebase data lives in Google's infrastructure. Google has a documented history of discontinuing products: Google Reader, Google+, Inbox, Google Stadia, and many others. While Firebase is clearly a core part of Google's developer platform and an unlikely discontinuation target, the risk is not zero, and teams that have built critical infrastructure on discontinued Google products have paid the migration cost.
+
+More practically: your Firebase data is not portable in the way that a Postgres database export is portable. Exporting Firestore data requires writing export scripts, and the exported format is Google's proprietary format.
+
+## Limited to Firebase's feature set
+
+Firebase provides authentication, Firestore, the Realtime Database, Cloud Storage, Cloud Functions, Hosting, and a few other services. When you need something outside that set (a specific messaging system, a custom authentication provider, a specialized storage feature), you're either adding another Google Cloud service (increasing complexity) or adding a third-party service (adding another vendor).
+
+## Self-hosting is not possible
+
+Firebase is a fully managed, cloud-only platform. You cannot self-host Firebase in your own infrastructure. For teams with data residency requirements, enterprise customers who need on-premise deployment, or applications in regulated industries, this is a hard constraint.
+
+# What open-source alternatives offer
+
+Open-source backend platforms like Appwrite address these trade-offs differently:
+
+- **Portable data and APIs.** Open-source platforms use standard data formats and well-documented APIs. Migrating your data or switching deployment environments doesn't require rewriting your application.
+- **Self-hostable.** Your data stays in your infrastructure, in the regions you choose.
+- **Predictable pricing.** Infrastructure costs (compute and storage) are well-understood and competitive. There are no per-row pricing surprises.
+- **Full customizability.** Open-source platforms can be modified, extended, and integrated with internal infrastructure in ways that closed-source platforms cannot.
+- **No Google dependency.** Your application's backend isn't subject to a single vendor's product decisions.
+
+# Appwrite as a Firebase alternative
+
+Appwrite is an open-source developer infrastructure platform for building web, mobile, and AI apps. It includes both a backend server, providing authentication, databases, file storage, serverless functions, real-time subscriptions, and messaging, and a fully integrated hosting solution for deploying static and server-side rendered frontends. Appwrite can be fully self-hosted on any Docker-compatible infrastructure or used as a managed service through [Appwrite Cloud](https://cloud.appwrite.io).
+
+Appwrite directly addresses each of the Firebase trade-offs outlined above:
+
+- **Lock-in**: Appwrite uses standard REST APIs and open-source SDKs. Its BSD 3-Clause license and self-hosting support mean you're never dependent on a single vendor's pricing or product decisions.
+- **Pricing**: Appwrite Cloud pricing is based on compute and storage, not per-row operations. Self-hosted Appwrite has only infrastructure costs. Neither model produces per-query billing surprises.
+- **Data ownership**: Self-hosted Appwrite stores data in your own infrastructure. Even on Appwrite Cloud, the data model is standard and exportable. There is no Google-owned infrastructure between you and your data.
+- **Feature breadth**: Appwrite provides authentication (email, OAuth2 with 30+ providers, phone, anonymous, MFA), a database with real-time row subscriptions, file storage with permissions and antivirus scanning, serverless functions, and messaging, covering the same surface area as Firebase's main services.
+- **Self-hosting**: Appwrite can be deployed on any Docker-compatible infrastructure, including your own servers, your cloud account, or an on-premise environment. This is a hard requirement for many enterprise and compliance use cases that Firebase simply cannot satisfy.
+
+# Resources
+
+- [Appwrite Authentication docs](docs/products/auth)
+- [Appwrite Databases docs](/docs/products/databases)
+- [Appwrite self-hosting guide](/docs/advanced/self-hosting)
+- [Sign up for Appwrite Cloud](https://cloud.appwrite.io)

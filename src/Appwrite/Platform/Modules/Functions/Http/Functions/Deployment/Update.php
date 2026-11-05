@@ -58,8 +58,8 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
-            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
@@ -116,39 +116,49 @@ class Update extends Base
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
+            ->setAttribute('interval', $function->getAttribute('interval', 0))
+            ->setAttribute('active', (!empty($function->getAttribute('schedule')) || !empty($function->getAttribute('interval'))) && !empty($function->getAttribute('deploymentId')));
         $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
             'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
             'schedule' => $schedule->getAttribute('schedule'),
+            'interval' => $schedule->getAttribute('interval', 0),
             'active' => $schedule->getAttribute('active'),
         ])));
 
+        // Template deployments reuse providerBranch for their resolved ref (tags
+        // included), which must not repoint a rule pinned to a real branch.
+        $branch = $deployment->getAttribute('providerBranch', '');
+        $isBranchBuild = $branch !== '' && ! empty($deployment->getAttribute('installationId'));
+        $branches = $isBranchBuild ? ['', $branch] : [''];
+
+        /** @var list<Query> $queries */
         $queries = [
             Query::equal('trigger', ['manual']),
             Query::equal('type', ['deployment']),
             Query::equal('deploymentResourceType', ['function']),
             Query::equal('deploymentResourceInternalId', [$function->getSequence()]),
-            Query::equal('deploymentVcsProviderBranch', ['']),
+            Query::equal('deploymentVcsProviderBranch', $branches),
             Query::equal('projectInternalId', [$project->getSequence()])
         ];
 
-        $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries) {
-            $updatedRules = [];
-
-            foreach ($dbForPlatform->iterate('rules', $queries) as $rule) {
+        /** @var list<array<string, mixed>> $updatedRules */
+        $updatedRules = $authorization->skip(function () use ($dbForPlatform, $deployment, $queries): array {
+            $collected = [];
+            foreach ($dbForPlatform->cursor('rules', $queries, batchSize: 25) as $rule) {
                 $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                     'deploymentId' => $deployment->getId(),
                     'deploymentInternalId' => $deployment->getSequence(),
                 ]));
-
-                $updatedRules[] = $rule->getArrayCopy();
+                $collected[] = $rule->getArrayCopy();
             }
 
-            return $updatedRules;
+            return $collected;
         });
 
-        foreach ($updatedRules as $rule) {
-            $bus->dispatch(new RuleUpdated($rule));
+        if ($updatedRules !== []) {
+            foreach ($updatedRules as $rule) {
+                $bus->dispatch(new RuleUpdated($rule));
+            }
         }
 
         $queueForEvents

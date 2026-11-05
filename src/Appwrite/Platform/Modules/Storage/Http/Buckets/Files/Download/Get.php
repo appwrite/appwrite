@@ -16,6 +16,7 @@ use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
@@ -59,7 +60,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
@@ -101,7 +102,7 @@ class Get extends Action
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+        $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
@@ -117,7 +118,8 @@ class Get extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($file->isEmpty()) {
+        // A file stays incomplete until its final chunk is joined and scanned.
+        if ($file->isEmpty() || $file->getAttribute('chunksUploaded', 0) < $file->getAttribute('chunksTotal', 1)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -136,10 +138,13 @@ class Get extends Action
             $unit = $request->getRangeUnit();
 
             if ($end === null || $end - $start > APP_STORAGE_READ_BUFFER) {
-                $end = min(($start + MAX_OUTPUT_CHUNK_SIZE - 1), ($size - 1));
+                $end = $start + MAX_OUTPUT_CHUNK_SIZE - 1;
             }
 
-            if ($unit !== 'bytes' || $start >= $end || $end >= $size) {
+            // RFC 9110: a last-byte-pos past the end of the file is clamped, not rejected.
+            $end = min($end, $size - 1);
+
+            if ($unit !== 'bytes' || $start > $end) {
                 throw new Exception(Exception::STORAGE_INVALID_RANGE);
             }
 
@@ -154,8 +159,9 @@ class Get extends Action
             ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-        ;
+            ->addHeader('Content-Security-Policy', "sandbox; script-src 'none';")
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setContentDisposition(Response::DISPOSITION_ATTACHMENT, (string) $file->getAttribute('name', ''));
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt
@@ -201,19 +207,35 @@ class Get extends Action
             return;
         }
 
-        if ($size > APP_STORAGE_READ_BUFFER) {
-            for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
-                $response->chunk(
-                    (string) $deviceForFiles->read(
-                        $path,
-                        ($i * MAX_OUTPUT_CHUNK_SIZE),
-                        min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
-                    ),
-                    (($i + 1) * MAX_OUTPUT_CHUNK_SIZE) >= $size
-                );
-            }
-        } else {
+        if ($size <= APP_STORAGE_READ_BUFFER) {
             $response->send((string) $deviceForFiles->read($path));
+            return;
+        }
+
+        // One backend read pins the representation, even if an S3 writer replaces
+        // and deletes its path while this response is still being delivered.
+        $remaining = $size;
+        $started = false;
+        try {
+            $deviceForFiles->stream($path, static function (string $chunk) use ($response, &$remaining, &$started): void {
+                $remaining -= \strlen($chunk);
+                if ($remaining < 0) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'File read exceeded its captured size.');
+                }
+                if ($chunk !== '') {
+                    $started = true;
+                    $response->chunk($chunk, false);
+                }
+            });
+            if ($remaining !== 0) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Incomplete file read.');
+            }
+            $response->chunk('', true);
+        } catch (\Throwable $error) {
+            if ($started) {
+                $response->abort();
+            }
+            throw $error;
         }
     }
 }

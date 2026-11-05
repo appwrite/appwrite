@@ -20,16 +20,18 @@ final class Jobs extends Base
     ) {
     }
 
+    #[\Override]
     public function toArray(): array
     {
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'id' => $this->id,
             'event' => $this->event,
             'data' => $this->data,
         ];
     }
 
+    #[\Override]
     public static function fromArray(array $data): static
     {
         return new self(

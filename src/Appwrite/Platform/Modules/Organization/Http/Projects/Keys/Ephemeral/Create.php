@@ -1,0 +1,138 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Ephemeral;
+
+use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\Key;
+use Appwrite\Event\Context\Audit as AuditContext;
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Organization\Http\Projects\Keys\Action;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime as DatabaseDateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Id;
+use Utopia\Database\Validator\UID;
+use Utopia\Platform\Enum;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
+
+class Create extends Action
+{
+    use HTTP;
+
+    public static function getName()
+    {
+        return 'createEphemeralProjectKey';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
+            ->setHttpPath('/v1/organization/projects/:projectId/keys/ephemeral')
+            ->desc('Create ephemeral project key')
+            ->groups(['api', 'organization'])
+            ->label('scope', ['organization.projects.keys.write', 'keys.write'])
+            ->label('event', 'keys.[keyId].create')
+            ->label('audits.event', 'project.key.create')
+            ->label('audits.resource', 'project.key/{response.$id}')
+            ->label('sdk', new Method(
+                namespace: 'organization',
+                group: 'keys',
+                name: 'createEphemeralProjectKey',
+                description: <<<EOT
+                Create a new ephemeral API key for a project in your organization. It's recommended to have multiple API keys with strict scopes for separate functions within your project.
+
+                You can also create a standard API key if you need a longer-lived key instead.
+                EOT,
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::ORGANIZATION],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_EPHEMERAL_KEY,
+                    )
+                ],
+            ))
+            ->param('projectId', '', new UID(), 'Project unique ID.')
+            ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', optional: false, example: '["users.read"]', enum: new Enum(name: 'ProjectKeyScopes'))
+            ->param('duration', null, new Range(1, 3600), 'Time in seconds before ephemeral key expires. Maximum duration is 3600 seconds.', optional: false, example: 600)
+            ->inject('response')
+            ->inject('queueForEvents')
+            ->inject('dbForPlatform')
+            ->inject('team')
+            ->inject('apiKey')
+            ->inject('auditContext')
+            ->inject('request')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $projectId,
+        array $scopes,
+        int $duration,
+        Response $response,
+        QueueEvent $queueForEvents,
+        Database $dbForPlatform,
+        Document $team,
+        ?Key $apiKey,
+        AuditContext $auditContext,
+        Request $request,
+    ) {
+        $now = new \DateTime();
+        $expire = $now->add(new \DateInterval('PT' . $duration . 'S'))->format('Y-m-d\TH:i:s.u\Z');
+
+        // A JWT stands in for its session for a few minutes; a key it left behind would outlive it
+        if ($request->getHeaderLine('x-appwrite-jwt', '') !== '') {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        // A key hands out no more than it holds: no broader scopes and no later expiry
+        if ($apiKey !== null && !$apiKey->mayCreate(API_KEY_EPHEMERAL, $scopes, $expire)) {
+            throw new Exception(Exception::KEY_CREATION_DENIED);
+        }
+
+        $project = $this->getProject($projectId, $team, $dbForPlatform, $apiKey);
+
+        // The request may run through the console project; events and audits belong to the resolved project
+        $queueForEvents->setProject($project);
+        $auditContext->project = $project;
+        $keyId = Id::unique();
+
+        $jwt = new JWT(EncryptionKey::current(), 'HS256', $duration, 0);
+
+        $secret = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
+            'scopes' => $scopes
+        ]);
+
+        $key = new Document([
+            '$id' => $keyId,
+            '$createdAt' => DatabaseDateTime::now(),
+            '$updatedAt' => DatabaseDateTime::now(),
+            'name' => '',
+            'scopes' => $scopes,
+            'expire' => $expire,
+            'sdks' => [],
+            'accessedAt' => null,
+            'secret' => API_KEY_EPHEMERAL . '_' . $secret,
+        ]);
+
+        $queueForEvents->setParam('keyId', $key->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($key, Response::MODEL_EPHEMERAL_KEY);
+    }
+}

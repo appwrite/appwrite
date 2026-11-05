@@ -1,0 +1,227 @@
+---
+layout: post
+title: How to build your digital event tickets
+description: Did you enjoy the Init tickets? In this blog we share how you can create your own.
+date: 2024-03-04
+lastUpdated: 2026-06-29
+cover: /images/blog/tickets-cover.avif
+timeToRead: 12
+author: laura-du-ry
+category: init
+removed: true
+faqs:
+  - question: "How did Appwrite build the Init tickets?"
+    answer: "Appwrite used GitHub OAuth (through [Appwrite Auth](/docs/products/auth)) to connect users' accounts, then scraped the GitHub contributions graph server-side using `node-html-parser`. The team converted the HTML grid into a matrix of contribution levels and rendered that as the side panel of each ticket."
+  - question: "Why scrape GitHub's contribution graph instead of using the API?"
+    answer: "The GitHub GraphQL API returns the raw contribution counts but not the level (0 to 4) shown on the profile graph. GitHub does not expose the algorithm that maps counts to levels, so the team fetched the rendered HTML and parsed it to match the public chart exactly."
+  - question: "What framework is the Appwrite site built with?"
+    answer: "The Appwrite website (including the Init ticket flow) is built with SvelteKit. SvelteKit gives the team full-stack control, so they can run server-side HTML scraping in the same project as the client-side ticket UI without a separate backend."
+  - question: "How do I add GitHub OAuth to my own app with Appwrite?"
+    answer: "Create a GitHub OAuth app in your GitHub developer settings, then add the client ID and secret to the GitHub provider in [Appwrite Auth](/docs/products/auth). Use `account.createOAuth2Session('github', success, failure)` from the client SDK to start the flow. The OAuth callback URL must match the one Appwrite gives you."
+  - question: "Where do the ticket designs come from?"
+    answer: "The Appwrite team was inspired by physical event badges from GitHub Universe 2023, which featured a contributions grid on the side. They adapted that into three ticket variants: a default Init celebration ticket, a pink Appwrite developer ticket, and a platinum ticket for Appwrite contributors."
+  - question: "Can I build similar collectible cards for my own product launch?"
+    answer: "Yes, the pattern is straightforward: an OAuth login to identify the user, a server-side fetch to pull personalized data, and a renderer (SVG, Canvas, or styled HTML) that produces a unique card per user. The hardest part is usually the design, not the engineering."
+---
+---
+
+Do you remember the Appwrite [Cloud cards](https://dev.to/appwrite/how-we-implemented-the-card-animation-in-appwrite-cloud-public-beta-4npb)? They were an absolute hit and filled our entire timeline for days. For Init, we wanted to create a new card, or better yet, a ticket to celebrate in style. So, we created three types of tickets that are unique to you with the help of your GitHub contributions and the tribe customization.
+
+As always, we want to share our learning so you can create your own tickets with GitHub OAuth and grid integration.
+
+# Ticket design inspiration
+
+Let’s start with the inspiration for the tickets. A few team members went to GitHub Universe in November 2023 and received a unique, customizable event badge with a grid on the side. These physical [event tickets](https://twitter.com/didier_lopes/status/1724925458762936817) inspired our very own Init tickets that would convey the feeling of a real ticket to an event.
+
+We took this idea, made it our own, and created three different types of tickets that would celebrate Init. The different types are categorized into:
+
+- Init celebration
+- Developers building with Appwrite
+- Appwrite contributors
+
+Depending on your specific situation, you get a certain type of card that you can then customize and personalize.
+
+Here is an overview of the three design types.
+
+### Init celebration
+
+The Init celebration ticket is what everyone gets at sign-up. This is your starting point.
+
+![Init celebration ticket](/images/blog/card1.avif)
+
+### Building with Appwrite
+
+The Appwrite ticket is for all developers with an Appwrite account. They get a pink ticket with an extra pink glow.
+
+![Init Appwrite dev ticket](/images/blog/card2.avif)
+
+### Appwrite contributors
+
+Then, we have one very special ticket dedicated to contributors of Appwrite. If you have contributed to Appwrite in any way, you will get this special design. It’s a platinum card with a rainbow glow.
+
+![Init contributors ticket](/images/blog/card3.avif)
+
+# Show off your GitHub contributions grid
+
+An essential part of the ticket is that we wanted to emphasize the importance of contributing to open source. What better way than showing off your actual contributions within your ticket?
+
+![Init celebration ticket](/images/blog/tickets-blog.avif)
+
+As you can see on each side of the ticket, a grid resembles your unique GitHub contributions over the past year, just like on your GitHub profile. You can choose to add the grid with a toggle, but to do so, you need to connect your GitHub account.
+
+Now, in case you would like to know how you can do this, we asked the engineer in charge, [Thomas G Lopes](https://github.com/TGlide), to explain the process.
+
+## Associating your GitHub account with your ticket
+
+First, you need to associate your GitHub account with your Init ticket. Therefore, we need to create an authentication flow on our website. Fortunately, with Appwrite Cloud, it was quite easy to do so.
+
+By following our [documentation on OAuth](https://appwrite.io/docs/products/auth/oauth2), and creating an OAuth GitHub App, we're quickly able to create a login flow for Appwrite Init. When logging in for the first time, a new ticket is instantiated and saved to Appwrite Cloud.
+
+![Init celebration ticket](/images/blog/tickets-blog2.avif)
+
+## Integrating the GitHub contributions grid
+
+Now that the association part is done, it’s time to integrate the more interesting part, the GitHub contributions grid.
+
+There are two ways to achieve this. The first one, is using the GraphQL API. [This article](https://medium.com/@yuichkun/how-to-retrieve-contribution-graph-data-from-the-github-api-dc3a151b4af) was initially used as a source of inspiration when implementing this feature. However, with this data, you only get the number of contributions but not the actual chart.
+
+In GitHub's chart, each square can have a level from 0 to 4, where each level is brighter than the other, indicating more contributions. We need a way to convert those numbers of contributions to levels, but unfortunately, that algorithm is not exposed by GitHub.
+
+We wanted the contribution chart to be as close to reality as possible. So, we arrived at our second solution: getting the chart from the source!
+
+Our website is developed with SvelteKit, which is a full-stack framework. TL;DR, we have control over both the server and the client. So, when someone requests their ticket, we can make the server directly access your GitHub profile page and read the chart! We used a library called `node-html-parser` to deal with the HTML data.
+
+We then can generate a matrix that representes the contribution chart. Each array of the matrix will represent a week, and each item of said array will contain the contribution level for that particular day.
+
+```ts
+const res = await fetch(`https://github.com/${gh_user}`);
+
+const html = await res.text();
+const root = parse(html);
+const table = root.querySelector('table');
+if (!table) return null;
+
+const matrix: ContributionsMatrix = [];
+const rows = table.querySelectorAll('tbody tr');
+const maxCols = rows[0].querySelectorAll('[role="gridcell"]').length;
+for (let c = 0; c < maxCols; c++) {
+    matrix.push([]);
+    for (let r = 0; r < rows.length; r++) {
+        const row = rows[r];
+        const cells = row.querySelectorAll('[role="gridcell"]');
+        if (c >= cells.length) continue;
+
+        const cell = cells[c];
+        matrix[c].push(Number(cell.getAttribute('data-level')));
+    }
+
+    matrix[c] = matrix[c].reverse();
+}
+```
+
+However, this operation is expensive! It's best if we don't have to always fetch it on each and every access to it. So we save it to Appwrite Cloud. By using a number array column and converting the matrix to a flat array, this is what our final code will look like.
+
+```ts
+import { APPWRITE_DB_INIT_ID, APPWRITE_TABLE_INIT_ID } from '$env/static/private';
+import { appwriteInit } from '$lib/appwrite/init';
+import parse from 'node-html-parser';
+import type { TicketData, ContributionsMatrix } from '../../constants';
+
+export async function getContributions(id: string): Promise<ContributionsMatrix | null> {
+    const { gh_user, contributions } = (await appwriteInit.tablesDB.getRow({
+        databaseId: APPWRITE_DB_INIT_ID,
+        tableId: APPWRITE_TABLE_INIT_ID,
+        rowId: id
+    })) as unknown as TicketData;
+
+    if (!gh_user) return null;
+
+    if (contributions?.length) {
+        // Transform flat array into matrix with 7 columns
+        const matrix: ContributionsMatrix = [];
+        for (let i = 0; i < contributions.length; i += 7) {
+            matrix.push(contributions.slice(i, i + 7));
+        }
+        return matrix;
+    }
+
+    // Code for fetching the matrix here
+
+    // Update the row with the new contributions
+    await appwriteInit.tablesDB.updateRow({
+        databaseId: APPWRITE_DB_INIT_ID,
+        tableId: APPWRITE_TABLE_INIT_ID,
+        rowId: id,
+        data: {
+            contributions: matrix.flat()
+        }
+    });
+
+    return matrix;
+}
+```
+
+With this, requests will be much faster. But we still care about the initial load, right? First impressions are everything.
+
+So, we adopted a smart strategy. When requesting the ticket, instead of waiting for all the data to load (the ticket data + the contributions) before rendering the page, we stream the contribution data. This is what our load function looks like:
+
+```ts
+import { getTicketByUser, getTicketContributions, getUser, isLoggedIn } from '$routes/init/helpers';
+import { redirect } from '@sveltejs/kit';
+
+export const load = async () => {
+    const loggedIn = await isLoggedIn();
+    if (!loggedIn) {
+        redirect(307, '/init/ticket');
+    }
+
+    const user = await getUser();
+    const ticket = await getTicketByUser(user);
+
+    return {
+        ticket,
+        user,
+        streamed: {
+            contributions: getTicketContributions(ticket.$id, fetch)
+        }
+    };
+};
+```
+
+Then, with SvelteKit, we can show the contributions as soon as they're ready.
+
+```svelte
+{#await contributions then c}
+    {#if c && show_contributions}
+        <div
+            class="github"
+            out:fade={{ duration: 100 }}
+            data-remove-delay={removeDelay ? '' : undefined}
+        >
+            {#each c as row}
+                <div class="row">
+                    {#each row as level, j}
+                        <div style:--index={row.length - j} data-level={level} />
+                    {/each}
+                </div>
+            {/each}
+        </div>
+    {/if}
+{/await}
+```
+
+This means that users can see the ticket without waiting for all data to load but still see the chart seamlessly added to the ticket.
+
+# Your tribe
+
+Thomas explained the cool part of how we managed to make your ticket truly unique. But we also wanted to allow for customization so that you could also have a say in what your ticket looked like. For this, we chose to add your favorite technology's logo as a watermark.
+
+![Init celebration ticket](/images/blog/tickets-blog3.avif)
+
+# Create your own
+
+You can find the entire source code for the tickets on [GitHub](https://github.com/appwrite/console/blob/cloud-1.1.x/src/routes/card/Card.svelte) to create your digital event tickets. In May, we created a [showcase site](https://appwrite-card-snippets.vercel.app/popup) for the Cloud cards on how to add a pop, rotation, and glare to the cards. We advise you to check it out to make your tickets all the more magical.
+
+Although Init is over, you can still get yourself a ticket at [appwrite.io/init/tickets](/init/tickets)
+
+[Join us on Discord](https://appwrite.io/discord) to be the first to get updates and to be part of a vibrant community!

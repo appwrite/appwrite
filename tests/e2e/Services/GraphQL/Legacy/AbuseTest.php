@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\GraphQL\Base;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class AbuseTest extends Scope
@@ -44,7 +44,7 @@ final class AbuseTest extends Scope
                 'variables' => [
                     'databaseId' => $databaseId,
                     'collectionId' => $collectionId,
-                    'documentId' => ID::unique(),
+                    'documentId' => Id::unique(),
                     'data' => [
                         'name' => 'John Doe',
                     ],
@@ -96,6 +96,28 @@ final class AbuseTest extends Scope
         $max = System::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', '250');
 
         $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
+    }
+
+    public function testZeroSelectionListComplexityBlocked()
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Every selected field is removed by @skip, so the per-row selection cost is 0. The list
+        // resolver still runs (a find() + count()), so aliasing the field must not be free: each
+        // alias is charged for its rows regardless, and enough of them exceed the complexity cap.
+        $aliases = [];
+        for ($i = 0; $i < 40; $i++) {
+            $aliases[] = "a{$i}: databasesListDocuments(databaseId: \"database\", collectionId: \"collection\") { total @skip(if: true) documents @skip(if: true) { _id } }";
+        }
+        $query = 'query { ' . \implode("\n", $aliases) . ' }';
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), ['query' => $query]);
+
+        $this->assertArrayHasKey('errors', $response['body']);
+        $this->assertStringContainsString('Max query complexity should be', (string) $response['body']['errors'][0]['message']);
     }
 
     public function testTooManyQueriesBlocked()

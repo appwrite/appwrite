@@ -1,0 +1,19 @@
+---
+layout: changelog
+title: "Deploy Sites and Functions from Entire repositories"
+date: 2026-10-27
+cover: /images/blog/announcing-appwrite-entire-partnership/cover.avif
+tags: sites, functions, integrations
+---
+
+Appwrite is partnering with [Entire](https://entire.com), the Git forge for agents, and Entire now joins Appwrite's Git providers. Connect an Entire project from **Project settings** > **Git configuration**, approve the installation on entire.com, and [deploy from Git](/docs/products/sites/deploy-from-git) on every push.
+
+Pushes to your production branch build and activate. Pushes to other branches build without activating, and Sites get a private [preview link](/docs/products/sites/previews). Unless Silent mode is on, each build reports back to the commit on Entire as a check run. Start a Site or Function from a template, and Appwrite can create the Entire repository for you. GitHub repositories mirrored on Entire deploy too. Entire is available as a Git provider on Appwrite Cloud.
+
+{% arrow_link href="/blog/post/announcing-appwrite-entire-partnership" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/blog/post/deploy-from-entire-to-appwrite" %}
+Deploy from Entire step by step
+{% /arrow_link %}

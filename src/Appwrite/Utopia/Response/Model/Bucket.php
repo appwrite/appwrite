@@ -48,6 +48,12 @@ class Bucket extends Model
                 'default' => '',
                 'example' => 'Documents',
             ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Optional description for the bucket.',
+                'default' => '',
+                'example' => 'Invoices and receipts uploaded by customers.',
+            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Bucket enabled.',
@@ -91,6 +97,12 @@ class Bucket extends Model
                 'description' => 'Image transformations are enabled.',
                 'default' => true,
                 'example' => false,
+            ])
+            ->addRule('stripMetadata', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Metadata such as location, device and capture time is removed from uploaded images.',
+                'default' => false,
+                'example' => true,
             ])
             ->addRule('totalSize', [
                 'type' => self::TYPE_INTEGER,

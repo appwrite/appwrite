@@ -3,11 +3,19 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\Key;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
+use Appwrite\Vcs\Validator\Directory;
+use Executor\Executor;
+use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
 use OpenRuntimes\Orchestrator\Enum\CallbackEvent;
 use OpenRuntimes\Orchestrator\Enum\ReadFormat;
 use OpenRuntimes\Orchestrator\Jobs;
+use OpenRuntimes\Orchestrator\Model\Artifact\ArchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\CloneArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\DownloadArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\ReadArtifact;
@@ -16,15 +24,20 @@ use OpenRuntimes\Orchestrator\Model\Artifact\UnarchiveArtifact;
 use OpenRuntimes\Orchestrator\Model\Artifact\UploadArtifact;
 use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
+use Psr\Http\Message\StreamInterface;
 use Utopia\Config\Config;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\DSN\DSN;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git;
@@ -37,10 +50,11 @@ use Utopia\VCS\Adapter\Git;
  * Source crosses the boundary via the artifacts system (presigned GET download
  * + unarchive, run by the sidecar) — a GET has no request-body cap, so large
  * sources are fine. The build output and package-manager cache go wherever
- * the builds device is (see storage()). On the local device the builds
- * storage volume is attached to the build worker at its Appwrite path, so
- * build.sh writes its artifact + the cache squashfs straight onto the volume
- * Appwrite already reads. On a remote device (S3 and friends) no volume spans
+ * the builds device is (see storage()). On the local device only this
+ * deployment's directory and this project's cache directory on the builds
+ * volume are attached to the build worker at their Appwrite paths, so build.sh
+ * writes its artifact + the cache squashfs straight onto the volume Appwrite
+ * already reads, and cannot list or write another deployment's tree. On a remote device (S3 and friends) no volume spans
  * Appwrite and the build workers, so the sidecar moves them over s3://
  * upload/download artifacts instead. The orchestrator supports the generic
  * _APP_STORAGE_S3_* configuration; legacy provider-specific variables and
@@ -62,6 +76,7 @@ readonly class Deployments
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
+        private BuildPublisher $publisherForBuilds,
     ) {
     }
 
@@ -98,9 +113,9 @@ readonly class Deployments
      * queued is left canceled and never dispatched. Returns the persisted,
      * updated deployment.
      */
-    public function createFromUpload(Document $resource, Document $deployment): Document
+    public function createFromUpload(Document $resource, Document $deployment, int $timeout): Document
     {
-        return $this->submit($resource, $deployment, null);
+        return $this->submit($resource, $deployment, $timeout, null);
     }
 
     /**
@@ -113,6 +128,7 @@ readonly class Deployments
     public function createFromRef(
         Document $resource,
         Document $deployment,
+        int $timeout,
         string $owner,
         string $repository,
         string $type,
@@ -124,7 +140,7 @@ readonly class Deployments
         // tag; codeload only understands one ref per tarball, not a range.
         $url = "https://codeload.github.com/{$owner}/{$repository}/tar.gz/{$reference}";
 
-        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory]);
+        return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory]);
     }
 
     /**
@@ -138,41 +154,159 @@ readonly class Deployments
     public function createFromUrl(
         Document $resource,
         Document $deployment,
+        int $timeout,
         string $url,
         string $rootDirectory = '',
         array $headers = [],
     ): Document {
-        return $this->submit($resource, $deployment, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
+        return $this->submit($resource, $deployment, $timeout, ['url' => $url, 'subdir' => $rootDirectory, 'headers' => $headers]);
+    }
+
+    /**
+     * Same as createFromUpload(), but builds from a tree on this host that a
+     * worker checked out itself: packs it flat, like a manual upload's
+     * tarball, into the deployment's own source and builds from there.
+     */
+    public function createFromDirectory(Document $resource, Document $deployment, int $timeout, string $directory): Document
+    {
+        $projectId = $this->project->getId();
+        $deploymentId = $deployment->getId();
+        $resourceType = $resource->getCollection();
+
+        $archive = \rtrim(\sys_get_temp_dir(), '/') . "/source-{$deploymentId}.tar.gz";
+        $sourcePath = static::sourcePath($projectId, $resourceType, $deploymentId);
+        $device = getDevice(($resourceType === 'sites' ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
+
+        // The archive holds the customer's source on a shared host, so it is
+        // removed however packing or storing it ends
+        try {
+            $stdout = '';
+            $stderr = '';
+            $exit = Console::execute(
+                (new Command('tar'))->flag('-czf')->argument($archive)->option('-C', $directory)->argument('--exclude=.git')->argument('.'),
+                '',
+                $stdout,
+                $stderr,
+            );
+            if ($exit !== 0) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to pack the source: ' . $stderr);
+            }
+
+            $file = \fopen($archive, 'rb');
+            if ($file === false) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read the packed source.');
+            }
+
+            try {
+                if (!$device->write($sourcePath, Stream::fromResource($file), 'application/gzip')) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to store the packed source.');
+                }
+            } finally {
+                \fclose($file);
+            }
+        } finally {
+            if (\is_file($archive)) {
+                \unlink($archive);
+            }
+        }
+
+        $size = $device->getFileSize($sourcePath);
+        $deployment->setAttributes([
+            'sourcePath' => $sourcePath,
+            'sourceSize' => $size,
+            'totalSize' => $size,
+            'sourceChunksTotal' => 1,
+            'sourceChunksUploaded' => 1,
+        ]);
+
+        return $this->createFromUpload($resource, $deployment, $timeout);
     }
 
     /**
      * Same as createFromUpload(), but builds from a repository on a VCS
-     * provider: a presigned archive URL when the provider hands those out, or
-     * a git clone through the jobs-service's clone artifact when the provider
-     * serves content over the git protocol only (Origin).
+     * provider: a presigned archive URL when the provider hands those out, a
+     * git clone through the jobs-service's clone artifact when the provider
+     * serves content over the git protocol only (Origin), or a clone by the
+     * Builds worker when only the provider's own tooling can fetch it
+     * (Entire), which then builds the tree it checked out.
      *
      * @param string $ref Branch, tag, or commit the deployment builds from
      */
     public function createFromVcs(
         Document $resource,
         Document $deployment,
+        int $timeout,
         Git $vcs,
         string $owner,
         string $repository,
         string $ref,
         string $rootDirectory = '',
     ): Document {
+        // Values stored before root directories were validated may still leave the repository
+        if (!(new Directory(\PHP_INT_MAX))->isValid($rootDirectory)) {
+            $message = 'Root directory must stay inside the repository.';
+            $this->dbForProject->updateDocuments('deployments', new Document([
+                'status' => 'failed',
+                'buildLogs' => "\n{$message}\n",
+                'buildEndedAt' => DateTime::now(),
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $message);
+        }
+
+        $deployment->setAttribute('providerRootDirectory', $rootDirectory);
+
         if ($vcs->supportsRepositoryArchives()) {
             return $this->createFromUrl(
                 $resource,
                 $deployment,
+                $timeout,
                 $vcs->getRepositoryPresignedUrl($owner, $repository, $ref),
                 $rootDirectory,
                 $vcs->getRepositoryPresignedUrlHeaders(),
             );
         }
 
-        return $this->submit($resource, $deployment, [
+        if (!$vcs->supportsRepositoryCloneUrl()) {
+            // The worker reads the ref off the deployment, the way the
+            // template push does
+            $deployment = $this->upload($resource, $deployment->setAttribute('status', 'waiting'));
+
+            try {
+                $queued = $this->publisherForBuilds->enqueue(new BuildMessage(
+                    project: $this->project,
+                    resource: $resource,
+                    deployment: $deployment,
+                    type: BUILD_TYPE_DEPLOYMENT,
+                    template: new Document(),
+                    platform: $this->platform,
+                    timeout: $timeout,
+                ));
+                if ($queued === false) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to queue the build.');
+                }
+            } catch (\Throwable $error) {
+                // Failed like a job submit() cannot hand over, rather than left
+                // waiting on a build that never starts
+                $this->dbForProject->updateDocuments('deployments', new Document([
+                    'status' => 'failed',
+                    'buildLogs' => "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n",
+                    'buildEndedAt' => DateTime::now(),
+                ]), [
+                    Query::equal('$id', [$deployment->getId()]),
+                    Query::notEqual('status', 'canceled'),
+                ]);
+
+                throw $error;
+            }
+
+            return $deployment;
+        }
+
+        return $this->submit($resource, $deployment, $timeout, [
             'clone' => $vcs->getRepositoryCloneUrl($owner, $repository),
             'ref' => $ref,
             'subdir' => $rootDirectory,
@@ -180,7 +314,7 @@ readonly class Deployments
         ]);
     }
 
-    private function submit(Document $resource, Document $deployment, ?array $source): Document
+    private function submit(Document $resource, Document $deployment, int $timeout, ?array $source): Document
     {
         // The caller may have been holding this deployment for a while (the
         // Builds worker pushes a template commit first), so its status is stale
@@ -189,9 +323,34 @@ readonly class Deployments
         $deployment->removeAttribute('status');
         $deployment = $this->upload($resource, $deployment);
 
+        // Refused before it is queued: the deployment is left failed with the
+        // reason, the active deployment stays live and no job is submitted.
+        try {
+            $this->admit($resource, $deployment);
+        } catch (\Throwable $error) {
+            $buildLogs = $error instanceof Exception && $error->getCode() < 500
+                ? "\n" . $error->getMessage() . "\n"
+                : "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n";
+
+            $this->dbForProject->updateDocuments('deployments', new Document([
+                'status' => 'failed',
+                'buildLogs' => $buildLogs,
+                'buildEndedAt' => DateTime::now(),
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            throw $error;
+        }
+
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
+            // These results belong to this build, including when duplicating a deployment.
+            'buildDuration' => null,
+            'buildEndedAt' => null,
+            'adapter' => '',
         ]), [
             Query::equal('$id', [$deployment->getId()]),
             Query::notEqual('status', 'canceled'),
@@ -221,7 +380,7 @@ readonly class Deployments
         }
 
         try {
-            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $source));
+            $this->jobs->create(...static::payload($this->project, $resource, $deployment, $this->platform, $timeout, $source));
         } catch (\Throwable $error) {
             // A refused variable key is the owner's to fix, so the build log
             // carries the actual reason; anything else stays a generic
@@ -248,6 +407,16 @@ readonly class Deployments
     }
 
     /**
+     * Decides whether a deployment may be built, called once it is persisted
+     * and before it is queued. Throw to refuse it: a refusal with a code under
+     * 500 is shown to the owner in the build logs. Every deployment passes
+     * here, from the API, VCS webhooks and the builds worker alike.
+     */
+    protected function admit(Document $resource, Document $deployment): void
+    {
+    }
+
+    /**
      * Best-effort cancel of an in-flight build. The deployment is already
      * marked canceled by the caller; this only needs to stop the backend from
      * still writing to it.
@@ -255,6 +424,16 @@ readonly class Deployments
     public function cancel(string $deploymentId): void
     {
         $this->jobs->delete(static::id($this->project->getId(), $deploymentId));
+
+        // A canceled build never completes, so the Jobs worker never moves or
+        // clears its staged source (see payload()). Unlinking follows symlinked
+        // parent directories the build could plant, so clean up only inside
+        // the builds tree.
+        $device = static::device($this->project->getId());
+        $staged = static::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
+            $device->delete($staged);
+        }
     }
 
     /**
@@ -347,12 +526,12 @@ readonly class Deployments
         Document $resource,
         Document $deployment,
         array $platform,
+        int $timeout,
         ?array $source = null,
     ): array {
         $projectId = $project->getId();
         $deploymentId = $deployment->getId();
         $isSite = $resource->getCollection() === 'sites';
-        $timeout = (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900);
 
         $runtime = self::runtime($resource, self::version($resource));
         $spec = Config::getParam('specifications')[$resource->getAttribute('buildSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT)];
@@ -384,8 +563,7 @@ readonly class Deployments
         //    strip.
         //  - git clone ($source with clone): a provider without archive
         //    downloads; the sidecar clones over Git HTTPS and checks the tree
-        //    out directly, so there is no archive to unarchive — or to stat,
-        //    which is why this path reports no sourceSize.
+        //    out directly, so there is no archive to unarchive.
         //  - otherwise: the deployment's uploaded tarball, fetched from Appwrite
         //    over a presigned GET (manual upload / duplicate).
         if (isset($source['clone'])) {
@@ -398,11 +576,6 @@ readonly class Deployments
             $sourceArtifacts = [
                 new DownloadArtifact(id: 'source', in: $source['url'], out: 'source.tar.gz', headers: $source['headers'] ?? []),
                 new UnarchiveArtifact(id: 'extract', in: 'source.tar.gz', out: 'source', subdir: $subdir !== '' ? $subdir : null, strip: true, depends: 'source'),
-                // Appwrite never sees the remote source (the sidecar fetches it),
-                // so unlike the uploaded-tarball path it can't size it. Stat the
-                // downloaded archive so the orchestrator reports its byte size in
-                // an artifact callback, which the worker records as sourceSize.
-                new StatArtifact(id: 'sourceSize', in: 'source.tar.gz', depends: 'source'),
             ];
         } else {
             // Presigned source-download URL (GET, no request-body cap), fetched by
@@ -421,16 +594,47 @@ readonly class Deployments
             ];
         }
 
+        // Only the sidecar ever sees a remote source, so pack the root
+        // directory it builds, flat like an uploaded tarball, and keep it where
+        // manual uploads keep theirs. On S3 the sidecar uploads it before
+        // build.sh starts; locally the worker can only stage it on the builds
+        // volume, which the build can write too (see the Jobs worker).
+        $stage = null;
+        if ($source !== null) {
+            $sourceArtifacts[] = new ArchiveArtifact(id: 'sourceArchive', in: 'source', out: 'source-root.tar.gz', compression: ArchiveCompression::Gzip, depends: isset($source['clone']) ? 'source' : 'extract');
+            $sourceArtifacts[] = new StatArtifact(id: 'sourceSize', in: 'source-root.tar.gz', depends: 'sourceArchive');
+
+            $sourceDevice = getDevice(($isSite ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
+            if ($sourceDevice->getType() === DeviceType::Local) {
+                $staged = static::stagedSourcePath(static::device($projectId), $deploymentId);
+                // Staging is best effort: the build runs even when it fails
+                $stage = Command::group(Command::or(
+                    Command::group(Command::and(
+                        (new Command('mkdir'))->flag('-p')->argument(\dirname($staged)),
+                        (new Command('cp'))->argument('/mnt/code/source-root.tar.gz')->argument($staged),
+                    )),
+                    new Command('true'),
+                ));
+            } else {
+                $sourceArtifacts[] = new UploadArtifact(id: 'sourceUpload', in: 'source-root.tar.gz', out: static::objectUrl($sourceDevice, static::sourcePath($projectId, $resource->getCollection(), $deploymentId)), depends: 'sourceArchive');
+            }
+        }
+
         // Where output + cache land is a swappable strategy (see storage()) —
-        // the default mounts the shared builds volume; nothing else here cares
-        // which strategy is active.
+        // the default mounts this project's directory on the builds volume;
+        // nothing else here cares which strategy is active.
         $output = static::storage($project, $resource, $deployment);
 
         // Site builds write a JSON build manifest into the workspace, read
         // back post-job so the Jobs worker can run adapter detection.
         $manifestArtifacts = $isSite ? [new ReadArtifact(id: 'manifest', in: 'manifest.json', format: ReadFormat::Json, depends: 'job')] : [];
 
+        // build.sh runs its first argument as the build command; an empty one is left out
+        $build = new Command('/usr/local/server/helpers/build.sh');
         $command = self::command($resource, $deployment);
+        if ($command !== '') {
+            $build->argument($command);
+        }
         $env = self::variables($project, $resource, $deployment, $runtime, $cpus, $memory, $endpoint, $timeout) + [
             'OPEN_RUNTIMES_BUILD_INPUT_DIR' => '/mnt/code/source',
             'OPEN_RUNTIMES_BUILD_COMPRESSION' => static::compression(),
@@ -446,7 +650,7 @@ readonly class Deployments
         return [
             'id' => static::id($projectId, $deploymentId),
             'image' => $runtime['image'],
-            'command' => '/usr/local/server/helpers/build.sh ' . \escapeshellarg($command),
+            'command' => ($stage === null ? $build : Command::and($stage, $build))->toString(),
             'cpu' => $cpus,
             'memory' => $memory,
             'timeoutSeconds' => $timeout,
@@ -474,7 +678,15 @@ readonly class Deployments
      */
     public static function id(string $projectId, string $deploymentId): string
     {
-        return "{$projectId}-{$deploymentId}-build";
+        return Executor::runtimeId($projectId, $deploymentId) . '-build';
+    }
+
+    /**
+     * The lock serializing a deployment's build callbacks and its cancellation.
+     */
+    public static function lock(string $projectInternalId, string $deploymentId): string
+    {
+        return "jobs-deployment:{$projectInternalId}:{$deploymentId}";
     }
 
     /**
@@ -496,6 +708,103 @@ readonly class Deployments
     public static function buildPath(string $projectId, string $deploymentId): string
     {
         return static::device($projectId)->getPath("{$deploymentId}/" . static::artifact());
+    }
+
+    /**
+     * Whether $path holds a deployment file that is safe to read: on the local
+     * device a regular file inside the device root, reached without symbolic
+     * links, since builds can write the builds volume.
+     *
+     * @phpstan-impure
+     */
+    public static function isArtifact(Device $device, string $path): bool
+    {
+        if ($path === '') {
+            return false;
+        }
+
+        if ($device->getType() !== DeviceType::Local) {
+            return $device->exists($path);
+        }
+
+        return \str_starts_with($path, \rtrim($device->getRoot(), '/') . '/')
+            && !\is_link($path)
+            && \is_file($path)
+            && \realpath($path) === $path;
+    }
+
+    /**
+     * Opens a local deployment file that isArtifact() accepts, or null. The handle is kept only when it is still
+     * the file at $path, so a build swapping in a link after the check cannot redirect reads made through it.
+     */
+    public static function openArtifact(Device $device, string $path): ?StreamInterface
+    {
+        if ($device->getType() !== DeviceType::Local || !static::isArtifact($device, $path)) {
+            return null;
+        }
+
+        $handle = \fopen($path, 'rb');
+        if ($handle === false) {
+            return null;
+        }
+
+        $opened = \fstat($handle);
+        $current = \lstat($path);
+
+        if (
+            $opened === false
+            || $current === false
+            || $opened['ino'] !== $current['ino']
+            || $opened['dev'] !== $current['dev']
+            || !static::isArtifact($device, $path)
+        ) {
+            \fclose($handle);
+
+            return null;
+        }
+
+        return Stream::fromResource($handle);
+    }
+
+    /**
+     * Where a remote-source deployment keeps the source it was built from: on
+     * the resource's own device, like a manual upload's tarball. The Jobs
+     * worker sets it as sourcePath once the file is there.
+     */
+    public static function sourcePath(string $projectId, string $resourceType, string $deploymentId): string
+    {
+        return getDevice(($resourceType === 'sites' ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}")->getPath("{$deploymentId}.gz");
+    }
+
+    /**
+     * Where the build worker leaves that source on the local device: this
+     * project's directory on the builds volume, the only path it mounts.
+     */
+    public static function stagedSourcePath(Device $deviceForBuilds, string $deploymentId): string
+    {
+        return $deviceForBuilds->getPath("{$deploymentId}/source.tar.gz");
+    }
+
+    /**
+     * Removes the deployment's directory on the builds device: the artifact,
+     * the staged source and anything else the build left there. On the local
+     * device the build can write the directory, so it is removed only when it
+     * is not reached through a symbolic link. True once nothing is left there.
+     */
+    public static function deleteBuildDirectory(Device $deviceForBuilds, string $deploymentId): bool
+    {
+        $directory = $deviceForBuilds->getPath($deploymentId);
+        if ($deviceForBuilds->getType() === DeviceType::Local) {
+            if (!\file_exists($directory) && !\is_link($directory)) {
+                return true;
+            }
+
+            if (\realpath($directory) !== $directory) {
+                return false;
+            }
+        }
+
+        return $deviceForBuilds->deletePath($deploymentId);
     }
 
     /**
@@ -533,6 +842,20 @@ readonly class Deployments
     }
 
     /**
+     * The build cache of the image a resource builds with now. The key hashes
+     * the image, so a runtime change leaves the previous cache at another key
+     * and deleting the resource has to remove this one.
+     *
+     * @throws Exception when the resource's runtime is not supported
+     */
+    public static function resourceCachePath(string $projectId, Document $resource): string
+    {
+        $runtime = self::runtime($resource, self::version($resource));
+
+        return static::cachePath($projectId, static::cacheKey($projectId, $resource->getId(), $runtime['image'] ?? ''));
+    }
+
+    /**
      * The builds device for a project, as everything else reads it
      * (deviceForBuilds).
      */
@@ -543,9 +866,12 @@ readonly class Deployments
 
     /**
      * Where build.sh's output artifact and package-manager cache land, and
-     * what the job needs to get them there. On the local device the shared
-     * builds volume is mounted and build.sh writes straight to
-     * buildPath()/cachePath(). On a remote device (S3 and friends) build.sh
+     * what the job needs to get them there. On the local device only this
+     * deployment's output directory and this project's cache directory of the
+     * builds volume are mounted (Volume.subPath) and build.sh writes straight
+     * to buildPath()/cachePath() — sibling deployments and app-{projectId}
+     * trees stay off the worker. Both directories are created first because
+     * Docker's named-volume Subpath must exist before the container starts. On a remote device (S3 and friends) build.sh
      * writes into the job workspace and the sidecar moves output and cache
      * over s3:// artifacts, keyed as buildPath()/cachePath(), so everything
      * reading through deviceForBuilds works unchanged. Open Runtimes Orchestrator
@@ -565,14 +891,32 @@ readonly class Deployments
         $cachePath = static::cachePath($projectId, $cacheKey);
         $device = static::device($projectId);
 
+        $volume = System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds');
+        $outputDirectory = static::outputDirectory($projectId, $deploymentId);
+        $cacheDirectory = \dirname($cachePath);
+
+        if ($device instanceof Local) {
+            $device->createDirectory($outputDirectory);
+            $device->createDirectory($cacheDirectory);
+        }
+
         return match ($device->getType()) {
             DeviceType::Local => [
                 'volumes' => [
-                    new Volume(source: System::getEnv('_APP_BUILDS_VOLUME', 'appwrite-builds'), path: APP_STORAGE_BUILDS),
+                    new Volume(
+                        source: $volume,
+                        path: $outputDirectory,
+                        subPath: "app-{$projectId}/{$deploymentId}",
+                    ),
+                    new Volume(
+                        source: $volume,
+                        path: $cacheDirectory,
+                        subPath: "app-{$projectId}/cache",
+                    ),
                 ],
                 'artifacts' => [],
                 'environment' => [
-                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => static::outputDirectory($projectId, $deploymentId),
+                    'OPEN_RUNTIMES_BUILD_OUTPUT_DIR' => $outputDirectory,
                     'OPEN_RUNTIMES_BUILD_CACHE_ARTIFACT' => $cachePath,
                 ],
             ],
@@ -691,8 +1035,10 @@ readonly class Deployments
             }
         }
 
-        $apiKey = (new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $timeout, 0))->encode([
+        $apiKey = (new JWT(EncryptionKey::current(), 'HS256', $timeout, 0))->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => static::scopes($resource),
         ]);
 
@@ -732,14 +1078,15 @@ readonly class Deployments
     }
 
     /**
+     * Deployments are written only by the console, project keys and workers, which all run with authorization
+     * disabled, so no role is granted write access.
+     *
      * @return array<string>
      */
-    private static function permissions(): array
+    public static function permissions(): array
     {
         return [
             Permission::read(Role::any()),
-            Permission::update(Role::any()),
-            Permission::delete(Role::any()),
         ];
     }
 

@@ -3,6 +3,7 @@
 namespace Appwrite\AvatarPhotos\Providers;
 
 use Appwrite\AvatarPhotos\Photo;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -17,6 +18,7 @@ class OAuth2 extends Photo
 
     public function __construct(
         private readonly Database $dbForProject,
+        private readonly Client $client,
     ) {
     }
 
@@ -49,7 +51,7 @@ class OAuth2 extends Photo
                 continue;
             }
 
-            $data = $this->fetch($url);
+            $data = $this->fetch($this->client, $url);
 
             if ($data !== null) {
                 return $data;

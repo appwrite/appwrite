@@ -35,7 +35,7 @@ class Get extends PlatformAction
                 namespace: 'presences',
                 group: 'presences',
                 name: 'get',
-                desc: 'Get presence',
+                summary: 'Get presence',
                 description: '/docs/references/presences/get.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -45,7 +45,7 @@ class Get extends PlatformAction
                     ),
                 ],
             ))
-            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Presence unique ID.', false, ['dbForProject'])
+            ->param('presenceId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Presence unique ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

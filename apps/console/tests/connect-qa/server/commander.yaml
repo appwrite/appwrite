@@ -1,0 +1,11 @@
+config:
+  inherit-env: true
+
+tests:
+  sample updates the policy, lists policies, and prints both as JSON:
+    command: bash -c 'cd "$APP_DIR" && eval "$SNIPPET_CMD" 2>&1'
+    exit-code: 0
+    stdout:
+      contains:
+        - '"min"' # the updated password strength policy
+        - '"policies"' # the policy list

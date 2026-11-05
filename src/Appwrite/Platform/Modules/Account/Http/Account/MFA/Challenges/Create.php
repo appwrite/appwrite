@@ -2,7 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\OTPToken;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Mail as MailMessage;
@@ -25,8 +27,9 @@ use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Locale\Locale;
 use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Enum;
@@ -53,6 +56,7 @@ class Create extends Action
             ->desc('Create MFA challenge')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
+            ->label('impersonation', 'allow')
             ->label('event', 'users.[userId].challenges.[challengeId].create')
             ->label('audits.event', 'challenge.create')
             ->label('audits.resource', 'user/{response.userId}')
@@ -92,8 +96,7 @@ class Create extends Action
                     contentType: ContentType::JSON
                 )
             ])
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->label('abuse', [Limit::attempts(['url', 'userId'], 10)])
             ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE, Type::CUSTOM]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`, `' . Type::CUSTOM . '`.', enum: new Enum(name: 'AuthenticationFactor'))
             ->inject('response')
             ->inject('dbForProject')
@@ -105,7 +108,6 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('publisherForMessaging')
             ->inject('publisherForMails')
-            ->inject('timelimit')
             ->inject('usage')
             ->inject('plan')
             ->inject('proofForToken')
@@ -125,7 +127,6 @@ class Create extends Action
         Event $queueForEvents,
         MessagingPublisher $publisherForMessaging,
         MailPublisher $publisherForMails,
-        callable $timelimit,
         Context $usage,
         array $plan,
         ProofsToken $proofForToken,
@@ -144,10 +145,11 @@ class Create extends Action
             throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'The requested factor is disabled by the MFA factors policy');
         }
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $code = $proofForCode->generate();
         $challenge = new Document([
+            '$id' => Id::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getSequence(),
             'type' => $factor,
@@ -161,7 +163,7 @@ class Create extends Action
             ],
         ]);
 
-        $challenge = $dbForProject->createDocument('challenges', $challenge);
+        $delivery = null;
 
         $projectName = $project->getAttribute('name');
         if ($project->getId() === 'console') {
@@ -195,7 +197,7 @@ class Create extends Action
                 $message = $message->render();
 
                 $phone = $user->getAttribute('phone');
-                $publisherForMessaging->enqueue(new MessagingMessage(
+                $delivery = new MessagingMessage(
                     type: MESSAGE_SEND_TYPE_INTERNAL,
                     project: $project,
                     message: new Document([
@@ -206,7 +208,7 @@ class Create extends Action
                     ]),
                     recipients: [$phone],
                     providerType: MESSAGE_TYPE_SMS,
-                ));
+                );
 
                 $countryCode = CallingCode::fromPhoneNumber($phone);
                 if (!empty($countryCode)) {
@@ -338,7 +340,7 @@ class Create extends Action
                     ]);
                 }
 
-                $publisherForMails->enqueue(new MailMessage(
+                $delivery = new MailMessage(
                     project: $project,
                     recipient: $user->getAttribute('email'),
                     subject: $subject,
@@ -350,8 +352,37 @@ class Create extends Action
                     variables: $emailVariables,
                     customMailOptions: $smtpBaseTemplate === APP_BRANDED_EMAIL_BASE_TEMPLATE ? ['senderName' => $platform['emailSenderName']] : [],
                     platform: $platform,
-                ));
+                    headers: OTPToken::from($code, $request->getOrigin())?->toHeaders() ?? [],
+                );
                 break;
+        }
+
+        $address = match ($factor) {
+            Type::PHONE => 'phone',
+            Type::EMAIL => 'email',
+            default => null,
+        };
+
+        if ($address === null) {
+            $challenge = $dbForProject->createDocument('challenges', $challenge);
+        } else {
+            // Store and queue the code under the user lock an address update takes, so it never goes to an address that just changed
+            $challenge = $dbForProject->withTransaction(function () use ($dbForProject, $user, $challenge, $address, $factor, $delivery, $publisherForMessaging, $publisherForMails) {
+                $current = $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+                if ($current->getAttribute($address) !== $user->getAttribute($address)) {
+                    throw new Exception($factor === Type::PHONE ? Exception::USER_PHONE_NOT_FOUND : Exception::USER_EMAIL_NOT_FOUND);
+                }
+
+                $challenge = $dbForProject->createDocument('challenges', $challenge);
+
+                if ($delivery instanceof MessagingMessage) {
+                    $publisherForMessaging->enqueue($delivery);
+                } elseif ($delivery instanceof MailMessage) {
+                    $publisherForMails->enqueue($delivery);
+                }
+
+                return $challenge;
+            });
         }
 
         $queueForEvents

@@ -44,8 +44,8 @@ class Get extends Action
                     ),
                 ]
             ))
-            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Parent report ID.', false, ['dbForPlatform'])
-            ->param('insightId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Insight ID.', false, ['dbForPlatform'])
+            ->param('reportId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Parent report ID.', false, ['dbForPlatform'])
+            ->param('insightId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getMaxUidLength()), 'Insight ID.', false, ['dbForPlatform'])
             ->inject('response')
             ->inject('project')
             ->inject('dbForPlatform')

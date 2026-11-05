@@ -72,6 +72,7 @@ class V21 extends Filter
                 $content = $this->fillWebhookid($content);
                 break;
             case 'project.createKey':
+            case 'organization.createProjectKey':
                 $content = $this->fillKeyId($content);
                 break;
             case 'project.createVariable':

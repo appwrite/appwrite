@@ -1,0 +1,541 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\Orchestration\\Adapter\:\:filterEnvKey\(\) should return string but returns string\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 4
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\*" between \(float\|int\<1, max\>\) and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\+\=" between \(float\|int\) and mixed results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 4
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\-" between mixed and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\-\=" between mixed and int\<1, max\> results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Error attaching…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Error creating…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Error detatching…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Error removing…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to create…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to execute…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to inspect…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to remove…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''Failed to start…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between ''http\://localhost…'' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 3
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between mixed and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 7
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Binary operation "/" between mixed and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Driver'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''ExitCode'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Labels'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Names'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Running'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Scope'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''Status'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''blkio_stats'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''cpu_stats'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''cpu_usage'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''io_service_bytes_recursive'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''limit'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''max_usage'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''memory_stats'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''networks'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''online_cpus'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''op'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''precpu_stats'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''rx_bytes'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''size'' on array\|false\|null\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''system_cpu_usage'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''total_usage'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''tx_bytes'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''type'' on array\|false\|null\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''usage'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset ''value'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Cannot assign offset ''size'' to array\|false\|null\.$#'
+			identifier: offsetAssign.dimType
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Method Utopia\\Orchestration\\Adapter\\DockerAPI\:\:createNetwork\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Method Utopia\\Orchestration\\Adapter\\DockerAPI\:\:run\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 6
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#1 \$message of class Utopia\\Orchestration\\Exception\\Orchestration constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#1 \$string of function base64_encode expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#1 \$string of function ltrim expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 6
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#2 \$id of class Utopia\\Orchestration\\Container constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#2 \$id of class Utopia\\Orchestration\\Network constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#2 \$offset of function substr expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$body of method Utopia\\Orchestration\\Adapter\\DockerAPI\:\:call\(\) expects string\|null, string\|false given\.$#'
+			identifier: argument.type
+			count: 5
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$driver of class Utopia\\Orchestration\\Network constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$length of function substr expects int\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$status of class Utopia\\Orchestration\\Container constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$subject of function str_replace expects array\<string\>\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects array\<int, string\>, array\<string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects array\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects bool, int given\.$#'
+			identifier: argument.type
+			count: 4
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#4 \$labels of class Utopia\\Orchestration\\Container constructor expects array\<string, string\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \#4 \$scope of class Utopia\\Orchestration\\Network constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \$containerId of class Utopia\\Orchestration\\Container\\Stats constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Parameter \$memoryIO of class Utopia\\Orchestration\\Container\\Stats constructor expects array\<string, float\>, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between 200 and 200 will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 2
+			path: src/Adapter/DockerAPI.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#1 \$name of class Utopia\\Orchestration\\Container constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#1 \$name of class Utopia\\Orchestration\\Network constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#1 \$stats of method Utopia\\Orchestration\\Adapter\\DockerCLI\:\:parseIOStats\(\) expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#1 \$string of function rtrim expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#2 \$characters of function rtrim expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#2 \$id of class Utopia\\Orchestration\\Container constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#2 \$id of class Utopia\\Orchestration\\Network constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#2 \$string of function explode expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#3 \$driver of class Utopia\\Orchestration\\Network constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#3 \$status of class Utopia\\Orchestration\\Container constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \#4 \$scope of class Utopia\\Orchestration\\Network constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \$containerId of class Utopia\\Orchestration\\Container\\Stats constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Parameter \$containerName of class Utopia\\Orchestration\\Container\\Stats constructor expects string, array\<mixed\>\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Adapter/DockerCLI.php
+
+		-
+			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertIsNumeric\(\) with float will always evaluate to true\.$#'
+			identifier: method.alreadyNarrowedType
+			count: 6
+			path: tests/E2E/Base.php

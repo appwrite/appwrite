@@ -15,4 +15,9 @@ class Get extends Base
     {
         return '/login';
     }
+
+    protected function getTarget(string $path, array $params): string
+    {
+        return '/sign-in';
+    }
 }

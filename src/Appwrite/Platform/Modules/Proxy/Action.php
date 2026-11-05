@@ -116,7 +116,7 @@ class Action extends PlatformAction
             $restrictions[] = ValidatorDomain::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
         }
 
-        $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '') . ',' . System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
         foreach (\explode(',', $functionsDomains) as $functionsDomain) {
             if (empty($functionsDomain)) {
                 continue;
@@ -289,7 +289,9 @@ class Action extends PlatformAction
         }
 
         foreach ($appwriteDomains as $appwriteDomain) {
-            if (\str_ends_with($domain, $appwriteDomain)) {
+            // Match on a DNS label boundary: the platform domain itself, or a subdomain of it.
+            // A bare suffix test would also claim sibling names like 'evil-appwrite.io'.
+            if ($domain === $appwriteDomain || \str_ends_with($domain, '.' . $appwriteDomain)) {
                 return true;
             }
         }

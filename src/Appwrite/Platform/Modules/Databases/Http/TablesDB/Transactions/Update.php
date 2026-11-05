@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Transactions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Update as TransactionsUpdate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -34,11 +35,16 @@ class Update extends TransactionsUpdate
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', ['documents.write', 'rows.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'tablesDB',
                 group: 'transactions',
                 name: 'updateTransaction',
                 description: '/docs/references/tablesdb/update-transaction.md',
+                requestExamples: [
+                    'commit' => ['summary' => 'Commit the transaction', 'value' => ['commit' => true]],
+                    'rollback' => ['summary' => 'Roll back the transaction', 'value' => ['rollback' => true]],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -48,7 +54,7 @@ class Update extends TransactionsUpdate
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->param('commit', false, new Boolean(), 'Commit transaction?', true)
             ->param('rollback', false, new Boolean(), 'Rollback transaction?', true)
             ->inject('project')

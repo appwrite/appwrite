@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class WebhooksCustomClientTest extends Scope
@@ -35,7 +35,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -80,7 +80,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -93,7 +93,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -131,7 +131,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -162,7 +162,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -198,7 +198,7 @@ final class WebhooksCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -227,7 +227,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -309,7 +309,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -355,6 +355,33 @@ final class WebhooksCustomClientTest extends Scope
         $this->assertEquals(true, $webhook['data']['current']);
     }
 
+    public function testDeleteAccountSessionCurrentUnderJWT(): void
+    {
+        $data = $this->setupAccountWithSession();
+        $projectId = $this->getProject()['$id'];
+
+        $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $data['session'],
+        ]);
+        $this->assertEquals(201, $jwt['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-jwt' => $jwt['body']['jwt'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$data['id']}.sessions.{$data['sessionId']}.delete"));
+        $this->assertEquals($data['sessionId'], $webhook['data']['$id']);
+        $this->assertEquals(true, $webhook['data']['current']);
+        $this->assertIsString($webhook['data']['countryName']);
+    }
+
     public function testDeleteAccountSessions(): void
     {
         // Set up account with session
@@ -391,7 +418,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.sessions.{$sessionId}.delete"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -461,7 +488,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.name"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -523,7 +550,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.password"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -585,7 +612,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.email"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -647,7 +674,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.update.prefs"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -700,7 +727,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -766,7 +793,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.verification.{$verificationId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -816,7 +843,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.create"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -883,7 +910,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("users.{$id}.recovery.{$recoveryId}.update"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 
@@ -937,7 +964,7 @@ final class WebhooksCustomClientTest extends Scope
 
         $webhook = $this->getLastRequest($this->webhookEventProbe("teams.{$teamUid}.memberships.{$membershipUid}.update.status"));
         $signatureKey = $this->getProject()['signatureKey'];
-        $payload = json_encode($webhook['data']);
+        $payload = $webhook['body'];
         $url = $webhook['url'];
         $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
 

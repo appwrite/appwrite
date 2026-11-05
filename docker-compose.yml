@@ -21,9 +21,13 @@ services:
       - --providers.docker.constraints=Label(`traefik.constraint-label-stack`,`appwrite`)
       - --entrypoints.appwrite_web.address=:80
       - --entrypoints.appwrite_websecure.address=:443
+      - --entrypoints.appwrite_mqtt.address=:8883
+      - --entrypoints.appwrite_mqtt_ws.address=:8084
     ports:
       - ${_APP_HTTP_PORT:-80}:80
       - ${_APP_HTTPS_PORT:-443}:443
+      - ${_APP_MQTT_PORT:-8883}:8883
+      - ${_APP_MQTT_WSS_PORT:-8084}:8084
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -41,16 +45,19 @@ services:
         max-file: "5"
         max-size: 10m
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    # The marker is APP_READINESS_MARKER, written by app/http.php once the core schema exists.
     healthcheck:
       test:
         - CMD-SHELL
-        - 'curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
+        - 'test -f /tmp/.appwrite-ready && curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}"
+          http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12
       start_period: 120s
     networks:
       - appwrite
+      - browser
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
@@ -77,13 +84,17 @@ services:
       - ${_APP_DB_HOST:-postgresql}
       - appwrite-geo
       - appwrite-autogravity
+      - appwrite-exiftool
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
+      - _APP_ALERTS_USAGE_LAG
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
@@ -122,10 +133,17 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_ROUTER_AUTO_CERTIFICATES
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_NOTIFICATIONS_PUSH_APNS
+      - _APP_NOTIFICATIONS_PUSH_APNS_KEY
+      - _APP_NOTIFICATIONS_PUSH_FCM
+      - _APP_NOTIFICATIONS_PUSH_FCM_KEY
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -133,6 +151,7 @@ services:
       - _APP_DOMAIN_TARGET_CAA
       - _APP_DNS
       - _APP_DOMAIN_FUNCTIONS
+      - _APP_DOMAIN_FUNCTIONS_FALLBACK
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -165,6 +184,7 @@ services:
       - _APP_STORAGE_LIMIT
       - _APP_STORAGE_PREVIEW_LIMIT
       - _APP_AUTOGRAVITY_HOST
+      - _APP_EXIFTOOL_HOST
       - _APP_STORAGE_ANTIVIRUS
       - _APP_STORAGE_ANTIVIRUS_HOST
       - _APP_STORAGE_ANTIVIRUS_PORT
@@ -174,6 +194,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -191,8 +212,10 @@ services:
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
+      - _APP_COMPUTE_STREAMING
       - _APP_COMPUTE_BUILD_TIMEOUT
       - _APP_COMPUTE_CPUS
       - _APP_COMPUTE_MEMORY
@@ -205,6 +228,7 @@ services:
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
       - _APP_JOBS_ENDPOINT
+      - _APP_REVIEWS_SECRET
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_LOCKING_ENABLED
@@ -214,8 +238,8 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
+      - _APP_MAINTENANCE_RETENTION_ALERTS
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_GRAPHQL_INTROSPECTION
@@ -242,19 +266,24 @@ services:
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
-      - _APP_ASSISTANT_OPENAI_API_KEY
       - _APP_CONSOLE_COUNTRIES_DENYLIST
       - _APP_DATABASE_SHARED_TABLES
       - _APP_DATABASE_SHARED_NAMESPACE
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_MIGRATION_HOST
       - _APP_GEO_SECRET
       - _APP_GEO_ENDPOINT
+      - _APP_PWNED_PASSWORDS_DSN
       - _APP_LIMIT_DATABASE_BATCH
       - _APP_DOCUMENTSDB
       - _APP_VECTORSDB
@@ -266,14 +295,14 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.1.74
+    image: appwrite/new:1.2.138-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_APPWRITE_VERSION=${_APP_VERSION:-}
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
-      - VITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
     labels:
       - traefik.enable=true
       - traefik.constraint-label-stack=appwrite
@@ -315,6 +344,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_WORKER_PER_CORE
@@ -322,7 +352,16 @@ services:
       - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_CONSOLE_HOSTNAMES
       - _APP_REALTIME_TAIL_RATE
+      - _APP_REALTIME_BOOT_TIMEOUT
+      - _APP_LIMIT_REALTIME_SUBSCRIPTIONS
+      - _APP_LIMIT_REALTIME_CHANNELS
+      - _APP_LIMIT_REALTIME_QUERIES
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
+      - _APP_TRUSTED_HEADERS
+      - _APP_TRUSTED_PROXIES
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -355,6 +394,79 @@ services:
       - _APP_VECTORSDB
       - _APP_EMBEDDING
 
+  appwrite-mqtt:
+    entrypoint: mqtt
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-mqtt
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 1883) ? 0 : 1);"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    labels:
+      - traefik.enable=true
+      - traefik.constraint-label-stack=appwrite
+      - traefik.docker.network=appwrite
+      # TLS is terminated here (mqtts, :8883) and forwarded as plaintext MQTT to :1883,
+      # mirroring how realtime's wss is terminated at the appwrite_websecure entrypoint.
+      - traefik.tcp.routers.appwrite_mqtt.entrypoints=appwrite_mqtt
+      - traefik.tcp.routers.appwrite_mqtt.rule=HostSNI(`*`)
+      - traefik.tcp.routers.appwrite_mqtt.tls=true
+      - traefik.tcp.routers.appwrite_mqtt.service=appwrite_mqtt
+      - traefik.tcp.services.appwrite_mqtt.loadbalancer.server.port=1883
+      # MQTT-over-WebSocket for browser clients: wss://<host>:8084 on its own TLS entrypoint
+      # (a dedicated port, not a URL path), the WebSocket sibling of the mqtts TCP router. The
+      # port identifies the broker, so a single push host serves both mqtts:// (:8883) and
+      # wss:// (:8084). TLS-only, so the reusable CONNECT credential never crosses the wire in
+      # the clear; TLS is terminated here and forwarded to the broker's WebSocket listener (:8083).
+      - traefik.http.routers.appwrite_mqtt_ws.entrypoints=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws.rule=PathPrefix(`/`)
+      - traefik.http.routers.appwrite_mqtt_ws.service=appwrite_mqtt_ws
+      - traefik.http.routers.appwrite_mqtt_ws.tls=true
+      - traefik.http.services.appwrite_mqtt_ws.loadbalancer.server.port=8083
+    networks:
+      - appwrite
+    environment:
+      - _APP_ENV
+      - _APP_MEMORY_LIMIT
+      - _APP_WORKER_PER_CORE
+      - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
+      - _APP_REALTIME_TAIL_RATE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_MQTT_REPLAY_DEPTH
+      - _APP_MQTT_WS_PORT
+      - _APP_MQTT_MAX_PACKET_SIZE
+
   appwrite-worker:
     entrypoint: worker
     restart: unless-stopped
@@ -367,6 +479,7 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
+      - browser
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
@@ -382,23 +495,30 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
+      - _APP_ALERTS_USAGE_LAG
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_WORKERS_NUM=1
-      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases stays at 1.
-      - _APP_WORKER_MAX_COROUTINES=78
+      # Pool sizing only (sum of per-queue caps). Each queue keeps its own maxCoroutines in PHP; databases and maintenance stay at 1.
+      - _APP_WORKER_MAX_COROUTINES=83
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_EMAIL_SECURITY
       - _APP_EMAIL_CERTIFICATES
       - _APP_DB_ADAPTER
@@ -429,8 +549,8 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_QUEUE_NAME
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -449,6 +569,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -476,6 +597,7 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
       - _APP_VCS_GITHUB_APP_ID
@@ -493,6 +615,10 @@ services:
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
       - _APP_JOBS_HOST
@@ -501,6 +627,10 @@ services:
       - _APP_BROWSER_HOST
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_NOTIFICATIONS_PUSH_APNS
+      - _APP_NOTIFICATIONS_PUSH_APNS_KEY
+      - _APP_NOTIFICATIONS_PUSH_FCM
+      - _APP_NOTIFICATIONS_PUSH_FCM_KEY
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SMTP_HOST
@@ -538,16 +668,17 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_STATS
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
       - _APP_POOL_SIZE_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_USAGE_TTL
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_STATS_RESOURCES_QUEUE_NAME
+      - _APP_MAINTENANCE_QUEUE_NAME
       - _APP_STATS_RESOURCES_INTERVAL
       - _APP_LOGGING_FORMAT
       # Combined mode runs functions/executions/messages timers + enqueue coroutines
@@ -555,6 +686,9 @@ services:
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
@@ -574,6 +708,9 @@ services:
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
       - _APP_FUNCTIONS_SCHEDULE_SPREAD
+      - _APP_MAINTENANCE_INTERVAL
+      - _APP_MAINTENANCE_INACTIVE_INTERVAL
+      - _APP_ALERTS_INTERVAL
 
   appwrite-worker-stats-usage:
     profiles:
@@ -591,6 +728,22 @@ services:
     entrypoint: worker-stats-resources
     container_name: appwrite-worker-stats-resources
 
+  appwrite-worker-alerts:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-worker
+    entrypoint: worker-alerts
+    container_name: appwrite-worker-alerts
+
+  appwrite-task-scheduler-alerts:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-task-scheduler
+    entrypoint: schedule-alerts
+    container_name: appwrite-task-scheduler-alerts
+
   appwrite-task-stats-resources:
     profiles:
       - separate
@@ -598,6 +751,71 @@ services:
       service: appwrite-task-scheduler
     entrypoint: stats-resources
     container_name: appwrite-task-stats-resources
+
+  appwrite-task-scheduler-maintenance:
+    profiles:
+      - separate
+    extends:
+      service: appwrite-task-scheduler
+    entrypoint: schedule-maintenance
+    container_name: appwrite-task-scheduler-maintenance
+
+  appwrite-worker-maintenance:
+    profiles:
+      - separate
+    entrypoint: worker-maintenance
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    container_name: appwrite-worker-maintenance
+    image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    networks:
+      - appwrite
+    depends_on:
+      - redis
+      - ${_APP_DB_HOST:-postgresql}
+    environment:
+      - _APP_ENV
+      - _APP_MEMORY_LIMIT
+      - _APP_WORKERS_NUM=1
+      # One slot at a time: each job re-checks the deletes backlog before every block.
+      - _APP_WORKER_MAX_COROUTINES=1
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_DB_ADAPTER_VECTORSDB
+      - _APP_DB_HOST_VECTORSDB
+      - _APP_DB_PORT_VECTORSDB
+      - _APP_DB_SCHEMA_VECTORSDB
+      - _APP_DB_USER_VECTORSDB
+      - _APP_DB_PASS_VECTORSDB
+      - _APP_DB_ADAPTER_DOCUMENTSDB
+      - _APP_DB_HOST_DOCUMENTSDB
+      - _APP_DB_PORT_DOCUMENTSDB
+      - _APP_DB_SCHEMA_DOCUMENTSDB
+      - _APP_DB_USER_DOCUMENTSDB
+      - _APP_DB_PASS_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_DOCUMENTSDB
+      - _APP_CONNECTIONS_DATABASE_VECTORSDB
+      - _APP_LOGGING_CONFIG
+      - _APP_LOGGING_FORMAT
+      - _APP_DATABASE_SHARED_TABLES
+      - _APP_MAINTENANCE_QUEUE_NAME
 
   appwrite-worker-webhooks:
     profiles:
@@ -616,11 +834,17 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_EMAIL_SECURITY
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
@@ -636,7 +860,10 @@ services:
       - _APP_LOGGING_FORMAT
       - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
       - _APP_DATABASE_SHARED_TABLES
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
   appwrite-worker-deletes:
     profiles:
       - separate
@@ -660,11 +887,12 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
+      - appwrite-imports:/storage/imports:rw
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -672,6 +900,9 @@ services:
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -702,6 +933,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -744,10 +976,14 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -802,10 +1038,14 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
       - _APP_REDIS_HOST
@@ -837,6 +1077,10 @@ services:
       - _APP_VCS_BITBUCKET_WEBHOOK_SECRET
       - _APP_VCS_ORIGIN_CLIENT_ID
       - _APP_VCS_ORIGIN_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_PLUGIN
+      - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
+      - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
@@ -845,11 +1089,12 @@ services:
       - _APP_COMPUTE_MEMORY
       - _APP_OPEN_RUNTIMES_NFT
       - _APP_COMPUTE_SIZE_LIMIT
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
-      - _APP_CONSOLE_URL_SCHEME=root
+      - _APP_CONSOLE_URL
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -857,6 +1102,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -896,22 +1142,29 @@ services:
     networks:
       - appwrite
     volumes:
+      - appwrite-functions:/storage/functions:rw
+      - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -930,6 +1183,7 @@ services:
       - _APP_STORAGE_WASABI_BUCKET
       - _APP_JOBS_HOST
       - _APP_JOBS_SECRET
+      - _APP_COMPUTE_BUILD_SIZE_LIMIT
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -943,6 +1197,10 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_DATABASE_SHARED_TABLES
+      - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_DOMAIN
+      - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_URL
     extra_hosts:
       - host.docker.internal:host-gateway
 
@@ -959,6 +1217,7 @@ services:
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
     networks:
       - appwrite
+      - browser
     volumes:
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
@@ -970,12 +1229,16 @@ services:
       - _APP_WORKER_SCREENSHOTS_ROUTER
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
-      - _APP_WORKER_MAX_COROUTINES=8
+      - _APP_WORKER_MAX_COROUTINES=4
       - _APP_WORKER_PER_CORE
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_FORMAT
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -993,6 +1256,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1032,10 +1296,14 @@ services:
       - appwrite-certificates:/storage/certificates:rw
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -1077,9 +1345,9 @@ services:
       - ${_APP_DB_HOST:-postgresql}
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_USAGE_PASS
       - _APP_CONNECTIONS_DB_USAGE
-      - _APP_EXECUTIONS_DUAL_WRITE
       - _APP_CONNECTIONS_DB_EXECUTIONS
       - _APP_POOL_SIZE_EXECUTIONS
       - _APP_MAINTENANCE_RETENTION_EXECUTION
@@ -1087,6 +1355,9 @@ services:
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1119,10 +1390,14 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=8
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_REDIS_HOST
@@ -1164,11 +1439,18 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_DNS
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=6
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_NOTIFICATIONS_TRACKING_SECRET
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
@@ -1211,10 +1493,21 @@ services:
       - redis
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_DNS
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_NOTIFICATIONS_TRACKING_SECRET
+      - _APP_NOTIFICATIONS_PUSH_APNS
+      - _APP_NOTIFICATIONS_PUSH_APNS_KEY
+      - _APP_NOTIFICATIONS_PUSH_FCM
+      - _APP_NOTIFICATIONS_PUSH_FCM_KEY
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_REDIS_HOST
@@ -1256,11 +1549,18 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_DNS
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1282,6 +1582,7 @@ services:
       - _APP_STORAGE_S3_REGION
       - _APP_STORAGE_S3_BUCKET
       - _APP_STORAGE_S3_ENDPOINT
+      - _APP_STORAGE_S3_PATH_STYLE
       - _APP_STORAGE_DO_SPACES_ACCESS_KEY
       - _APP_STORAGE_DO_SPACES_SECRET
       - _APP_STORAGE_DO_SPACES_REGION
@@ -1319,11 +1620,17 @@ services:
     depends_on:
       - ${_APP_DB_HOST:-postgresql}
     environment:
+      - _APP_DNS_EXTERNAL
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_WORKERS_NUM=1
       - _APP_WORKER_MAX_COROUTINES=1
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -1379,6 +1686,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -1391,6 +1699,9 @@ services:
       - _APP_EDITION
       - _APP_ROUTER_AUTO_CERTIFICATES
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1407,8 +1718,8 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_AUDIT_CONSOLE
-      - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
+      - _APP_MAINTENANCE_RETENTION_ALERTS
       - _APP_MAINTENANCE_START_TIME
       - _APP_DATABASE_SHARED_TABLES
   appwrite-task-interval:
@@ -1428,6 +1739,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
@@ -1439,6 +1751,9 @@ services:
       - _APP_DOMAIN_FUNCTIONS
       - _APP_DOMAIN_SITES
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1472,9 +1787,13 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
@@ -1513,9 +1832,13 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
@@ -1553,9 +1876,13 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_MEMORY_LIMIT
       - _APP_LOGGING_FORMAT
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_OPENSSL_KEY_V2
+      - _APP_OPENSSL_KEY_CURRENT
+      - _APP_OPENSSL_KEY_OLDEST
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -1567,22 +1894,62 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_DATABASE_SHARED_TABLES
-  appwrite-assistant:
-    container_name: appwrite-assistant
-    image: appwrite/assistant:0.8.4
-    networks:
-      - appwrite
-    environment:
-      - _APP_ASSISTANT_OPENAI_API_KEY
   appwrite-browser:
     container_name: appwrite-browser
-    image: appwrite/browser:0.3.4
+    image: appwrite/browser:0.3.10
+    networks:
+      - browser
+    environment:
+      - ALLOWED_HOSTS=appwrite
+    # Public resolvers only, so the browser cannot resolve internal service
+    # names (e.g. redis, appwrite-mariadb) and render them via a user URL.
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  appwrite-hansi:
+    # Code review for pull requests (appwrite/hansi). Optional: the installer adds it only when
+    # _APP_REVIEWS_SECRET is set, and here it runs only with `--profile reviews`.
+    profiles:
+      - reviews
+    container_name: appwrite-hansi
+    image: ghcr.io/appwrite/hansi:0.4.2
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    restart: unless-stopped
+    # A stopped review is not redelivered for about a day, so a running one gets time to finish.
+    stop_grace_period: 16m
     networks:
       - appwrite
+    depends_on:
+      - appwrite
+      - redis
+    environment:
+      - HANSI_APPWRITE_ENDPOINT=http://appwrite/v1
+      - HANSI_APPWRITE_SECRET=${_APP_REVIEWS_SECRET}
+      - HANSI_QUEUE_URL=redis://${_APP_REDIS_HOST:-redis}:${_APP_REDIS_PORT:-6379}
+      - HANSI_QUEUE_USER=${_APP_REDIS_USER}
+      - HANSI_QUEUE_PASSWORD=${_APP_REDIS_PASS}
+      - HANSI_SHUTDOWN_TIMEOUT=900
+      - HANSI_REVIEW_MODEL=${_APP_REVIEWS_MODEL}
+      - HANSI_VERIFY_MODEL=${_APP_REVIEWS_VERIFY_MODEL:-${_APP_REVIEWS_MODEL}}
+      - AI_GATEWAY_API_KEY=${_APP_REVIEWS_AI_GATEWAY_KEY}
 
   appwrite-autogravity:
     container_name: appwrite-autogravity
-    image: ghcr.io/appwrite/autogravity:0.0.8
+    image: ghcr.io/appwrite/autogravity:0.0.11
+    environment:
+      - MODEL_BACKEND=focalnet
+    restart: unless-stopped
+    networks:
+      - appwrite
+
+  appwrite-exiftool:
+    container_name: appwrite-exiftool
+    image: ghcr.io/appwrite/exiftool:0.1.1
     restart: unless-stopped
     networks:
       - appwrite
@@ -1597,8 +1964,11 @@ services:
       - CLICKHOUSE_USER=appwrite
       - CLICKHOUSE_PASSWORD=${_APP_USAGE_PASS:-appwrite}
       - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+      - CLICKHOUSE_ALWAYS_RUN_INITDB_SCRIPTS=1
     volumes:
       - appwrite-clickhouse:/var/lib/clickhouse:rw
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro
+      - ./clickhouse-init.sh:/docker-entrypoint-initdb.d/clickhouse-init.sh:ro
     ulimits:
       nofile:
         soft: 262144
@@ -1619,7 +1989,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
-    image: appwrite/geo:0.3.1
+    image: appwrite/geo:0.3.2
     restart: unless-stopped
     networks:
       - appwrite
@@ -1641,7 +2011,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:0.29.0
+    image: openruntimes/executor:1.3.1
     restart: unless-stopped
     networks:
       - appwrite
@@ -1687,7 +2057,7 @@ services:
     # One image carrying every orchestrator control plane. Appwrite drives the
     # jobs plane today; the per-plane images exist for Kubernetes, where each
     # scales, fails and gets RBAC on its own.
-    image: ghcr.io/open-runtimes/orchestrator/orchestrator:2.1.1
+    image: ghcr.io/open-runtimes/orchestrator/orchestrator:5.0.0
     restart: unless-stopped
     user: root
     networks:
@@ -1700,6 +2070,8 @@ services:
       # names; both name the network the workload containers join.
       - ORCHESTRATOR_NETWORK=appwrite
       - DOCKER_NETWORK=appwrite
+      # The key appwrite authenticates with; v5 refuses to start without one.
+      - API_KEY=${_APP_JOBS_SECRET}
       - ARTIFACT_ENDPOINT=http://orchestrator:8080
       - S3_ENDPOINT=${_APP_STORAGE_S3_ENDPOINT:-}
       - S3_REGION=${_APP_STORAGE_S3_REGION:-us-east-1}
@@ -1714,6 +2086,7 @@ services:
       options:
         max-file: "5"
         max-size: 10m
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
@@ -1729,13 +2102,12 @@ services:
       - --innodb-flush-method=fsync
     healthcheck:
       test:
-        - CMD
-        - healthcheck.sh
-        - --connect
-        - --innodb_initialized
+        - CMD-SHELL
+        - mariadb --protocol=tcp -h127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent -e "SELECT 1"
       interval: 5s
       timeout: 5s
       retries: 12
+      start_period: 10s
   mongodb:
     image: mongo:8.2.5
     container_name: appwrite-mongodb
@@ -1750,7 +2122,7 @@ services:
     volumes:
       - appwrite-mongodb:/data/db
       - appwrite-mongodb-keyfile:/data/keyfile
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./mongo-init.js:/mongo-init.js:ro
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
@@ -1786,6 +2158,8 @@ services:
   postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
+    init: true
+    shm_size: 1g
     logging:
       driver: json-file
       options:
@@ -1809,6 +2183,9 @@ services:
       start_period: 10s
     command:
       - postgres
+      # Every HTTP worker and worker coroutine pools its own connections; the default of 100 runs out under load
+      - -c
+      - max_connections=${_APP_DB_MAX_CONNECTIONS:-500}
   appwrite-embedding:
     image: appwrite/embedding:0.3.1
     profiles:
@@ -1856,6 +2233,8 @@ networks:
     name: appwrite
   runtimes:
     name: runtimes
+  browser:
+    name: browser
 volumes:
   appwrite-mariadb: null
   appwrite-mongodb: null

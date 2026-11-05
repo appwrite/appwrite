@@ -19,7 +19,9 @@ use Exception;
 use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
-use Utopia\Console;
+use Utopia\Cdn\Certificates\Status;
+use Utopia\Cdn\Exception\Certificate as CertificateException;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -27,7 +29,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
 use Utopia\Domains\Domain;
@@ -38,6 +40,14 @@ use Utopia\System\System;
 
 class Certificates extends Action
 {
+    private const MAX_GENERATION_ATTEMPTS = 5;
+
+    /**
+     * How soon a certificate a delayed provider has not issued yet is checked
+     * again. Without a renew date, maintenance never selects it again.
+     */
+    private const PROVIDER_CHECK_INTERVAL = 60 * 60 * 24;
+
     public static function getName(): string
     {
         return 'certificates';
@@ -108,6 +118,7 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $certificateMessage->skipRenewCheck;
+        $skipDomainValidation = $certificateMessage->skipDomainValidation;
         $validationDomain = $certificateMessage->validationDomain;
         $action = $certificateMessage->action;
 
@@ -119,7 +130,7 @@ class Certificates extends Action
                 break;
 
             case \Appwrite\Event\Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $publisherForMails, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $certificates, $authorization, $bus, $skipRenewCheck, $plan, $validationDomain, $skipDomainValidation);
                 break;
 
             default:
@@ -201,6 +212,7 @@ class Certificates extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                skipDomainValidation: true,
             ));
 
             Console::success('Certificate generation triggered successfully.');
@@ -221,6 +233,7 @@ class Certificates extends Action
      * @param bool $skipRenewCheck
      * @param array $plan
      * @param string|null $validationDomain
+     * @param bool $skipDomainValidation DNS already passed for this rule
      * @return void
      * @throws Authorization
      * @throws Conflict
@@ -244,7 +257,8 @@ class Certificates extends Action
         Bus $bus,
         bool $skipRenewCheck = false,
         array $plan = [],
-        ?string $validationDomain = null
+        ?string $validationDomain = null,
+        bool $skipDomainValidation = false
     ): void {
         /**
          * 1. Read arguments and validate domain
@@ -265,7 +279,7 @@ class Certificates extends Action
          * 1. 'log' attribute on document is updated with error message
          * 2. 'attempts' amount is increased
          * 3. Console log is shown
-         * 4. Email is sent to security email
+         * 4. Email is sent to security email, unless the rule stays generating for another attempt
          *
          * Unless unexpected error occurs, at the end, we:
          * 1. Update 'updated' attribute on document
@@ -302,6 +316,12 @@ class Certificates extends Action
         $date = \date('H:i:s');
         $logs = "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n";
 
+        // Set once DNS has passed on a delayed provider, so a failure after that can be retried
+        $awaitingProvider = false;
+
+        // A renewal: the domain already serves a certificate. Retries keep the rule verified, so this holds on every attempt
+        $renewing = $rule->getAttribute('status') === RULE_STATUS_VERIFIED;
+
         try {
             $certificate->setAttribute('logs', $logs);
 
@@ -310,31 +330,87 @@ class Certificates extends Action
             // Ensure certificate is associated with the rule
             $rule->setAttribute('certificateId', $certificate->getId());
 
-            // Validate domain and DNS records. Skip if job is forced
-            if (!$skipRenewCheck) {
+            // Validate domain and DNS records. Skip if job is forced, or if DNS
+            // already passed for this rule: a second run of the same check can
+            // only agree, or fail on a transient and contradict that result.
+            if (!$skipRenewCheck && !$skipDomainValidation) {
                 $this->validateDomain($rule, $domain, $validationDomain);
+            }
 
-                // If certificate exists already, double-check expiry date. Skip if job is forced
-                if (!$certificates->isRenewRequired($domain->get(), $domainType)) {
+            $awaitingProvider = !$certificates->isInstantGeneration($domain->get(), $domainType);
+
+            // If certificate exists already, double-check expiry date. Skip if job is forced
+            if (!$skipRenewCheck && !$certificates->isRenewRequired($domain->get(), $domainType)) {
+                if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
                     Console::info("Skipping, renew isn't required");
+                    $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                    $certificate->setAttributes([
+                        'status' => Status::ISSUED,
+                        'expireDate' => $this->getExpireDate($certificates, $domain->get(), $domainType, $certificate),
+                    ]);
+                    return;
+                }
+
+                $status = $certificates->getCertificateStatus($domain->get(), $domainType);
+                $certificate->setAttribute('status', $status);
+
+                // The provider owns the renewal and has not finished it; issuing again would not help
+                if ($status === Status::EXPIRING) {
+                    // It still serves, so a rule a renewal left generating is verified again, and renewal checks report it
+                    $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                    $expireDate = $this->getExpireDate($certificates, $domain->get(), $domainType, $certificate);
+                    $date = \date('H:i:s');
+                    if ($expireDate !== null && \strtotime($expireDate) <= \time()) {
+                        $expiredOn = (new \DateTime($expireDate))->format('Y-m-d');
+                        $logs .= "\033[90m[{$date}] \033[33mSSL certificate expired on {$expiredOn}, and the certificate provider has not renewed it yet. We'll check again tomorrow. \033[0m\n";
+                        Console::warning('Certificate for ' . $domain->get() . ' expired on ' . $expiredOn . ' and its provider has not renewed it');
+                    } else {
+                        $logs .= "\033[90m[{$date}] \033[33mSSL certificate expires soon, and the certificate provider has not renewed it yet. We'll check again tomorrow. \033[0m\n";
+                        Console::warning('Certificate for ' . $domain->get() . ' expires soon and its provider has not renewed it');
+                    }
+                    $certificate->setAttributes([
+                        'expireDate' => $expireDate,
+                        'renewDate' => DateTime::addSeconds(new \DateTime(), self::PROVIDER_CHECK_INTERVAL),
+                    ]);
+                    return;
+                }
+
+                // Wait for the delayed provider's existing order; issuing again below picks up its renew date
+                if (!\in_array($status, [Status::ISSUED, Status::RENEWING], true)) {
+                    $date = \date('H:i:s');
+                    $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
+                    Console::info('Certificate for ' . $domain->get() . ' is not issued yet');
+                    $certificate->setAttribute('renewDate', DateTime::addSeconds(new \DateTime(), self::PROVIDER_CHECK_INTERVAL));
                     return;
                 }
             }
 
             // Prepare unique cert name. Using this helps prevent mismatch in configuration when renewing certificates.
-            $certName = ID::unique();
+            $certName = Id::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
             $date = \date('H:i:s');
-            // If certificate is generated instantly, we can mark the rule as 'verified'.
-            if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
+            $status = $certificates->isInstantGeneration($domain->get(), $domainType)
+                ? Status::ISSUED
+                : $certificates->getCertificateStatus($domain->get(), $domainType);
+            $certificate->setAttribute('status', $status);
+
+            // Mark the rule as 'verified' once the certificate is issued, instantly or by a delayed provider.
+            if (\in_array($status, [Status::ISSUED, Status::RENEWING], true)) {
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                // Until then a delayed provider has no certificate to read an expiry from
+                $certificate->setAttribute('expireDate', $this->getExpireDate($certificates, $domain->get(), $domainType, $certificate));
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
             } else {
                 // Delayed generation: third-party handles certificate issuance asynchronously
                 $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
+            }
+
+            // A delayed provider has no renew date until it issues, and one already due would be queued on every maintenance run
+            if ($awaitingProvider && ($renewDate === null || $renewDate <= DateTime::now())) {
+                $renewDate = DateTime::addSeconds(new \DateTime(), self::PROVIDER_CHECK_INTERVAL);
             }
 
             $certificate->setAttributes([
@@ -355,13 +431,33 @@ class Certificates extends Action
                 'renewDate' => DateTime::now(), // Store current time as renew date to ensure another attempt in next maintenance cycle.
             ]);
 
-            // Mark rule as 'unverified'
-            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+            // A provider reports whether it waits on the domain owner or has stopped trying.
+            // Any other error keeps the last reported state while attempts remain.
+            if ($e instanceof CertificateException) {
+                $certificate->setAttribute('status', $e->getStatus());
+            }
 
-            // Send email to security email
-            $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan);
+            if ($awaitingProvider && $attempts < self::MAX_GENERATION_ATTEMPTS) {
+                // Nothing retries 'unverified', so keep the rule generating while attempts remain, for the
+                // interval to retry. A renewal stays verified, since its certificate still serves, for
+                // maintenance to retry. This is a wait, not a worker error.
+                $rule->setAttribute('status', $renewing ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATING);
+                Console::warning('Certificate for ' . $domain->get() . ' will be retried: ' . $e->getMessage());
+            } else {
+                // A failed renewal stays verified: 'unverified' rules are never renewed again
+                $rule->setAttribute('status', $renewing ? RULE_STATUS_VERIFIED : RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+                if (!$e instanceof CertificateException) {
+                    $certificate->setAttribute('status', Status::FAILED);
+                }
 
-            throw $e;
+                // Send email to security email. Past the attempts maintenance retries, a certificate
+                // about to expire is checked twice a day: one more email for that, not one per check.
+                if ($attempts <= self::MAX_GENERATION_ATTEMPTS + 1) {
+                    $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
+                }
+
+                throw $e;
+            }
         } finally {
             // Update certificate document with logs
             $certificate->setAttribute('logs', $logs);
@@ -371,6 +467,23 @@ class Certificates extends Action
             $rule->setAttribute('certificateId', $certificate->getId());
             $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $publisherForFunctions, $queueForRealtime, $bus);
+        }
+    }
+
+    /**
+     * When the certificate expires, as the provider reports it, or as last
+     * recorded when the provider cannot tell. The date only informs the rule,
+     * so a failed read keeps the recorded one rather than failing the job.
+     * A subclass that handles a job without generation records it the same way.
+     */
+    protected function getExpireDate(Provider $certificates, string $domain, ?string $domainType, Document $certificate): ?string
+    {
+        try {
+            return $certificates->getCertificateExpiry($domain, $domainType) ?? $certificate->getAttribute('expireDate');
+        } catch (Throwable $th) {
+            Console::warning('Failed to read the certificate expiry for ' . $domain . ': ' . $th->getMessage());
+
+            return $certificate->getAttribute('expireDate');
         }
     }
 
@@ -437,10 +550,10 @@ class Certificates extends Action
         ]));
         $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
-        $projectId = $rule->getAttribute('projectId');
+        $projectId = (string) $rule->getAttribute('projectId', '');
 
         // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
-        if ($projectId === 'console') {
+        if ($projectId === '' || $projectId === 'console') {
             return;
         }
 
@@ -449,12 +562,19 @@ class Certificates extends Action
             return;
         }
 
-        $ruleModel = new Rule();
+        // The rule model carries its certificate's state, which is what a job here changes
+        $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
+        $payload = (new Rule())->payload(new Document(\array_merge($rule->getArrayCopy(), [
+            'renewAt' => $certificate->getAttribute('renewDate', ''),
+            'expireAt' => $certificate->getAttribute('expireDate', ''),
+            'certificateStatus' => $certificate->getAttribute('status', ''),
+        ])));
+
         $queueForEvents
             ->setProject($project)
             ->setEvent('rules.[ruleId].update')
             ->setParam('ruleId', $rule->getId())
-            ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+            ->setPayload($payload);
 
         /** Trigger Webhook */
         $queueForWebhooks
@@ -542,7 +662,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan, Document $console): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -574,6 +694,7 @@ class Certificates extends Action
         $preview = $locale->getText("emails.certificate.preview");
 
         $publisherForMails->enqueue(new MailMessage(
+            project: $console,
             recipient: System::getEnv('_APP_EMAIL_CERTIFICATES', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS')),
             name: 'Appwrite Administrator',
             subject: $subject,

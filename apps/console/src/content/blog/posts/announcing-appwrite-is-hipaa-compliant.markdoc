@@ -1,0 +1,50 @@
+---
+layout: post
+title: Appwrite is now HIPAA compliant
+description: This is another step towards building a platform for developers from all industries.
+date: 2024-04-11
+lastUpdated: 2026-06-29
+cover: /images/blog/hipaa.avif
+timeToRead: 4
+author: may-ender
+category: security
+faqs:
+  - question: "What is HIPAA and which apps need to consider it?"
+    answer: "The Health Insurance Portability and Accountability Act is a US law that governs how Protected Health Information (PHI) is stored, transmitted, and accessed. Any application that handles PHI for US patients (telehealth, EHRs, health tracking with identifiable data, insurance tools) typically falls under HIPAA's rules."
+  - question: "What does Appwrite Cloud being HIPAA compliant mean for me?"
+    answer: "Appwrite Cloud has the technical and organizational safeguards in place (encryption, access controls, audit logging, backups, MFA on internal access) to act as a HIPAA-compliant backend. You can build healthcare apps on Appwrite without having to run that infrastructure yourself."
+  - question: "Do I still have to make my own app HIPAA compliant?"
+    answer: "Yes. Appwrite covers the platform layer, but you remain responsible for how your application collects, displays, and shares PHI. That includes things like configuring permissions correctly, restricting who can read sensitive tables, training your staff, and obtaining consent where required."
+  - question: "Can I get a Business Associate Agreement (BAA) with Appwrite?"
+    answer: "BAAs are required for any service that processes PHI on your behalf. If you are building a HIPAA-regulated app on Appwrite Cloud, contact Appwrite via the [contact form](/contact-us) to discuss a BAA before going live with PHI."
+  - question: "Is self-hosted Appwrite HIPAA compliant?"
+    answer: "Self-hosted Appwrite gives you the same security primitives as Cloud, but compliance depends entirely on how you operate the host environment, network, and backups. The HIPAA compliance announcement applies to Appwrite Cloud."
+  - question: "What other compliance standards does Appwrite meet?"
+    answer: "Appwrite is also [GDPR](/blog/post/announcing-appwrite-is-gdpr-compliant), [CCPA](/blog/post/announcing-appwrite-is-ccpa-compliant), and [SOC 2 Type 1](/blog/post/appwrite-is-now-soc-2-type-1-compliant) compliant. The [Appwrite security documentation](/docs/advanced/security) is the best place to see the full list."
+---
+
+We’re happy to announce that Appwrite fully complies with the Health Insurance Portability and Accountability Act (HIPAA), allowing developers who handle sensitive health data to trust Appwrite as their backend.
+
+## Commitment to data security
+
+If you’re familiar with Appwrite, you will know that data security is a top priority. We offer out-of-the-box solutions to protect your applications, making your life much easier and your users safer. Announcing our HIPAA compliance is a step to make Appwrite accessible to even more industries.
+
+## Measures taken to comply
+
+To attain HIPAA compliance, we’ve undergone audits and implemented measures to safeguard personal information, updating our policies, procedures, and infrastructure to meet the strict requirements of HIPAA regulations.
+
+So what did we do to comply? We’ve set measures and controls to maintain security, availability, processing integrity, and confidentiality, including:
+
+- A strict data backup schedule.
+- An extended business continuity plan.
+- Data retention rights for individuals as outlined in our Privacy Policy.
+- Intrusion detection and penetration testing.
+- Encryption of data transmitted between Appwrite and users using transport layer security (TLS) and HTTP strict Transport Security, ensuring confidentiality both at rest and during transmission.
+- Access to environments containing customer data is strictly controlled, requiring authentication and authorization through multi-factor authentication (MFA).
+
+Appwrite safeguards personal information to the same extent it protects its own, complying with relevant privacy laws and regulations in the jurisdictions where its services are offered. 
+
+Please note that while Appwrite Cloud serves as a HIPAA-compliant platform to handle data,
+it is the responsibility of developers to ensure that their application is also compliant with HIPAA regulations.
+
+Looking for a HIPAA compliant backend provider? Or looking to replace Firebase? Appwrite can be your solution. Take a look at our [documentation](https://appwrite.io/docs/advanced/security) to learn more about our security.

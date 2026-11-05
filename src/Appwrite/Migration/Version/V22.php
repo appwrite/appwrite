@@ -5,7 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
@@ -76,9 +76,6 @@ class V22 extends Migration
                 case '_metadata':
                     $this->createCollection('sites');
                     $this->createCollection('resourceTokens');
-                    if ($projectInternalId === 'console') {
-                        $this->createCollection('devKeys');
-                    }
                     break;
                 case 'identities':
                     $attributes = [
@@ -86,17 +83,6 @@ class V22 extends Migration
                         'expire',
                     ];
                     try {
-                        $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
-                    } catch (\Throwable $th) {
-                        Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
-                    }
-                    $this->dbForProject->purgeCachedCollection($id);
-                    break;
-                case 'projects':
-                    try {
-                        $attributes = [
-                            'devKeys',
-                        ];
                         $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                     } catch (\Throwable $th) {
                         Console::warning('Failed to create attributes "' . \implode(', ', $attributes) . "\" in collection {$id}: {$th->getMessage()}");
@@ -530,7 +516,7 @@ class V22 extends Migration
 
             switch ($id) {
                 case '_metadata':
-                    if (!$this->dbForProject->getCollection('builds')->isEmpty()) {
+                    if ($this->dbForProject->findCollection('builds') !== null) {
                         $this->dbForProject->deleteCollection('builds');
                     }
                     break;

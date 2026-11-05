@@ -1,0 +1,40 @@
+{
+    "name": "utopia-php/smtp",
+    "description": "Lite & fast micro PHP SMTP library that is easy to learn",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "smtp",
+        "mail",
+        "email",
+        "mime"
+    ],
+    "require": {
+        "php": ">=8.4"
+    },
+    "suggest": {
+        "ext-fileinfo": "Detects the media type of an attachment added by path",
+        "ext-openssl": "Required for TLS, whether implicit or through STARTTLS",
+        "ext-swoole": "Required for the coroutine-native Transport\\Swoole"
+    },
+    "autoload": {
+        "psr-4": {
+            "Utopia\\SMTP\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\SMTP\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": "phpunit --testsuite e2e"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,33 @@
+rules:
+  - id: php.appwrite.tls-verification-disabled
+    message: >
+      TLS peer or host verification is turned off (CURLOPT_SSL_VERIFYPEER /
+      CURLOPT_SSL_VERIFYHOST, or stream verify_peer / verify_peer_name /
+      allow_self_signed). Keep verification on; configure a CA bundle for
+      private endpoints instead.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: curl_setopt($CH, CURLOPT_SSL_VERIFYPEER, false)
+      - pattern: \curl_setopt($CH, CURLOPT_SSL_VERIFYPEER, false)
+      - pattern: curl_setopt($CH, CURLOPT_SSL_VERIFYPEER, 0)
+      - pattern: \curl_setopt($CH, CURLOPT_SSL_VERIFYPEER, 0)
+      - pattern: curl_setopt($CH, CURLOPT_SSL_VERIFYHOST, false)
+      - pattern: \curl_setopt($CH, CURLOPT_SSL_VERIFYHOST, false)
+      - pattern: curl_setopt($CH, CURLOPT_SSL_VERIFYHOST, 0)
+      - pattern: \curl_setopt($CH, CURLOPT_SSL_VERIFYHOST, 0)
+      - pattern: "[..., CURLOPT_SSL_VERIFYPEER => false, ...]"
+      - pattern: "[..., CURLOPT_SSL_VERIFYPEER => 0, ...]"
+      - pattern: "[..., CURLOPT_SSL_VERIFYHOST => false, ...]"
+      - pattern: "[..., CURLOPT_SSL_VERIFYHOST => 0, ...]"
+      - pattern: "[..., 'verify_peer' => false, ...]"
+      - pattern: "[..., 'verify_peer_name' => false, ...]"
+      - pattern: "[..., 'allow_self_signed' => true, ...]"

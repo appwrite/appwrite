@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
@@ -14,7 +15,8 @@ use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -61,11 +63,9 @@ class Create extends Action
                     )
                 ]
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'userId:{userId}, url:{url}')
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['userId', 'url'], 10, seconds: 60)])
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'ID of function to be executed.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'ID of function to be executed.', false, ['dbForProject'])
             ->param('branch', '', new Text(255, 0), 'Name of VCS branch to deploy changes automatically', true)
             ->inject('response')
             ->inject('project')
@@ -108,10 +108,24 @@ class Create extends Action
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
         }
 
-        $deployment = $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''));
+        // A branch-pinned rule must start on that branch's newest build, not on
+        // whatever the resource currently serves. Template deployments reuse
+        // providerBranch for their resolved ref, so they are not a branch build.
+        $deployment = $branch === ''
+            ? $dbForProject->getDocument('deployments', $function->getAttribute('deploymentId', ''))
+            : $dbForProject->findOne('deployments', [
+                Query::equal('resourceType', ['functions']),
+                Query::equal('resourceInternalId', [$function->getSequence()]),
+                Query::equal('providerBranch', [$branch]),
+                Query::equal('status', ['ready']),
+                Query::isNotNull('installationId'),
+                Query::notEqual('installationId', ''),
+                Query::orderDesc('$createdAt'),
+                Query::orderDesc('$sequence'),
+            ]);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : Id::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
@@ -162,6 +176,8 @@ class Create extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                // A rule reaches this status only through verifyRule() above.
+                skipDomainValidation: $rule->getAttribute('status', '') === RULE_STATUS_CERTIFICATE_GENERATING,
             ));
         }
 
