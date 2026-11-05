@@ -1541,13 +1541,15 @@ export function useCreateFunctionDomainRule(
         functionId,
       })
     },
-    onSuccess: async () => {
+    onSuccess: async (_rule, { functionId }) => {
       // Refetch, not invalidate: the domains list is unmounted behind the
       // add route and uses refetchOnMount: false, so it would stay stale
       // when the wizard is left on its verify step.
       await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
+      queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
-        type: 'all',
       })
     },
   })
@@ -1608,13 +1610,15 @@ export function useCreateSmtpDomainRule(projectId: string | null | undefined) {
       }
       return await createSmtpDomainRule(projectId, params)
     },
-    onSuccess: async () => {
+    onSuccess: async (_rule, { functionId }) => {
       // Refetch, not invalidate: the domains list is unmounted behind the
       // add route and uses refetchOnMount: false, so it would stay stale
       // when the wizard is left on its verify step.
       await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
+      queryClient.invalidateQueries({
         queryKey: ['proxy-rules'],
-        type: 'all',
       })
     },
   })

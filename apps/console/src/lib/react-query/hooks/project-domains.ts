@@ -186,7 +186,6 @@ export function useCreateDomain(
       // when the wizard is left on its verify step.
       await queryClient.refetchQueries({
         queryKey: ['proxy-rules', 'project', projectId],
-        type: 'all',
       })
       queryClient.invalidateQueries({
         queryKey: Dependencies.DOMAINS,
