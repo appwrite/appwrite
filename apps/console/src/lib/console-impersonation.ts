@@ -46,10 +46,14 @@ const AUTH_REDIRECT_PATHS = new Set([
 ])
 
 function isSafeConsoleRedirect(redirect: string): boolean {
-  // Reject protocol-relative URLs (//evil.com) alongside absolute ones.
+  // Reject protocol-relative URLs (//evil.com) alongside absolute ones. A
+  // backslash is rejected anywhere: browsers normalize "\" to "/" in the
+  // authority, so "/\evil.com" would otherwise pass as a relative path and
+  // navigate off-origin.
   return (
     redirect.startsWith('/') &&
     !redirect.startsWith('//') &&
+    !redirect.includes('\\') &&
     !redirect.includes('://')
   )
 }

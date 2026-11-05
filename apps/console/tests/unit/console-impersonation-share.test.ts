@@ -23,6 +23,16 @@ describe('resolveConsoleImpersonationRedirect', () => {
     expect(resolveConsoleImpersonationRedirect('//evil.example')).toBe(
       ACCOUNT_PATH_AFTER_IMPERSONATION,
     )
+    // Backslash variants browsers normalize to a scheme-relative URL.
+    expect(resolveConsoleImpersonationRedirect('/\\evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('/\\/\\evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('\\\\evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
     expect(resolveConsoleImpersonationRedirect('/sign-in')).toBe(
       ACCOUNT_PATH_AFTER_IMPERSONATION,
     )
