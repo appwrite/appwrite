@@ -197,7 +197,7 @@ class Storage implements Adapter
 
     /**
      * The write time at the start of the stream, or null if the object was not
-     * written by this adapter: too short, or a time in the future.
+     * written by this adapter: too short, or a time outside the past.
      */
     private function readTime(StreamInterface $stream): ?int
     {
@@ -210,7 +210,7 @@ class Storage implements Adapter
         /** @var array{1: int} $time */
         $time = unpack('J', $header);
 
-        return $time[1] <= time() ? $time[1] : null;
+        return $time[1] >= 0 && $time[1] <= time() ? $time[1] : null;
     }
 
     private function header(): string
