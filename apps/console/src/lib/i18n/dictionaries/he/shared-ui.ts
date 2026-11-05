@@ -859,7 +859,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   Theme: 'ערכת נושא',
   'Light theme': 'ערכת נושא בהירה',
   'Dark theme': 'ערכת נושא כהה',
-  'System theme': 'ערכת נושא לפי המערכת',
 
   // Refresh toasts (default label)
   'data refreshed successfully': 'הנתונים רועננו בהצלחה',
@@ -878,7 +877,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'Focus search': 'מעבר לשדה החיפוש',
   'Set theme to light': 'החלפה לערכת נושא בהירה',
   'Set theme to dark': 'החלפה לערכת נושא כהה',
-  'Set theme to system': 'החלפה לערכת נושא לפי המערכת',
 
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'פתיחה או סגירה של הטרמינל',

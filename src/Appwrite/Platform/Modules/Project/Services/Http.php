@@ -61,6 +61,8 @@ use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TikTok\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Tradeshift\Update as UpdateOAuth2Tradeshift;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\TradeshiftSandbox\Update as UpdateOAuth2TradeshiftSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Twitch\Update as UpdateOAuth2Twitch;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Vipps\Update as UpdateOAuth2Vipps;
+use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\VippsSandbox\Update as UpdateOAuth2VippsSandbox;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\Webflow\Update as UpdateOAuth2Webflow;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\WordPress\Update as UpdateOAuth2WordPress;
 use Appwrite\Platform\Modules\Project\Http\Project\OAuth2\X\Update as UpdateOAuth2X;
@@ -268,5 +270,7 @@ class Http extends Service
         $this->addAction('updateProjectOAuth2TikTok', UpdateOAuth2TikTok::class);
         $this->addAction('updateProjectOAuth2Kakao', UpdateOAuth2Kakao::class);
         $this->addAction('updateProjectOAuth2Cloudflare', UpdateOAuth2Cloudflare::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay', UpdateOAuth2Vipps::class);
+        $this->addAction('updateProjectOAuth2Vipps MobilePay Sandbox', UpdateOAuth2VippsSandbox::class);
     }
 }

@@ -3403,6 +3403,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -3579,8 +3589,25 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
         ],
         "reviews.createRepository": [
             "installationId",
@@ -7533,6 +7560,16 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
+        "project.updateOAuth2VippsSandbox": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -7679,8 +7716,25 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
         ],
         "reviews.createRepository": [
             "installationId",

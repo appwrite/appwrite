@@ -181,12 +181,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   // Determine theme for screenshots
   const isDark = useMemo(() => {
     if (typeof window === 'undefined') return true
-    return (
-      resolvedTheme === 'dark' ||
-      (resolvedTheme === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-      theme === 'dark'
-    )
+    return (resolvedTheme ?? theme ?? 'dark') !== 'light'
   }, [theme, resolvedTheme])
 
   // Initialize form from template

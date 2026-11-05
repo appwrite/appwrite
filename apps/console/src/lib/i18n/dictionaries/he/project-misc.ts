@@ -1054,10 +1054,35 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'קבעו אם הנכס הזה מקבל אירועים.',
   'Tracking enabled': 'המעקב הופעל',
   'Tracking disabled': 'המעקב הושבת',
+  'Browser versions': 'גרסאות דפדפן',
+  'OS versions': 'גרסאות מערכת הפעלה',
+  'Versions': 'גרסאות',
+  'Browser version': 'גרסת דפדפן',
+  'OS version': 'גרסת מערכת הפעלה',
+  'Identified users, ranked by visitors':
+    'משתמשים מזוהים, לפי מספר המבקרים',
+  'No identified users in this range':
+    'אין משתמשים מזוהים בטווח הזה',
+  'Event properties': 'מאפייני אירועים',
+  'Values of the props sent with your events':
+    'ערכי ה-props שנשלחו עם האירועים',
+  'No event props in this range': 'אין props של אירועים בטווח הזה',
+  'Not available with this filter': 'לא זמין עם המסנן הזה',
+  'User identification': 'זיהוי משתמשים',
+  'Identify signed-in users': 'זיהוי משתמשים מחוברים',
+  'User identification enabled': 'זיהוי המשתמשים הופעל',
+  'User identification disabled': 'זיהוי המשתמשים הושבת',
+  'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.':
+    'משתמשים מזוהים ייחודיים. נספרים רק אירועים שכוללים מזהה משתמש; מבקרים אנונימיים אינם נכללים.',
+  "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
+    'תיעוד מזהה המשתמש המחובר באירועים שנשלחים מסשן לקוח, כדי לספור ולפלח תנועה לפי משתמש. מבקרים אנונימיים אינם מושפעים. המזהים הם מזהי המשתמשים של הפרויקט, לעולם לא כתובות אימייל או שמות. יש להפעיל זאת רק אם מדיניות הפרטיות מכסה קישור של נתוני אנליטיקס לחשבונות משתמשים.',
   'Tracking is enabled': 'המעקב פעיל',
-  'Primary domain being tracked. Optional for native apps.':
-    'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
+  'Primary domain being tracked. May be empty for mobile and agent properties.':
+    'הדומיין הראשי שנמצא במעקב. יכול להישאר ריק בנכסים של מובייל וסוכנים.',
   'Domain updated': 'הדומיין עודכן',
+  'Type updated': 'הסוג עודכן',
+  'Only changes which panels the dashboard shows.':
+    'משנה רק אילו חלוניות מוצגות בלוח הבקרה.',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
   'https://example.com': 'https://example.com',
@@ -1134,6 +1159,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Exit pages': 'דפי יציאה',
   'Where visitors came from': 'מהיכן הגיעו המבקרים',
   'Most visited paths': 'הנתיבים הנצפים ביותר',
+  Screens: 'מסכים',
+  'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
@@ -1162,6 +1189,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'iOS, Android, web ודסקטופ מבסיס קוד אחד.',
   'Any language, straight against the HTTP API.':
     'כל שפה, ישירות מול ה-API של HTTP.',
+  'Websites and browser apps.': 'אתרים ואפליקציות דפדפן.',
+  'iOS and Android apps.': 'אפליקציות iOS ו-Android.',
+  'AI agents and backend services, over the API.':
+    'סוכני AI ושירותי צד שרת, דרך ה-API.',
+  'Decides which panels the dashboard shows. You can change it later in settings.':
+    'קובע אילו חלוניות יוצגו בלוח הבקרה. אפשר לשנות זאת בהמשך בהגדרות.',
+  'The site you are tracking. Page paths in reports link to it.':
+    'האתר שבמעקב. נתיבי הדפים בדוחות מקשרים אליו.',
   'Install the SDK': 'התקנת ה-SDK',
   'Initialize tracking': 'אתחול המעקב',
   'Turn on automatic tracking': 'הפעלת מעקב אוטומטי',
@@ -3839,4 +3874,48 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'ההתראות האלה עדיין יופיעו בהתראות ב-Console.',
   'Saving...': 'שומר...',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'המשאבים שלכם',
+  'View all databases': 'צפייה בכל מסדי הנתונים',
+  'View all sites': 'צפייה בכל האתרים',
+  'View all functions': 'צפייה בכל הפונקציות',
+  'View all buckets': 'צפייה בכל הבאקטים',
+  'View all users': 'צפייה בכל המשתמשים',
+  'View all topics': 'צפייה בכל הנושאים',
+  'View all API keys': 'צפייה בכל מפתחות ה-API',
+  'Failed to load sites': 'טעינת האתרים נכשלה',
+  'Failed to load functions': 'טעינת הפונקציות נכשלה',
+  'Failed to load buckets': 'טעינת הבאקטים נכשלה',
+  'Failed to load users': 'טעינת המשתמשים נכשלה',
+  'Failed to load topics': 'טעינת הנושאים נכשלה',
+  'Store, query, and sync your app data with a managed database.':
+    'אחסון, שאילתות וסנכרון של נתוני האפליקציה שלכם במסד נתונים מנוהל.',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'הריצו קוד צד שרת בתגובה לבקשות HTTP, לאירועים או לפי תזמון.',
+  'Keep data apart by environment, customer, or workload.':
+    'הפרידו נתונים לפי סביבה, לקוח או עומס עבודה.',
+  'Deploy another app, a landing page, or your docs.':
+    'פרסו אפליקציה נוספת, דף נחיתה או את התיעוד שלכם.',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'הוסיפו Webhook, משימה מתוזמנת או טיפול באירועים.',
+  'Group files with their own permissions and limits.':
+    'קבצו קבצים עם הרשאות ומגבלות משלהם.',
+  'Add a user by hand, or let people sign up from your app.':
+    'הוסיפו משתמש ידנית, או אפשרו הרשמה מהאפליקציה שלכם.',
+  'Group subscribers to message them all at once.':
+    'קבצו מנויים כדי לשלוח הודעה לכולם בבת אחת.',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'הוסיפו כל אפליקציית Web, מובייל או דסקטופ שפונה לפרויקט הזה.',
+  'Give your servers and scripts scoped access to this project.':
+    'העניקו לשרתים ולסקריפטים שלכם גישה לפרויקט הזה עם הרשאות מוגדרות.',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'השתמשו במפתח נפרד לכל שרת או סביבה, עם ההרשאות הנחוצות בלבד.',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    'העלו והגישו קבצים עם הרשאות, הצפנה ותצוגות מקדימות לתמונות.',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'אפשרו למשתמשים להתחבר עם אימייל, ספקי OAuth, טלפון או מפתחות גישה.',
+  'Send email, SMS, and push notifications to your users.':
+    'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
+  'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
 }
