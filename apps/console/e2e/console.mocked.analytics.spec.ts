@@ -297,7 +297,10 @@ test.describe('analytics property (mocked API)', () => {
     await expect(page.getByText('4.3K').first()).toBeVisible({
       timeout: 30_000,
     })
-    await expect(page.getByText('Users', { exact: true }).first()).toBeVisible()
+    const usersMetric = page
+      .locator('[role="button"][aria-pressed]')
+      .filter({ has: page.getByText('Users', { exact: true }) })
+    await expect(usersMetric).toContainText('37')
 
     const users = card(page, 'Users')
     await expect(users.getByText('user-a')).toBeVisible()
@@ -323,6 +326,9 @@ test.describe('analytics property (mocked API)', () => {
     const before = mock.metrics.length
     await props.getByText('pro', { exact: true }).click()
     await expect(page.getByText('Filtered by')).toBeVisible()
+    // Per-bucket users don't sum to a range total, so none is shown.
+    await expect(usersMetric).not.toContainText('37')
+    await expect(usersMetric).toContainText('-')
     const carries = (url: URL) =>
       listParam(url, 'queries').some(
         (query) => query.includes('props.plan') && query.includes('pro'),

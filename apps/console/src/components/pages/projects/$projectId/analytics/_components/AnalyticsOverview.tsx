@@ -548,7 +548,7 @@ export function AnalyticsOverview({
   // only a fallback while the aggregate loads, or when a filter rules it out.
   const sum = (
     points: AnalyticsChartPoint[],
-    key: 'visitors' | 'sessions' | 'pageviews' | 'events' | 'users',
+    key: 'visitors' | 'sessions' | 'pageviews' | 'events',
   ) => points.reduce((total, point) => total + point[key], 0)
   const metricTotal = (
     key: AnalyticsChartMetric,
@@ -561,7 +561,6 @@ export function AnalyticsOverview({
     if (key === 'visits') return hasBase ? sum(base, 'sessions') : undefined
     if (key === 'pageviews') return hasBase ? sum(base, 'pageviews') : undefined
     if (key === 'events') return hasBase ? sum(base, 'events') : undefined
-    if (key === 'users') return hasBase ? sum(base, 'users') : undefined
     return undefined // bounce rate / duration only exist on the aggregate
   }
 
@@ -613,12 +612,18 @@ export function AnalyticsOverview({
     // Aggregate-only metrics can't be shown with some filters; say so rather
     // than quietly showing unfiltered numbers.
     const blockedByFilter = metric.source === 'aggregate' && statsUnsupported
+    // Per-bucket distinct users don't add up to a range total, so Users has
+    // no fallback total; its chart still plots per bucket.
+    const totalBlocked = metric.key === 'users' && statsUnsupported
     return {
       ...metric,
       value,
       change: isComparing ? analyticsChangePercent(value, previous) : undefined,
       unavailable: value === undefined,
-      hint: blockedByFilter ? t(ANALYTICS_FILTER_UNSUPPORTED_MESSAGE) : undefined,
+      hint:
+        blockedByFilter || totalBlocked
+          ? t(ANALYTICS_FILTER_UNSUPPORTED_MESSAGE)
+          : undefined,
       blockedByFilter,
     }
   })
