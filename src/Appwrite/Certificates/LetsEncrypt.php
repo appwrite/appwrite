@@ -22,6 +22,10 @@ class LetsEncrypt implements Provider
 
     public function issueCertificate(string $certName, string $domain, ?string $domainType): ?string
     {
+        if (empty($this->email)) {
+            throw new Exception('You must set a valid security email address (_APP_EMAIL_CERTIFICATES) to issue a LetsEncrypt SSL certificate.');
+        }
+
         $stdout = '';
         $stderr = '';
 
