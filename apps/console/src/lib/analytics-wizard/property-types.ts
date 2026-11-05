@@ -53,7 +53,7 @@ export function isAnalyticsPropertyType(
 export function analyticsPropertyType(
   property: Models.AnalyticsProperty,
 ): AnalyticsPropertyType {
-  // TODO(#64): read property.type directly once the console SDK RC with type is pinned
+  // TODO: switch to the SDK field once a console SDK with property type is pinned
   const type = (property as { type?: string }).type
   return isAnalyticsPropertyType(type) ? type : 'web'
 }

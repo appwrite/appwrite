@@ -1137,7 +1137,7 @@ export type CreateAnalyticsPropertyInput = {
 }
 
 // The pinned SDK's createProperty/updateProperty send known keys only, dropping `type`.
-// TODO(#64): drop for the SDK methods once the console SDK RC with type is pinned
+// TODO: switch to the SDK methods once a console SDK with property type is pinned
 function sendAnalyticsProperty(
   projectId: string,
   method: 'post' | 'patch',
