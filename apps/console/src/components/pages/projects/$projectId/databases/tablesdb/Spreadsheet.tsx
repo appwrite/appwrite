@@ -2076,7 +2076,7 @@ function RowEditDrawer({
                                       ? undefined
                                       : columnInfo?.max
                                   }
-                                  step={fieldType === 'double' ? 0.1 : 1}
+                                  step={fieldType === 'double' ? 'any' : 1}
                                   placeholder={isRequired ? undefined : 'NULL'}
                                   className="h-9 text-[13px]"
                                 />
@@ -2258,7 +2258,7 @@ function RowEditDrawer({
                                                     step={
                                                       colType === 'double' ||
                                                         colType === 'float'
-                                                        ? 0.1
+                                                        ? 'any'
                                                         : 1
                                                     }
                                                     placeholder={`Item ${index + 1}`}
