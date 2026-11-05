@@ -1,7 +1,8 @@
 import { AnalyticsDimension } from '@appwrite.io/console'
 import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
-  useAnalyticsBreakdown,
+  analyticsBreakdownQueryOptions,
   useAnalyticsProperty,
   useCountryLookups,
   type AnalyticsRange,
@@ -263,26 +264,38 @@ const USER_TABS: BreakdownTab[] = [
   { id: 'users', label: 'Users', dimension: AnalyticsDimension.UserId },
 ]
 
+/** Keeps a query's previous result across filter changes, never across properties. */
+function samePropertyPlaceholder<T>(propertyId: string) {
+  // Key index 3 is the property in analyticsBreakdownQueryOptions.
+  return (previous: T | undefined, previousQuery?: { queryKey: readonly unknown[] }) =>
+    previousQuery?.queryKey[3] === propertyId ? previous : undefined
+}
+
 /**
  * Shown when the property identifies users, or when user IDs arrive anyway
- * (sent by a server with an API key while the setting is off).
+ * (sent by a server with an API key while the setting is off). Drives both the
+ * Users card and the overview's Users tab.
  */
 export function useShowUsersPanel(
   { projectId, propertyId, range }: PanelProps,
   filters: readonly AnalyticsFilter[],
 ) {
   const { property } = useAnalyticsProperty(projectId, propertyId)
-  // Same arguments as the panel's own query, so it is one request.
-  const { breakdown } = useAnalyticsBreakdown(
-    projectId,
-    propertyId,
-    AnalyticsDimension.UserId,
-    range,
-    undefined,
-    true,
-    filters,
-  )
-  return !!property?.identifyUsers || breakdown.length > 0
+  // Same key as the panel's own query, so it is one request. The previous
+  // answer is kept while a new filter loads so the card doesn't blink out.
+  const { data } = useQuery({
+    ...analyticsBreakdownQueryOptions(
+      projectId,
+      propertyId,
+      AnalyticsDimension.UserId,
+      range,
+      undefined,
+      true,
+      filters,
+    ),
+    placeholderData: samePropertyPlaceholder(propertyId),
+  })
+  return !!property?.identifyUsers || (data?.breakdown.length ?? 0) > 0
 }
 
 export function UsersPanel(props: PanelProps) {
@@ -310,19 +323,25 @@ const PROP_TABS_INLINE = 4
 export function EventPropertiesPanel(props: PanelProps) {
   const t = useT()
   const { filters } = useAnalyticsFilters()
-  const { breakdown: keys, isLoading, error } = useAnalyticsBreakdown(
-    props.projectId,
-    props.propertyId,
-    AnalyticsDimension.Props,
-    props.range,
-    undefined,
-    true,
-    filters,
-  )
+  // The previous keys stay while a new filter loads, so the tabs (and the
+  // selected one) survive a click on a value.
+  const { data, isLoading, error } = useQuery({
+    ...analyticsBreakdownQueryOptions(
+      props.projectId,
+      props.propertyId,
+      AnalyticsDimension.Props,
+      props.range,
+      undefined,
+      true,
+      filters,
+    ),
+    placeholderData: samePropertyPlaceholder(props.propertyId),
+  })
+  const keys = data?.breakdown
 
   const tabs = useMemo(
     () =>
-      keys
+      (keys ?? [])
         .filter((entry) => isKnownBreakdownValue(entry.value))
         .map(
           (entry, index): BreakdownTab => ({

@@ -40,7 +40,6 @@ import {
 import {
   analyticsStatsQueryOptions,
   useAnalyticsEventMetrics,
-  useAnalyticsProperty,
   useAnalyticsStats,
   type AnalyticsChartInterval,
   type AnalyticsCompareMode,
@@ -318,6 +317,8 @@ type AnalyticsOverviewProps = {
   comparisonRange: AnalyticsRange | null
   /** "Try again" in the chart's error state. */
   onRefresh: () => void
+  /** Include the Users tab (see useShowUsersPanel). */
+  showUsers: boolean
 }
 
 /**
@@ -342,6 +343,7 @@ export function AnalyticsOverview({
   compareMode,
   comparisonRange,
   onRefresh,
+  showUsers,
 }: AnalyticsOverviewProps) {
   const t = useT()
   const [hasRevealed, setHasRevealed] = useState(false)
@@ -402,11 +404,6 @@ export function AnalyticsOverview({
 
   // `users` counts identified traffic only, so it stays hidden on properties
   // that never record a user ID rather than showing a permanent 0.
-  const { property } = useAnalyticsProperty(projectId, propertyId)
-  const showUsers =
-    !!property?.identifyUsers ||
-    (stats?.users ?? 0) > 0 ||
-    !!seriesData?.points.some((point) => (point.users ?? 0) > 0)
   const metrics = showUsers
     ? OVERVIEW_METRICS
     : OVERVIEW_METRICS.filter((metric) => metric.key !== 'users')
