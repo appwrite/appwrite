@@ -350,6 +350,9 @@ class User extends Document
             ];
 
         $dbForProject->withTransaction(function () use ($dbForProject, $user, $project, $sequence, $attributes, $proven, $mqtt) {
+            // A locking read first, so the snapshot follows any issuance that committed under the same lock
+            $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+
             foreach (['sessions', 'tokens', 'challenges', 'authenticators', 'identities'] as $collection) {
                 $dbForProject->deleteDocuments($collection, [
                     Query::equal('userInternalId', [$sequence]),

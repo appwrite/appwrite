@@ -160,6 +160,10 @@ class Update extends Action
         $claimed = false;
         $recoveryDocument = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $profile, $project, $newPassword, $history, $passwordPwned, $proofForPassword, &$claimed, $mqtt) {
             $claimed = false; // A retried attempt starts over
+            // Locked before any read, so the revocation below sees credentials issued while this waited
+            /** @var User $locked */
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
+
             $document = $dbForProject->getDocument('tokens', $verifiedToken->getId());
             if (!$dbForProject->deleteDocument('tokens', $verifiedToken->getId())) {
                 return;
@@ -167,8 +171,6 @@ class Update extends Action
 
             // Recovery proves an unverified email, so whoever registered it keeps no other way in.
             // MFA in force is left alone, so the new password still needs the second factor to sign in
-            /** @var User $locked */
-            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $profile->getId(), forUpdate: true));
             $guarded = $locked->getMinimumFactors() > 1;
             if (!$locked->getAttribute('emailVerification', false) && !$guarded) {
                 $authorization->skip(fn () => User::revokeCredentials($dbForProject, $profile, $project, mqtt: $mqtt));

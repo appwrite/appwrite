@@ -215,27 +215,35 @@ class Create extends Action
             }
         }
 
-        // Re-hash if not using recommended algo or its configured costs (read from the hash, not hashOptions)
-        if (
-            $user->getAttribute('hash') !== $proofForPassword->getHash()->getName()
-            || \password_needs_rehash($user->getAttribute('password'), PASSWORD_ARGON2ID, $proofForPassword->getHash()->getOptions())
-        ) {
-            $user
-                ->setAttribute('password', $proofForPassword->hash($password))
-                ->setAttribute('hash', $proofForPassword->getHash()->getName())
-                ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
-            $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'password' => $user->getAttribute('password'),
-                'hash' => $user->getAttribute('hash'),
-                'hashOptions' => $user->getAttribute('hashOptions'),
-            ]));
-        }
+        $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $profile, $user, $session, $password, $proofForPassword) {
+            // A claim revoking this password since it was verified bumps passwordUpdate; the user lock orders the two
+            $locked = $authorization->skip(fn () => $dbForProject->getDocument('users', $user->getId(), forUpdate: true));
+            if ($locked->getAttribute('passwordUpdate') !== $profile->getAttribute('passwordUpdate')) {
+                throw new Exception(Exception::USER_INVALID_CREDENTIALS);
+            }
 
-        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
-            Permission::read(Role::user($user->getId())),
-            Permission::update(Role::user($user->getId())),
-            Permission::delete(Role::user($user->getId())),
-        ]));
+            // Re-hash if not using recommended algo or its configured costs (read from the hash, not hashOptions)
+            if (
+                $user->getAttribute('hash') !== $proofForPassword->getHash()->getName()
+                || \password_needs_rehash($user->getAttribute('password'), PASSWORD_ARGON2ID, $proofForPassword->getHash()->getOptions())
+            ) {
+                $user
+                    ->setAttribute('password', $proofForPassword->hash($password))
+                    ->setAttribute('hash', $proofForPassword->getHash()->getName())
+                    ->setAttribute('hashOptions', $proofForPassword->getHash()->getOptions());
+                $dbForProject->updateDocument('users', $user->getId(), new Document([
+                    'password' => $user->getAttribute('password'),
+                    'hash' => $user->getAttribute('hash'),
+                    'hashOptions' => $user->getAttribute('hashOptions'),
+                ]));
+            }
+
+            return $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
+        });
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
