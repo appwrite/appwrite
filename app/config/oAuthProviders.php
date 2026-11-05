@@ -465,7 +465,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Tradeshift',
+        'class' => 'Appwrite\\Auth\\OAuth2\\TradeshiftBox',
     ],
     'twitch' => [
         'name' => 'Twitch',
