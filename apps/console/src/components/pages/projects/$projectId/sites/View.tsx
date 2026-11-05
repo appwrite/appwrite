@@ -367,13 +367,8 @@ export function View() {
 
   // Get theme for screenshot selection
   const isDark = useMemo(() => {
-    if (typeof window === 'undefined') return true // Default to dark during SSR
-    return (
-      resolvedTheme === 'dark' ||
-      (resolvedTheme === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-      theme === 'dark'
-    )
+    if (typeof window === 'undefined') return true
+    return (resolvedTheme ?? theme ?? 'dark') !== 'light'
   }, [theme, resolvedTheme])
 
   // Reset loaded screenshots when theme changes

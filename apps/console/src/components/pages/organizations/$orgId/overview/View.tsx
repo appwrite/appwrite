@@ -1910,6 +1910,34 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     !showProjectsLoading &&
     pinnedProjects.length === 0 &&
     displayedProjectsByTeam.length === 0
+  const isFirstProject = activeProjectsTotalData?.total === 0
+
+  // Signup no longer creates a project, so an organization without one opens
+  // the create dialog, where the region closest to the visitor is preselected.
+  // Once per organization per visit: dismissing it leaves the empty state.
+  const firstProjectPromptedOrgsRef = useRef(new Set<string>())
+  useEffect(() => {
+    if (
+      !orgId ||
+      activeTab !== 'projects' ||
+      !isFirstProject ||
+      !showsFirstRunProjectsEmptyState ||
+      !canManageProjects ||
+      zeroAccount ||
+      firstProjectPromptedOrgsRef.current.has(orgId)
+    ) {
+      return
+    }
+    firstProjectPromptedOrgsRef.current.add(orgId)
+    setCreateProjectDialogOpen(true)
+  }, [
+    activeTab,
+    canManageProjects,
+    isFirstProject,
+    orgId,
+    showsFirstRunProjectsEmptyState,
+    zeroAccount,
+  ])
 
   const showProjectUsageCharts =
     features.usageStats ||
@@ -4870,6 +4898,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         teamId={orgTeamId}
         organizationPlan={organizationPlan}
         currentProjectsCount={totalProjectsCount}
+        firstProject={isFirstProject}
       />
     </>
   )

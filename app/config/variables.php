@@ -1678,7 +1678,7 @@ return [
             ],
             [
                 'name' => '_APP_COMPUTE_STREAMING',
-                'description' => 'Allows a site to send its response in chunks as the runtime produces it, so a progressively rendered page reaches the visitor before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
+                'description' => 'Allows a function or site served on its domain to send its response in chunks as the runtime produces it, so a progressively rendered page or an event stream reaches the client before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
                 'introduction' => '2.7.0',
                 'default' => 'enabled',
                 'required' => false,

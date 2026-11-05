@@ -120,6 +120,8 @@ final class ReviewsConsoleClientTest extends Scope
             'projectId' => $projectId,
             'events' => [
                 ['type' => 'tool_call', 'at' => '2026-10-27T15:00:00.000Z', 'data' => ['tool' => 'read_file']],
+                // A step with no data arrives as an empty JSON object
+                ['type' => 'tool.list_files', 'at' => '2026-10-27T15:00:01.000Z', 'data' => new \stdClass()],
             ],
         ]);
         $this->assertSame(204, $events['headers']['status-code']);
@@ -127,9 +129,11 @@ final class ReviewsConsoleClientTest extends Scope
         // The Console reads the trace back, oldest step first
         $trace = $this->client->call(Client::METHOD_GET, '/reviews/' . $reviewId . '/events', $this->projectHeaders());
         $this->assertSame(200, $trace['headers']['status-code']);
-        $this->assertSame(1, $trace['body']['total']);
+        $this->assertSame(2, $trace['body']['total']);
         $this->assertSame('tool_call', $trace['body']['events'][0]['type']);
         $this->assertSame(['tool' => 'read_file'], $trace['body']['events'][0]['data']);
+        $this->assertSame('tool.list_files', $trace['body']['events'][1]['type']);
+        $this->assertSame([], $trace['body']['events'][1]['data']);
 
         $missing = $this->client->call(Client::METHOD_GET, '/reviews/missing/events', $this->projectHeaders());
         $this->assertSame(404, $missing['headers']['status-code']);
