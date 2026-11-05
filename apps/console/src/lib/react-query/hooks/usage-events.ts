@@ -4003,27 +4003,5 @@ export type { StorageBreakdownResourceMap } from '@/lib/usage/resolve-storage-br
 
 export type { DatabaseBreakdownResourceMap } from '@/lib/usage/resolve-database-breakdown-resources'
 
-export type {
-  ProjectBandwidthOverview,
-  ProjectExecutionsOverview,
-  ProjectGbHoursOverview,
-  ProjectStorageOverview,
-  StorageImageTransformationsOverview,
-  StorageResourceTypeUsageOverview,
-  StorageUsageChartOverview,
-  ProjectRequestsOverview,
-  ProjectRequestsChartOverview,
-  ProjectBandwidthOverview as ProjectBandwidthChartOverview,
-  ProjectBandwidthOverview as ProjectBandwidthTopConsumersOverview,
-  ProjectRequestsOverview as ProjectRequestsTopEndpointsOverview,
-  DatabaseUsageChartOverview,
-  RealtimeBandwidthOverview,
-  RealtimeUsageChartOverview,
-  AuthUsageChartOverview,
-  AvatarsUsageChartOverview,
-  MessagingUsageChartOverview,
-  WebhooksUsageChartOverview,
-}
-
 export type { UsageChartInterval } from '@/lib/usage/chart-interval'
 export { DEFAULT_USAGE_CHART_INTERVAL } from '@/lib/usage/chart-interval'
