@@ -132,7 +132,7 @@ final class StorageTest extends Base
     {
         $path = self::scratch('storage-read');
         $device = new class ($path) extends Local {
-            public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
+            public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface
             {
                 throw new TransportException('Connection timed out');
             }
@@ -145,14 +145,15 @@ final class StorageTest extends Base
 
     public function testLoadMakesOneReadAndNoOtherRequest(): void
     {
-        $device = new class (self::scratch('storage-requests')) extends Local {
+        $path = self::scratch('storage-requests');
+        $device = new class ($path) extends Local {
             public int $reads = 0;
 
-            public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null): StreamInterface
+            public function read(string $path, int $offset = 0, ?int $length = null, ?string $etag = null, ?\DateTimeInterface $modifiedSince = null): StreamInterface
             {
                 $this->reads++;
 
-                return parent::read($path, $offset, $length, $etag);
+                return parent::read($path, $offset, $length, $etag, $modifiedSince);
             }
 
             public function getFileInfo(string $path): FileInfo
@@ -169,20 +170,24 @@ final class StorageTest extends Base
 
         $this->assertSame('value', $adapter->load('key', 60));
         $this->assertSame(2, $device->reads);
+
+        touch($path . '/key', time() - 100);
+
+        $this->assertFalse($adapter->load('key', 60));
+        $this->assertSame(3, $device->reads);
+        $this->assertSame('value', $adapter->load('key', 200));
     }
 
-    public function testObjectNotWrittenByTheAdapterIsAMiss(): void
+    public function testObjectsHoldOnlyTheCachedBytes(): void
     {
-        $path = self::scratch('storage-foreign');
+        $path = self::scratch('storage-plain');
         $adapter = new Storage(new Local($path));
 
-        foreach (['short', 'written by something else', "\x89PNG\r\n\x1a\n\x00\xff"] as $body) {
-            file_put_contents($path . '/key', $body);
+        $adapter->save('key', 'value');
+        $this->assertSame('value', file_get_contents($path . '/key'));
 
-            $this->assertFalse($adapter->load('key', 60), $body);
-            $this->assertFalse($adapter->touch('key'), $body);
-            $this->assertSame($body, file_get_contents($path . '/key'));
-        }
+        file_put_contents($path . '/other', 'written elsewhere');
+        $this->assertSame('written elsewhere', $adapter->load('other', 60));
     }
 
     public function testRunsBesideFilesystemWithTheSameKeys(): void

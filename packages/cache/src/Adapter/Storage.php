@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Utopia\Cache\Adapter;
 
+use DateTimeImmutable;
 use InvalidArgumentException;
-use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Utopia\Cache\Adapter;
 use Utopia\Psr7\Stream;
@@ -13,16 +13,13 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Exception\StorageException;
 
 /**
- * Stores each entry as one object on a storage device, under the device's root:
- * an 8-byte write time followed by the data. Keeping the time in the object lets
- * a load check age from a single read, since the device API returns no metadata
- * with the bytes. Requires utopia-php/storage.
+ * Stores each entry as one object on a storage device, under the device's root,
+ * holding exactly the cached bytes. Age is the object's last modified time.
+ * Requires utopia-php/storage.
  */
 class Storage implements Adapter
 {
     private const string CONTENT_TYPE = 'application/octet-stream';
-
-    private const int HEADER_SIZE = 8;
 
     /**
      * Takes a built device, so a caller decides its client and connection reuse.
@@ -37,8 +34,9 @@ class Storage implements Adapter
     }
 
     /**
-     * One read on every path: a GET on S3, with no request before it. An expired
-     * entry still downloads its body. A device failure reads as a miss.
+     * One conditional read, with no request before it: on S3 a GET that answers 200
+     * with the bytes, 304 with no body if expired, or 404 if missing. A device
+     * failure reads as a miss.
      *
      * @param  int  $ttl time in seconds
      * @param  string  $hash optional
@@ -46,10 +44,9 @@ class Storage implements Adapter
     public function load(string $key, int $ttl, string $hash = ''): mixed
     {
         try {
-            $stream = $this->device->read($this->getPath($key));
-            $time = $this->readTime($stream);
+            $modifiedSince = new DateTimeImmutable('@' . (time() - $ttl));
 
-            return $time !== null && $time + $ttl > time() ? $stream->getContents() : false;
+            return $this->device->read($this->getPath($key), modifiedSince: $modifiedSince)->getContents();
         } catch (StorageException | RuntimeException) {
             return false;
         }
@@ -80,7 +77,7 @@ class Storage implements Adapter
         }
 
         try {
-            $this->device->write($this->getPath($key), new Stream($this->header() . $body), self::CONTENT_TYPE);
+            $this->device->write($this->getPath($key), new Stream($body), self::CONTENT_TYPE);
 
             return $data;
         } catch (StorageException | RuntimeException) {
@@ -89,9 +86,9 @@ class Storage implements Adapter
     }
 
     /**
-     * Rewrites the object with a new write time: a HEAD, a GET and a conditional PUT
-     * on S3. The condition stops it bringing back an entry purged or replaced
-     * meanwhile, which returns false.
+     * Objects have no writable modified time, so this rewrites the object: a HEAD, a
+     * GET and a conditional PUT on S3. The condition stops it bringing back an entry
+     * purged or replaced meanwhile, which returns false.
      *
      * @param  string  $hash optional
      */
@@ -106,13 +103,7 @@ class Storage implements Adapter
                 return false;
             }
 
-            $stream = $this->device->read($path, etag: $etag);
-
-            if ($this->readTime($stream) === null) {
-                return false;
-            }
-
-            $this->device->replace($path, new Stream($this->header() . $stream->getContents()), $etag, self::CONTENT_TYPE);
+            $this->device->replace($path, $this->device->read($path, etag: $etag), $etag, self::CONTENT_TYPE);
 
             return true;
         } catch (StorageException | RuntimeException) {
@@ -193,29 +184,6 @@ class Storage implements Adapter
             '..' => '%2E%2E',
             default => $name,
         });
-    }
-
-    /**
-     * The write time at the start of the stream, or null if the object was not
-     * written by this adapter: too short, or a time outside the past.
-     */
-    private function readTime(StreamInterface $stream): ?int
-    {
-        $header = $stream->read(self::HEADER_SIZE);
-
-        if (\strlen($header) !== self::HEADER_SIZE) {
-            return null;
-        }
-
-        /** @var array{1: int} $time */
-        $time = unpack('J', $header);
-
-        return $time[1] >= 0 && $time[1] <= time() ? $time[1] : null;
-    }
-
-    private function header(): string
-    {
-        return pack('J', time());
     }
 
     public function getName(?string $key = null): string
