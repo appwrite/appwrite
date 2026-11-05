@@ -2,15 +2,16 @@
 
 namespace Tests\E2E\Services\Messaging;
 
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\DSN\DSN;
 use Utopia\System\System;
 
@@ -41,20 +42,20 @@ trait MessagingBase
 
         $providersParams = [
             'sendgrid' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
                 'from' => 'sender-email@my-domain.com',
             ],
             'resend' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Resend1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender Name',
                 'fromEmail' => 'sender-email@my-domain.com',
             ],
             'mailgun' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
@@ -63,7 +64,7 @@ trait MessagingBase
                 'isEuRegion' => false,
             ],
             'smtp' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'SMTP1',
                 'host' => 'smtp.appwrite.io',
                 'port' => 587,
@@ -74,42 +75,42 @@ trait MessagingBase
                 'fromEmail' => 'tester@appwrite.io',
             ],
             'twilio' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
                 'from' => '+123456789',
             ],
             'telesign' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Telesign1',
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
             'textmagic' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
                 'from' => '+123456789',
             ],
             'msg91' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
                 'templateId' => '123456'
             ],
             'vonage' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
             'fcm' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
@@ -121,7 +122,7 @@ trait MessagingBase
                 ],
             ],
             'apns' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -267,7 +268,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'my-app',
         ]);
 
@@ -276,7 +277,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'my-app2',
             'subscribe' => [Role::user('invalid')->toString()],
         ]);
@@ -343,7 +344,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Sendgrid-subscriber-test',
             'apiKey' => 'my-apikey',
             'from' => 'sender-email@my-domain.com',
@@ -354,7 +355,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => 'random-email@mail.org',
@@ -364,7 +365,7 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -396,7 +397,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User Draft 1',
@@ -411,7 +412,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User Draft 2',
@@ -426,7 +427,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId1, $targetId2],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -467,7 +468,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Sendgrid-provider-sent',
             'apiKey' => $apiKey,
             'fromName' => $fromName,
@@ -481,7 +482,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic-sent-email',
         ]);
 
@@ -491,7 +492,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $to,
             'password' => 'password',
             'name' => 'Messaging User Sent',
@@ -504,8 +505,8 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['$id'],
         ]);
 
@@ -515,7 +516,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -569,7 +570,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Msg91Sender-sent',
             'senderId' => $senderId,
             'authKey' => $authKey,
@@ -583,7 +584,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic-sent-sms',
         ]);
 
@@ -593,7 +594,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'random-sms-sent@mail.org',
             'password' => 'password',
             'name' => 'Messaging User SMS Sent',
@@ -605,7 +606,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'sms',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
@@ -615,8 +616,8 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -626,7 +627,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'content' => '064763',
         ]);
@@ -674,7 +675,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'FCM-sent',
             'serviceAccountJSON' => $serviceAccountJSON,
             'enabled' => true,
@@ -686,7 +687,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic-sent-push',
         ]);
 
@@ -696,7 +697,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'random-push-sent@mail.org',
             'password' => 'password',
             'name' => 'Messaging User Push Sent',
@@ -708,7 +709,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'push',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
@@ -718,8 +719,8 @@ trait MessagingBase
         $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -729,7 +730,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'title' => 'Test-Notification-Sent',
             'body' => 'Test-Notification-Body-Sent',
@@ -754,20 +755,20 @@ trait MessagingBase
     {
         $providersParams = [
             'sendgrid' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
                 'from' => 'sender-email@my-domain.com',
             ],
             'resend' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Resend1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender Name',
                 'fromEmail' => 'sender-email@my-domain.com',
             ],
             'mailgun' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
@@ -776,7 +777,7 @@ trait MessagingBase
                 'isEuRegion' => false,
             ],
             'smtp' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'SMTP1',
                 'host' => 'smtp.appwrite.io',
                 'port' => 587,
@@ -787,42 +788,42 @@ trait MessagingBase
                 'fromEmail' => 'tester@appwrite.io',
             ],
             'twilio' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
                 'from' => '+123456789',
             ],
             'telesign' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Telesign1',
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
             'textmagic' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
                 'from' => '+123456789',
             ],
             'msg91' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
                 'templateId' => '123456'
             ],
             'vonage' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
             'fcm' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
@@ -834,7 +835,7 @@ trait MessagingBase
                 ],
             ],
             'apns' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -869,7 +870,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Appwrite1',
             'enabled' => true,
             'qos' => 1,
@@ -892,7 +893,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Appwrite-before',
             'enabled' => true,
         ]);
@@ -917,7 +918,7 @@ trait MessagingBase
         $this->assertEquals(7200, $response['body']['options']['expiry']);
 
         // Test for FAILURE: an unknown provider id is not found.
-        $missing = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/appwrite/' . ID::unique(), [
+        $missing = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/appwrite/' . Id::unique(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -936,7 +937,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'mqtt-settings-topic',
             'qos' => 1,
             'expiry' => 3600,
@@ -961,6 +962,91 @@ trait MessagingBase
         $this->assertEquals(7200, $response['body']['expiry']);
     }
 
+    public function testUpdateTopicDescription(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $keyword = ID::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'orders',
+            'description' => 'Order updates tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->assertSame('Order updates tagged ' . $keyword, $topic['body']['description']);
+
+        $topicId = $topic['body']['$id'];
+
+        $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, $headers);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Order updates tagged ' . $keyword, $topic['body']['description']);
+
+        $topics = $this->client->call(Client::METHOD_GET, '/messaging/topics', $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $topics['headers']['status-code']);
+        $this->assertCount(1, $topics['body']['topics']);
+        $this->assertSame($topicId, $topics['body']['topics'][0]['$id']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => 'Shipping updates',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Shipping updates', $topic['body']['description']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'name' => 'shipping',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('Shipping updates', $topic['body']['description']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertSame('', $topic['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
+            'topicId' => ID::unique(),
+            'name' => 'too-long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $topic['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $topic['body']['type']);
+
+        $topic = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, $headers, [
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $topic['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $topic['body']['type']);
+    }
+
     /**
      * The built-in Appwrite (MQTT) push provider is server-published only: a message
      * campaign is the single publish path, never an outside MQTT PUBLISH. This drives
@@ -978,7 +1064,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Appwrite-send',
             'enabled' => true,
         ]);
@@ -991,7 +1077,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'appwrite-push-topic',
             'qos' => 1,
         ]);
@@ -1003,8 +1089,8 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
-            'email' => 'appwrite-push-' . ID::unique() . '@mail.org',
+            'userId' => Id::unique(),
+            'email' => 'appwrite-push-' . Id::unique() . '@mail.org',
             'password' => 'password',
             'name' => 'Appwrite Push User',
         ]);
@@ -1017,18 +1103,21 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'push',
             'providerId' => $provider['body']['$id'],
             'identifier' => $topicId,
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', \array_merge([
+        // Subscribe the target to the topic as a server (API key) call: the target belongs to the
+        // user created above, not to the caller, and only privileged callers may subscribe it.
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
         $this->assertEquals(201, $subscriber['headers']['status-code']);
@@ -1039,7 +1128,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topicId],
             'title' => 'Match update',
             'body' => 'India needs 12 off 6',
@@ -1184,8 +1273,8 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $providerId = ID::unique();
-        $completeProviderId = ID::unique();
+        $providerId = Id::unique();
+        $completeProviderId = Id::unique();
         $params = [
             'providerId' => $providerId,
             'name' => 'Msg91 without template',
@@ -1241,7 +1330,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Invalid FCM',
             'serviceAccountJSON' => [
                 'type' => 'service_account',
@@ -1263,7 +1352,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'FCM',
         ]);
 
@@ -1287,6 +1376,60 @@ trait MessagingBase
         $this->assertEquals("Invalid `serviceAccountJSON` param: FCM service account JSON must include a non-empty 'client_email' field, which identifies the service account used for authentication. or null", $response['body']['message']);
     }
 
+    public function testCreateSMTPProviderPrivateHost(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Outside the dev allowlist of internal addresses
+        foreach (['169.254.169.254', 'tls://10.0.0.1:587', 'smtp.appwrite.io;ssl://[fe80::1]:465'] as $host) {
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+                'providerId' => Id::unique(),
+                'name' => 'Private SMTP',
+                'host' => $host,
+                'port' => 587,
+                'fromEmail' => 'tester@appwrite.io',
+            ]);
+
+            $this->assertSame(400, $response['headers']['status-code'], $host);
+            $this->assertSame('general_argument_invalid', $response['body']['type']);
+            $this->assertStringContainsString('private or reserved', $response['body']['message']);
+        }
+    }
+
+    public function testUpdateSMTPProviderPrivateHost(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // A host that does not resolve yet is stored and checked again when a message is sent
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'SMTP',
+            'host' => 'smtp.appwrite.io',
+            'port' => 587,
+            'fromEmail' => 'tester@appwrite.io',
+        ]);
+        $this->assertSame(201, $provider['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/smtp/' . $provider['body']['$id'], $headers, [
+            'host' => '169.254.169.254',
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+        $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
+
+        $stored = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $provider['body']['$id'], $headers);
+        $this->assertSame('smtp.appwrite.io', $stored['body']['credentials']['host']);
+    }
+
     public function testCreateTwilioProviderAlphanumericSender(): void
     {
         $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/twilio', [
@@ -1294,7 +1437,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Twilio',
             'accountSid' => 'my-accountSid',
             'authToken' => 'my-authToken',
@@ -1312,7 +1455,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Twilio',
         ]);
 
@@ -1338,7 +1481,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'FCM3',
         ]);
 
@@ -1391,7 +1534,7 @@ trait MessagingBase
         // Create fresh providers for deletion test to avoid affecting other tests
         $providersParams = [
             'sendgrid' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Sengrid-delete',
                 'apiKey' => 'my-apikey',
                 'from' => 'sender-email@my-domain.com',
@@ -1426,7 +1569,7 @@ trait MessagingBase
 
         // Create with full credentials but no fromEmail, so the provider stays disabled.
         $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/ses', $headers, [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'SES1',
             'accessKey' => 'my-access-key',
             'secretKey' => 'my-secret-key',
@@ -1439,7 +1582,7 @@ trait MessagingBase
         $this->assertEquals('email', $response['body']['type']);
         $this->assertEquals(false, $response['body']['enabled']);
         $this->assertEquals('my-access-key', $response['body']['credentials']['accessKey']);
-        $this->assertEquals('my-secret-key', $response['body']['credentials']['secretKey']);
+        $this->assertArrayNotHasKey('secretKey', $response['body']['credentials']);
         $this->assertEquals('us-east-1', $response['body']['credentials']['region']);
         $this->assertArrayHasKey('fromEmail', $response['body']['options']);
         $this->assertArrayNotHasKey('accessKey', $response['body']['options']);
@@ -1448,7 +1591,7 @@ trait MessagingBase
 
         // Create enabled: all credentials plus fromEmail present.
         $enabledResponse = $this->client->call(Client::METHOD_POST, '/messaging/providers/ses', $headers, [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'SES-enabled',
             'accessKey' => 'my-access-key',
             'secretKey' => 'my-secret-key',
@@ -1472,7 +1615,7 @@ trait MessagingBase
         $this->assertEquals('SES2', $updateResponse['body']['name']);
         $this->assertEquals('eu-west-1', $updateResponse['body']['credentials']['region']);
         $this->assertEquals('my-access-key', $updateResponse['body']['credentials']['accessKey']);
-        $this->assertEquals('my-secret-key', $updateResponse['body']['credentials']['secretKey']);
+        $this->assertArrayNotHasKey('secretKey', $updateResponse['body']['credentials']);
 
         // Regression: enabling while fromEmail is still empty must be rejected, not silently enabled.
         $enableWithoutFromEmail = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/ses/' . $providerId, $headers, [
@@ -1512,7 +1655,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'my-app',
         ]);
         $this->assertEquals(201, $response1['headers']['status-code']);
@@ -1523,7 +1666,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'my-app2',
             'subscribe' => [Role::user('invalid')->toString()],
         ]);
@@ -1629,7 +1772,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Sendgrid-create-sub',
             'apiKey' => 'my-apikey',
             'from' => 'sender-email@my-domain.com',
@@ -1642,7 +1785,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => 'random-email-create-sub@mail.org',
@@ -1654,7 +1797,7 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -1667,7 +1810,7 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -1689,7 +1832,7 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -1697,6 +1840,90 @@ trait MessagingBase
             $this->assertEquals(401, $response2['headers']['status-code']);
         } else {
             $this->assertEquals(201, $response2['headers']['status-code']);
+        }
+    }
+
+    public function testCreateSubscriberForeignTargetDenied(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $apiKey = $this->getProject()['apiKey'];
+
+        // A topic any signed-in user is allowed to subscribe to.
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'topicId' => Id::unique(),
+            'name' => 'foreign-target-topic',
+            'subscribe' => [Role::users()->toString()],
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'providerId' => Id::unique(),
+            'name' => 'Sendgrid-foreign-target',
+            'apiKey' => 'my-apikey',
+            'from' => 'sender-email@my-domain.com',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // A victim user the caller does not own, plus an email target with a secret identifier.
+        $victim = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'userId' => Id::unique(),
+            'email' => 'victim-' . uniqid() . '@mail.org',
+            'password' => 'password',
+            'name' => 'Victim',
+        ]);
+        $this->assertEquals(201, $victim['headers']['status-code']);
+
+        $victimIdentifier = 'victim-secret-' . uniqid() . '@mail.org';
+        $victimTarget = $this->client->call(Client::METHOD_POST, '/users/' . $victim['body']['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'targetId' => Id::unique(),
+            'providerType' => 'email',
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $victimIdentifier,
+        ]);
+        $this->assertEquals(201, $victimTarget['headers']['status-code']);
+
+        // The caller attempts to bind the victim's target to the topic.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'subscriberId' => Id::unique(),
+            'targetId' => $victimTarget['body']['$id'],
+        ]);
+
+        if ($this->getSide() === 'client') {
+            // A session/JWT caller may only subscribe a target it owns. The refusal must not
+            // disclose the victim's identifier, and no subscriber may be created.
+            $this->assertEquals(404, $response['headers']['status-code']);
+            $this->assertStringNotContainsStringIgnoringCase($victimIdentifier, \json_encode($response['body']));
+
+            $subscribers = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $apiKey,
+            ]);
+            $this->assertEquals(200, $subscribers['headers']['status-code']);
+            $this->assertEquals(0, $subscribers['body']['total']);
+        } else {
+            // Admin console and API key callers act for the project and may subscribe any target.
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertEquals($victimTarget['body']['$id'], $response['body']['target']['$id']);
         }
     }
 
@@ -1737,10 +1964,11 @@ trait MessagingBase
 
             $target = $targets[0];
 
-            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', \array_merge([
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
                 'subscriberId' => $user['$id'],
                 'targetId' => $target['$id'],
             ]);
@@ -1888,7 +2116,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Sendgrid-delete-sub',
             'apiKey' => 'my-apikey',
             'from' => 'sender-email@my-domain.com',
@@ -1899,7 +2127,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => 'random-email-delete@mail.org',
@@ -1909,7 +2137,7 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -1938,7 +2166,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic-to-delete',
         ]);
 
@@ -1998,7 +2226,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
             'draft' => true
@@ -2029,7 +2257,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User 1',
@@ -2048,7 +2276,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User 2',
@@ -2066,7 +2294,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId1, $targetId2],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -2078,6 +2306,197 @@ trait MessagingBase
         $this->assertEquals(MessageStatus::DRAFT, $message['status']);
     }
 
+    public function testCreateEmailToRawEmails(): void
+    {
+        $emails = [uniqid() . '@example.com', uniqid() . '@example.com'];
+
+        // Raw emails alone (no topics/users/targets) must satisfy the recipient requirement.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'emails' => $emails,
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $message = $response['body'];
+        $this->assertEquals(MessageStatus::DRAFT, $message['status']);
+        $this->assertEquals($emails, $message['data']['emails']);
+
+        // A non-draft message addressed only to raw emails is accepted for processing.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'emails' => $emails,
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($emails, $response['body']['data']['emails']);
+
+        // Malformed email addresses are rejected before the message is created.
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'emails' => ['not-an-email'],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testUpdateEmailToRawEmails(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $draft = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => Id::unique(),
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $draft['headers']['status-code']);
+        $messageId = $draft['body']['$id'];
+
+        $emails = [\uniqid() . '@example.com'];
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $headers, [
+            'emails' => $emails,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame($emails, $response['body']['data']['emails']);
+        $this->assertSame('New blog post', $response['body']['data']['subject']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $headers, [
+            'emails' => ['not-an-email'],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, $headers, [
+            'emails' => [],
+            'draft' => false,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame(Exception::MESSAGE_MISSING_TARGET, $response['body']['type']);
+    }
+
+    public function testSendEmailToRawEmails(): void
+    {
+        // A fresh project holds only the Maildev provider, so it is the default that raw emails route to.
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'Maildev',
+            'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
+            'port' => (int) System::getEnv('_APP_SMTP_PORT', '1025'),
+            'username' => System::getEnv('_APP_SMTP_USERNAME', 'user'),
+            'password' => System::getEnv('_APP_SMTP_PASSWORD', 'password'),
+            'fromName' => 'Appwrite',
+            'fromEmail' => 'sender@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        $recipient = \uniqid() . '@appwrite.io';
+        $subject = 'Raw email ' . \uniqid();
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => Id::unique(),
+            'emails' => [$recipient, $recipient],
+            'subject' => $subject,
+            'content' => 'Delivered without a user, target, or topic',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        $messageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertEquals(MessageStatus::SENT, $response['body']['status']);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertSame(1, $message['body']['deliveredTotal'], 'A repeated raw email must be delivered once');
+        $this->assertSame([], $message['body']['deliveryErrors']);
+
+        $mail = $this->getLastEmailByAddress($recipient, fn (array $mail) => $this->assertSame($subject, $mail['subject']));
+
+        $this->assertSame($subject, $mail['subject']);
+    }
+
+    public function testSendEmailThroughUnresolvedSMTPHostFails(): void
+    {
+        // The host is accepted while it does not resolve, and checked again when the message is sent.
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
+            'providerId' => Id::unique(),
+            'name' => 'Unresolved',
+            'host' => 'smtp-' . \uniqid() . '.invalid',
+            'port' => 25,
+            'fromName' => 'Appwrite',
+            'fromEmail' => 'sender@appwrite.io',
+            'enabled' => true,
+        ]);
+
+        $this->assertSame(201, $provider['headers']['status-code']);
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
+            'messageId' => Id::unique(),
+            'emails' => [\uniqid() . '@appwrite.io'],
+            'subject' => 'Unresolved host',
+            'content' => 'Never dialled',
+        ]);
+
+        $this->assertSame(201, $email['headers']['status-code']);
+
+        $messageId = $email['body']['$id'];
+        $this->assertEventually(function () use ($messageId, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+            $this->assertSame(MessageStatus::FAILED, $response['body']['status']);
+        }, 30000, 500);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, $headers);
+
+        $this->assertSame(0, $message['body']['deliveredTotal']);
+        $this->assertCount(1, $message['body']['deliveryErrors']);
+        $this->assertStringContainsString('does not resolve', $message['body']['deliveryErrors'][0]);
+    }
+
     public function testCreateDraftPushWithImage(): void
     {
         // Create User 1
@@ -2086,7 +2505,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User 1',
@@ -2101,7 +2520,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'userId' => $user['body']['$id'],
             'providerType' => 'push',
             'identifier' => '123456',
@@ -2115,7 +2534,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, // 2MB
@@ -2147,7 +2566,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2158,13 +2577,47 @@ trait MessagingBase
 
         $fileId = $file['body']['$id'];
 
+        // The image mints a signed download URL for a project file, so a messages.write key that
+        // cannot read files must be refused rather than have its scope widened to Storage reads.
+        $withoutFilesRead = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $withoutFilesRead['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $withoutFilesRead['body']['type']);
+
+        // Holding files.read opens the gate.
+        $withFilesRead = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write', 'files.read']),
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'title' => 'New blog post',
+            'body' => 'Check out the new blog post at http://localhost',
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(201, $withFilesRead['headers']['status-code']);
+
         // Create Push
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId],
             'title' => 'New blog post',
             'body' => 'Check out the new blog post at http://localhost',
@@ -2207,6 +2660,94 @@ trait MessagingBase
         $rejected = $client->call(Client::METHOD_GET, $imageUrl, ['Range' => 'bytes=' . $size . '-']);
 
         $this->assertEquals(416, $rejected['headers']['status-code']);
+
+        // Image token expires fifteen days after delivery.
+        $claims = $this->getImageTokenClaims($imageUrl);
+        $this->assertEqualsWithDelta(\time() + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
+
+        $scheduledAt = \time() + 60 * 60 * 24 * 2;
+
+        // The update path mints the same signed URL, so it enforces files.read too.
+        $updateWithoutFilesRead = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $updateWithoutFilesRead['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $updateWithoutFilesRead['body']['type']);
+
+        // The stored image is re-minted on any update, so a PATCH that omits image but changes
+        // another field on a message that already has one is refused the same way, and the refusal
+        // happens before the schedule is touched so nothing is left half-applied.
+        $updateStoredImage = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['messages.write']),
+        ], [
+            'body' => 'Updated body without resending the image',
+            'scheduledAt' => \date(\DateTime::ATOM, \time() + 60 * 60 * 24 * 2),
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(401, $updateStoredImage['headers']['status-code']);
+        $this->assertEquals('general_unauthorized_scope', $updateStoredImage['body']['type']);
+
+        // The rejected PATCH must not have scheduled the message.
+        $afterReject = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $afterReject['headers']['status-code']);
+        $this->assertNull($afterReject['body']['scheduledAt']);
+
+        $updated = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'image' => "{$bucketId}:{$fileId}",
+            'draft' => true,
+            'scheduledAt' => \date(\DateTime::ATOM, $scheduledAt),
+        ]);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+
+        $claims = $this->getImageTokenClaims($updated['body']['data']['image']['url']);
+        $this->assertEqualsWithDelta($scheduledAt + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
+
+        $rescheduledAt = \time() + 60 * 60 * 24 * 30;
+
+        $rescheduled = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $message['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => \date(\DateTime::ATOM, $rescheduledAt),
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(200, $rescheduled['headers']['status-code']);
+
+        $claims = $this->getImageTokenClaims($rescheduled['body']['data']['image']['url']);
+        $this->assertEqualsWithDelta($rescheduledAt + APP_PUSH_IMAGE_TOKEN_DURATION, $claims['exp'], 60);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getImageTokenClaims(string $url): array
+    {
+        \parse_str((string) \parse_url($url, PHP_URL_QUERY), $query);
+        $payload = \explode('.', (string) $query['jwt'])[1];
+        $claims = \json_decode((string) \base64_decode(\strtr($payload, '-_', '+/')), true);
+        $this->assertIsArray($claims);
+
+        return $claims;
     }
 
     public function testCreateDraftPushWithData(): void
@@ -2226,7 +2767,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'title' => 'New blog post',
             'body' => 'Check out the new blog post',
             'data' => $data,
@@ -2257,7 +2798,7 @@ trait MessagingBase
         ];
 
         $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'subject' => 'Draft',
             'content' => 'Draft content',
             'attachments' => null,
@@ -2287,13 +2828,13 @@ trait MessagingBase
         ];
 
         $omitted = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             ...$required,
         ]);
         $this->assertSame(201, $omitted['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             ...$required,
             'topics' => null,
             'users' => null,
@@ -2323,11 +2864,11 @@ trait MessagingBase
 
         // Without draft, null recipients must be rejected the same way as omitted ones rather than crash
         $omitted = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'title' => 'New blog post',
         ]);
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'title' => 'New blog post',
             'topics' => null,
             'users' => null,
@@ -2348,7 +2889,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User 1',
@@ -2364,7 +2905,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -2396,7 +2937,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User 1',
@@ -2411,7 +2952,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -2453,7 +2994,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User 1',
@@ -2467,7 +3008,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -2498,6 +3039,148 @@ trait MessagingBase
         );
     }
 
+    public function testDraftWithScheduledAtToScheduledEmail(): void
+    {
+        // Create user
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 1',
+        ]);
+
+        $targetId = $response['body']['targets'][0]['$id'];
+
+        // Create draft message with a scheduledAt, which stores scheduledAt without a schedule
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $messageId = $message['body']['$id'];
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        // Convert draft to scheduled message, creating the missing schedule
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        // Reschedule to verify the schedule was created and linked to the message
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 900);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($rescheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+    }
+
+    public function testDraftWithScheduledAtToScheduledPush(): void
+    {
+        // Create topic
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => Id::unique(),
+            'name' => 'topic-scheduled-draft-push',
+        ]);
+
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        // Create draft message with a scheduledAt, which stores scheduledAt without a schedule
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'topics' => [$topic['body']['$id']],
+            'title' => 'Test-Notification',
+            'body' => 'Test-Notification-Body',
+            'draft' => true,
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 300),
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
+
+        $messageId = $message['body']['$id'];
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        // Convert draft to scheduled message, creating the missing schedule
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+
+        // Reschedule to verify the schedule was created and linked to the message
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 900);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $messageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
+        $this->assertSame(
+            (new \DateTime($rescheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
+    }
+
     public function testUpdateScheduledAt(): void
     {
         // Create user
@@ -2506,7 +3189,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
             'name' => 'Messaging User 1',
@@ -2521,7 +3204,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -2589,7 +3272,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Sendgrid-provider',
             'apiKey' => $apiKey,
             'fromName' => $fromName,
@@ -2605,7 +3288,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic1',
         ]);
 
@@ -2617,7 +3300,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $to,
             'password' => 'password',
             'name' => 'Messaging User',
@@ -2632,8 +3315,8 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['$id'],
         ]);
 
@@ -2645,7 +3328,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
@@ -2687,7 +3370,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Maildev',
             'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
             'port' => (int) System::getEnv('_APP_SMTP_PORT', '1025'),
@@ -2705,7 +3388,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Attachments',
             'encryption' => true,
             'compression' => 'gzip',
@@ -2720,7 +3403,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(\realpath($source), 'text/csv', 'documents.csv'),
         ]);
 
@@ -2734,7 +3417,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'attachments',
         ]);
 
@@ -2745,7 +3428,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'Attachment User',
@@ -2759,7 +3442,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => \uniqid() . '@appwrite.io',
@@ -2767,11 +3450,12 @@ trait MessagingBase
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -2784,7 +3468,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'subject' => $subject,
             'content' => 'See attached',
@@ -2843,7 +3527,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'draft' => true,
             'topics' => [$email['topics'][0]],
             'subject' => 'Khali beats Undertaker',
@@ -2892,7 +3576,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic-reply-to',
         ]);
 
@@ -2906,7 +3590,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'draft' => true,
             'topics' => [$topic['body']['$id']],
             'subject' => 'Reply to test',
@@ -2970,7 +3654,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'draft' => true,
             'topics' => [$topic['body']['$id']],
             'subject' => 'Reply to test',
@@ -2988,7 +3672,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Maildev',
             'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
             'port' => (int) System::getEnv('_APP_SMTP_PORT', '1025'),
@@ -3006,7 +3690,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'reply-to-send',
         ]);
 
@@ -3017,7 +3701,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'Reply To User',
@@ -3031,7 +3715,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => $recipient,
@@ -3039,11 +3723,12 @@ trait MessagingBase
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -3056,7 +3741,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'subject' => $subject,
             'content' => 'Reply to the custom address',
@@ -3111,7 +3796,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'Msg91Sender',
             'senderId' => $senderId,
             'authKey' => $authKey,
@@ -3127,7 +3812,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic1',
         ]);
 
@@ -3139,7 +3824,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'random1-email@mail.org',
             'password' => 'password',
             'name' => 'Messaging User',
@@ -3153,7 +3838,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'sms',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
@@ -3165,8 +3850,8 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -3178,7 +3863,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'content' => '064763',
         ]);
@@ -3230,7 +3915,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'draft' => true,
             'topics' => [$sms['topics'][0]],
             'content' => 'Your OTP code is 123456',
@@ -3290,7 +3975,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'FCM-1',
             'serviceAccountJSON' => $serviceAccountJSON,
             'enabled' => true,
@@ -3304,7 +3989,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => ID::unique(),
+            'topicId' => Id::unique(),
             'name' => 'topic1',
         ]);
 
@@ -3316,7 +4001,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'random3-email@mail.org',
             'password' => 'password',
             'name' => 'Messaging User',
@@ -3330,7 +4015,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'push',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
@@ -3342,8 +4027,8 @@ trait MessagingBase
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
+        ], ['x-appwrite-key' => $this->getProject()['apiKey']]), [
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -3355,7 +4040,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['body']['$id']],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
@@ -3404,7 +4089,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'FCM-Users-1',
             'serviceAccountJSON' => $serviceAccountJSON,
             'enabled' => true,
@@ -3417,7 +4102,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'FCM-Users-2',
             'serviceAccountJSON' => $serviceAccountJSON,
             'enabled' => true,
@@ -3430,7 +4115,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . "@mail.org",
             'password' => 'password',
             'name' => 'Messaging User Recipients',
@@ -3443,7 +4128,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'push',
             'providerId' => $provider1['body']['$id'],
             'identifier' => $to,
@@ -3456,7 +4141,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'push',
             'providerId' => $provider2['body']['$id'],
             'identifier' => $to,
@@ -3469,7 +4154,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'users' => [$user['body']['$id']],
             'title' => 'Test-Notification-Users',
             'body' => 'Test-Notification-Body-Users',
@@ -3521,7 +4206,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'draft' => true,
             'topics' => [$push['topics'][0]],
             'title' => 'Test-Notification',
@@ -3591,7 +4276,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topic['$id']],
             'subject' => 'Test subject',
             'content' => 'Test content',
@@ -3626,7 +4311,7 @@ trait MessagingBase
         ];
 
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/smtp', $headers, [
-            'providerId' => ID::unique(),
+            'providerId' => Id::unique(),
             'name' => 'SMTP-to-header',
             'host' => System::getEnv('_APP_SMTP_HOST', 'maildev'),
             'port' => (int) System::getEnv('_APP_SMTP_PORT', '1025'),
@@ -3640,7 +4325,7 @@ trait MessagingBase
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         $user = $this->client->call(Client::METHOD_POST, '/users', $headers, [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => \uniqid() . '@appwrite.io',
             'password' => 'password',
             'name' => 'SMTP Recipient',
@@ -3655,7 +4340,7 @@ trait MessagingBase
         $recipient = \uniqid() . '@appwrite.io';
 
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', $headers, [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => $recipient,
@@ -3666,7 +4351,7 @@ trait MessagingBase
         $ccRecipient = \uniqid() . '@appwrite.io';
 
         $ccTarget = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', $headers, [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => $ccRecipient,
@@ -3675,7 +4360,7 @@ trait MessagingBase
         $this->assertEquals(201, $ccTarget['headers']['status-code']);
 
         $secondTarget = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', $headers, [
-            'targetId' => ID::unique(),
+            'targetId' => Id::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => \uniqid() . '@appwrite.io',
@@ -3684,8 +4369,8 @@ trait MessagingBase
         $this->assertEquals(201, $secondTarget['headers']['status-code']);
 
         $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $headers, [
-            'topicId' => ID::unique(),
-            'name' => ID::unique(),
+            'topicId' => Id::unique(),
+            'name' => Id::unique(),
         ]);
 
         $this->assertEquals(201, $topic['headers']['status-code']);
@@ -3700,7 +4385,7 @@ trait MessagingBase
         $subject = 'Lone recipient ' . \uniqid();
 
         $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'targets' => [$target['body']['$id']],
             'subject' => $subject,
             'content' => $subject,
@@ -3719,7 +4404,7 @@ trait MessagingBase
         $this->assertSame($recipient, $mail['to'][0]['address']);
 
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', $headers, [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -3730,7 +4415,7 @@ trait MessagingBase
         $subject = 'Subscriber with CC ' . \uniqid();
 
         $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topicId],
             'cc' => [$ccTarget['body']['$id']],
             'subject' => $subject,
@@ -3751,7 +4436,7 @@ trait MessagingBase
         $this->assertEmpty($mail['to'] ?? []);
 
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topicId . '/subscribers', $headers, [
-            'subscriberId' => ID::unique(),
+            'subscriberId' => Id::unique(),
             'targetId' => $secondTarget['body']['$id'],
         ]);
 
@@ -3761,7 +4446,7 @@ trait MessagingBase
         $subject = 'Several subscribers ' . \uniqid();
 
         $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', $headers, [
-            'messageId' => ID::unique(),
+            'messageId' => Id::unique(),
             'topics' => [$topicId],
             'subject' => $subject,
             'content' => $subject,

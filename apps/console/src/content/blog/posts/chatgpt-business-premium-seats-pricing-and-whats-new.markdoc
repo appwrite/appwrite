@@ -1,0 +1,141 @@
+---
+layout: post
+title: "ChatGPT Business Premium seats: Pricing and what's new"
+description: ChatGPT Business Premium seats bring 5x usage and no 5-hour limit for $125/user/month. See pricing, seat mixing, and the $500 credit offer ending Aug 20.
+date: 2026-08-11
+cover: /images/blog/chatgpt-business-premium-seats-pricing-and-whats-new/cover.avif
+timeToRead: 5
+author: aishwari
+category: ai
+featured: false
+unlisted: true
+faqs:
+  - question: What is the difference between ChatGPT Business Standard and Premium?
+    answer: Premium costs more but provides 5× the usage of a Standard seat and removes the five-hour usage limit.
+  - question: How much does ChatGPT Business Premium cost?
+    answer: ChatGPT Business Premium costs $125 per user per month, or $100 per user per month with annual billing.
+  - question: Does ChatGPT Business Premium remove the 5-hour limit?
+    answer: Yes. Premium seats remove the five-hour usage limit, making them better suited for long coding, analysis, and agentic sessions.
+  - question: Can you mix Standard and Premium seats in ChatGPT Business?
+    answer: Yes. Business workspaces can have both Standard and Premium seats, allowing teams to give higher-capacity access only to users who need it.
+---
+OpenAI is introducing Premium seats for ChatGPT Business. [Premium seats](https://openai.com/index/premium-seats-chatgpt-business/) provide 5x more usage than Standard seats and remove the five-hour usage limit. Premium seats cost $125 per user per month, or $100 per user per month when billed annually. Standard seats remain $25 per user per month, or $20 per user per month when billed annually. Teams can mix Standard and Premium seats within the same workspace.
+
+The change is aimed at teams whose most active users need more capacity for larger projects and longer sessions. Because Standard and Premium seats can be mixed, teams can give higher-capacity seats to the people who need them without upgrading everyone.
+
+This post covers ChatGPT Business Premium seats pricing, what the usage change actually removes, how seat mixing works, the limited-time credit offer that ends on August 20, and how to decide between a Premium seat and the OpenAI API.
+
+# What are ChatGPT Business Premium seats?
+
+**Premium seats are a higher-capacity seat type for ChatGPT Business. They provide 5x more usage than Standard seats, remove the five-hour usage limit, and include predictable weekly usage resets. Premium seats cost $125 per user per month, or $100 per user per month when billed annually, and can be used alongside Standard seats in the same Business workspace.**
+
+Here is the comparison.
+
+|                       | Standard seat            | Premium seat              |
+| --------------------- | ------------------------ | ------------------------- |
+| Monthly billing       | $25 per user per month   | $125 per user per month   |
+| Annual billing        | $20 per user per month   | $100 per user per month   |
+
+Premium seats are not generally available yet. OpenAI has opened a waitlist, and some customers who sign up early may be selected for access before general availability.
+
+# ChatGPT Business pricing after Premium seats
+
+Premium costs 5x the price of a Standard seat and provides 5x the usage. Annual billing brings the price down to $100 per Premium seat per month and $20 per Standard seat per month.
+
+What you actually pay the premium for is **concentration and continuity**. Five Standard seats give five people a baseline allowance each. One Premium seat gives one person all five allowances plus no five-hour ceiling, which is the only configuration that helps when a single teammate is the bottleneck.
+
+Annual billing takes 20% off either tier:
+
+* **Standard:** $25 monthly, $20 per user per month annually.
+* **Premium:** $125 monthly, $100 per user per month annually.
+
+If a Premium user still runs out, workspace owners can add **shared workspace credits** to the workspace instead of upgrading more seats. Credits are pooled and managed centrally, so the overflow budget is one line item rather than a set of individual upgrades.
+
+# What removing the five-hour usage limit changes
+
+The five-hour limit is a rolling cap that stops a heavy session partway through. Removing it is a bigger practical change than the raw 5x number, because rolling caps punish exactly the workflows teams are moving toward: long agentic runs, large refactors, multi-file code review, and analysis over a big pile of source documents.
+
+Premium is designed to give active users more capacity for longer and more ambitious work, including coding, analysis, and other sustained sessions.
+
+Predictable weekly resets matter for a less obvious reason. A rolling five-hour window is hard to plan around because you cannot tell when it clears without hitting it. A weekly reset you can schedule against, which is the difference between rationing capacity and budgeting it.
+
+# How mixing Standard and Premium seats works
+
+Seat mixing lets teams use Standard and Premium seats within the same Business workspace, so higher-capacity seats can be assigned only to the teammates who need them.
+
+Workspace owners and admins can:
+
+* Mix Standard and Premium seats across the same team.
+* Upgrade or reassign seats as needs change.
+* Monitor usage across the workspace.
+* Manage billing, usage, and spend limits in one place.
+* Keep all company work inside the same secure Business workspace.
+
+Seat mixing gives teams more flexibility without requiring separate subscriptions or fragmented work. Workspace owners and admins can also monitor usage and manage billing, usage, and spend limits across the workspace.
+
+# Who should get a ChatGPT Business Premium seat?
+
+Buying Premium for everyone is the wrong default. Usage is almost never evenly distributed across a team, and OpenAI is explicit that Premium is aimed at your **most active** teammates. Use your workspace usage data to decide rather than guessing.
+
+| Role                                                     | Typical usage pattern                     | Seat recommendation                          |
+| -------------------------------------------------------- | ----------------------------------------- | -------------------------------------------- |
+| Developers using Codex on large codebases                | Long agentic runs, hits the five-hour cap | Premium                                      |
+| Data or ops analysts working across large datasets       | Sustained heavy sessions                  | Premium                                      |
+| Marketers building full campaigns from customer insights | Bursty, project-based                     | Premium during campaigns, Standard otherwise |
+| Founders and operators running reports into plans        | Moderate, spiky                           | Standard, upgrade if capacity bites          |
+| Occasional users doing drafting and summaries            | Light, well inside the baseline           | Standard                                     |
+
+A practical approach is to look at your workspace usage before upgrading seats. If a teammate regularly needs more capacity, Premium may be a better fit for their workload.
+
+# The $100 credit offer for every Premium seat ends August 20
+
+For a limited time, the **first 10,000 eligible ChatGPT Business customers** get **$100 in workspace credits (2,500 credits) for every Premium seat** they add, capped at five seats.
+
+| Premium seats added | Workspace credits | Value |
+| ------------------- | ----------------- | ----- |
+| 1                   | 2,500             | $100  |
+| 3                   | 7,500             | $300  |
+| 5 (cap)             | 12,500            | $500  |
+
+How to qualify:
+
+* Join the waitlist using the email address tied to your **ChatGPT Business workspace owner account**. Signing up with a member account does not count.
+* OpenAI follows up with redemption instructions and tells you when Premium seats reach your workspace.
+* The promotion ends **August 20, 2026**.
+
+If you are not the workspace owner, pass the offer to whoever manages billing. Eligibility details are in OpenAI's [help center article](https://help.openai.com/). Some customers who sign up may also be selected for early access before general availability.
+
+# ChatGPT Business Premium seats vs the OpenAI API
+
+These are different purchases that often get compared as if they were the same budget line. A seat buys a person capacity in a product. The API buys your application capacity to serve users.
+
+|               | Premium seat                            | OpenAI API                           |
+| ------------- | --------------------------------------- | ------------------------------------ |
+| Who uses it   | A named person in your workspace        | Your application, on behalf of users |
+| Pricing model | Flat per user per month                 | Per token, pay for what you use      |
+| Best for      | Codex sessions, analysis, internal work | Product features, agents you ship    |
+| Governance    | Workspace admin controls                | Your own auth, logging, and limits   |
+| Scales with   | Headcount                               | Traffic                              |
+
+For most teams the answer is both, and the split is clean. Buy Premium seats for the people whose own work is capacity-bound, and use the API for anything your customers touch. The [GPT-5.6 price cuts on July 30](/blog/post/openai-cuts-gpt-56-pricing-and-adds-fast-mode-to-the-api) made the API side considerably cheaper for high-volume work, so paying seat prices to run product features through a chat interface is the wrong trade even before you account for the governance gap.
+
+One caveat on either path: flat per-seat pricing makes spend predictable but ties cost to headcount, and per-token pricing scales with usage but needs monitoring. Set workspace spend limits on the seat side and log token usage on the API side. Neither is self-managing.
+
+# Ship what Codex builds on an Appwrite backend
+
+If your team is using Codex to build applications, the next question is what those applications need on the backend. That includes authentication, data storage, file storage, server-side logic, and deployment.
+
+[Appwrite](/) is an open source backend as a service that covers it. [Auth](/docs/products/auth) for accounts and sessions, [Databases](/docs/products/databases) for application and conversation state, [Storage](/docs/products/storage) for files, [Functions](/docs/products/functions) to call the OpenAI API server-side with your key kept secret, and [Messaging](/docs/products/messaging) for notifications. Deploy your frontend next to it with [Sites](/docs/products/sites). Run it on managed Cloud or self-host it.
+
+If your Premium seat is going into Codex, the [Appwrite plugin for Codex](/blog/post/announcing-appwrite-codex-plugin) makes that session more productive. It ships agent skills for the Appwrite CLI and major SDKs and registers the Appwrite Docs MCP server, so your agent writes real SDK calls against a backend that already exists instead of inventing an API.
+
+`codex plugin marketplace add appwrite/codex-plugin`
+
+[Create a free Appwrite project](https://cloud.appwrite.io/), add the plugin, and point your longest Codex run at it.
+
+# Resources
+
+* [Appwrite plugin for Codex](/blog/post/announcing-appwrite-codex-plugin)
+* [Appwrite Functions docs](/docs/products/functions)
+* [Create a free Appwrite project](https://cloud.appwrite.io/)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

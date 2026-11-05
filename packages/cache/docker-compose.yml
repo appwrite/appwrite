@@ -59,8 +59,10 @@ services:
       HZ_NETWORK_MEMCACHEPROTOCOL_ENABLED: "true"
     ports:
       - "15701:5701"
+    # The node reports ACTIVE before it serves the Memcached protocol, so the
+    # check round-trips a read through it. stdin stays open for the reply.
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:5701/hazelcast/health/node-state | grep -q ACTIVE"]
+      test: ["CMD-SHELL", "(printf 'get healthcheck\\r\\n'; sleep 1) | nc -w 1 127.0.0.1 5701 | grep -q END"]
       interval: 2s
       timeout: 3s
       retries: 60

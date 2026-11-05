@@ -9,9 +9,9 @@ use Tests\E2E\Scopes\ApiDocumentsDB;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 /**
  * Live-stack proof that the databases worker can drain a burst of schema jobs
@@ -36,7 +36,7 @@ final class WorkerConcurrencyCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Worker Concurrency DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -47,7 +47,7 @@ final class WorkerConcurrencyCustomServerTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Concurrency Collection',
             $this->getSecurityParam() => true,
             'permissions' => [

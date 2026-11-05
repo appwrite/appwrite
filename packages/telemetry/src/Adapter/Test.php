@@ -61,14 +61,14 @@ class Test implements Adapter
 
         return new class ($register) extends Counter {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
             /**
              * @param \Closure(Counter): void $register
              */
-            public function __construct(private \Closure $register)
+            public function __construct(private readonly \Closure $register)
             {
             }
 
@@ -94,14 +94,21 @@ class Test implements Adapter
 
         return new class ($register) extends Histogram {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
             /**
+             * The attributes of each recording, by the same index as $values.
+             *
+             * @phpstan-var list<array<non-empty-string, array<mixed>|bool|float|int|string|null>>
+             */
+            public array $attributes = [];
+
+            /**
              * @param \Closure(Histogram): void $register
              */
-            public function __construct(private \Closure $register)
+            public function __construct(private readonly \Closure $register)
             {
             }
 
@@ -112,6 +119,7 @@ class Test implements Adapter
             {
                 ($this->register)($this);
                 $this->values[] = $amount;
+                $this->attributes[] = \is_array($attributes) ? $attributes : \iterator_to_array($attributes);
             }
         };
     }
@@ -127,14 +135,14 @@ class Test implements Adapter
 
         return new class ($register) extends Gauge {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
             /**
              * @param \Closure(Gauge): void $register
              */
-            public function __construct(private \Closure $register)
+            public function __construct(private readonly \Closure $register)
             {
             }
 
@@ -160,14 +168,14 @@ class Test implements Adapter
 
         return new class ($register) extends UpDownCounter {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
             /**
              * @param \Closure(UpDownCounter): void $register
              */
-            public function __construct(private \Closure $register)
+            public function __construct(private readonly \Closure $register)
             {
             }
 
@@ -194,13 +202,13 @@ class Test implements Adapter
         return $this->observableGauges[$name]
             ?? $this->unobservedGauges[$name]
             ??= new class ($register) extends ObservableGauge {
-                /** @var list<\Closure> */
+                /** @phpstan-var list<\Closure> */
                 public array $callbacks = [];
 
                 /**
                  * @param \Closure(ObservableGauge): void $register
                  */
-                public function __construct(private \Closure $register)
+                public function __construct(private readonly \Closure $register)
                 {
                 }
 

@@ -2,16 +2,23 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Callback;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Permission as AppwritePermission;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
+use Appwrite\Vcs\State;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -41,7 +48,7 @@ abstract class Base extends Action
      * endpoint (token exchange is a server-to-server call, unlike Authorize's
      * browser-facing endpoint).
      */
-    abstract protected function createOAuth2(string $callback): OAuth2;
+    abstract protected function createOAuth2(Client $client, string $callback): OAuth2;
 
     public function __construct()
     {
@@ -59,6 +66,8 @@ abstract class Base extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -67,7 +76,9 @@ abstract class Base extends Action
         string $state,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        User $user,
+        Authorization $authorization
     ) {
         $key = static::getProvider();
 
@@ -75,42 +86,50 @@ abstract class Base extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        $state = \json_decode($state, true) ?? [];
-        $redirectFailure = $state['failure'] ?? '';
-        $projectId = $state['projectId'] ?? '';
-
         // This endpoint is public -- without verifying the signature the
         // Authorize action put in state, anyone with their own valid
         // authorization code could pass an arbitrary projectId here and
         // attach their VCS account as an installation on another project.
-        $signingKey = System::getEnv('_APP_OPENSSL_KEY_V1', '');
+        $state = State::verify($state, ...EncryptionKey::accepted());
 
-        if (empty($signingKey)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Signing key is not configured. Please configure _APP_OPENSSL_KEY_V1 in .env file.');
+        if ($state === null) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $signingKey);
-        if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        $projectId = $state->projectId;
+        $settings = ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings";
+        $redirectSuccess = $state->success ?: $settings;
+        $redirectFailure = $state->failure ?: $settings;
+
+        if ($state->isExpired()) {
+            $this->failure($response, $redirectFailure, 'The installation request has expired. Please restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        if ($user->isEmpty() || $user->getId() !== $state->userId) {
+            $this->failure($response, $redirectFailure, 'The installation was started by a different Appwrite account. Please sign in with that account, or restart the installation from the Appwrite Console.');
+            return;
+        }
+
+        // Each state completes one installation; ids are capped at 36 characters
+        try {
+            $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                '$id' => 'vcs-state-' . \substr(\hash('sha256', $state->nonce), 0, 26),
+            ])));
+        } catch (Duplicate) {
+            $this->failure($response, $redirectFailure, 'This installation request was already used. Please restart the installation from the Appwrite Console.');
+            return;
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
-            $this->failure($response, $redirectFailure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
+            $this->failure($response, $state->failure, 'Project with the ID from state could not be found.', Exception::PROJECT_NOT_FOUND);
             return;
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $hostname = $platform['consoleHostname'] ?? '';
-
-        $defaultState = [
-            'success' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-            'failure' => ($platform['consoleUrl'] ?? '') . "/projects/$projectId/settings",
-        ];
-
-        $redirectSuccess = empty($state['success']) ? $defaultState['success'] : $state['success'];
-        $redirectFailure = empty($state['failure']) ? $defaultState['failure'] : $state['failure'];
 
         if (empty($code)) {
             $this->failure($response, $redirectFailure, 'OAuth2 authorization code is missing.');
@@ -118,7 +137,8 @@ abstract class Base extends Action
         }
 
         $callback = $protocol . '://' . $hostname . '/v1/vcs/' . $key . '/callback';
-        $oauth2 = $this->createOAuth2($callback);
+        // The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
+        $oauth2 = $this->createOAuth2(new Client(new CurlAdapter()), $callback);
 
         $accessToken = $oauth2->getAccessToken($code);
         $refreshToken = $oauth2->getRefreshToken($code);
@@ -149,7 +169,7 @@ abstract class Base extends Action
             $teamId = $project->getAttribute('teamId', '');
 
             $installation = $dbForPlatform->createDocument('installations', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $projectId),
                 'providerInstallationId' => $providerInstallationId,
                 'projectId' => $projectId,

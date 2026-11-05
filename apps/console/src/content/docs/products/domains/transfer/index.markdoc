@@ -1,0 +1,93 @@
+---
+layout: article
+title: Transfer a domain
+description: Transfer domain registration into or out of Appwrite, including authorization codes, fees, and transfer status.
+---
+
+You can transfer domain registration **into** Appwrite from another registrar and **out** to another registrar when the domain is registered with Appwrite.
+
+This guide covers transfer in, transfer status, and transfer out.
+
+{% info title="Change organization instead?" %}
+To reassign a domain between Appwrite organizations without changing registrar, see [Change organization](/docs/products/domains/change-organization).
+{% /info %}
+
+# Transfer in {% #transfer-in %}
+
+Use transfer in when you want Appwrite to become the registrar for a domain you already own elsewhere.
+
+## Before you start
+
+- Unlock the domain at your current registrar.
+- Request an **authorization code** (also called EPP or transfer code).
+- Confirm the registrant email on the domain can receive approval messages.
+- Ensure your organization has not reached its [domain plan limit](/docs/products/domains/registration#plan-limits).
+
+## Start the transfer
+
+1. Open **Domains** in your organization.
+2. Click **Transfer domain**.
+3. Enter the full domain name (for example `example.com`).
+4. Enter the authorization code from your current registrar.
+5. Select a payment method and review the transfer fee shown in the summary.
+
+Transfer pricing follows the same period rules as registration (for example `.ai` may require a two-year quote). Renewal pricing for after the transfer may appear in the summary when available.
+
+## Payment and confirmation
+
+Transfer in requires payment before Appwrite submits the transfer to the registry. Complete any required card authentication in the payment modal.
+
+After payment:
+
+1. Appwrite initiates the transfer.
+2. The domain appears in your list with a transfer status badge.
+3. Status updates automatically while the transfer is in progress.
+
+## Transfer status {% #transfer-status %}
+
+While a transfer is pending, the Console may show:
+
+| Status | Meaning |
+|--------|---------|
+| Pending owner approval | Waiting for confirmation from the domain owner |
+| Pending admin approval | Waiting for administrative approval at the registry |
+| Pending registry | Registry is processing the transfer |
+| Transfer completed | Domain is registered with Appwrite |
+| Transfer cancelled | Transfer was cancelled before completion |
+| Not transferrable | Domain cannot be transferred (locked, recent registration, or policy restriction) |
+| Transfer unavailable | Transfer service is temporarily unavailable |
+
+{% info title="How long transfers take" %}
+Domain transfers usually take 5 to 7 days. ICANN allows the previous registrar up to 5 days to release the domain. Some TLDs (for example `.com` and `.net`) may need an extra 1 to 2 days to finalize.
+{% /info %}
+
+When the transfer completes, the domain behaves like any [Appwrite-registered](/docs/products/domains/register) name: Appwrite is shown as registrar, auto-renewal is available, and DNS is managed in the Console.
+
+# Transfer out {% #transfer-out %}
+
+Transfer out moves registration from Appwrite to another registrar. This applies only to domains where Appwrite is the registrar.
+
+1. Open the domain in your organization.
+2. Go to the **Settings** tab.
+3. In **Transfer to another registrar**, generate a transfer authorization code.
+4. Copy the code and submit it at your new registrar to start the transfer away from Appwrite.
+
+Keep the authorization code private until you use it at the receiving registrar. After transfer out completes, the domain is removed from Appwrite and DNS management in the Console ends for that registration.
+
+{% info title="DNS after transfer out" %}
+Plan DNS and product connections at the new registrar before transfer out completes. Sites, Functions, and API custom domains that relied on Appwrite DNS must be reconfigured at your new DNS host.
+{% /info %}
+
+# Troubleshooting {% #troubleshooting %}
+
+**Transfer stuck in pending**
+
+Confirm the domain is unlocked at the previous registrar, the authorization code is current, and owner approval emails were accepted. Status polling continues automatically in the Console.
+
+**Not transferrable**
+
+Common causes include a 60-day lock after registration, an incorrect authorization code, or registrar-specific restrictions. Resolve the issue at your current registrar and start a new transfer attempt.
+
+**Plan limit reached**
+
+You cannot complete transfer in if the organization is at its domain limit. [Delete a domain](/docs/products/domains/delete) or upgrade the plan, then retry.

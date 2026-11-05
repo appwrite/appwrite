@@ -3,8 +3,6 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
-use Utopia\Client\Client;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
@@ -215,7 +213,7 @@ class Resend extends OAuth2
         // The redirect_uri must be a well-formed URL; Resend rejects the
         // request shape with invalid_request before authenticating the
         // client, which would mask bad credentials.
-        $response = (new Client(new CurlAdapter()))
+        $response = $this->client
             ->withTimeout(15)
             ->withFollowRedirects(maxHops: 5)
             ->sendRequest((new RequestFactory())->form(

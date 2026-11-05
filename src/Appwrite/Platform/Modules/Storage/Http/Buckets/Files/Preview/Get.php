@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files\Preview;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
@@ -22,6 +23,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\PermissionType;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
@@ -58,6 +60,7 @@ class Get extends Action
             ->label('scope', 'files.read')
             ->label('usage.resource', 'bucket/{request.bucketId}/file/{request.fileId}')
             ->label('resourceType', RESOURCE_TYPE_BUCKETS)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId', 'param.fileId'], 60, seconds: 60)])
             ->label('cache', true)
             ->label('cache.resourceType', 'bucket/{request.bucketId}')
             ->label('cache.resource', 'file/{request.fileId}')
@@ -75,7 +78,7 @@ class Get extends Action
                     )
                 ],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
                 contentType: ContentType::IMAGE
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
@@ -154,7 +157,7 @@ class Get extends Action
 
         $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+        $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
         if (!$fileSecurity && !$valid && !$isToken) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
@@ -169,7 +172,8 @@ class Get extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($file->isEmpty()) {
+        // A file stays incomplete until its final chunk is joined and scanned.
+        if ($file->isEmpty() || $file->getAttribute('chunksUploaded', 0) < $file->getAttribute('chunksTotal', 1)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -182,7 +186,7 @@ class Get extends Action
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
-        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
+        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeOriginal') > (int) System::getEnv('_APP_STORAGE_PREVIEW_LIMIT', APP_STORAGE_READ_BUFFER)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
             } else {

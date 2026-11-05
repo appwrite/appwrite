@@ -2,23 +2,22 @@
 
 namespace Utopia\Agents\DiffCheck;
 
-use Utopia\Agents\Adapter;
 use Utopia\Agents\Agent;
-use Utopia\Agents\Conversation;
-use Utopia\Agents\Message;
-use Utopia\Agents\Roles\User;
+use Utopia\Agents\Model;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 
 class DiffCheck
 {
     /**
-     * @param  Agent|Adapter  $runner  Agent (preconfigured) or Adapter (wrapped into a new Agent)
+     * @param  Agent|Model  $runner  Agent (preconfigured) or Model (wrapped into a new Agent)
      * @param  Repository|string  $base  Local path or remote URL
      * @param  Repository|string  $target  Local path or remote URL
      * @param  string  $prompt  User prompt. Supports placeholders: {{diff}}, {{base}}, {{target}}, {{diff_stats}}
-     * @return array{hasChanges: bool, response: string}
+     * @return array{hasChanges: bool, response: string, output: mixed}
      */
     public function run(
-        Agent|Adapter $runner,
+        Agent|Model $runner,
         Repository|string $base,
         Repository|string $target,
         string $prompt,
@@ -44,6 +43,7 @@ class DiffCheck
                 return [
                     'hasChanges' => false,
                     'response' => '',
+                    'output' => null,
                 ];
             }
 
@@ -55,16 +55,12 @@ class DiffCheck
                 stats: $diffResult['stats']
             );
 
-            $agent = $this->resolveAgent($runner, $options);
-            $conversation = new Conversation($agent);
-            $response = $conversation
-                ->message(new User($options->getUserId()), new Message($finalPrompt))
-                ->send()
-                ->getContent();
+            $result = $this->resolveAgent($runner, $options)->generate($finalPrompt);
 
             return [
                 'hasChanges' => true,
-                'response' => $options->getTrimResponse() ? trim($response) : $response,
+                'response' => $options->getTrimResponse() ? trim($result->text) : $result->text,
+                'output' => $result->output,
             ];
         } finally {
             if ($basePath !== null) {
@@ -76,27 +72,11 @@ class DiffCheck
         }
     }
 
-    protected function resolveAgent(Agent|Adapter $runner, Options $options): Agent
+    protected function resolveAgent(Agent|Model $runner, Options $options): Agent
     {
-        if ($runner instanceof Agent) {
-            if ($options->getDescription() !== '') {
-                $runner->setDescription($options->getDescription());
-            }
-            if ($options->getInstructions() !== []) {
-                $runner->setInstructions($options->getInstructions());
-            }
-            if ($options->getSchema() !== null) {
-                $runner->setSchema($options->getSchema());
-            }
+        $agent = $runner instanceof Agent ? $runner : new Agent($runner);
 
-            return $runner;
-        }
-
-        $agent = new Agent($runner);
-        if ($options->getDescription() !== '') {
-            $agent->setDescription($options->getDescription());
-        }
-        if ($options->getInstructions() !== []) {
+        if ($options->getInstructions() !== '') {
             $agent->setInstructions($options->getInstructions());
         }
         if ($options->getSchema() !== null) {
@@ -117,19 +97,19 @@ class DiffCheck
         }
 
         $source = $repository->getSource();
-        $command = 'cp -R '.escapeshellarg($source.'/.').' '.escapeshellarg($path).' 2>&1';
-        $result = $this->runCommand($command);
+        $result = $this->runCommand((new Command('cp'))->flag('-R')->argument($source.'/.')->argument($path));
 
         if ($result['code'] !== 0) {
             throw new \RuntimeException('Failed to copy local repository: '.implode("\n", $result['output']));
         }
 
-        if ($repository->getRef() !== null) {
+        $ref = $repository->getRef();
+        if ($ref !== null) {
             $checkout = $this->runCommand(
-                'git -C '.escapeshellarg($path).' checkout '.escapeshellarg($repository->getRef()).' 2>&1'
+                (new Command('git'))->option('-C', $path)->argument('checkout')->argument($ref)
             );
             if ($checkout['code'] !== 0) {
-                throw new \RuntimeException('Failed to checkout ref "'.$repository->getRef().'": '.implode("\n", $checkout['output']));
+                throw new \RuntimeException('Failed to checkout ref "'.$ref.'": '.implode("\n", $checkout['output']));
             }
         }
 
@@ -141,7 +121,7 @@ class DiffCheck
         $ref = $repository->getRef();
         if ($ref === null) {
             $clone = $this->runCommand(
-                'git clone --depth 1 '.escapeshellarg($repository->getSource()).' '.escapeshellarg($destination).' 2>&1'
+                (new Command('git'))->argument('clone')->option('--depth', '1')->argument($repository->getSource())->argument($destination)
             );
 
             if ($clone['code'] !== 0) {
@@ -152,14 +132,14 @@ class DiffCheck
         }
 
         $clone = $this->runCommand(
-            'git clone '.escapeshellarg($repository->getSource()).' '.escapeshellarg($destination).' 2>&1'
+            (new Command('git'))->argument('clone')->argument($repository->getSource())->argument($destination)
         );
         if ($clone['code'] !== 0) {
             throw new \RuntimeException('Failed to clone repository: '.implode("\n", $clone['output']));
         }
 
         $checkout = $this->runCommand(
-            'git -C '.escapeshellarg($destination).' checkout '.escapeshellarg($ref).' 2>&1'
+            (new Command('git'))->option('-C', $destination)->argument('checkout')->argument($ref)
         );
         if ($checkout['code'] !== 0) {
             throw new \RuntimeException('Failed to checkout ref "'.$ref.'": '.implode("\n", $checkout['output']));
@@ -175,22 +155,7 @@ class DiffCheck
      */
     protected function generateDiff(string $basePath, string $targetPath, Options $options): array
     {
-        $flags = [];
-        if ($options->getIgnoreAllSpace()) {
-            $flags[] = '--ignore-all-space';
-        }
-        if ($options->getIgnoreBlankLines()) {
-            $flags[] = '--ignore-blank-lines';
-        }
-
-        $command = 'git diff --quiet --no-index '
-            .implode(' ', $flags)
-            .' -- '
-            .escapeshellarg($basePath).' '
-            .escapeshellarg($targetPath)
-            .' 2>&1';
-
-        $result = $this->runCommand($command);
+        $result = $this->runCommand($this->diffCommand($basePath, $targetPath, $options, quiet: true));
 
         if (! in_array($result['code'], [0, 1], true)) {
             throw new \RuntimeException('Failed to generate diff: '.implode("\n", $result['output']));
@@ -206,11 +171,10 @@ class DiffCheck
 
         $maxLines = $options->getMaxDiffLines();
         $captureLines = $maxLines + 1;
-        $outputResult = $this->runCommand(
-            '(git diff --no-index '.implode(' ', $flags).' -- '.escapeshellarg($basePath).' '.escapeshellarg($targetPath).') 2>&1'
-            .' | head -n '
-            .(string) $captureLines
-        );
+        $outputResult = $this->runCommand(Command::pipe(
+            $this->diffCommand($basePath, $targetPath, $options, quiet: false),
+            (new Command('head'))->option('-n', $captureLines),
+        ));
 
         $lines = $outputResult['output'];
         $capturedLineCount = count($lines);
@@ -340,18 +304,37 @@ class DiffCheck
         return $path;
     }
 
+    protected function diffCommand(string $basePath, string $targetPath, Options $options, bool $quiet): Command
+    {
+        $command = (new Command('git'))->argument('diff');
+        if ($quiet) {
+            $command->flag('--quiet');
+        }
+        $command->flag('--no-index');
+        if ($options->getIgnoreAllSpace()) {
+            $command->flag('--ignore-all-space');
+        }
+        if ($options->getIgnoreBlankLines()) {
+            $command->flag('--ignore-blank-lines');
+        }
+
+        return $command->argument('--')->argument($basePath)->argument($targetPath);
+    }
+
     /**
      * @return array{code: int, output: array<int, string>}
      */
-    protected function runCommand(string $command): array
+    protected function runCommand(Command $command): array
     {
-        $output = [];
-        $code = 0;
-        exec($command, $output, $code);
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute($command, '', $stdout, $stderr);
+
+        $printed = rtrim($stdout.($stdout !== '' && $stderr !== '' ? "\n" : '').$stderr, "\n");
 
         return [
             'code' => $code,
-            'output' => $output,
+            'output' => $printed === '' ? [] : explode("\n", $printed),
         ];
     }
 

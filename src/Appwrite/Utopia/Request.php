@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia;
 
+use Appwrite\Network\TrustedProxies;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request\Filter;
@@ -20,12 +21,54 @@ class Request extends UtopiaRequest
     private array $filters = [];
     private ?Route $route = null;
     private ?array $filteredParams = null;
+    private readonly TrustedProxies $trustedProxies;
 
     public function __construct(SwooleRequest $request)
     {
         $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
+        $this->trustedProxies = TrustedProxies::fromEnvironment();
+        $fromProxy = $this->trustedProxies->contains($request->server['remote_addr'] ?? '0.0.0.0');
 
-        parent::__construct($request, new TrustedHeaders(ip: explode(',', $trustedHeaders)));
+        parent::__construct($request, new TrustedHeaders(
+            ip: explode(',', $trustedHeaders),
+            host: $fromProxy ? ['x-forwarded-host'] : [],
+            port: $fromProxy ? ['x-forwarded-port'] : [],
+        ));
+    }
+
+    #[\Override]
+    public function getIP(): string
+    {
+        $remoteAddr = $this->getServer('remote_addr') ?? '0.0.0.0';
+
+        if (!$this->trustedProxies->contains($remoteAddr)) {
+            return $remoteAddr;
+        }
+
+        foreach ($this->trusted->ip as $header) {
+            $ips = [];
+            foreach (explode(',', $this->getHeaderLine($header)) as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP) !== false) {
+                    $ips[] = $ip;
+                }
+            }
+
+            if ($ips === []) {
+                continue;
+            }
+
+            // Proxies that append keep client-supplied entries on the left, so the rightmost untrusted hop is the client.
+            foreach (array_reverse($ips) as $ip) {
+                if (!$this->trustedProxies->contains($ip)) {
+                    return $ip;
+                }
+            }
+
+            return $ips[0];
+        }
+
+        return $remoteAddr;
     }
 
     /**
@@ -178,9 +221,21 @@ class Request extends UtopiaRequest
      */
     public function getHeaders(): array
     {
-        $headers = parent::getHeaders();
+        return $this->getHeadersWithoutCookies([]);
+    }
 
-        $cookies = $this->getCookieParams();
+    /**
+     * Get all headers like getHeaders(), leaving the named cookies out of the synthesized `cookie` header.
+     *
+     * @param list<string> $names
+     * @return array<string, array<int, string>>
+     */
+    public function getHeadersWithoutCookies(array $names): array
+    {
+        $headers = parent::getHeaders();
+        unset($headers['cookie']);
+
+        $cookies = \array_diff_key($this->getCookieParams(), \array_flip($names));
         if (!empty($cookies)) {
             $pairs = [];
             foreach ($cookies as $key => $value) {
@@ -216,6 +271,36 @@ class Request extends UtopiaRequest
     }
 
     /**
+     * Index of the chunk this range starts in, for chunks of the given size. 0 without a valid range.
+     */
+    public function getContentRangeChunk(int $size): int
+    {
+        $start = $this->getContentRangeStart();
+
+        if ($start === null) {
+            return 0;
+        }
+
+        return \intdiv($start, $size);
+    }
+
+    /**
+     * @return array{unit: string, size: int, start: int, end: int}|null
+     */
+    #[\Override]
+    protected function parseContentRange(): ?array
+    {
+        $data = parent::parseContentRange();
+
+        // Bounds past PHP_INT_MAX saturate to it, and end + 1 must stay an integer.
+        if ($data === null || $data['size'] >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return $data;
+    }
+
+    /**
      * Creates a unique stable cache identifier for this GET request.
      * Stable-sorts query params, use `serialize` to ensure key&value are part of cache keys.
      *
@@ -238,6 +323,11 @@ class Request extends UtopiaRequest
     private ?Authorization $authorization = null;
     private ?User $user = null;
 
+    /**
+     * @var array<string> Scopes the caller holds, set once the request is authorized
+     */
+    private array $scopes = [];
+
     public function setAuthorization(Authorization $authorization): void
     {
         $this->authorization = $authorization;
@@ -246,5 +336,21 @@ class Request extends UtopiaRequest
     public function setUser(User $user): void
     {
         $this->user = $user;
+    }
+
+    /**
+     * @param array<string> $scopes
+     */
+    public function setScopes(array $scopes): void
+    {
+        $this->scopes = $scopes;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function getScopes(): array
+    {
+        return $this->scopes;
     }
 }

@@ -14,6 +14,7 @@ use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Query\Builder\ClickHouse as ClickHouseBuilder;
 use Utopia\Query\Builder\ClickHouse\Format;
 use Utopia\Query\Builder\Statement;
+use Utopia\Query\Method as QueryMethod;
 
 /**
  * ClickHouse persistence for function and site executions.
@@ -80,6 +81,14 @@ class Store
         'duration' => ['duration', 'Float64'],
         'requestMethod' => ['requestMethod', 'String'],
         'requestPath' => ['requestPath', 'String'],
+    ];
+
+    private const array WINDOW_METHODS = [
+        QueryMethod::LessThan,
+        QueryMethod::LessThanEqual,
+        QueryMethod::GreaterThan,
+        QueryMethod::GreaterThanEqual,
+        QueryMethod::Between,
     ];
 
     private readonly RequestFactory $requestFactory;
@@ -305,7 +314,7 @@ class Store
         }
 
         $where = $filters === [] ? '' : ' WHERE ' . \implode(' AND ', $filters);
-        $before = $cursor?->getMethod() === Query::TYPE_CURSOR_BEFORE;
+        $before = $cursor?->getMethod() === QueryMethod::CursorBefore;
         $orderSql = $this->orderSql($order, $before);
         $latest = $this->latestSql($this->latestWhere($queries, $params));
         $builder = $this->builder()
@@ -433,7 +442,8 @@ class Store
         $statement = (new ClickHouseBuilder())
             ->from($table)
             ->bulkInsert(Format::JSONEachRow, $rows, $columns);
-        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query]);
+        // Async inserts wait up to 200ms for a flush that batches almost nothing for one-row snapshots.
+        $url = $this->url() . '?' . \http_build_query(['query' => $statement->query, 'async_insert' => 0]);
         $body = $statement->body;
         $request = $this->requestFactory->body(Method::POST, $url, $body, 'application/x-ndjson', $this->headers());
 
@@ -508,14 +518,30 @@ class Store
      * the route's internal resource filters before aggregation avoids scanning
      * and grouping every execution in a large project.
      *
+     * A $createdAt window narrows the aggregation to the executions that have
+     * at least one version inside it. The window cannot filter versions
+     * directly: an execution queued through the API and finished by the
+     * functions worker gets a later createdAt on its worker-written versions,
+     * so dropping out-of-window versions could hide the latest one and return
+     * a stale status or a deleted execution. Every execution whose latest
+     * version matches has some version that matches, so the outer filter still
+     * decides on the latest snapshot.
+     *
      * @param array<Query> $queries
      * @param array<string, mixed> $params
      */
     private function latestWhere(array $queries, array &$params): string
     {
-        $conditions = ['source.projectId = {projectId:String}'];
+        $scope = ['projectId = {projectId:String}'];
+        $window = [];
         foreach ($queries as $query) {
-            if ($query->getMethod() !== Query::TYPE_EQUAL
+            if ($query->getAttribute() === '$createdAt'
+                && \in_array($query->getMethod(), self::WINDOW_METHODS, true)) {
+                $window[] = $this->filterSql($query, $params);
+                continue;
+            }
+
+            if ($query->getMethod() !== QueryMethod::Equal
                 || !\in_array($query->getAttribute(), ['resourceInternalId', 'resourceType'], true)) {
                 continue;
             }
@@ -526,8 +552,14 @@ class Store
                 $parameters[] = $this->parameter($type, $value, $params);
             }
             if ($parameters !== []) {
-                $conditions[] = "source.{$column} IN (" . \implode(', ', $parameters) . ')';
+                $scope[] = "{$column} IN (" . \implode(', ', $parameters) . ')';
             }
+        }
+
+        $conditions = \array_map(fn (string $condition) => "source.{$condition}", $scope);
+        if ($window !== []) {
+            $conditions[] = 'source.id IN (SELECT id FROM ' . $this->table()
+                . ' WHERE ' . \implode(' AND ', [...$scope, ...$window]) . ')';
         }
 
         return \implode(' AND ', $conditions);
@@ -547,28 +579,14 @@ class Store
         $cursor = null;
 
         foreach ($queries as $query) {
-            switch ($query->getMethod()) {
-                case Query::TYPE_ORDER_ASC:
-                case Query::TYPE_ORDER_DESC:
-                case Query::TYPE_ORDER_RANDOM:
-                    $order[] = $query;
-                    break;
-                case Query::TYPE_LIMIT:
-                    $limit = \max(1, (int) $query->getValue(25));
-                    break;
-                case Query::TYPE_OFFSET:
-                    $offset = \max(0, (int) $query->getValue(0));
-                    break;
-                case Query::TYPE_CURSOR_AFTER:
-                case Query::TYPE_CURSOR_BEFORE:
-                    $cursor = $query;
-                    break;
-                case Query::TYPE_SELECT:
-                    break;
-                default:
-                    $filters[] = $this->filterSql($query, $params);
-                    break;
-            }
+            match ($query->getMethod()) {
+                QueryMethod::OrderAsc, QueryMethod::OrderDesc, QueryMethod::OrderRandom => $order[] = $query,
+                QueryMethod::Limit => $limit = \max(1, (int) $query->getValue(25)),
+                QueryMethod::Offset => $offset = \max(0, (int) $query->getValue(0)),
+                QueryMethod::CursorAfter, QueryMethod::CursorBefore => $cursor = $query,
+                QueryMethod::Select => null,
+                default => $filters[] = $this->filterSql($query, $params),
+            };
         }
 
         if ($order === []) {
@@ -583,8 +601,8 @@ class Store
             $first = $order[0];
             $method = \in_array($first->getAttribute(), ['$createdAt', '$updatedAt'], true)
                 ? $first->getMethod()
-                : Query::TYPE_ORDER_ASC;
-            $order[] = $method === Query::TYPE_ORDER_DESC
+                : QueryMethod::OrderAsc;
+            $order[] = $method === QueryMethod::OrderDesc
                 ? Query::orderDesc('$sequence')
                 : Query::orderAsc('$sequence');
         }
@@ -598,7 +616,7 @@ class Store
         }
         if (!$hasId) {
             $last = $order[\array_key_last($order)];
-            $order[] = $last->getMethod() === Query::TYPE_ORDER_ASC
+            $order[] = $last->getMethod() === QueryMethod::OrderAsc
                 ? Query::orderAsc('$id')
                 : Query::orderDesc('$id');
         }
@@ -610,7 +628,7 @@ class Store
     private function filterSql(Query $query, array &$params): string
     {
         $method = $query->getMethod();
-        if ($method === Query::TYPE_AND || $method === Query::TYPE_OR) {
+        if ($method === QueryMethod::And || $method === QueryMethod::Or) {
             $parts = [];
             foreach ($query->getValues() as $nested) {
                 if (!$nested instanceof Query) {
@@ -621,13 +639,13 @@ class Store
             if ($parts === []) {
                 throw new \InvalidArgumentException('Empty logical execution query');
             }
-            return '(' . \implode($method === Query::TYPE_AND ? ' AND ' : ' OR ', $parts) . ')';
+            return '(' . \implode($method === QueryMethod::And ? ' AND ' : ' OR ', $parts) . ')';
         }
-        if ($method === Query::TYPE_EXISTS || $method === Query::TYPE_NOT_EXISTS) {
+        if ($method === QueryMethod::Exists || $method === QueryMethod::NotExists) {
             $parts = [];
             foreach ($query->getValues() as $attribute) {
                 [$column] = $this->column((string) $attribute);
-                $parts[] = $column . ($method === Query::TYPE_EXISTS ? " != ''" : " = ''");
+                $parts[] = $column . ($method === QueryMethod::Exists ? " != ''" : " = ''");
             }
             if ($parts === []) {
                 throw new \InvalidArgumentException('Empty execution exists query');
@@ -644,28 +662,28 @@ class Store
         }
 
         return match ($method) {
-            Query::TYPE_EQUAL => "{$column} IN (" . \implode(', ', $parameters) . ')',
-            Query::TYPE_NOT_EQUAL => "{$column} NOT IN (" . \implode(', ', $parameters) . ')',
-            Query::TYPE_LESSER => "{$column} < {$parameters[0]}",
-            Query::TYPE_LESSER_EQUAL => "{$column} <= {$parameters[0]}",
-            Query::TYPE_GREATER => "{$column} > {$parameters[0]}",
-            Query::TYPE_GREATER_EQUAL => "{$column} >= {$parameters[0]}",
-            Query::TYPE_BETWEEN => "{$column} BETWEEN {$parameters[0]} AND {$parameters[1]}",
-            Query::TYPE_NOT_BETWEEN => "{$column} NOT BETWEEN {$parameters[0]} AND {$parameters[1]}",
-            Query::TYPE_CONTAINS => $this->containsSql($column, $parameters, false),
-            Query::TYPE_CONTAINS_ANY => $this->containsSql($column, $parameters, false),
-            Query::TYPE_CONTAINS_ALL => $this->containsAllSql($column, $parameters),
-            Query::TYPE_NOT_CONTAINS => $this->containsSql($column, $parameters, true),
-            Query::TYPE_SEARCH => "positionCaseInsensitive({$column}, {$parameters[0]}) > 0",
-            Query::TYPE_NOT_SEARCH => "positionCaseInsensitive({$column}, {$parameters[0]}) = 0",
-            Query::TYPE_STARTS_WITH => "startsWith({$column}, {$parameters[0]})",
-            Query::TYPE_NOT_STARTS_WITH => "NOT startsWith({$column}, {$parameters[0]})",
-            Query::TYPE_ENDS_WITH => "endsWith({$column}, {$parameters[0]})",
-            Query::TYPE_NOT_ENDS_WITH => "NOT endsWith({$column}, {$parameters[0]})",
-            Query::TYPE_REGEX => "match({$column}, {$parameters[0]})",
-            Query::TYPE_IS_NULL => "{$column} = ''",
-            Query::TYPE_IS_NOT_NULL => "{$column} != ''",
-            default => throw new \InvalidArgumentException("Unsupported execution query method: {$method}"),
+            QueryMethod::Equal => "{$column} IN (" . \implode(', ', $parameters) . ')',
+            QueryMethod::NotEqual => "{$column} NOT IN (" . \implode(', ', $parameters) . ')',
+            QueryMethod::LessThan => "{$column} < {$parameters[0]}",
+            QueryMethod::LessThanEqual => "{$column} <= {$parameters[0]}",
+            QueryMethod::GreaterThan => "{$column} > {$parameters[0]}",
+            QueryMethod::GreaterThanEqual => "{$column} >= {$parameters[0]}",
+            QueryMethod::Between => "{$column} BETWEEN {$parameters[0]} AND {$parameters[1]}",
+            QueryMethod::NotBetween => "{$column} NOT BETWEEN {$parameters[0]} AND {$parameters[1]}",
+            QueryMethod::Contains => $this->containsSql($column, $parameters, false),
+            QueryMethod::ContainsAny => $this->containsSql($column, $parameters, false),
+            QueryMethod::ContainsAll => $this->containsAllSql($column, $parameters),
+            QueryMethod::NotContains => $this->containsSql($column, $parameters, true),
+            QueryMethod::Search => "positionCaseInsensitive({$column}, {$parameters[0]}) > 0",
+            QueryMethod::NotSearch => "positionCaseInsensitive({$column}, {$parameters[0]}) = 0",
+            QueryMethod::StartsWith => "startsWith({$column}, {$parameters[0]})",
+            QueryMethod::NotStartsWith => "NOT startsWith({$column}, {$parameters[0]})",
+            QueryMethod::EndsWith => "endsWith({$column}, {$parameters[0]})",
+            QueryMethod::NotEndsWith => "NOT endsWith({$column}, {$parameters[0]})",
+            QueryMethod::Regex => "match({$column}, {$parameters[0]})",
+            QueryMethod::IsNull => "{$column} = ''",
+            QueryMethod::IsNotNull => "{$column} != ''",
+            default => throw new \InvalidArgumentException("Unsupported execution query method: {$method->value}"),
         };
     }
 
@@ -696,12 +714,12 @@ class Store
     {
         $parts = [];
         foreach ($order as $query) {
-            if ($query->getMethod() === Query::TYPE_ORDER_RANDOM) {
+            if ($query->getMethod() === QueryMethod::OrderRandom) {
                 $parts[] = 'rand()';
                 continue;
             }
             [$column] = $this->column($query->getAttribute());
-            $ascending = $query->getMethod() === Query::TYPE_ORDER_ASC;
+            $ascending = $query->getMethod() === QueryMethod::OrderAsc;
             if ($before) {
                 $ascending = !$ascending;
             }
@@ -722,11 +740,11 @@ class Store
             return '';
         }
 
-        if ($order[0]->getMethod() === Query::TYPE_ORDER_RANDOM) {
+        if ($order[0]->getMethod() === QueryMethod::OrderRandom) {
             return '';
         }
 
-        $after = $cursor->getMethod() === Query::TYPE_CURSOR_AFTER;
+        $after = $cursor->getMethod() === QueryMethod::CursorAfter;
         $branches = [];
         $equal = [];
 
@@ -748,7 +766,7 @@ class Store
             }
 
             $parameter = $this->parameter($type, $value, $params);
-            $ascending = $query->getMethod() === Query::TYPE_ORDER_ASC;
+            $ascending = $query->getMethod() === QueryMethod::OrderAsc;
             $operator = ($ascending === $after) ? '>' : '<';
             $conditions = [...$equal, "{$column} {$operator} {$parameter}"];
             $branches[] = '(' . \implode(' AND ', $conditions) . ')';

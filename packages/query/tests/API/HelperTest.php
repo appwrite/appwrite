@@ -2,6 +2,7 @@
 
 namespace Utopia\Query\Tests\API;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Query\CursorDirection;
 use Utopia\Query\Exception\ValidationException;
@@ -164,9 +165,9 @@ class HelperTest extends TestCase
     {
         $queries = [
             Query::equal('name', ['John']),
-            Query::cursorAfter('abc'),
+            Query::cursorAfter(['id' => 'abc']),
             Query::limit(10),
-            Query::cursorBefore('xyz'),
+            Query::cursorBefore(['id' => 'xyz']),
         ];
 
         $cursors = Query::getCursorQueries($queries);
@@ -192,7 +193,7 @@ class HelperTest extends TestCase
             Query::offset(10),
             Query::orderAsc('name'),
             Query::orderDesc('age'),
-            Query::cursorAfter('doc123'),
+            Query::cursorAfter(['id' => 'doc123']),
         ];
 
         $grouped = Query::groupByType($queries);
@@ -207,7 +208,7 @@ class HelperTest extends TestCase
         $this->assertSame(25, $grouped->limit);
         $this->assertSame(10, $grouped->offset);
 
-        $this->assertSame('doc123', $grouped->cursor);
+        $this->assertSame(['id' => 'doc123'], $grouped->cursor);
         $this->assertSame(CursorDirection::After, $grouped->cursorDirection);
     }
 
@@ -233,26 +234,69 @@ class HelperTest extends TestCase
         $this->assertSame(5, $grouped->offset);
     }
 
+    /**
+     * @return array<string, array{0: mixed, 1: int|null}>
+     */
+    public static function limitValueProvider(): array
+    {
+        return [
+            'integer' => [25, 25],
+            'integral float' => [25.0, 25],
+            'numeric string' => ['25', 25],
+            'fractional float' => [25.9, 25],
+            'float beyond int range' => [1e308, null],
+            'string beyond int range' => ['1e400', null],
+            'negative float beyond int range' => [-1e300, null],
+            'boolean' => [true, null],
+            'array' => [[1], null],
+            'non-numeric string' => ['ten', null],
+        ];
+    }
+
+    #[DataProvider('limitValueProvider')]
+    public function testGroupByTypeReadsLimitAndOffsetWithoutWarnings(mixed $value, ?int $expected): void
+    {
+        $warnings = [];
+        \set_error_handler(static function (int $severity, string $message) use (&$warnings): bool {
+            $warnings[] = $message;
+
+            return true;
+        });
+
+        try {
+            $grouped = Query::groupByType([
+                new Query(Method::Limit, values: [$value]),
+                new Query(Method::Offset, values: [$value]),
+            ]);
+        } finally {
+            \restore_error_handler();
+        }
+
+        $this->assertSame([], $warnings, 'Reading a limit or offset must not raise a PHP warning');
+        $this->assertSame($expected, $grouped->limit);
+        $this->assertSame($expected, $grouped->offset);
+    }
+
     public function testGroupByTypeFirstCursorWins(): void
     {
         $queries = [
-            Query::cursorAfter('first'),
-            Query::cursorBefore('second'),
+            Query::cursorAfter(['id' => 'first']),
+            Query::cursorBefore(['id' => 'second']),
         ];
 
         $grouped = Query::groupByType($queries);
-        $this->assertSame('first', $grouped->cursor);
+        $this->assertSame(['id' => 'first'], $grouped->cursor);
         $this->assertSame(CursorDirection::After, $grouped->cursorDirection);
     }
 
     public function testGroupByTypeCursorBefore(): void
     {
         $queries = [
-            Query::cursorBefore('doc456'),
+            Query::cursorBefore(['id' => 'doc456']),
         ];
 
         $grouped = Query::groupByType($queries);
-        $this->assertSame('doc456', $grouped->cursor);
+        $this->assertSame(['id' => 'doc456'], $grouped->cursor);
         $this->assertSame(CursorDirection::Before, $grouped->cursorDirection);
     }
 
@@ -265,7 +309,7 @@ class HelperTest extends TestCase
     {
         $queries = [
             Query::limit(25),
-            Query::cursorAfter(null),
+            Query::parseQuery(['method' => 'cursorAfter', 'values' => [null]]),
         ];
 
         $grouped = Query::groupByType($queries);
@@ -338,9 +382,9 @@ class HelperTest extends TestCase
     public function testGroupByTypeJoins(): void
     {
         $queries = [
-            Query::join('orders', 'users.id', 'orders.user_id'),
-            Query::leftJoin('profiles', 'users.id', 'profiles.user_id'),
-            Query::crossJoin('colors'),
+            Query::join('orders', 'orders', [Query::on('users.id', 'orders.user_id')]),
+            Query::leftJoin('profiles', 'profiles', [Query::on('users.id', 'profiles.user_id')]),
+            Query::crossJoin('colors', 'colors'),
         ];
         $grouped = Query::groupByType($queries);
         $this->assertCount(3, $grouped->joins);
@@ -393,12 +437,12 @@ class HelperTest extends TestCase
 
     public function testMergeCursorOverrides(): void
     {
-        $a = [Query::cursorAfter('abc')];
-        $b = [Query::cursorAfter('xyz')];
+        $a = [Query::cursorAfter(['id' => 'abc'])];
+        $b = [Query::cursorAfter(['id' => 'xyz'])];
 
         $result = Query::merge($a, $b);
         $this->assertCount(1, $result);
-        $this->assertSame('xyz', $result[0]->getValue());
+        $this->assertSame(['id' => 'xyz'], $result[0]->getValue());
     }
 
     public function testDiffReturnsUnique(): void
@@ -457,6 +501,16 @@ class HelperTest extends TestCase
             Query::orderRandom(),
         ];
         $errors = Query::validate($queries, []);
+        $this->assertCount(0, $errors);
+    }
+
+    public function testValidateSkipsRelationshipQueries(): void
+    {
+        $queries = [
+            Query::equal('name', ['John']),
+            Query::relationship('comments', [Query::equal('approved', [true])]),
+        ];
+        $errors = Query::validate($queries, ['name']);
         $this->assertCount(0, $errors);
     }
 
@@ -529,7 +583,7 @@ class HelperTest extends TestCase
             Query::groupBy(['status']),
             Query::having([Query::greaterThan('total', 5)]),
             Query::distinct(),
-            Query::join('orders', 'u.id', 'o.uid'),
+            Query::join('orders', 'orders', [Query::on('u.id', 'o.uid')]),
             Query::union([Query::equal('x', [1])]),
             Query::select(['name']),
             Query::orderAsc('name'),
@@ -643,8 +697,8 @@ class HelperTest extends TestCase
 
     public function testMergeCursorTypesIndependent(): void
     {
-        $a = [Query::cursorAfter('abc')];
-        $b = [Query::cursorBefore('xyz')];
+        $a = [Query::cursorAfter(['id' => 'abc'])];
+        $b = [Query::cursorBefore(['id' => 'xyz'])];
         $result = Query::merge($a, $b);
         // cursorAfter and cursorBefore are different types, both should exist
         $this->assertCount(2, $result);
@@ -812,7 +866,7 @@ class HelperTest extends TestCase
     public function testValidateJoinAttributeIsTableName(): void
     {
         // Join's attribute is the table name, not a column, so it gets validated
-        $queries = [Query::join('orders', 'u.id', 'o.uid')];
+        $queries = [Query::join('orders', 'orders', [Query::on('u.id', 'o.uid')])];
         $errors = Query::validate($queries, ['name']);
         $this->assertCount(1, $errors);
         $this->assertStringContainsString('orders', $errors[0]);
@@ -859,7 +913,7 @@ class HelperTest extends TestCase
         $queries = [
             Query::count('*', 'total'),
             Query::sum('price'),
-            Query::join('t', 'a', 'b'),
+            Query::join('t', 't', [Query::on('a', 'b')]),
             Query::distinct(),
             Query::groupBy(['status']),
         ];

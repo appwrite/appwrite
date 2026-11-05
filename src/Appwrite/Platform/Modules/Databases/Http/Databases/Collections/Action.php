@@ -114,7 +114,7 @@ abstract class Action extends DatabasesAction
     protected function addRowBytesInfo(Document $document, Database $dbForProject): Document
     {
         $adapter = $dbForProject->getAdapter();
-        $document->setAttribute('bytesMax', $adapter->getDocumentSizeLimit());
+        $document->setAttribute('bytesMax', $adapter->limits()->documentSize);
         $document->setAttribute('bytesUsed', $adapter->getAttributeWidth($document));
         return $document;
     }

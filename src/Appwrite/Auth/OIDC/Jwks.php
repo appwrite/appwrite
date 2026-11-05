@@ -4,7 +4,6 @@ namespace Appwrite\Auth\OIDC;
 
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Method;
@@ -27,12 +26,9 @@ class Jwks
 
     private const RSA_ENCRYPTION_OID = "\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01"; // 1.2.840.113549.1.1.1
 
-    /**
-     * @param ?callable $fetcher `fn (string $url): string` returning the raw JWKS body; HTTP GET when null
-     */
     public function __construct(
         private Cache $cache,
-        private mixed $fetcher = null,
+        private Client $client,
     ) {
     }
 
@@ -75,25 +71,21 @@ class Jwks
      */
     private function fetch(string $jwksUrl): array
     {
-        if ($this->fetcher !== null) {
-            $body = ($this->fetcher)($jwksUrl);
-        } else {
-            try {
-                $response = (new Client(new CurlAdapter()))
-                    ->withConnectTimeout(self::CONNECT_TIMEOUT)
-                    ->withTimeout(self::REQUEST_TIMEOUT)
-                    ->withHeaders([Header::USER_AGENT => 'Appwrite'])
-                    ->sendRequest((new RequestFactory())->createRequest(Method::GET, $jwksUrl));
-            } catch (\Throwable) {
-                $response = null;
-            }
-
-            if ($response === null || $response->getStatusCode() !== 200) {
-                throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
-            }
-
-            $body = (string) $response->getBody();
+        try {
+            $response = $this->client
+                ->withConnectTimeout(self::CONNECT_TIMEOUT)
+                ->withTimeout(self::REQUEST_TIMEOUT)
+                ->withHeaders([Header::USER_AGENT => 'Appwrite'])
+                ->sendRequest((new RequestFactory())->createRequest(Method::GET, $jwksUrl));
+        } catch (\Throwable) {
+            $response = null;
         }
+
+        if ($response === null || $response->getStatusCode() !== 200) {
+            throw new Exception(Exception::USER_OAUTH2_PROVIDER_ERROR, 'Failed to fetch the provider signing keys. Please try again.');
+        }
+
+        $body = (string) $response->getBody();
 
         $document = \json_decode($body, true);
         if (!\is_array($document) || !\is_array($document['keys'] ?? null)) {

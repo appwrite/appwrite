@@ -16,6 +16,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -55,6 +57,7 @@ class XList extends Action
             ->param('providerRepositoryId', '', new Text(256), 'Repository Id')
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('queries', [], new Branches(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit, offset, cursorAfter, and cursorBefore', true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('vcsFactory')
             ->inject('installationTokens')
             ->inject('response')
@@ -68,6 +71,7 @@ class XList extends Action
         string $providerRepositoryId,
         string $search,
         array $queries,
+        bool $includeTotal,
         VcsFactory $vcsFactory,
         InstallationTokens $installationTokens,
         Response $response,
@@ -109,30 +113,23 @@ class XList extends Action
             ? $vcs->listBranches($owner, $repositoryName, search: $search)
             : $vcs->listBranches($owner, $repositoryName);
 
-        $total = \count($branches);
-        [
-            'limit' => $limit,
-            'offset' => $offset,
-        ] = Query::groupByType($queries);
+        $total = $includeTotal ? \count($branches) : 0;
+        $limit = (Query::getByType($queries, [QueryMethod::Limit])[0] ?? null)?->getValue() ?? APP_LIMIT_LIST_DEFAULT;
+        $offset = (Query::getByType($queries, [QueryMethod::Offset])[0] ?? null)?->getValue() ?? 0;
         $cursorQuery = \current(Query::getCursorQueries($queries, false));
-
-        $limit ??= APP_LIMIT_LIST_DEFAULT;
-        $offset ??= 0;
 
         if ($cursorQuery instanceof Query) {
             $cursor = $cursorQuery->getValue();
-            $cursorDirection = $cursorQuery->getMethod() === Query::TYPE_CURSOR_AFTER
-                ? Database::CURSOR_AFTER
-                : Database::CURSOR_BEFORE;
+            $cursorAfter = $cursorQuery->getMethod() === QueryMethod::CursorAfter;
 
             $cursorIndex = \array_search($cursor, $branches, true);
             if ($cursorIndex === false) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Branch '{$cursor}' for the 'cursor' value not found.");
             }
 
-            $offset += $cursorDirection === Database::CURSOR_AFTER ? $cursorIndex + 1 : 0;
+            $offset += $cursorAfter ? $cursorIndex + 1 : 0;
 
-            if ($cursorDirection === Database::CURSOR_BEFORE) {
+            if (!$cursorAfter) {
                 $start = \max(0, $cursorIndex - $limit);
                 $branches = \array_slice($branches, $start, $cursorIndex - $start);
             } else {

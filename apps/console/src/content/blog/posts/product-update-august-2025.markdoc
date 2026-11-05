@@ -1,0 +1,169 @@
+---
+layout: post
+title: "August product update: Cloud GA, new TablesDB UI & Sites Hackathon"
+description: Get a full recap of products, features and programs we released in the month of August.
+date: 2025-09-03
+lastUpdated: 2026-06-29
+cover: /images/blog/product-update-august-2025/cover.avif
+timeToRead: 6
+author: dennis-ivy
+category: products
+featured: false
+callToAction: true
+faqs:
+  - question: "What does Appwrite Cloud GA mean for existing users?"
+    answer: "GA means the beta tag is gone and Appwrite Cloud is now a generally available product backed by formal availability and support commitments. Nothing changes for existing projects, but you get the assurance that the platform is production stable."
+  - question: "What is TablesDB?"
+    answer: "TablesDB is a new API layer for [Appwrite Databases](/docs/products/databases) that uses relational terminology: tables, rows, and columns instead of collections, documents, and attributes. It also ships with a spreadsheet style console UI for inline editing and bulk actions."
+  - question: "Do I need to migrate from the document API to TablesDB?"
+    answer: "No. The document based methods continue to work and remain backwards compatible. They are deprecated for major upgrades, but they still receive security patches. New projects should adopt TablesDB to access future improvements."
+  - question: "Where is the new San Francisco cloud region available?"
+    answer: "San Francisco (SFO) is available on all Free, Pro, and Enterprise plans. You can create new projects there or migrate existing projects using Appwrite Cloud migrations."
+  - question: "What are atomic numeric operations?"
+    answer: "Atomic numeric operations let you increment or decrement a column directly on the server, without reading the value first. This is useful for counters, inventory, and any state where two clients might update the same field at once."
+  - question: "What was the Appwrite Sites Hackathon?"
+    answer: "The Appwrite Sites Hackathon ran in August 2025 and invited the community to build and ship sites using [Appwrite Sites](/docs/products/sites). Participants competed for prizes including the Appwriter Keyboard."
+---
+
+Welcome back to the August Product Update. This month, we’ve got some significant updates, from Appwrite Cloud, which is now generally available, and a brand new look for Appwrite Databases. On top of it, Appwrite’s very first Sites Hackathon is also now live.
+
+So, here’s what to expect:
+
+- Appwrite Cloud GA
+- Sites Hackathon
+- New Cloud region
+- New Database UI
+- Terminology update
+- And more!
+
+Let’s dive in.
+
+# Appwrite Cloud is now generally available
+
+![Appwrite Cloud GA](/images/blog/product-update-august-2025/ga.avif)
+
+After more than 26 months of Appwrite Cloud, we removed the beta tag. Appwrite is now officially generally available (GA).
+
+With Appwrite Cloud now powering over 300,000 projects, we’re proud and excited to announce that we have transitioned to General Availability.
+
+[Read the announcement](/changelog/entry/2025-08-06)
+
+# Appwrite Sites Hackathon
+
+![Appwrite Sites Hackathon](/images/blog/product-update-august-2025/hackathon.avif)
+
+After receiving multiple requests from the community, the **Appwrite Sites Hackathon** is finally here and underway.
+
+You have until **September 12** to showcase your creativity and compete for great prizes, including the exclusive Appwriter Keyboard and other prizes.
+
+[Register now](https://hackathon.appwrite.network/)
+
+# New Cloud region
+
+![New Cloud region](/images/blog/product-update-august-2025/new-region.avif)
+
+We’re happy to share that the new cloud region, San Francisco (SFO), is now available on all Free, Pro, and Enterprise plans.
+
+You can create a new project or migrate your existing project to the SFO region.
+
+Want to switch to a new region? Here are some resources to help you:
+
+- Video: [Changing regions with migrations](https://www.youtube.com/watch?v=Ya2R6dD_xxE)
+- Blog: [How to change regions in Appwrite Cloud using migrations](/blog/post/change-regions-with-migrations)
+
+# New TablesDB API with updated terminology
+
+![New TablesDB API with updated terminology](/images/blog/product-update-august-2025/terminology.avif)
+
+Appwrite Databases now feels more relational. We’ve updated the terminology to match the relational model that developers are most familiar with.
+
+Here’s what’s changed:
+
+- Collections are now Tables
+- Documents are now Rows
+- Attributes are now Columns
+
+To support the terminology change, we’ve added the TablesDB API.
+
+A new API layer that helps you work with relational database concepts like tables, columns, and rows, without requiring any changes to your existing apps.
+
+The old document-based methods are now deprecated and will no longer receive major upgrades. They will continue to receive security patches and essential maintenance, and we are ensuring backwards compatibility with those methods for the API, so there’s no need to migrate immediately if a specific issue arises.
+
+However, we recommend adopting the new TablesDB API for future projects to take advantage of ongoing improvements and new capabilities.
+
+[Learn more](/blog/post/announcing-appwrite-databases-new-ui)
+
+# TablesDB UI
+
+![TablesDB UI](/images/blog/product-update-august-2025/new-ui.avif)
+
+We introduced a completely new TablesDB UI for Appwrite Databases. This new interface lets you experience a spreadsheet‑like editing workflow inside the Console.
+
+You can now:
+
+- Edit records inline
+- Perform bulk actions
+- Navigate with arrow keys and shortcuts
+
+[Learn more](/blog/post/announcing-appwrite-databases-new-ui)
+
+# Atomic numeric operations
+
+![Atomic numeric operations](/images/blog/product-update-august-2025/atomic.avif)
+
+This new database feature optimizes your app’s performance and saves you time.
+
+You can safely update numeric fields (likes, retries, stock, or scores) directly on the server, without conflicts or race conditions. No need to fetch the full row just for a single increment/decrement operation.
+
+[Learn more](/blog/post/announcing-atomic-numeric-operations)
+
+# Timestamp Overrides
+
+![Timestamp Overrides](/images/blog/product-update-august-2025/timestamp.avif)
+
+With the help of timestamp overrides, you can now retain original timestamps during imports to keep audits, analytics, and user timelines accurate.
+
+Whether importing a few thousand records or years of historical data, this feature allows you to control timestamps when needed and let Appwrite handle them when you don’t.
+
+[Learn more](/blog/post/announcing-timestamp-overrides)
+
+# Community recognitions
+
+![Community recognitions](/images/blog/product-update-august-2025/community.avif)
+
+We’re excited to feature [WriteWise](https://writewise-os.streamlit.app/) as part of our Monthly Community recognitions this month.
+
+WriteWise is an AI RAG (Retrieval-Augmented Generation) system that can browse through Appwrite docs and provide code examples or explanations based on your questions.
+
+A big shout-out to osasgentech.
+
+If you'd like to participate in next month's Community Recognitions, [join our Discord server](https://appwrite.io/discord) to showcase your project.
+
+# Engineering resources
+
+**Read**
+
+- [Simplifying social media management with automation and AI with StoreAlert and Appwrite](/blog/post/customer-story-socialaize)
+- [Announcing an improved Appwrite Databases. A completely new look, feel, and experience](/blog/post/announcing-appwrite-databases-new-ui)
+- [Announcing Opt-in relationship loading: Granular control for smarter data fetching](/blog/post/announcing-opt-in-relationship-loading)
+
+**Watch**
+
+- [Build a full stack food delivery app in React Native](https://www.youtube.com/watch?v=LKrX390fJMw)
+- [Importing CSV files into an Appwrite database](https://youtu.be/7UfWaHNghas?si=ggKDtrhclOQXllS2)
+- [Bulk operations with Appwrites database](https://youtu.be/lliJLad3e9s?si=mdV8QIplgdxPOFKY)
+- [Type generation for Appwrite DB Schema](https://youtu.be/ip2CXH2KRl8?si=9EoOCraYd-hOCYoX)
+- [Announcing Database Upserts](https://youtu.be/Pt9ZttS3KiA?si=TWlRi5qFzZbHbzAP)
+- [Auto-increment support for numeric sequencing](https://youtu.be/yy-L6QmEWe8?si=BjXzFna1C54IDXZd)
+
+# What’s to come
+
+That’s a wrap. But the excitement doesn’t stop here.
+
+Next month, we’re bringing:
+
+- A new Database integration
+- Plenty of useful Database features
+- A new open-source initiative by the Appwrite team!
+
+Follow us on [X](https://x.com/appwrite) and check our [Changelog](https://appwrite.io/changelog) regularly, as we will release more information in the coming weeks.

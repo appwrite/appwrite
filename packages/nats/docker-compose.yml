@@ -1,0 +1,40 @@
+name: utopia-nats
+
+services:
+  nats:
+    image: nats:2.11-alpine
+    command: ["-js", "-m", "8222"]
+    ports:
+      - "14222:4222"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8222/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  nats-tls:
+    image: nats:2.11-alpine
+    command: ["-c", "/nats.conf"]
+    volumes:
+      - ./tests/fixtures/certs:/certs:ro
+      - ./tests/fixtures/nats-tls.conf:/nats.conf:ro
+    ports:
+      - "14223:4222"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8222/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  nats-ws:
+    image: nats:2.11-alpine
+    command: ["-c", "/nats.conf"]
+    volumes:
+      - ./tests/fixtures/nats-ws.conf:/nats.conf:ro
+    ports:
+      - "14224:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8222/healthz"]
+      interval: 2s
+      timeout: 2s
+      retries: 30

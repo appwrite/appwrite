@@ -1,0 +1,73 @@
+---
+layout: post
+title: "TanStack Start is stable, and it runs on Appwrite Sites"
+description: TanStack Start 1.0 is stable and ready for production. Deploy it to Appwrite Sites with server-side rendering, server functions, and API routes.
+date: 2026-10-14
+cover: /images/blog/tanstack-start-stable-appwrite-sites/cover.avif
+timeToRead: 4
+author: atharva
+category: products
+featured: false
+faqs:
+  - question: "Does Appwrite Sites support TanStack Start 1.0?"
+    answer: "Yes. Appwrite Sites builds TanStack Start 1.0 with Vite 8 and serves it with server-side rendering. Server functions, API routes, and every SSR mode run from the same deployment."
+  - question: "Do I need to change my site settings after I upgrade to TanStack Start 1.0?"
+    answer: "No. The output directory depends on whether your app uses the Nitro plugin, and upgrading doesn't change that. Push the upgrade, and Appwrite Sites builds a new deployment with Vite 8."
+  - question: "Which output directory does a TanStack Start site use?"
+    answer: "If `vite.config.ts` uses the Nitro plugin from `nitro/vite`, the build writes to `.output`, so set the output directory to `./.output`. Without it, the build writes to `dist`, so set it to `./dist`."
+  - question: "Can I stay on Vite 7?"
+    answer: "Yes, for now. `@tanstack/react-start` 1.168.61 is the last release for Vite 7, and it includes the fix for [CVE-2026-102989](/blog/post/tanstack-start-server-function-xss). Install it with `npm install @tanstack/react-start@1.168 @tanstack/react-router@1.170.42`."
+---
+
+On October 13, 2026, TanStack declared [TanStack Start 1.0 stable](https://tanstack.com/blog/tanstack-start-1-0). Teams have run Start in production since its beta, and the release candidate label is now gone. Stable means the TanStack team commits to the APIs: you can build on Start without expecting the way your app works to change under you.
+
+TanStack Start 1.0 runs on [Appwrite Sites](/docs/products/sites) today. Sites builds it with Vite 8 and serves server-rendered routes, server functions, and API routes from one deployment.
+
+# What TanStack Start 1.0 gives you
+
+TanStack Start is a full-stack React framework built on TanStack Router. The 1.0 release locks in its core ideas:
+
+- **Type-safe routing.** Routes know their paths, parameters, search parameters, and loader data. When you change one, your editor shows every place that no longer matches. Coding agents get the same help: when an agent changes a route parameter or a server function's input, type errors show it every place it still has to update.
+- **Rendering per route.** A route can render on the server, load only its data on the server, or render in the browser.
+- **Typed server functions.** `createServerFn` runs code on the server, and you call it from a loader or an event handler like any other function. Middleware can wrap these calls on both the client and the server.
+- **Faster server rendering.** TanStack's profiling work raised SSR throughput about five and a half times in their benchmark.
+
+# Deploy TanStack Start to Appwrite Sites
+
+![A TanStack Start site deployed on Appwrite Sites](/images/blog/tanstack-start-stable-appwrite-sites/site-overview.avif)
+
+1. Push your app to a GitHub, GitLab, or Bitbucket repository.
+2. In the [Appwrite Console](https://appwrite.io/console), go to **Sites**, click **Create site**, and connect the repository.
+3. Appwrite detects TanStack Start and fills in the build settings. Check **Output directory**: use `./.output` if `vite.config.ts` uses the Nitro plugin, and `./dist` if it doesn't.
+4. Add your environment variables and click **Deploy**.
+
+After the first deployment, every push to your production branch builds and deploys a new version.
+
+# Start from a template
+
+![Creating a site from the TanStack Start starter template](/images/blog/tanstack-start-stable-appwrite-sites/template.avif)
+
+Appwrite Sites has two TanStack Start templates, and both run on TanStack Start 1.0:
+
+- **TanStack Start starter** connects to your Appwrite project with the Appwrite Web SDK.
+- **TanStack Start playground** shows server functions, API routes, and each rendering mode in one app.
+
+In **Sites**, click **Create site**, set the framework filter under **Clone template** to **TanStack Start**, and select a template. Appwrite fills in the build settings, so you only pick a domain and click **Deploy**.
+
+# Upgrade an existing TanStack Start app
+
+TanStack Start 1.0 requires Vite 8 and removes a few deprecated APIs, such as `.inputValidator()` on server functions, which is now `.validator()`. Follow TanStack's [migration guide](https://tanstack.com/start/latest/docs/framework/react/migrate-from-release-candidate) for the full list.
+
+Raise `@tanstack/react-start`, `@tanstack/react-router`, `vite`, and your Vite plugins in `package.json`, then run `npm install`. Build locally, then commit `package.json` and the lockfile and push. Appwrite Sites builds the new deployment with Vite 8, and your site settings stay the same.
+
+# Ship TanStack Start on Appwrite Sites
+
+With 1.0, TanStack Start is a production choice with stable APIs. Create a site from your repository or a template, and Appwrite Sites handles the build, the server, and the CDN.
+
+# Resources
+
+- [Deploy TanStack Start to Appwrite Sites](/docs/products/sites/quick-start/tanstack-start)
+- [Appwrite Sites documentation](/docs/products/sites)
+- [TanStack Start 1.0 is Stable](https://tanstack.com/blog/tanstack-start-1-0)
+- [Migrate from the TanStack Start release candidate](https://tanstack.com/start/latest/docs/framework/react/migrate-from-release-candidate)
+- [Join the Appwrite Discord](https://appwrite.io/discord)

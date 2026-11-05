@@ -8,10 +8,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
@@ -241,7 +241,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertNotSame($initialSubscriptionId, $mintedId);
         $this->assertNotEmpty($mintedId);
 
-        $explicitNewId = ID::unique();
+        $explicitNewId = Id::unique();
         $qExplicit = [Query::equal('status', ['explicit'])->toString()];
         $rExplicit = $this->sendSubscribeMessage($client, [[
             'subscriptionId' => $explicitNewId,
@@ -415,7 +415,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertEqualsCanonicalizing([$subA, $subB], $event['data']['subscriptions']);
 
         // Unknown subscriptionId upserts as a new subscription.
-        $ghostId = ID::unique();
+        $ghostId = Id::unique();
         $ghost = $this->sendSubscribeMessage($client, [[
             'subscriptionId' => $ghostId,
             'channels' => ['account'],
@@ -582,6 +582,159 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertTrue($bulk['data']['subscriptions'][0]['removed']);
         $this->assertSame('does-not-exist', $bulk['data']['subscriptions'][1]['subscriptionId']);
         $this->assertFalse($bulk['data']['subscriptions'][1]['removed']);
+
+        $client->close();
+    }
+
+    public function testSubscribeLimits(): void
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . \http_build_query(['project' => $projectId]),
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_' . $projectId . '=' . $session,
+                ],
+                'timeout' => 10,
+            ]
+        );
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+
+        $send = function (string $type, array $data) use ($client): array {
+            $client->send(\json_encode(['type' => $type, 'data' => $data]));
+            return \json_decode($client->receive(), true);
+        };
+        $select = Query::select(['*'])->toString();
+
+        /**
+         * Test for FAILURE
+         */
+        $tooManyChannels = $send('subscribe', [['channels' => \array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, 'documents')]]);
+        $this->assertSame('error', $tooManyChannels['type']);
+        $this->assertSame(1003, $tooManyChannels['data']['code']);
+        $this->assertStringContainsString('channels must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', (string) $tooManyChannels['data']['message']);
+
+        $tooManyQueries = $send('subscribe', [['channels' => ['documents'], 'queries' => \array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE + 1, $select)]]);
+        $this->assertSame('error', $tooManyQueries['type']);
+        $this->assertStringContainsString('queries must contain at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries.', (string) $tooManyQueries['data']['message']);
+
+        $tooManySubscriptions = $send('subscribe', \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, ['channels' => ['documents']]));
+        $this->assertSame('error', $tooManySubscriptions['type']);
+        $this->assertStringContainsString('Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', (string) $tooManySubscriptions['data']['message']);
+
+        $tooManyUnsubscribes = $send('unsubscribe', \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS + 1, ['subscriptionId' => 'sub']));
+        $this->assertSame('error', $tooManyUnsubscribes['type']);
+        $this->assertStringContainsString('Payload must contain at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.', (string) $tooManyUnsubscribes['data']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $full = $this->sendSubscribeMessage($client, \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, ['channels' => ['documents']]));
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $full['data']['subscriptions']);
+        $subscriptionId = $full['data']['subscriptions'][0]['subscriptionId'];
+
+        /**
+         * Test for FAILURE
+         */
+        $overLimit = $send('subscribe', [['channels' => ['documents']]]);
+        $this->assertSame('error', $overLimit['type']);
+        $this->assertSame(1003, $overLimit['data']['code']);
+        $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions. Unsubscribe from some before subscribing to more.', $overLimit['data']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // The connection stays open, and unsubscribing makes room.
+        $unsubscribed = $send('unsubscribe', [['subscriptionId' => $full['data']['subscriptions'][1]['subscriptionId']]]);
+        $this->assertTrue($unsubscribed['data']['subscriptions'][0]['removed']);
+
+        // Adding channels to an existing subscription does not count as a new one.
+        $added = $this->sendSubscribeMessage($client, [['subscriptionId' => $subscriptionId, 'channels' => ['files']]]);
+        $this->assertSame(['files'], $added['data']['subscriptions'][0]['channels']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Channels added under the same id count towards that subscription's limit.
+        $channels = \array_map(fn (int $i) => 'documents.' . $i, \range(1, APP_LIMIT_ARRAY_PARAMS_SIZE - 1));
+        $tooManyAdded = $send('subscribe', [['subscriptionId' => $subscriptionId, 'channels' => $channels]]);
+        $this->assertSame('error', $tooManyAdded['type']);
+        $this->assertSame('Subscription "' . $subscriptionId . '" must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' channels.', $tooManyAdded['data']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $unsubscribed = $send('unsubscribe', [['subscriptionId' => $subscriptionId]]);
+        $this->assertTrue($unsubscribed['data']['subscriptions'][0]['removed']);
+        $this->sendSubscribeMessage($client, [['channels' => ['documents']]]);
+
+        $client->close();
+    }
+
+    public function testSubscribeTotals(): void
+    {
+        $user = $this->getUser();
+        $projectId = $this->getProject()['$id'];
+        $client = new WebSocketClient(
+            'ws://appwrite.test/v1/realtime?' . \http_build_query(['project' => $projectId]),
+            [
+                'headers' => [
+                    'origin' => 'http://localhost',
+                    'cookie' => 'a_session_' . $projectId . '=' . ($user['session'] ?? ''),
+                ],
+                'timeout' => 10,
+            ]
+        );
+        $this->assertSame('connected', \json_decode($client->receive(), true)['type'] ?? null);
+
+        $send = function (array $data) use ($client): array {
+            $client->send(\json_encode(['type' => 'subscribe', 'data' => $data]));
+            return \json_decode($client->receive(), true);
+        };
+        $channels = fn (string $prefix, int $count) => \array_map(fn (int $i) => $prefix . $i, \range(1, $count));
+        $equals = fn (int $count) => \array_map(fn (int $i) => Query::equal('f' . $i, ['x'])->toString(), \range(1, $count));
+        // Split each total across two subscriptions, so the connection is exactly at its limits.
+        $channelsA = \intdiv(APP_LIMIT_REALTIME_CHANNELS, 2);
+        $queriesA = \intdiv(APP_LIMIT_REALTIME_QUERIES, 2);
+
+        /**
+         * Test for SUCCESS
+         */
+        $first = $this->sendSubscribeMessage($client, [
+            ['subscriptionId' => 'a', 'channels' => $channels('documents.a', $channelsA), 'queries' => $equals($queriesA)],
+            ['subscriptionId' => 'b', 'channels' => $channels('documents.b', APP_LIMIT_REALTIME_CHANNELS - $channelsA), 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - $queriesA)],
+        ]);
+        $this->assertCount(2, $first['data']['subscriptions']);
+
+        /**
+         * Test for FAILURE
+         */
+        $tooManyChannels = $send([['channels' => ['files']]]);
+        $this->assertSame('error', $tooManyChannels['type']);
+        $this->assertSame(1003, $tooManyChannels['data']['code']);
+        $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyChannels['data']['message']);
+
+        $tooManyQueries = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - $queriesA + 1)]]);
+        $this->assertSame('error', $tooManyQueries['type']);
+        $this->assertSame('Connection must have at most ' . APP_LIMIT_REALTIME_QUERIES . ' queries across its subscriptions. Unsubscribe from some before subscribing to more.', $tooManyQueries['data']['message']);
+
+        $tooManyValues = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => [Query::equal('id', $channels('v', APP_LIMIT_ARRAY_PARAMS_SIZE + 1))->toString()]]]);
+        $this->assertSame('error', $tooManyValues['type']);
+        $this->assertStringContainsString('A query must have at most ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' values.', (string) $tooManyValues['data']['message']);
+
+        $tooLong = $send([['subscriptionId' => 'b', 'channels' => [], 'queries' => [Query::equal('id', [\str_repeat('x', APP_LIMIT_ARRAY_ELEMENT_SIZE)])->toString()]]]);
+        $this->assertSame('error', $tooLong['type']);
+        $this->assertStringContainsString('A query must be at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', (string) $tooLong['data']['message']);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Subscribing again replaces a subscription's queries, so lowering one makes room in another.
+        $this->sendSubscribeMessage($client, [['subscriptionId' => 'a', 'channels' => [], 'queries' => $equals(1)]]);
+        $this->sendSubscribeMessage($client, [['subscriptionId' => 'b', 'channels' => [], 'queries' => $equals(APP_LIMIT_REALTIME_QUERIES - 1)]]);
 
         $client->close();
     }
@@ -806,7 +959,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Query Message Test DB',
         ]);
         $databaseId = $database['body']['$id'];
@@ -816,7 +969,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Query Message Test Collection',
             'permissions' => [
                 Permission::create(Role::user($userId)),
@@ -844,8 +997,8 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             $this->assertEquals('available', $response['body']['status']);
         }, 30000, 250);
 
-        $targetDocumentId = ID::unique();
-        $otherDocumentId = ID::unique();
+        $targetDocumentId = Id::unique();
+        $otherDocumentId = Id::unique();
 
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
@@ -911,14 +1064,14 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Tail DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
         $databaseId = $database['body']['$id'];
 
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Actors',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -946,12 +1099,12 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
     }
 
     /**
-     * Open a console connection (root session) in message mode and subscribe to a
-     * `console.tail.<projectId>` channel with optional filter queries.
+     * Open a console connection (root session, or a console JWT when given) in message
+     * mode and subscribe to a `console.tail.<projectId>` channel with optional filter queries.
      *
      * @param array<int,string> $queries
      */
-    private function openConsoleTail(string $targetProjectId, array $queries = [], string $subscriptionId = 'tail-1'): WebSocketClient
+    private function openConsoleTail(string $targetProjectId, array $queries = [], string $subscriptionId = 'tail-1', ?string $jwt = null): WebSocketClient
     {
         $queryString = \http_build_query(['project' => 'console']);
         $client = new WebSocketClient(
@@ -959,7 +1112,9 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             [
                 'headers' => [
                     'origin' => 'http://localhost',
-                    'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                    ...($jwt === null
+                        ? ['cookie' => 'a_session_console=' . $this->getRoot()['session']]
+                        : ['x-appwrite-jwt' => $jwt]),
                 ],
                 'timeout' => 10,
             ]
@@ -1013,7 +1168,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Spiderman'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1042,6 +1197,68 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $client->close();
     }
 
+    public function testConsoleTailEndsWithJwt(): void
+    {
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->setupTailCollection();
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'duration' => 2,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $jwt = $response['body']['jwt'];
+
+        $client = $this->openConsoleTail($projectId, jwt: $jwt);
+
+        // Expiry fires no event; wait until the HTTP API refuses the JWT.
+        $this->assertEventually(function () use ($jwt) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => 'console',
+                'x-appwrite-jwt' => $jwt,
+            ]);
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'documentId' => Id::unique(),
+            'data' => ['name' => 'Spiderman'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - no tail frames after expiry, then a 401 and the socket closes
+         */
+        $frames = [];
+        while ($client->isConnected() && \count($frames) < 10) {
+            try {
+                $frames[] = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                $this->fail('Timed out waiting for the server to close the socket. Frames: ' . \json_encode($frames));
+            } catch (ConnectionException) {
+                // Socket closed by the server
+                break;
+            }
+        }
+
+        $this->assertFalse($client->isConnected(), 'Server did not close the socket. Frames: ' . \json_encode($frames));
+        foreach ($frames as $frame) {
+            $this->assertNotEquals('console.tail', $frame['data']['events'][0] ?? null, 'Tail delivered after expiry: ' . \json_encode($frames));
+        }
+        $last = \end($frames);
+        $this->assertEquals('error', $last['type'] ?? null);
+        $this->assertEquals(401, $last['data']['code'] ?? null);
+    }
+
     public function testConsoleTailServerSideFilter(): void
     {
         ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->setupTailCollection();
@@ -1058,7 +1275,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
 
         // create — must be filtered out (never reaches the token bucket).
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'Ironman'],
         ]);
         $this->assertEquals(201, $document['headers']['status-code']);
@@ -1136,7 +1353,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         ];
 
         $database = $this->client->call(Client::METHOD_POST, '/databases', $headers, [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Tail ACL DB',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -1145,7 +1362,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         // documentSecurity ON and NO read(any) at the collection level, so the only read
         // grant comes from the document's own (restricted) permission.
         $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', $headers, [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Secrets',
             'documentSecurity' => true,
             'permissions' => [Permission::create(Role::any())],
@@ -1169,7 +1386,7 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         // Read restricted to a user that is NOT the console user → the console viewer
         // could never read this document directly, yet the tail must surface its event.
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', $headers, [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => ['name' => 'top secret'],
             'permissions' => [Permission::read(Role::user('not-the-console-user'))],
         ]);

@@ -1,0 +1,310 @@
+import {
+  getAnalyticsArea,
+  getAnalyticsSurface,
+  type AnalyticsSurface,
+} from '@/lib/analytics-route'
+import { getAttributionSearchForPlausible } from '@/lib/marketing/utm'
+import { getActiveLanguage, type SupportedLanguage } from '@/lib/i18n/active-language'
+import { getRuntimeConfig } from '@/lib/runtime-config'
+import {
+  getPlanNameFromTier,
+  type CanonicalPlanId,
+} from '@/lib/utils/plan-filter'
+
+export {
+  getAnalyticsArea,
+  getAnalyticsSurface,
+  type AnalyticsSurface,
+} from '@/lib/analytics-route'
+
+const PLAUSIBLE_EVENT_PATH = '/api/event'
+const PLAUSIBLE_ORIGIN_FALLBACK = 'https://plausible.io'
+
+/** Plausible script URL from runtime config (read at call time, not import). */
+export function getPlausibleScriptSrc() {
+  return getRuntimeConfig().plausibleScriptSrc
+}
+
+export function getPlausibleEventUrl(scriptSrc = getPlausibleScriptSrc()) {
+  try {
+    return new URL(PLAUSIBLE_EVENT_PATH, new URL(scriptSrc).origin).toString()
+  } catch {
+    return `${PLAUSIBLE_ORIGIN_FALLBACK}${PLAUSIBLE_EVENT_PATH}`
+  }
+}
+
+export const ANALYTICS_ENABLED = Boolean(getPlausibleScriptSrc())
+
+function isAnalyticsAllowed() {
+  // Plausible is cookieless. Do not gate it on the cookie banner.
+  return Boolean(getPlausibleScriptSrc())
+}
+
+export function getPlausibleInitScript() {
+  const endpoint = JSON.stringify(getPlausibleEventUrl())
+  const logging = import.meta.env.DEV ? 'true' : 'false'
+
+  return `window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+plausible.init({autoCapturePageviews:false,endpoint:${endpoint},captureOnLocalhost:/^(localhost|127(?:\\.\\d+){0,2}\\.\\d+|\\[::1\\])$/.test(location.hostname),logging:${logging}})`
+}
+
+export type AnalyticsEventName =
+  | 'Button Clicked'
+  | 'Command Executed'
+  | 'Control Changed'
+  | 'Dialog Closed'
+  | 'Dialog Opened'
+  | 'Error Shown'
+  | 'External Link Opened'
+  | 'Filter Applied'
+  | 'Form Submitted'
+  | 'Form Validation Failed'
+  | 'Menu Item Clicked'
+  | 'Navigation Clicked'
+  | 'Pagination Changed'
+  | 'Resource Created'
+  | 'Resource Creation Failed'
+  | 'Search Performed'
+  | 'Sort Changed'
+  | 'Tab Changed'
+  | 'View Mode Changed'
+  | 'Wizard Opened'
+  | 'Wizard Option Selected'
+
+export type AnalyticsPropValue = string | number | boolean | null | undefined
+export type AnalyticsProps = Record<string, AnalyticsPropValue>
+
+/** Login state for Plausible custom properties. */
+export type AnalyticsAuth = 'user' | 'guest'
+
+/**
+ * Billing plan bucket for Plausible custom properties.
+ * Uses canonical console plan ids; guests (and unknown org) use `none`.
+ */
+export type AnalyticsPlan = CanonicalPlanId | 'none'
+
+export type AnalyticsSessionProps = {
+  auth: AnalyticsAuth
+  plan: AnalyticsPlan
+  lang: SupportedLanguage
+}
+
+type PlausibleOptions = {
+  url?: string
+  u?: string
+  props?: Record<string, string | number | boolean>
+}
+
+declare global {
+  interface Window {
+    plausible?: (
+      eventName: 'pageview' | string,
+      options?: PlausibleOptions,
+    ) => void
+  }
+}
+
+const DEFAULT_SESSION_PROPS: AnalyticsSessionProps = {
+  auth: 'guest',
+  plan: 'none',
+  lang: 'en',
+}
+
+let sessionProps: AnalyticsSessionProps = { ...DEFAULT_SESSION_PROPS }
+
+/**
+ * Custom events must not create Plausible visits before the first pageview.
+ * Waiting on auth/plan for pageviews while clicks/dialogs fire immediately
+ * produced visitors with 0 pageviews (views/visit < 1, ~1s duration).
+ */
+let hasTrackedPageview = false
+type PendingAnalyticsEvent = {
+  eventName: string
+  options?: PlausibleOptions
+}
+const pendingAnalyticsEvents: PendingAnalyticsEvent[] = []
+
+/**
+ * Sync auth/plan/lang from React (account + active org plan + i18n).
+ * Call during render so pageviews/events in the same commit see fresh values.
+ */
+export function setAnalyticsSessionProps(
+  next: Partial<AnalyticsSessionProps>,
+) {
+  sessionProps = {
+    ...sessionProps,
+    ...next,
+  }
+}
+
+export function getAnalyticsSessionProps(): AnalyticsSessionProps {
+  return {
+    ...sessionProps,
+    // Prefer live language in case it changed outside the sync component.
+    lang: getActiveLanguage(),
+  }
+}
+
+export function getAnalyticsPlanFromBillingId(
+  planId: string | null | undefined,
+): AnalyticsPlan {
+  if (!planId) return 'none'
+  return getPlanNameFromTier(planId)
+}
+
+function normalizeAnalyticsProps(props: AnalyticsProps = {}) {
+  return Object.fromEntries(
+    Object.entries(props).filter(
+      ([, value]) => value !== null && value !== undefined,
+    ),
+  ) as Record<string, string | number | boolean>
+}
+
+/**
+ * Route path used for analytics. Public pages (marketing, docs, blog, ...)
+ * report the full concrete pathname so per-page traffic is visible.
+ * Console, account, and auth routes report the sanitized route template
+ * (e.g. /projects/$projectId/databases/$databaseId) so raw IDs never leave.
+ */
+export function getAnalyticsRoutePath(
+  routeId: string | undefined,
+  pathname: string,
+) {
+  const template = routeId
+    ?.split('/')
+    .filter(Boolean)
+    .filter((part) => !part.startsWith('_'))
+    .join('/')
+
+  const routePath = template ? `/${template}` : pathname || '/'
+  const surface = getAnalyticsSurface(routePath)
+  if (surface === 'marketing' || surface === 'docs') {
+    return pathname || routePath
+  }
+
+  return routePath
+}
+
+export function getAnalyticsRouteUrl(routePath: string) {
+  if (typeof window === 'undefined') return routePath
+  return `${window.location.origin}${routePath}`
+}
+
+function surfaceIncludesAttributionQuery(surface: AnalyticsSurface): boolean {
+  return surface === 'marketing' || surface === 'docs'
+}
+
+/** Plausible pageview URL; includes attribution query on marketing/docs only. */
+export function getAnalyticsPageviewUrl(routePath: string) {
+  if (typeof window === 'undefined') return routePath
+
+  const surface = getAnalyticsSurface(routePath)
+  const attributionSearch = surfaceIncludesAttributionQuery(surface)
+    ? getAttributionSearchForPlausible(window.location.search)
+    : ''
+
+  return `${window.location.origin}${routePath}${attributionSearch}`
+}
+
+function getGlobalAnalyticsProps(routePath?: string): AnalyticsProps {
+  const session = getAnalyticsSessionProps()
+  return {
+    auth: session.auth,
+    plan: session.plan,
+    lang: session.lang,
+    ...(routePath ? { surface: getAnalyticsSurface(routePath) } : {}),
+  }
+}
+
+function flushPendingAnalyticsEvents() {
+  if (typeof window === 'undefined' || !window.plausible) return
+  while (pendingAnalyticsEvents.length > 0) {
+    const pending = pendingAnalyticsEvents.shift()
+    if (!pending) break
+    window.plausible(pending.eventName, pending.options)
+  }
+}
+
+const MAX_PENDING_ANALYTICS_EVENTS = 20
+
+let pendingPageviewPath: string | null = null
+
+function sendPageView(routePath: string) {
+  if (!window.plausible) return false
+
+  window.plausible('pageview', {
+    url: getAnalyticsPageviewUrl(routePath),
+    props: normalizeAnalyticsProps({
+      route: routePath,
+      area: getAnalyticsArea(routePath),
+      ...getGlobalAnalyticsProps(routePath),
+    }),
+  })
+  hasTrackedPageview = true
+  flushPendingAnalyticsEvents()
+  return true
+}
+
+/** Flush a pageview queued before the Plausible stub was injected. */
+export function flushPendingPageView() {
+  if (!pendingPageviewPath) return
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  const routePath = pendingPageviewPath
+  pendingPageviewPath = null
+  sendPageView(routePath)
+}
+
+export function trackPageView(routePath: string) {
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+  // Plausible's init stub queues until the remote script loads. If the stub is
+  // not in the page yet, keep the latest path and send it when the stub lands.
+  if (!window.plausible) {
+    pendingPageviewPath = routePath
+    return
+  }
+
+  pendingPageviewPath = null
+  sendPageView(routePath)
+}
+
+export function trackEvent(
+  eventName: AnalyticsEventName | string,
+  props: AnalyticsProps = {},
+  options: { routePath?: string; url?: string } = {},
+) {
+  if (!isAnalyticsAllowed() || typeof window === 'undefined') return
+
+  const routePath = options.routePath
+  const plausibleOptions: PlausibleOptions = {
+    url:
+      options.url ?? (routePath ? getAnalyticsRouteUrl(routePath) : undefined),
+    props: normalizeAnalyticsProps({
+      ...(routePath
+        ? { route: routePath, area: getAnalyticsArea(routePath) }
+        : {}),
+      ...props,
+      // Session dimensions win so callers cannot accidentally override them.
+      ...getGlobalAnalyticsProps(routePath),
+    }),
+  }
+
+  if (!hasTrackedPageview) {
+    if (pendingAnalyticsEvents.length < MAX_PENDING_ANALYTICS_EVENTS) {
+      pendingAnalyticsEvents.push({ eventName, options: plausibleOptions })
+    }
+    return
+  }
+
+  window.plausible?.(eventName, plausibleOptions)
+}
+
+export function getSafeInternalPathParts(pathname: string) {
+  const parts = pathname.split('/').filter(Boolean)
+  if (parts[0] === 'projects') {
+    return { scope: 'project', area: parts[2] ?? 'overview' }
+  }
+  if (parts[0] === 'organizations') {
+    return { scope: 'organization', area: parts[2] ?? 'overview' }
+  }
+  return { scope: parts[0] ?? 'root', area: parts[0] ?? 'root' }
+}

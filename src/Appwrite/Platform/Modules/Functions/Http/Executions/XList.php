@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -58,7 +59,7 @@ class XList extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
             ->param('queries', [], new Executions(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
@@ -128,7 +129,7 @@ class XList extends Base
         // Capture what statuses the caller explicitly requested, before we mutate the query.
         $requestedStatuses = [];
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'status') {
+            if ($query->getMethod() === QueryMethod::Equal && $query->getAttribute() === 'status') {
                 $requestedStatuses = [...$requestedStatuses, ...$query->getValues()];
             }
         }
@@ -137,7 +138,7 @@ class XList extends Base
         // waiting/processing executions created before the timeout threshold, so timed-out
         // executions that were never marked failed are included in the results.
         foreach ($queries as $index => $query) {
-            if ($query->getMethod() === Query::TYPE_EQUAL && $query->getAttribute() === 'status' && \in_array('failed', $query->getValues())) {
+            if ($query->getMethod() === QueryMethod::Equal && $query->getAttribute() === 'status' && \in_array('failed', $query->getValues())) {
                 $queries[$index] = Query::or([
                     $query,
                     Query::and([
@@ -149,7 +150,7 @@ class XList extends Base
             }
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
 
         try {
             $results = $executionStore->find($project->getId(), $queries, $roles);

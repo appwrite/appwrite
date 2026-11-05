@@ -4,6 +4,9 @@ use Utopia\Config\Config;
 use Utopia\System\System;
 
 $templateRuntimes = Config::getParam('template-runtimes');
+// The templates' SDKs need Node 18.17+ (node-appwrite 29) and Python 3.9+ (appwrite 23)
+$templateRuntimes['NODE'] = \array_diff($templateRuntimes['NODE'], ['node-14.5', 'node-16.0']);
+$templateRuntimes['PYTHON'] = \array_diff($templateRuntimes['PYTHON'], ['python-3.8']);
 $allowList = \array_map('trim', \explode(',', System::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
 
 function getRuntimes($runtimes, $commands, $entrypoint, $providerRootDirectory, $allowList)
@@ -85,7 +88,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [],
         'scopes' => ['users.read']
     ],
@@ -113,7 +116,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'UPSTASH_URL',
@@ -159,7 +162,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'REDIS_HOST',
@@ -204,7 +207,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'NEO4J_URI',
@@ -258,7 +261,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'MONGO_URI',
@@ -297,7 +300,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PGHOST',
@@ -338,6 +341,43 @@ return [
                 'placeholder' => 'ep-still-sea-a792sh84',
                 'required' => true,
                 'type' => 'text'
+            ]
+        ],
+        'scopes' => []
+    ],
+    [
+        'icon' => 'icon-database',
+        'id' => 'postgres-with-drizzle',
+        'name' => 'Postgres with Drizzle',
+        'score' => 6,
+        'tagline' => 'Serve a todo API from Appwrite Postgres using Drizzle ORM.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::DATABASES],
+        'runtimes' => [
+            ...getRuntimes(
+                $templateRuntimes['NODE'],
+                'npm install && npm run build',
+                'dist/main.js',
+                'node-typescript/postgres-with-drizzle',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node-typescript/postgres-with-drizzle">file</a>. The function doesn\'t create tables, so apply the migrations from your machine with <code>DATABASE_URL="postgresql://..." npm run db:migrate</code> before the first request.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.0',
+        'variables' => [
+            [
+                'name' => 'DATABASE_URL',
+                'description' => 'Connection string of your Appwrite Postgres database. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/postgresql/connections">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'postgresql://admin:d1efb...aec35@db-8f2c61a4d7e0.fra.appwrite.center:5432/db-8f2c61a4d7e0',
+                'required' => true,
+                'type' => 'password'
             ]
         ],
         'scopes' => []
@@ -387,7 +427,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'OPENAI_API_KEY',
@@ -421,18 +461,18 @@ return [
         'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
-                $templateRuntimes['PYTHON'],
+                ['python-3.14', 'python-3.13', 'python-3.12', 'python-3.11', 'python-3.10'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/mcp-server',
                 $allowList
             )
         ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server">file</a>.',
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server">file</a>. For per-user sign-in (MCP_AUTH_MODE=oauth), follow the <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server#per-user-sign-in-oauth">OAuth setup</a> to enable the project\'s OAuth2 server.',
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.1.0',
+        'providerVersion' => '1.3.0',
         'variables' => [
             [
                 'name' => 'MCP_SERVER_NAME',
@@ -444,7 +484,7 @@ return [
             ],
             [
                 'name' => 'MCP_AUTH_MODE',
-                'description' => 'Auth gate for the endpoint. Set to "bearer" to require an Authorization header, or "none" to keep it open.',
+                'description' => 'Auth gate for the endpoint: "none" keeps it open, "bearer" requires the shared secret in MCP_AUTH_TOKEN, and "oauth" makes MCP clients sign users in through the project\'s OAuth2 server.',
                 'value' => 'none',
                 'placeholder' => 'none',
                 'required' => false,
@@ -459,6 +499,14 @@ return [
                 'type' => 'password'
             ],
             [
+                'name' => 'MCP_AUTH_SCOPES',
+                'description' => 'OAuth mode only: space-separated scopes advertised to MCP clients, e.g. "openid tasks.read". Each tool checks its own scope.',
+                'value' => '',
+                'placeholder' => 'openid tasks.read',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
                 'name' => 'MCP_TOOL_TIMEOUT',
                 'description' => 'Soft deadline in seconds for the whole request, before the 30s execution hard-cap.',
                 'value' => '25',
@@ -467,7 +515,7 @@ return [
                 'type' => 'number'
             ]
         ],
-        'scopes' => []
+        'scopes' => ['users.write']
     ],
     [
         'icon' => 'icon-discord',
@@ -507,7 +555,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'DISCORD_PUBLIC_KEY',
@@ -560,7 +608,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PERSPECTIVE_API_KEY',
@@ -612,7 +660,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PANGEA_REDACT_TOKEN',
@@ -643,7 +691,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [],
         'scopes' => []
     ],
@@ -672,7 +720,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'GITHUB_TOKEN',
@@ -717,7 +765,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -784,7 +832,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -883,7 +931,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -989,7 +1037,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'VONAGE_API_KEY',
@@ -1047,7 +1095,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'FCM_PROJECT_ID',
@@ -1119,7 +1167,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'SMTP_HOST',
@@ -1192,7 +1240,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'STRIPE_SECRET_KEY',
@@ -1235,7 +1283,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'STRIPE_SECRET_KEY',
@@ -1294,7 +1342,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'HUGGINGFACE_ACCESS_TOKEN',
@@ -1330,7 +1378,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'HUGGINGFACE_ACCESS_TOKEN',
@@ -1366,7 +1414,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1426,7 +1474,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1486,7 +1534,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1549,7 +1597,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -1609,7 +1657,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'REPLICATE_API_KEY',
@@ -1646,7 +1694,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'TOGETHER_API_KEY',
@@ -1690,7 +1738,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'PERPLEXITY_API_KEY',
@@ -1733,7 +1781,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'REPLICATE_API_KEY',
@@ -1770,7 +1818,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'OPENAI_API_KEY',
@@ -1835,7 +1883,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'OPENAI_API_KEY',
@@ -1900,7 +1948,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'ELEVENLABS_API_KEY',
@@ -1957,7 +2005,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'LMNT_API_KEY',
@@ -2000,7 +2048,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'ANYSCALE_API_KEY',
@@ -2043,7 +2091,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_BUCKET_ID',
@@ -2087,7 +2135,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'FAL_API_KEY',
@@ -2112,8 +2160,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/subscriptions-with-lemon-squeezy',
@@ -2124,7 +2173,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'LEMON_SQUEEZY_API_KEY',
@@ -2169,8 +2218,9 @@ return [
         'timeout' => 15,
         'useCases' => [FunctionUseCases::UTILITIES],
         'runtimes' => [
+            // The Lemon Squeezy SDK needs Node 20+
             ...getRuntimes(
-                $templateRuntimes['NODE'],
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
                 'npm install',
                 'src/main.js',
                 'node/payments-with-lemon-squeezy',
@@ -2181,7 +2231,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'APPWRITE_DATABASE_ID',
@@ -2231,6 +2281,146 @@ return [
         'scopes' => ['databases.read', 'databases.write', 'collections.write', 'attributes.write', 'documents.read', 'documents.write']
     ],
     [
+        'icon' => 'icon-currency-dollar',
+        'id' => 'subscriptions-with-dodo-payments',
+        'name' => 'Subscriptions with Dodo Payments',
+        'score' => 6,
+        'tagline' => 'Receive recurring payments and grant subscribers extra permissions.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::UTILITIES],
+        'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
+            ...getRuntimes(
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
+                'npm install',
+                'src/main.js',
+                'node/subscriptions-with-dodo-payments',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/subscriptions-with-dodo-payments">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.1',
+        'variables' => [
+            [
+                'name' => 'DODO_PAYMENTS_API_KEY',
+                'description' => 'API key for sending requests to the Dodo Payments API. The key needs write access to create checkout sessions. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/api-reference/introduction#authentication">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'abcd...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_WEBHOOK_KEY',
+                'description' => 'Signing secret of the webhook endpoint, used to verify that webhooks come from Dodo Payments. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/webhooks">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'whsec_MfKQ...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_PRODUCT_ID',
+                'description' => 'ID of the subscription product to sell. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/subscription-integration-guide">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'pdt_0NWa...',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_ENVIRONMENT',
+                'description' => 'Dodo Payments environment to use, either test_mode or live_mode. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/miscellaneous/test-mode-vs-live-mode">Learn more</a>.',
+                'value' => 'test_mode',
+                'placeholder' => 'test_mode',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => ['users.read', 'users.write']
+    ],
+    [
+        'icon' => 'icon-currency-dollar',
+        'id' => 'payments-with-dodo-payments',
+        'name' => 'Payments with Dodo Payments',
+        'score' => 6,
+        'tagline' => 'Receive one-time payments and store paid orders.',
+        'permissions' => ['any'],
+        'events' => [],
+        'cron' => '',
+        'timeout' => 15,
+        'useCases' => [FunctionUseCases::UTILITIES],
+        'runtimes' => [
+            // The Dodo Payments SDK needs Node 20+
+            ...getRuntimes(
+                \array_diff($templateRuntimes['NODE'], ['node-18.0', 'node-19.0']),
+                'npm install',
+                'src/main.js',
+                'node/payments-with-dodo-payments',
+                $allowList
+            )
+        ],
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/node/payments-with-dodo-payments">file</a>.',
+        'vcsProvider' => 'github',
+        'providerRepositoryId' => 'templates',
+        'providerOwner' => 'appwrite',
+        'providerVersion' => '1.4.1',
+        'variables' => [
+            [
+                'name' => 'DODO_PAYMENTS_API_KEY',
+                'description' => 'API key for sending requests to the Dodo Payments API. The key needs write access to create checkout sessions. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/api-reference/introduction#authentication">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'abcd...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_WEBHOOK_KEY',
+                'description' => 'Signing secret of the webhook endpoint, used to verify that webhooks come from Dodo Payments. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/developer-resources/webhooks">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'whsec_MfKQ...',
+                'required' => true,
+                'type' => 'password'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_PRODUCT_ID',
+                'description' => 'ID of the one-time product to sell. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/features/products">Learn more</a>.',
+                'value' => '',
+                'placeholder' => 'pdt_0NWa...',
+                'required' => true,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'DODO_PAYMENTS_ENVIRONMENT',
+                'description' => 'Dodo Payments environment to use, either test_mode or live_mode. <a class="u-bold" target="_blank" href="https://docs.dodopayments.com/miscellaneous/test-mode-vs-live-mode">Learn more</a>.',
+                'value' => 'test_mode',
+                'placeholder' => 'test_mode',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_DATABASE_ID',
+                'description' => 'The ID of the database to store paid orders. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/tablesdb/databases">Learn more</a>.',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
+                'name' => 'APPWRITE_TABLE_ID',
+                'description' => 'The ID of the table to store paid orders. <a class="u-bold" target="_blank" href="https://appwrite.io/docs/products/databases/tablesdb/tables">Learn more</a>.',
+                'value' => 'orders',
+                'placeholder' => 'orders',
+                'required' => false,
+                'type' => 'text'
+            ]
+        ],
+        'scopes' => ['databases.write', 'tables.read', 'tables.write', 'rows.write']
+    ],
+    [
         'icon' => 'icon-apple',
         'id' => 'sign-in-with-apple',
         'name' => 'Sign in with Apple',
@@ -2248,7 +2438,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.0.1',
+        'providerVersion' => '1.2.0',
         'variables' => [
             [
                 'name' => 'BUNDLE_ID',

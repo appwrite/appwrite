@@ -1,0 +1,298 @@
+---
+layout: post
+title: Build a SaaS waitlist landing page with Appwrite
+description: Learn how to ship a production-ready waitlist page with Vite, React, and Appwrite, including unique email validation and clean error handling.
+date: 2026-04-23
+lastUpdated: 2026-06-29
+cover: /images/blog/build-saas-waitlist/cover.avif
+timeToRead: 10
+author: atharva
+category: tutorials, products
+featured: false
+faqs:
+  - question: "Why use Appwrite for a SaaS waitlist instead of a form service?"
+    answer: "Form services work for capturing emails, but they make it hard to query or export your data later, and they often add their branding. With [Appwrite Databases](/docs/products/databases), you own the data, can query it with filters and indexes, and can wire it into the rest of your stack as the product grows."
+  - question: "How do you prevent duplicate emails in an Appwrite waitlist?"
+    answer: "Create a unique index on the email column in your Entries table. When someone tries to sign up with an existing email, the insert fails with a 409 error. The frontend catches that and shows a friendly \"you're already on the list\" message instead of a generic server error."
+  - question: "Do I need a server to run a waitlist on Appwrite?"
+    answer: "No. The browser can talk to Appwrite directly using the client SDK, so you only need a static React or Vite app. There is no API key to ship, no Node server to maintain, and permissions on the table control who can write. This is the same pattern most simple Appwrite frontends use."
+  - question: "How do I make the email field validate without writing a regex?"
+    answer: "Use Appwrite's built-in email column type when you create the table. Appwrite validates the format on write, so the database rejects malformed emails before they hit your data. You still want client-side validation for UX, but the server-side check is the source of truth."
+  - question: "What permissions should I set on the waitlist table?"
+    answer: "Allow Any to create rows so unauthenticated visitors can sign up, but do not give read access to Any. Reading the list should be restricted to a specific team or admin role so emails are not publicly enumerable. See [Appwrite Databases](/docs/products/databases) for how role-based permissions work."
+  - question: "How would I send a confirmation email after someone joins the waitlist?"
+    answer: "Trigger an [Appwrite Function](/docs/products/functions) on the `tablesdb.*.tables.entries.rows.*.create` event for the Entries table. The function receives the new entry and sends a confirmation through your email provider or through [Appwrite Messaging](/docs/products/messaging). This keeps the frontend simple while adding async behavior."
+---
+
+Every SaaS launch starts the same way. A landing page, a form, and a quiet hope that the right people leave an email. The shape of that form is simple, but the backend around it has to do a handful of unglamorous jobs well: accept writes from the browser, reject duplicate emails, store entries safely, and stay out of your way.
+
+In this tutorial, you will build exactly that: a polished waitlist landing page in React that stores entries in Appwrite, with duplicate emails rejected by a unique index on the email column. The browser talks to Appwrite directly, so there is no server to run and no secret to ship.
+
+# Prerequisites
+
+- An [Appwrite Cloud](https://cloud.appwrite.io) account or a self-hosted Appwrite instance
+- [Node.js](https://nodejs.org/) 18+ installed
+- Basic knowledge of React and TypeScript
+
+# Set up the Appwrite project
+
+Start by creating a new project in the Appwrite Console. Head to the Console, click **Create project**, name it **SaaS Waitlist**, pick a region, and open it. On the overview page, copy the **Project ID** and **API endpoint**. You will need both in a moment.
+
+![SaaS Waitlist project overview in the Appwrite Console](/images/blog/build-saas-waitlist/project-overview.avif)
+
+## Register a web platform
+
+Before the browser can talk to Appwrite, you need to tell Appwrite which origins are allowed. On the project overview, scroll to **Integrations**, open the **Platforms** tab, and click **Add platform**. Choose **Web**, give it a name, and add the hostname of your dev server, for example `localhost`. For production, you will add your deployed domain later.
+
+# Create the database
+
+Navigate to **Databases** and create a new database called **Waitlist** (ID: `waitlist`). Inside it, create a table called **Entries** (ID: `entries`) with the following columns:
+
+| Column | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | varchar | Yes | Size 255, the person's name |
+| `email` | email | Yes | Validated by Appwrite on write |
+
+`varchar` is the right pick for a short, bounded string like a name. The `email` type validates the format on write, so you do not need to hand-roll a regex on the server. Both columns are required so that the frontend cannot accidentally submit a half-filled row.
+
+![Entries table columns in the Appwrite Console](/images/blog/build-saas-waitlist/table-columns.avif)
+
+## Prevent duplicate emails with a unique index
+
+A waitlist with three copies of the same email is a broken waitlist. Switch to the **Indexes** tab, click **Create index**, and add one with:
+
+| Field | Value |
+| --- | --- |
+| Index key | `unique_email` |
+| Type | Unique |
+| Attributes | `email` |
+
+When the index is in place, the second call to insert an existing email fails with a 409. You will surface that as a friendly "you're already on the list" message in the UI instead of a generic error.
+
+## Configure permissions
+
+Open the table's **Settings** tab and configure permissions there:
+
+- Scroll to **Permissions** and click **Add role**.
+- Pick **Any**.
+- Check only **Create**. Leave **Read**, **Update**, and **Delete** unchecked.
+- Keep **Row security** off.
+
+![Permissions panel with Any role granted Create only](/images/blog/build-saas-waitlist/table-permissions.avif)
+
+This is the minimum viable permission set for a public waitlist:
+
+- Anonymous visitors can submit their email, because they have `Create`.
+- Nobody can read the list back from the browser. Your frontend never needs to.
+- Nobody can edit or delete existing rows from the browser.
+
+When you want to view or export signups, you do it from the Appwrite Console or with an API key on a server you control. The browser only ever writes.
+
+# Build the app
+
+{% info title="Full source code" %}
+The complete source code for this project is available on [GitHub](https://github.com/appwrite-community/saas-waitlist).
+{% /info %}
+
+Scaffold a new Vite project and install the Appwrite SDK:
+
+```bash
+pnpm create vite@latest saas-waitlist -- --template react-ts
+cd saas-waitlist
+pnpm install
+pnpm add appwrite
+```
+
+Feel free to add your preferred styling setup on top, whether that's Tailwind, CSS Modules, or plain stylesheets. We'll focus on the data flow from here on.
+
+## Environment variables
+
+Create a `.env` file in the project root with your Appwrite credentials:
+
+```bash
+VITE_APPWRITE_ENDPOINT=https://<REGION>.cloud.appwrite.io/v1
+VITE_APPWRITE_PROJECT_ID=<YOUR_PROJECT_ID>
+VITE_APPWRITE_DATABASE_ID=waitlist
+VITE_APPWRITE_TABLE_ID=entries
+```
+
+Replace `<YOUR_PROJECT_ID>` with your project ID from the Console, and update the endpoint to match your project's region. Vite only exposes variables prefixed with `VITE_` to the browser, which is exactly what you want here. These four values are safe to ship to the client; the project ID is a public identifier, not a secret.
+
+## The Appwrite helper
+
+Everything Appwrite-related lives in one file. The component never imports the SDK directly, which means you can refactor the backend later without touching your UI. Create `src/lib/appwrite.ts`:
+
+```ts
+import { Client, TablesDB, ID, AppwriteException } from "appwrite";
+
+const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT;
+const projectId = import.meta.env.VITE_APPWRITE_PROJECT_ID;
+const databaseId = import.meta.env.VITE_APPWRITE_DATABASE_ID;
+const tableId = import.meta.env.VITE_APPWRITE_TABLE_ID;
+
+if (!endpoint || !projectId || !databaseId || !tableId) {
+  throw new Error("Missing Appwrite environment variables.");
+}
+
+export const client = new Client().setEndpoint(endpoint).setProject(projectId);
+export const tablesDB = new TablesDB(client);
+
+export type WaitlistInput = { name: string; email: string };
+
+export type WaitlistResult =
+  | { ok: true }
+  | { ok: false; reason: "duplicate"; message: string }
+  | { ok: false; reason: "unknown"; message: string };
+
+export async function createWaitlistEntry({
+  name,
+  email,
+}: WaitlistInput): Promise<WaitlistResult> {
+  try {
+    await tablesDB.createRow({
+      databaseId,
+      tableId,
+      rowId: ID.unique(),
+      data: { name, email },
+    });
+    return { ok: true };
+  } catch (error) {
+    if (error instanceof AppwriteException) {
+      if (error.code === 409) {
+        return {
+          ok: false,
+          reason: "duplicate",
+          message: "You're already on the list. We'll be in touch.",
+        };
+      }
+
+      return {
+        ok: false,
+        reason: "unknown",
+        message: error.message,
+      };
+    }
+
+    return {
+      ok: false,
+      reason: "unknown",
+      message: "Network error. Check your connection and try again.",
+    };
+  }
+}
+```
+
+The helper returns one of three outcomes the UI can react to: a successful create, a `duplicate` rejection when the unique index on `email` rejects a repeat, or an `unknown` failure for anything else.
+
+## The landing page
+
+Open `src/App.tsx` and replace it with the form wiring. The important part is not the styling, which is up to you, but how little the component knows about Appwrite. It calls one helper and branches on the result:
+
+```tsx
+import { useState, type FormEvent } from "react";
+import { createWaitlistEntry } from "./lib/appwrite";
+
+type FormStatus =
+  | { kind: "idle" }
+  | { kind: "submitting" }
+  | { kind: "error"; message: string }
+  | { kind: "success"; tone: "new" | "duplicate"; message: string };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validate(name: string, email: string): string | null {
+  if (name.trim().length === 0) return "Please tell us your name.";
+  if (name.trim().length > 120) return "That name is a little too long.";
+  if (!EMAIL_RE.test(email.trim())) return "That email doesn't look right.";
+  return null;
+}
+
+export default function App() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<FormStatus>({ kind: "idle" });
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (status.kind === "submitting") return;
+
+    const validationError = validate(name, email);
+    if (validationError) {
+      setStatus({ kind: "error", message: validationError });
+      return;
+    }
+
+    setStatus({ kind: "submitting" });
+
+    const result = await createWaitlistEntry({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+    });
+
+    if (result.ok) {
+      setStatus({
+        kind: "success",
+        tone: "new",
+        message: "You're in. We'll email you when your seat is ready.",
+      });
+      return;
+    }
+
+    if (result.reason === "duplicate") {
+      setStatus({
+        kind: "success",
+        tone: "duplicate",
+        message: result.message,
+      });
+      return;
+    }
+
+    setStatus({ kind: "error", message: result.message });
+  }
+
+  // render form, submitting state, success panel, or error line
+  // based on `status`
+}
+```
+
+A few small conventions make this code easier to live with:
+
+- **Client-side validation first.** The form is validated before any request goes out. This does not replace the server check; it just avoids obvious round trips. The Appwrite `email` column and the unique index remain your source of truth.
+- **Treat duplicates as success, not error.** From the visitor's point of view they are on the list, so a red error banner is the wrong signal. The helper marks the outcome as `success` with a `duplicate` tone, and the UI shows a calm "already on the list" confirmation.
+
+# Run the demo
+
+Start the dev server:
+
+```bash
+pnpm dev
+```
+
+The landing page renders immediately.
+
+![The Stratum waitlist landing page](/images/blog/build-saas-waitlist/waitlist-initial.avif)
+
+Fill in a name and email, submit, and the form is replaced with a confirmation. Behind the scenes, the helper fired a single `createRow` request to the Appwrite endpoint, which returned a row object with `$id`, `$createdAt`, and the values you sent.
+
+![Confirmation state after a successful submission](/images/blog/build-saas-waitlist/waitlist-success.avif)
+
+Open the **Entries** table in the Appwrite Console and the row is there, timestamped and ready.
+
+![The new waitlist entry in the Appwrite Console](/images/blog/build-saas-waitlist/table-rows.avif)
+
+Submit the same email again and the helper catches the 409 from the unique index, the UI shifts to the "already on file" confirmation, and no second row is created. Submit a malformed email and the client validator blocks the request before it ever leaves the browser.
+
+# Where to go from here
+
+You now have a functioning waitlist with proper deduplication, scoped permissions, and a clean separation between your UI and your backend. There are a few natural next steps depending on where you want to take it.
+
+- **Send a welcome email.** Create an [Appwrite Function](/docs/products/functions) that listens for the `tablesdb.*.tables.*.rows.*.create` event on your `entries` table and sends a transactional email through your provider of choice. The user never has to wait for it on the form.
+- **Export the list.** Use the [CSV export](/docs/products/databases/csv-exports) feature from the Console when you are ready to invite people, or hit the REST API with a server-side API key for scheduled jobs.
+- **Add referral tracking.** Add a `source` enum column on the table and capture `utm_source` from the URL before calling the helper. The helper signature only needs one more field.
+- **Show a live counter.** With row security off and a read permission for `Any`, you can expose a count of entries on the page. If you want exact privacy, keep reads server-only and surface a daily-updated number from a Function instead.
+
+# Next steps
+
+- [Read the TablesDB documentation](/docs/products/databases/tables)
+- [Explore Appwrite permissions](/docs/products/databases/permissions)
+- [Learn about Appwrite Functions](/docs/products/functions)

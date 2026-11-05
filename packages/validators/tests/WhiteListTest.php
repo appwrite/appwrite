@@ -25,7 +25,7 @@ final class WhiteListTest extends TestCase
         $this->assertFalse($whiteList->isValid(5));
         $this->assertFalse($whiteList->isArray());
         $this->assertSame($whiteList->getList(), ['string1', 'string2', 3, 4]);
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $whiteList->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $whiteList->getType());
     }
 
     public function testCanValidateLoosely(): void

@@ -8,9 +8,11 @@ use Appwrite\Schedule\Source;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
 use Utopia\Schedule\Source\Row;
+use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -26,6 +28,7 @@ class ScheduleFunctions extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
@@ -34,7 +37,7 @@ class ScheduleFunctions extends Action
         return 'schedule-functions';
     }
 
-    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(FunctionPublisher $publisherForFunctions, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, Group $pools): void
     {
         $source = new Source\Functions(
             $dbForPlatform,
@@ -43,21 +46,25 @@ class ScheduleFunctions extends Action
             fn (array $schedule): int => $this->spreadWindow($schedule, $dbForPlatform),
         );
 
-        $scheduler = new Scheduler(
-            source: $source,
-            telemetry: $telemetry,
-            onError: function (\Throwable $error, ?Row $row = null): void {
-                Span::init('schedule.functions.reconcile');
-                if ($row?->data instanceof Document) {
-                    Span::add('project.id', (string) $row->data->getAttribute('projectId'));
-                    Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
-                    Span::add('schedule.id', $row->data->getId());
-                }
-                Span::current()?->finish(error: $error);
-            },
-        );
+        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForFunctions, $dbForPlatform): void {
+            $scheduler = new Scheduler(
+                source: $source,
+                store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
+                telemetry: $telemetry,
+                onError: function (\Throwable $error, ?Row $row = null): void {
+                    Span::init('schedule.functions.reconcile');
+                    if ($row?->data instanceof Document) {
+                        Span::add('project.id', (string) $row->data->getAttribute('projectId'));
+                        Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
+                        Span::add('schedule.id', $row->data->getId());
+                    }
+                    Span::current()?->finish(error: $error);
+                },
+            );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions));
+            $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForFunctions, $dbForPlatform));
+        });
 
         Span::init('schedule.functions.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
@@ -72,9 +79,19 @@ class ScheduleFunctions extends Action
     }
 
     /**
+     * Skip runs the worker would reject; rejected jobs pile up on the failed list.
+     *
+     * @param array<string, mixed> $schedule
+     */
+    protected function shouldEnqueue(array $schedule, Database $dbForPlatform): bool
+    {
+        return true;
+    }
+
+    /**
      * @param list<Occurrence> $occurrences
      */
-    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions): null
+    private function dispatch(array $occurrences, FunctionPublisher $publisherForFunctions, Database $dbForPlatform): null
     {
         $batch = \count($occurrences);
 
@@ -89,10 +106,25 @@ class ScheduleFunctions extends Action
                 Span::add('function.id', $schedule['resource']->getId());
                 Span::add('schedule.id', $schedule['$id'] ?? '');
                 Span::add('schedule.cron', (string) ($schedule['schedule'] ?? ''));
+                Span::add('schedule.interval', (int) ($schedule['interval'] ?? 0));
                 Span::add('occurrence.due', $occurrence->due->format('c'));
                 Span::add('occurrence.late', \round(\microtime(true) - (float) $occurrence->due->format('U.u'), 3));
                 Span::add('occurrence.batch', $batch);
                 Span::add('occurrence.index', $index);
+
+                // A failed check enqueues anyway: the window is committed after
+                // dispatch, so a skipped run is lost, while the worker still enforces.
+                try {
+                    $eligible = $this->shouldEnqueue($schedule, $dbForPlatform);
+                } catch (\Throwable $th) {
+                    $error = $th;
+                    $eligible = true;
+                }
+
+                if (!$eligible) {
+                    Span::add('occurrence.skipped', true);
+                    continue;
+                }
 
                 $publisherForFunctions->enqueue(new FunctionMessage(
                     project: $schedule['project'],

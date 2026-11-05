@@ -2,14 +2,15 @@
 
 namespace Appwrite\Platform\Modules\VCS\Http\Origin\Callback;
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -92,8 +93,8 @@ class Get extends Action
         // The receipt authenticates Cursor, and this HMAC authenticates the
         // Appwrite Console that started the flow -- without it anyone could
         // attach an installation to an arbitrary projectId.
-        $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
-        if (!\hash_equals($signature, $state['signature'] ?? '')) {
+        $signature = \is_string($state['signature'] ?? null) ? $state['signature'] : '';
+        if (!\array_any(EncryptionKey::accepted(), fn (string $key) => \hash_equals(\hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), $key), $signature))) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
         }
 
@@ -143,7 +144,7 @@ class Get extends Action
             $teamId = $project->getAttribute('teamId', '');
 
             $installation = $dbForPlatform->createDocument('installations', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $this->getPermissions($teamId, $projectId),
                 'providerInstallationId' => $providerInstallationId,
                 'projectId' => $projectId,

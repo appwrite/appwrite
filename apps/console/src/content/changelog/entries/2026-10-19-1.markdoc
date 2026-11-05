@@ -1,0 +1,20 @@
+---
+layout: changelog
+title: "Sign users in with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow"
+date: 2026-10-19
+cover: /images/blog/announcing-new-oauth2-providers/cover.avif
+description: "Appwrite Auth adds six OAuth2 login providers: Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow, each with its own OAuthProvider enum value."
+tags: auth, sdk
+---
+
+[OAuth2 login](/docs/products/auth/oauth2) in Appwrite Auth now supports six more providers: **Hugging Face**, **Resend**, **Cloudflare**, **TikTok**, **Kakao**, and **Webflow**. Enable them in your project under **Auth** > **Settings**, then pass the matching value to `createOAuth2Session` or `createOAuth2Token`: `OAuthProvider.Huggingface`, `Resend`, `Cloudflare`, `Tiktok`, `Kakao`, or `Webflow`.
+
+Appwrite handles PKCE for Cloudflare and Resend and refreshes provider tokens for every new provider except Webflow. TikTok and Resend don't share an email address, so those users are created without one. Resend also needs an explicit scope, either `emails:send` or `full_access`. All six are live on Appwrite Cloud and available in self-hosted Appwrite 2.4 and later.
+
+{% arrow_link href="/blog/post/announcing-new-oauth2-providers" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/products/auth/oauth2" %}
+Set up OAuth2 login
+{% /arrow_link %}

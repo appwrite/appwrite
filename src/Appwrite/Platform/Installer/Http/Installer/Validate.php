@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Installer\Http\Installer;
 
+use Appwrite\Installer\Secret;
 use Appwrite\Platform\Installer\Server;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
@@ -27,12 +28,27 @@ class Validate extends Action
 
     public function action(Request $request, Response $response): void
     {
-        if (!self::validateCsrf($request)) {
-            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-            $response->json(['success' => false, 'message' => 'Invalid CSRF token']);
+        if (!self::authorize($request, $response)) {
             return;
         }
         $response->json(['success' => true]);
+    }
+
+    public static function authorize(Request $request, Response $response): bool
+    {
+        if (!self::validateSecret($request)) {
+            $response->setStatusCode(Response::STATUS_CODE_UNAUTHORIZED);
+            $response->json(['success' => false, 'message' => 'Invalid installer secret']);
+            return false;
+        }
+
+        if (!self::validateCsrf($request)) {
+            $response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+            $response->json(['success' => false, 'message' => 'Invalid CSRF token']);
+            return false;
+        }
+
+        return true;
     }
 
     public static function validateCsrf(Request $request): bool
@@ -41,5 +57,10 @@ class Validate extends Action
         $header = $request->getHeaderLine('x-appwrite-installer-csrf');
 
         return $cookie !== '' && $header !== '' && hash_equals($cookie, $header);
+    }
+
+    public static function validateSecret(Request $request): bool
+    {
+        return Server::secret()->matches($request->getHeaderLine(Secret::HEADER));
     }
 }

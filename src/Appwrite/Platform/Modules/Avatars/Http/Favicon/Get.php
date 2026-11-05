@@ -2,8 +2,9 @@
 
 namespace Appwrite\Platform\Modules\Avatars\Http\Favicon;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -17,9 +18,8 @@ use DOMElement;
 use enshrined\svgSanitize\Sanitizer as SvgSanitizer;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\ResponseInterface;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
-use Utopia\Domains\Domain;
+use Utopia\Image\Exception\UnsupportedFormatException;
 use Utopia\Image\Image;
 use Utopia\Platform\Action as UtopiaAction;
 use Utopia\Platform\Scope\HTTP;
@@ -27,13 +27,11 @@ use Utopia\Psr7\Header;
 use Utopia\Psr7\Method as RequestMethod;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
-use Utopia\Validator\URL;
 
 class Get extends Action
 {
     use HTTP;
 
-    private const ALLOWED_SCHEMES = ['http', 'https'];
     private const MAX_REDIRECTS = 5;
 
     public static function getName(): string
@@ -49,6 +47,7 @@ class Get extends Action
             ->desc('Get favicon')
             ->groups(['api', 'avatars'])
             ->label('scope', 'avatars.read')
+            ->label('abuse', [Limit::attempts(['url', 'ip'], 60, seconds: 60)])
             ->label('cache', true)
             ->label('cache.resource', 'avatar/favicon')
             ->label('sdk', new Method(
@@ -58,7 +57,7 @@ class Get extends Action
                 description: '/docs/references/avatars/get-favicon.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -67,12 +66,14 @@ class Get extends Action
                 ],
                 contentType: ContentType::IMAGE
             ))
-            ->param('url', '', new URL(self::ALLOWED_SCHEMES), 'Website URL which you want to fetch the favicon from.')
+            ->param('url', '', fn (PublicURL $publicURL) => $publicURL, 'Website URL which you want to fetch the favicon from.', false, ['publicURL'])
             ->inject('response')
+            ->inject('publicURL')
+            ->inject('clientForAvatars')
             ->callback($this->action(...));
     }
 
-    public function action(string $url, Response $response)
+    public function action(string $url, Response $response, PublicURL $publicURL, Client $clientForAvatars)
     {
         $width = 56;
         $height = 56;
@@ -90,7 +91,7 @@ class Get extends Action
         );
 
         try {
-            $pageResponse = $this->safeFetch($url, $userAgent);
+            $pageResponse = $this->safeFetch($url, $userAgent, $publicURL, $clientForAvatars, $pageUrl);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -112,7 +113,7 @@ class Get extends Action
             $href = $link->getAttribute('href');
             $rel = $link->getAttribute('rel');
             $sizes = $link->getAttribute('sizes');
-            $absolute = URLParse::resolveLocation($url, $href);
+            $absolute = URLParse::resolveLocation($pageUrl, $href);
 
             switch (\strtolower($rel)) {
                 case 'icon':
@@ -149,14 +150,12 @@ class Get extends Action
         }
 
         if (empty($outputHref) || empty($outputExt)) {
-            $default = \parse_url($url);
-
-            $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
+            $outputHref = URLParse::resolveLocation($pageUrl, '/favicon.ico');
             $outputExt = 'ico';
         }
 
         try {
-            $iconResponse = $this->safeFetch($outputHref, $userAgent);
+            $iconResponse = $this->safeFetch($outputHref, $userAgent, $publicURL, $clientForAvatars);
         } catch (\Throwable) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
@@ -196,7 +195,12 @@ class Get extends Action
             return;
         }
 
-        $image = new Image($data);
+        try {
+            $image = new Image($data);
+        } catch (UnsupportedFormatException | \ImagickException) {
+            throw new Exception(Exception::AVATAR_ICON_NOT_FOUND);
+        }
+
         $image->crop((int) $width, (int) $height);
         $data = $image->output($output, $quality);
 
@@ -208,55 +212,23 @@ class Get extends Action
     }
 
     /**
+     * Follows redirects one hop at a time so every target passes the validator (scheme,
+     * known public domain, allowed addresses) before it is requested; the client then
+     * checks the address it actually connects to. The last requested URL is written to
+     * $finalUrl.
+     *
      * @throws Exception
      */
-    protected static function assertSafeUrl(string $url): void
+    protected function safeFetch(string $url, string $userAgent, PublicURL $validator, ClientInterface $client, ?string &$finalUrl = null): ResponseInterface
     {
-        $parts = \parse_url($url);
-        if (!\is_array($parts)) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'Malformed URL.');
-        }
-
-        $scheme = \strtolower($parts['scheme'] ?? '');
-        if (!\in_array($scheme, self::ALLOWED_SCHEMES, true)) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, "Scheme '{$scheme}' is not allowed.");
-        }
-
-        $host = $parts['host'] ?? '';
-        if ($host === '') {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, 'URL has no host.');
-        }
-
-        $isIpLiteral = \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) !== false;
-        if (!$isIpLiteral) {
-            try {
-                $domain = new Domain($host);
-            } catch (\Throwable) {
-                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, "Hostname '{$host}' is invalid.");
-            }
-
-            if (!$domain->isKnown()) {
-                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, "Hostname '{$host}' is not a known public domain.");
-            }
-        }
-
-        $validator = new PublicHostname();
-        if (!$validator->isValid($host)) {
-            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
-        }
-    }
-
-    /**
-     * @throws Exception
-     */
-    protected function safeFetch(string $url, string $userAgent, ?ClientInterface $client = null): ResponseInterface
-    {
-        // Redirects are followed here, one hop at a time, so every target passes assertSafeUrl()
-        $client ??= (new Client(new CurlAdapter()))->withTimeout(15);
         $requestFactory = new RequestFactory();
 
         for ($hop = 0; $hop <= self::MAX_REDIRECTS; $hop++) {
-            self::assertSafeUrl($url);
+            if (!$validator->isValid($url)) {
+                throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED, $validator->getDescription());
+            }
+
+            $finalUrl = $url;
 
             $response = $client->sendRequest(
                 $requestFactory

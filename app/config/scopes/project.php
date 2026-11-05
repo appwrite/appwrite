@@ -407,6 +407,18 @@ return [
             "Access to create, update, and delete webhooks",
         'category' => 'Other',
     ],
+    'monitors.read' => [
+        'description' => 'Access to read monitors',
+        'category' => 'Other',
+    ],
+    'monitors.write' => [
+        'description' => 'Access to create, update, and delete monitors',
+        'category' => 'Other',
+    ],
+    'alerts.read' => [
+        'description' => 'Access to read the alerts monitors raise',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',
@@ -415,13 +427,20 @@ return [
         'description' => 'Access to use Avatars service',
         'category' => 'Other',
     ],
+    'avatars.write' => [
+        'description' => 'Access to update and delete the user photo',
+        'category' => 'Other',
+    ],
     'health.read' => [
         'description' => 'Access to use Health service',
         'category' => 'Other',
     ],
+    // The Assistant endpoint is gone, but OAuth2 clients registered with this scope
+    // (e.g. the ChatGPT app) still request it, so it must stay a known scope.
     'assistant.read' => [
-        'description' => 'Access to use Assistant service',
+        'description' => 'Access to use Assistant service. This scope is deprecated, the Assistant service has been removed.',
         'category' => 'Other',
+        'deprecated' => true,
     ],
     'migrations.read' => [
         'description' => 'Access to read migrations',
@@ -466,6 +485,15 @@ return [
     'reports.write' => [
         'description' => 'Access to delete reports under Advisor service.',
         'category' => 'Advisor',
+    ],
+    // Reviews
+    'reviews.read' => [
+        'description' => 'Access to read code review repositories and reviews.',
+        'category' => 'Reviews',
+    ],
+    'reviews.write' => [
+        'description' => 'Access to turn code review on and off for repositories.',
+        'category' => 'Reviews',
     ],
     'presences.read' => [
         'description' => 'Access to read your project\'s presences',

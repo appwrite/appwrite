@@ -1,0 +1,64 @@
+---
+layout: article
+title: Zenflow
+description: Learn how to add the Appwrite MCP server to agents in Zenflow to interact with both the Appwrite API and documentation.
+---
+
+{% section #quick-start-prompts step=1 title="Quick start prompts" %}
+
+Get started quickly with these pre-built prompts for common Appwrite integrations:
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/tooling/ai/quickstart-prompts" %}
+Browse all quick start prompts
+{% /arrow_link %}
+
+{% /section %}
+
+{% section #step-2 step=2 title="Add the MCP server" %}
+
+Connect the Appwrite MCP server to Zenflow for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install.
+
+To add the Appwrite MCP server, open Zenflow and go to the **Settings** > **MCP servers**. From there, select your agent you want to configure MCP for, and then add your custom MCP server.
+
+```json
+{
+  "mcpServers": {
+    "appwrite": {
+      "url": "https://mcp.appwrite.io/",
+      "type": "http"
+    }
+  }
+}
+```
+
+The server uses OAuth for authentication. When Zenflow first connects to the server, complete the sign-in flow in your browser to sign in to your Appwrite account and authorize access.
+
+Click **Save**. Once you save the configuration, Zenflow will connect with the MCP server and load all available tools.
+
+{% /section %}
+
+{% section #step-3 step=3 title="Test the integration" %}
+
+Open **Zenflow Chat** of your existing task to test your MCP integrations. If you don't have an existing task, you can create one by clicking **New Task**, selecting a task type, and writing a task description. Click **Create and Run**.
+If you are new to Zenflow, learn more about [how to set up Zenflow](https://docs.zencoder.ai/user-guides/guides/set-up-your-zenflow#step-6:-create-your-first-task).
+
+You can try out the following example prompts:
+
+**Example prompts:**
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `How do I implement file uploads with Appwrite Storage?`
+
+![Search for portfolio site in Appwrite project](/images/docs/mcp/zenflow/zenflow-chat.avif)
+
+{% /section %}

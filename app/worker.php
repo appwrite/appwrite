@@ -3,12 +3,13 @@
 require_once __DIR__ . '/init.php';
 $registerWorkerMessageResources = require __DIR__ . '/init/worker/message.php';
 
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Certificates\LetsEncrypt;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Workers\Jobs;
 use Swoole\Runtime;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
@@ -19,6 +20,16 @@ use Utopia\Queue\Connection\Redis as Connection;
 use Utopia\Queue\Server;
 use Utopia\Span\Span;
 use Utopia\System\System;
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        EncryptionKey::current()
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 Runtime::enableCoroutine();
 require_once __DIR__ . '/init/span.php';
@@ -78,8 +89,8 @@ if ($requested === [] || \in_array('all', $requested, true)) {
 }
 
 // Same as a single worker: resolve queue + concurrency from config/env.
-// For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases).
-// For many, each queue keeps its own cap so databases stays at 1.
+// For one worker, `_APP_WORKER_MAX_COROUTINES` still overrides (except databases and maintenance).
+// For many, each queue keeps its own cap.
 $jobs = Jobs::resolve($workers, $workersConfig, System::getEnv(...));
 
 // Keep commands available for heartbeats and recovery while receive blocks.

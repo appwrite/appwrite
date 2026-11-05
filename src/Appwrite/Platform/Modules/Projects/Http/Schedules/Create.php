@@ -20,6 +20,7 @@ use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Range;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -89,9 +90,10 @@ class Create extends Action
             ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.', enum: new Enum(name: 'ScheduleResourceType'))
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
-            ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
+            ->param('schedule', '', new Cron(), 'Schedule CRON expression. Cannot be combined with interval.', true)
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
             ->param('data', null, new JSON(), 'Schedule data as a JSON string. Used to store resource-specific context needed for execution.', true)
+            ->param('interval', 0, new Range(0, Database::MAX_INT), 'Minutes between runs, for function schedules only. Use 0 to disable. Cannot be combined with schedule.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
@@ -107,12 +109,21 @@ class Create extends Action
         string $schedule,
         bool $active,
         ?string $data,
+        int $interval,
         Response $response,
         Database $dbForPlatform,
         callable $getProjectDB,
         Store $executionStore,
         Event $queueForEvents,
     ): void {
+        if ($interval !== 0 && $resourceType !== SCHEDULE_RESOURCE_TYPE_FUNCTION) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Only function schedules support "interval".');
+        }
+
+        if (($schedule === '') === ($interval === 0)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Set either "schedule" or "interval".');
+        }
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -136,6 +147,7 @@ class Create extends Action
             'projectId' => $project->getId(),
             'projectInternalId' => $project->getSequence(),
             'schedule' => $schedule,
+            'interval' => $interval,
             'active' => $active,
         ];
 

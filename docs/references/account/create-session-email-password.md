@@ -1,3 +1,3 @@
-Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user.
+Allow the user to login into their account by providing a valid email and password combination. This route will create a new session for the user. Use the optional `duration` parameter to create a shorter session, for example when the user doesn't choose "remember me". It must be at least 60 seconds and cannot exceed the project maximum session length.
 
 A user is limited to 10 active sessions at a time by default. [Learn more about session limits](https://appwrite.io/docs/authentication-security#limits).

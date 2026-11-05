@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Utopia\Config\Parser;
+
+use Utopia\Config\Exception\Parse;
+use Utopia\Config\Parser;
+
+class PHP extends Parser
+{
+    /**
+     * @param \ReflectionClass<covariant object>|null $reflection
+     * @return array<string, mixed>
+     */
+    public function parse(mixed $contents, ?\ReflectionClass $reflection = null): array
+    {
+        if (!\is_string($contents)) {
+            throw new Parse('Contents must be a string.');
+        }
+
+        // Anything before the open tag, including a missing one, would be
+        // printed by include rather than parsed.
+        if (!str_starts_with($contents, '<?php') || (\strlen($contents) > 5 && !ctype_space($contents[5]))) {
+            throw new Parse('PHP config must start with an opening <?php tag.');
+        }
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'utopia_config_');
+        if ($tempPath === false) {
+            throw new Parse('Failed to create temporary file for PHP config.');
+        }
+
+        if (file_put_contents($tempPath, $contents) === false) {
+            throw new Parse('Failed to write PHP config to temporary file.');
+        }
+
+        try {
+            $contents = include $tempPath;
+        } catch (\Throwable $e) {
+            throw new Parse('Failed to parse PHP config file: ' . $e->getMessage(), $e->getCode(), $e);
+        } finally {
+            unlink($tempPath);
+        }
+
+        if (!\is_array($contents)) {
+            throw new Parse('PHP config file must return an array.');
+        }
+
+        return $contents;
+    }
+}

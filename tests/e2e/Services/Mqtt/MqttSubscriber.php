@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Mqtt;
 
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Disconnect;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
@@ -227,6 +228,29 @@ final class MqttSubscriber
                 return true;
             }
         }
+    }
+
+    /**
+     * The reason code of the DISCONNECT the broker sends within $timeout seconds, or null when none
+     * arrives (a timeout, or a close without one). PUBLISH packets read meanwhile are kept for consume().
+     */
+    public function awaitDisconnect(float $timeout): ?int
+    {
+        if (!\is_resource($this->socket)) {
+            return null;
+        }
+
+        $deadline = microtime(true) + $timeout;
+        while (($packet = $this->readPacket($deadline)) !== null) {
+            if ($packet->type === Packet::DISCONNECT) {
+                return Disconnect::decode($packet->body)->reasonCode;
+            }
+            if ($packet->type === Packet::PUBLISH) {
+                $this->pending[] = $packet;
+            }
+        }
+
+        return null;
     }
 
     public function disconnect(): void

@@ -127,6 +127,35 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('LIMIT {param0:Int64}', $find);
         $this->assertStringContainsString('name="param_param0"', $find);
         $this->assertStringContainsString('least(count()', (string) $client->requests[1]->getBody());
+        $this->assertStringNotContainsString('source.id IN (SELECT id', $find);
+    }
+
+    public function testCreatedAtWindowNarrowsAggregationToMatchingExecutions(): void
+    {
+        $client = new CapturingClient([
+            $this->jsonResponse([]),
+            $this->jsonResponse([['total' => 0]]),
+        ]);
+        $store = $this->store($client);
+        $queries = [
+            Query::equal('resourceInternalId', ['1608']),
+            Query::equal('resourceType', ['functions']),
+            Query::greaterThanEqual('$createdAt', '2026-09-28T21:00:00.000+00:00'),
+            Query::lessThan('$createdAt', '2026-09-28T22:00:00.000+00:00'),
+            Query::orderDesc('$createdAt'),
+        ];
+
+        $store->find('project', $queries);
+        $store->count('project', $queries, 5000);
+
+        foreach ($client->requests as $request) {
+            $body = (string) $request->getBody();
+            $this->assertStringContainsString('source.id IN (SELECT id FROM `appwrite`.`executions` WHERE projectId = {projectId:String}', $body);
+            // The window only picks candidate executions; versions are not
+            // filtered by it.
+            $this->assertStringNotContainsString('source.createdAt >=', $body);
+            $this->assertStringNotContainsString('source.createdAt <', $body);
+        }
     }
 
     public function testBulkDeleteUsesLatestSnapshots(): void
@@ -373,6 +402,24 @@ final class StoreTest extends TestCase
         $this->assertSame('2026-09-14T21:27:33.884+00:00', $execution->getAttribute('scheduledAt'));
     }
 
+    public function testWritesBypassAsyncInsertBuffer(): void
+    {
+        $client = new CapturingClient();
+        $store = $this->store($client);
+
+        $store->upsertMany('project', [
+            new Document(['$id' => 'first', 'resourceType' => 'functions', 'status' => 'waiting']),
+            new Document(['$id' => 'second', 'resourceType' => 'functions', 'status' => 'completed']),
+        ]);
+        $store->delete('project', new Document(['$id' => 'first', 'resourceType' => 'functions']));
+
+        $this->assertCount(2, $client->requests);
+        foreach ($client->requests as $request) {
+            \parse_str($request->getUri()->getQuery(), $parameters);
+            $this->assertSame('0', $parameters['async_insert'] ?? null);
+        }
+    }
+
     public function testWriteFailuresPropagate(): void
     {
         $store = $this->store(new FailingClient());
@@ -424,30 +471,5 @@ final class StoreTest extends TestCase
     private function jsonResponse(array $rows): ResponseInterface
     {
         return new Response(200, body: new Stream(\json_encode(['data' => $rows], JSON_THROW_ON_ERROR)));
-    }
-}
-
-final class CapturingClient implements ClientInterface
-{
-    /** @var list<RequestInterface> */
-    public array $requests = [];
-
-    /** @param list<ResponseInterface> $responses */
-    public function __construct(private array $responses = [])
-    {
-    }
-
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        $this->requests[] = $request;
-        return \array_shift($this->responses) ?? new Response(200);
-    }
-}
-
-final class FailingClient implements ClientInterface
-{
-    public function sendRequest(RequestInterface $request): ResponseInterface
-    {
-        throw new \RuntimeException('ClickHouse unavailable');
     }
 }

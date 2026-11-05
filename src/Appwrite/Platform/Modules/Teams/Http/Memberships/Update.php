@@ -55,7 +55,7 @@ class Update extends Action
             ))
             ->param('teamId', '', new UID(), 'Team ID.')
             ->param('membershipId', '', new UID(), 'Membership ID.')
-            ->param('roles', [], new ArrayList(new Key(maxLength: 81), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 81 characters long.', false, ['project'], example: '["editor"]') // For project-specific permissions, roles will be in the format `project-<projectId>-<role>`. Template takes 9 characters, `projectId` and `role` can be upto 36 characters. In total, 81 characters.
+            ->param('roles', [], new ArrayList(new Key(maxLength: APP_LIMIT_ROLE_LENGTH), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each ' . APP_LIMIT_ROLE_LENGTH . ' characters long.', false, ['project'], example: '["editor"]')
             ->inject('request')
             ->inject('response')
             ->inject('user')
@@ -91,36 +91,48 @@ class Update extends Action
         $isAppUser = $user->isKey($authorization->getRoles());
         $isOwner = $authorization->hasRole('team:' . $team->getId() . '/owner');
 
-        if ($project->getId() === 'console') {
-            // Quick check: fetch up to 2 owners to determine if only one exists
-            $ownersCount = $dbForProject->count(
-                collection: 'memberships',
-                queries: [
-                    Query::contains('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getSequence()])
-                ],
-                max: 2
-            );
-
-            // Is the role change being requested by the user on their own membership?
-            $isCurrentUserAnOwner =  $user->getSequence() === $membership->getAttribute('userInternalId');
-
-            // Prevent role change if there's only one owner left,
-            // the requester is that owner, and the new `$roles` no longer include 'owner'
-            if ($ownersCount === 1 && $isOwner && $isCurrentUserAnOwner && !\in_array('owner', $roles)) {
-                throw new Exception(Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED, 'There must be at least one owner in the organization.');
-            }
-        }
-
-        if (!$isOwner && !$isPrivilegedUser && !$isAppUser) { // Not owner, not admin, not app (server)
+        // Console organization developer/admin become bare privileged roles when
+        // X-Appwrite-Organization is applied. Those roles must not authorize
+        // membership role changes; only the team owner or an API key may.
+        if (!$isOwner && !$isAppUser && ($project->getId() === 'console' || !$isPrivilegedUser)) {
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to modify roles');
         }
 
-        /**
-         * Update the roles
-         */
-        $membership->setAttribute('roles', $roles);
-        $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['roles' => $roles]));
+        // An organization must keep a confirmed owner, whoever makes the change: a session, or an API key.
+        // Locking the team first serializes concurrent changes to its owners; counting after the update,
+        // in the same transaction, sees this change and refuses it as a whole.
+        $isDemotingConfirmedOwner = $project->getId() === 'console'
+            && $membership->getAttribute('confirm', false)
+            && \in_array('owner', $membership->getAttribute('roles', []), true)
+            && !\in_array('owner', $roles, true);
+
+        $membership = $dbForProject->withTransaction(function () use ($dbForProject, $membership, $roles, $team, $isDemotingConfirmedOwner) {
+            if ($isDemotingConfirmedOwner) {
+                $dbForProject->getDocument('teams', $team->getId(), forUpdate: true);
+            }
+
+            $membership = $dbForProject->updateDocument('memberships', $membership->getId(), new Document(['roles' => $roles]));
+
+            if (!$isDemotingConfirmedOwner) {
+                return $membership;
+            }
+
+            $owners = $dbForProject->count(
+                collection: 'memberships',
+                queries: [
+                    Query::containsAny('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getSequence()]),
+                    Query::equal('confirm', [true]),
+                ],
+                max: 1
+            );
+
+            if ($owners === 0) {
+                throw new Exception(Exception::MEMBERSHIP_DOWNGRADE_PROHIBITED, 'There must be at least one owner in the organization.');
+            }
+
+            return $membership;
+        });
 
         /**
          * Replace membership on profile
@@ -132,11 +144,16 @@ class Update extends Action
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
+        // The privacy policy only hides other members, a member always sees their own details
+        $auths = $project->getAttribute('auths', []);
+        $isVisible = $isPrivilegedUser || $isAppUser
+            || ($user->getSequence() !== null && $membership->getAttribute('userInternalId') === $user->getSequence());
+
         $response->dynamic(
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
-                ->setAttribute('userName', $profile->getAttribute('name'))
-                ->setAttribute('userEmail', $profile->getAttribute('email')),
+                ->setAttribute('userName', $isVisible || ($auths['membershipsUserName'] ?? true) ? $profile->getAttribute('name') : '')
+                ->setAttribute('userEmail', $isVisible || ($auths['membershipsUserEmail'] ?? true) ? $profile->getAttribute('email') : ''),
             Response::MODEL_MEMBERSHIP
         );
     }

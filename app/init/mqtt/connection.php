@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
@@ -10,7 +11,6 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\System\System;
 
 return function (Container $container): void {
     $getProject = function (string $projectId, Authorization $authorization) use ($container): Document {
@@ -25,12 +25,28 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     };
 
-    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container): User {
+    // A session can end or lose its factors without a revoke reaching the broker (an MFA
+    // requirement raised by verifying an email or phone), so delivery checks it again at least
+    // this often, and once it is due to expire.
+    $getRecheckAt = static function (User $user, string $sessionId): int {
+        $recheckAt = \time() + APP_MQTT_SESSION_RECHECK;
+        $expire = $user->getSessionExpiry($sessionId);
+
+        return $expire === null ? $recheckAt : \min($recheckAt, $expire);
+    };
+
+    /**
+     * The user a credential authenticates, with the session it runs on, when the token itself
+     * expires and when that session is next due to be checked, or [] when it authenticates nobody.
+     *
+     * @return array{user?: User, sessionId?: string, expire?: ?int, sessionExpire?: ?int, recheckAt?: ?int}
+     */
+    $getUser = function (Document $project, string $authMethod, string $credential, Authorization $authorization) use ($container, $getRecheckAt): array {
         if ($project->isEmpty() || $credential === '') {
-            return new User([]);
+            return [];
         }
 
-        $authorization->setDefaultStatus(true);
+        $authorization->setStatus(true);
 
         $getProjectDB = $container->get('getProjectDB');
         $dbForProject = $getProjectDB($project);
@@ -38,16 +54,23 @@ return function (Container $container): void {
 
         switch ($authMethod) {
             case 'appwrite-jwt':
-                $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
-
                 try {
-                    $payload = $jwt->decode($credential);
+                    $payload = EncryptionKey::decode($credential);
                 } catch (JWTException) {
-                    return new User([]);
+                    return [];
                 }
 
                 $userId = $payload['userId'] ?? '';
                 $sessionId = $payload['sessionId'] ?? '';
+
+                // Same binding as the HTTP and realtime user resources: a JWT is only good for
+                // the project that minted it, and one minted before the projectId claim existed
+                // only when it names a session.
+                $jwtProjectId = $payload['projectId'] ?? '';
+                $bound = $jwtProjectId !== '' ? $jwtProjectId === $project->getId() : $sessionId !== '';
+                if (!$bound) {
+                    return [];
+                }
 
                 /** @var User $user */
                 $user = $dbForProject->getDocument('users', $userId);
@@ -55,12 +78,18 @@ return function (Container $container): void {
                 if (
                     $user->isEmpty()
                     || $user->getAttribute('status', true) === false // blocked account
-                    || ($sessionId !== '' && !$user->sessionActive($sessionId))
+                    || ($sessionId !== '' && (!$user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) || !$user->sessionFactorsMet($sessionId)))
                 ) {
-                    return new User([]);
+                    return [];
                 }
 
-                return $user;
+                return [
+                    'user' => $user,
+                    'sessionId' => $sessionId,
+                    'expire' => \is_int($payload['exp'] ?? null) ? $payload['exp'] : null,
+                    'sessionExpire' => $sessionId !== '' ? $user->getSessionExpiry($sessionId) : null,
+                    'recheckAt' => $sessionId !== '' ? $getRecheckAt($user, $sessionId) : null,
+                ];
 
             case 'appwrite-session':
                 $store = new Store();
@@ -71,19 +100,27 @@ return function (Container $container): void {
 
                 /** @var User $user */
                 $user = $dbForProject->getDocument('users', $store->getProperty('id', ''));
+                $sessionId = $user->sessionVerify($store->getProperty('secret', ''), $proofForToken, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
 
                 if (
                     $user->isEmpty()
                     || $user->getAttribute('status', true) === false // blocked account
-                    || !$user->sessionVerify($store->getProperty('secret', ''), $proofForToken)
+                    || !$sessionId
+                    || !$user->sessionFactorsMet($sessionId)
                 ) {
-                    return new User([]);
+                    return [];
                 }
 
-                return $user;
+                return [
+                    'user' => $user,
+                    'sessionId' => $sessionId,
+                    'expire' => null,
+                    'sessionExpire' => $user->getSessionExpiry($sessionId),
+                    'recheckAt' => $getRecheckAt($user, $sessionId),
+                ];
 
             default:
-                return new User([]);
+                return [];
         }
     };
 
@@ -96,14 +133,19 @@ return function (Container $container): void {
                 return [];
             }
 
-            $user = $getUser($project, $authMethod, $credential, $authorization);
-            if ($user->isEmpty()) {
+            $authenticated = $getUser($project, $authMethod, $credential, $authorization);
+            if (!isset($authenticated['user'])) {
                 return [];
             }
 
+            // The session and expiry are kept so the connection ends with the credential it was opened with.
             return [
                 'projectId' => $project->getId(),
-                'userId' => $user->getId(),
+                'userId' => $authenticated['user']->getId(),
+                'sessionId' => $authenticated['sessionId'] ?? '',
+                'expire' => $authenticated['expire'] ?? null,
+                'sessionExpire' => $authenticated['sessionExpire'] ?? null,
+                'recheckAt' => $authenticated['recheckAt'] ?? null,
             ];
         };
     }, []);
@@ -113,6 +155,11 @@ return function (Container $container): void {
             $userId = $identity['userId'] ?? '';
             $projectId = $identity['projectId'] ?? '';
             if ($userId === '' || $projectId === '') {
+                return false;
+            }
+
+            $expire = $identity['expire'] ?? null;
+            if (\is_int($expire) && $expire <= \time()) {
                 return false;
             }
 
@@ -126,10 +173,17 @@ return function (Container $container): void {
             $getProjectDB = $container->get('getProjectDB');
             $dbForProject = $getProjectDB($project);
             $dbForProject->setAuthorization($authorization);
+            /** @var User $user */
             $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
             // status: true = enabled, false = blocked.
-            return !$user->isEmpty() && $user->getAttribute('status', true) !== false;
+            if ($user->isEmpty() || $user->getAttribute('status', true) === false) {
+                return false;
+            }
+
+            $sessionId = $identity['sessionId'] ?? '';
+
+            return $sessionId === '' || ($user->sessionActive($sessionId, $project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null) && $user->sessionFactorsMet($sessionId));
         };
     }, []);
 };

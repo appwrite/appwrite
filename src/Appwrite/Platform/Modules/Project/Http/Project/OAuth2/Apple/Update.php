@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -140,14 +141,15 @@ class Update extends Base
             ->param('keyId', null, new Nullable(new Text(256, 0)), '\'Key ID\' of Apple OAuth2 app. For example: P4000000N8', optional: true)
             ->param('teamId', null, new Nullable(new Text(256, 0)), '\'Team ID\' of Apple OAuth2 app. For example: D4000000R6', optional: true)
             ->param('p8File', null, new Nullable(new Text(4096, 0)), 'Contents of the Apple OAuth2 app .p8 private key file. The secret key wrapped by the PEM markers is 200 characters long. For example: -----BEGIN PRIVATE KEY-----MIGTAg...jy2Xbna-----END PRIVATE KEY-----', optional: true)
-            ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'App bundle IDs accepted as ID token audiences for native Sign in with Apple. For example: com.example.app. Together with the Services ID, these are the only client IDs whose tokens are trusted. Pass an empty array to clear the list.', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Browser-based OAuth2 sign-in status. Set to true to enable new session creation through the redirect flow. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid. Has no effect on native sign-in, which is controlled by nativeEnabled only.', true)
+            ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'App bundle IDs accepted as ID token audiences for native Sign in with Apple. For example: com.example.app. Together with the Services ID, these are the only client IDs whose tokens are trusted. Pass an empty array to clear the list.', optional: true)
             ->param('nativeEnabled', null, new Nullable(new Boolean()), 'Native Sign in with Apple status. This is the only switch for creating sessions from ID tokens obtained on device and is independent of enabled. Needs a Services ID or at least one native client ID to match tokens against, but no key or team ID: this method verifies a signature rather than redeeming an authorization code.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('clientForOAuth2')
             ->callback($this->handle(...));
     }
 
@@ -181,14 +183,15 @@ class Update extends Base
         ?string $keyId,
         ?string $teamId,
         ?string $p8File,
-        ?array $nativeClientIds,
         ?bool $enabled,
+        ?array $nativeClientIds,
         ?bool $nativeEnabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
@@ -211,7 +214,7 @@ class Update extends Base
             ]);
         }
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $serviceId, $encodedSecret, $enabled, $nativeClientIds, $nativeEnabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $serviceId, $encodedSecret, $enabled, $nativeClientIds, $nativeEnabled);
 
         // Reuse buildReadResponse to keep PATCH/GET shapes identical and
         // guarantee keyId/teamId/p8File are write-only on every response path.

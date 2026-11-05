@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Message\StatsResources as StatsResourcesMessage;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -15,6 +15,9 @@ use Utopia\Usage\Usage;
 
 class StatsResources extends Action
 {
+    // Below this, an exact count is cheap and an estimate's error would show.
+    private const int ESTIMATE_MIN = 100_000;
+
     public static function getName(): string
     {
         return 'stats-resources';
@@ -136,6 +139,7 @@ class StatsResources extends Action
         array_push($gauges, ...$this->bucketGauges($project, $dbForProject));
         array_push($gauges, ...$this->databaseGauges($project, $dbForProject, $getDatabasesDB));
         array_push($gauges, ...$this->deploymentGauges($project, $dbForProject));
+        array_push($gauges, ...$this->photoGauges($project, $dbForProject));
 
         return $gauges;
     }
@@ -217,7 +221,7 @@ class StatsResources extends Action
                 $storage = 0;
                 $this->foreachDocument($dbForProject, 'database_' . $databaseSequence, [], function (Document $collection) use ($dbForDatabases, $databaseSequence, &$documents, &$storage): void {
                     $data = 'database_' . $databaseSequence . '_collection_' . $collection->getSequence();
-                    $documents += $dbForDatabases->count($data);
+                    $documents += $this->countDocuments($dbForDatabases, $data);
                     $storage += $dbForDatabases->getSizeOfCollection($data);
                 });
             } catch (\Throwable $th) {
@@ -275,6 +279,21 @@ class StatsResources extends Action
         return $gauges;
     }
 
+    /** @return array<int, array<string, mixed>> */
+    private function photoGauges(Document $project, Database $dbForProject): array
+    {
+        try {
+            $storage = (int) $dbForProject->sum('users', 'photoSize');
+        } catch (\Throwable $th) {
+            Console::warning("Failed to measure photos for {$project->getId()}: " . $th->getMessage());
+            return [];
+        }
+
+        return [
+            ['metric' => METRIC_STORAGE, 'value' => $storage, 'service' => 'avatars', 'resourceType' => 'photos', 'resourceId' => $project->getId()],
+        ];
+    }
+
     /**
      * Deployment gauges for one compute kind (functions or sites): one row set
      * per function or site. The project totals come from deploymentGauges(); a
@@ -310,6 +329,20 @@ class StatsResources extends Action
         });
 
         return $gauges;
+    }
+
+    /**
+     * An exact count reads the whole table once writes clear Postgres' visibility map,
+     * so large collections report the engine's estimate instead.
+     */
+    private function countDocuments(Database $database, string $collection): int
+    {
+        $estimate = $database->estimateCount($collection);
+        if ($estimate !== null && $estimate >= self::ESTIMATE_MIN) {
+            return $estimate;
+        }
+
+        return $database->count($collection);
     }
 
     /** @param array<int, Query> $queries */

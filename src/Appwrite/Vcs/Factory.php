@@ -5,6 +5,7 @@ namespace Appwrite\Vcs;
 use Appwrite\Auth\OAuth2;
 use Appwrite\Extend\Exception;
 use Utopia\Cache\Cache;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\System\System;
@@ -22,6 +23,7 @@ class Factory
      */
     public function __construct(
         protected Cache $cache,
+        protected Client $client,
         ?array $registry = null,
     ) {
         $this->registry = $registry ?? Config::getParam('vcs', []);
@@ -61,6 +63,12 @@ class Factory
         $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
         if (!empty($endpoint) && \method_exists($adapter, 'setEndpoint')) {
             $adapter->setEndpoint(\rtrim($endpoint, '/'));
+        }
+
+        // The identity a provider registered for this server (Entire's plugin issuer)
+        $issuer = $this->registry[$key]['issuer'] ?? $this->getEnv($key, 'issuer');
+        if (!empty($issuer) && \method_exists($adapter, 'setIssuer')) {
+            $adapter->setIssuer($issuer);
         }
 
         return $adapter;
@@ -123,7 +131,7 @@ class Factory
         $clientSecret = $this->getEnv($key, 'clientSecret');
         $endpoint = $this->registry[$key]['endpoint'] ?? $this->getEnv($key, 'endpoint');
 
-        $oauth2 = $builder($clientId, $clientSecret, $endpoint);
+        $oauth2 = $builder($this->client, $clientId, $clientSecret, $endpoint);
 
         if (!$oauth2 instanceof OAuth2) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'VCS provider "' . $key . '" oauth2 builder returned an invalid client');

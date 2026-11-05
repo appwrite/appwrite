@@ -13,7 +13,7 @@ final class HostnameTest extends TestCase
     {
         $validator = new Hostname();
 
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $validator->getType());
         $this->assertFalse($validator->isArray());
 
         $this->assertTrue($validator->isValid('myweb.com'));

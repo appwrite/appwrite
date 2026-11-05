@@ -13,6 +13,12 @@ use Utopia\Client\Psr18\StreamingClientInterface;
  */
 interface Adapter extends ClientInterface, StreamingClientInterface
 {
+    /**
+     * Where requests may connect; Anywhere unless set. The adapter must check the address each
+     * connection actually reaches (every connection, every redirect hop).
+     */
+    public function withDestinations(Destinations $destinations): static;
+
     public function withTimeout(float $seconds): static;
 
     public function withConnectTimeout(float $seconds): static;

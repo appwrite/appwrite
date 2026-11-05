@@ -5,6 +5,7 @@ use Appwrite\Autogravity\Detector as AutogravityDetector;
 use Appwrite\Certificates\Certificates;
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Alert as AlertPublisher;
 use Appwrite\Event\Publisher\Audit as AuditPublisher;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Certificate as CertificatePublisher;
@@ -14,36 +15,47 @@ use Appwrite\Event\Publisher\Execution as ExecutionPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Jobs as JobsPublisher;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
+use Appwrite\Event\Publisher\Maintenance as MaintenancePublisher;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
+use Appwrite\Event\Publisher\Review as ReviewPublisher;
 use Appwrite\Event\Publisher\Screenshot as ScreenshotPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Execution\Store as ExecutionStore;
+use Appwrite\Exiftool\Client as ExiftoolClient;
 use Appwrite\Geo\Client as GeoClient;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Messaging\Provider as MessagingProvider;
+use Appwrite\Messaging\PushService;
+use Appwrite\Network\Validator\DeploymentHostname;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Storage\Config\StorageCacheControl;
+use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Screenshots\Client as ScreenshotsClient;
 use Appwrite\Usage\Connection as UsageConnection;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
-use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\Cache\Adapter\Sharding;
+use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
 use Utopia\Client\Client;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Client\Pool as HttpClientPool;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\DNS\Lookup\Recursive;
 use Utopia\DSN\DSN;
 use Utopia\Lock\Distributed;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
@@ -53,6 +65,7 @@ use Utopia\Pools\Pool as Connections;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
+use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
 use Utopia\Storage\Device\Backblaze;
@@ -75,13 +88,64 @@ $container->set('register', fn () => $register);
 
 $container->set('hooks', fn ($register) => $register->get('hooks'), ['register']);
 
-$container->set('console', fn () => new Document(Config::getParam('console')), []);
+$container->set('console', fn () => new Project(Config::getParam('console')), []);
 
 $container->set('platform', fn () => Config::getParam('platform', []), []);
 
 $container->set('localeCodes', fn () => array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', [])));
 
 $container->set('executor', fn () => new Executor(), []);
+
+// Clients for destinations a user chose. Each connection, redirects included, is checked on the
+// address it actually reaches: public addresses only, plus the private or reserved ranges this
+// container's _APP_ALLOWED_INTERNAL_ADDRESSES lists (empty by default; the dev stack lists its
+// own network). A malformed range throws rather than being skipped. Shared per process: without
+// connection reuse every request opens its own handle, and each with*() returns a copy.
+// cURL counts decoded bytes against the size cap and aborts the transfer once it is passed.
+$container->set('clientForOAuth2', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForWebhooks', fn () => new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)), []);
+$container->set('clientForAvatars', fn () => (new Client(new CurlAdapter(options: [
+    \CURLOPT_MAXFILESIZE_LARGE => APP_STORAGE_READ_BUFFER,
+]), new PublicInternet(
+    ...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    )
+)))->withConnectTimeout(5)->withTimeout(15), []);
+
+// Checked before connecting, for hosts a request accepts. Resolves through _APP_DNS_EXTERNAL,
+// falling back to _APP_DNS, never the container's own resolver.
+$container->set('publicHostname', function () {
+    $servers = \array_values(\array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_DNS_EXTERNAL', System::getEnv('_APP_DNS', '8.8.8.8'))))));
+
+    $publicInternet = new PublicInternet(...\array_map(
+        fn (string $range) => new IPRange($range),
+        \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_ALLOWED_INTERNAL_ADDRESSES', '')))),
+    ));
+
+    return new PublicHostname($publicInternet, new Recursive($servers));
+}, []);
+
+$container->set('publicURL', fn (PublicHostname $publicHostname) => new PublicURL($publicHostname), ['publicHostname']);
+
+$container->set('deploymentHostname', fn () => new DeploymentHostname(
+    System::getEnv('_APP_DOMAIN', ''),
+    System::getEnv('_APP_MIGRATION_HOST', ''),
+), []);
 
 $container->set('jobs', function () {
     $client = (new Client(new CurlAdapter()))
@@ -117,24 +181,54 @@ $container->set('autogravity', function (Cache $cache) {
     return new AutogravityDetector($client === null ? null : new AutogravityClient($client), $cache);
 }, ['cache']);
 
+$container->set('exiftool', function () {
+    $host = System::getEnv('_APP_EXIFTOOL_HOST', '');
+    $client = $host === ''
+        ? null
+        : (new Client(new SwooleClientAdapter()))
+            ->withBaseUri($host)
+            ->withTimeout(30);
+
+    return new ExiftoolClient($client);
+}, []);
+
 $container->set('telemetry', fn () => new NoTelemetry(), []);
 
 /**
  * A malformed DSN is reported and read as unset rather than thrown: this resolves for every
  * messaging job, so one bad platform variable must not stop a project's push and email.
  */
-$container->set('adapterForSMS', function (Telemetry $telemetry): ?SMSAdapter {
+$container->set('adapterForSMS', function (Telemetry $telemetry, PublicHostname $publicHostname): ?SMSAdapter {
     try {
-        return (new MessagingProvider($telemetry))->internalSMS();
+        return (new MessagingProvider($telemetry, $publicHostname))->internalSMS();
     } catch (\Throwable $error) {
         Console::error('Ignoring _APP_SMS_PROVIDER: ' . $error->getMessage());
         return null;
     }
-}, ['telemetry']);
+}, ['telemetry', 'publicHostname']);
+
+$container->set('adaptersForPush', function (Telemetry $telemetry, PublicHostname $publicHostname): array {
+    $adapters = [];
+    foreach (PushService::cases() as $service) {
+        try {
+            $adapter = (new MessagingProvider($telemetry, $publicHostname))->internalPush($service);
+        } catch (\Throwable $error) {
+            Console::error('Ignoring ' . $service->variable() . ': ' . $error->getMessage());
+            continue;
+        }
+        if ($adapter !== null) {
+            $adapters[$service->value] = $adapter;
+        }
+    }
+
+    return $adapters;
+}, ['telemetry', 'publicHostname']);
 
 $container->set('authorization', fn () => new Authorization(), []);
 
 $container->set('publisher', fn (Group $pools) => new BrokerPool(publisher: $pools->get('publisher')), ['pools']);
+
+$container->set('mqtt', fn (Group $pools, Telemetry $telemetry): Mqtt => new Mqtt($telemetry, new PubSubPool($pools->get('pubsub'))), ['pools', 'telemetry']);
 
 $container->set('publisherForAudits', fn (Publisher $publisher) => new AuditPublisher(
     $publisher,
@@ -207,7 +301,7 @@ $container->set('usageConnection', function () {
     );
 }, []);
 
-$container->set('executionStore', function () {
+$container->set('executionStore', function (): ExecutionStore {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
         'executions',
@@ -244,6 +338,11 @@ $container->set('publisherForJobs', fn (Publisher $publisher) => new JobsPublish
     new Queue(System::getEnv('_APP_JOBS_QUEUE_NAME', Event::JOBS_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('publisherForReviews', fn (Publisher $publisher) => new ReviewPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_REVIEWS_QUEUE_NAME', Event::REVIEWS_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('publisherForDatabase', fn (Publisher $publisher) => new DatabasePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DATABASE_QUEUE_NAME', Event::DATABASE_QUEUE_NAME))
@@ -252,6 +351,11 @@ $container->set('publisherForDatabase', fn (Publisher $publisher) => new Databas
 $container->set('publisherForDeletes', fn (Publisher $publisher) => new DeletePublisher(
     $publisher,
     new Queue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
+), ['publisher']);
+
+$container->set('publisherForMaintenance', fn (Publisher $publisher) => new MaintenancePublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_MAINTENANCE_QUEUE_NAME', Event::MAINTENANCE_QUEUE_NAME))
 ), ['publisher']);
 
 $container->set('publisherForMails', fn (Publisher $publisher) => new MailPublisher(
@@ -264,16 +368,21 @@ $container->set('publisherForMessaging', fn (Publisher $publisher) => new Messag
     new Queue(System::getEnv('_APP_MESSAGING_QUEUE_NAME', Event::MESSAGING_QUEUE_NAME))
 ), ['publisher']);
 
+$container->set('publisherForAlerts', fn (Publisher $publisher) => new AlertPublisher(
+    $publisher,
+    new Queue(System::getEnv('_APP_ALERTS_QUEUE_NAME', Event::ALERTS_QUEUE_NAME))
+), ['publisher']);
+
 $container->set('publisherForNotifications', fn (Publisher $publisher) => new NotificationPublisher(
     $publisher,
     new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+$container->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
     $pools,
     $cache,
     $authorization
-), ['pools', 'cache', 'authorization']);
+), ['register', 'pools', 'cache', 'authorization']);
 
 $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(
     APP_DATABASE_TIMEOUT_MILLISECONDS_API,
@@ -281,19 +390,12 @@ $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $datab
     ['host' => \gethostname(), 'project' => 'console']
 ), ['databaseFactory']);
 
-$container->set('cache', function (Group $pools, Telemetry $telemetry) {
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = new CachePool($pools->get($value));
-    }
-
-    $cache = new Cache(new Sharding($adapters));
+$container->set('cache', function (Registry $register, Telemetry $telemetry) {
+    $cache = $register->get('cache', fresh: true);
     $cache->setTelemetry($telemetry);
 
     return $cache;
-}, ['pools', 'telemetry']);
+}, ['register', 'telemetry']);
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 
@@ -307,12 +409,9 @@ $container->set('locks', fn (Group $pools) => fn (string $key, int $ttl, callabl
     }
 ), ['pools']);
 
-// The lease spans the whole callback because a TimeLimit issues several round
-// trips (remaining, limit, check, reset) and must hold one connection for all of
-// them. Do not throw from the callback: the pool treats that as a failed lease
-// and reconnects the socket before returning it.
-$container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $time, callable $callback): mixed => $pools->get('abuse')->use(
-    fn (\Redis $redis): mixed => $callback(new TimeLimitRedis($key, $limit, $time, $redis))
+// The lease spans the callback; throwing from it makes the pool reconnect the socket.
+$container->set('timelimit', fn (Group $pools) => fn (string $key, int $limit, int $seconds, callable $callback): mixed => $pools->get('abuse')->use(
+    fn (\Redis $redis): mixed => $callback(new TimeLimitRedis($key, $limit, $seconds, $redis))
 ), ['pools']);
 
 $container->set('deviceForLocal', fn (Telemetry $telemetry) => new Device\Telemetry($telemetry, new Local()), ['telemetry']);
@@ -380,8 +479,23 @@ function getDevice(string $root, string $connection = ''): Device
             $endpoint = System::getEnv('_APP_STORAGE_S3_ENDPOINT', '');
             if (! empty($endpoint)) {
                 $bucketRoot = (! empty($bucket) ? "{$bucket}/" : '') . \ltrim($root, '/');
+                // A configured bucket may carry a key prefix (`bucket/prefix`); the bucket is its first segment.
+                $bucketName = \explode('/', \trim($bucket, '/'))[0];
 
-                return new S3($bucketRoot, $accessKey, $accessSecret, $endpoint, $region);
+                return new S3(
+                    $bucketRoot,
+                    $accessKey,
+                    $accessSecret,
+                    $endpoint,
+                    $region,
+                    bucket: $bucketName !== '' ? $bucketName : null,
+                    // Unset lets the device infer it from the endpoint and bucket.
+                    pathStyle: match (System::getEnv('_APP_STORAGE_S3_PATH_STYLE', '')) {
+                        'enabled' => true,
+                        'disabled' => false,
+                        default => null,
+                    },
+                );
             }
 
             return new AWS($root, $accessKey, $accessSecret, $bucket, $region);
@@ -413,12 +527,13 @@ $container->set('servers', function () {
 
     $languages = array_map(fn ($language) => strtolower($language['name']), $server['sdks']);
 
-    return $languages;
+    return [...$languages, ...APP_SDK_INTEGRATIONS];
 });
 
 $container->set('promiseAdapter', fn ($register) => $register->get('promiseAdapter'), ['register']);
 
-$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache), ['cache']);
+// The VCS endpoints are the operator's own (_APP_VCS_*), which may be on a private network
+$container->set('vcsFactory', fn (Cache $cache) => new VcsFactory($cache, new Client(new CurlAdapter())), ['cache']);
 $container->set('installationTokens', fn () => new InstallationTokens(), []);
 $container->set('repositoryWebhooks', fn (VcsFactory $vcsFactory) => new RepositoryWebhooks($vcsFactory), ['vcsFactory']);
 

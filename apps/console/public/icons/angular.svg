@@ -1,0 +1,10 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<mask id="angularMask">
+<rect width="24" height="24" fill="white"/>
+<path d="M11.5003 5.02307L6.18665 16.9688H8.16785L9.23605 14.2959H13.7463L14.8145 16.9688H16.7957L11.5003 5.02307ZM13.0524 12.6482H9.94819L11.5003 8.9043L13.0524 12.6482Z" fill="black"/>
+</mask>
+</defs>
+<path d="M11.5 3L3 6.26923L4.30769 17.3846L11.5 21.3077L18.6923 17.3846L20 6.26923L11.5 3Z" fill="#C4C6D7" mask="url(#angularMask)"/>
+<path d="M11.5 3V21.3077L18.6923 17.3846L20 6.26923L11.5 3Z" fill="#C4C6D7" mask="url(#angularMask)"/>
+</svg>

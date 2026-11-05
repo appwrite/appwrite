@@ -120,7 +120,7 @@ final class ContainsTest extends TestCase
         $validator = new Contains(['foo', 'bar']);
 
         $this->assertFalse($validator->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $validator->getType());
         $this->assertStringContainsString('foo', $validator->getDescription());
         $this->assertStringContainsString('bar', $validator->getDescription());
         $this->assertStringContainsString('case-insensitive', $validator->getDescription());

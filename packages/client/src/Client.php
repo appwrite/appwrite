@@ -9,11 +9,13 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
+use Utopia\Client\Exception\AdapterPreconditionException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Psr7\Header;
 use Utopia\Psr7\Uri;
 use Utopia\Span\Span;
 
-final class Client implements Adapter
+final class Client implements Adapter, ResponseStreamingClientInterface
 {
     /**
      * @var array<string, array{name: string, values: array<int, string>}>
@@ -24,9 +26,24 @@ final class Client implements Adapter
 
     private bool $tracePropagation = false;
 
+    /**
+     * @param Destinations|null $destinations Where requests may connect; when omitted the adapter's own setting stands, which is Anywhere unless it was changed
+     */
     public function __construct(
         private Adapter $adapter,
+        ?Destinations $destinations = null,
     ) {
+        if ($destinations instanceof Destinations) {
+            $this->adapter = $adapter->withDestinations($destinations);
+        }
+    }
+
+    public function withDestinations(Destinations $destinations): static
+    {
+        $clone = clone $this;
+        $clone->adapter = $this->adapter->withDestinations($destinations);
+
+        return $clone;
     }
 
     public function withTimeout(float $seconds): static
@@ -158,6 +175,11 @@ final class Client implements Adapter
         return $this->adapter->sendRequest($this->prepare($request));
     }
 
+    public function supportsResponseStreaming(): bool
+    {
+        return $this->adapter instanceof ResponseStreamingClientInterface && $this->adapter->supportsResponseStreaming();
+    }
+
     /**
      * Send a request and pass each response body chunk to $sink as it arrives.
      * The returned response carries the status and headers; its body is empty.
@@ -166,9 +188,17 @@ final class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
-        return $this->adapter->stream($this->prepare($request), $sink);
+        if ($onResponse === null) {
+            return $this->adapter->stream($this->prepare($request), $sink);
+        }
+
+        if (!$this->adapter instanceof ResponseStreamingClientInterface || !$this->adapter->supportsResponseStreaming()) {
+            throw new AdapterPreconditionException($request, 'This adapter cannot expose response headers before streaming.');
+        }
+
+        return $this->adapter->stream($this->prepare($request), $sink, $onResponse);
     }
 
     private function prepare(RequestInterface $request): RequestInterface

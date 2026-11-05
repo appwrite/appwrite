@@ -1,0 +1,307 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Instanceof between mixed and mixed results in an error\.$#'
+			identifier: instanceof.invalidExprType
+			count: 1
+			path: src/Config.php
+
+		-
+			message: '#^Method Utopia\\Config\\Config\:\:missing\(\) should return object but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Config.php
+
+		-
+			message: '#^Parameter \#1 \$data of static method Utopia\\Config\\Config\:\:resolveValueRecursive\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Config.php
+
+		-
+			message: '#^Part \$expectedClass \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 1
+			path: src/Config.php
+
+		-
+			message: '#^Method Utopia\\Config\\Parser\:\:requireMap\(\) should return array\<string, mixed\> but returns array\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Parser.php
+
+		-
+			message: '#^Parameter \#2 \$type of method Utopia\\Config\\Parser\\Dotenv\:\:convertValue\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Parser/Dotenv.php
+
+		-
+			message: '#^Method Utopia\\Config\\Parser\\None\:\:parse\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Parser/None.php
+
+		-
+			message: '#^Method Utopia\\Config\\Parser\\PHP\:\:parse\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Parser/PHP.php
+
+		-
+			message: '#^Property Utopia\\Config\\Tests\\TestConfigWithoutType\:\:\$key has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: tests/ConfigTest.php
+
+		-
+			message: '#^Cannot access offset ''active'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset ''age'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset ''profile'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset ''settings'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset ''theme'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset ''user'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset 1 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset 2 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset 3 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset 4 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 6
+			path: tests/Parser/JSONTest.php
+
+		-
+			message: '#^Cannot access offset ''active'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset ''age'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset ''profile'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset ''settings'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset ''theme'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset ''user'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset 1 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset 2 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset 3 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset 4 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 6
+			path: tests/Parser/PHPTest.php
+
+		-
+			message: '#^Cannot access offset ''active'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset ''age'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset ''profile'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset ''settings'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset ''theme'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset ''user'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset 1 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset 2 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset 3 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Cannot access offset 4 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Parser/YAMLTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertCount\(\) expects Countable\|iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 6
+			path: tests/Parser/YAMLTest.php

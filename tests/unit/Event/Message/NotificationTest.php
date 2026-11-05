@@ -34,6 +34,7 @@ final class NotificationTest extends TestCase
                 'documentId' => 'document-1',
             ],
             platform: ['name' => 'test-platform'],
+            headers: ['List-Unsubscribe' => '<https://example.test/unsubscribe>'],
         );
 
         $payload = $message->toArray();
@@ -57,6 +58,7 @@ final class NotificationTest extends TestCase
             $payload['events']
         );
         $this->assertSame(['name' => 'test-platform'], $payload['platform']);
+        $this->assertSame(['List-Unsubscribe' => '<https://example.test/unsubscribe>'], $payload['headers']);
 
         $this->assertSame($payload, NotificationMessage::fromArray($payload)->toArray());
     }

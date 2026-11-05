@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Messaging\Http\Messages\Push;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Messaging as MessagingMessage;
 use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
@@ -12,6 +13,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CompoundUID;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -98,10 +100,10 @@ class Update extends Action
                     )
                 ]
             ))
-            ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID.', false, ['dbForProject'])
-            ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Topic IDs.', true, ['dbForProject'])
-            ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of User IDs.', true, ['dbForProject'])
-            ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength()))), 'List of Targets IDs.', true, ['dbForProject'])
+            ->param('messageId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Message ID.', false, ['dbForProject'])
+            ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Topic IDs.', true, ['dbForProject'])
+            ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of User IDs.', true, ['dbForProject'])
+            ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Targets IDs.', true, ['dbForProject'])
             ->param('title', null, new Nullable(new Text(256)), 'Title for push notification.', true)
             ->param('body', null, new Nullable(new Text(64230)), 'Body for push notification.', true)
             ->param('data', null, new Nullable(new JSONObject()), 'Additional Data for push notification.', true)
@@ -117,6 +119,7 @@ class Update extends Action
             ->param('contentAvailable', null, new Nullable(new Boolean()), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
             ->param('critical', null, new Nullable(new Boolean()), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
             ->param('priority', null, new Nullable(new WhiteList(['normal', 'high'])), 'Set the notification priority. "normal" will consider device battery state and may send notifications later. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
+            ->param('channelId', null, new Nullable(new Text(256, 0)), 'ID of the notification channel to deliver the notification on. The app must have already created a channel with this ID, otherwise the channel from the app manifest is used. Pass an empty string to clear it. Available only for Android platforms.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -124,10 +127,11 @@ class Update extends Action
             ->inject('publisherForMessaging')
             ->inject('response')
             ->inject('platform')
+            ->inject('request')
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, null|array|\stdClass $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, ?string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform, Request $request)
     {
         $data = $this->normalizeJsonObject($data);
 
@@ -181,7 +185,19 @@ class Update extends Action
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+        // The update re-mints the image's signed URL below, which requires files.read. Check it
+        // here, before the schedule or message is mutated, so a refused request leaves no schedule
+        // a worker could act on. The image is the stored one unless the request replaces it.
+        $hasImage = !\is_null($image) || !empty($message->getAttribute('data', [])['image'] ?? null);
+        if ($hasImage && !\in_array('files.read', $request->getScopes(), true)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Push notification images require the files.read scope.');
+        }
+
+        // Drafts created with a scheduledAt have no schedule document yet, so create one on demand.
+        if (
+            (\is_null($currentScheduledAt) || \is_null($message->getAttribute('scheduleId')))
+            && !\is_null($scheduledAt ?? $currentScheduledAt)
+        ) {
             $schedule = $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_MESSAGE,
@@ -190,14 +206,12 @@ class Update extends Action
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'projectInternalId' => $project->getSequence(),
-                'schedule' => $scheduledAt,
+                'schedule' => $scheduledAt ?? $currentScheduledAt,
                 'active' => $status === MessageStatus::SCHEDULED,
             ]));
 
             $message->setAttribute('scheduleId', $schedule->getId());
-        }
-
-        if (!\is_null($currentScheduledAt)) {
+        } elseif (!\is_null($currentScheduledAt)) {
             $schedule = $dbForPlatform->getDocument('schedules', $message->getAttribute('scheduleId'));
             $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
 
@@ -283,6 +297,12 @@ class Update extends Action
             $pushData['priority'] = $priority;
         }
 
+        if ($channelId === '') {
+            unset($pushData['channelId']);
+        } elseif (!\is_null($channelId)) {
+            $pushData['channelId'] = $channelId;
+        }
+
         if (!\is_null($image)) {
             [$bucketId, $fileId] = CompoundUID::parse($image);
 
@@ -300,29 +320,31 @@ class Update extends Action
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
-            if (!\is_null($scheduleTime)) {
-                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
-            } else {
-                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
-            }
-
-            $encoder = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', \intval($expiry), 0);
-
-            $jwt = $encoder->encode([
+            $pushData['image'] = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
+            ];
+        }
+
+        if (!empty($pushData['image'])) {
+            // Reissue on every update so the token tracks the current delivery time.
+            // files.read for this image was already enforced before any mutation above.
+            $scheduleTime = $scheduledAt ?? $currentScheduledAt;
+            $delivery = \is_null($scheduleTime) ? \time() : (new \DateTime($scheduleTime))->getTimestamp();
+
+            $encoder = new JWT(EncryptionKey::current(), 'HS256', APP_PUSH_IMAGE_TOKEN_DURATION, 0);
+
+            $jwt = $encoder->encode([
+                'bucketId' => $pushData['image']['bucketId'],
+                'fileId' => $pushData['image']['fileId'],
                 'projectId' => $project->getId(),
+                'exp' => $delivery + APP_PUSH_IMAGE_TOKEN_DURATION,
             ]);
 
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
             $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
-            $pushData['image'] = [
-                'bucketId' => $bucket->getId(),
-                'fileId' => $file->getId(),
-                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
-            ];
+            $pushData['image']['url'] = "{$endpoint}/storage/buckets/{$pushData['image']['bucketId']}/files/{$pushData['image']['fileId']}/push?project={$project->getId()}&jwt={$jwt}";
         }
 
         $message->setAttribute('data', $pushData);

@@ -1,0 +1,114 @@
+---
+layout: article
+title: dbt
+description: Run dbt transformations against an Appwrite native PostgreSQL database. Configure profiles.yml for the direct engine port, size threads to your connection budget, and test models against a branch in CI.
+---
+
+An Appwrite native PostgreSQL database is a standard PostgreSQL server, so [dbt](https://docs.getdbt.com/) works against it through the standard [`dbt-postgres`](https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup) adapter with no Appwrite-specific configuration. Point a `profiles.yml` target at the connection details from the [Connections](/docs/products/databases/postgresql/connections) page and use `dbt debug`, `dbt run`, and `dbt build` the same way you would against any self-hosted PostgreSQL warehouse.
+
+dbt compiles your models into `CREATE TABLE` / `CREATE VIEW` statements and runs them in dependency order, materializing a transformed analytics layer inside a schema you control.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [PostgreSQL](/docs/products/databases/postgresql) to create one and [Connections](/docs/products/databases/postgresql/connections) to retrieve them. The primary user is `admin`, the database name is generated for each database, and the engine listens on port `5432`.
+{% /info %}
+
+# Create a build schema {% #build-schema %}
+
+dbt issues DDL (`CREATE`, `DROP`, `ALTER`) to build your models, so connect with the primary `admin` user and build into a schema reserved for dbt, for example `analytics`. The `admin` user owns the generated database and can create the schema, tables, and views dbt needs.
+
+Keep transformed tables separate from source data by setting the `schema` field in `profiles.yml`. You can use different schema names per environment, such as `analytics_dev`, `analytics_ci`, and `analytics_prod`.
+
+# Configure profiles.yml {% #profiles %}
+
+dbt reads connection details from `~/.dbt/profiles.yml` or the project directory. Configure a `postgres` target against the database host on port `5432`, and set `sslmode: require` so the connection is encrypted:
+
+```yaml
+analytics:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: db-<hash>.<region>.appwrite.center
+      port: 5432
+      user: admin
+      password: "{{ env_var('APPWRITE_DB_PASSWORD') }}"
+      dbname: <database>
+      schema: analytics
+      sslmode: require
+      threads: 4
+```
+
+The dbt-postgres adapter uses `password` (not `pass`) and `dbname` (you may also write `database`). Read the password from an environment variable with `env_var` rather than committing it. The `schema` key is where dbt materializes models, set it to the build schema your user owns.
+
+The edge proxy terminates TLS for every native PostgreSQL database, so `sslmode: require` needs no extra certificate files. For full certificate verification, set `sslmode: verify-full` with `sslrootcert` pointing at a trusted root store, `system` on libpq 16+, or your OS bundle such as `/etc/ssl/certs/ca-certificates.crt`. The proxy's certificate is signed by a public CA, so there is no Appwrite-specific CA to download.
+
+# Test the connection {% #debug %}
+
+`dbt debug` validates your project files and opens a connection to confirm the credentials and host are correct:
+
+```bash
+dbt debug
+```
+
+A successful run reports `Connection test: OK connection ok`. If it fails, recheck the host, port, `sslmode`, and password.
+
+# Run transformations {% #run %}
+
+Build your models into the analytics schema:
+
+```bash
+dbt run
+```
+
+`dbt run` executes models only, materializing each as a table or view. Use `dbt build` to run models, tests, seeds, and snapshots together in DAG order, a failing test on an upstream model then skips its dependents:
+
+```bash
+dbt build
+```
+
+# Choose the right connection {% #connection %}
+
+dbt opens one database connection per thread and uses each to run DDL and rely on session state (search paths, temporary objects, transactions spanning multiple statements). Point dbt at a connection that preserves that session:
+
+- **Direct engine port (`5432`)** is the simplest and recommended target. Each thread gets a backend session with full DDL privileges. This is what the `profiles.yml` above uses.
+- **Session-mode pooler** also works, because it holds a backend connection for the whole client session. Connect on the pooler port (`6432`) and switch the pool to `session` mode.
+
+Do **not** point dbt at the **transaction-mode** pooler, which is the pooler default. Transaction mode returns the backend connection to the pool after every statement, so the session state and multi-statement DDL that dbt depends on can break. See the [connection pooling](/docs/products/databases/postgresql/connection-pooling#modes) page for the mode trade-offs.
+
+# Size threads to your connection budget {% #threads %}
+
+The `threads` setting controls how many models dbt builds in parallel, and dbt opens one connection per thread. A `threads: 8` run can hold up to eight backend connections at once. dbt also respects model dependencies, so it never runs more models concurrently than your DAG allows, regardless of the thread count.
+
+Pick a `threads` value that fits the connection budget for your database spec, and leave headroom for any application traffic sharing the same database. If you connect through a session-mode pooler, the same per-thread connections apply at the backend, so size against the pool, not the client side. Start at the adapter default of `4` and raise it only while connections stay within budget.
+
+# Test transformations against a branch {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are isolated copies of a database with their own hostname and connection string. Because a branch starts from a storage snapshot, its schema and data match the source at branch time, so dbt models run against production-like data without touching production. That makes branches ideal for validating transformations in CI:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Set the branch host and credentials as the `profiles.yml` target (or export them as `env_var` values).
+3. Run `dbt build` against the branch so models and tests execute on realistic data.
+4. Delete the branch when the job finishes.
+
+This gives every pull request a clean, production-shaped warehouse to build against without touching live analytics tables.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials and rotate the primary password.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes and ports. Use session mode for dbt, never transaction mode.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for CI and preview environments.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS modes, certificate verification, and IP allowlists.
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="https://docs.getdbt.com/docs/local/connect-data-platform/postgres-setup" %}
+dbt-postgres adapter reference
+{% /arrow_link %}

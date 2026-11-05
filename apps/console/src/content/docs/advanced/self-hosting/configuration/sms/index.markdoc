@@ -1,0 +1,67 @@
+---
+layout: article
+title: SMS delivery
+description: Set up SMS services for your self-hosted Appwrite instance. Discover how to configure SMS notifications, verification, and messaging for your applications.
+---
+
+Appwrite supports phone authentication, which allows users to create accounts and log in using SMS messages. Appwrite requires an SMS provider to be set up before using Phone authentication.
+
+{% info title="Setting up Appwrite Messaging?" %}
+This page describes how to setup messaging for your self-hosted Appwrite instance to send one-time passwords during phone login.
+
+If you are looking to send custom messages for promotions, reminders, and other purposes, view the [documentation for Appwrite Messaging](/docs/products/messaging) documentation.
+{% /info %}
+
+# SMS providers {% #sms-providers %}
+
+Appwrite supports a growing list of SMS providers that you can choose from. Choose one from the list below and set up an account.
+
+{% table %}
+* &nbsp; {% width=80 %}
+* SMS provider
+* Create account
+* Get credentials
+---
+* {% icon icon="twilio" size="l" /%}
+* Twilio
+* [Website](https://www.twilio.com)
+* [Documentation](https://www.twilio.com/docs/iam/access-tokens#step-2-api-key)
+---
+* {% icon icon="textmagic" size="l" /%}
+* Textmagic
+* [Website](https://www.textmagic.com)
+* [Documentation](https://www.textmagic.com/docs/api/start/#How-to-obtain-the-API-credentials)
+---
+* {% icon icon="telesign" size="l" /%}
+* Telesign
+* [Website](https://www.telesign.com)
+* [Documentation](https://support.telesign.com/s/article/Find-Customer-ID-and-API-Key)
+---
+* {% icon icon="msg91" size="l" /%}
+* MSG91
+* [Website](https://msg91.com)
+* [Documentation](https://msg91.com/help/where-can-i-find-my-authentication-key)
+---
+* {% icon icon="vonage" size="l" /%}
+* Vonage
+* [Website](https://www.vonage.ca/)
+* [Documentation](https://developer.vonage.com/en/account/secret-management)
+{% /table %}
+
+# Environment variables {% #environment-variables %}
+
+You will need to configure these [environment variables](https://appwrite.io/docs/environment-variables#phone) and restart your Appwrite containers before you can use phone authentication.
+
+{% info title="URL encode" %}
+Ensure the values you insert in the `_APP_SMS_PROVIDER` placeholders are [URL encoded](https://developer.mozilla.org/en-US/docs/Glossary/Percent-encoding) if they contain any non-alphanumeric characters.
+{% /info %}
+
+| Provider | \_APP\_SMS\_PROVIDER                                | \_APP\_SMS\_FROM        |
+| -------- | -------------------------------------------------- | ----------------------- |
+| Twilio   | `sms://<ACCOUNT SID>:<AUTH TOKEN>@twilio`         | `<TWILIO PHONE NUMBER>` |
+| Textmagic| `sms://<USERNAME>:<API KEY>@text-magic`          | `<PHONE NUMBER OR SENDER ID>` |
+| TeleSign | `sms://<CUSTOMER ID>:<API KEY>@telesign`         | `<TELESIGN PHONE NUMBER>` |
+| MSG91    | `sms://<SENDER ID>:<AUTH KEY>@msg91`             | `<FLOW ID>`            |
+| Vonage   | `sms://<API KEY>:<API SECRET>@vonage`            | `<PHONE NUMBER OR BRAND NAME>` |
+
+{% partial file="update-variables.md" /%}

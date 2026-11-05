@@ -12,7 +12,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -53,7 +53,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.')
             ->param('templateId', '', new Text(0), 'Msg91 template ID', true)
             ->param('senderId', '', new Text(0), 'Msg91 sender ID.', true)
@@ -67,7 +67,7 @@ class Create extends Action
 
     public function action(string $providerId, string $name, string $templateId, string $senderId, string $authKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response)
     {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $providerId = $providerId == 'unique()' ? Id::unique() : $providerId;
 
         $options = [];
         $credentials = [];

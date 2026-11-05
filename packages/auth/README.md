@@ -48,6 +48,7 @@ Utopia Auth requires PHP 8.3 or later. We recommend using the latest PHP version
 - [Data Store](docs/store.md) — encode/decode authentication state
 - [JSON Web Tokens](docs/jwt.md) — application token issuance, JWS mechanics, verification, and claim/header names
 - [OAuth2 and OpenID Connect](docs/oauth2.md) — token examples and protocol helpers
+- [Passkeys](docs/passkeys.md) — WebAuthn registration and sign-in ceremonies
 
 ## Tests
 

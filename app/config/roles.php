@@ -28,14 +28,13 @@ $member = [
     'projects.read',
     'locale.read',
     'avatars.read',
+    'avatars.write',
     'executions.read',
     'executions.write',
     'targets.read',
     'targets.write',
     'subscribers.write',
     'subscribers.read',
-    'assistant.read',
-    'rules.read',
 ];
 
 $admins = [
@@ -96,11 +95,15 @@ $admins = [
     'organization.projects.keys.write',
     'webhooks.read',
     'webhooks.write',
+    'monitors.read',
+    'monitors.write',
+    'alerts.read',
     'project.read',
     'project.write',
     'usage.read',
     'locale.read',
     'avatars.read',
+    'avatars.write',
     'health.read',
     'functions.read',
     'functions.write',
@@ -136,6 +139,8 @@ $admins = [
     'insights.write',
     'reports.read',
     'reports.write',
+    'reviews.read',
+    'reviews.write',
 ];
 
 return [
@@ -156,7 +161,6 @@ return [
             'vectorsdb.documents.write',
             'rows.read',
             'rows.write',
-            'embeddings.write',
             'files.read',
             'files.write',
             'locale.read',

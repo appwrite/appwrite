@@ -31,7 +31,7 @@ final class PhoneTest extends TestCase
         $this->assertFalse($validator->isValid(null));
         $this->assertFalse($validator->isValid(['+15550102680']));
         $this->assertFalse($validator->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $validator->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $validator->getType());
     }
 
     public function testCanAllowEmptyValue(): void

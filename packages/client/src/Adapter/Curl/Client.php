@@ -12,9 +12,12 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Utopia\Client\Adapter;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Client\Exception\AdapterInitializationException;
 use Utopia\Client\Exception\AdapterPreconditionException;
 use Utopia\Client\Exception\ConnectionException;
+use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Exception\DnsException;
 use Utopia\Client\Exception\InvalidResponseException;
 use Utopia\Client\Exception\InvalidUriException;
@@ -23,6 +26,7 @@ use Utopia\Client\Exception\ProtocolException;
 use Utopia\Client\Exception\ProxyException;
 use Utopia\Client\Exception\TimeoutException;
 use Utopia\Client\Exception\TlsException;
+use Utopia\Client\Psr18\ResponseStreamingClientInterface;
 use Utopia\Client\Redirect;
 use Utopia\Client\Response\Builder as ResponseBuilder;
 use Utopia\Client\Tls;
@@ -32,7 +36,7 @@ use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 use ValueError;
 
-class Client implements Adapter
+class Client implements Adapter, ResponseStreamingClientInterface
 {
     private const float DEFAULT_CONNECT_TIMEOUT = 5.0;
 
@@ -50,6 +54,8 @@ class Client implements Adapter
 
     private ?CurlHandle $handle = null;
 
+    private Destinations $destinations;
+
     /**
      * Native cURL options. Values override adapter defaults when keys overlap.
      *
@@ -66,12 +72,21 @@ class Client implements Adapter
         ];
 
         $this->responseBuilder = new ResponseBuilder($responseFactory, $streamFactory);
+        $this->destinations = new Anywhere();
     }
 
     public function __clone(): void
     {
         // Clones get their own handle and connection cache.
         $this->handle = null;
+    }
+
+    public function withDestinations(Destinations $destinations): static
+    {
+        $clone = clone $this;
+        $clone->destinations = $destinations;
+
+        return $clone;
     }
 
     public function withTimeout(float $seconds): static
@@ -174,14 +189,19 @@ class Client implements Adapter
         );
     }
 
+    public function supportsResponseStreaming(): bool
+    {
+        return true;
+    }
+
     /**
      * @param callable(string): void $sink
      *
      * @throws ClientExceptionInterface
      */
-    public function stream(RequestInterface $request, callable $sink): ResponseInterface
+    public function stream(RequestInterface $request, callable $sink, ?callable $onResponse = null): ResponseInterface
     {
-        $parsed = $this->transfer($request, $sink);
+        $parsed = $this->transfer($request, $sink, $onResponse);
 
         return $this->responseBuilder->build(
             $parsed['status'],
@@ -204,7 +224,7 @@ class Client implements Adapter
      *
      * @throws ClientExceptionInterface
      */
-    private function transfer(RequestInterface $request, callable $sink): array
+    private function transfer(RequestInterface $request, callable $sink, ?callable $onResponse = null): array
     {
         if (!\extension_loaded('curl')) {
             throw new AdapterPreconditionException($request, 'The curl extension is required.');
@@ -220,8 +240,31 @@ class Client implements Adapter
         $decompress = !$request->hasHeader(Header::ACCEPT_ENCODING);
 
         $headers = '';
+        $refused = null;
         $handle = $this->handle($request);
-        $options = $this->options($request, $headers, $sink, $decompress);
+        $notified = false;
+        $builder = $this->responseBuilder;
+        $notify = static function () use (&$notified, &$headers, $onResponse, $decompress, $request, $builder): void {
+            if ($notified || $onResponse === null) {
+                return;
+            }
+
+            $parsed = self::parseHeaderBlock($headers);
+            if ($parsed['status'] < 200 || $parsed['status'] > 599) {
+                throw new InvalidResponseException($request, 'Received an invalid final HTTP response.');
+            }
+
+            if ($decompress) {
+                $parsed['headers'] = self::decoded($parsed['headers']);
+            }
+
+            $notified = true;
+            $onResponse($builder->build($parsed['status'], $parsed['reason'], $parsed['headers'], '', $parsed['protocol']));
+        };
+        $options = $this->options($request, $headers, $refused, static function (string $chunk) use ($sink, $notify): void {
+            $notify();
+            $sink($chunk);
+        }, $decompress);
 
         try {
             if (curl_setopt_array($handle, $options) === false) {
@@ -237,6 +280,10 @@ class Client implements Adapter
             $message = curl_error($handle);
             $code = curl_errno($handle);
 
+            if ($refused !== null) {
+                throw new DestinationException($request, "Connection to {$refused} refused: not an allowed destination.", $code);
+            }
+
             throw $this->networkException($request, $message === '' ? 'Curl request failed.' : $message, $code);
         }
 
@@ -244,15 +291,17 @@ class Client implements Adapter
             throw new ConnectionException($request, 'Connection closed before a complete HTTP response was received.');
         }
 
-        $parsed = $this->parseHeaderBlock($headers);
+        $parsed = self::parseHeaderBlock($headers);
 
         if ($parsed['status'] < 100 || $parsed['status'] > 599) {
             throw new InvalidResponseException($request, 'Received an invalid HTTP response.');
         }
 
         if ($decompress) {
-            $parsed['headers'] = $this->decoded($parsed['headers']);
+            $parsed['headers'] = self::decoded($parsed['headers']);
         }
+
+        $notify();
 
         return $parsed;
     }
@@ -290,7 +339,7 @@ class Client implements Adapter
      *
      * @return array<int, mixed>
      */
-    private function options(RequestInterface $request, string &$headers, callable $sink, bool $decompress): array
+    private function options(RequestInterface $request, string &$headers, ?string &$refused, callable $sink, bool $decompress): array
     {
         $options = [
             \CURLOPT_URL => (string) $request->getUri(),
@@ -327,6 +376,14 @@ class Client implements Adapter
             if (!$request->hasHeader(Header::CONTENT_TYPE)) {
                 $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
             }
+        } elseif ($size === 0 && \in_array($request->getMethod(), [Method::POST, Method::PUT, Method::PATCH], true)) {
+            // Forced HTTP/1.1 sends no length for an empty body, and origins such
+            // as Google's OAuth token endpoint refuse that with 411.
+            $options[\CURLOPT_POSTFIELDS] = '';
+
+            if (!$request->hasHeader(Header::CONTENT_TYPE)) {
+                $options[\CURLOPT_HTTPHEADER][] = 'Content-Type:';
+            }
         } elseif ($size !== 0) {
             if ($body->isSeekable()) {
                 $body->rewind();
@@ -356,6 +413,26 @@ class Client implements Adapter
         // the helpers.
         $merged[\CURLOPT_FORBID_REUSE] = !$this->reuseConnections;
         $merged[\CURLOPT_FOLLOWLOCATION] = $this->followRedirects;
+
+        // Checked once connected, before anything is sent, against the address curl
+        // actually connected to: every connection and every redirect hop. Authoritative
+        // like the options above, so a constructor option cannot replace it.
+        $destinations = $this->destinations;
+        $merged[\CURLOPT_PREREQFUNCTION] = static function (CurlHandle $handle, string $address) use ($destinations, &$refused): int {
+            if ($destinations->allows($address)) {
+                return \CURL_PREREQFUNC_OK;
+            }
+
+            $refused = $address;
+
+            return \CURL_PREREQFUNC_ABORT;
+        };
+
+        // Through a proxy the connected address is the proxy's, so ignore any the
+        // environment configures unless the destination permits them.
+        if (!$this->destinations->permitsProxy()) {
+            $merged[\CURLOPT_PROXY] = '';
+        }
 
         if ($this->followRedirects) {
             $merged[\CURLOPT_MAXREDIRS] = $this->maxHops;
@@ -510,7 +587,7 @@ class Client implements Adapter
      *
      * @return array<string, array<int, string>>
      */
-    private function decoded(array $headers): array
+    private static function decoded(array $headers): array
     {
         $encoded = false;
 
@@ -536,7 +613,7 @@ class Client implements Adapter
     /**
      * @return array{protocol: string, status: int, reason: string, headers: array<string, array<int, string>>}
      */
-    private function parseHeaderBlock(string $headerBlock): array
+    private static function parseHeaderBlock(string $headerBlock): array
     {
         $blocks = preg_split("/\r\n\r\n|\n\n|\r\r/", trim($headerBlock));
         $headers = $blocks === false ? [] : array_values(array_filter($blocks));

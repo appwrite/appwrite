@@ -101,6 +101,15 @@ if ($path === '/nested/final') {
     return;
 }
 
+if ($path === '/redirect-to') {
+    $to = $_GET['to'] ?? '';
+    http_response_code(302);
+    header('Location: ' . (is_string($to) ? $to : ''));
+    echo 'redirect';
+
+    return;
+}
+
 if ($path === '/redirect-absolute') {
     $host = $_SERVER['HTTP_HOST'] ?? '127.0.0.1';
     $host = is_string($host) ? $host : '127.0.0.1';
@@ -261,6 +270,17 @@ if ($path === '/method') {
     header('X-Request-Method: ' . $method);
 
     echo $method;
+
+    return;
+}
+
+if ($path === '/content-length') {
+    $contentLength = $_SERVER['CONTENT_LENGTH'] ?? $_SERVER['HTTP_CONTENT_LENGTH'] ?? null;
+
+    http_response_code(200);
+    header('Content-Type: text/plain;charset=UTF-8');
+
+    echo is_string($contentLength) ? $contentLength : 'none';
 
     return;
 }

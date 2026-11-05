@@ -62,6 +62,11 @@ class TanStackStart extends React
     {
         $stripped = \preg_replace('/(?<!:)\/\/[^\n]*/', '', $configContent) ?? $configContent;
 
+        // Nitro emits `.output/server/index.mjs` even when every route is prerendered.
+        if (\str_contains($stripped, 'nitro/vite') || \str_contains($stripped, '@tanstack/nitro-v2-vite-plugin')) {
+            return 'ssr';
+        }
+
         if (!\preg_match('/\bprerender\b/', $stripped) || \preg_match('/\bprerender[\x27\x22]?\s*:\s*false\b/', $stripped)) {
             return 'ssr';
         }

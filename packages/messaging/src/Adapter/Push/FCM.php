@@ -125,11 +125,17 @@ class FCM extends PushAdapter
         if (!\is_null($message->getTag())) {
             $shared['message']['android']['notification']['tag'] = $message->getTag();
         }
+        if (!\is_null($message->getChannelId())) {
+            $shared['message']['android']['notification']['channel_id'] = $message->getChannelId();
+        }
         if (!\is_null($message->getBadge())) {
             $shared['message']['apns']['payload']['aps']['badge'] = $message->getBadge();
         }
         if (!\is_null($message->getContentAvailable())) {
             $shared['message']['apns']['payload']['aps']['content-available'] = (int) $message->getContentAvailable();
+        }
+        if (!\is_null($message->getMutableContent())) {
+            $shared['message']['apns']['payload']['aps']['mutable-content'] = (int) $message->getMutableContent();
         }
         if (!\is_null($message->getPriority())) {
             $shared['message']['android']['priority'] = match ($message->getPriority()) {
@@ -142,6 +148,19 @@ class FCM extends PushAdapter
             };
         }
 
+        // No user-facing content means a silent background push: on the APNs side Apple requires type
+        // background, priority 5, and content-available. Android keeps its requested priority.
+        $background = \is_null($message->getTitle())
+            && \is_null($message->getBody())
+            && \is_null($message->getSound())
+            && \is_null($message->getCritical())
+            && \is_null($message->getBadge());
+        if ($background) {
+            $shared['message']['apns']['headers']['apns-push-type'] = 'background';
+            $shared['message']['apns']['headers']['apns-priority'] = '5';
+            $shared['message']['apns']['payload']['aps']['content-available'] = 1;
+        }
+
         $bodies = [];
 
         foreach ($message->getTo() as $to) {
@@ -150,7 +169,10 @@ class FCM extends PushAdapter
             $bodies[] = $body;
         }
 
-        $results = $this->requestMulti(
+        $to = $message->getTo();
+        $response = new Response($this->getType());
+
+        $this->requestMulti(
             method: 'POST',
             urls: ["https://fcm.googleapis.com/v1/projects/{$credentials['project_id']}/messages:send"],
             headers: [
@@ -158,18 +180,15 @@ class FCM extends PushAdapter
                 "Authorization: Bearer {$accessToken}",
             ],
             bodies: $bodies,
+            onResult: function (array $result) use ($to, $response): void {
+                if ($result['statusCode'] === 200) {
+                    $response->incrementDeliveredTo();
+                    $response->addResult($to[$result['index']]);
+                } else {
+                    $response->addResult($to[$result['index']], $this->getError($result));
+                }
+            },
         );
-
-        $response = new Response($this->getType());
-
-        foreach ($results as $result) {
-            if ($result['statusCode'] === 200) {
-                $response->incrementDeliveredTo();
-                $response->addResult($message->getTo()[$result['index']]);
-            } else {
-                $response->addResult($message->getTo()[$result['index']], $this->getError($result));
-            }
-        }
 
         return $response->toArray();
     }

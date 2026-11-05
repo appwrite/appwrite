@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class KeysIntegrationTest extends Scope
 {
@@ -61,7 +61,7 @@ final class KeysIntegrationTest extends Scope
             '/users',
             $consoleHeaders,
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'ephemeral_key_' . \uniqid() . '@localhost.test',
                 'password' => 'password1234',
                 'name' => 'Ephemeral Key Test User',
@@ -94,7 +94,7 @@ final class KeysIntegrationTest extends Scope
             '/users',
             $ephemeralHeaders,
             [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'should_fail_' . \uniqid() . '@localhost.test',
                 'password' => 'password1234',
                 'name' => 'Should Fail',

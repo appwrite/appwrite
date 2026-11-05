@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\ExecutionScheduled;
 use Appwrite\Deployment\Deployments;
@@ -27,13 +29,13 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -84,7 +86,7 @@ class Create extends Base
                     )
                 ],
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function ID.', false, ['dbForProject'])
             ->param('body', '', new Text(10485760, 0), 'HTTP body of execution. Default value is empty string.', true)
             ->param('async', false, new Boolean(true), 'Execute code in the background. Default value is false.', true)
             ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
@@ -166,8 +168,10 @@ class Create extends Base
         // 'headers' validator
         $validator = new Headers();
         if (!$validator->isValid($headers)) {
-            throw new Exception($validator->getDescription(), 400);
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $validator->getDescription());
         }
+
+        $headers = Headers::stripReserved($headers);
 
         /* @var Document $function */
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
@@ -225,8 +229,9 @@ class Create extends Base
 
             if (!$current->isEmpty()) {
                 $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
-                $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+                $jwtObj = new JWT(EncryptionKey::current(), 'HS256', $jwtExpiry, 0);
                 $jwt = $jwtObj->encode([
+                    'projectId' => $project->getId(),
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
@@ -237,13 +242,15 @@ class Create extends Base
         }
 
         $jwtExpiry = $function->getAttribute('timeout', 900) + 60; // 1min extra to account for possible cold-starts
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 0);
+        $jwtObj = new JWT(EncryptionKey::current(), 'HS256', $jwtExpiry, 0);
         $apiKey = $jwtObj->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
             'projectId' => $project->getId(),
+            'projectSequence' => $project->getSequence(),
             'scopes' => Deployments::scopes($function)
         ]);
 
-        $executionId = ID::unique();
+        $executionId = Id::unique();
         $headers['x-appwrite-execution-id'] = $executionId;
         $headers['x-appwrite-key'] = API_KEY_EPHEMERAL . '_' . $apiKey;
         $headers['x-appwrite-trigger'] = 'http';
@@ -320,8 +327,17 @@ class Create extends Base
                     method: $method,
                 ));
             } else {
+                // The worker re-mints every reserved header when the schedule fires, so the ephemeral API key and
+                // user JWT must not sit in the client-readable schedule. Keep the client IP, the one it reads back.
+                $storedHeaders = \array_filter(
+                    $headers,
+                    fn (string $name): bool => \strtolower($name) === 'x-appwrite-client-ip'
+                        || !\str_starts_with(\strtolower($name), 'x-appwrite-'),
+                    ARRAY_FILTER_USE_KEY
+                );
+
                 $data = [
-                    'headers' => $headers,
+                    'headers' => $storedHeaders,
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,

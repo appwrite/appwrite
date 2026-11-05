@@ -9,8 +9,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Role;
 
 final class FunctionsClientTest extends Scope
 {
@@ -35,7 +35,7 @@ final class FunctionsClientTest extends Scope
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'functionId' => ID::unique(),
+                'functionId' => Id::unique(),
                 'name' => 'Test Function',
                 'runtime' => 'node-22',
                 'entrypoint' => 'index.js',
@@ -177,7 +177,11 @@ final class FunctionsClientTest extends Scope
         ], $this->getHeaders()), $gqlPayload);
 
         $this->assertIsArray($execution['body']['data']);
-        $this->assertArrayNotHasKey('errors', $execution['body']);
+        $this->assertArrayNotHasKey(
+            'errors',
+            $execution['body'],
+            \json_encode($execution['body']['errors'] ?? [], JSON_THROW_ON_ERROR)
+        );
 
         self::$cachedExecution[$key] = $execution['body']['data']['functionsCreateExecution'];
         return self::$cachedExecution[$key];

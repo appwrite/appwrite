@@ -26,6 +26,6 @@ final class JSONTest extends TestCase
         $this->assertFalse($json->isValid(1.2));
         $this->assertFalse($json->isValid("{'test': 'demo'}"));
         $this->assertFalse($json->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_OBJECT, $json->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_OBJECT, $json->getType());
     }
 }

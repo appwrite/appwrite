@@ -5,8 +5,8 @@ namespace Appwrite\Certificates;
 use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
 use Utopia\Cdn\Certificates\Provider;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\DateTime;
 use Utopia\Http\Http;
 
@@ -99,6 +99,22 @@ class LetsEncrypt implements Provider
     public function getCertificateStatus(string $domain, ?string $domainType): string
     {
         throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
+    }
+
+    public function getCertificateExpiry(string $domain, ?string $domainType): ?string
+    {
+        $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
+        if (!\file_exists($certPath)) {
+            return null;
+        }
+
+        $certData = openssl_x509_parse(file_get_contents($certPath));
+        $validTo = $certData['validTo_time_t'] ?? null;
+        if (empty($validTo)) {
+            return null;
+        }
+
+        return DateTime::format((new \DateTime())->setTimestamp($validTo));
     }
 
     public function isRenewRequired(string $domain, ?string $domainType): bool

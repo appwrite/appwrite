@@ -1,0 +1,5 @@
+---
+layout: category
+name: DevOps
+description: Guides on CI/CD, containerization, and automating your Appwrite workflows.
+---

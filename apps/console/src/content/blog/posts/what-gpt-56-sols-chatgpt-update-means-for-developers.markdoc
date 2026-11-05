@@ -1,0 +1,146 @@
+---
+layout: post
+title: "ChatGPT is now free and unlimited when using GPT-5.6 Luna"
+description: OpenAI retuned GPT-5.6 Sol for ChatGPT and made Luna the free default. Here is what it changes for developers building on the API, and what to copy from it.
+date: 2026-08-07
+cover: /images/blog/what-gpt-56-sols-chatgpt-update-means-for-developers/cover.avif
+timeToRead: 5
+author: aishwari
+category: ai
+featured: false
+faqs:
+  - question: What changed in the GPT-5.6 Sol ChatGPT update?
+    answer: The update changes how GPT-5.6 Sol responds inside ChatGPT. Answers are shorter and more direct, factual errors are reduced through better use of retrieved sources, and Plus and Pro users can control reasoning effort with a new slider. The API, Codex, and ChatGPT Work versions are unchanged.
+  - question: Does the GPT-5.6 Sol ChatGPT update affect the OpenAI API?
+    answer: No. The updated GPT-5.6 Sol behavior only applies to the Chat experience in ChatGPT. The GPT-5.6 Sol model available through the API, Codex, and ChatGPT Work continues to behave the same, with no pricing or capability changes.
+  - question: Is GPT-5.6 Sol better than GPT-5.5 Instant?
+    answer: For everyday ChatGPT conversations, yes. According to OpenAI, GPT-5.6 Sol produces more concise answers and significantly reduces factual errors compared to GPT-5.5 Instant, especially on prompts involving dates, numbers, rules, and source-backed information.
+  - question: What is the Think button in ChatGPT?
+    answer: The Think button gives GPT-5.6 Luna additional reasoning time for difficult questions. It offers Free and Go users a simple way to improve response quality without exposing detailed reasoning controls.
+---
+OpenAI shipped an update to [GPT-5.6 Sol in ChatGPT](https://openai.com/index/improving-gpt-5-6-sol-in-chatgpt/) that changes how the model answers rather than what it can do. Answers get shorter and more direct, factual errors drop, and a new slider hands the effort decision to the user. At the same time, GPT-5.6 Luna becomes the default for Free users with unlimited text chats.
+
+The easy read is that this is a consumer release with nothing in it for developers. That read is wrong. The version of GPT-5.6 Sol powering the API, Codex, and ChatGPT Work did not change, but the product decisions in this update are the same ones you make every time you ship an LLM feature: how verbose to be, how to ground facts, and who controls reasoning effort.
+
+This post covers what actually changed in the GPT-5.6 Sol ChatGPT update, which surfaces are unaffected, and the four patterns worth copying into your own app. If you want the model family background first, see our [GPT-5.6 launch breakdown](/blog/post/gpt-56-is-here-openais-efficient-frontier-model).
+
+# What changed in the GPT-5.6 Sol ChatGPT update?
+
+**OpenAI retuned GPT-5.6 Sol for everyday ChatGPT conversations so it gives more focused answers, makes fewer factual errors, and behaves consistently from quick replies through deep reasoning. Plus and Pro users also get a slider to control how much thought goes into each response.** The changes are scoped to the Chat experience only.
+
+Here is the full change set in one place.
+
+| Change                                | Who gets it                  | What it does                                                     |
+| ------------------------------------- | ---------------------------- | ---------------------------------------------------------------- |
+| Retuned GPT-5.6 Sol                   | Plus, Pro                    | More direct answers, tighter formatting, less filler             |
+| Fewer factual errors                  | Plus, Pro (Sol), Free (Luna) | Better use of available sources, especially for dates, numbers, rules, and assumptions |
+| GPT-5.6 Sol across fast and deeper reasoning | Plus, Pro | Consistent tone whether responses are quick or more deliberate |
+| Reasoning slider                      | Plus, Pro                    | User-controlled effort on web, mobile, and desktop               |
+| GPT-5.6 Luna as default               | Free, Go                     | Latest small model instead of the previous default               |
+| Unlimited text chats                  | Free, Go                     | Rolling out with no text chat limits, subject to abuse guardrails |
+| Think button                          | Free, Go                     | Opt-in higher reasoning for harder questions                     |
+
+The scale context matters for reading the rest of this. OpenAI says roughly **1 billion people use ChatGPT each week** across quick questions, search, planning, research, and complex decisions. Tuning decisions at that volume are made against a much wider distribution of prompts than most of us ever evaluate against.
+
+# GPT-5.6 Sol gives more focused answers
+
+The clearest behavior change is length discipline. The updated GPT-5.6 Sol leads with the answer, adapts detail to the question, drops unnecessary formatting, and pushes back when simply agreeing would not help. It is also less likely to agree with incorrect assumptions simply to be agreeable, helping conversations stay more accurate instead of overly validating the user.
+
+OpenAI's own example is a weather question: can I bike from the Mission to Ocean Beach after work without getting soaked? GPT-5.5 Instant returned a four-section forecast breakdown with a caveat paragraph. The updated GPT-5.6 Sol answered "yes, you should stay dry," named wind rather than rain as the real problem, and recommended a light wind layer. Nothing else.
+
+Two things make the second answer better, and both are things you can specify in a system prompt:
+
+* **It answers the question that was asked**, then supports it. It does not build up to the answer through a structured report.
+* **It identifies the actual constraint.** The rider asked about rain. The real issue was a 10 to 20 mph headwind, so that is what led.
+
+On the follow-up ("assume I'm leaving around 5:30"), the update reissues the recommendation without restating the full forecast. Verbose models tend to re-dump context on every turn, which is one of the most common complaints about LLM chat features and one of the easiest to fix.
+
+# OpenAI reports fewer factual errors with GPT-5.6 Sol
+
+**OpenAI reports that in an internal evaluation of financial, medical, and legal prompts requiring factual detail, responses containing at least one factual error were about 62% less common with GPT-5.6 Luna and 68% less common with GPT-5.6 Sol than with GPT-5.5 Instant.**
+
+| Model        | Reduction in responses with at least one factual error vs GPT-5.5 Instant |
+| ------------ | ------------------------------------------------------------------------- |
+| GPT-5.6 Sol  | \~68%                                                                     |
+| GPT-5.6 Luna | \~62%                                                                     |
+
+Two caveats before you build a slide around those numbers. This is a vendor-reported internal evaluation, not an independent benchmark, and the baseline is GPT-5.5 Instant rather than a reasoning model. Treat it as directional.
+
+The mechanism is the interesting part. OpenAI attributes the gain to the model **better using the sources it finds**, specifically on answers that depend on dates, numbers, sources, rules, or assumptions. That is not raw parametric knowledge improving. It is retrieval grounding improving, which is the same failure mode most RAG features hit in production: the right document is in context and the model still paraphrases it wrong.
+
+If you run an assistant over your own data, that list of five categories is a ready-made evaluation set. Build test cases around dates, numeric values, source attribution, rule application, and unstated assumptions, because those are where grounded answers actually break.
+
+# The reasoning slider makes effort a user-facing control
+
+Plus and Pro users now get a slider in ChatGPT on web, mobile, and desktop to choose how much thought goes into an answer. Keep it low for everyday questions, raise it for planning, research, writing, coding, or decisions that need more work.
+
+The same model now powers both Instant responses and deeper reasoning for paid users, which is what makes the slider feel like a dial instead of a switch. Moving it up should feel like the model taking longer on the same problem, not like being handed off to a different model with its own tone and formatting habits.
+
+That distinction is the design lesson. GPT-5.6 already exposes effort settings in the API, including `max` and `ultra` as we covered in the [launch breakdown](/blog/post/gpt-56-is-here-openais-efficient-frontier-model). Most teams bury those settings in a router and guess at the user's intent from the prompt. This update suggests OpenAI believes giving users direct control over reasoning effort can work better than always inferring it from the prompt.
+
+Free users get a coarser version of the same idea: a **Think button** that gives GPT-5.6 Luna more time on a hard question. One button, no slider, same principle.
+
+# What Free and Go users get: GPT-5.6 Luna and unlimited text chats
+
+GPT-5.6 Luna becomes the default model for Free and Go users this week. Unlimited text chats and the Think button follow the week after, subject to abuse guardrails. Limits still apply to file uploads, images, and other tools.
+
+| Plan      | Default model         | Effort control   | Text chat limits      |
+| --------- | --------------------- | ---------------- | --------------------- |
+| Free, Go  | GPT-5.6 Luna          | Think button     | Unlimited (text only) |
+| Plus, Pro | GPT-5.6 Sol (updated) | Reasoning slider | Plan limits apply     |
+
+Luna as the free default is a notable move given the pricing history. When OpenAI [cut GPT-5.6 pricing on July 30](/blog/post/openai-cuts-gpt-56-pricing-and-adds-fast-mode-to-the-api), Luna dropped 80% to $0.20 per million input tokens and $1.20 per million output tokens. Serving it as the free default is likely helped by those lower serving costs, the same economics that make high-volume AI features more practical in production.
+
+# Does this change GPT-5.6 Sol in the API, Codex, or ChatGPT Work?
+
+**No. This version of GPT-5.6 Sol is optimized for everyday chats and is only available in the Chat experience in ChatGPT. The version of GPT-5.6 Sol that powers ChatGPT Work and Codex is not changing, and API pricing and behavior are unaffected.**
+
+| Surface                  | Affected by this update?                        |
+| ------------------------ | ----------------------------------------------- |
+| ChatGPT Chat (Plus, Pro) | Yes, updated Sol plus the slider                |
+| ChatGPT Chat (Free, Go)  | Yes, Luna default, unlimited text, Think button |
+| ChatGPT Work             | No                                              |
+| Codex                    | No                                              |
+| OpenAI API               | No                                              |
+
+This split is worth internalizing. The ChatGPT version of GPT-5.6 Sol is tuned differently from the version used in the API, Codex, and ChatGPT Work, so behavior you observe in ChatGPT is not a reliable prediction of what the API returns for the same prompt. If you benchmark models for your product, benchmark the surface you actually ship on. Our [Claude vs GPT vs Gemini comparison](/blog/post/claude-vs-gpt-vs-gemini-for-developers-who-wins-in-2026) has more on evaluating models against your own workload rather than published scores.
+
+# Safety changes and under-18 protections
+
+OpenAI published the details in its system card, including measures for users it believes are under 18. For those users, the model is trained to avoid romantic roleplay, age-restricted challenges, and presenting itself as a substitute for real-world relationships.
+
+OpenAI also applied age-appropriate boundaries around sexual content, eating disorders and body-image risks, age-restricted goods, dangerous activities, and graphic violence, and trained the model to encourage connection with trusted people when a teen may need support. Model training is reinforced with system-level protections and new evaluations for under-18 performance.
+
+The practical takeaway if you ship a consumer AI product: model-level training is treated as one layer, not the whole answer. System-level checks sit on top of it, and the evaluation suite is versioned alongside the policy.
+
+# Four things developers should copy from this update
+
+Strip out the consumer packaging and this release is a list of defensible defaults for LLM product design.
+
+* **Answer first, then support it.** Lead with the conclusion and cut formatting that does not earn its place. Long structured answers read as thorough and usually are not.
+* **Do not re-dump context on follow-ups.** Update the recommendation. Do not restate everything the user already read two turns ago.
+* **Evaluate grounding** Build test cases specifically around dates, numbers, source attribution, rules, and assumptions. That is where retrieved-context answers fail.
+* **Give the user the effort dial.** A visible slider or a single Think button beats a router silently guessing how hard the question is.
+
+The one thing you cannot copy directly is tier consistency. Serving quick and deliberate answers from one tuned model is what keeps tone stable across effort levels. If you route between a cheap model and an expensive one, users feel the seam. Matching prompts and output formats across both tiers gets you most of the way there.
+
+# Build GPT-5.6 apps on a backend that is ready for them
+
+Copying these patterns is prompt and evaluation work, and it is the fast part. The slow part is everything underneath: authenticating users, storing conversation history, persisting uploaded files, keeping API keys off the client, and running model calls server-side. That plumbing is usually where a weekend of work goes.
+
+[Appwrite](/) is an open source backend as a service that covers it. [Auth](/docs/products/auth) for user accounts and sessions, [Databases](/docs/products/databases) for chat history and evaluation results, [Storage](/docs/products/storage) for uploads, [Functions](/docs/products/functions) to call the OpenAI API server-side with your key kept secret, and [Messaging](/docs/products/messaging) for notifications. Deploy your frontend next to it with [Sites](/docs/products/sites). Run it on managed Cloud or self-host it.
+
+The effort-slider pattern is a good example of why the backend matters. Storing a per-user effort preference, passing it into an API call, and logging what it cost is three products working together, not one prompt. Our guide to [what an AI backend actually needs](/blog/post/what-is-an-ai-backend) walks through the rest.
+
+If you are building with Codex, the [Appwrite plugin for Codex](/blog/post/announcing-appwrite-codex-plugin) ships agent skills for the Appwrite CLI and SDKs and registers the Appwrite Docs MCP server, so your agent writes real SDK calls instead of guessing at an API.
+
+`codex plugin marketplace add appwrite/codex-plugin`
+
+[Create a free Appwrite project](https://cloud.appwrite.io/), add the plugin, and point GPT-5.6 at a backend that already exists.
+
+# Resources
+
+* [Appwrite plugin for Codex](/blog/post/announcing-appwrite-codex-plugin)
+* [Appwrite Functions docs](/docs/products/functions)
+* [Create a free Appwrite project](https://cloud.appwrite.io/)
+* [Join the Appwrite Discord](https://appwrite.io/discord)

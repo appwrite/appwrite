@@ -15,8 +15,17 @@ use Utopia\SMTP\Reply;
  */
 class TransactionException extends SmtpException
 {
-    public function __construct(public readonly Reply $reply, string $message = '')
-    {
+    /**
+     * @param array<string, Reply> $rejected Each recipient's own refusal, when the envelope
+     *                                        failed because every recipient was refused. Empty
+     *                                        when the refusal was the message's, such as a
+     *                                        MAIL FROM or DATA reply.
+     */
+    public function __construct(
+        public readonly Reply $reply,
+        string $message = '',
+        public readonly array $rejected = [],
+    ) {
         parent::__construct($message === '' ? (string) $reply : $message, $reply->code);
     }
 

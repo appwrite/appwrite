@@ -5,19 +5,21 @@ namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
-use Appwrite\Platform\Action;
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Platform\Enum;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
@@ -26,8 +28,6 @@ use Utopia\Validator\WhiteList;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createSupabaseMigration';
@@ -48,7 +48,7 @@ class Create extends Action
                 group: null,
                 name: 'createSupabaseMigration',
                 description: '/docs/references/migrations/migration-supabase.md',
-                auth: [AuthType::ADMIN],
+                auth: [AuthType::KEY, AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -63,12 +63,14 @@ class Create extends Action
             ->param('username', '', new Text(512), 'Source\'s Database Username')
             ->param('password', '', new PasswordFormat(new Text(512)), 'Source\'s Database Password')
             ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true, example: '5432')
+            ->inject('request')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('project')
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -80,15 +82,29 @@ class Create extends Action
         string $username,
         string $password,
         int $port,
+        Request $request,
         Response $response,
         Database $dbForProject,
         Document $project,
         array $platform,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations
+        MigrationPublisher $publisherForMigrations,
+        PublicHostname $publicHostname
     ): void {
+        // Block a source endpoint or database host that resolves to a private or
+        // reserved address to prevent SSRF into the internal network. The migration
+        // worker connects to both, outside any curl guard.
+        $hostname = $publicHostname;
+        foreach ([\parse_url($endpoint, PHP_URL_HOST) ?? '', $databaseHost] as $host) {
+            if (!$hostname->isValid($host)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
+            }
+        }
+
+        $scopes = $this->authorize($request, $resources);
+
         $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => Supabase::getName(),
@@ -105,6 +121,9 @@ class Create extends Action
             'statusCounters' => '{}',
             'resourceData' => '{}',
             'errors' => [],
+            'options' => [
+                'scopes' => $scopes,
+            ],
         ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());

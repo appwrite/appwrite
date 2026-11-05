@@ -5,17 +5,20 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Sites;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
+use Appwrite\Deployment\Deployments;
+use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Command;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
@@ -57,7 +60,7 @@ final class SitesCustomServerTest extends Scope
 
         try {
             $siteId = $this->setupSite([
-                'siteId' => ID::unique(),
+                'siteId' => Id::unique(),
                 'name' => 'SSR site logs',
                 'framework' => 'astro',
                 'adapter' => 'ssr',
@@ -108,6 +111,53 @@ final class SitesCustomServerTest extends Scope
         }
     }
 
+    public function testSiteClientIp(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => Id::unique(),
+                'name' => 'SSR site client IP',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $this->setupSiteDomain($siteId);
+
+            $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $this->getSiteDomain($siteId));
+
+            $this->assertEventually(function () use ($proxyClient) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/client-ip', [
+                    'x-forwarded-for' => '203.0.113.9',
+                    'x-appwrite-client-ip' => '198.51.100.1',
+                    'x-appwrite-country-code' => 'XX',
+                    'x-appwrite-continent-eu' => 'true',
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertEquals('203.0.113.9', $response['body']['ip']);
+                // 203.0.113.0/24 is reserved for documentation, so it has no geo record.
+                $this->assertNull($response['body']['countryCode']);
+                $this->assertEquals('false', $response['body']['continentEu']);
+            });
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
+    }
+
     public function testListSpecs(): void
     {
         $specifications = $this->listSpecifications(['type' => 'runtimes']);
@@ -133,7 +183,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'buildSpecification' => $buildSpecification,
             'runtimeSpecification' => $specifications['body']['specifications'][1]['slug'],
         ]);
@@ -152,7 +202,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'buildSpecification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $site['headers']['status-code']);
@@ -161,7 +211,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Specs site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'runtimeSpecification' => 'cheap-please'
         ]);
         $this->assertEquals(400, $site['headers']['status-code']);
@@ -181,8 +231,9 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
+            'description' => 'Site created via E2E test',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $siteId = $site['body']['$id'] ?? '';
@@ -191,6 +242,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(201, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
         $this->assertEquals('Test Site', $site['body']['name']);
+        $this->assertSame('Site created via E2E test', $site['body']['description']);
         $this->assertEquals('other', $site['body']['framework']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
@@ -199,18 +251,22 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(null, $site['body']['fallbackFile']);
         $this->assertEquals('./', $site['body']['outputDirectory']);
 
+        $site = $this->getSite($siteId);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('Site created via E2E test', $site['body']['description']);
+
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
         ]);
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
         ]);
         $variable3 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
         ]);
@@ -227,12 +283,23 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-24',
             'framework' => 'other',
             'name' => 'Unsupported Runtime Site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
         ]);
 
         $this->assertEquals(400, $site['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $site['body']['type']);
         $this->assertStringContainsString('Runtime "node-24" is not supported', (string) $site['body']['message']);
+
+        $site = $this->createSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site',
+            'description' => \str_repeat('a', 1025),
+            'siteId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $site['body']['type']);
 
         $this->cleanupSite($siteId);
     }
@@ -240,7 +307,7 @@ final class SitesCustomServerTest extends Scope
     public function testConsoleAvailabilityEndpoint(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -307,6 +374,79 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']); // domain available as site is deleted
     }
 
+    public function testProjectUserCannotReadRules(): void
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Test Site',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'domain' => Id::unique() . '.' . $sitesDomain,
+            'siteId' => $siteId,
+        ]);
+        $this->assertSame(201, $rule['headers']['status-code']);
+        $ruleId = $rule['body']['$id'];
+
+        $email = 'rules-reader-' . Id::unique() . '@localhost.test';
+        $account = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $account['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $email,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $session['headers']['status-code']);
+
+        $userHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+        ];
+
+        // Test for FAILURE
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', $userHeaders);
+        $this->assertSame(401, $rules['headers']['status-code']);
+        $this->assertArrayNotHasKey('rules', $rules['body']);
+
+        $read = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, $userHeaders);
+        $this->assertSame(401, $read['headers']['status-code']);
+        $this->assertArrayNotHasKey('domain', $read['body']);
+
+        // Test for SUCCESS
+        $read = $this->client->call(Client::METHOD_GET, '/proxy/rules/' . $ruleId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()));
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame($rule['body']['domain'], $read['body']['domain']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testVariables(): void
     {
         $site = $this->createSite([
@@ -315,7 +455,7 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Site',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $siteId = $site['body']['$id'] ?? '';
@@ -325,7 +465,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals('Test Site', $site['body']['name']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey1',
             'value' => 'siteValue1',
             'secret' => false,
@@ -338,7 +478,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable['body']['secret']);
 
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey2',
             'value' => 'siteValue2',
             'secret' => false,
@@ -351,7 +491,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(false, $variable2['body']['secret']);
 
         $secretVariable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'siteKey3',
             'value' => 'siteValue3',
             'secret' => true,
@@ -366,7 +506,7 @@ final class SitesCustomServerTest extends Scope
         // A key that is not a valid env var name is refused
         foreach (['9KEY', 'MY KEY', 'MY-KEY', "TRAILING_TAB\t", "A\x00C\x00M\x00E"] as $invalidKey) {
             $invalidVariable = $this->createVariable($siteId, [
-                'variableId' => ID::unique(),
+                'variableId' => Id::unique(),
                 'key' => $invalidKey,
                 'value' => 'siteValue',
             ]);
@@ -466,20 +606,20 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test List Variables Limit',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable1 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'LIMIT_KEY_1',
             'value' => 'limit-value-1',
         ]);
         $this->assertEquals(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'LIMIT_KEY_2',
             'value' => 'limit-value-2',
         ]);
@@ -508,13 +648,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test List Variables No Total',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'NO_TOTAL_KEY',
             'value' => 'no-total-value',
         ]);
@@ -540,20 +680,20 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test List Variables Cursor',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable1 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'CURSOR_KEY_1',
             'value' => 'cursor-value-1',
         ]);
         $this->assertEquals(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'CURSOR_KEY_2',
             'value' => 'cursor-value-2',
         ]);
@@ -595,13 +735,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable Key',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'KEY_BEFORE',
             'value' => 'unchanged-value',
             'secret' => false
@@ -629,13 +769,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable Value',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'UNCHANGED_KEY',
             'value' => 'value-before',
             'secret' => false
@@ -663,13 +803,13 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable NoOp',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
         $variable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'NOOP_KEY',
             'value' => 'noop-value',
             'secret' => false
@@ -685,6 +825,93 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testUpdateVariableDescription(): void
+    {
+        $settings = [
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Test Update Variable Description',
+            'outputDirectory' => './',
+        ];
+
+        $site = $this->createSite([...$settings, 'siteId' => ID::unique()]);
+        $siteId = $site['body']['$id'] ?? '';
+        $this->assertEquals(201, $site['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'STRIPE_KEY',
+            'value' => 'sk_test',
+            'secret' => false,
+            'description' => 'Stripe key used at checkout',
+        ]);
+        $this->assertEquals(201, $variable['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $variable['body']['description']);
+        $variableId = $variable['body']['$id'];
+
+        $plain = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'PLAIN_KEY',
+            'value' => 'plain',
+        ]);
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        // Re-saving unchanged settings marks the site live again
+        $site = $this->updateSite([...$settings, '$id' => $siteId]);
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertTrue($site['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => 'Rotated quarterly',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $response['body']['description']);
+        $this->assertSame('STRIPE_KEY', $response['body']['key']);
+        $this->assertSame('sk_test', $response['body']['value']);
+        $this->assertTrue($this->getSite($siteId)['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'value' => 'sk_live',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $response['body']['description']);
+        $this->assertFalse($this->getSite($siteId)['body']['live']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSame('', $response['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $variable = $this->createVariable($siteId, [
+            'variableId' => ID::unique(),
+            'key' => 'LONG_DESCRIPTION',
+            'value' => 'value',
+            'description' => \str_repeat('a', 1025),
+        ]);
+        $this->assertEquals(400, $variable['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $variable['body']['type']);
+
+        $response = $this->updateVariable($siteId, $variableId, [
+            'description' => \str_repeat('a', 1025),
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testUpdateVariableNotFound(): void
     {
         $site = $this->createSite([
@@ -693,7 +920,7 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Update Variable Not Found',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
@@ -717,7 +944,7 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Invalid Variable ID',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
@@ -741,12 +968,12 @@ final class SitesCustomServerTest extends Scope
             'framework' => 'other',
             'name' => 'Test Duplicate Variable ID',
             'outputDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $siteId = $site['body']['$id'] ?? '';
         $this->assertEquals(201, $site['headers']['status-code']);
 
-        $variableId = ID::unique();
+        $variableId = Id::unique();
 
         $variable = $this->createVariable($siteId, [
             'variableId' => $variableId,
@@ -773,7 +1000,7 @@ final class SitesCustomServerTest extends Scope
     public function testVariablesE2E(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Astro site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -789,7 +1016,7 @@ final class SitesCustomServerTest extends Scope
         $domain = $this->setupSiteDomain($siteId);
 
         $secretVariable = $this->createVariable($siteId, [
-            'variableId' => ID::unique(),
+            'variableId' => Id::unique(),
             'key' => 'name',
             'value' => 'Appwrite',
         ]);
@@ -811,11 +1038,12 @@ final class SitesCustomServerTest extends Scope
         $proxyClient = new Client();
         $proxyClient->setEndpoint('http://' . $domain);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertStringContainsString("Env variable is Appwrite", (string) $response['body']);
-        $this->assertStringNotContainsString("Variable not found", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Env variable is Appwrite', (string) $response['body']);
+            $this->assertStringNotContainsString('Variable not found', (string) $response['body']);
+        }, 30000, 500);
 
         $deployment = $this->getDeployment($siteId, $deploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -834,10 +1062,71 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testScopesWithinKey(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['sites.read', 'sites.write', 'users.read']),
+        ];
+        $params = [
+            'name' => 'Scopes within key',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            ...$params,
+            'scopes' => ['users.read'],
+        ]);
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertSame(['users.read'], $site['body']['scopes']);
+
+        $siteId = $site['body']['$id'];
+
+        $site = $this->updateSite(['$id' => $siteId, ...$params, 'scopes' => ['users.read', 'users.write']]);
+        $this->assertSame(200, $site['headers']['status-code']);
+
+        // Scopes the site already has are kept by a key that lacks them
+        $site = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            ...$params,
+            'scopes' => ['users.read', 'users.write'],
+        ]);
+        $this->assertSame(200, $site['headers']['status-code']);
+        $this->assertSame(['users.read', 'users.write'], $site['body']['scopes']);
+
+        /**
+         * Test for FAILURE
+         */
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
+            'siteId' => Id::unique(),
+            ...$params,
+            'scopes' => ['users.read', 'databases.write'],
+        ]);
+        $this->assertSame(401, $site['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $site['body']['type']);
+
+        $site = $this->client->call(Client::METHOD_PUT, '/sites/' . $siteId, $headers, [
+            ...$params,
+            'scopes' => ['users.read', 'users.write', 'databases.write'],
+        ]);
+        $this->assertSame(401, $site['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_UNAUTHORIZED_SCOPE, $site['body']['type']);
+
+        $site = $this->getSite($siteId);
+        $this->assertSame(['users.read', 'users.write'], $site['body']['scopes']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testScopes(): void
     {
         $site = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Astro site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -977,7 +1266,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $sites = $this->listSites([
@@ -1049,6 +1338,28 @@ final class SitesCustomServerTest extends Scope
         $this->assertCount(1, $sites['body']['sites']);
         $this->assertEquals($sites['body']['sites'][0]['$id'], $siteId);
 
+        // Test search description
+        $keyword = ID::unique();
+        $describedId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Described',
+            'description' => 'Renders avatars tagged ' . $keyword,
+            'outputDirectory' => './',
+            'siteId' => ID::unique()
+        ]);
+
+        $sites = $this->listSites([
+            'search' => $keyword
+        ]);
+
+        $this->assertEquals(200, $sites['headers']['status-code']);
+        $this->assertCount(1, $sites['body']['sites']);
+        $this->assertSame($describedId, $sites['body']['sites'][0]['$id']);
+
+        $this->cleanupSite($describedId);
+
         /**
          * Test pagination
          */
@@ -1060,7 +1371,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $sites = $this->listSites([
@@ -1123,7 +1434,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -1133,6 +1444,7 @@ final class SitesCustomServerTest extends Scope
 
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertEquals('Test Site', $site['body']['name']);
+        $this->assertSame('', $site['body']['description']);
 
         /**
          * Test for FAILURE
@@ -1151,10 +1463,11 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site',
+            'description' => 'Site created via E2E test',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $siteId = $site['body']['$id'] ?? '';
@@ -1168,6 +1481,7 @@ final class SitesCustomServerTest extends Scope
             'fallbackFile' => '',
             'framework' => 'other',
             'name' => 'Test Site Updated',
+            'description' => 'Updated site description',
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
@@ -1180,9 +1494,49 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $site['headers']['status-code']);
         $this->assertNotEmpty($site['body']['$id']);
         $this->assertEquals('Test Site Updated', $site['body']['name']);
+        $this->assertSame('Updated site description', $site['body']['description']);
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$createdAt']));
         $this->assertEquals(true, $dateValidator->isValid($site['body']['$updatedAt']));
         $this->assertEquals('npm ci', $site['body']['installCommand']);
+
+        // Omitting description keeps the stored one
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('Updated site description', $site['body']['description']);
+
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'description' => '',
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(200, $site['headers']['status-code']);
+        $this->assertSame('', $site['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $site = $this->updateSite([
+            'buildRuntime' => 'node-22',
+            'framework' => 'other',
+            'name' => 'Test Site Updated',
+            'description' => \str_repeat('a', 1025),
+            'outputDirectory' => './',
+            '$id' => $siteId,
+        ]);
+
+        $this->assertEquals(400, $site['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $site['body']['type']);
 
         $this->cleanupSite($siteId);
     }
@@ -1201,7 +1555,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $code = $this->packageSite('static-single-file');
@@ -1241,7 +1595,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         // Create a temporary large site package for chunked upload
@@ -1375,10 +1729,10 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-site-deployment-' . $deploymentId;
 
         mkdir($tmpDirectory);
@@ -1520,7 +1874,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1575,10 +1929,71 @@ final class SitesCustomServerTest extends Scope
     }
 
     #[Retry(count: 3)]
+    public function testSiteStreaming(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Streaming site',
+            'framework' => 'astro',
+            'adapter' => 'ssr',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './dist',
+            'buildCommand' => 'npm run build',
+            'installCommand' => 'npm ci',
+            'fallbackFile' => '',
+        ]);
+
+        $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('astro'),
+            'activate' => 'true',
+        ]);
+
+        $domain = $this->setupSiteDomain($siteId);
+
+        // Note when each piece of the page reaches the visitor.
+        $measure = function (string $path) use ($domain): array {
+            $body = '';
+            $arrivals = [];
+            $request = \curl_init('http://' . $domain . $path);
+            \curl_setopt_array($request, [
+                CURLOPT_HTTPHEADER => ['Accept-Encoding: identity'],
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_WRITEFUNCTION => function ($handle, string $chunk) use (&$body, &$arrivals): int {
+                    $body .= $chunk;
+                    foreach (['first', 'second', 'third'] as $text) {
+                        if (!isset($arrivals[$text]) && \str_contains($body, $text)) {
+                            $arrivals[$text] = \microtime(true);
+                        }
+                    }
+                    return \strlen($chunk);
+                },
+            ]);
+            \curl_exec($request);
+
+            return [\curl_getinfo($request, CURLINFO_RESPONSE_CODE), $arrivals];
+        };
+
+        // The page renders over 4s; buffered, every piece would arrive together at the end.
+        [$status, $arrivals] = $measure('/stream');
+        $this->assertSame(200, $status);
+        $this->assertCount(3, $arrivals);
+        $this->assertGreaterThan(1.5, $arrivals['second'] - $arrivals['first']);
+        $this->assertGreaterThan(1.5, $arrivals['third'] - $arrivals['second']);
+
+        // An error status stays buffered, so the proxy can still replace it with an error page.
+        [$status, $arrivals] = $measure('/stream?code=500');
+        $this->assertSame(500, $status);
+        $this->assertCount(3, $arrivals);
+        $this->assertLessThan(0.5, $arrivals['third'] - $arrivals['first']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    #[Retry(count: 3)]
     public function testAdapterDetectionSSR(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'SSR detection site',
             'framework' => 'astro',
             'buildRuntime' => 'node-22',
@@ -1615,7 +2030,7 @@ final class SitesCustomServerTest extends Scope
     public function testAdapterMismatchFailsBuild(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Adapter mismatch site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -1655,7 +2070,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1705,7 +2120,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1729,7 +2144,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -1756,7 +2171,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1799,7 +2214,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1823,7 +2238,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -1855,7 +2270,7 @@ final class SitesCustomServerTest extends Scope
 
     public function testDeploymentEndpointsRequireMatchingResourceType(): void
     {
-        $sharedId = ID::unique();
+        $sharedId = Id::unique();
 
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
@@ -1949,7 +2364,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -1973,7 +2388,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -2008,7 +2423,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2032,7 +2447,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -2061,6 +2476,63 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCreateDeploymentRejectsShortChunk(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Short Chunk Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => Id::unique()
+        ]);
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($siteId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'code' => new \CURLFile('data://application/x-gzip;base64,' . base64_encode($body), 'application/x-gzip', 'code.tar.gz'),
+                'activate' => 'false',
+            ]);
+        };
+
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
+        $this->assertEquals(202, $first['headers']['status-code']);
+        $deploymentId = $first['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         * The last chunk carries fewer bytes than its range announces.
+         */
+        $last = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 10), $deploymentId);
+        $this->assertEquals(400, $last['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $last['body']['type']);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('failed', $deployment['body']['status']);
+
+        // A retried chunk returns the failed deployment instead of writing to the removed source.
+        $retry = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 1024), $deploymentId);
+        $this->assertEquals(202, $retry['headers']['status-code']);
+        $this->assertEquals('failed', $retry['body']['status']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListDeployments(): void
     {
         $siteId = $this->setupSite([
@@ -2071,7 +2543,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2282,7 +2754,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2337,7 +2809,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         /**
@@ -2445,7 +2917,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deployment = $this->createDeployment($siteId, [
@@ -2459,9 +2931,13 @@ final class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
+            $buildLogs = (string) $deployment['body']['buildLogs'];
+            $screenshotsCaptured = ! empty($deployment['body']['screenshotLight'])
+                && ! empty($deployment['body']['screenshotDark']);
             $this->assertTrue(
-                \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing finished.')
-                || \str_contains((string) $deployment['body']['buildLogs'], 'Screenshot capturing failed.'),
+                \str_contains($buildLogs, 'Screenshot capturing finished.')
+                || \str_contains($buildLogs, 'Screenshot capturing failed.')
+                || $screenshotsCaptured,
                 'Screenshot worker did not finish: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT)
             );
         }, 120000, 500);
@@ -2492,7 +2968,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $site = $this->deleteSite($siteId);
@@ -2505,10 +2981,83 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(404, $function['headers']['status-code']);
     }
 
+    public function testDeleteSiteBuildCache(): void
+    {
+        $siteId = $this->setupBuildCacheSite();
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $this->getProject()['$id']);
+        $cache = $this->buildCache($siteId, 'node-22');
+        $this->assertTrue($builds->exists($cache), 'The build left no cache to clean up');
+
+        $response = $this->deleteSite($siteId);
+        $this->assertSame(204, $response['headers']['status-code']);
+
+        $this->assertEventually(function () use ($builds, $cache): void {
+            \clearstatcache();
+            $this->assertFalse($builds->exists($cache), 'Deleting the site left its build cache behind');
+        }, 60000, 500);
+    }
+
+    public function testUpdateSiteRuntimeBuildCache(): void
+    {
+        $siteId = $this->setupBuildCacheSite();
+        $builds = getDevice(APP_STORAGE_BUILDS . '/app-' . $this->getProject()['$id']);
+        $cache = $this->buildCache($siteId, 'node-22');
+        $this->assertTrue($builds->exists($cache), 'The build left no cache to clean up');
+
+        // Builds key a new cache for the new runtime, so nothing would read or delete the old one
+        $response = $this->updateSite([
+            '$id' => $siteId,
+            'name' => 'Test Build Cache Site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        \clearstatcache();
+        $this->assertFalse($builds->exists($cache), 'Changing the build runtime left the previous build cache behind');
+
+        $this->cleanupSite($siteId);
+    }
+
+    private function setupBuildCacheSite(): string
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Test Build Cache Site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+        $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true',
+        ]);
+
+        return $siteId;
+    }
+
+    /**
+     * Where builds of this site on this runtime keep their package-manager cache.
+     */
+    private function buildCache(string $siteId, string $buildRuntime): string
+    {
+        return Deployments::resourceCachePath($this->getProject()['$id'], new Document([
+            '$id' => $siteId,
+            '$collection' => 'sites',
+            'buildRuntime' => $buildRuntime,
+        ]));
+    }
+
     public function testDeleteSiteRulesCleanup(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Rules Cleanup Site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -2594,6 +3143,34 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
     }
 
+    public function testListFrameworksAndSpecificationsTotal(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => true]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertCount($frameworks['body']['total'], $frameworks['body']['frameworks']);
+        $this->assertGreaterThan(0, $frameworks['body']['total']);
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => false]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertEquals(0, $frameworks['body']['total']);
+        $this->assertNotEmpty($frameworks['body']['frameworks']);
+
+        $specifications = $this->listSpecifications(['total' => true]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertCount($specifications['body']['total'], $specifications['body']['specifications']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+
+        $specifications = $this->listSpecifications(['total' => false]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertEquals(0, $specifications['body']['total']);
+        $this->assertNotEmpty($specifications['body']['specifications']);
+    }
+
     public function testGetFrameworksHidesStartCommand(): void
     {
         $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', array_merge([
@@ -2610,7 +3187,7 @@ final class SitesCustomServerTest extends Scope
     public function testCreateSiteHidesStartCommand(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'SSR site without a start command',
             'framework' => 'nextjs',
             'adapter' => 'ssr',
@@ -2637,7 +3214,7 @@ final class SitesCustomServerTest extends Scope
     public function testSiteStatic(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Non-SPA site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2693,6 +3270,64 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testRootDirectoryMustStayInsideRepository(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $site = $this->createSite([
+            'siteId' => Id::unique(),
+            'name' => 'Root directory test',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'providerRootDirectory' => '/sites/starter',
+        ]);
+
+        $this->assertSame(201, $site['headers']['status-code']);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
+
+        $siteId = $site['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['..', '../other', 'sites/../../storage', '/../etc'] as $rootDirectory) {
+            $deployment = $this->createTemplateDeployment($siteId, [
+                'repository' => 'templates-for-sites',
+                'owner' => 'appwrite',
+                'rootDirectory' => $rootDirectory,
+                'type' => 'branch',
+                'reference' => 'main',
+                'activate' => true,
+            ]);
+            $this->assertSame(400, $deployment['headers']['status-code'], $rootDirectory);
+            $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $deployment['body']['type']);
+
+            $created = $this->createSite([
+                'siteId' => Id::unique(),
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $created['headers']['status-code'], $rootDirectory);
+
+            $updated = $this->updateSite([
+                '$id' => $siteId,
+                'name' => 'Root directory test',
+                'framework' => 'other',
+                'buildRuntime' => 'node-22',
+                'providerRootDirectory' => $rootDirectory,
+            ]);
+            $this->assertSame(400, $updated['headers']['status-code'], $rootDirectory);
+        }
+
+        $site = $this->getSite($siteId);
+        $this->assertSame('/sites/starter', $site['body']['providerRootDirectory']);
+
+        $this->cleanupSite($siteId);
+    }
+
     #[Retry(count: 3)]
     public function testSiteTemplate(): void
     {
@@ -2702,7 +3337,7 @@ final class SitesCustomServerTest extends Scope
         $template = $template['body'];
 
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Template site',
             'framework' => $template['frameworks'][0]['key'],
             'adapter' => $template['frameworks'][0]['adapter'],
@@ -2771,7 +3406,7 @@ final class SitesCustomServerTest extends Scope
     public function testSiteDomainReclaiming(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2804,7 +3439,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringNotContainsString("This domain is not connected to any Appwrite resource yet", (string) $response['body']);
 
         $site2 = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2850,7 +3485,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString("This page is empty, but you can make it yours.", (string) $response['body']);
 
         $site = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup 2 site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2876,7 +3511,7 @@ final class SitesCustomServerTest extends Scope
     public function testSitePreviewBranding(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'A site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -2915,13 +3550,10 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-        $apiKey = $jwtObj->encode([
-            'projectCheckDisabled' => true,
-            'previewAuthDisabled' => true,
-        ]);
+        $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Hello Appwrite", (string) $response['body']);
@@ -2929,7 +3561,8 @@ final class SitesCustomServerTest extends Scope
         $this->assertGreaterThan($contentLength, $response['headers']['content-length']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/non-existing-path', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertStringContainsString("Page not found", (string) $response['body']);
@@ -2939,13 +3572,101 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testSitePreviewKeyBoundToRule(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Preview key site',
+            'framework' => 'other',
+            'adapter' => 'static',
+            'buildRuntime' => 'static-1',
+            'outputDirectory' => './',
+            'buildCommand' => '',
+            'installCommand' => '',
+            'fallbackFile' => '',
+        ]);
+        $this->assertNotEmpty($siteId);
+
+        $deploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+            'activate' => 'true'
+        ]);
+        $this->assertNotEmpty($deploymentId);
+        $otherDeploymentId = $this->setupDeployment($siteId, [
+            'code' => $this->packageSite('static'),
+        ]);
+        $this->assertNotEmpty($otherDeploymentId);
+
+        $domain = $this->getDeploymentDomain($deploymentId);
+        $otherDomain = $this->getDeploymentDomain($otherDeploymentId);
+        $apiKey = $this->createPreviewKey($domain, $deploymentId);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertStringContainsString('Hello Appwrite', (string) $response['body']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
+            'x-appwrite-hostname' => $otherDomain,
+        ]);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        $proxyClient->setEndpoint('http://' . $otherDomain);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
+        ]);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+        $unbound = $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'projectCheckDisabled' => true,
+            'previewAuthDisabled' => true,
+        ]);
+        $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
+            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $unbound,
+        ]);
+        $this->assertSame(301, $response['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    private function createPreviewKey(string $hostname, string $deploymentId): string
+    {
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
+
+        return API_KEY_EPHEMERAL . '_' . $jwt->encode([
+            Key::PURPOSE_CLAIM => Key::PURPOSE,
+            'hostname' => $hostname,
+            'projectId' => $this->getProject()['$id'],
+            'deploymentId' => $deploymentId,
+            'hostnameOverride' => true,
+            'previewAuthDisabled' => true,
+        ]);
+    }
+
     public function testSiteCors(): void
     {
         // Create rule together with site
         $subdomain = 'startup' . \uniqid();
 
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Startup site',
             'framework' => 'other',
             'adapter' => 'static',
@@ -3005,7 +3726,7 @@ final class SitesCustomServerTest extends Scope
             'outputDirectory' => './',
             'providerBranch' => 'main',
             'providerRootDirectory' => './',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
 
         $deploymentId = $this->setupDeployment($siteId, [
@@ -3072,7 +3793,7 @@ final class SitesCustomServerTest extends Scope
             'name' => 'Duplicate deployment Site',
             'adapter' => 'static',
             'fallbackFile' => '404.html',
-            'siteId' => ID::unique()
+            'siteId' => Id::unique()
         ]);
         $this->assertNotEmpty($siteId);
 
@@ -3087,8 +3808,10 @@ final class SitesCustomServerTest extends Scope
         ]);
         $this->assertNotEmpty($deploymentId1);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Customized 404 page", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+            $this->assertStringContainsString('Customized 404 page', (string) $response['body']);
+        }, 30000, 500);
 
         $site = $this->updateSite([
             '$id' => $siteId,
@@ -3147,8 +3870,10 @@ final class SitesCustomServerTest extends Scope
         $this->waitDeploymentReady($siteId, $manualDeploymentId);
         $this->waitDeploymentActivated($siteId, $manualDeploymentId);
 
-        $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
-        $this->assertStringContainsString("Index page", (string) $response['body']);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
+            $this->assertStringContainsString('Index page', (string) $response['body']);
+        }, 30000, 500);
 
         $deployment = $this->getDeployment($siteId, $manualDeploymentId);
         $this->assertEquals(200, $deployment['headers']['status-code']);
@@ -3166,7 +3891,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Activate test Site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'adapter' => 'static',
         ]);
         $this->assertNotEmpty($siteId);
@@ -3252,7 +3977,7 @@ final class SitesCustomServerTest extends Scope
             'buildRuntime' => 'node-22',
             'framework' => 'other',
             'name' => 'Authorized preview site',
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'adapter' => 'static',
         ]);
         $this->assertNotEmpty($siteId);
@@ -3303,6 +4028,7 @@ final class SitesCustomServerTest extends Scope
             'path' => '/contact'
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/contact', $response['headers']['location']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', (string) $response['headers']['set-cookie']);
         // due to swoole update; no more httponly
@@ -3321,6 +4047,196 @@ final class SitesCustomServerTest extends Scope
             $this->assertStringContainsString("Preview by", (string) $response['body']);
         });
 
+        // Success: Path defaults to the site root
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+            'jwt' => $jwt['body']['jwt'],
+            'path' => ''
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertEquals('http://' . $domain . '/', $response['headers']['location']);
+
+        // Failure: Path must be relative to the site root
+        $paths = [
+            ['contact'],
+            'contact',
+            'example.com',
+            '@example.com',
+            '.example.com',
+            '-example.com',
+            ':8080/contact',
+            'https://example.com/contact',
+            '//example.com/contact',
+            '/\\example.com/contact',
+            "/contact\r\nx-test: 1",
+        ];
+        foreach ($paths as $path) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/_appwrite/authorize', params: [
+                'jwt' => $jwt['body']['jwt'],
+                'path' => $path
+            ], followRedirects: false);
+            $message = \var_export($path, true);
+            $this->assertEquals(400, $response['headers']['status-code'], $message);
+            $this->assertArrayNotHasKey('location', $response['headers'], $message);
+            $this->assertArrayNotHasKey('set-cookie', $response['headers'], $message);
+        }
+
+        // Failure: Membership not confirmed
+        $project = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+        ]);
+        $this->assertSame(200, $project['headers']['status-code']);
+        $teamId = $project['body']['teamId'];
+
+        $inviteeEmail = \uniqid() . 'invitee@appwrite.io';
+        $invitee = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => Id::unique(),
+            'email' => $inviteeEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $invitee['headers']['status-code']);
+
+        $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'email' => $inviteeEmail,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $membership['headers']['status-code']);
+        $this->assertFalse($membership['body']['confirm']);
+
+        $inviteeSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $inviteeEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $inviteeSession['headers']['status-code']);
+
+        $inviteeJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $inviteeSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], []);
+        $this->assertSame(201, $inviteeJwt['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $inviteeJwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        // Failure: Confirmed membership for another project only
+        $otherProjectId = Id::unique();
+        $scopedEmail = \uniqid() . 'scoped@appwrite.io';
+        $scopedUser = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => Id::unique(),
+            'email' => $scopedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $scopedUser['headers']['status-code']);
+
+        $scopedMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'email' => $scopedEmail,
+            'roles' => ['project-' . $otherProjectId . '-developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $scopedMembership['headers']['status-code']);
+        $this->assertFalse($scopedMembership['body']['confirm']);
+
+        $invite = $this->getLastEmailByAddress($scopedEmail, function (array $email): void {
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
+
+        // Signed in, as accepting signed out claims the unverified account and revokes its password
+        $scopedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $scopedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $scopedSession['headers']['status-code']);
+
+        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $scopedSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirm['headers']['status-code']);
+        $this->assertTrue($confirm['body']['confirm']);
+
+        $scopedJwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $scopedSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], []);
+        $this->assertSame(201, $scopedJwt['headers']['status-code']);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+            'cookie' => 'a_jwt_console=' . $scopedJwt['body']['jwt']
+        ], followRedirects: false);
+        $this->assertSame(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
+
+        // Success: Same member after granting this project's developer role
+        $roleUpdate = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $scopedMembership['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $cookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'roles' => ['project-' . $this->getProject()['$id'] . '-developer'],
+        ]);
+        $this->assertSame(200, $roleUpdate['headers']['status-code']);
+
+        $this->assertEventually(function () use ($proxyClient, $scopedJwt) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/contact', headers: [
+                'cookie' => 'a_jwt_console=' . $scopedJwt['body']['jwt']
+            ], followRedirects: false);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertStringContainsString('Contact page', (string) $response['body']);
+            $this->assertStringContainsString('Preview by', (string) $response['body']);
+        });
+
         // Failure: Session missing (old bad, new ok)
         $session = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', array_merge([
             'origin' => 'http://localhost',
@@ -3336,8 +4252,59 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('/auth/preview', (string) $response['headers']['location']);
 
-        // Failure: User missing
-        $cookie = 'a_session_console=' .$this->getRoot()['session'];
+        // Failure: Blocked user (must not use getRoot(); blocking poisons later tests in this worker)
+        $blockedEmail = \uniqid() . 'blocked-preview@appwrite.io';
+        $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => Id::unique(),
+            'email' => $blockedEmail,
+            'password' => 'password',
+        ]);
+
+        $adminCookie = 'a_session_console=' . $this->getRoot()['session'];
+        $blockedMembership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => $adminCookie,
+            'x-appwrite-project' => 'console',
+            'x-appwrite-organization' => $teamId,
+        ], [
+            'email' => $blockedEmail,
+            'roles' => ['developer'],
+            'url' => 'http://localhost:5000/join-us#title',
+        ]);
+        $this->assertSame(201, $blockedMembership['headers']['status-code']);
+
+        $invite = $this->getLastEmailByAddress($blockedEmail, function (array $email): void {
+            $this->assertStringContainsString('/join-us', (string) ($email['html'] ?? ''));
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($invite['html']);
+
+        $blockedSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+        ], [
+            'email' => $blockedEmail,
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $blockedSession['headers']['status-code']);
+
+        $confirm = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $blockedMembership['body']['$id'] . '/status', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $blockedSession['cookies']['a_session_console'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'userId' => $tokens['userId'],
+            'secret' => $tokens['secret'],
+        ]);
+        $this->assertSame(200, $confirm['headers']['status-code']);
+
+        $cookie = 'a_session_console=' . $blockedSession['cookies']['a_session_console'];
         $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -3378,7 +4345,7 @@ final class SitesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password'
         ]);
@@ -3414,10 +4381,82 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testPreviewCookies(): void
+    {
+        $siteId = '';
+
+        try {
+            $siteId = $this->setupSite([
+                'siteId' => Id::unique(),
+                'name' => 'SSR preview cookies',
+                'framework' => 'astro',
+                'adapter' => 'ssr',
+                'buildRuntime' => 'node-22',
+                'outputDirectory' => './dist',
+                'buildCommand' => 'npm run build',
+                'installCommand' => 'npm ci',
+                'fallbackFile' => '',
+            ]);
+
+            $deploymentId = $this->setupDeployment($siteId, [
+                'code' => $this->packageSite('astro'),
+                'activate' => 'true',
+            ]);
+
+            $domain = $this->getDeploymentDomain($deploymentId);
+            $this->assertNotEmpty($domain);
+
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], [
+                'email' => $this->getRoot()['email'],
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $session['headers']['status-code']);
+            $secret = $session['cookies']['a_session_console'];
+
+            $jwt = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => 'a_session_console=' . $secret,
+                'x-appwrite-project' => 'console',
+            ], []);
+            $this->assertSame(201, $jwt['headers']['status-code']);
+
+            $proxyClient = new Client();
+            $proxyClient->setEndpoint('http://' . $domain);
+
+            $cookie = \implode('; ', [
+                'a_jwt_console=' . $jwt['body']['jwt'],
+                'a_session_console=' . $secret,
+                'a_session_console_legacy=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '=' . $secret,
+                'a_session_' . $this->getProject()['$id'] . '_legacy=' . $secret,
+                'theme=dark',
+            ]);
+
+            $this->assertEventually(function () use ($proxyClient, $cookie, $secret) {
+                $response = $proxyClient->call(Client::METHOD_GET, '/cookie-header', [
+                    'cookie' => $cookie,
+                    'x-fallback-cookies' => \json_encode(['a_session_console' => $secret]),
+                ], followRedirects: false);
+                $this->assertSame(200, $response['headers']['status-code']);
+                $this->assertSame('theme=dark', $response['body']['cookie']);
+                $this->assertNull($response['body']['fallbackCookies']);
+            });
+        } finally {
+            if ($siteId !== '') {
+                $this->cleanupSite($siteId);
+            }
+        }
+    }
+
     public function testInvalidSSRSource(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Astro SSR Site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -3454,7 +4493,7 @@ final class SitesCustomServerTest extends Scope
     public function testDomainForFailedDeployment(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test Site',
             'framework' => 'astro',
             'buildRuntime' => 'node-22',
@@ -3491,7 +4530,7 @@ final class SitesCustomServerTest extends Scope
     public function testPermanentRedirect(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Sub project site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3544,7 +4583,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertStringContainsString('Start with this domain', (string) $response['body']);
 
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Static site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3576,14 +4615,9 @@ final class SitesCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
 
-        $jwtObj = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 0);
-        $apiKey = $jwtObj->encode([
-            'projectCheckDisabled' => true,
-            'previewAuthDisabled' => true,
-        ]);
-
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->createPreviewKey($deploymentDomain, $deploymentId),
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $deployment = $this->getDeployment($siteId, $deploymentId);
@@ -3624,8 +4658,10 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
 
         // deployment is still building error page
+        $apiKey = $this->createPreviewKey($deploymentDomain, $deploymentId);
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment is still building", (string) $response['body']);
@@ -3640,7 +4676,8 @@ final class SitesCustomServerTest extends Scope
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
-            'x-appwrite-key' => API_KEY_EPHEMERAL . '_' . $apiKey,
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString("Deployment build failed", (string) $response['body']);
@@ -3652,7 +4689,7 @@ final class SitesCustomServerTest extends Scope
     public function testEmptySiteSource(): void
     {
         $siteId = $this->setupSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Empty source site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3691,7 +4728,7 @@ final class SitesCustomServerTest extends Scope
 
         // Default
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3706,7 +4743,7 @@ final class SitesCustomServerTest extends Scope
 
         // Success values
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3721,7 +4758,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertSame(0, $response['body']['deploymentRetention']);
 
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3737,7 +4774,7 @@ final class SitesCustomServerTest extends Scope
 
         // Failure values
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3746,7 +4783,7 @@ final class SitesCustomServerTest extends Scope
         $this->assertSame(400, $response['headers']['status-code']);
 
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3756,7 +4793,7 @@ final class SitesCustomServerTest extends Scope
 
         // Update flow
         $response = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test retention site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3818,7 +4855,7 @@ final class SitesCustomServerTest extends Scope
     public function testCreateVcsDeploymentWithoutInstallation(): void
     {
         $site = $this->createSite([
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Test VCS No Installation',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -3844,5 +4881,53 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals('installation_not_found', $deployment['body']['type']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testCreateDeploymentRejectsPathTraversalId(): void
+    {
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Test Traversal Deployment Id',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+            'outputDirectory' => './',
+            'fallbackFile' => '',
+        ]);
+
+        $code = $this->packageSite('static');
+        $size = \filesize($code->getFilename());
+
+        // A `..` deployment id escapes the per-project storage root (CWE-22).
+        // The chunked-upload branch reads x-appwrite-id as the on-disk name, so
+        // it must be UID-validated exactly like Storage file uploads are.
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . ($size - 1) . '/' . $size,
+            'x-appwrite-id' => '../../../tmp/appwrite-poc',
+        ], $this->getHeaders()), [
+            'code' => $code,
+            'activate' => 'true',
+        ]);
+
+        $this->assertEquals(400, $deployment['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $deployment['body']['type']);
+
+        // The rejection must happen before anything is written: no poisoned
+        // deployment row is persisted for the traversal id.
+        $deployments = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/deployments', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployments['headers']['status-code']);
+        $this->assertEquals(0, $deployments['body']['total']);
+
+        $this->cleanupSite($siteId);
+    }
+
+    public function testTemplateDeploymentIsManagedWithAProjectKey(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
     }
 }

@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace Utopia\Client\Tests\Adapter\Curl;
 
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Utopia\Client\Adapter;
 use Utopia\Client\Adapter\Curl\Client;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
+use Utopia\Client\Exception\DestinationException;
 use Utopia\Client\Tests\Adapter\AdapterContract;
 use Utopia\Client\Tests\Server\Http;
 use Utopia\Psr7\ContentType;
@@ -18,6 +22,67 @@ use Utopia\Psr7\Stream;
 
 final class ClientTest extends AdapterContract
 {
+    public function testResponseHeadersArriveBeforeStreamedBody(): void
+    {
+        Http::raw("HTTP/1.1 206 Partial Content\r\nContent-Length: 4\r\nContent-Range: bytes 2-5/8\r\nConnection: close\r\n\r\ncdef", function (int $port): void {
+            $headers = null;
+            $body = '';
+            $client = new \Utopia\Client\Decorator\Retry(new \Utopia\Client\Client(new Client()));
+            $response = $client->stream(
+                new Request(Method::GET, \Utopia\Psr7\Uri::parse('http://127.0.0.1:' . $port)),
+                function (string $chunk) use (&$headers, &$body): void {
+                    $this->assertSame('bytes 2-5/8', $headers);
+                    $body .= $chunk;
+                },
+                function (ResponseInterface $response) use (&$headers): void {
+                    $this->assertSame(206, $response->getStatusCode());
+                    $headers = $response->getHeaderLine('Content-Range');
+                }
+            );
+            $this->assertSame('cdef', $body);
+            $this->assertSame('', (string) $response->getBody());
+        });
+    }
+
+    public function testResponseNotificationOnlySeesTheFinalRedirectHop(): void
+    {
+        Http::serve(function (int $port): void {
+            $statuses = [];
+            $body = '';
+            new Client()->withFollowRedirects()->stream(
+                new Request(Method::GET, \Utopia\Psr7\Uri::parse('http://127.0.0.1:' . $port . '/redirect')),
+                function (string $chunk) use (&$body, &$statuses): void {
+                    $this->assertSame([200], $statuses);
+                    $body .= $chunk;
+                },
+                static function (ResponseInterface $response) use (&$statuses): void {
+                    $statuses[] = $response->getStatusCode();
+                }
+            );
+            $this->assertSame([200], $statuses);
+            $this->assertSame('final', $body);
+        });
+    }
+
+    public function testEmptyResponseStillNotifiesHeaders(): void
+    {
+        Http::raw("HTTP/1.1 204 No Content\r\nConnection: close\r\n\r\n", function (int $port): void {
+            $statuses = [];
+            $body = '';
+            new Client()->stream(
+                new Request(Method::GET, \Utopia\Psr7\Uri::parse('http://127.0.0.1:' . $port)),
+                static function (string $chunk) use (&$body): void {
+                    $body .= $chunk;
+                },
+                static function (ResponseInterface $response) use (&$statuses): void {
+                    $statuses[] = $response->getStatusCode();
+                }
+            );
+            $this->assertSame([204], $statuses);
+            $this->assertSame('', $body);
+        });
+    }
+
     public function testItStreamsLargeRequestBodiesWithBoundedMemory(): void
     {
         $size = 8 * 1024 * 1024;
@@ -95,10 +160,43 @@ final class ClientTest extends AdapterContract
         ];
     }
 
+    public function testAnEnvironmentProxyCannotCarryARequestPastTheDestination(): void
+    {
+        // An allowed proxy in front of a disallowed target: checking the proxy's address alone would pass
+        $proxy = \stream_socket_server('tcp://127.0.0.1:0');
+        $target = \stream_socket_server('tcp://127.0.0.2:0');
+        $this->assertNotFalse($proxy);
+        $this->assertNotFalse($target);
+
+        $client = $this->createAdapter(destinations: new PublicInternet(new IPRange('127.0.0.1')));
+        $request = new Request\Factory()->createRequest(Method::GET, 'http://' . \stream_socket_get_name($target, false) . '/');
+
+        \putenv('http_proxy=http://' . \stream_socket_get_name($proxy, false));
+        try {
+            $client->sendRequest($request);
+            $this->fail('The request left through the proxy.');
+        } catch (DestinationException) {
+            // refused on the direct connection to 127.0.0.2
+        } finally {
+            \putenv('http_proxy');
+        }
+
+        foreach ([$proxy, $target] as $server) {
+            $connection = @\stream_socket_accept($server, 0.2);
+            $received = '';
+            if ($connection !== false) {
+                \stream_set_blocking($connection, false);
+                $received = (string) \fread($connection, 1024);
+            }
+
+            $this->assertSame('', $received);
+        }
+    }
+
     /**
      * @param array<int, mixed> $transportOptions
      */
-    protected function createAdapter(array $transportOptions = []): Adapter
+    protected function newAdapter(array $transportOptions = []): Adapter
     {
         return new Client(new Response\Factory(), new Stream\Factory(), $transportOptions);
     }

@@ -1,0 +1,47 @@
+---
+layout: article
+title: Automations
+description: Learn how Appwrite Agent automations run scheduled prompts and create conversations on a cron schedule.
+---
+
+**Automations** run Agent prompts on a schedule. Each run creates a **new conversation** with your prompt, optional model, and project context so you can review the result later the same way you read an ordinary Agent thread.
+
+Use automations for recurring checks you would otherwise open the Console to do by hand: weekly summaries, deployment hygiene, or "what changed?" reviews for a project you do not visit every day. Manage them from `/agent/automations` or the Agent automations panel.
+
+# What an automation contains {% #what-an-automation-contains %}
+
+| Field | Purpose |
+|-------|---------|
+| Name | Label in the automations list |
+| Prompt | The message sent to the Agent on each run |
+| Schedule | Cron expression (UI helpers cover common weekly and daily patterns; default is weekly on Monday) |
+| Title prefix | Optional prefix for conversation titles created by the run |
+| Model | Optional custom or default model for the run |
+| Enabled | Whether the schedule is active |
+| Context project | Project used as context when the automation runs (resolved the same way as chat project context) |
+
+# How runs work {% #how-runs-work %}
+
+When the schedule fires, Appwrite creates a new conversation linked to the automation, then processes the prompt with the configured model and project context. You open that conversation to read the output, tool activity, and any resource cards or charts.
+
+Automation conversations are **not** mixed into the main Agents list. They stay under the automation so scheduled noise does not bury your ad-hoc threads. Opening a run by URL still works if you have the conversation id.
+
+Disable an automation to pause the schedule without deleting it. Enable it again when you want runs to resume. Delete an automation when you no longer need the schedule or its configuration.
+
+# Writing a good automation prompt {% #writing-prompts %}
+
+Write the prompt as if you were messaging the Agent once, with enough detail that it does not need you present to clarify. Name the project concerns you care about, the format you want (short bullets, table, checklist), and whether the run should only report or also take actions.
+
+Runs that only need guidance can work without MCP. Runs that must list or change live resources need [Appwrite MCP](/docs/products/agent/mcp) connected and enabled on the account that owns the automation. There is no separate MCP toggle on the automation itself; it uses your account’s Agent MCP connection at run time.
+
+# Example use cases {% #example-use-cases %}
+
+**Weekly Auth review**: Ask for a short summary of recent signups, verification issues, and anything that looks like abuse, formatted as a checklist you can skim on Monday.
+
+**Deployment hygiene**: Ask whether Functions or Sites have failed deployments, stale builds, or domains that need attention, and link to the resources that need a human.
+
+**Quiet project pulse**: For a project you do not open daily, ask what changed in storage, databases, or messaging since the last check, and keep the answer short unless something looks wrong.
+
+{% arrow_link href="/docs/products/agent/create-automation" %}
+Create an automation
+{% /arrow_link %}

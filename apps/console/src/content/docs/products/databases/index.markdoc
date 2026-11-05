@@ -1,0 +1,46 @@
+---
+layout: article
+title: Databases
+description: Store and query app data with Appwrite Databases. Use TablesDB, DocumentsDB, and VectorsDB, or host managed PostgreSQL and MySQL with direct SQL access.
+---
+
+Appwrite Databases provide performant and scalable storage for your application, business, and user data. Choose the database that fits your use case, from managed APIs with permissions and realtime to dedicated native engines you connect to directly.
+
+{% info title="Looking for file storage?" %}
+Databases store data. If you need to store files like images, PDFs, or videos, use [Appwrite Storage](/docs/products/storage).
+{% /info %}
+
+# Appwrite databases {% #appwrite-databases %}
+
+Managed databases with an Appwrite API on top, including permissions, indexes, queries, and realtime. Available on shared and dedicated infrastructure.
+
+{% cards %}
+{% cards_item href="/docs/products/databases/tablesdb" title="TablesDB" %}
+Structured, relational data with typed columns, rows, relationships, and indexes.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/documentsdb" title="DocumentsDB" %}
+Schemaless document storage for flexible, JSON-style data.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/vectorsdb" title="VectorsDB" %}
+Store embeddings and run similarity search to power AI features.
+{% /cards_item %}
+{% /cards %}
+
+# Shared and dedicated databases {% #shared-and-dedicated %}
+
+An Appwrite database runs either on a shared pool that Appwrite manages for you, or on compute provisioned for your project alone.
+
+If you leave `specification` out when creating a database, it lands on the shared pool and is ready to use as soon as the call returns. If you pass a specification, Appwrite provisions a dedicated database on that tier, which you can then resize, replicate, and fail over. Collections and rows or documents work through the same methods either way.
+
+# Native databases {% #native-databases %}
+
+Native database engines provisioned for your project with direct connection access and no abstraction layer. Available on dedicated infrastructure.
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql" title="Managed PostgreSQL" %}
+Hosted PostgreSQL with direct connections, backups, pgvector, and full SQL.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/mysql" title="MySQL" %}
+A dedicated, native MySQL database you connect to directly.
+{% /cards_item %}
+{% /cards %}
