@@ -23,14 +23,16 @@ FROM appwrite/base:2.0.0 AS ffmpeg
 # Alpine's apk ffmpeg is an older line and is not what the library CI tests against.
 # GnuTLS gives ffmpeg its https protocol: the videos worker reads S3 sources over
 # a presigned URL, and without a TLS library ffmpeg has no https at all.
+# Cloned from the GitHub mirror at the release tag, like every other pinned source
+# the utopia libraries build; ffmpeg.org drops connections from CI runners.
 ARG FFMPEG_VERSION=8.1.2
 
 RUN apk add --no-cache \
-        build-base nasm pkgconf curl xz \
+        build-base nasm pkgconf git \
         x264-dev x265-dev libvpx-dev opus-dev lame-dev zlib-dev \
         libtheora-dev libvorbis-dev gnutls-dev \
-    && curl -fsSL "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz" | tar -xJ -C /tmp \
-    && cd "/tmp/ffmpeg-${FFMPEG_VERSION}" \
+    && git clone --depth 1 --branch "n${FFMPEG_VERSION}" https://github.com/FFmpeg/FFmpeg.git /tmp/ffmpeg \
+    && cd /tmp/ffmpeg \
     && ./configure \
         --prefix=/opt/ffmpeg \
         --enable-gpl \
@@ -47,7 +49,7 @@ RUN apk add --no-cache \
         --disable-ffplay \
     && make -j"$(nproc)" \
     && make install \
-    && rm -rf "/tmp/ffmpeg-${FFMPEG_VERSION}"
+    && rm -rf /tmp/ffmpeg
 
 FROM appwrite/base:2.2.9 AS base
 
