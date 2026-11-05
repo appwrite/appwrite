@@ -77,20 +77,20 @@ class Update extends Base
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Site ID.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Site name. Max length: 128 chars.')
             ->param('framework', '', new WhiteList(\array_keys(Config::getParam('frameworks')), true), 'Sites framework.', enum: new Enum(name: 'Framework'))
-            ->param('enabled', true, new Boolean(), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
-            ->param('logging', true, new Boolean(), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
-            ->param('timeout', 30, new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30)), 'Maximum request time in seconds.', true)
-            ->param('installCommand', '', new Text(8192, 0), 'Install Command.', true)
-            ->param('buildCommand', '', new Text(8192, 0), 'Build Command.', true)
-            ->param('startCommand', '', new Text(8192, 0), 'Custom start command. Leave empty to use default.', true)
-            ->param('outputDirectory', '', new Text(8192, 0), 'Output Directory for site.', true)
+            ->param('enabled', null, new Nullable(new Boolean()), 'Is site enabled? When set to \'disabled\', users cannot access the site but Server SDKs with and API key can still access the site. No data is lost when this is toggled.', true)
+            ->param('logging', null, new Nullable(new Boolean()), 'When disabled, request logs will exclude logs and errors, and site responses will be slightly faster.', true)
+            ->param('timeout', null, new Nullable(new Range(1, (int) System::getEnv('_APP_SITES_TIMEOUT', 30))), 'Maximum request time in seconds.', true)
+            ->param('installCommand', null, new Nullable(new Text(8192, 0)), 'Install Command.', true)
+            ->param('buildCommand', null, new Nullable(new Text(8192, 0)), 'Build Command.', true)
+            ->param('startCommand', null, new Nullable(new Text(8192, 0)), 'Custom start command. Leave empty to use default.', true)
+            ->param('outputDirectory', null, new Nullable(new Text(8192, 0)), 'Output Directory for site.', true)
             ->param('buildRuntime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Runtime to use during build step.', true, enum: new Enum(name: 'BuildRuntime'))
-            ->param('adapter', '', new WhiteList(['static', 'ssr']), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
-            ->param('fallbackFile', '', new Text(255, 0), 'Fallback file for single page application sites.', true)
+            ->param('adapter', null, new Nullable(new WhiteList(['static', 'ssr'])), 'Framework adapter defining rendering strategy. Allowed values are: static, ssr', true, enum: new Enum(name: 'Adapter'))
+            ->param('fallbackFile', null, new Nullable(new Text(255, 0)), 'Fallback file for single page application sites.', true)
             ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
             ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
-            ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
+            ->param('providerSilentMode', null, new Nullable(new Boolean()), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
             ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
@@ -101,13 +101,13 @@ class Update extends Base
                 System::getEnv('_APP_COMPUTE_MEMORY', 0),
                 'buildSpecifications'
             )), 'Build specification for the site deployments.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('runtimeSpecification', fn (array $plan) => $this->getDefaultSpecification($plan), fn (array $plan) => new Specification(
+            ->param('runtimeSpecification', null, fn (array $plan) => new Nullable(new Specification(
                 $plan,
                 Config::getParam('specifications', []),
                 System::getEnv('_APP_COMPUTE_CPUS', 0),
                 System::getEnv('_APP_COMPUTE_MEMORY', 0)
-            ), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
-            ->param('deploymentRetention', 0, new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
+            )), 'Runtime specification for the SSR executions.', true, ['plan'], example: 's-1vcpu-512mb')
+            ->param('deploymentRetention', null, new Nullable(new Range(0, APP_COMPUTE_DEPLOYMENT_MAX_RETENTION)), 'Days to keep non-active deployments before deletion. Value 0 keeps all deployments unless the server applies a default retention.', true)
             ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(\array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_SCOPES_SIZE)), 'List of scopes allowed for API key auto-generated for every site build and SSR execution. Maximum of ' . APP_LIMIT_ARRAY_SCOPES_SIZE . ' scopes are allowed.', true, enum: new Enum(name: 'ProjectKeyScopes'))
             ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the site.', true)
             ->inject('request')
@@ -134,26 +134,26 @@ class Update extends Base
         string $siteId,
         string $name,
         string $framework,
-        bool $enabled,
-        bool $logging,
-        int $timeout,
-        string $installCommand,
-        string $buildCommand,
-        string $startCommand,
-        string $outputDirectory,
+        ?bool $enabled,
+        ?bool $logging,
+        ?int $timeout,
+        ?string $installCommand,
+        ?string $buildCommand,
+        ?string $startCommand,
+        ?string $outputDirectory,
         string $buildRuntime,
-        string $adapter,
-        string $fallbackFile,
+        ?string $adapter,
+        ?string $fallbackFile,
         string $installationId,
         ?string $providerRepositoryId,
         string $providerBranch,
-        bool $providerSilentMode,
+        ?bool $providerSilentMode,
         string $providerRootDirectory,
         ?array $providerBranches,
         ?array $providerPaths,
         ?string $buildSpecification,
-        string $runtimeSpecification,
-        int $deploymentRetention,
+        ?string $runtimeSpecification,
+        ?int $deploymentRetention,
         ?array $scopes,
         ?string $description,
         Request $request,
@@ -221,6 +221,18 @@ class Update extends Base
 
         $description ??= $site->getAttribute('description', '');
         $buildSpecification ??= $site->getAttribute('buildSpecification', APP_SITES_BUILD_SPECIFICATION_DEFAULT);
+        $runtimeSpecification ??= $site->getAttribute('runtimeSpecification', APP_COMPUTE_SPECIFICATION_DEFAULT);
+        $enabled ??= $site->getAttribute('enabled', true);
+        $logging ??= $site->getAttribute('logging', true);
+        $timeout ??= $site->getAttribute('timeout', 30);
+        $installCommand ??= $site->getAttribute('installCommand', '');
+        $buildCommand ??= $site->getAttribute('buildCommand', '');
+        $startCommand ??= $site->getAttribute('startCommand', '');
+        $outputDirectory ??= $site->getAttribute('outputDirectory', '');
+        $adapter ??= $site->getAttribute('adapter', '');
+        $fallbackFile ??= $site->getAttribute('fallbackFile', '');
+        $providerSilentMode ??= $site->getAttribute('providerSilentMode', false);
+        $deploymentRetention ??= $site->getAttribute('deploymentRetention', 0);
 
         $repositoryId = $site->getAttribute('repositoryId', '');
         $repositoryInternalId = $site->getAttribute('repositoryInternalId', '');
