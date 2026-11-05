@@ -75,7 +75,7 @@ jobs:
             digest_arm64: ${{ matrix.arch == 'arm64' && steps.build.outputs.digest || '' }}
         steps:
             - name: Checkout the repo
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
 
@@ -187,7 +187,7 @@ jobs:
             digest_arm64: ${{ matrix.arch == 'arm64' && steps.build.outputs.digest || '' }}
         steps:
             - name: Checkout the repo
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
 
@@ -283,7 +283,7 @@ jobs:
             packages: read
         steps:
             - name: Checkout the repo
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
 
@@ -339,7 +339,7 @@ jobs:
                   permission-contents: write
 
             - name: Checkout ${{ env.DECLARATIVE_REPOSITORY }}
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 # zizmor: ignore[artipacked] the push below uses these credentials
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6.0.2 # zizmor: ignore[artipacked] the push below uses these credentials
               with:
                   repository: ${{ env.DECLARATIVE_OWNER }}/${{ env.DECLARATIVE_REPOSITORY }}
                   token: ${{ steps.app-token.outputs.token }}
