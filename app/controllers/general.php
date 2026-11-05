@@ -735,8 +735,9 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
 
                 // Cloud-only site attributes; absent on self-hosted, so this never applies there.
+                // Banner-disabled keys are the screenshot worker's; its captures are not visits.
                 $propertyId = $resource->getAttribute('analyticsPropertyId', '');
-                if ($type === 'site' && !$isPreview && $resource->getAttribute('analyticsEnabled', false) === true && !empty($propertyId)) {
+                if ($type === 'site' && !$isPreview && $apiKey?->isBannerDisabled() !== true && $resource->getAttribute('analyticsEnabled', false) === true && !empty($propertyId)) {
                     $web = \array_values(\array_filter(
                         Config::getParam('sdks')[APP_SDK_PLATFORM_CLIENT]['sdks'],
                         fn (array $sdk) => $sdk['key'] === 'web'
