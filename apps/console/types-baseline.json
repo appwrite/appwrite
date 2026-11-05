@@ -798,7 +798,6 @@
     "TS6133: 'ArrowLeft' is declared but its value is never read.": 1
   },
   "src/components/pages/projects/$projectId/overview/Overview.tsx": {
-    "TS2304: Cannot find name 'AddAppKind'.": 2,
     "TS2322: Type '{ className: string; isPanelVisible: boolean; dateRange: DateRange; chartInterval: UsageChartInterval; chartData: OverviewStorageChartPoint[]; isLoading: boolean; isRefreshing: boolean; isError: boolean; onRetry: (() => undefined) | undefined; upgradeOrgId: string | undefined; errorTitle: string; errorMessage: Element; }' is not assignable to type 'IntrinsicAttributes & OverviewStorageChartProps'.": 1,
     "TS2322: Type 'null | undefined | { keys?: unknown[] | undefined; }' is not assignable to type 'KeyList | null | undefined'.": 1
   },
