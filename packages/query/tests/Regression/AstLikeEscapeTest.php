@@ -219,4 +219,34 @@ final class AstLikeEscapeTest extends TestCase
         $this->assertSame('SELECT * FROM `t` WHERE `a` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['50!%%'], $result->bindings);
     }
+
+    public function testFromAstKeepsUnmappedLikeInsideOr(): void
+    {
+        $tokens = Tokenizer::filter(new MySQLTokenizer()->tokenize("SELECT * FROM t WHERE name LIKE 'a%' ESCAPE '' OR id = 1"));
+        $result = MySQL::fromAst(new Parser()->parse($tokens))->build();
+
+        $this->assertSame('SELECT * FROM `t` WHERE ((`name` LIKE \'a%\' ESCAPE \'\') OR `id` IN (?))', $result->query);
+        $this->assertSame([1], $result->bindings);
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function wildcardEscapes(): array
+    {
+        return [
+            'percent' => ['%%abc', '%'],
+            'underscore' => ['__abc%', '_'],
+        ];
+    }
+
+    #[DataProvider('wildcardEscapes')]
+    public function testFromAstKeepsWildcardEscapeRaw(string $pattern, string $escape): void
+    {
+        $tokens = Tokenizer::filter(new MySQLTokenizer()->tokenize("SELECT * FROM t WHERE a LIKE '{$pattern}' ESCAPE '{$escape}'"));
+        $result = MySQL::fromAst(new Parser()->parse($tokens))->build();
+
+        $this->assertSame("SELECT * FROM `t` WHERE (`a` LIKE '{$pattern}' ESCAPE '{$escape}')", $result->query);
+        $this->assertSame([], $result->bindings);
+    }
 }

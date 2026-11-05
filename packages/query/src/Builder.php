@@ -2711,13 +2711,13 @@ abstract class Builder implements
             return $left;
         }
 
-        $query = $this->astExpressionToSingleQuery($expression);
-        if ($query !== null) {
-            return [$query];
-        }
+        return [$this->astExpressionToQuery($expression)];
+    }
 
-        $serializer = $this->createAstSerializer();
-        return [Query::raw($serializer->serializeExpression($expression))];
+    private function astExpressionToQuery(Expression $expression): Query
+    {
+        return $this->astExpressionToSingleQuery($expression)
+            ?? Query::raw($this->createAstSerializer()->serializeExpression($expression));
     }
 
     private function astExpressionToSingleQuery(Expression $expression): ?Query
@@ -2733,19 +2733,10 @@ abstract class Builder implements
             }
 
             if ($op === 'OR') {
-                $leftQ = $this->astExpressionToSingleQuery($expression->left);
-                $rightQ = $this->astExpressionToSingleQuery($expression->right);
-                $parts = [];
-                if ($leftQ !== null) {
-                    $parts[] = $leftQ;
-                }
-                if ($rightQ !== null) {
-                    $parts[] = $rightQ;
-                }
-                if (!empty($parts)) {
-                    return Query::or($parts);
-                }
-                return null;
+                return Query::or([
+                    $this->astExpressionToQuery($expression->left),
+                    $this->astExpressionToQuery($expression->right),
+                ]);
             }
 
             if ($expression->left instanceof Column && $expression->right instanceof Literal) {
@@ -2810,6 +2801,10 @@ abstract class Builder implements
         }
 
         $escapeCharacter = $escape instanceof Literal ? (string) $escape->value : static::IMPLICIT_LIKE_ESCAPE;
+
+        if ($escapeCharacter === self::LIKE_WILDCARD || $escapeCharacter === self::LIKE_SINGLE_WILDCARD) {
+            return null;
+        }
         $decoded = $this->decodeLikePattern($pattern, $escapeCharacter);
 
         if ($decoded === null || $decoded[0] === false && $decoded[2] === false) {

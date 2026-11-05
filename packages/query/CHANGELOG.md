@@ -106,7 +106,11 @@ All notable changes to `utopia-php/query` are documented in this file.
   serializes to `a LIKE '50%%'`. `fromAst()` reads the pattern back with its
   declared escape character, or the dialect's implicit one, into
   `startsWith()`, `endsWith()` and `contains()` with the unescaped value; a
-  pattern with other wildcards stays raw with its `ESCAPE` clause.
+  pattern with other wildcards, or whose escape character is `%` or `_`,
+  stays raw with its `ESCAPE` clause.
+- `fromAst()` keeps an OR operand it cannot map to a `Query` as a raw
+  condition. It dropped it, so `a LIKE 'x%' ESCAPE '' OR id = 1` read back as
+  `id = 1` alone.
 
 ## 0.7.2
 
