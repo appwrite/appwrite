@@ -1,8 +1,8 @@
 ---
 layout: post
-title: How Creators Mind runs 1,100+ coaching apps on Appwrite
-description: Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite that powers 1,100+ coaching apps for Indian educators and reaches nearly 10 million students.
-date: 2026-10-29
+title: How Creators Mind runs 2,600+ coaching apps on Appwrite
+description: Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite that powers 2,600+ coaching apps for Indian educators and reaches nearly 10 million students.
+date: 2026-11-06
 cover: /images/blog/customer-story-creators-mind/cover.avif
 timeToRead: 6
 author: aditya-oberai
@@ -19,14 +19,14 @@ faqs:
   - question: "Can Appwrite host many apps for many clients in one account?"
     answer: "Yes. An Appwrite organization can hold many projects, and each project has its own databases, users, functions, and sites. Creators Mind uses this structure to give each educator an isolated backend while managing them from one [Appwrite Cloud](https://cloud.appwrite.io) account."
   - question: "What Appwrite plan is Creators Mind on?"
-    answer: "Creators Mind is on the Appwrite Pro plan. Its Appwrite Cloud organization hosts about 90% of the company's 1,100+ educator apps, and media files are stored on Amazon S3, which the team manages separately."
+    answer: "Creators Mind is on the Appwrite Pro plan. Its Appwrite Cloud organization hosts about 90% of the company's 2,600+ educator apps, and media files are stored on Amazon S3, which the team manages separately."
 ---
 
 Mohnish Vats started out building websites and apps for clients in Patna, India. Most of those clients turned out to be the same kind of person: a YouTuber or a coaching teacher who had built an audience and wanted to sell courses to it. Around 80% of his first 30 clients were educators.
 
 They all wanted the same thing: a branded app where students could watch live classes, take tests, download notes, and pay fees. So rather than build it from scratch each time, Mohnish and his brothers built it once, and named the company [Creators Mind](https://www.creatorsmind.co.in/).
 
-Three years later, that one app runs as more than 1,100 separate apps, each carrying a different coaching institute's name, and the students using them add up to almost 10 million people. **Every one of those apps runs on Appwrite.**
+Three years later, that one app runs as more than 2,600 separate apps, each carrying a different coaching institute's name, and the students using them add up to almost 10 million people. **Every one of those apps runs on Appwrite.**
 
 # The challenge
 
@@ -73,7 +73,7 @@ Appwrite's pricing took care of the second problem. The [Pro plan](/docs/advance
 
 About 90% of Creators Mind's educators run on this shared Appwrite Cloud setup. The remaining 10% ask for their own server, and Creators Mind deploys the same app there with a maintenance fee instead of a revenue share. Because Appwrite is open source and can be [self-hosted](/docs/advanced/self-hosting), the app, data model, and functions move to the educator's infrastructure unchanged.
 
-Mohnish also runs a second company, Super Squad, which builds apps, websites, and AI automation for clients outside education. In the past, clients there often arrived asking for Supabase specifically because their projects needed PostgreSQL. Now the team is evaluating [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql) for some of those projects, for a few reasons:
+Mohnish also runs a second company, SuperSquare, which builds apps, websites, and AI automation for clients outside education. In the past, clients there often arrived asking for Supabase specifically because their projects needed PostgreSQL. Now the team is evaluating [Appwrite's managed PostgreSQL](/docs/products/databases/postgresql) for some of those projects, for a few reasons:
 
 - **It's standard PostgreSQL.** Clients get the engine they asked for, with `psql`, any PostgreSQL driver, their own ORM, and extensions like pgvector for the AI automation work.
 - **Mohnish's team already knows the platform.** After three years on Appwrite, a PostgreSQL database is one more resource in a Console they use every day, running in the project's region with its usage tracked alongside everything else.
@@ -83,7 +83,7 @@ Mohnish also runs a second company, Super Squad, which builds apps, websites, an
 
 The company that started as three brothers now has 105 people, an organic following of tens of thousands of educators, and, by Mohnish's account, the top-selling classroom hardware business in Bihar, India. Where the business stands today:
 
-- **More than 1,100 educator apps live** on the platform
+- **More than 2,600 educator apps live** on the platform
 - Almost **10 million students** reached
 - **About $1.1 million (₹9.5 crore) in revenue last financial year**, about 30% of it from software
 - **Three years on Appwrite**, from self-hosting to the Cloud beta to the Pro plan
@@ -92,4 +92,4 @@ None of that growth is paid. Educators find Creators Mind through other educator
 
 > "Appwrite gives us the backend power to build, ship, and scale without the backend overhead."
 
-Creators Mind is a white-label product that grew to more than 1,100 brands on a single backend design. Every educator's app starts as a copy of one base project, data model and functions included, with the educator's branding on top, so onboarding the next educator is the same job as onboarding the first. Learn more about Creators Mind on its [website](https://www.creatorsmind.co.in/) and [LinkedIn](https://www.linkedin.com/company/creators-mind/).
+Creators Mind is a white-label product that grew to more than 2,600 brands on a single backend design. Every educator's app starts as a copy of one base project, data model and functions included, with the educator's branding on top, so onboarding the next educator is the same job as onboarding the first. Learn more about Creators Mind on its [website](https://www.creatorsmind.co.in/) and [LinkedIn](https://www.linkedin.com/company/creators-mind/).
