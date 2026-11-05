@@ -379,7 +379,11 @@ class Create extends Action
         $key = $indexDef['key'];
         $type = $indexDef['type'];
         $indexAttributes = $indexDef['attributes'];
-        $orders = $indexDef['orders'] ?? [];
+        // Normalize orders to the uppercase ASC/DESC the database adapter requires.
+        $orders = \array_map(
+            fn ($order) => \is_string($order) ? \strtoupper($order) : $order,
+            $indexDef['orders'] ?? []
+        );
         $lengths = $indexDef['lengths'] ?? [];
 
         $attributesByKey = [];
