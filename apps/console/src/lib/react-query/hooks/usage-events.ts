@@ -94,7 +94,6 @@ import {
   fetchProjectDatabaseDocumentsOverview,
   fetchProjectDatabaseReadsOverview,
   fetchProjectDatabaseWritesOverview,
-  type DatabaseUsageChartOverview,
 } from '@/lib/usage/database-usage'
 import {
   DATABASE_OPERATIONS_BREAKDOWN_SECTIONS,
@@ -114,30 +113,24 @@ import {
   fetchProjectRealtimeBandwidthOverview,
   fetchProjectRealtimeConnectionsOverview,
   fetchProjectRealtimeMessagesOverview,
-  type RealtimeBandwidthOverview,
-  type RealtimeUsageChartOverview,
 } from '@/lib/usage/realtime-usage'
 import {
   fetchProjectAuthMauOverview,
   fetchProjectAuthOtpOverview,
   fetchProjectAuthSignupsOverview,
-  type AuthUsageChartOverview,
 } from '@/lib/usage/auth-usage'
 import {
   fetchProjectAvatarsScreenshotsOverview,
-  type AvatarsUsageChartOverview,
 } from '@/lib/usage/avatars-usage'
 import {
   fetchProjectMessagingMessagesOverview,
   fetchProjectMessagingSmsOverview,
   fetchProjectMessagingTopicsOverview,
-  type MessagingUsageChartOverview,
 } from '@/lib/usage/messaging-usage'
 import {
   fetchProjectWebhooksCountOverview,
   fetchProjectWebhooksEventsFailedOverview,
   fetchProjectWebhooksEventsSentOverview,
-  type WebhooksUsageChartOverview,
 } from '@/lib/usage/webhooks-usage'
 import {
   appendUsageFiltersToQueryKey,
