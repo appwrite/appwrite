@@ -2986,6 +2986,56 @@ trait MessagingBase
         }, 10000, 500);
     }
 
+    public function testScheduledToDraftSms(): void
+    {
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => Id::unique(),
+            'phone' => '+1' . \random_int(2000000000, 9999999999),
+        ]);
+
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 5);
+
+        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => Id::unique(),
+            'targets' => [$user['body']['targets'][0]['$id']],
+            'content' => 'Scheduled SMS',
+            'scheduledAt' => $scheduledAt,
+        ]);
+
+        $this->assertEquals(201, $message['headers']['status-code']);
+
+        $draft = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $message['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => true,
+        ]);
+
+        $this->assertEquals(MessageStatus::DRAFT, $draft['body']['status']);
+
+        // Still a draft once the original schedule time has passed
+        $this->assertEventually(function () use ($message, $scheduledAt) {
+            $this->assertGreaterThan(\strtotime($scheduledAt) + 10, \time());
+
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
+        }, 30000, 1000);
+    }
+
     public function testDraftToScheduledMessage(): void
     {
         // Create user
