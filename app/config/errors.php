@@ -870,11 +870,6 @@ return [
         'description' => 'A collection with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::COLLECTION_LIMIT_EXCEEDED => [
-        'name' => Exception::COLLECTION_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of collections for database \'%s\' has been reached.',
-        'code' => 400,
-    ],
 
     /** Tables */
     Exception::TABLE_NOT_FOUND => [
@@ -886,11 +881,6 @@ return [
         'name' => Exception::TABLE_ALREADY_EXISTS,
         'description' => 'A table with the requested ID \'%s\' already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
-    ],
-    Exception::TABLE_LIMIT_EXCEEDED => [
-        'name' => Exception::TABLE_LIMIT_EXCEEDED,
-        'description' => 'The maximum number of tables for database \'%s\' has been reached.',
-        'code' => 400,
     ],
 
     /** Documents */

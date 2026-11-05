@@ -235,12 +235,10 @@ class Exception extends \Exception
     /** Collections */
     public const string COLLECTION_NOT_FOUND = 'collection_not_found';
     public const string COLLECTION_ALREADY_EXISTS = 'collection_already_exists';
-    public const string COLLECTION_LIMIT_EXCEEDED = 'collection_limit_exceeded';
 
     /** Tables */
     public const string TABLE_NOT_FOUND = 'table_not_found';
     public const string TABLE_ALREADY_EXISTS = 'table_already_exists';
-    public const string TABLE_LIMIT_EXCEEDED = 'table_limit_exceeded';
 
     /** Documents */
     public const string DOCUMENT_NOT_FOUND = 'document_not_found';
