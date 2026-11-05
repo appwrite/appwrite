@@ -23,18 +23,7 @@ The command reads the bundle ID and team ID from your Xcode project (or `app.jso
 - Adds an Apple platform for the bundle ID to your project if it has none. Without one, Appwrite rejects your app's requests, device registration included.
 - Checks with Apple that the bundle ID is registered as an App ID with Push Notifications turned on. APNs rejects pushes for any other bundle ID with `TopicDisallowed`. The CLI asks before it signs in to Apple or changes anything.
 
-In an Expo project, `expo prebuild` regenerates the `ios` folder and drops these changes. Set them in `app.json` (or `app.config.json`) as well:
-
-{% table %}
-* Setting
-* Value
----
-* `expo.ios.entitlements["aps-environment"]`
-* `"development"`
----
-* `expo.ios.infoPlist.UIBackgroundModes`
-* `["remote-notification"]`, added to any modes you already have
-{% /table %}
+In an Expo project, also set the entitlement and background mode in `app.json`, because `expo prebuild` regenerates the `ios` folder. The CLI prints the exact keys to add.
 
 ## Provide a key {% #key %}
 
@@ -52,7 +41,24 @@ When the CLI creates a key:
 - It saves the key as `AuthKey_<KEYID>.p8` in your project folder. Apple lets you download a key only once, so keep the file somewhere safe and out of version control. The CLI warns you when git would commit it.
 - Apple allows two APNs keys per team, and one key works for every app on the team. When both are taken, the CLI lists them and stops. Pass `--key-path` with a key you saved earlier, or revoke one you no longer use in the Apple Developer portal.
 - It saves your Apple sign-in, so later runs skip the password and two-factor code until Apple expires the session. The `appwrite` and `expo` setups keep it in `~/.appwrite/apns/<setup>/`, readable only by you. The `fastlane` setup uses fastlane's own saved session. `--reset` signs in again and creates a new key.
-- It signs in to Apple through one of three setups: `appwrite` (the default), `expo` (`@expo/apple-utils`), or `fastlane` (spaceship). If one stops working, switch with `--provider` or the `APPWRITE_APNS_SETUP` environment variable, for example `--provider fastlane`. This only picks how the CLI signs in to Apple. It has nothing to do with the APNs providers in your Appwrite project.
+
+The CLI can sign in to Apple in three ways. Pick one with `--provider` or the `APPWRITE_APNS_SETUP` environment variable. If one stops working, switch to another.
+
+{% table %}
+* Setup
+* Built on
+---
+* `appwrite` (default)
+* The CLI's own Apple client
+---
+* `expo`
+* `@expo/apple-utils`
+---
+* `fastlane`
+* fastlane's spaceship
+{% /table %}
+
+`--provider` only picks how the CLI signs in to Apple. It doesn't change the APNs providers in your Appwrite project.
 
 ## Run it again {% #rerun %}
 

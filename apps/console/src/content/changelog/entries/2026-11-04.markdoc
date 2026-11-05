@@ -6,13 +6,13 @@ cover: /images/blog/announcing-apns-one-click-setup/cover.avif
 tags: messaging, cli
 ---
 
-The Appwrite CLI now sets up push notifications for iOS apps. Run `appwrite init apns` in your project and it creates the [APNs](/docs/products/messaging/apns#one-click-setup) production and sandbox providers, adds the push entitlement and background mode to your Xcode target, adds an Apple platform for the bundle ID, and checks with Apple that the App ID has Push Notifications on.
+Run `appwrite init apns` in your iOS project and the [Appwrite CLI](/docs/tooling/command-line/installation) sets up push notifications in one command. It:
 
-It reads the bundle ID and team ID from your Xcode project or Expo `app.json`, and the key ID from the `.p8` file name. With `--create-key`, the CLI signs in with your Apple ID and creates the APNs key for you, no Apple Developer portal needed.
-
-```bash
-appwrite init apns --create-key
-```
+- Creates the production and sandbox [APNs providers](/docs/products/messaging/apns#one-click-setup).
+- Adds the push entitlement and background mode to your Xcode target.
+- Adds an Apple platform for your bundle ID.
+- Checks with Apple that your App ID has Push Notifications on.
+- Creates the APNs key for you with `--create-key`, so you can skip the Apple Developer portal.
 
 {% arrow_link href="/blog/post/announcing-apns-one-click-setup" %}
 Read the announcement
