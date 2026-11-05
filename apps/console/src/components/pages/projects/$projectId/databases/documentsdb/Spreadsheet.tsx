@@ -117,6 +117,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Query, type Models } from '@appwrite.io/console'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
+import { parseNumericField } from '@/lib/numeric-field'
 import type { editor } from 'monaco-editor'
 import {
   dbNavLink,
@@ -1899,15 +1900,8 @@ function RowEditDrawer({
                                                 return null
                                               }
                                             })()
-                                          : (() => {
-                                              const parsed =
-                                                fieldType === 'integer'
-                                                  ? parseInt(e.target.value, 10)
-                                                  : parseFloat(e.target.value)
-                                              return Number.isNaN(parsed)
-                                                ? null
-                                                : parsed
-                                            })()
+                                          : (parseNumericField(e.target.value) ??
+                                            null)
                                     handleFieldChange(key, val)
                                   }}
                                   min={
