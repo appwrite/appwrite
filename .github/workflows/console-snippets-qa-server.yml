@@ -465,7 +465,7 @@ jobs:
 
       - name: Install Swift
         if: startsWith(matrix.id, 'swift')
-        uses: swift-actions/setup-swift@7ca6abe6b3b0e8b5421b88be48feee39cbf52c6a # v2.4.0
+        uses: swift-actions/setup-swift@364295d9c23900ce04d4e5cc708387921b4e50f9 # v3
         with:
           swift-version: "6.1"
 
