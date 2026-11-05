@@ -121,6 +121,8 @@ class XList extends Action
             }
 
             $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+            $rule->setAttribute('expireAt', $certificate->getAttribute('expireDate', ''));
+            $rule->setAttribute('certificateStatus', $certificate->getAttribute('status', ''));
 
             // Rename 'created' status to 'unverified' for consistency.
             // 'verifying' and 'verified' statuses stay as is.

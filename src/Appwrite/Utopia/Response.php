@@ -351,6 +351,7 @@ class Response extends SwooleResponse
     public const MODEL_OAUTH2_RESEND = 'oAuth2Resend';
     public const MODEL_OAUTH2_TIKTOK = 'oAuth2TikTok';
     public const MODEL_OAUTH2_KAKAO = 'oAuth2Kakao';
+    public const MODEL_OAUTH2_VIPPS = 'oAuth2Vipps';
     public const MODEL_OAUTH2_PROVIDER_LIST = 'oAuth2ProviderList';
 
     // Health
@@ -373,6 +374,8 @@ class Response extends SwooleResponse
     public const MODEL_REVIEW = 'review';
     public const MODEL_REVIEW_LIST = 'reviewList';
     public const MODEL_REVIEW_FINDING = 'reviewFinding';
+    public const MODEL_REVIEW_EVENT = 'reviewEvent';
+    public const MODEL_REVIEW_EVENT_LIST = 'reviewEventList';
     public const MODEL_REVIEW_REPOSITORY = 'reviewRepository';
     public const MODEL_REVIEW_REPOSITORY_LIST = 'reviewRepositoryList';
 

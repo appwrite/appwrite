@@ -580,11 +580,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
         $streamed = null;
         $streamParts = [];
         $streamBody = '';
-        $canStreamResponse = $type === 'site'
-            && !$isPreview
-            && System::getEnv('_APP_COMPUTE_STREAMING', 'disabled') === 'enabled';
+        $canStreamResponse = !$isPreview
+            && System::getEnv('_APP_COMPUTE_STREAMING', 'enabled') === 'enabled';
 
-        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView): void {
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView, $type): void {
             if ($name !== 'body') {
                 // Only the parts read below, and only while they still can be.
                 if ($streamed === null) {
@@ -606,7 +605,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $streamed = $statusCode < 400;
 
                 if ($streamed) {
-                    $headers['x-appwrite-log-id'] = $execution->getId();
+                    $headers[$type === 'function' ? 'x-appwrite-execution-id' : 'x-appwrite-log-id'] = $execution->getId();
 
                     $contentType = 'text/plain';
 
@@ -640,8 +639,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 return;
             }
 
-            if ($chunk !== '') {
-                $response->chunk($chunk);
+            if (!$response->stream($chunk)) {
+                throw new \RuntimeException('Failed to write response chunk.');
             }
         };
 
@@ -717,7 +716,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
             // Ended only here, once the executor has confirmed the rest of the envelope arrived.
             if ($streamed === true) {
-                $response->chunk('', true);
+                $response->stream('', true);
             }
 
             $headerOverrides = [];

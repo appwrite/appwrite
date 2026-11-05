@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\Email;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\PasswordPwned;
 use Appwrite\Bus\Events\SessionCreated;
@@ -74,9 +75,10 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'projectId:{projectId},url:{url},email:{param-email}')
-            ->label('abuse-reset', [201])
+            ->label('abuse', [
+                Limit::failures(['projectId', 'url', 'param.email'], 10),
+                Limit::failures(['projectId', 'url', 'ip'], 100),
+            ])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
             ->param('duration', null, new Nullable(new Range(60, TOKEN_EXPIRATION_LOGIN_LONG)), 'Session length in seconds. Minimum is 60 seconds, and it cannot exceed the project maximum session length. Defaults to the project maximum session length.', true)

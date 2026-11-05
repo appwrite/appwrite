@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Account\Http\Account\JWTs;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\EncryptionKey;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -54,9 +55,7 @@ class Create extends Action
                 contentType: ContentType::JSON,
             ))
             ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
-            ->label('abuse-key', 'url:{url},userId:{userId}')
+            ->label('abuse', [Limit::attempts(['url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->inject('request')
             ->inject('response')
             ->inject('user')

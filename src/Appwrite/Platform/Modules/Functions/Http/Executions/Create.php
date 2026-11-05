@@ -327,8 +327,17 @@ class Create extends Base
                     method: $method,
                 ));
             } else {
+                // The worker re-mints every reserved header when the schedule fires, so the ephemeral API key and
+                // user JWT must not sit in the client-readable schedule. Keep the client IP, the one it reads back.
+                $storedHeaders = \array_filter(
+                    $headers,
+                    fn (string $name): bool => \strtolower($name) === 'x-appwrite-client-ip'
+                        || !\str_starts_with(\strtolower($name), 'x-appwrite-'),
+                    ARRAY_FILTER_USE_KEY
+                );
+
                 $data = [
-                    'headers' => $headers,
+                    'headers' => $storedHeaders,
                     'path' => $path,
                     'method' => $method,
                     'body' => $body,

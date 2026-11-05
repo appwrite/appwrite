@@ -45,7 +45,6 @@ use GraphQL\Error\Error as GraphQLError;
 use OpenRuntimes\Orchestrator\Jobs;
 use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
-use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Argon2;
@@ -804,7 +803,10 @@ return function (Container $context): void {
                 return $over;
             }
 
-            return \min($complexity * $limit, $over);
+            // graphql-php still runs the list resolver (a REST find() + count()) when @skip/@include
+            // removes every selected field and the child complexity is 0, so charge at least one unit
+            // per row; otherwise the same field aliased many times repeats unbounded work at no cost.
+            return \min(\max($complexity, 1) * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
@@ -1178,12 +1180,10 @@ return function (Container $context): void {
     $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
 
-    $context->set('embeddingAgent', function ($register) {
-        $adapter = new AppwriteAdapter();
-        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'));
-        $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
-        return new Agent($adapter);
-    }, ['register']);
+    $context->set('embedder', fn () => new AppwriteAdapter(
+        endpoint: System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'),
+        timeout: (int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'),
+    ));
 
     $context->set('geo', fn (Locale $locale, ?GeoClient $geoClient, Table $geoRecords) => new Geo(
         $geoClient,
