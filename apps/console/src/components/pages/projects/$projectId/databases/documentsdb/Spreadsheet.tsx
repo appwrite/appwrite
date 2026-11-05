@@ -115,7 +115,8 @@ import {
 
 
 import { useIsMobile } from '@/hooks/use-mobile'
-import type { Models } from '@appwrite.io/console'
+import { Query, type Models } from '@appwrite.io/console'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import type { editor } from 'monaco-editor'
 import {
   dbNavLink,
@@ -589,6 +590,8 @@ function RelationshipField({
   const databaseId = params.databaseId as string | undefined
   const relatedTableId = getRelationshipTableId(columnInfo)
   const isMulti = isMultiRelationship(columnInfo)
+  const [search, setSearch] = useState('')
+  const searchTerm = useDebouncedValue(search.trim(), 300)
 
   const { rows: relatedRows, isLoading: relatedRowsLoading } =
     useProjectTableRows(
@@ -601,6 +604,20 @@ function RelationshipField({
       undefined,
       'desc',
       '$createdAt',
+    )
+  // Rows outside the first page are only found by asking the API for them
+  const { rows: searchedRows, isFetching: searchFetching } =
+    useProjectTableRows(
+      projectId,
+      databaseId,
+      searchTerm ? relatedTableId : undefined,
+      DB_KIND,
+      0,
+      100,
+      undefined,
+      'desc',
+      '$createdAt',
+      [Query.startsWith('$id', searchTerm)],
     )
   const { columns: relatedColumns } = useProjectCollectionAttributes(
     projectId,
@@ -633,7 +650,7 @@ function RelationshipField({
       label: getRelationshipRowLabel(row, relatedColumns),
     })
   }
-  for (const relatedRow of relatedRows) {
+  for (const relatedRow of [...relatedRows, ...searchedRows]) {
     const row = relatedRow as Record<string, unknown>
     if (typeof row.$id !== 'string') continue
     optionsById.set(row.$id, {
@@ -641,7 +658,13 @@ function RelationshipField({
       label: getRelationshipRowLabel(row, relatedColumns),
     })
   }
-  const options = [...optionsById.values()]
+  const query = search.trim().toLowerCase()
+  const options = [...optionsById.values()].filter(
+    (option) =>
+      !query ||
+      selectedValues.includes(option.value) ||
+      `${option.value} ${option.label}`.toLowerCase().includes(query),
+  )
 
   if (!relatedTableId) {
     return (
@@ -672,6 +695,8 @@ function RelationshipField({
             relatedRowsLoading ? t('Loading related rows…') : t('Add related row')
           }
           searchPlaceholder={t('Search related rows…')}
+          onSearchChange={setSearch}
+          isFetching={searchFetching}
           emptyMessage={
             relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
           }
@@ -737,6 +762,8 @@ function RelationshipField({
           relatedRowsLoading ? t('Loading related rows…') : t('Select related row')
         }
         searchPlaceholder={t('Search related rows…')}
+        onSearchChange={setSearch}
+        isFetching={searchFetching}
         emptyMessage={
           relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
         }
