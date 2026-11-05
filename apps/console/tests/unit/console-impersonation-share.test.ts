@@ -33,6 +33,16 @@ describe('resolveConsoleImpersonationRedirect', () => {
     expect(resolveConsoleImpersonationRedirect('\\\\evil.example')).toBe(
       ACCOUNT_PATH_AFTER_IMPERSONATION,
     )
+    // Control characters browsers strip before parsing (/\r//evil → //evil).
+    expect(resolveConsoleImpersonationRedirect('/\r//evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('/\n//evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
+    expect(resolveConsoleImpersonationRedirect('/\t//evil.example')).toBe(
+      ACCOUNT_PATH_AFTER_IMPERSONATION,
+    )
     expect(resolveConsoleImpersonationRedirect('/sign-in')).toBe(
       ACCOUNT_PATH_AFTER_IMPERSONATION,
     )
