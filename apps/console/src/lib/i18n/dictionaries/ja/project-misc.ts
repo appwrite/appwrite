@@ -3918,6 +3918,11 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     'これらのアラートは引き続きコンソール通知に表示されます。',
   'Saving...': '保存中...',
   // Firewall rule schedules
+  'Times are in your local time zone:':
+    '時刻はローカルのタイムゾーンで表示されます:',
+  'Times follow the time zone this schedule was created in:':
+    '時刻はこのスケジュールを作成したタイムゾーンに従います:',
+  'Your local time zone:': 'ローカルのタイムゾーン:',
   'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
     '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
   Repeat: '繰り返し',
@@ -3938,6 +3943,4 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '開始時刻と終了時刻は異なる値にしてください。1 日中有効にするには「終日」をオンにします。',
   'This window crosses midnight: it starts on each selected day and ends the next morning.':
     'この時間帯は午前 0 時をまたぎます。選択した各曜日に始まり、翌朝に終わります。',
-  "Days and times follow this time zone's clock, including daylight saving.":
-    '曜日と時刻は、夏時間を含めこのタイムゾーンの時計に従います。',
 }

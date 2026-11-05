@@ -3840,6 +3840,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'ההתראות האלה עדיין יופיעו בהתראות ב-Console.',
   'Saving...': 'שומר...',
   // Firewall rule schedules
+  'Times are in your local time zone:': 'השעות לפי אזור הזמן המקומי שלכם:',
+  'Times follow the time zone this schedule was created in:':
+    'השעות לפי אזור הזמן שבו נוצר התזמון:',
+  'Your local time zone:': 'אזור הזמן המקומי שלכם:',
   'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
     'החלת הכלל רק בימים או בשעות מסוימים. כשהאפשרות כבויה, הכלל פעיל תמיד.',
   Repeat: 'חזרה',
@@ -3860,6 +3864,4 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שעת ההתחלה ושעת הסיום חייבות להיות שונות. לכל היום, הפעילו את "כל היום".',
   'This window crosses midnight: it starts on each selected day and ends the next morning.':
     'חלון הזמן חוצה את חצות: הוא מתחיל בכל יום נבחר ומסתיים למחרת בבוקר.',
-  "Days and times follow this time zone's clock, including daylight saving.":
-    'הימים והשעות נקבעים לפי השעון של אזור הזמן הזה, כולל שעון קיץ.',
 }

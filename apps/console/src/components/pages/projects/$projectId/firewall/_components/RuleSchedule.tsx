@@ -1,4 +1,4 @@
-import { TimezoneSelect } from '@/components/global/shared/TimezoneSelect'
+import { Clock } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -23,6 +23,7 @@ import {
   type FirewallScheduleMode,
 } from '@/lib/firewall/schedule'
 import { useT } from '@/lib/i18n/translate'
+import { formatTimeZoneLabel, getUserTimeZone } from '@/lib/timezones'
 
 type RuleScheduleProps = {
   value: FirewallScheduleDraft
@@ -35,6 +36,11 @@ export function RuleSchedule({ value, onChange, disabled }: RuleScheduleProps) {
   const t = useT()
   const set = (patch: Partial<FirewallScheduleDraft>) =>
     onChange({ ...value, ...patch })
+
+  // The time zone is not editable: a new schedule uses the browser's, and an existing one keeps
+  // the zone it was created in, so editing it from elsewhere never shifts when it runs.
+  const localTimezone = getUserTimeZone()
+  const isLocalTimezone = value.timezone === localTimezone
 
   const crossesMidnight =
     !value.allDay &&
@@ -229,21 +235,34 @@ export function RuleSchedule({ value, onChange, disabled }: RuleScheduleProps) {
             ) : null}
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="firewall-schedule-timezone" className="text-[12px]">
-              {t('Time zone')}
-            </Label>
-            <TimezoneSelect
-              id="firewall-schedule-timezone"
-              value={value.timezone}
-              onValueChange={(timezone) => set({ timezone })}
-              disabled={disabled}
-            />
-            <p className="text-[12px] text-muted-foreground">
-              {t(
-                "Days and times follow this time zone's clock, including daylight saving.",
-              )}
-            </p>
+          <div
+            className="flex items-start gap-2 rounded-md bg-muted/40 px-3 py-2 text-[12px] text-muted-foreground"
+            data-testid="firewall-schedule-timezone"
+          >
+            <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {isLocalTimezone ? (
+              <p>
+                {t('Times are in your local time zone:')}{' '}
+                <span className="font-medium text-foreground">
+                  {formatTimeZoneLabel(value.timezone)}
+                </span>
+              </p>
+            ) : (
+              <div className="space-y-0.5">
+                <p>
+                  {t(
+                    'Times follow the time zone this schedule was created in:',
+                  )}{' '}
+                  <span className="font-medium text-foreground">
+                    {formatTimeZoneLabel(value.timezone)}
+                  </span>
+                </p>
+                <p>
+                  {t('Your local time zone:')}{' '}
+                  {formatTimeZoneLabel(localTimezone)}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       ) : null}
