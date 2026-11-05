@@ -5,6 +5,7 @@ import {
   scheduleDraftFromRule,
   schedulePayload,
   scheduleUpdatePayload,
+  todayIn,
   type FirewallScheduleDraft,
   type FirewallSchedulePayload,
 } from '@/lib/firewall/schedule'
@@ -247,7 +248,64 @@ describe('isScheduleDraftComplete', () => {
     ).toBe(true)
   })
 
+  test('dates must be exactly YYYY-MM-DD', () => {
+    for (const anchor of [
+      '2026-11-04T00:00',
+      '20261104',
+      '2026-1a-04',
+      ' 2026-11-04',
+      '2026-11-04 ',
+      '2026-11-04-01',
+    ]) {
+      expect(isScheduleDraftComplete(draft({ mode: 'biweekly', anchor }))).toBe(
+        false,
+      )
+    }
+    expect(
+      isScheduleDraftComplete(
+        draft({ mode: 'biweekly', anchor: '2028-02-29' }),
+      ),
+    ).toBe(true)
+  })
+
+  test('times must be HH:MM on a 24-hour clock', () => {
+    for (const startTime of [
+      '24:00',
+      '23:60',
+      '9:00',
+      '09:00:00',
+      '0a:00',
+      ' 09:00',
+      '09:00 ',
+      '09-00',
+    ]) {
+      expect(
+        isScheduleDraftComplete(draft({ startTime, endTime: '10:00' })),
+      ).toBe(false)
+    }
+    for (const startTime of ['00:00', '23:59', '19:30']) {
+      expect(
+        isScheduleDraftComplete(draft({ startTime, endTime: '10:00' })),
+      ).toBe(true)
+    }
+  })
+
   test('needs a timezone', () => {
     expect(isScheduleDraftComplete(draft({ timezone: '' }))).toBe(false)
+  })
+})
+
+describe('todayIn', () => {
+  // 20:00 UTC on 4 Nov is already 5 Nov in Kolkata and still 4 Nov in Los Angeles.
+  const now = new Date('2026-11-04T20:00:00Z')
+
+  test("gives the date on the zone's clock", () => {
+    expect(todayIn('UTC', now)).toBe('2026-11-04')
+    expect(todayIn('Asia/Kolkata', now)).toBe('2026-11-05')
+    expect(todayIn('America/Los_Angeles', now)).toBe('2026-11-04')
+  })
+
+  test('falls back to the UTC date for a zone the browser does not know', () => {
+    expect(todayIn('Mars/Olympus_Mons', now)).toBe('2026-11-04')
   })
 })
