@@ -38,4 +38,28 @@ final class ConnectionTest extends TestCase
 
         $this->assertTrue(Connection::fromUsage($usage)->isReady());
     }
+
+    public function testHealthCheckProbesThroughAnEmptyTenantInsteadOfScanningAllTenants(): void
+    {
+        $usage = new RecordingUsage();
+
+        $health = Connection::fromUsage($usage)->healthCheck();
+
+        $this->assertTrue($health['schemaReady']);
+        $this->assertSame([
+            ['tenant' => '__health__', 'type' => Usage::TYPE_EVENT],
+            ['tenant' => '__health__', 'type' => Usage::TYPE_GAUGE],
+            ['tenant' => '__health__', 'type' => 'daily'],
+        ], $usage->reads, 'A tenant-less read starts at the head of the table and steps over every purged row, so every readiness probe must stay scoped to one tenant');
+    }
+
+    public function testHealthCheckReportsTheSchemaAsNotReadyWhenAProbeFails(): void
+    {
+        $usage = new RecordingUsage(new \RuntimeException('Unknown identifier: service'));
+
+        $health = Connection::fromUsage($usage)->healthCheck();
+
+        $this->assertFalse($health['schemaReady']);
+        $this->assertSame('Unknown identifier: service', $health['error']);
+    }
 }

@@ -20,6 +20,12 @@ class Connection
 {
     private const int READY_TTL_SECONDS = 15;
 
+    /**
+     * Tenant the schema probes run against. It owns no rows, so every probe
+     * is answered from the primary index instead of reading table data.
+     */
+    private const string HEALTH_TENANT = '__health__';
+
     private ?Usage $usage = null;
     private bool $ready = false;
     private float $checkedAt = 0.0;
@@ -107,9 +113,13 @@ class Connection
         }
 
         try {
-            $usage->findAcrossTenants([Query::limit(1)], Usage::TYPE_EVENT);
-            $usage->findAcrossTenants([Query::limit(1)], Usage::TYPE_GAUGE);
-            $usage->findDaily('__health__', [Query::limit(1)]);
+            // Probe through a tenant-scoped read. A tenant-less read starts at
+            // the head of the (tenant, metric, time, id) primary key and has to
+            // step over every lightweight-deleted row left by purged projects
+            // before it finds a live one, so its cost grows with the table.
+            $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_EVENT);
+            $usage->find(self::HEALTH_TENANT, [Query::limit(1)], Usage::TYPE_GAUGE);
+            $usage->findDaily(self::HEALTH_TENANT, [Query::limit(1)]);
         } catch (\Throwable $th) {
             return [
                 'enabled' => true,
