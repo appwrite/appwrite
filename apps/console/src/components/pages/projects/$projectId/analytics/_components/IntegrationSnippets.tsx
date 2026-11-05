@@ -36,7 +36,9 @@ export function IntegrationSnippets({
   className,
 }: IntegrationSnippetsProps) {
   const t = useT()
-  const [localPlatform, setLocalPlatform] = useState<AnalyticsPlatform>('web')
+  const [localPlatform, setLocalPlatform] = useState<AnalyticsPlatform>(
+    platforms[0],
+  )
   const active = platform ?? localPlatform
 
   const setActive = (next: AnalyticsPlatform) => {
