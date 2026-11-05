@@ -103,7 +103,7 @@ abstract class S3Base extends TestCase
             $this->assertSame('Hello', (string) $this->object->read($path, modifiedSince: new \DateTimeImmutable('-1 hour')));
 
             try {
-                $this->object->read($path, modifiedSince: new \DateTimeImmutable('+1 second'));
+                $this->object->read($path, modifiedSince: $this->object->getFileInfo($path)->modifiedAt);
                 $this->fail('An object not modified after the time must not be read');
             } catch (NotModifiedException) {
                 $this->assertTrue($this->object->exists($path));
