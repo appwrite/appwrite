@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { Download, Globe, Plus, Shield, X } from 'lucide-react'
-import type { Models } from '@appwrite.io/console'
+import type { AnalyticsPropertyType, Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,8 +27,6 @@ import {
 import {
   ANALYTICS_PROPERTY_TYPES,
   ANALYTICS_PROPERTY_TYPE_META,
-  analyticsPropertyType,
-  type AnalyticsPropertyType,
 } from '@/lib/analytics-wizard/property-types'
 import { DeleteProperty } from './DeleteProperty'
 import { InstallTrackingDialog } from './InstallTrackingDialog'
@@ -314,7 +312,7 @@ export function PropertySettings({
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <Select
-              value={analyticsPropertyType(property)}
+              value={property.type}
               onValueChange={(next) =>
                 applyUpdate(
                   { type: next as AnalyticsPropertyType },

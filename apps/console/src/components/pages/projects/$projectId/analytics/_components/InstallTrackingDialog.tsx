@@ -32,10 +32,7 @@ import {
   type AnalyticsPlatform,
   type AnalyticsProxyRecipeId,
 } from '@/lib/analytics-wizard/snippets'
-import {
-  ANALYTICS_PROPERTY_TYPE_META,
-  analyticsPropertyType,
-} from '@/lib/analytics-wizard/property-types'
+import { ANALYTICS_PROPERTY_TYPE_META } from '@/lib/analytics-wizard/property-types'
 
 function PlatformGlyph({ platform }: { platform: AnalyticsPlatform }) {
   // REST has no platform logo; a neutral glyph reads better than the JS one.
@@ -152,8 +149,7 @@ export function InstallTrackingDialog({
   initialProxy?: boolean
 }) {
   const t = useT()
-  const platforms =
-    ANALYTICS_PROPERTY_TYPE_META[analyticsPropertyType(property)].platforms
+  const platforms = ANALYTICS_PROPERTY_TYPE_META[property.type].platforms
   const startPlatform =
     initialPlatform && platforms.includes(initialPlatform)
       ? initialPlatform

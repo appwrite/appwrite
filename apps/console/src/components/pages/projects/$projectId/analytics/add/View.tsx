@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { AnalyticsPropertyType } from '@appwrite.io/console'
 import {
   ArrowRight,
   BrainCircuit,
@@ -45,12 +46,7 @@ import {
   isAnalyticsPlatform,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
-import {
-  ANALYTICS_PROPERTY_TYPE_META,
-  analyticsPropertyType,
-  isAnalyticsPropertyType,
-  type AnalyticsPropertyType,
-} from '@/lib/analytics-wizard/property-types'
+import { ANALYTICS_PROPERTY_TYPE_META } from '@/lib/analytics-wizard/property-types'
 import { IntegrationSnippets } from '../_components/IntegrationSnippets'
 import { PlatformCards, TypeCards } from './_components/PlatformCards'
 import { EventAside } from './_components/EventAside'
@@ -106,11 +102,7 @@ export function View({ projectId, search }: ViewProps) {
   )
 
   // Only the setup step loads the property; there its saved type beats ?type=.
-  const type = property
-    ? analyticsPropertyType(property)
-    : isAnalyticsPropertyType(search.type)
-      ? search.type
-      : 'web'
+  const type = property?.type ?? search.type ?? AnalyticsPropertyType.Web
   const typePlatforms = ANALYTICS_PROPERTY_TYPE_META[type].platforms
   // A platform the type doesn't offer (stale or hand-edited URL) falls back
   // to the type's default SDK.
@@ -175,7 +167,10 @@ export function View({ projectId, search }: ViewProps) {
       {
         propertyId,
         name: name.trim(),
-        domain: type === 'agent' ? undefined : domain.trim() || undefined,
+        domain:
+          type === AnalyticsPropertyType.Agent
+            ? undefined
+            : domain.trim() || undefined,
         type,
       },
       {
@@ -330,7 +325,7 @@ export function View({ projectId, search }: ViewProps) {
           </section>
 
           {/* Agents have no domain to track. */}
-          {type !== 'agent' ? (
+          {type !== AnalyticsPropertyType.Agent ? (
             <div className="space-y-2">
               <Label htmlFor="add-property-domain">
                 {t('Domain')}{' '}
@@ -344,7 +339,7 @@ export function View({ projectId, search }: ViewProps) {
                 onChange={(e) => setDomain(e.target.value)}
                 disabled={createMutation.isPending}
               />
-              {type === 'web' ? (
+              {type === AnalyticsPropertyType.Web ? (
                 <p className="text-[12px] text-muted-foreground">
                   {t(
                     'The site you are tracking. Page paths in reports link to it.',

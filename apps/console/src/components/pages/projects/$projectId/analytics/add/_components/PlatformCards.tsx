@@ -7,10 +7,10 @@ import {
   ANALYTICS_PLATFORM_META,
   type AnalyticsPlatform,
 } from '@/lib/analytics-wizard/snippets'
+import { AnalyticsPropertyType } from '@appwrite.io/console'
 import {
   ANALYTICS_PROPERTY_TYPES,
   ANALYTICS_PROPERTY_TYPE_META,
-  type AnalyticsPropertyType,
 } from '@/lib/analytics-wizard/property-types'
 
 type CardOption<T extends string> = {
@@ -101,9 +101,9 @@ function OptionCards<T extends string>({
 }
 
 const TYPE_ICONS: Record<AnalyticsPropertyType, ReactNode> = {
-  web: <PlatformIcon platform="web" size="md" />,
-  mobile: <Smartphone className="h-4 w-4" />,
-  agent: <Bot className="h-4 w-4" />,
+  [AnalyticsPropertyType.Web]: <PlatformIcon platform="web" size="md" />,
+  [AnalyticsPropertyType.Mobile]: <Smartphone className="h-4 w-4" />,
+  [AnalyticsPropertyType.Agent]: <Bot className="h-4 w-4" />,
 }
 
 export function TypeCards({

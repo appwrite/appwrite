@@ -23,12 +23,12 @@ import { resolveUsageChartIntervalWithin } from '@/lib/usage/chart-interval'
 import {
   AnalyticsDimension,
   AnalyticsInterval,
+  type AnalyticsPropertyType,
   ID,
   Query,
   type Models,
 } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import type { AnalyticsPropertyType } from '@/lib/analytics-wizard/property-types'
 import {
   analyticsFilterQueries,
   analyticsFiltersKey,
@@ -1136,27 +1136,6 @@ export type CreateAnalyticsPropertyInput = {
   type?: AnalyticsPropertyType
 }
 
-// The pinned SDK's createProperty/updateProperty send known keys only, dropping `type`.
-// TODO: switch to the SDK methods once a console SDK with property type is pinned
-function sendAnalyticsProperty(
-  projectId: string,
-  method: 'post' | 'patch',
-  path: string,
-  payload: Record<string, unknown>,
-): Promise<Models.AnalyticsProperty> {
-  const { client } = sdk.forProject(projectId)
-  return client.call(
-    method,
-    new URL(client.config.endpoint + path),
-    {
-      'X-Appwrite-Project': client.config.project,
-      'content-type': 'application/json',
-      accept: 'application/json',
-    },
-    payload,
-  ) as Promise<Models.AnalyticsProperty>
-}
-
 export function useCreateAnalyticsProperty(
   projectId: string | null | undefined,
 ) {
@@ -1166,18 +1145,12 @@ export function useCreateAnalyticsProperty(
     mutationFn: async (input: CreateAnalyticsPropertyInput) => {
       if (!projectId) throw new Error('Project ID is required')
 
-      const domain = input.domain?.trim()
-      return await sendAnalyticsProperty(
-        projectId,
-        'post',
-        '/analytics/properties',
-        {
-          propertyId: input.propertyId?.trim() || ID.unique(),
-          name: input.name.trim(),
-          ...(domain && { domain }),
-          ...(input.type !== undefined && { type: input.type }),
-        },
-      )
+      return await sdk.forProject(projectId).analytics.createProperty({
+        propertyId: input.propertyId?.trim() || ID.unique(),
+        name: input.name.trim(),
+        domain: input.domain?.trim() || undefined,
+        type: input.type,
+      })
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -1211,20 +1184,16 @@ export function useUpdateAnalyticsProperty(
     mutationFn: async (input: UpdateAnalyticsPropertyInput) => {
       if (!projectId) throw new Error('Project ID is required')
 
-      return await sendAnalyticsProperty(
-        projectId,
-        'patch',
-        `/analytics/properties/${encodeURIComponent(input.propertyId)}`,
-        {
-          ...(input.name !== undefined && { name: input.name }),
-          ...(input.domain !== undefined && { domain: input.domain }),
-          ...(input.enabled !== undefined && { enabled: input.enabled }),
-          ...(input.allowedOrigins !== undefined && {
-            allowedOrigins: input.allowedOrigins,
-          }),
-          ...(input.type !== undefined && { type: input.type }),
-        },
-      )
+      return await sdk.forProject(projectId).analytics.updateProperty({
+        propertyId: input.propertyId,
+        ...(input.name !== undefined && { name: input.name }),
+        ...(input.domain !== undefined && { domain: input.domain }),
+        ...(input.enabled !== undefined && { enabled: input.enabled }),
+        ...(input.allowedOrigins !== undefined && {
+          allowedOrigins: input.allowedOrigins,
+        }),
+        ...(input.type !== undefined && { type: input.type }),
+      })
     },
     onSuccess: async (property) => {
       await Promise.all([

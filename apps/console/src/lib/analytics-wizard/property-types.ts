@@ -1,13 +1,11 @@
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType } from '@appwrite.io/console'
 import type { AnalyticsPlatform } from './snippets'
 
 /**
  * What a property tracks. The type decides which dashboard panels apply; the
  * platform (`AnalyticsPlatform`) is only the SDK used to send events.
  */
-export const ANALYTICS_PROPERTY_TYPES = ['web', 'mobile', 'agent'] as const
-
-export type AnalyticsPropertyType = (typeof ANALYTICS_PROPERTY_TYPES)[number]
+export const ANALYTICS_PROPERTY_TYPES = Object.values(AnalyticsPropertyType)
 
 export type AnalyticsPropertyTypeMeta = {
   id: AnalyticsPropertyType
@@ -21,39 +19,22 @@ export const ANALYTICS_PROPERTY_TYPE_META: Record<
   AnalyticsPropertyType,
   AnalyticsPropertyTypeMeta
 > = {
-  web: {
-    id: 'web',
+  [AnalyticsPropertyType.Web]: {
+    id: AnalyticsPropertyType.Web,
     label: 'Web',
     description: 'Websites and browser apps.',
     platforms: ['web', 'rest'],
   },
-  mobile: {
-    id: 'mobile',
+  [AnalyticsPropertyType.Mobile]: {
+    id: AnalyticsPropertyType.Mobile,
     label: 'Mobile',
     description: 'iOS and Android apps.',
     platforms: ['flutter', 'rest'],
   },
-  agent: {
-    id: 'agent',
+  [AnalyticsPropertyType.Agent]: {
+    id: AnalyticsPropertyType.Agent,
     label: 'Agent',
     description: 'AI agents and backend services, over the API.',
     platforms: ['rest'],
   },
-}
-
-export function isAnalyticsPropertyType(
-  value: string | undefined | null,
-): value is AnalyticsPropertyType {
-  return (
-    !!value && (ANALYTICS_PROPERTY_TYPES as readonly string[]).includes(value)
-  )
-}
-
-/** Properties created before types existed have none and count as web. */
-export function analyticsPropertyType(
-  property: Models.AnalyticsProperty,
-): AnalyticsPropertyType {
-  // TODO: switch to the SDK field once a console SDK with property type is pinned
-  const type = (property as { type?: string }).type
-  return isAnalyticsPropertyType(type) ? type : 'web'
 }

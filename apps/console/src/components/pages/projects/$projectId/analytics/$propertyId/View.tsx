@@ -11,7 +11,7 @@ import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { UsageChartIntervalToggle } from '../../overview/UsageChartIntervalToggle'
 import { useT } from '@/lib/i18n/translate'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import {
   ANALYTICS_CHART_INTERVALS,
   analyticsRangeKey,
@@ -43,10 +43,6 @@ import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAnalyticsChartPrefs } from '@/hooks/use-analytics-chart-prefs'
 import { canWriteRules } from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
-import {
-  analyticsPropertyType,
-  type AnalyticsPropertyType,
-} from '@/lib/analytics-wizard/property-types'
 import { AnalyticsOverview } from '../_components/AnalyticsOverview'
 import {
   PropertyHeaderLive,
@@ -121,7 +117,7 @@ const PANELS_BY_TYPE: Record<
   AnalyticsPropertyType,
   ReadonlySet<DimensionPanel>
 > = {
-  web: new Set([
+  [AnalyticsPropertyType.Web]: new Set([
     'sources',
     'split',
     'pages',
@@ -129,8 +125,8 @@ const PANELS_BY_TYPE: Record<
     'technology',
     'bots',
   ]),
-  mobile: new Set(['pages', 'locations', 'technology']),
-  agent: new Set(),
+  [AnalyticsPropertyType.Mobile]: new Set(['pages', 'locations', 'technology']),
+  [AnalyticsPropertyType.Agent]: new Set(),
 }
 
 function defaultIntervalForRange(dateRange: DateRange): AnalyticsChartInterval {
@@ -461,7 +457,7 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
-  const propertyType = property ? analyticsPropertyType(property) : 'web'
+  const propertyType = property?.type ?? AnalyticsPropertyType.Web
   const panels = PANELS_BY_TYPE[propertyType]
 
   if (!property && !propertyLoading) {
@@ -650,7 +646,7 @@ export function View({
                     projectId={projectId}
                     propertyId={propertyId}
                     range={range}
-                    screens={propertyType === 'mobile'}
+                    screens={propertyType === AnalyticsPropertyType.Mobile}
                   />
                 ) : null}
                 {panels.has('locations') ? (

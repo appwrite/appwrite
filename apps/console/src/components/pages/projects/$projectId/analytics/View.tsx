@@ -24,10 +24,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
-import {
-  ANALYTICS_PROPERTY_TYPE_META,
-  analyticsPropertyType,
-} from '@/lib/analytics-wizard/property-types'
+import { ANALYTICS_PROPERTY_TYPE_META } from '@/lib/analytics-wizard/property-types'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -340,11 +337,7 @@ export function View() {
                               variant="outline"
                               className="text-[10px] shrink-0"
                             >
-                              {t(
-                                ANALYTICS_PROPERTY_TYPE_META[
-                                  analyticsPropertyType(property)
-                                ].label,
-                              )}
+                              {t(ANALYTICS_PROPERTY_TYPE_META[property.type].label)}
                             </Badge>
                             {!property.enabled && (
                               <Badge
@@ -543,11 +536,7 @@ export function View() {
                                     variant="outline"
                                     className="text-[10px] shrink-0"
                                   >
-                                    {t(
-                                      ANALYTICS_PROPERTY_TYPE_META[
-                                        analyticsPropertyType(property)
-                                      ].label,
-                                    )}
+                                    {t(ANALYTICS_PROPERTY_TYPE_META[property.type].label)}
                                   </Badge>
                                   {!property.enabled && (
                                     <Badge
