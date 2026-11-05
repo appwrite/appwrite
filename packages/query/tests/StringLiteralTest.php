@@ -65,4 +65,36 @@ final class StringLiteralTest extends TestCase
 
         $literal->quote($value);
     }
+
+    #[DataProvider('quotedProvider')]
+    public function testUnquoteInvertsQuote(StringLiteral $literal, string $value, string $quoted): void
+    {
+        $this->assertSame($value, $literal->unquote($quoted));
+    }
+
+    /**
+     * @return array<string, array{StringLiteral, string}>
+     */
+    public static function malformedProvider(): array
+    {
+        return [
+            'backslash unquoted' => [StringLiteral::Backslash, 'abc'],
+            'backslash lone quote' => [StringLiteral::Backslash, "'a'b'"],
+            'backslash escaped closing quote' => [StringLiteral::Backslash, "'a\\'"],
+            'backslash utf8 trailing backslash' => [StringLiteral::BackslashUtf8, "'a\\"],
+            'extended lone quote' => [StringLiteral::Extended, "E'a'b'"],
+            'extended surrogate escape' => [StringLiteral::Extended, "E'\\uD800'"],
+            'standard prefix' => [StringLiteral::Standard, "E'a'"],
+            'standard lone quote' => [StringLiteral::Standard, "'a'b'"],
+            'single quote only' => [StringLiteral::Standard, "'"],
+        ];
+    }
+
+    #[DataProvider('malformedProvider')]
+    public function testUnquoteRefusesMalformedLiteral(StringLiteral $literal, string $quoted): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $literal->unquote($quoted);
+    }
 }

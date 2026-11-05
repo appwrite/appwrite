@@ -7,13 +7,18 @@ All notable changes to `utopia-php/query` are documented in this file.
 ### Changed
 
 - String literals in `toRawSql()`, the schema builder and the AST serializer
-  are quoted by the new `StringLiteral` enum, one case per dialect. MySQL,
+  are quoted by the new `StringLiteral` enum, one case per dialect:
+  `Backslash` (MySQL, MariaDB), `Extended` (PostgreSQL), `Standard` (SQLite)
+  and `BackslashUtf8` (ClickHouse). `unquote()` reads a literal back. MySQL,
   MariaDB and PostgreSQL throw `ValidationException` for a value with a
   backslash right after a byte of `0x80` or above, which a GBK, BIG5,
   SJIS/CP932 or GB18030 connection reads as the lead byte of a character that
   absorbs the escaping backslash. PostgreSQL and SQLite throw for a NUL byte.
   The ClickHouse schema builder's `Enum8` values double quotes like its other
   literals instead of escaping them with a backslash.
+- `Tokenizer` and `AST\Parser` take a `StringLiteral`; each dialect tokenizer
+  defaults to its dialect's case and `Parser` to `Backslash`. The SQLite
+  tokenizer also reads backtick-quoted identifiers, which its builder emits.
 - MySQL and MariaDB LIKE predicates compile to `col LIKE ? ESCAPE '!'` (and
   `NOT LIKE`) with `!`-escaped bindings, SQLite's to `col LIKE ? ESCAPE '\'`,
   and MySQL's `setJsonRemove()` to `JSON_SEARCH(col, 'one', ?, '!')`.
@@ -55,6 +60,14 @@ All notable changes to `utopia-php/query` are documented in this file.
   the PostgreSQL and SQLite builders doubled them in string literals. Each
   dialect's serializer, and `Serializer` given a `StringLiteral`, now quotes
   as its builder does.
+- The tokenizer and parser read string literals as the serializer writes
+  them. The tokenizer treated `\` as an escape in every dialect, so SQLite's
+  `'C:\'` was reported unterminated and PostgreSQL's `E'..'` was not one
+  string; the parser undid `''` and `\'` but not `\\`, so `parse()` of a
+  serialized `a\b` re-serialized with its backslash doubled. MySQL, MariaDB
+  and ClickHouse now decode backslash escapes, SQLite reads `\` literally, and
+  PostgreSQL decodes them only inside `E''`. `toAst()` parses CTE bodies with
+  its dialect's tokenizer and literal.
 - The ClickHouse schema builder escapes backslashes in `ReplicatedMergeTree`'s
   ZooKeeper path and replica name and in string skip-index arguments, as it
   already did in its other literals.

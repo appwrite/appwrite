@@ -2403,10 +2403,14 @@ abstract class Builder implements
 
     private function parseSqlToAst(string $sql): Select
     {
-        $tokenizer = new Tokenizer();
-        $tokens = Tokenizer::filter($tokenizer->tokenize($sql));
-        $parser = new Parser();
-        return $parser->parse($tokens);
+        $tokens = Tokenizer::filter($this->createTokenizer()->tokenize($sql));
+
+        return new Parser($this->literal)->parse($tokens);
+    }
+
+    protected function createTokenizer(): Tokenizer
+    {
+        return new Tokenizer($this->literal);
     }
 
     protected function createAstSerializer(): Serializer

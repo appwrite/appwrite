@@ -18,6 +18,8 @@ use Utopia\Query\Builder\Feature\Upsert;
 use Utopia\Query\Builder\Feature\UpsertSelect;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\Method;
+use Utopia\Query\Tokenizer\MySQL as MySQLTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class MySQL extends SQL implements
     Json,
@@ -76,6 +78,12 @@ class MySQL extends SQL implements
     protected function createAstSerializer(): Serializer
     {
         return new MySQLSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new MySQLTokenizer($this->literal);
     }
 
     #[\Override]

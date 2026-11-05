@@ -2707,7 +2707,7 @@ $tokens[0]->value;  // 'SELECT'
 
 `TokenType` covers `Keyword`, `Identifier`, `QuotedIdentifier`, `Integer`, `Float`, `String`, `Boolean`, `Null`, `Operator`, `LeftParen`, `RightParen`, `Comma`, `Semicolon`, `Dot`, `Star`, `Placeholder`, `NamedPlaceholder`, `NumberedPlaceholder`, `LineComment`, `BlockComment`, `Whitespace`, and `Eof`.
 
-Dialect subclasses handle dialect-specific quoting and operators — `Tokenizer\MySQL`, `Tokenizer\MariaDB`, `Tokenizer\PostgreSQL`, `Tokenizer\SQLite`, and `Tokenizer\ClickHouse`.
+Dialect subclasses handle dialect-specific quoting and operators — `Tokenizer\MySQL`, `Tokenizer\MariaDB`, `Tokenizer\PostgreSQL`, `Tokenizer\SQLite`, and `Tokenizer\ClickHouse`. Each reads string literals as its dialect does: MySQL, MariaDB and ClickHouse treat `\` as an escape, SQLite never does, and PostgreSQL only inside `E''` literals. A tokenizer or parser constructed with a `StringLiteral` case follows that case instead.
 
 ### Parsing to an AST
 
@@ -2722,6 +2722,8 @@ $ast->where;             // AST\Expression\Binary
 ```
 
 The node hierarchy is made of readonly value objects. Expressions implement the `AST\Expression` marker interface: `Literal`, `Raw`, `Star`, `Placeholder`, `Reference\Column`, `Call\Func`, and `Expression\{Aliased, Between, Binary, CaseWhen, Cast, Conditional, Exists, In, Subquery, Unary, Window}`. Structural nodes include `Reference\Table`, `JoinClause`, `OrderByItem`, `SubquerySource`, `Definition\Cte`, `Definition\Window`, and `Specification\Window`.
+
+`Parser` decodes string literals by the `StringLiteral` it is given (`StringLiteral::Backslash` by default), so pass the dialect's case, e.g. `new Parser(StringLiteral::Extended)` with `Tokenizer\PostgreSQL`, to read `E'a\\b'` as `a\b`.
 
 `Statement\Select` is immutable; use its `with()` helper to derive a modified copy.
 

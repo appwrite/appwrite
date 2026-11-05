@@ -24,6 +24,7 @@ use Utopia\Query\Exception;
 use Utopia\Query\Exception\ValidationException;
 use Utopia\Query\NullsPosition;
 use Utopia\Query\OrderDirection;
+use Utopia\Query\StringLiteral;
 use Utopia\Query\Tokenizer\Token;
 use Utopia\Query\Tokenizer\TokenType;
 
@@ -47,6 +48,11 @@ class Parser
     private int $pos;
     private int $depth = 0;
     private bool $inColumnList = false;
+
+    public function __construct(
+        private readonly StringLiteral $literal = StringLiteral::Backslash,
+    ) {
+    }
 
     /**
      * Parse tokens into a Select.
@@ -534,11 +540,7 @@ class Parser
 
         if ($token->type === TokenType::String) {
             $this->advance();
-            $raw = $token->value;
-            $inner = substr($raw, 1, -1);
-            $inner = str_replace("''", "'", $inner);
-            $inner = str_replace("\\'", "'", $inner);
-            return new Literal($inner);
+            return new Literal($this->literal->unquote($token->value));
         }
 
         if ($token->type === TokenType::Boolean) {

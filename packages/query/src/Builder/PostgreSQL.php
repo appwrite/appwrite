@@ -34,6 +34,8 @@ use Utopia\Query\Method;
 use Utopia\Query\Query;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Query\StringLiteral;
+use Utopia\Query\Tokenizer\PostgreSQL as PostgreSQLTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class PostgreSQL extends SQL implements
     VectorSearch,
@@ -91,6 +93,12 @@ class PostgreSQL extends SQL implements
     protected function createAstSerializer(): Serializer
     {
         return new PostgreSQLSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new PostgreSQLTokenizer($this->literal);
     }
 
     /** @var ?array{attribute: string, vector: array<float>, metric: VectorMetric} */

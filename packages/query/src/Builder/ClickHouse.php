@@ -29,6 +29,8 @@ use Utopia\Query\Hook\Join\Placement;
 use Utopia\Query\Query;
 use Utopia\Query\QuotesIdentifiers;
 use Utopia\Query\StringLiteral;
+use Utopia\Query\Tokenizer\ClickHouse as ClickHouseTokenizer;
+use Utopia\Query\Tokenizer\Tokenizer;
 
 class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, TableSampling, FullOuterJoins, StringAggregates, StatisticalAggregates, BitwiseAggregates, LimitBy, ArrayJoins, AsofJoins, WithFill, Rollup, Cube, Totals, ApproximateAggregates, RawSql, CrossJoins
 {
@@ -105,6 +107,12 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     protected function createAstSerializer(): Serializer
     {
         return new ClickHouseSerializer($this->literal);
+    }
+
+    #[\Override]
+    protected function createTokenizer(): Tokenizer
+    {
+        return new ClickHouseTokenizer($this->literal);
     }
 
     /**
