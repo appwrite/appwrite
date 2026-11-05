@@ -1187,9 +1187,6 @@
     "TS2323: Cannot redeclare exported variable 'isPostgresPromoBannerVisible'.": 2,
     "TS2484: Export declaration conflicts with exported declaration of 'isPostgresPromoBannerVisible'.": 1
   },
-  "src/lib/react-query/hooks/addons.ts": {
-    "TS2305: Module '\"@appwrite.io/console\"' has no exported member 'Addon'.": 1
-  },
   "src/lib/react-query/hooks/assistant.ts": {
     "TS6133: 'params' is declared but its value is never read.": 1
   },

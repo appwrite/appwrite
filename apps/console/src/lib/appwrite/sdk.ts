@@ -5,53 +5,7 @@
  * All Appwrite operations are handled client-side.
  */
 
-import {
-  Account,
-  Activities,
-  Affiliates,
-  Alerts,
-  Analytics,
-  Apps,
-  Avatars,
-  Backups,
-  Client,
-  Console,
-  Functions,
-  Growth,
-  ImageFormat,
-  Locale,
-  Manager,
-  Messaging,
-  Migrations,
-  Monitors,
-  Oauth2,
-  Project,
-  Project as ProjectApi,
-  Projects,
-  Proxy,
-  Realtime,
-  Storage,
-  Teams,
-  Users,
-  Vcs,
-  Sites,
-  Tokens,
-  TablesDB,
-  DocumentsDB,
-  VectorsDB,
-  Postgresql,
-  Mysql,
-  Mongo,
-  Domains,
-  Organization,
-  Organizations,
-  Presences,
-  Usage,
-  Videos,
-  Webhooks,
-  Notifications,
-  Waf,
-} from '@appwrite.io/console'
+import { Account, Activities, Affiliates, Analytics, Apps, Avatars, Backups, Client, Console, Functions, Growth, ImageFormat, Locale, Manager, Messaging, Migrations, Oauth2, Project, Project as ProjectApi, Projects, Proxy, Realtime, Storage, Teams, Users, Vcs, Sites, Tokens, TablesDB, DocumentsDB, VectorsDB, Postgresql, Mysql, Mongo, Domains, Organization, Organizations, Presences, Usage, Webhooks, Notifications, Waf } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
 import { Reviews } from '@/lib/appwrite/reviews'
 import { Zero } from '@/lib/appwrite/zero'
@@ -80,6 +34,8 @@ import {
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
 import { getActiveEnvironmentId } from '@/lib/active-environment'
+import { Alerts, Monitors } from '@/lib/appwrite/monitors'
+import { Videos } from '@/lib/appwrite/videos'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
