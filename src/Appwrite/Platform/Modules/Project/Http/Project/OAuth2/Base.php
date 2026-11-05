@@ -411,6 +411,7 @@ abstract class Base extends Action
             'microsoft' => Microsoft\Update::class,
             'resend' => Resend\Update::class,
             'vipps' => Vipps\Update::class,
+            'vippsSandbox' => VippsSandbox\Update::class,
         ];
     }
 

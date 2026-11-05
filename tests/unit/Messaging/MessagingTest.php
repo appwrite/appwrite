@@ -1378,6 +1378,41 @@ final class MessagingTest extends TestCase
         $this->assertNotContains('memberships.membership_id.status', $membershipResult['channels']);
     }
 
+    public function testFromPayloadKeepsDottedUserIdIntact(): void
+    {
+        // A custom user id may contain dots. The account channel and user role must carry the
+        // whole id, not the part before the first dot, or the event reaches a different user.
+        $result = Realtime::fromPayload(
+            event: 'users.john.doe.sessions.session_id.create',
+            payload: new Document(['$id' => Id::custom('session_id')]),
+            userId: 'john.doe',
+        );
+
+        $this->assertContains('account.john.doe', $result['channels']);
+        $this->assertContains(Role::user(Id::custom('john.doe'))->toString(), $result['roles']);
+
+        // The truncated id must not be addressed: a user whose id is literally `john` would
+        // otherwise receive john.doe's account events.
+        $this->assertNotContains('account.john', $result['channels']);
+        $this->assertNotContains(Role::user(Id::custom('john'))->toString(), $result['roles']);
+
+        // The suffix (sessions.*.create) still changes access, so the resolve flag holds.
+        $this->assertTrue($result['permissionsChanged']);
+
+        // A top-level create on a dotted id must still emit the action channels, keyed on the
+        // whole id — the top-level check keys off the parsed suffix, not a fixed part index.
+        $create = Realtime::fromPayload(
+            event: 'users.john.doe.create',
+            payload: new Document(['$id' => Id::custom('john.doe')]),
+            userId: 'john.doe',
+        );
+
+        $this->assertContains('account.create', $create['channels']);
+        $this->assertContains('account.john.doe', $create['channels']);
+        $this->assertContains('account.john.doe.create', $create['channels']);
+        $this->assertNotContains('account.john.create', $create['channels']);
+    }
+
     public function testMembershipDeleteReachesSubjectAfterTeamRoleIsRevoked(): void
     {
         // Delete is published with permissionsChanged, and the realtime worker

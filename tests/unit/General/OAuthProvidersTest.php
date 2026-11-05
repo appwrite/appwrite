@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Unit\General;
 
 use PHPUnit\Framework\TestCase;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 
 final class OAuthProvidersTest extends TestCase
@@ -39,5 +41,22 @@ final class OAuthProvidersTest extends TestCase
 
         $this->assertTrue($providers['apple']['idToken']['nonceRequired']);
         $this->assertFalse($providers['google']['idToken']['nonceRequired']);
+    }
+
+    /**
+     * The login routes build the adapter from `class`, so a sandbox provider
+     * pointed at the live adapter sends its users to the production host.
+     */
+    public function testSandboxProvidersUseSandboxAdapters(): void
+    {
+        $providers = \array_filter(Config::getParam('oAuthProviders'), fn (array $provider) => !empty($provider['sandbox']));
+
+        $this->assertNotEmpty($providers);
+
+        foreach ($providers as $id => $provider) {
+            $class = $provider['class'];
+
+            $this->assertSame($id, (new $class(new Client(new CurlAdapter()), '', '', ''))->getName());
+        }
     }
 }

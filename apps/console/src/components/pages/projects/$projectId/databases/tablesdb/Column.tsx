@@ -906,7 +906,7 @@ export function ColumnDrawer({
                             : ['e', 'E', '+'],
                         )}
                         placeholder={t('Enter min')}
-                        step={formData.type === 'double' ? 0.1 : 1}
+                        step={formData.type === 'double' ? 'any' : 1}
                         disabled={isLoading}
                       />
                     )}
@@ -963,7 +963,7 @@ export function ColumnDrawer({
                             : ['e', 'E', '+'],
                         )}
                         placeholder={t('Enter max')}
-                        step={formData.type === 'double' ? 0.1 : 1}
+                        step={formData.type === 'double' ? 'any' : 1}
                         disabled={isLoading}
                       />
                     )}
@@ -1566,7 +1566,7 @@ export function ColumnDrawer({
                     }}
                     min={formData.type === 'bigint' ? undefined : formData.min}
                     max={formData.type === 'bigint' ? undefined : formData.max}
-                    step={formData.type === 'double' ? 0.1 : 1}
+                    step={formData.type === 'double' ? 'any' : 1}
                     placeholder={t('Enter value')}
                     disabled={isLoading}
                   />

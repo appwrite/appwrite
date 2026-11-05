@@ -366,7 +366,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Paypal',
+        'class' => 'Appwrite\\Auth\\OAuth2\\PaypalSandbox',
     ],
     'podio' => [
         'name' => 'Podio',
@@ -465,7 +465,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Tradeshift',
+        'class' => 'Appwrite\\Auth\\OAuth2\\TradeshiftBox',
     ],
     'twitch' => [
         'name' => 'Twitch',
@@ -488,6 +488,17 @@ return [
         'beta' => false,
         'mock' => false,
         'class' => 'Appwrite\\Auth\\OAuth2\\Vipps',
+    ],
+    'vippsSandbox' => [
+        'name' => 'Vipps MobilePay Sandbox',
+        'developers' => 'https://developer.vippsmobilepay.com/docs/knowledge-base/test-environment/',
+        'icon' => 'icon-vipps',
+        'enabled' => true,
+        'sandbox' => true,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+        'class' => 'Appwrite\\Auth\\OAuth2\\VippsSandbox',
     ],
     'webflow' => [
         'name' => 'Webflow',
