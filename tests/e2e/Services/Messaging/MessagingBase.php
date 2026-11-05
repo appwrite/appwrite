@@ -3002,8 +3002,8 @@ trait MessagingBase
         $targetId = $response['body']['targets'][0]['$id'];
 
         // Create scheduled message far enough in the future that the scheduler
-        // will not process it before we convert it to draft
-        $scheduledAt = DateTime::addSeconds(new \DateTime(), 120);
+        // will not process it before we convert it to draft, and near enough to wait past it
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 20);
 
         $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
             'content-type' => 'application/json',
@@ -3034,9 +3034,11 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
 
-        // Verify the message remains in DRAFT status and is not processed by the scheduler
+        // Verify the message remains in DRAFT status after its original scheduled time
         $draftMessageId = $message['body']['$id'];
-        $this->assertEventually(function () use ($draftMessageId) {
+        $this->assertEventually(function () use ($draftMessageId, $scheduledAt) {
+            $this->assertGreaterThan((new \DateTime($scheduledAt))->getTimestamp() + 10, \time());
+
             $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $draftMessageId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -3044,7 +3046,22 @@ trait MessagingBase
             ]);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals(MessageStatus::DRAFT, $response['body']['status']);
-        }, 10000, 500);
+        }, 60000, 1000);
+
+        // A draft past its original time can still be scheduled again
+        $rescheduledAt = DateTime::addSeconds(new \DateTime(), 600);
+
+        $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $draftMessageId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'draft' => false,
+            'scheduledAt' => $rescheduledAt,
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
     }
 
     public function testDraftToScheduledMessage(): void
