@@ -120,7 +120,14 @@ class Update extends Base
         $documents = $status === 'completed' ? $this->prepareFindings($review, $findings) : [];
 
         // One transaction, so a failed status write leaves no findings behind for a retry to duplicate.
+        // The row lock makes the move to an end state happen once: of two overlapping reports, the
+        // second finds the review ended, so a completed review is counted once.
         $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $review, $update, $documents) {
+            $current = $dbForProject->getDocument('reviews', $review->getId(), forUpdate: true);
+            if (!\in_array($current->getAttribute('status'), ['queued', 'processing'], true)) {
+                throw new Exception(Exception::REVIEW_STATUS_INVALID, "Review is already {$current->getAttribute('status')}.");
+            }
+
             if (!empty($documents)) {
                 $dbForProject->createDocuments('reviewFindings', $documents);
             }
