@@ -70,7 +70,7 @@ import {
   type AnalyticsFiltersContextValue,
 } from '../_components/analytics-filters-context'
 import {
-  ANALYTICS_FILTER_COLUMNS,
+  analyticsFilterColumns,
   analyticsFiltersFromMap,
   equalFilterEntry,
   trafficKindFilterEntry,
@@ -146,6 +146,7 @@ export function View({
     [filterQuery],
   )
   const filters = useMemo(() => analyticsFiltersFromMap(filterMap), [filterMap])
+  const filterColumns = useMemo(() => analyticsFilterColumns(filters), [filters])
 
   const commitFilterMap = useCallback(
     (next: FilterMap) => {
@@ -501,7 +502,7 @@ export function View({
               <FiltersPopover
                 open={filtersOpen}
                 onOpenChange={setFiltersOpen}
-                columns={ANALYTICS_FILTER_COLUMNS}
+                columns={filterColumns}
                 filterMap={filterMap}
                 onRemoveFilter={filtersContext.onRemoveFilter}
                 onClearAll={filtersContext.onClearAllFilters}

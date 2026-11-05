@@ -5,8 +5,7 @@ import { buildFilterTagFromCompactKey } from '@/lib/table-filters'
 import { useCountryLookups } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import {
-  ANALYTICS_FILTER_COLUMNS,
-  analyticsPropKeyOf,
+  analyticsFilterColumns,
   trafficKindOfFilterKey,
 } from '@/lib/analytics/analytics-filters'
 import { useAnalyticsFilters } from './analytics-filters-context'
@@ -34,7 +33,9 @@ function TagText({ tag }: { tag: string }) {
  */
 export function ActiveFilterChips() {
   const t = useT()
-  const { filterMap, onRemoveFilter, onClearAllFilters } = useAnalyticsFilters()
+  const { filters, filterMap, onRemoveFilter, onClearAllFilters } =
+    useAnalyticsFilters()
+  const columns = analyticsFilterColumns(filters)
   const { lookups: countryLookups } = useCountryLookups()
 
   if (filterMap.size === 0) return null
@@ -53,13 +54,6 @@ export function ActiveFilterChips() {
         // The humans/bots filter is an empty-category query underneath; show
         // what it means rather than `Bot category is ""`.
         const trafficKind = trafficKindOfFilterKey(key)
-        const propKey = analyticsPropKeyOf(String(key.c))
-        const columns = propKey
-          ? [
-              ...ANALYTICS_FILTER_COLUMNS,
-              { id: String(key.c), title: propKey, type: 'string' as const },
-            ]
-          : ANALYTICS_FILTER_COLUMNS
         const tag = trafficKind
           ? `**${trafficKind === 'human' ? t('Humans') : t('Bots')}** ${t('only')}`
           : buildFilterTagFromCompactKey(displayKey, columns).tag

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { AnalyticsDimension } from '@appwrite.io/console'
 import {
   analyticsFilterAttributeForTab,
+  analyticsFilterColumns,
   analyticsFiltersFromMap,
   equalFilterEntry,
   isAnalyticsFilterShapeSupported,
@@ -99,4 +100,18 @@ describe('analytics filter shapes', () => {
       ).toBe(true)
     },
   )
+})
+
+describe('analytics filter columns', () => {
+  test('adds a column titled with the key for each active prop filter', () => {
+    const columns = analyticsFilterColumns([
+      { attribute: 'props.plan', query: equalFilterEntry('props.plan', 'pro').query },
+      { attribute: 'props.plan', query: equalFilterEntry('props.plan', 'team').query },
+      { attribute: 'country', query: equalFilterEntry('country', 'NP').query },
+    ])
+    const props = columns.filter((column) => column.id.startsWith('props.'))
+    expect(props.map((column) => [column.id, column.title])).toEqual([
+      ['props.plan', 'plan'],
+    ])
+  })
 })

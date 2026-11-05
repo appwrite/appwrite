@@ -108,6 +108,32 @@ export const ANALYTICS_FILTER_COLUMNS: FilterColumn[] =
     allowedOperators: [...ANALYTICS_FILTER_OPERATORS],
   }))
 
+/**
+ * The filter columns plus one per active `props.<key>` filter, titled with the
+ * key, so chips, exports and the filter editor can resolve it.
+ */
+export function analyticsFilterColumns(
+  filters: readonly AnalyticsFilter[],
+): FilterColumn[] {
+  const propAttributes = new Set(
+    filters
+      .map((filter) => filter.attribute)
+      .filter((attribute) => analyticsPropKeyOf(attribute) !== null),
+  )
+  if (propAttributes.size === 0) return ANALYTICS_FILTER_COLUMNS
+  return [
+    ...ANALYTICS_FILTER_COLUMNS,
+    ...[...propAttributes].map(
+      (id): FilterColumn => ({
+        id,
+        title: analyticsPropKeyOf(id)!,
+        type: 'string',
+        allowedOperators: [...ANALYTICS_FILTER_OPERATORS],
+      }),
+    ),
+  ]
+}
+
 const ATTRIBUTE_SET = new Set<string>(ANALYTICS_FILTER_ATTRIBUTES)
 const OPERATOR_SET = new Set<string>(ANALYTICS_FILTER_OPERATORS)
 
