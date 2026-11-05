@@ -1183,15 +1183,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'סך הכל עבור כל האירועים בטווח הנבחר',
   Visits: 'ביקורים',
   'Engagement time': 'זמן מעורבות',
-  'Screen views': 'צפיות במסכים',
-  'Screens per session': 'מסכים לסשן',
-  'Session duration': 'משך סשן',
-  'Screens viewed, including repeat views of the same screen.':
-    'מסכים שנצפו, כולל צפיות חוזרות באותו מסך.',
-  'Average screen views per session (screen views ÷ sessions).':
-    'ממוצע הצפיות במסכים לסשן (צפיות במסכים ÷ סשנים).',
-  'Average time the app was in the foreground per session. Sessions with no engagement are excluded.':
-    'הזמן הממוצע שבו האפליקציה הייתה בחזית בכל סשן. סשנים ללא מעורבות אינם נכללים.',
   'This endpoint is public, so no API key is needed for client-side tracking. Only the server-side override fields (userId, ip, userAgent) require an API key with the analytics.write scope.':
     'נקודת הקצה הזו ציבורית, ולכן לא נדרש מפתח API למעקב בצד הלקוח. רק שדות הדריסה בצד השרת (userId, ip, userAgent) דורשים מפתח API עם ההרשאה analytics.write.',
   Flutter: 'Flutter',

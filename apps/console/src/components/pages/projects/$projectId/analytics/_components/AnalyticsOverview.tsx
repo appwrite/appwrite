@@ -124,33 +124,23 @@ const OVERVIEW_METRICS: {
   { key: 'engagementTime', label: 'Engagement time', info: 'engagementTime', format: formatDuration, source: 'aggregate', axis: 'duration' },
 ]
 
-type OverviewTile = {
-  key: AnalyticsChartMetric
-  label?: string
-  info?: AnalyticsMetricInfoKey
-}
-
-// Flutter's screen and lifecycle events never interact, so bounce rate reads
-// oddly on apps. Agents relay from servers, where visitors mean little.
-// prettier-ignore
-const TILES_BY_TYPE: Record<AnalyticsPropertyType, readonly OverviewTile[]> = {
-  [AnalyticsPropertyType.Web]: OVERVIEW_METRICS.map(({ key }) => ({ key })),
+// In display order; the first leads the chart. A default Flutter app sends
+// screen_view, not pageview, so pageview-based metrics would read 0 or 100%.
+// Agents relay from servers, where visitors mean little.
+const METRICS_BY_TYPE: Record<
+  AnalyticsPropertyType,
+  readonly AnalyticsChartMetric[]
+> = {
+  [AnalyticsPropertyType.Web]: OVERVIEW_METRICS.map(({ key }) => key),
   [AnalyticsPropertyType.Mobile]: [
-    { key: 'visitors' },
-    { key: 'visits', label: 'Sessions' },
-    { key: 'pageviews', label: 'Screen views', info: 'screenViews' },
-    { key: 'events' },
-    { key: 'users' },
-    { key: 'viewsPerVisit', label: 'Screens per session', info: 'screensPerSession' },
-    { key: 'visitDuration', label: 'Session duration' },
-    { key: 'engagementTime', info: 'appEngagementTime' },
+    'visitors',
+    'visits',
+    'events',
+    'users',
+    'visitDuration',
+    'engagementTime',
   ],
-  [AnalyticsPropertyType.Agent]: [
-    { key: 'events' },
-    { key: 'visits', label: 'Sessions' },
-    { key: 'users' },
-    { key: 'visitDuration', label: 'Session duration' },
-  ],
+  [AnalyticsPropertyType.Agent]: ['events', 'visits', 'users', 'visitDuration'],
 }
 
 /** Value of a series-backed metric for one bucket. */
@@ -435,16 +425,9 @@ export function AnalyticsOverview({
 
   // `users` counts identified traffic only, so it stays hidden on properties
   // that never record a user ID rather than showing a permanent 0.
-  const metrics = TILES_BY_TYPE[type].flatMap((tile) =>
-    tile.key === 'users' && !showUsers
-      ? []
-      : [
-          {
-            ...OVERVIEW_METRICS.find((metric) => metric.key === tile.key)!,
-            ...tile,
-          },
-        ],
-  )
+  const metrics = METRICS_BY_TYPE[type]
+    .filter((key) => showUsers || key !== 'users')
+    .map((key) => OVERVIEW_METRICS.find((metric) => metric.key === key)!)
 
   // Aggregate metrics can't be read with some filters, so while one is
   // active the chart falls back to the first tab (the tab explains why).
