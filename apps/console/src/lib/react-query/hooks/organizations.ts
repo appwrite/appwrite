@@ -265,6 +265,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     deploymentSize: Number.MAX_SAFE_INTEGER,
     buildSize: Number.MAX_SAFE_INTEGER,
     functionsIntervalMinimum: 0,
+    functionsAllowCron: true,
     databasesAllowEncrypt: true,
     group: 'starter' as Models.BillingPlan['group'],
   }

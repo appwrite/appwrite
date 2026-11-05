@@ -522,6 +522,12 @@ const REALTIME_CONCURRENCY_INTERVAL = '5m';
 // sampled is lost for good.
 const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
+// Default for _APP_REALTIME_BOOT_TIMEOUT: longest a presence write waits at boot for the self-hosted cleanup.
+const REALTIME_BOOT_TIMEOUT_SECONDS = 30;
+
+// A realtime process whose heartbeat (every 5s) is older than this counts as gone.
+const REALTIME_HEARTBEAT_WINDOW_SECONDS = 60;
+
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';

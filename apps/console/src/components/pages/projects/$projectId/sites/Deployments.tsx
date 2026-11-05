@@ -312,11 +312,7 @@ export function View() {
 
   const { theme, resolvedTheme } = useTheme()
   const isDark = useMemo(
-    () =>
-      resolvedTheme === 'dark' ||
-      theme === 'dark' ||
-      (typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches),
+    () => (resolvedTheme ?? theme ?? 'dark') !== 'light',
     [theme, resolvedTheme],
   )
 

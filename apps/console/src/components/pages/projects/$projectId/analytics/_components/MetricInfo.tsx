@@ -24,6 +24,8 @@ export const ANALYTICS_METRIC_INFO = {
     'Every tracked event, pageviews and custom events alike, including repeats by the same visitor.',
   visits: 'Sessions with at least one event in the selected range.',
   pageviews: 'Pages viewed, including repeat views of the same page.',
+  users:
+    'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.',
   viewsPerVisit: 'Average pageviews per session (pageviews ÷ visits).',
   bounceRate:
     'Share of sessions with only a single event. Lower usually means visitors explore further.',
