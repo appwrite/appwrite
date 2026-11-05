@@ -42,6 +42,8 @@ class Parser
 {
     private const int MAX_DEPTH = 256;
 
+    private const string ESCAPE = 'ESCAPE';
+
     /** @var Token[] */
     private array $tokens;
     private int $tokenCount;
@@ -66,7 +68,15 @@ class Parser
         $this->depth = 0;
         $this->inColumnList = false;
 
-        return $this->parseSelect();
+        $select = $this->parseSelect();
+        $this->matchAndConsume(TokenType::Semicolon);
+
+        $token = $this->current();
+        if ($token->type !== TokenType::Eof) {
+            throw new ValidationException("Unexpected token '{$token->value}' ({$token->type->name}) at position {$token->position}");
+        }
+
+        return $select;
     }
 
     private function parseSelect(): Select
@@ -381,14 +391,12 @@ class Parser
             if ($this->peekKeyword(1, 'LIKE')) {
                 $this->advance(); // NOT
                 $this->advance(); // LIKE
-                $right = $this->parseAddition();
-                return new Binary($left, 'NOT LIKE', $right);
+                return $this->parseLike($left, 'NOT LIKE');
             }
             if ($this->peekKeyword(1, 'ILIKE')) {
                 $this->advance(); // NOT
                 $this->advance(); // ILIKE
-                $right = $this->parseAddition();
-                return new Binary($left, 'NOT ILIKE', $right);
+                return $this->parseLike($left, 'NOT ILIKE');
             }
         }
 
@@ -407,13 +415,11 @@ class Parser
         // LIKE / ILIKE
         if ($this->matchKeyword('LIKE')) {
             $this->advance();
-            $right = $this->parseAddition();
-            return new Binary($left, 'LIKE', $right);
+            return $this->parseLike($left, 'LIKE');
         }
         if ($this->matchKeyword('ILIKE')) {
             $this->advance();
-            $right = $this->parseAddition();
-            return new Binary($left, 'ILIKE', $right);
+            return $this->parseLike($left, 'ILIKE');
         }
 
         // Comparison operators: =, !=, <>, <, >, <=, >=
@@ -428,6 +434,19 @@ class Parser
         }
 
         return $left;
+    }
+
+    private function parseLike(Expression $left, string $operator): Binary
+    {
+        $right = $this->parseAddition();
+
+        if (!$this->matchWord(self::ESCAPE)) {
+            return new Binary($left, $operator, $right);
+        }
+
+        $this->advance();
+
+        return new Binary($left, $operator, $right, $this->parseAddition());
     }
 
     private function parseInList(Expression $left, bool $negated): In
@@ -1162,6 +1181,14 @@ class Parser
         throw new Exception(
             "Expected '{$value}' at position {$token->position}, got '{$token->value}'"
         );
+    }
+
+    private function matchWord(string $word): bool
+    {
+        $token = $this->current();
+
+        return ($token->type === TokenType::Identifier || $token->type === TokenType::Keyword)
+            && strtoupper($token->value) === $word;
     }
 
     private function matchAndConsume(TokenType $type): bool

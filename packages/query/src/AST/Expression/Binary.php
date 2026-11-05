@@ -10,6 +10,7 @@ readonly class Binary implements Expression
         public Expression $left,
         public string $operator,
         public Expression $right,
+        public ?Expression $escape = null,
     ) {
     }
 }

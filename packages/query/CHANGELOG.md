@@ -27,6 +27,13 @@ All notable changes to `utopia-php/query` are documented in this file.
   `NOT LIKE`) with `!`-escaped bindings, SQLite's to `col LIKE ? ESCAPE '\'`,
   and MySQL's `setJsonRemove()` to `JSON_SEARCH(col, 'one', ?, '!')`.
   Statement text and bindings matched in tests or caches change accordingly.
+- `AST\Parser::parse()` requires the statement to end the input, after at most
+  one `;`, and throws `ValidationException` for any token left over. It
+  stopped at the first token it did not expect, so a clause it did not know,
+  or a second statement, was silently dropped from the tree.
+- `AST\Expression\Binary` takes an optional `escape` expression, which the
+  parser reads from `LIKE`, `ILIKE`, `NOT LIKE` and `NOT ILIKE` followed by
+  `ESCAPE`, and the serializer and `Walker` carry.
 
 ### Fixed
 
@@ -90,6 +97,16 @@ All notable changes to `utopia-php/query` are documented in this file.
   `JSON_SEARCH()` matches its value with and passes `!` as the escape
   character, so a value containing `%` or `_` removes only the element equal
   to it.
+- `toAst()` keeps the `ESCAPE` clause of LIKE predicates in CTE bodies. The
+  parser stopped at `ESCAPE`, so on MySQL, MariaDB and SQLite the tree
+  serialized `a LIKE ?` while the binding stayed `!`- or `\`-escaped, and
+  `startsWith('a', '50%')` matched any value starting with `50!`. LIKE
+  filters `toAst()` builds itself escape the value and declare the dialect's
+  escape character, as `build()` does, so `startsWith('a', '50%')` no longer
+  serializes to `a LIKE '50%%'`. `fromAst()` reads the pattern back with its
+  declared escape character, or the dialect's implicit one, into
+  `startsWith()`, `endsWith()` and `contains()` with the unescaped value; a
+  pattern with other wildcards stays raw with its `ESCAPE` clause.
 
 ## 0.7.2
 

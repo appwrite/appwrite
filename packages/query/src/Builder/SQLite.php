@@ -26,6 +26,8 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
 
     protected const bool DECLARES_LIKE_ESCAPE = true;
 
+    protected const ?string IMPLICIT_LIKE_ESCAPE = null;
+
     protected StringLiteral $literal = StringLiteral::Standard;
 
     /** @var array<string, Condition> */

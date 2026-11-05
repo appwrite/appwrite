@@ -155,6 +155,10 @@ class Serializer
 
         $sql = $left . ' ' . $expression->operator . ' ' . $right;
 
+        if ($expression->escape !== null) {
+            $sql .= ' ESCAPE ' . $this->serializeBinaryChild($expression->escape, $rightPrec);
+        }
+
         if ($parentPrecedence !== null && $prec < $parentPrecedence) {
             return '(' . $sql . ')';
         }
