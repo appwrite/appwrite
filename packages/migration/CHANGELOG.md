@@ -12,6 +12,10 @@
 
 ### Added
 
+- `NHost::getDatabaseHost()` returns the Postgres host the source connects to (Supabase returns its configured host),
+  so a caller can check where it resolves before connecting.
+- `NHost::setDatabaseAddress()` connects to the database host on a given address (libpq `hostaddr`), so the
+  connection lands on the address a caller checked. `NHost::getDatabaseDsn()` returns the DSN it connects with.
 - `Target::setDestinations()` confines a target's requests to a `Utopia\Client\Destinations`. Each connection and
   redirect hop is checked against the address it actually reached, so DNS cannot answer differently between a check
   and the connection. The Appwrite source applies it to its SDK client too. Unset, requests connect anywhere.
@@ -20,6 +24,12 @@
 - Appwrite to Appwrite migrations carry what sdk-for-php 30.4 can write: membership IDs, topic `qos` and `expiry`,
   the reply-to address of scheduled emails, the Android channel of scheduled pushes, the password-pwned,
   password-rotation and passkey policies, and project environments as the new `project-environment` resource.
+
+### Fixed
+
+- The CSV destination prefixes string values that start with `=`, `+`, `-`, `@`, a tab or a carriage return with a
+  single quote, so spreadsheet applications do not evaluate them as formulas. Numbers, booleans and arrays are
+  written as before. The CSV source strips the quote again, so exports import back unchanged.
 
 ## 3.1.2
 
@@ -104,6 +114,7 @@ database library it builds on; read the upgrade notes before you upgrade from 2.
 
 ### Fixed
 
+- The transfer cache keys a table by its database's ID and a column, index or row by its database's and table's IDs, so the first tables of two databases no longer share an entry (the second replaced the first, which then got no columns, indexes or rows).
 - Imports into a destination whose database metadata has `status` but no owner attributes.
 - Recovery of databases left `provisioning` or `failed` without an owner.
 - An ownerless database that another migration may still be provisioning is no longer taken over.

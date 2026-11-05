@@ -1140,6 +1140,13 @@
             "queries",
             "total"
         ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -2822,6 +2829,36 @@
         "migrations.retry": [
             "migrationId"
         ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
         "notifications.list": [
             "queries",
             "total"
@@ -2848,12 +2885,20 @@
             "expire",
             "description"
         ],
+        "organization.createProjectTransfer": [
+            "projectId",
+            "recipientId",
+            "expire"
+        ],
         "organization.deleteProject": [
             "projectId"
         ],
         "organization.deleteProjectKey": [
             "projectId",
             "keyId"
+        ],
+        "organization.deleteProjectTransfer": [
+            "transferId"
         ],
         "organization.getProject": [
             "projectId"
@@ -2862,7 +2907,16 @@
             "projectId",
             "keyId"
         ],
+        "organization.getProjectTransfer": [
+            "transferId",
+            "secret"
+        ],
         "organization.listProjectKeys": [
+            "projectId",
+            "queries",
+            "total"
+        ],
+        "organization.listProjectTransfers": [
             "projectId",
             "queries",
             "total"
@@ -2883,6 +2937,10 @@
             "scopes",
             "expire",
             "description"
+        ],
+        "organization.updateProjectTransferStatus": [
+            "transferId",
+            "secret"
         ],
         "ping.get": [],
         "presences.delete": [
@@ -2972,6 +3030,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
         ],
@@ -2995,6 +3054,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -3051,6 +3111,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -3340,6 +3403,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -3400,6 +3468,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -3513,8 +3584,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",
@@ -5247,6 +5358,13 @@
             "queries",
             "total"
         ],
+        "alerts.get": [
+            "alertId"
+        ],
+        "alerts.list": [
+            "queries",
+            "total"
+        ],
         "avatars.deletePhoto": [],
         "avatars.getBrowser": [
             "code",
@@ -6796,6 +6914,145 @@
             "apiSecret",
             "from"
         ],
+        "migrations.createAppwriteMigration": [
+            "resources",
+            "endpoint",
+            "projectId",
+            "apiKey",
+            "onDuplicate"
+        ],
+        "migrations.createCSVExport": [
+            "databaseId",
+            "collectionId",
+            "filename",
+            "columns",
+            "queries",
+            "delimiter",
+            "enclosure",
+            "escape",
+            "header",
+            "notify"
+        ],
+        "migrations.createCSVImport": [
+            "bucketId",
+            "fileId",
+            "databaseId",
+            "collectionId",
+            "internalFile",
+            "onDuplicate"
+        ],
+        "migrations.createFirebaseMigration": [
+            "resources",
+            "serviceAccount"
+        ],
+        "migrations.createJSONExport": [
+            "databaseId",
+            "collectionId",
+            "filename",
+            "columns",
+            "queries",
+            "notify"
+        ],
+        "migrations.createJSONImport": [
+            "bucketId",
+            "fileId",
+            "databaseId",
+            "collectionId",
+            "internalFile",
+            "onDuplicate"
+        ],
+        "migrations.createNHostMigration": [
+            "resources",
+            "subdomain",
+            "region",
+            "adminSecret",
+            "database",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.createSupabaseMigration": [
+            "resources",
+            "endpoint",
+            "apiKey",
+            "databaseHost",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.delete": [
+            "migrationId"
+        ],
+        "migrations.get": [
+            "migrationId"
+        ],
+        "migrations.getAppwriteReport": [
+            "resources",
+            "endpoint",
+            "projectID",
+            "key"
+        ],
+        "migrations.getFirebaseReport": [
+            "resources",
+            "serviceAccount"
+        ],
+        "migrations.getNHostReport": [
+            "resources",
+            "subdomain",
+            "region",
+            "adminSecret",
+            "database",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.getSupabaseReport": [
+            "resources",
+            "endpoint",
+            "apiKey",
+            "databaseHost",
+            "username",
+            "password",
+            "port"
+        ],
+        "migrations.list": [
+            "queries",
+            "search",
+            "total"
+        ],
+        "migrations.retry": [
+            "migrationId"
+        ],
+        "monitors.createUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
+        "monitors.delete": [
+            "monitorId"
+        ],
+        "monitors.get": [
+            "monitorId"
+        ],
+        "monitors.list": [
+            "queries",
+            "total"
+        ],
+        "monitors.updateUsageMonitor": [
+            "monitorId",
+            "name",
+            "rules",
+            "window",
+            "cooldown",
+            "enabled",
+            "notify",
+            "critical"
+        ],
         "organization.createEphemeralProjectKey": [
             "projectId",
             "scopes",
@@ -6925,6 +7182,7 @@
         "project.deletePlatform": [
             "platformId"
         ],
+        "project.deleteSessions": [],
         "project.deleteVariable": [
             "variableId"
         ],
@@ -6948,6 +7206,7 @@
         "project.getPolicy": [
             "policyId"
         ],
+        "project.getPrefs": [],
         "project.getVariable": [
             "variableId"
         ],
@@ -7004,6 +7263,9 @@
             "enabled"
         ],
         "project.updateDenyFreeEmailPolicy": [
+            "enabled"
+        ],
+        "project.updateDenyRealtimeGuestsPolicy": [
             "enabled"
         ],
         "project.updateEmailTemplate": [
@@ -7293,6 +7555,11 @@
             "clientSecret",
             "enabled"
         ],
+        "project.updateOAuth2Vipps": [
+            "clientId",
+            "clientSecret",
+            "enabled"
+        ],
         "project.updateOAuth2WordPress": [
             "clientId",
             "clientSecret",
@@ -7353,6 +7620,9 @@
             "lowercase",
             "number",
             "symbols"
+        ],
+        "project.updatePrefs": [
+            "prefs"
         ],
         "project.updateProtocol": [
             "protocolId",
@@ -7436,8 +7706,48 @@
             "queries",
             "total"
         ],
+        "proxy.updateFunctionRule": [
+            "ruleId",
+            "functionId",
+            "branch"
+        ],
+        "proxy.updateRedirectRule": [
+            "ruleId",
+            "url",
+            "statusCode",
+            "resourceId",
+            "resourceType"
+        ],
         "proxy.updateRuleStatus": [
             "ruleId"
+        ],
+        "proxy.updateSiteRule": [
+            "ruleId",
+            "siteId",
+            "branch"
+        ],
+        "reviews.createRepository": [
+            "installationId",
+            "providerRepositoryId"
+        ],
+        "reviews.deleteRepository": [
+            "repositoryId"
+        ],
+        "reviews.get": [
+            "reviewId"
+        ],
+        "reviews.list": [
+            "queries",
+            "total"
+        ],
+        "reviews.listEvents": [
+            "reviewId",
+            "queries",
+            "total"
+        ],
+        "reviews.listRepositories": [
+            "queries",
+            "total"
         ],
         "sites.create": [
             "siteId",

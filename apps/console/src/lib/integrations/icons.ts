@@ -8,6 +8,7 @@ export const INTEGRATION_SLUG_ICON_MAP: Record<string, string> = {
   'ai-hugging-face-speech-recognition': 'hugging-face.svg',
   'ai-openai': 'chatgpt.svg',
   'ai-perplexity': 'perplexity.svg',
+  'deployments-entire': 'entire.svg',
   'deployments-github': 'github.svg',
   'email-sendgrid': 'sendgrid.svg',
   'flutterflow-auth-kit': 'flutter.svg',

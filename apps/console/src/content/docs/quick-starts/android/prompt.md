@@ -25,7 +25,7 @@
 - The SDK requires `minSdk` 24 or higher. Add the following dependency to the app-level `build.gradle.kts` file inside the **dependencies** block:
 
 ```kotlin
-implementation("io.appwrite:sdk-for-android:30.0.0")
+implementation("io.appwrite:sdk-for-android:31.0.1")
 ```
 
 - Add the OAuth callback activity inside the `<application>` tag in `AndroidManifest.xml` (replace `<PROJECT_ID>` with actual project ID):

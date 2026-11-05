@@ -76,6 +76,8 @@ return [
             Attribute::boolean(key: 'impersonator', default: false),
             Attribute::string(key: 'photoId'),
             Attribute::integer(key: 'photoSize', width: IntegerWidth::Bits64, default: 0),
+            // Monitors whose alert emails a console user stopped, and `type:<type>` for every monitor of a type.
+            Attribute::string(key: 'alertsUnsubscribed', size: Database::LENGTH_KEY, default: [], array: true),
         ],
         'indexes' => [
             Index::key(key: '_key_name', attributes: ['name'], lengths: [256], orders: [OrderDirection::Asc]),
@@ -374,6 +376,8 @@ return [
         'name' => 'MQTT Messages',
         'attributes' => [
             Attribute::string(key: 'topic', required: true),
+            // Replay keys on the topic instance, so a topic recreated under a deleted one's id never replays its messages.
+            Attribute::string(key: 'topicInternalId', required: true),
             Attribute::string(key: 'data', size: 65535, required: true, filters: [Filter::Json]),
             Attribute::string(key: 'messageId'),
             Attribute::string(key: 'messageInternalId'),
@@ -382,9 +386,9 @@ return [
             Attribute::integer(key: 'sequence', required: true),
         ],
         'indexes' => [
-            Index::key(key: '_key_topic_sequence', attributes: ['topic', 'sequence'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
+            Index::key(key: '_key_topicInternalId_sequence', attributes: ['topicInternalId', 'sequence'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
             Index::key(key: '_key_messageInternalId', attributes: ['messageInternalId'], orders: [OrderDirection::Asc]),
-            Index::unique(key: '_key_message_topic', attributes: ['messageId', 'topic'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
+            Index::unique(key: '_key_message_topicInternalId', attributes: ['messageId', 'topicInternalId'], orders: [OrderDirection::Asc, OrderDirection::Asc]),
         ],
     ],
 

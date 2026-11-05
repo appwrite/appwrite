@@ -88,6 +88,17 @@ export const jaSitesDictionary: Record<string, string> = {
   'Generating certificate': '証明書を発行中',
   'Verification failed': '検証に失敗しました',
   'Certificate generation failed': '証明書の発行に失敗しました',
+  'Certificate expired': '証明書の期限切れ',
+  'Renewal failed': '証明書の更新に失敗しました',
+  'Renewal blocked': '証明書の更新が保留中',
+  'Certificate renewal started': '証明書の更新を開始しました',
+  'Certificate expires on {date}.': '証明書の有効期限は{date}です。',
+  "This certificate has expired. Check that the domain's DNS still points to Appwrite.":
+    'この証明書は期限切れです。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  "View logs for details. Check that the domain's DNS still points to Appwrite.":
+    '詳細はログを確認してください。ドメインの DNS が引き続き Appwrite を指しているか確認してください。',
+  'Renewal is waiting on a DNS record. View logs to see which record to add.':
+    '証明書の更新は DNS レコードの追加を待っています。追加するレコードはログで確認できます。',
   'Back to sites': 'サイト一覧に戻る',
   'Your site is currently being deployed.': 'サイトは現在デプロイ中です。',
   'Filters coming soon': 'フィルターは近日公開',
@@ -105,7 +116,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Site is disabled': 'サイトは無効です',
   'This site is disabled and not accessible to visitors. Console actions remain available.':
     'このサイトは無効になっており、訪問者がアクセスすることはできません。コンソールからの操作は引き続き利用できます。',
-  'Enable this site in the Settings tab': '設定タブでこのサイトを有効にしてください',
+  'Enable this site in the Settings tab':
+    '設定タブでこのサイトを有効にしてください',
   'to make it available to visitors.': '訪問者が利用できるようにしてください。',
   // Settings: danger zone
   'Delete site': 'サイトの削除',
@@ -178,7 +190,8 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to update triggers': 'トリガーの更新に失敗しました',
   // Settings: silent mode card
   'Silent mode': 'サイレントモード',
-  'Disable automated commit comments': '自動コミットコメントを無効化',
+  'Skip pull request comments, checks and deployment reports':
+    'プルリクエストへのコメント、チェック、デプロイの報告をスキップ',
   // Settings: variables card
   'Environment variables': '環境変数',
   // Overview extras
@@ -205,6 +218,9 @@ export const jaSitesDictionary: Record<string, string> = {
   'Failed to remove domain': 'ドメインの削除に失敗しました',
   'Failed to add domain': 'ドメインの追加に失敗しました',
   'Failed to register domain': 'ドメインの登録に失敗しました',
+  'Verify domain ownership': 'ドメイン所有権の検証',
+  'This domain already points to Appwrite. Add this TXT record to prove it is yours, then verify.':
+    'このドメインはすでに Appwrite を指しています。所有者であることを証明するため、この TXT レコードを追加してから検証してください。',
   'Invalid URL': '無効な URL',
   'Enter URL': 'URL を入力',
   'Select branch': 'Branch を選択',
@@ -226,6 +242,7 @@ export const jaSitesDictionary: Record<string, string> = {
   'Connect GitHub': 'GitHub の接続',
   'Connect GitLab': 'GitLab の接続',
   'Connect Bitbucket': 'Bitbucket の接続',
+  'Connect Gitea': 'Gitea の接続',
   'Connect Origin': 'Origin の接続',
   'Select organization': 'Organization を選択',
   'Add account': 'アカウントの追加',
@@ -378,8 +395,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '有効: サイトからのログとエラーが記録されます。',
   'Disabled - lighter request records; responses may be slightly faster.':
     '無効: 軽量なリクエスト記録。応答がわずかに速くなる場合があります。',
-  'Control whether Appwrite posts automated comments on commits in your connected GitHub repository (for example deployment notes on pull requests). Deployments, checks, and builds are unchanged-only optional commit comments are skipped when silent mode is on.':
-    '接続した GitHub リポジトリのコミットに Appwrite が自動コメントを投稿するかを制御します (例: プルリクエストへのデプロイメモ)。デプロイ、チェック、ビルドは変わりません。サイレントモードがオンのときは任意のコミットコメントのみスキップされます。',
+  "When on, Appwrite doesn't comment on pull requests or report checks and deployments to your Git provider. Builds and deployments run as usual.":
+    'オンにすると、Appwrite はプルリクエストにコメントせず、チェックやデプロイを Git プロバイダーに報告しません。ビルドとデプロイは通常どおり実行されます。',
   'Configure environment variables for your site deployments. Site-specific variables override global project variables. Set the environment variables or secret keys that will be passed to this site during deployment.':
     'サイトデプロイの環境変数を構成します。サイト固有の変数はプロジェクト全体の変数を上書きします。デプロイ時にこのサイトへ渡す環境変数またはシークレットキーを設定してください。',
   'Shell command that starts your SSR app after deploy (for example, npm run start). If left empty, your framework default is used. This field is optional.':
@@ -414,8 +431,6 @@ export const jaSitesDictionary: Record<string, string> = {
     'サイトにリンクされたリポジトリの本番 Branch。ここからのデプロイ成功時は自動的に有効化されます。',
   'Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web).':
     'リンクされたリポジトリ内のサイトコードへのパス。リポジトリルート (./) またはアプリを含むサブディレクトリ (例: ./apps/web) を使用してください。',
-  'Disable automated comments on repository commits':
-    'リポジトリのコミットへの自動コメントを無効化',
   'Clone this template into a new Git repository or link it to an existing one.':
     'このテンプレートを新しい Git リポジトリにクローンするか、既存のリポジトリにリンク',
   'Deploy now and connect your version control later via CLI or Git integration in your settings.':
@@ -424,6 +439,8 @@ export const jaSitesDictionary: Record<string, string> = {
     '接続された Git リポジトリでサイトを作成してデプロイ',
   'Configure the environment variables for this template':
     'このテンプレートの環境変数を構成',
+  'This template grants these scopes to the ephemeral key generated for every site build and SSR execution. You can change them in the site settings.':
+    'このテンプレートは、サイトのビルドと SSR の実行ごとに生成される一時的なキーにこれらのスコープを付与します。スコープはサイトの設定で変更できます。',
   'Screenshot may take a few moments after build completes':
     'ビルド完了後、スクリーンショットの生成に少し時間がかかることがあります',
   'Configure your site or share it with others':
@@ -544,4 +561,6 @@ export const jaSitesDictionary: Record<string, string> = {
   'Go live': '公開する',
   'Get an appwrite.network URL right away, then add your own domain.':
     'すぐに appwrite.network の URL が発行されます。その後、独自ドメインを追加できます。',
+  "This site's Git installation can no longer reach its repository, so pushes can't deploy. Disconnect the repository, then connect it again through the installation that has it now.":
+    'このサイトの Git インストールからリポジトリにアクセスできなくなったため、プッシュはデプロイされません。リポジトリの接続を解除してから、現在そのリポジトリがあるインストールで接続し直してください。',
 }

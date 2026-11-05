@@ -7,13 +7,16 @@ use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Platform\Action;
+use Appwrite\Presences\State as PresenceState;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
@@ -63,10 +66,12 @@ class Delete extends Action
             ->inject('queueForEvents')
             ->inject('publisherForDeletes')
             ->inject('mqtt')
+            ->inject('queueForRealtime')
+            ->inject('usage')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Mqtt $mqtt): void
+    public function action(string $userId, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, DeletePublisher $publisherForDeletes, Mqtt $mqtt, Realtime $queueForRealtime, Context $usage): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -84,6 +89,7 @@ class Delete extends Action
 
         DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
         DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$user->getSequence()]));
+        (new PresenceState())->deleteForUser($dbForProject, $project, $user, $queueForRealtime, $usage);
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,

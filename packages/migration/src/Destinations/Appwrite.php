@@ -79,6 +79,7 @@ use Utopia\Migration\Resources\Messaging\Subscriber;
 use Utopia\Migration\Resources\Messaging\Topic;
 use Utopia\Migration\Resources\Settings\Environment;
 use Utopia\Migration\Resources\Settings\Labels;
+use Utopia\Migration\Resources\Settings\Preferences;
 use Utopia\Migration\Resources\Settings\ProjectVariable;
 use Utopia\Migration\Resources\Settings\Protocols;
 use Utopia\Migration\Resources\Settings\Services as ServicesResource;
@@ -231,6 +232,7 @@ class Appwrite extends Destination
      * @param OnDuplicate $onDuplicate Behavior when a row with an existing $id is encountered.
      * @param (callable(Database $resource): string)|null $getDatabaseDSN Resolver for the destination's `_databases.database` value. Pass when the destination project's DSN differs from the source's, so the destination row carries its own DSN instead of inheriting the source's.
      * @param array<string, CollectionStructure> $collectionStructures Per-database-type metadata collection structures (e.g. `['vectorsdb' => ...]`), used instead of $collectionStructure when the imported database's type has an entry. Types with an entry also get type-specific metadata written (e.g. vectorsdb collection `dimension`).
+     * @param array<string>|null $scopes Scopes the migration was granted; imported API keys may hold no others. Null grants every scope.
      */
     public function __construct(
         string $project,
@@ -244,6 +246,7 @@ class Appwrite extends Destination
         protected OnDuplicate $onDuplicate = OnDuplicate::Fail,
         ?callable $getDatabaseDSN = null,
         protected array $collectionStructures = [],
+        protected ?array $scopes = null,
     ) {
         $this->projectId = $project;
         $this->endpoint = $endpoint;
@@ -425,6 +428,7 @@ class Appwrite extends Destination
             Resource::TYPE_PROJECT_VARIABLE,
             Resource::TYPE_PROJECT_PROTOCOLS,
             Resource::TYPE_PROJECT_LABELS,
+            Resource::TYPE_PROJECT_PREFERENCES,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
             Resource::TYPE_PROJECT_ENVIRONMENT,
@@ -3473,6 +3477,10 @@ class Appwrite extends Destination
                 /** @var Labels $resource */
                 $this->createLabels($resource);
                 break;
+            case Resource::TYPE_PROJECT_PREFERENCES:
+                /** @var Preferences $resource */
+                $this->createPreferences($resource);
+                break;
             case Resource::TYPE_PROJECT_SERVICES:
                 /** @var ServicesResource $resource */
                 $this->createServices($resource);
@@ -3623,6 +3631,19 @@ class Appwrite extends Destination
             'projects',
             $this->projectId,
             new UtopiaDocument(['labels' => $labels]),
+        ));
+
+        $this->dbForPlatform->purgeCachedDocument('projects', $this->projectId);
+
+        return true;
+    }
+
+    protected function createPreferences(Preferences $resource): bool
+    {
+        $this->dbForPlatform->getAuthorization()->skip(fn () => $this->dbForPlatform->updateDocument(
+            'projects',
+            $this->projectId,
+            new UtopiaDocument(['prefs' => $resource->getPreferences()]),
         ));
 
         $this->dbForPlatform->purgeCachedDocument('projects', $this->projectId);
@@ -4001,6 +4022,7 @@ class Appwrite extends Destination
             'corporateEmails' => $resource->getDenyCorporateEmail(),
             'passwordPwned' => $resource->getPasswordPwned(),
             'passwordRotation' => $resource->getPasswordRotation(),
+            'realtimeGuests' => $resource->getDenyRealtimeGuests(),
             'passkeyRpId' => $this->resolvePasskeyRpId($resource->getPasskeyRpId(), \is_array($auths) ? $this->optionalString($auths, 'passkeyRpId') ?? '' : ''),
         ];
         foreach ($reported as $key => $value) {
@@ -4049,6 +4071,17 @@ class Appwrite extends Destination
 
     protected function createApiKey(ApiKey $resource): bool
     {
+        // An imported key holds no scope the migration was not granted
+        if ($this->scopes !== null && !empty(\array_diff($resource->getScopes(), $this->scopes))) {
+            throw new Exception(
+                resourceName: $resource->getName(),
+                resourceGroup: $resource->getGroup(),
+                resourceId: $resource->getId(),
+                message: 'API key has scopes this migration was not granted',
+                code: Exception::CODE_UNAUTHORIZED,
+            );
+        }
+
         $existing = $this->dbForPlatform->findOne('keys', [
             Query::equal('resourceType', ['projects']),
             Query::equal('resourceInternalId', [$this->projectInternalId]),

@@ -46,6 +46,12 @@ class Email extends Validator
             return true;
         }
 
+        // EmailParser trims before it checks, but callers store the value they were given: 'dev@x.com ' or
+        // "dev@x.com\0" would pass as dev@x.com and be stored as a second, distinct address.
+        if ($value !== \trim($value) || ! \ctype_print($value)) {
+            return false;
+        }
+
         try {
             $email = new EmailParser($value);
 

@@ -17,8 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
   ExternalLink,
   Loader2,
@@ -34,15 +33,19 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { DomainsEmptyState } from './_components/DomainsEmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import type { Models } from '@appwrite.io/console'
-import { getApexDomain } from '@/lib/utils/proxy-domains'
+import {
+  canRetryRule,
+  canViewRuleLogs,
+  getApexDomain,
+} from '@/lib/utils/proxy-domains'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { VerifyDomainDialog } from './domains/VerifyDomain'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
-import { domainUrl } from '@/lib/domains/url'
+import { RuleStatusBadge } from './domains/RuleStatusBadge'
+import { useVisitUrl } from '@/hooks/use-visit-url'
 
 interface DomainsProps {
   projectId: string
@@ -60,13 +63,13 @@ export function Domains({
   createDisabledTooltip,
 }: DomainsProps) {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
 
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
-  const [verifyDomainOpen, setVerifyDomainOpen] = useState(false)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [retryDomainOpen, setRetryDomainOpen] = useState(false)
@@ -74,7 +77,7 @@ export function Domains({
     null,
   )
 
-  const { rules, isLoading } = useProjectDomains(
+  const { rules, isLoading, isFetching, refetch } = useProjectDomains(
     projectId,
     region,
     searchValueProp,
@@ -91,24 +94,6 @@ export function Domains({
     }
     return map
   }, [orgDomains])
-
-  const getStatusBadge = (status: string) => {
-    const config = getDomainStatusBadgeConfig(status)
-    return (
-      <Badge
-        variant={config.variant}
-        className="text-[10px] shrink-0 gap-1.5"
-        title={
-          status === 'verifying'
-            ? t('SSL certificate is being issued. This usually takes a couple of minutes.')
-            : undefined
-        }
-      >
-        {status === 'verifying' && <Loader2 className="h-3 w-3 animate-spin" />}
-        {t(config.label)}
-      </Badge>
-    )
-  }
 
   const handleRetry = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
@@ -129,10 +114,6 @@ export function Domains({
       setSelectedRule(rule)
       setDeleteDomainOpen(true)
     })
-  }
-
-  const canRetry = (status: string) => {
-    return status === 'created' || status === 'unverified'
   }
 
   const getOrganizationDomainId = (rule: Models.ProxyRule) => {
@@ -218,7 +199,7 @@ export function Domains({
                     <TableRow>
                       <TableCell className="px-4 py-3">
                         <a
-                          href={domainUrl(rule.domain)}
+                          href={visitUrl(rule.domain)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
@@ -229,18 +210,20 @@ export function Domains({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(rule.status)}
-                          {rule.status !== 'verified' && (
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="h-auto p-0 text-[13px]"
-                              onClick={() => handleViewLogs(rule)}
-                            >
-                              {t('View logs')}
-                            </Button>
-                          )}
-                          {canRetry(rule.status) && (
+                          <RuleStatusBadge rule={rule} />
+                          {getRuleStatusBadgeConfig(rule).variant !==
+                            'success' &&
+                            canViewRuleLogs(rule) && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-[13px]"
+                                onClick={() => handleViewLogs(rule)}
+                              >
+                                {t('View logs')}
+                              </Button>
+                            )}
+                          {canRetryRule(rule) && (
                             <Button
                               variant="link"
                               size="sm"
@@ -265,14 +248,14 @@ export function Domains({
                               <RowActionsMenuTrigger />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              {rule.status !== 'verified' && (
+                              {canViewRuleLogs(rule) && (
                                 <DropdownMenuItem
                                   onClick={() => handleViewLogs(rule)}
                                 >
                                   <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
-                              {canRetry(rule.status) && (
+                              {canRetryRule(rule) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
@@ -339,39 +322,14 @@ export function Domains({
 
       {selectedRule && (
         <>
-          <VerifyDomainDialog
-            open={verifyDomainOpen}
-            onOpenChange={setVerifyDomainOpen}
-            projectId={projectId}
-            region={region}
-            rule={selectedRule}
-            organizationDomainId={getOrganizationDomainId(selectedRule)}
-            onReconfigure={(reconfigureDomain) => {
-              setVerifyDomainOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/settings/domains/add',
-                params: { projectId },
-                search: reconfigureDomain
-                  ? { domain: reconfigureDomain }
-                  : undefined})
-            }}
-            onVerifySuccess={() => {
-              toast.success(t('Domain verified successfully'))
-              setVerifyDomainOpen(false)
-              setSelectedRule(null)
-            }}
-          />
-
           <RetryDomainDialog
             open={retryDomainOpen}
             onOpenChange={setRetryDomainOpen}
             projectId={projectId}
             region={region}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onRetrySuccess={() => {
-              toast.success(t('Verification in progress'))
               setRetryDomainOpen(false)
               setSelectedRule(null)
             }}
@@ -380,7 +338,9 @@ export function Domains({
           <ViewLogsDialog
             open={viewLogsOpen}
             onOpenChange={setViewLogsOpen}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            onRefresh={() => void refetch()}
+            isRefreshing={isFetching}
           />
 
           <DeleteDomainDialog

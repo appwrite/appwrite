@@ -74,7 +74,7 @@ final class FactoryTest extends TestCase
 
         $factory = new Factory($this->cache(), new Client(new CurlAdapter()), $registry);
         $this->assertInstanceOf(Entire::class, $factory->fromProvider('entire'));
-        $this->assertSame('https://entire.io/et/acme', $factory->fromProvider('entire')->getOrganizationUrl('acme'));
+        $this->assertSame('https://entire.com/et/acme', $factory->fromProvider('entire')->getOrganizationUrl('acme'));
 
         $this->expectException(Exception::class);
         $factory->oauth2FromProvider('entire');
@@ -209,6 +209,15 @@ final class FactoryTest extends TestCase
         $factory = new Factory($this->cache(), new Client(new CurlAdapter()), ['gitlab' => $entry]);
 
         $this->assertSame('https://gitlab.example.com/owner', $factory->fromProviderForBrowser('gitlab')->getOrganizationUrl('owner'));
+    }
+
+    public function testFromProviderVerifiesCertificatesByDefault(): void
+    {
+        $factory = new Factory($this->cache(), new Client(new CurlAdapter()), Config::getParam('vcs', []));
+
+        foreach (['github', 'gitea', 'gitlab', 'bitbucket', 'origin', 'entire'] as $key) {
+            $this->assertFalse($factory->fromProvider($key)->isSelfSigned(), "'{$key}' must verify certificates by default");
+        }
     }
 
     public function testGetWebhookSecret(): void

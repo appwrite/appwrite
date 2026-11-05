@@ -13,11 +13,14 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { DomainTargetCard } from '../../shared/DomainTargetCard'
+import { DomainTypeCard } from './DomainTypeCard'
 import {
   VerifyDomainContent,
   dnsPendingVerificationError,
+  domainVerificationError,
   type DomainVerificationError,
 } from '@/components/pages/projects/$projectId/settings/domains/VerifyDomainContent'
+import { ClaimDomainContent } from '@/components/pages/projects/$projectId/settings/domains/ClaimDomainContent'
 import {
   useCreateFunctionDomainRule,
   useProjectFunction,
@@ -27,11 +30,18 @@ import {
 } from '@/lib/react-query/hooks'
 import {
   ensureApexDomainInOrganization,
+  isDomainClaimError,
   isValidDomain,
 } from '@/lib/utils/proxy-domains'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  isFunctionEmailEnabled,
+  type FunctionWithEmail,
+} from '@/lib/function-email'
 
 export function AddDomainWizard() {
   const t = useT()
@@ -40,6 +50,7 @@ export function AddDomainWizard() {
   const queryClient = useQueryClient()
   const { project } = useProject(projectId)
   const { data: func } = useProjectFunction(projectId, functionId)
+  const { isCloud } = useConsoleProfile()
 
   const createMutation = useCreateFunctionDomainRule(projectId)
   const verifyMutation = useVerifyDomain(projectId, project?.region)
@@ -56,17 +67,57 @@ export function AddDomainWizard() {
   const [statusCode, setStatusCode] = useState('302')
   const [error, setError] = useState('')
   const [rule, setRule] = useState<Models.ProxyRule | null>(null)
+  // Set while the create waits for the domain's ownership TXT record
+  const [claimDomain, setClaimDomain] = useState<string | null>(null)
+  const [registering, setRegistering] = useState(false)
 
   const fallbackPath = `/projects/${projectId}/functions/${functionId}/domains`
   const isPending =
+    registering ||
     createMutation.isPending ||
     verifyMutation.isPending ||
     deleteMutation.isPending
 
   const hasRepo = !!(func?.installationId && func?.providerRepositoryId)
 
+  const createRule = async (d: string) => {
+    const created = await createMutation.mutateAsync({
+      domain: d,
+      functionId: functionId!,
+      behaviour,
+      ...(behaviour === 'branch' && { branch }),
+      ...(behaviour === 'redirect' && {
+        redirectUrl: redirectUrl.trim(),
+        statusCode,
+      }),
+    })
+    setClaimDomain(null)
+    if (created.status === 'verified') {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
+      toast.success(t('Domain verified'))
+      navigate({
+        to: '/projects/$projectId/functions/$functionId/domains',
+        params: { projectId: projectId!, functionId: functionId! },
+      })
+    } else if (created.status === 'verifying') {
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules', 'function', projectId, functionId],
+      })
+      toast.success(t('Verification in progress'))
+      navigate({
+        to: '/projects/$projectId/functions/$functionId/domains',
+        params: { projectId: projectId!, functionId: functionId! },
+      })
+    } else {
+      setRule(created)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isPending) return
     const d = domain.trim().toLowerCase()
     setError('')
     if (!d) {
@@ -102,52 +153,39 @@ export function AddDomainWizard() {
       }
     }
 
+    setRegistering(true)
     try {
       await ensureApexDomainInOrganization(project?.teamId ?? '', d)
     } catch (err: unknown) {
       const e = err as { type?: string }
       if (e?.type !== 'domain_already_exists') {
-        toast.error(t('Failed to register domain'))
+        toast.error(getErrorMessage(err, 'Failed to register domain'))
         return
       }
+    } finally {
+      setRegistering(false)
     }
 
     try {
-      const created = await createMutation.mutateAsync({
-        domain: d,
-        functionId: functionId!,
-        behaviour,
-        ...(behaviour === 'branch' && { branch }),
-        ...(behaviour === 'redirect' && {
-          redirectUrl: redirectUrl.trim(),
-          statusCode,
-        }),
-      })
-      if (created.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
-        toast.success(t('Domain verified'))
-        navigate({
-          to: '/projects/$projectId/functions/$functionId/domains',
-          params: { projectId: projectId!, functionId: functionId! },
-        })
-      } else if (created.status === 'verifying') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
-        toast.success(t('Verification in progress'))
-        navigate({
-          to: '/projects/$projectId/functions/$functionId/domains',
-          params: { projectId: projectId!, functionId: functionId! },
-        })
-      } else {
-        setRule(created)
-      }
+      await createRule(d)
     } catch (err) {
+      if (isDomainClaimError(err)) {
+        setClaimDomain(d)
+        return
+      }
       toast.error(
         err instanceof Error ? err.message : t('Failed to add domain'),
       )
+    }
+  }
+
+  const handleClaim = async () => {
+    if (!claimDomain) return
+    setVerificationError(null)
+    try {
+      await createRule(claimDomain)
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
@@ -157,9 +195,6 @@ export function AddDomainWizard() {
     try {
       const updated = await verifyMutation.mutateAsync(rule.$id)
       if (updated.status === 'verified') {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
         toast.success(t('Domain verified'))
         navigate({
           to: '/projects/$projectId/functions/$functionId/domains',
@@ -171,17 +206,14 @@ export function AddDomainWizard() {
       ) {
         setVerificationError(dnsPendingVerificationError(t))
       } else {
-        await queryClient.refetchQueries({
-          queryKey: ['proxy-rules', 'function', projectId, functionId],
-        })
         toast.success(t('Verification in progress'))
         navigate({
           to: '/projects/$projectId/functions/$functionId/domains',
           params: { projectId: projectId!, functionId: functionId! },
         })
       }
-    } catch {
-      setVerificationError(dnsPendingVerificationError(t))
+    } catch (err) {
+      setVerificationError(domainVerificationError(t, err))
     }
   }
 
@@ -230,6 +262,42 @@ export function AddDomainWizard() {
     )
   }
 
+  // Ownership claim
+  if (claimDomain) {
+    return (
+      <WizardLayout
+        title={t('Verify domain ownership')}
+        fallbackPath={fallbackPath}
+        fullscreen
+        useSidebar={false}
+        maxWidth="max-w-4xl"
+        footer={
+          <div className="flex gap-2 justify-end w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setClaimDomain(null)
+                setVerificationError(null)
+              }}
+              disabled={isPending}
+            >
+              {t('Back')}
+            </Button>
+            <Button onClick={handleClaim} disabled={isPending}>
+              {t('Verify')}
+            </Button>
+          </div>
+        }
+      >
+        <ClaimDomainContent
+          domain={claimDomain}
+          projectId={projectId!}
+          verificationError={verificationError}
+        />
+      </WizardLayout>
+    )
+  }
+
   // Step 1: Configure
   return (
     <WizardLayout
@@ -259,6 +327,25 @@ export function AddDomainWizard() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-6">
+        {isCloud ? (
+          <DomainTypeCard
+            value="http"
+            onChange={(type) => {
+              if (type === 'smtp') {
+                navigate({
+                  to: '/projects/$projectId/functions/$functionId/domains/add',
+                  params: { projectId: projectId!, functionId: functionId! },
+                  search: { protocol: 'smtp' },
+                  replace: true,
+                })
+              }
+            }}
+            emailEnabled={isFunctionEmailEnabled(
+              func as FunctionWithEmail | undefined,
+            )}
+            disabled={createMutation.isPending}
+          />
+        ) : null}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">

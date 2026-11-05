@@ -19,6 +19,7 @@ use Utopia\Cache\Cache;
 use Utopia\Client\Client;
 use Utopia\Client\Destinations\Anywhere;
 use Utopia\Config\Config;
+use Utopia\Console\Command;
 use Utopia\Console\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
@@ -102,15 +103,20 @@ class Specs extends Action
      * Override in a subclass to customise flags (platform, sdk, mode, etc.).
      *
      * @param string $version Spec version being generated
-     * @return string Shell command string (including 2>&1 redirect)
+     * @return Command|string A prepared command, or a shell string from an override that predates it
      */
-    protected function getSdksCommand(string $version): string
+    protected function getSdksCommand(string $version): Command|string
     {
         $cli = \realpath(__DIR__ . '/../../../../app') . '/cli.php';
 
-        return 'php ' . \escapeshellarg($cli)
-            . ' sdks --platform=* --sdk=* --version=' . \escapeshellarg($version)
-            . ' --git=no --mode=examples 2>&1';
+        return (new Command('php'))
+            ->argument($cli)
+            ->argument('sdks')
+            ->argument('--platform=*')
+            ->argument('--sdk=*')
+            ->argument('--version=' . $version)
+            ->argument('--git=no')
+            ->argument('--mode=examples');
     }
 
     /**
@@ -164,6 +170,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Environment' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Environment',
+                    'description' => 'The ID of the project environment to act in, alongside the project ID. Used with Appwrite Cloud projects that have environments.',
                     'in' => 'header',
                 ],
                 'Session' => [
@@ -237,6 +249,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Environment' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Environment',
+                    'description' => 'The ID of the project environment to act in, alongside the project ID. Used with Appwrite Cloud projects that have environments.',
                     'in' => 'header',
                 ],
                 'Session' => [
@@ -316,6 +334,12 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Environment' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Environment',
+                    'description' => 'The ID of the project environment to act in, alongside the project ID. Used with Appwrite Cloud projects that have environments.',
                     'in' => 'header',
                 ],
                 'Mode' => [
@@ -612,20 +636,32 @@ class Specs extends Action
 
             Console::info("Cloning {$gitRepoName} into {$target}...");
 
-            \exec('rm -rf ' . $target . ' && \
-                mkdir -p ' . $target . ' && \
-                cd ' . $target . ' && \
-                git init && \
-                git config core.ignorecase false && \
-                git config pull.rebase false && \
-                git remote add origin ' . $gitUrl . ' && \
-                git fetch origin && \
-                (git checkout -f ' . $repoBranch . ' 2>/dev/null || git checkout -b ' . $repoBranch . ') && \
-                git pull origin ' . $repoBranch . ' && \
-                (git checkout -f ' . $gitBranch . ' 2>/dev/null || git checkout -b ' . $gitBranch . ') && \
-                (git fetch origin ' . $gitBranch . ' 2>/dev/null || git push -u origin ' . $gitBranch . ') && \
-                git reset --hard origin/' . $gitBranch . ' 2>/dev/null || true
-            ');
+            $stdout = '';
+            $stderr = '';
+            Console::execute(Command::and(
+                (new Command('rm'))->flag('-rf')->argument($target),
+                (new Command('mkdir'))->flag('-p')->argument($target),
+                (new Command('cd'))->argument($target),
+                (new Command('git'))->argument('init'),
+                (new Command('git'))->argument('config')->argument('core.ignorecase')->argument('false'),
+                (new Command('git'))->argument('config')->argument('pull.rebase')->argument('false'),
+                (new Command('git'))->argument('remote')->argument('add')->argument('origin')->argument($gitUrl),
+                (new Command('git'))->argument('fetch')->argument('origin'),
+                Command::group(Command::or(
+                    (new Command('git'))->argument('checkout')->flag('-f')->argument($repoBranch),
+                    (new Command('git'))->argument('checkout')->flag('-b')->argument($repoBranch),
+                )),
+                (new Command('git'))->argument('pull')->argument('origin')->argument($repoBranch),
+                Command::group(Command::or(
+                    (new Command('git'))->argument('checkout')->flag('-f')->argument($gitBranch),
+                    (new Command('git'))->argument('checkout')->flag('-b')->argument($gitBranch),
+                )),
+                Command::group(Command::or(
+                    (new Command('git'))->argument('fetch')->argument('origin')->argument($gitBranch),
+                    (new Command('git'))->argument('push')->flag('-u')->argument('origin')->argument($gitBranch),
+                )),
+                (new Command('git'))->argument('reset')->flag('--hard')->argument('origin/' . $gitBranch),
+            ), '', $stdout, $stderr);
 
             // Copy the canonical document and the PR platforms' documents into specs/{version}/
             $prPlatforms = static::getPlatformsForPR();
@@ -635,28 +671,27 @@ class Specs extends Action
             ));
 
             $specsSubDir = $mocks ? 'mocks' : $version;
-            \exec('mkdir -p ' . \escapeshellarg("{$target}/specs/{$specsSubDir}"));
+            Console::execute((new Command('mkdir'))->flag('-p')->argument("{$target}/specs/{$specsSubDir}"), '', $stdout, $stderr);
             foreach ($prFiles as $file) {
                 $fileName = \basename($file);
-                \exec('cp ' . \escapeshellarg($file) . ' ' . \escapeshellarg("{$target}/specs/{$specsSubDir}/{$fileName}"));
+                Console::execute((new Command('cp'))->argument($file)->argument("{$target}/specs/{$specsSubDir}/{$fileName}"), '', $stdout, $stderr);
                 Console::success("Copied spec file to repo: specs/{$specsSubDir}/{$fileName}");
             }
 
             // Regenerate SDK examples for this version
             Console::info("Regenerating SDK examples for version {$version}...");
-            $sdksCommand = $this->getSdksCommand($version);
-            \exec($sdksCommand, $sdksOutput, $sdksReturnCode);
+            $sdksReturnCode = Console::execute($this->getSdksCommand($version), '', $stdout, $stderr);
 
             if ($sdksReturnCode !== 0) {
                 Console::warning("SDK examples generation returned non-zero exit code: {$sdksReturnCode}");
-                Console::warning(\implode("\n", $sdksOutput));
+                Console::warning(\trim($stdout . "\n" . $stderr));
             } else {
                 Console::success("Regenerated SDK examples for version {$version}");
             }
 
             // Copy SDK examples for this version, filtered by PR platforms
             if (\is_dir($examplesDir)) {
-                \exec('mkdir -p ' . \escapeshellarg("{$target}/examples/{$version}"));
+                Console::execute((new Command('mkdir'))->flag('-p')->argument("{$target}/examples/{$version}"), '', $stdout, $stderr);
                 $exampleFolders = \glob($examplesDir . '/*', GLOB_ONLYDIR) ?: [];
                 foreach ($exampleFolders as $folder) {
                     $folderName = \basename($folder);
@@ -665,7 +700,7 @@ class Specs extends Action
                         Console::info("Skipping SDK examples for platform '{$platform}': examples/{$version}/{$folderName}");
                         continue;
                     }
-                    \exec('cp -r ' . \escapeshellarg($folder) . ' ' . \escapeshellarg("{$target}/examples/{$version}/"));
+                    Console::execute((new Command('cp'))->flag('-r')->argument($folder)->argument("{$target}/examples/{$version}/"), '', $stdout, $stderr);
                     Console::success("Copied SDK examples to repo: examples/{$version}/{$folderName}");
                 }
             } else {
@@ -673,11 +708,12 @@ class Specs extends Action
             }
 
             // Git add, commit, and push
-            \exec('cd ' . $target . ' && \
-                git add -A && \
-                git commit -m "' . \addslashes($message) . '" && \
-                git push -u origin ' . $gitBranch . '
-            ');
+            Console::execute(Command::and(
+                (new Command('cd'))->argument($target),
+                (new Command('git'))->argument('add')->flag('-A'),
+                (new Command('git'))->argument('commit')->option('-m', $message),
+                (new Command('git'))->argument('push')->flag('-u')->argument('origin')->argument($gitBranch),
+            ), '', $stdout, $stderr);
 
             Console::success("Pushed specs to {$gitRepoName} on branch {$gitBranch}");
 
@@ -685,30 +721,36 @@ class Specs extends Action
             $prTitle = "feat: API specs update for version {$version}";
             $prBody = "This PR contains API specification updates and SDK examples for version {$version}.";
 
-            $prCommand = 'cd ' . $target . ' && \
-                gh pr create \
-                --repo "' . $gitRepoName . '" \
-                --title "' . $prTitle . '" \
-                --body "' . $prBody . '" \
-                --base "' . $repoBranch . '" \
-                --head "' . $gitBranch . '" \
-                2>&1';
-
-            $prUrl = '';
-            \exec($prCommand, $prOutput);
-            $prOutput = \implode("\n", $prOutput);
+            Console::execute(Command::and(
+                (new Command('cd'))->argument($target),
+                (new Command('gh'))
+                    ->argument('pr')
+                    ->argument('create')
+                    ->option('--repo', $gitRepoName)
+                    ->option('--title', $prTitle)
+                    ->option('--body', $prBody)
+                    ->option('--base', $repoBranch)
+                    ->option('--head', $gitBranch),
+            ), '', $stdout, $stderr);
+            $prOutput = \trim($stdout . "\n" . $stderr);
 
             if (\str_contains($prOutput, 'already exists')) {
                 Console::warning("PR already exists for branch {$gitBranch}");
                 // Try to get the existing PR URL
-                \exec('cd ' . $target . ' && gh pr view --repo "' . $gitRepoName . '" --json url -q .url 2>&1', $existingPrOutput);
-                $prUrl = \trim(\implode("\n", $existingPrOutput));
+                Console::execute(Command::and(
+                    (new Command('cd'))->argument($target),
+                    (new Command('gh'))->argument('pr')->argument('view')->option('--repo', $gitRepoName)->option('--json', 'url')->option('-q', '.url'),
+                ), '', $stdout, $stderr);
+                $prUrl = \trim($stdout . "\n" . $stderr);
             } else {
-                $prUrl = \trim($prOutput);
+                $prUrl = $prOutput;
             }
 
             // Clean up temp directory
-            \exec('chmod -R u+w ' . $target . ' && rm -rf ' . $target);
+            Console::execute(Command::and(
+                (new Command('chmod'))->flag('-R')->argument('u+w')->argument($target),
+                (new Command('rm'))->flag('-rf')->argument($target),
+            ), '', $stdout, $stderr);
             Console::success("Removed temp directory '{$target}'");
 
             if (!empty($prUrl)) {

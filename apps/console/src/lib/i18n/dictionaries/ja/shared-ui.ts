@@ -26,7 +26,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'already exists': 'は既に存在します',
   'is longer than 8192 allowed characters':
     'は許可される8192文字を超えています',
-  'contact sales': '営業にお問い合わせ',
   'to include more repos.': 'して、さらに多くのリポジトリを含めてください。',
   'to unlock additional specifications.':
     'して、追加の仕様を有効にしてください。',
@@ -256,6 +255,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'My filters': '自分のフィルター',
   'Name, email, phone, or user ID…': '名前、メール、電話、またはユーザー ID…',
   'Need more resources?': 'リソースが足りませんか?',
+  'Higher CPU and memory are available on Enterprise.':
+    'Enterprise プランでは、より多くの CPU とメモリをご利用いただけます。',
   'Next image': '次の画像',
   'No API key scopes are available from the server.':
     'サーバーから利用可能な API キースコープがありません。',
@@ -551,7 +552,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No organizations found': '組織が見つかりません',
   'Light theme': 'ライトテーマ',
   'Dark theme': 'ダークテーマ',
-  'System theme': 'システムテーマ',
   // Refresh toasts (default label)
   'data refreshed successfully': 'データを更新しました',
   'Failed to refresh data': 'データの更新に失敗しました',
@@ -563,7 +563,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Focus search': '検索にフォーカス',
   'Set theme to light': 'ライトテーマに設定',
   'Set theme to dark': 'ダークテーマに設定',
-  'Set theme to system': 'システムテーマに設定',
   // Keyboard shortcuts reference: terminal shortcut descriptions
   'Toggle terminal': 'ターミナルの表示を切り替え',
   'Enter full screen': '全画面表示',
@@ -669,8 +668,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Adaptive video streaming, renditions and subtitles':
     'アダプティブ動画ストリーミング、レンディション、字幕',
   'Audit log of project events': 'プロジェクトイベントの監査ログ',
-  'Realtime channels and live messages':
-    'Realtime チャンネルとライブメッセージ',
   'Usage statistics and quotas': '使用統計とクォータ',
   'Website analytics and traffic insights':
     'ウェブサイト分析とトラフィックのインサイト',
@@ -1009,8 +1006,8 @@ export const jaSharedUiDictionary: Record<string, string> = {
     '内蔵の Appwrite CLI ターミナルを切り替え',
   'Connect platforms (web, iOS, Android, Flutter, server)':
     'プラットフォームを接続 (Web、iOS、Android、Flutter、サーバー)',
-  'Browse and test Appwrite REST API endpoints':
-    'Appwrite REST API エンドポイントを閲覧してテスト',
+  'Test REST API endpoints and Realtime subscriptions':
+    'REST API エンドポイントと Realtime サブスクリプションをテスト',
   'Users, teams, sessions and authentication providers':
     'ユーザー、チーム、セッション、認証プロバイダー',
   'Project settings, custom domains, variables, webhooks':
@@ -1353,4 +1350,29 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Load more': 'さらに読み込む',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
+  Previews: 'プレビュー',
+  'Early access. Saved in this browser.':
+    '早期アクセスです。このブラウザに保存されます。',
+  'Appwrite Analytics': 'Appwrite Analytics',
+  'Visitor, page, and campaign tracking.':
+    '訪問者、ページ、キャンペーンを計測します。',
+  'Project environments': 'プロジェクト環境',
+  'Switch or clone staging and production.':
+    'ステージングと本番を切り替え、複製します。',
+  'Project transfers': 'プロジェクトの転送',
+  'Move a project to another organization.':
+    'プロジェクトを別の組織へ移します。',
+  'Repository not available': 'リポジトリを利用できません',
+  'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
+    'この Git インストールからリポジトリにアクセスできなくなりました。削除された、インストールから外された、または別のインストールに移された可能性があります。デプロイを続けるには、リポジトリを接続し直してください。',
+  // Halloween caution tape
+  Caution: '注意',
+  'Spooky zone': '恐怖ゾーン',
+  // GitHub star wizard
+  'Enjoying Appwrite?': 'Appwriteを楽しんでいますか？',
+  'Appwrite is open source and built in the open. A star helps more developers discover it.':
+    'Appwriteはオープンソースで、オープンに開発されています。スターを付けると、より多くの開発者がAppwriteを見つけやすくなります。',
+  'No thanks': 'いいえ、結構です',
+  'One-time ask, promise. May your builds be ever green.':
+    'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',
 }

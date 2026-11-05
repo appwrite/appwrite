@@ -43,11 +43,15 @@ class Cache
         $keys = [];
 
         switch ($resourceName) {
+            // Parents go in by ID: the Appwrite source builds a table's database and a row's
+            // table from the listing, so they never carry the sequence the destination gave the
+            // parent. Keyed by that blank sequence, the first table of every database shared one
+            // key and only the last one was exported further.
             case Resource::TYPE_TABLE:
             case Resource::TYPE_COLLECTION:
                 /** @var Table $resource */
                 $keys[] = $resource->getDatabase()->getType();
-                $keys[] = $resource->getDatabase()->getSequence();
+                $keys[] = $resource->getDatabase()->getId();
                 break;
 
             case Resource::TYPE_ROW:
@@ -57,8 +61,8 @@ class Cache
             case Resource::TYPE_INDEX:
                 /** @var Row|Column|Index $resource */
                 $table = $resource->getTable();
-                $keys[] = $table->getDatabase()->getSequence();
-                $keys[] = $table->getSequence();
+                $keys[] = $table->getDatabase()->getId();
+                $keys[] = $table->getId();
                 break;
 
             case Resource::TYPE_FILE:

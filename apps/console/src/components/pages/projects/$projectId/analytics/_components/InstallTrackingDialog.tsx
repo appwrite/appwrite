@@ -23,7 +23,6 @@ import { useAnalyticsFirstEvent } from '@/lib/react-query/hooks'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
 import {
-  ANALYTICS_PLATFORMS,
   ANALYTICS_PLATFORM_META,
   ANALYTICS_PROXY_DEFAULT_PATH,
   buildAnalyticsInstallGuide,
@@ -33,6 +32,10 @@ import {
   type AnalyticsPlatform,
   type AnalyticsProxyRecipeId,
 } from '@/lib/analytics-wizard/snippets'
+import {
+  ANALYTICS_PROPERTY_TYPE_META,
+  propertyType,
+} from '@/lib/analytics-wizard/property-types'
 
 function PlatformGlyph({ platform }: { platform: AnalyticsPlatform }) {
   // REST has no platform logo; a neutral glyph reads better than the JS one.
@@ -137,7 +140,7 @@ export function InstallTrackingDialog({
   onOpenChange,
   projectId,
   property,
-  initialPlatform = 'web',
+  initialPlatform,
   initialProxy = false,
 }: {
   open: boolean
@@ -149,7 +152,12 @@ export function InstallTrackingDialog({
   initialProxy?: boolean
 }) {
   const t = useT()
-  const [platform, setPlatform] = useState<AnalyticsPlatform>(initialPlatform)
+  const platforms = ANALYTICS_PROPERTY_TYPE_META[propertyType(property)].platforms
+  const startPlatform =
+    initialPlatform && platforms.includes(initialPlatform)
+      ? initialPlatform
+      : platforms[0]
+  const [platform, setPlatform] = useState<AnalyticsPlatform>(startPlatform)
   const [mode, setMode] = useState<SendMode>(initialProxy ? 'proxy' : 'direct')
   const [fileId, setFileId] = useState<string>(APP_FILE_ID)
   // The proxy last looked at; the prompt uses it.
@@ -165,14 +173,13 @@ export function InstallTrackingDialog({
   // Each open starts from the requested platform and mode.
   useEffect(() => {
     if (!open) return
-    setPlatform(initialPlatform)
+    setPlatform(startPlatform)
     setMode(initialProxy ? 'proxy' : 'direct')
     setFileId(APP_FILE_ID)
-  }, [open, initialPlatform, initialProxy])
+  }, [open, startPlatform, initialProxy])
 
   const endpoint = getProjectApiEndpoint(projectId)
-  // Ingestion takes either ID; the snippet ID is meant for client code.
-  const trackingId = property.snippetId || property.$id
+  const trackingId = property.$id
 
   // Two blocks: the install command, then all the code in one snippet.
   const guide = useMemo(
@@ -281,7 +288,7 @@ export function InstallTrackingDialog({
           aria-label={t('Platform')}
           className="flex shrink-0 gap-0 overflow-x-auto border-b border-border px-6"
         >
-          {ANALYTICS_PLATFORMS.map((id) => {
+          {platforms.map((id) => {
             const isActive = platform === id
             return (
               <button
@@ -341,12 +348,6 @@ export function InstallTrackingDialog({
                   {t('Property ID')}
                   <CopyableId id={property.$id} size="xs" />
                 </span>
-                {property.snippetId ? (
-                  <span className="inline-flex items-center gap-2">
-                    {t('Snippet ID')}
-                    <CopyableId id={property.snippetId} size="xs" />
-                  </span>
-                ) : null}
               </div>
               <SetupStatus
                 eventReceived={eventReceived}

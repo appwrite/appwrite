@@ -2,7 +2,17 @@
 
 namespace Utopia\Query\Tests\Regression;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Query\AST\Call\Func;
+use Utopia\Query\AST\Expression\Binary;
+use Utopia\Query\AST\Expression\Cast;
+use Utopia\Query\AST\Literal;
+use Utopia\Query\AST\Parser;
+use Utopia\Query\AST\Reference\Column;
+use Utopia\Query\AST\Serializer;
+use Utopia\Query\AST\Statement\Select;
+use Utopia\Query\AST\Visitor\FilterInjector;
 use Utopia\Query\Builder\JoinBuilder;
 use Utopia\Query\Builder\MongoDB as MongoDBBuilder;
 use Utopia\Query\Builder\MySQL as MySQLBuilder;
@@ -20,6 +30,7 @@ use Utopia\Query\Schema\Index;
 use Utopia\Query\Schema\MySQL as MySQLSchema;
 use Utopia\Query\Schema\ParameterDirection;
 use Utopia\Query\Schema\PostgreSQL as PostgreSQLSchema;
+use Utopia\Query\Tokenizer\Tokenizer;
 use Utopia\Query\Type;
 
 /**
@@ -55,6 +66,16 @@ use Utopia\Query\Type;
  *      testQueryParseRejectsRawByDefault
  *      testQueryParseAcceptsRawWhenAllowRawTrue
  *      testQueryParseRejectsRawNestedInsideOr
+ *  - (this branch)  fix(query): reject SQL in AST function names and cast types
+ *      testParserRejectsSqlInQuotedFunctionNameOrCastType
+ *      testParserKeepsInjectedFilterForQuotedFunctionName
+ *      testFuncRejectsSqlInName
+ *      testCastRejectsSqlInType
+ *      testCastAcceptsParameterisedType
+ *      testToAstRejectsUnsupportedFilterInsteadOfEmittingRaw
+ *      testFuncRejectsTrailingWhitespaceInName
+ *      testCastRejectsTrailingWhitespaceInType
+ *      testCastAcceptsMultiWordType
  */
 class SecurityRegressionTest extends TestCase
 {
@@ -424,5 +445,151 @@ class SecurityRegressionTest extends TestCase
 
         $this->assertStringContainsString('renamed', $result->query);
         $this->assertStringNotContainsString('"a"', $result->query);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function quotedInjectionProvider(): array
+    {
+        return [
+            'function name' => ['SELECT name FROM users WHERE "1=1 OR TRUE OR LOWER"(name) = 1'],
+            'double colon cast type' => ['SELECT name FROM users WHERE name::"TEXT) OR 1=1 OR CAST(name AS TEXT" = 1'],
+            'cast type' => ['SELECT name FROM users WHERE CAST(name AS "TEXT) OR (1=1") = 1'],
+        ];
+    }
+
+    /**
+     * A quoted identifier may hold any text. Used as a function name or cast
+     * type it was serialized verbatim, so it carried SQL past ColumnValidator
+     * and, through OR precedence, neutralized the predicate FilterInjector
+     * ANDs onto the WHERE clause.
+     */
+    #[DataProvider('quotedInjectionProvider')]
+    public function testParserRejectsSqlInQuotedFunctionNameOrCastType(string $sql): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $this->parse($sql);
+    }
+
+    public function testParserKeepsInjectedFilterForQuotedFunctionName(): void
+    {
+        $statement = $this->parse('SELECT name FROM users WHERE "lower"(name) = 1');
+        $statement = new FilterInjector(new Binary(new Column('tenant'), '=', new Literal(7)))->visitSelect($statement);
+
+        $this->assertSame(
+            'SELECT `name` FROM `users` WHERE LOWER(`name`) = 1 AND `tenant` = 7',
+            new Serializer()->serialize($statement),
+        );
+    }
+
+    public function testFuncRejectsSqlInName(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid function name');
+
+        new Func('NOW() OR 1=1 OR NOW');
+    }
+
+    public function testCastRejectsSqlInType(): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid cast type');
+
+        new Cast(new Column('price'), 'TEXT) OR (1=1');
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function trailingWhitespaceFunctionNameProvider(): array
+    {
+        return [
+            'newline' => ["NOW\n"],
+            'carriage return and newline' => ["NOW\r\n"],
+            'space' => ['NOW '],
+            'tab' => ["NOW\t"],
+        ];
+    }
+
+    #[DataProvider('trailingWhitespaceFunctionNameProvider')]
+    public function testFuncRejectsTrailingWhitespaceInName(string $name): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid function name');
+
+        new Func($name);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function trailingWhitespaceCastTypeProvider(): array
+    {
+        return [
+            'newline after word' => ["INT\n"],
+            'newline after arguments' => ["DECIMAL(10, 2)\n"],
+            'space after word' => ['INT '],
+            'space after arguments' => ['DECIMAL(10, 2) '],
+        ];
+    }
+
+    #[DataProvider('trailingWhitespaceCastTypeProvider')]
+    public function testCastRejectsTrailingWhitespaceInType(string $type): void
+    {
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Invalid cast type');
+
+        new Cast(new Column('price'), $type);
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function multiWordCastTypeProvider(): array
+    {
+        return [
+            'two words' => ['DOUBLE PRECISION'],
+            'tab separated' => ["DOUBLE\tPRECISION"],
+            'four words' => ['TIMESTAMP WITH TIME ZONE'],
+            'words and arguments' => ['CHARACTER VARYING (255)'],
+            'whitespace inside arguments' => ["NUMERIC( 10 ,\n2 )"],
+        ];
+    }
+
+    #[DataProvider('multiWordCastTypeProvider')]
+    public function testCastAcceptsMultiWordType(string $type): void
+    {
+        $this->assertSame($type, new Cast(new Column('price'), $type)->type);
+    }
+
+    public function testCastAcceptsParameterisedType(): void
+    {
+        $cast = new Cast(new Column('price'), 'DECIMAL(10, 2)');
+
+        $this->assertSame('CAST(`price` AS DECIMAL(10, 2))', new Serializer()->serializeExpression($cast));
+    }
+
+    /**
+     * toAst() wrapped the attribute of every filter method it does not model
+     * in a Raw node, which the Serializer emits verbatim, while build() throws
+     * for the same methods.
+     */
+    public function testToAstRejectsUnsupportedFilterInsteadOfEmittingRaw(): void
+    {
+        $builder = new MySQLBuilder()
+            ->from('users')
+            ->filter([Query::search('name) OR (1=1', 'term')]);
+
+        $this->expectException(UnsupportedException::class);
+        $this->expectExceptionMessage('Unsupported filter type: search');
+
+        $builder->toAst();
+    }
+
+    private function parse(string $sql): Select
+    {
+        return new Parser()->parse(Tokenizer::filter(new Tokenizer()->tokenize($sql)));
     }
 }

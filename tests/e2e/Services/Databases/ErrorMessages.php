@@ -187,6 +187,26 @@ trait ErrorMessages
         $this->assertStringStartsWith($this->getRecordNoun() . " with the requested ID '{$existingId}' already exists.", $response['body']['message']);
     }
 
+    public function testBulkCreatePastTheQueryValuesLimitNamesTheExistingId(): void
+    {
+        [$databaseId, $collectionId] = $this->createErrorMessagesCollection('bulkCreateLargeExisting');
+        $existingId = $this->createErrorMessagesRecord($databaseId, $collectionId, ['count' => 1]);
+
+        $records = [];
+        for ($i = 0; $i < APP_DATABASE_QUERY_MAX_VALUES; $i++) {
+            $records[] = ['$id' => Id::unique(), 'count' => $i];
+        }
+        $records[] = ['$id' => $existingId, 'count' => 0];
+
+        $response = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $this->getErrorMessagesHeaders(), [
+            $this->getRecordResource() => $records,
+        ]);
+
+        $this->assertSame(409, $response['headers']['status-code'], \json_encode($response['body']) ?: '');
+        $this->assertSame($this->isTablesAPI() ? Exception::ROW_ALREADY_EXISTS : Exception::DOCUMENT_ALREADY_EXISTS, $response['body']['type']);
+        $this->assertStringStartsWith($this->getRecordNoun() . " with the requested ID '{$existingId}' already exists.", $response['body']['message']);
+    }
+
     public function testBulkCreateOfARepeatedIdNamesTheId(): void
     {
         $this->assertBulkWriteOfARepeatedIdNamesTheId(Client::METHOD_POST, 'bulkCreateRepeated');

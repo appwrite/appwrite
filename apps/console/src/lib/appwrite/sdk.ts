@@ -9,6 +9,7 @@ import {
   Account,
   Activities,
   Affiliates,
+  Alerts,
   Analytics,
   Apps,
   Avatars,
@@ -22,6 +23,7 @@ import {
   Manager,
   Messaging,
   Migrations,
+  Monitors,
   Oauth2,
   Project,
   Project as ProjectApi,
@@ -51,6 +53,8 @@ import {
   Waf,
 } from '@appwrite.io/console'
 import { Agent } from '@/lib/appwrite/agent'
+import { Reviews } from '@/lib/appwrite/reviews'
+import { Zero } from '@/lib/appwrite/zero'
 import {
   getDebugEndpointBaseUrl,
   subscribeToDebugEndpointChange,
@@ -59,6 +63,7 @@ import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
 import { toResourceUrl } from '@/lib/appwrite/admin-resource-url'
 import { getRuntimeConfig } from '@/lib/runtime-config'
 import { resolveAppwriteEndpointFallback } from '@/lib/runtime-config-shared'
+import { clearApiExplorerAuthStorage } from '@/lib/api-explorer/auth-storage'
 import { clearConsoleAccountCache } from '@/lib/console-account-cache'
 import {
   fetchConsoleAccount,
@@ -74,6 +79,7 @@ import {
 } from '@/lib/fingerprint'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
 import { subscribeToDebugOverrides } from '@/lib/debug-overrides'
+import { getActiveEnvironmentId } from '@/lib/active-environment'
 
 /**
  * True when the endpoint host is a known multi-region Appwrite cloud host
@@ -222,6 +228,8 @@ function createConsoleSdkRaw(client: Client) {
     client,
     account: new Account(client),
     affiliates: new Affiliates(client),
+    alerts: new Alerts(client),
+    monitors: new Monitors(client),
     apps: new Apps(client),
     oauth2: new Oauth2(client),
     avatars: new Avatars(client),
@@ -269,6 +277,7 @@ function createConsoleSdkRaw(client: Client) {
     usage: new Usage(client),
     webhooks: new Webhooks(client),
     notifications: new Notifications(client),
+    zero: new Zero(client),
   }
 }
 
@@ -296,6 +305,23 @@ function installSetProjectWithHeader(client: Client) {
 
 installSetProjectWithHeader(clientConsole)
 installSetProjectWithHeader(clientProject)
+
+/**
+ * An environment of a project is reached with the project's ID in
+ * `X-Appwrite-Project` and the environment's ID in `X-Appwrite-Environment`;
+ * it has no project ID of its own. Set on the client, so service methods and
+ * raw `client.call` alike act in the environment; cleared for the project itself.
+ */
+export function applyEnvironmentHeader(
+  client: Client,
+  environmentId: string | null,
+) {
+  if (environmentId) {
+    client.headers['X-Appwrite-Environment'] = environmentId
+  } else {
+    delete client.headers['X-Appwrite-Environment']
+  }
+}
 
 // The SDK asks for the 2.3.0 response format, which leaves `passkey` out of
 // `project.authMethods` for clients that predate it. This console knows the
@@ -424,6 +450,7 @@ const CONSOLE_SDK_PROJECT_ID = 'console'
  *
  * - Clears operator impersonation.
  * - Removes Appwrite `cookieFallback` from localStorage (SDK uses it when cookies are restricted).
+ * - Removes the API explorer's stored auth state, including project API keys.
  * - Clears in-memory session/JWT/key on the shared console and project clients.
  * - Best-effort expiry of `a_session_console` on the current document host (only works for
  *   non-httpOnly cookies; cross-site session cookies require a successful server sign-out).
@@ -434,6 +461,7 @@ export function clearConsoleSessionLocally(): void {
   clearConsoleImpersonateUser()
   clearConsoleImpersonationSession()
   clearConsoleAccountCache()
+  clearApiExplorerAuthStorage()
 
   try {
     window.localStorage.removeItem('cookieFallback')
@@ -552,6 +580,8 @@ const sdkForProjectRaw = {
   client: clientProject,
   account: new Account(clientProject),
   activities: new Activities(clientProject),
+  alerts: new Alerts(clientProject),
+  monitors: new Monitors(clientProject),
   analytics: new Analytics(clientProject),
   apps: new Apps(clientProject),
   avatars: new Avatars(clientProject),
@@ -570,6 +600,8 @@ const sdkForProjectRaw = {
   users: new Users(clientProject),
   vcs: new Vcs(clientProject),
   proxy: new Proxy(clientProject),
+  // Hand-written until a Console SDK release carries the reviews service.
+  reviews: new Reviews(clientProject),
   migrations: new Migrations(clientProject),
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),
@@ -639,7 +671,16 @@ export const sdk = {
   // Project SDK - for managing project-specific resources.
   // Endpoint is set from cached region (setProjectRegion when project is fetched) or explicit region param.
   // Always fetch project first in loaders so region is cached before project-scoped calls.
-  forProject(projectId: string, region?: string) {
+  //
+  // Inside an environment of the project (the working context kept by
+  // `@/lib/active-environment`), every call acts in that environment. The few calls meant for
+  // the project itself while there, such as listing its environments, pass
+  // `environment: null`; a caller that knows another environment names it.
+  forProject(
+    projectId: string,
+    region?: string,
+    options: { environment?: string | null } = {},
+  ) {
     const effectiveRegion = region ?? projectRegions.get(projectId)
     const projectEndpoint = getApiEndpoint(effectiveRegion)
 
@@ -649,6 +690,12 @@ export const sdk = {
     if (projectId !== clientProject.config.project) {
       clientProject.setProject(projectId)
     }
+    applyEnvironmentHeader(
+      clientProject,
+      options.environment === undefined
+        ? getActiveEnvironmentId(projectId)
+        : options.environment,
+    )
 
     return sdkForProject
   },

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Sites\Http\Sites;
 
+use Appwrite\Auth\Key;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Build as BuildPublisher;
@@ -14,6 +15,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\RepositoryWebhooks;
+use Appwrite\Vcs\Validator\Directory;
 use Executor\Executor;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
@@ -27,6 +29,7 @@ use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -34,7 +37,6 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git;
 
 class Update extends Base
 {
@@ -89,7 +91,7 @@ class Update extends Base
             ->param('providerRepositoryId', '', new Nullable(new Text(128, 0)), 'Repository ID of the repo linked to the site.', true)
             ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the site.', true)
             ->param('providerSilentMode', false, new Boolean(), 'Is the VCS (Version Control System) connection in silent mode for the repo linked to the site? In silent mode, comments will not be made on commits and pull requests.', true)
-            ->param('providerRootDirectory', '', new Text(128, 0), 'Path to site code in the linked repo.', true)
+            ->param('providerRootDirectory', '', new Directory(), 'Path to site code in the linked repo.', true)
             ->param('providerBranches', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of branch name patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all branches.', true)
             ->param('providerPaths', null, new Nullable(new ArrayList(new Text(128), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'List of file path patterns to trigger automatic deployments. Supports wildcards. Leave empty to deploy on all file changes.', true)
             ->param('buildSpecification', null, fn (array $plan) => new Nullable(new Specification(
@@ -123,6 +125,8 @@ class Update extends Base
             ->inject('buildTimeout')
             ->inject('bus')
             ->inject('platform')
+            ->inject('apiKey')
+            ->inject('deviceForBuilds')
             ->callback($this->action(...));
     }
 
@@ -166,7 +170,9 @@ class Update extends Base
         Deployments $deployments,
         int $buildTimeout,
         Bus $bus,
-        array $platform
+        array $platform,
+        ?Key $apiKey,
+        ?Device $deviceForBuilds = null,
     ) {
         if (!empty($adapter)) {
             $configFramework = Config::getParam('frameworks')[$framework] ?? [];
@@ -188,6 +194,11 @@ class Update extends Base
 
         if ($site->isEmpty()) {
             throw new Exception(Exception::SITE_NOT_FOUND);
+        }
+
+        // Scopes the site already has stay; only new ones need the key to hold them
+        if ($apiKey !== null && !$apiKey->mayGrant(\array_diff($scopes ?? [], $site->getAttribute('scopes', [])))) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'An API key cannot grant scopes it does not hold.');
         }
 
         $installation = $dbForPlatform->getDocument('installations', $installationId);
@@ -254,6 +265,9 @@ class Update extends Base
         }
 
         if (!$isConnected && !empty($providerRepositoryId)) {
+            $providerAdapter = $vcsFactory->fromInstallation($installation);
+            [$owner, $repositoryName] = $this->resolveInstallationRepository($providerAdapter, $installation, $providerRepositoryId);
+
             $teamId = $project->getAttribute('teamId', '');
             $repository = new Document([
                 '$id' => Id::unique(),
@@ -273,12 +287,7 @@ class Update extends Base
             $repositoryInternalId = $repository->getSequence();
 
             try {
-                $providerAdapter = $vcsFactory->fromInstallation($installation);
-                if (!\in_array(Git::WEBHOOK_SCOPE_INSTALLATION, $providerAdapter->getSupportedWebhookScopes(), true)) {
-                    $owner = $providerAdapter->getOwnerName($installation->getAttribute('providerInstallationId', ''), (int)$providerRepositoryId);
-                    $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
-                    $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
-                }
+                $repositoryWebhooks->ensure($providerAdapter, $installation, $dbForPlatform, $providerRepositoryId, $owner, $repositoryName);
             } catch (\Throwable $error) {
                 $dbForPlatform->deleteDocument('repositories', $repository->getId());
                 throw $error;
@@ -294,6 +303,8 @@ class Update extends Base
                 && $repository->getAttribute('providerRepositoryId') === $providerRepositoryId
                 && $repository->getAttribute('installationInternalId') !== $installation->getSequence()
             ) {
+                $this->resolveInstallationRepository($vcsFactory->fromInstallation($installation), $installation, $providerRepositoryId);
+
                 $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document([
                     'installationId' => $installation->getId(),
                     'installationInternalId' => $installation->getSequence(),
@@ -335,6 +346,7 @@ class Update extends Base
             }
         }
 
+        $previous = $site;
         $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
             'name' => $name,
             'description' => $description,
@@ -366,6 +378,8 @@ class Update extends Base
             'fallbackFile' => $fallbackFile,
             'scopes' => $scopes ?? $site->getAttribute('scopes', []),
         ])));
+
+        $this->deleteStaleBuildCache($deviceForBuilds, $project->getId(), $previous, $site);
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {

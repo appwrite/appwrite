@@ -1,5 +1,15 @@
 ## Getting started
 
+### Requirements and installation
+
+Use Python 3.10 or later with SDK 27.0.0. Create and activate a virtual environment with that interpreter, then install the SDK:
+
+```sh
+python -m pip install --upgrade "appwrite==27.0.0"
+```
+
+SDK 27.0.0 requires `requests>=2.34.2,<3` and `urllib3>=2.8.0,<3`. Update application pins or constraints that exclude these versions. Python 3.9 is no longer supported; service methods, models, and response format `2.5.0` are unchanged from SDK 26.0.0.
+
 ### Initialize the client
 
 Create a client with your Appwrite endpoint, project ID and an [API key](https://appwrite.io/docs/partners/project/api-keys). Find the endpoint and project ID in your project's **Settings** page, and create an API key with only the scopes you need under **API keys** in the project sidebar.

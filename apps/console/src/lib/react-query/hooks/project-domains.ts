@@ -107,7 +107,7 @@ export function useProjectDomains(
   region?: string,
   search?: string,
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
     projectDomainsQueryOptions(projectId, region, search),
   )
 
@@ -115,6 +115,7 @@ export function useProjectDomains(
     rules: data?.rules || [],
     total: data?.total || 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }
@@ -229,12 +230,24 @@ export function useVerifyDomain(
       const projectSdk = sdk.forProject(projectId, region)
       return await projectSdk.proxy.updateRuleStatus({ ruleId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['proxy-rules', 'project', projectId],
+    onSuccess: async () => {
+      // Every proxy rule list of this project: project, site, function and deployment keys hold projectId third
+      await queryClient.refetchQueries({
+        queryKey: ['proxy-rules'],
+        predicate: (query) => query.queryKey[2] === projectId,
       })
-      queryClient.invalidateQueries({
-        queryKey: Dependencies.DOMAINS,
+    },
+    // The nameserver check runs even when the rule check fails, so the
+    // organization domain can change either way.
+    onSettled: (_data, _error, input) => {
+      const organizationDomainId =
+        typeof input === 'string' ? undefined : input.organizationDomainId
+      if (!organizationDomainId) return
+      void queryClient.refetchQueries({
+        queryKey: ['domain', organizationDomainId],
+      })
+      void queryClient.refetchQueries({
+        queryKey: ['domains', 'organization'],
       })
     },
   })

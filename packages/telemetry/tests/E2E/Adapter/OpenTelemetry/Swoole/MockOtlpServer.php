@@ -5,6 +5,7 @@ namespace Utopia\Telemetry\Tests\E2E\Adapter\OpenTelemetry\Swoole;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Http\Client;
 use Swoole\Coroutine\Http\Server;
+use Swoole\Exception as SwooleException;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Utopia\Telemetry\Exception;
@@ -30,14 +31,23 @@ class MockOtlpServer
     /** @var array<int, array{payload: string, headers: array<string, string>, timestamp: float}> */
     private array $requests = [];
 
+    /**
+     * Request methods and URIs, with their query strings, that arrived anywhere other than the metrics path.
+     *
+     * @var array<string>
+     */
+    private array $strays = [];
+
     private int $statusCode = 200;
 
     private string $responseBody = '';
 
     private float $responseDelay = 0;
 
-    public function __construct()
-    {
+    public function __construct(
+        private ?string $certificate = null,
+        private ?string $key = null,
+    ) {
         $this->port = self::HOST === '127.0.0.1' ? 19318 + (self::$portOffset++) : 19318;
     }
 
@@ -46,7 +56,9 @@ class MockOtlpServer
      */
     public function getEndpoint(): string
     {
-        return 'http://' . self::HOST . ':' . $this->port . '/v1/metrics';
+        $scheme = $this->certificate === null ? 'http' : 'https';
+
+        return $scheme . '://' . self::HOST . ':' . $this->port . '/v1/metrics';
     }
 
     /**
@@ -83,8 +95,21 @@ class MockOtlpServer
      */
     public function start(): void
     {
-        $this->server = new Server(self::HOST, $this->port);
-        $this->server->set(['open_http2_protocol' => false]);
+        $this->server = new Server(self::HOST, $this->port, $this->certificate !== null);
+        $this->server->set([
+            'open_http2_protocol' => false,
+            ...($this->certificate === null ? [] : [
+                'ssl_cert_file' => $this->certificate,
+                'ssl_key_file' => $this->key,
+            ]),
+        ]);
+
+        $this->server->handle('/', function (Request $request, Response $response): void {
+            $query = $request->server['query_string'] ?? '';
+            $this->strays[] = ($request->server['request_method'] ?? '') . ' ' . ($request->server['request_uri'] ?? '') . ($query === '' ? '' : '?' . $query);
+            $response->status(404);
+            $response->end();
+        });
 
         $this->server->handle('/v1/metrics', function (Request $request, Response $response): void {
             $this->requests[] = [
@@ -115,6 +140,34 @@ class MockOtlpServer
     }
 
     /**
+     * Restart on the same port presenting another certificate, which drops every open connection.
+     *
+     * The port is released only once the connections the stopped server was
+     * serving have wound down, so binding it again is retried until then.
+     */
+    public function restart(string $certificate, string $key, float $timeout = 2.0): void
+    {
+        $this->stop();
+        unset($this->server);
+        $this->certificate = $certificate;
+        $this->key = $key;
+
+        $deadline = microtime(true) + $timeout;
+        while (true) {
+            try {
+                $this->start();
+
+                return;
+            } catch (SwooleException $e) {
+                if (microtime(true) > $deadline) {
+                    throw $e;
+                }
+                Coroutine::sleep(0.01);
+            }
+        }
+    }
+
+    /**
      * Wait for the server to be ready to accept connections.
      *
      * @throws Exception If the server fails to start within the timeout period
@@ -123,7 +176,7 @@ class MockOtlpServer
     {
         $start = microtime(true);
         while (microtime(true) - $start < $timeout) {
-            $client = new Client(self::HOST, $this->port);
+            $client = new Client(self::HOST, $this->port, $this->certificate !== null);
             $client->set(['timeout' => 0.1]);
             $client->get('/');
             if ($client->statusCode !== -1 && $client->statusCode !== -2) {
@@ -154,6 +207,14 @@ class MockOtlpServer
     }
 
     /**
+     * @return array<string>
+     */
+    public function getStrays(): array
+    {
+        return $this->strays;
+    }
+
+    /**
      * Get the number of requests received.
      */
     public function getRequestCount(): int
@@ -177,6 +238,7 @@ class MockOtlpServer
     public function reset(): void
     {
         $this->requests = [];
+        $this->strays = [];
     }
 
     /**
@@ -186,12 +248,12 @@ class MockOtlpServer
      *
      * @param callable(MockOtlpServer): void $test
      */
-    public static function run(callable $test): void
+    public static function run(callable $test, ?string $certificate = null, ?string $key = null): void
     {
         $exception = null;
 
-        $executor = function () use ($test, &$exception): void {
-            $server = new self();
+        $executor = function () use ($test, $certificate, $key, &$exception): void {
+            $server = new self($certificate, $key);
             $server->start();
 
             try {

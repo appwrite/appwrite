@@ -9,10 +9,13 @@ use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory as MemoryAdapter;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
+use Utopia\Migration\Resource as UtopiaResource;
 use Utopia\Migration\Resources\Database\Database;
 use Utopia\Migration\Resources\Database\Row;
 use Utopia\Migration\Resources\Database\Table;
 use Utopia\Migration\Sources\CSV;
+use Utopia\Migration\Tests\Adapters\MockSource;
+use Utopia\Migration\Transfer;
 use Utopia\Storage\Device\Local;
 
 /**
@@ -513,6 +516,62 @@ class CSVTest extends TestCase
         $this->assertSame(['key' => 'value'], $metadataArray);
 
         // Cleanup
+        if (is_dir($tempDir)) {
+            $this->recursiveDelete($tempDir);
+        }
+    }
+
+    public function testCSVExportFailureLeavesNoFile(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_' . uniqid();
+        mkdir($tempDir, 0755, true);
+
+        $csvDestination = new DestinationCSV(new Local($tempDir), 'test_db:test_table_id', '', 'test_db_test_table_id');
+
+        $database = new Database('test_db');
+        $table = new Table($database, 'test_table', 'test_table_id');
+
+        $source = new MockSource();
+        $source->pushMockResource(new Row('row1', $table, ['name' => 'John Doe']));
+        (new Transfer($source, $csvDestination))->run([UtopiaResource::TYPE_ROW], function () {
+            return;
+        });
+        $csvDestination->shutdown();
+        $this->assertFileExists($tempDir . '/test_db_test_table_id.csv');
+
+        $csvDestination->error();
+
+        $this->assertFileDoesNotExist($tempDir . '/test_db_test_table_id.csv');
+
+        if (is_dir($tempDir)) {
+            $this->recursiveDelete($tempDir);
+        }
+    }
+
+    public function testCSVExportFailureKeepsAFileItDoesNotOwn(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/csv_test_' . uniqid();
+        mkdir($tempDir, 0755, true);
+
+        $database = new Database('test_db');
+        $table = new Table($database, 'test_table', 'test_table_id');
+
+        $published = new DestinationCSV(new Local($tempDir), 'test_db:test_table_id', '', 'test_db_test_table_id');
+        $source = new MockSource();
+        $source->pushMockResource(new Row('row1', $table, ['name' => 'John Doe']));
+        (new Transfer($source, $published))->run([UtopiaResource::TYPE_ROW], function () {
+            return;
+        });
+        $published->shutdown();
+        $published->success();
+
+        $published->error();
+        $this->assertFileExists($tempDir . '/test_db_test_table_id.csv');
+
+        $retry = new DestinationCSV(new Local($tempDir), 'test_db:test_table_id', '', 'test_db_test_table_id');
+        $retry->error();
+        $this->assertFileExists($tempDir . '/test_db_test_table_id.csv');
+
         if (is_dir($tempDir)) {
             $this->recursiveDelete($tempDir);
         }

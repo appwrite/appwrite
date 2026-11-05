@@ -162,6 +162,7 @@ abstract class Model
             'description' => '',
             'example' => '',
             'sensitive' => false,
+            'credential' => false,
             'readOnly' => false
         ], $options);
 

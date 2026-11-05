@@ -107,7 +107,7 @@ export function View() {
   if (!func) return null
 
   const specFooterNote = hasUnavailableSpecifications(specifications) ? (
-    <SpecificationsUpgradeNote orgId={project?.teamId} showContactSales />
+    <SpecificationsUpgradeNote orgId={project?.teamId} />
   ) : undefined
 
   const cards: SettingsCardItem[] = [

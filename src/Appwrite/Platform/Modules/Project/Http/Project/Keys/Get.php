@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
@@ -59,6 +60,7 @@ class Get extends Base
             ->inject('project')
             ->inject('authorization')
             ->inject('request')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -69,6 +71,7 @@ class Get extends Base
         Document $project,
         Authorization $authorization,
         Request $request,
+        ?Key $apiKey,
     ) {
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
@@ -76,8 +79,13 @@ class Get extends Base
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        // Secrets are only for callers that could replace the key anyway
-        if (!\in_array('keys.write', $request->getScopes(), true)) {
+        // Secrets are only for callers that could have created the key: a session with
+        // keys.write, or a key whose grant covers it. A JWT never sees them.
+        if (
+            !\in_array('keys.write', $request->getScopes(), true)
+            || $request->getHeaderLine('x-appwrite-jwt', '') !== ''
+            || ($apiKey !== null && !$apiKey->mayCreate(API_KEY_STANDARD, $key->getAttribute('scopes', []), $key->getAttribute('expire')))
+        ) {
             $key->setAttribute('secret', '');
         }
 

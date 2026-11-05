@@ -30,6 +30,10 @@ function formatUsageChartIntervalDisabledReason(
     return t('Ranges shorter than 15 minutes use the 1m interval.')
   }
 
+  if (details.kind === 'coarse') {
+    return t('Use a date range longer than this interval.')
+  }
+
   if (details.kind === 'hours') {
     return `${t('Use a date range of')} ${details.maxHours} ${t('hours or less for this interval.')}`
   }

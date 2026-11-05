@@ -1,5 +1,8 @@
 ## Getting Started
 
+Use SDK 21.1.1 or later. In Xcode's package dependency settings, choose **Up to Next Major Version** from `21.1.1`.
+
+
 ### Add your Apple platform
 
 Before your app can talk to Appwrite, register it as a platform in your project. In the Appwrite Console, open your project (create one if you haven't already), click **Add platform** on the project overview and choose **Apple**. Select **iOS**, **macOS**, **watchOS** or **tvOS**, then enter your app's name and bundle identifier. You can find the bundle identifier in the **General** tab of your app target in Xcode.

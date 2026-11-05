@@ -95,7 +95,9 @@ import { useKeyboardShortcutsContext } from '@/components/global/providers/keybo
 import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
+import { ExperimentsPopover } from '@/components/global/shared/ExperimentsPopover'
 import { NotificationCenterPopover } from '@/components/global/shared/NotificationCenterPopover'
+import { hasQualityLabel } from '@/lib/experiments'
 import { useAgentChat } from '@/components/global/providers/AgentChat'
 import { isAgentPagePath } from '@/lib/assistant/agent-paths'
 import { Button } from '@/components/ui/button'
@@ -109,6 +111,8 @@ import { openCreateOrganizationFlow } from '@/lib/open-create-organization-flow'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { HalloweenCobwebs } from '@/components/global/shared/HalloweenCobwebs'
+import { useHalloween } from '@/hooks/use-halloween'
 import { AppwriteWordmark } from '@/components/global/shared/AppwriteWordmark'
 import { resolveInitHeaderNavCta } from '@/lib/init/events'
 import { resolveInitHref } from '@/lib/init/links'
@@ -136,6 +140,9 @@ import {
 } from '@/components/pages/marketing/MarketingSolutionsNavMenu'
 import { MarketingGitHubStarsLink } from '@/components/pages/marketing/MarketingGitHubStarsLink'
 import { useI18n } from '@/lib/i18n'
+import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 
 type MarketingHeaderNavItem = {
   label: string
@@ -535,7 +542,10 @@ export function ConsoleHeader({
   const showNotifications =
     features.notifications && !showMarketingNav && !preLaunch
   const showConnectAndCreate = canShowConnectSection(access, features)
-  const canCreateProjectFlag = canCreateProject(access, features)
+  const t = useT()
+  const zeroAccount = useIsZeroAccount()
+  const canCreateProjectFlag =
+    canCreateProject(access, features) && !zeroAccount
   const canCreateDatabaseFlag = canCreateDatabase(access, features)
   const canCreateUserFlag = canCreateUser(access, features)
   const canCreateBucketFlag = canCreateBucket(access, features)
@@ -662,6 +672,7 @@ export function ConsoleHeader({
     pathname: location.pathname,
     showMarketingNav,
   })
+  const showExperiments = hasQualityLabel(headerAccount?.labels)
   const showCenterSearch = centerSearch && !hideSearch && !preLaunch
   const showRightSearch = !hideSearch && !centerSearch && !preLaunch
   const { modKey: searchModKey, isMac } = usePlatform()
@@ -670,9 +681,10 @@ export function ConsoleHeader({
     isMac,
   )
   const logoColumnWidth = showMarketingNav ? 158 : 60
+  const halloween = useHalloween()
 
   return (
-    <div className="@container w-full overflow-visible">
+    <div className="@container relative w-full overflow-visible">
       <header
         className={cn(
           'h-14 min-h-14 items-center gap-1 overflow-visible border-b border-border bg-background @[640px]:gap-2',
@@ -965,7 +977,13 @@ export function ConsoleHeader({
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{headerCopy.permissions.createProjects}</p>
+                            <p>
+                              {zeroAccount
+                                ? t(
+                                    'Claim this project to create more projects',
+                                  )
+                                : headerCopy.permissions.createProjects}
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       ) : (
@@ -994,7 +1012,23 @@ export function ConsoleHeader({
                           <span>{headerCopy.createMenu.newProject}</span>
                         </DropdownMenuItem>
                       )}
-                      {supportsMultiTenancy && (
+                      {supportsMultiTenancy && zeroAccount && (
+                        <ClaimToUnlock
+                          locked
+                          reason={t(
+                            'Claim this project to create organizations',
+                          )}
+                        >
+                          <DropdownMenuItem
+                            disabled
+                            className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground"
+                          >
+                            <Building2 className="h-4 w-4" />
+                            <span>{headerCopy.createMenu.newOrganization}</span>
+                          </DropdownMenuItem>
+                        </ClaimToUnlock>
+                      )}
+                      {supportsMultiTenancy && !zeroAccount && (
                         <DropdownMenuItem
                           {...analyticsAttrs('create-organization')}
                           onClick={() => {
@@ -1592,6 +1626,12 @@ export function ConsoleHeader({
                 </>
               ) : null}
 
+              {showExperiments ? (
+                <div className="flex shrink-0">
+                  <ExperimentsPopover />
+                </div>
+              ) : null}
+
               {/* Notifications - gated by the notifications profile feature */}
               {showNotifications && (
                 <div className="flex shrink-0">
@@ -2075,6 +2115,7 @@ export function ConsoleHeader({
           )}
         </div>
       </header>
+      {halloween && !showMarketingNav && <HalloweenCobwebs />}
     </div>
   )
 }

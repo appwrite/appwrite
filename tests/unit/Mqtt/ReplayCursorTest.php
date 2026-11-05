@@ -87,6 +87,35 @@ final class ReplayCursorTest extends ReplayTestCase
         $this->assertSame($this->topicSequence('news'), $this->storedCursorTopic('news'), 'acknowledgements must keep the cursor bound to its topic');
     }
 
+    public function testRecreatedTopicDoesNotReplayTheDeletedTopicsLedger(): void
+    {
+        $this->seedTopic('news', 3, subscribed: false);
+        $this->appendLedger('news', 1, 3, prefix: 'deleted');
+        $this->database->deleteDocument('topics', 'news');
+        $this->seedTopic('news', 2);
+        $this->appendLedger('news', 1, 2);
+        $this->seedCursor('news', 0, topicSequence: $this->topicSequence('news'));
+
+        $this->subscribe($this->connect(1), 'news');
+
+        $this->assertSame(['message-1', 'message-2'], $this->payloads($this->drainPublishes(1)), 'a topic recreated under a deleted topic\'s id must replay only its own messages');
+    }
+
+    public function testRecreatedTopicReplaysOnlyItsOwnLedgerAfterAStaleCursor(): void
+    {
+        $this->seedTopic('news', 4);
+        $this->appendLedger('news', 1, 4, prefix: 'deleted');
+        $deleted = $this->topicSequence('news');
+        $this->database->deleteDocument('topics', 'news');
+        $this->seedTopic('news', 1);
+        $this->appendLedger('news', 1, 1);
+        $this->seedCursor('news', 1, topicSequence: $deleted);
+
+        $this->subscribe($this->connect(1), 'news');
+
+        $this->assertSame(['message-1'], $this->payloads($this->drainPublishes(1)), 'a cursor rewound for a recreated topic must not reach the deleted topic\'s ledger');
+    }
+
     public function testAcknowledgementAfterACursorCacheMissBindsTheCursorToItsTopic(): void
     {
         $this->seedTopic('news', 12);

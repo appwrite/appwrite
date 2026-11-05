@@ -49,6 +49,7 @@ interface OrgApiKeyContextMenuProps {
   apiKey: OrgApiKeyContextMenuKey
   children: React.ReactNode
   onUpdate?: (keyId: string) => void
+  actionsDisabled?: boolean
 }
 
 export function OrgApiKeyContextMenu({
@@ -56,6 +57,7 @@ export function OrgApiKeyContextMenu({
   apiKey,
   children,
   onUpdate,
+  actionsDisabled = false,
 }: OrgApiKeyContextMenuProps) {
   const t = useT()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -88,6 +90,8 @@ export function OrgApiKeyContextMenu({
           {onUpdate && (
             <>
               <ContextMenuItem
+                disabled={actionsDisabled}
+                title={actionsDisabled ? t("You don't have permission to perform this action.") : undefined}
                 onSelect={() =>
                   openDialogAfterOverlayCloses(() => onUpdate(apiKey.id))
                 }
@@ -140,6 +144,8 @@ export function OrgApiKeyContextMenu({
           </ContextMenuSub>
           <ContextMenuSeparator />
           <ContextMenuItem
+            disabled={actionsDisabled}
+            title={actionsDisabled ? t("You don't have permission to perform this action.") : undefined}
             onSelect={() =>
               openDialogAfterOverlayCloses(() => setDeleteDialogOpen(true))
             }

@@ -26,6 +26,12 @@ class InstallationTokens
 
         $provider = $installation->getAttribute('provider', 'github');
 
+        // A personal GitHub installation still calls GitHub as the App. Refreshing its unused
+        // OAuth pair here only races concurrent requests on GitHub's refresh token rotation.
+        if ($provider === 'github') {
+            return $installation;
+        }
+
         return $this->refresh($installation, $dbForPlatform, $vcsFactory->oauth2FromProvider($provider));
     }
 

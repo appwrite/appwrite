@@ -57,6 +57,7 @@ class Identity extends Model
                 'description' => 'Identity Provider Access Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+                'credential' => true,
             ])
             ->addRule('providerAccessTokenExpiry', [
                 'type' => self::TYPE_DATETIME,
@@ -69,12 +70,14 @@ class Identity extends Model
                 'description' => 'Identity Provider Refresh Token.',
                 'default' => '',
                 'example' => 'MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3',
+                'credential' => true,
             ])
             ->addRule('providerIdToken', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Identity Provider ID token (JWT) from the most recent native sign-in. Empty for identities created through the browser OAuth2 flow.',
                 'default' => '',
                 'example' => 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjBhYzNmMWQwNWExYjhlN2YifQ.eyJzdWIiOiIxMTAxNjk0ODQ0NzQzODYyNzYzMzQifQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+                'credential' => true,
             ])
         ;
     }

@@ -60,7 +60,7 @@ class Get extends Action
                 ],
                 contentType: ContentType::ANY,
                 type: MethodType::LOCATION,
-                locationAuth: ['Project', 'ImpersonateUserId'],
+                locationAuth: ['Project', 'Environment', 'ImpersonateUserId'],
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File ID.')
@@ -118,7 +118,8 @@ class Get extends Action
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ($file->isEmpty()) {
+        // A file stays incomplete until its final chunk is joined and scanned.
+        if ($file->isEmpty() || $file->getAttribute('chunksUploaded', 0) < $file->getAttribute('chunksTotal', 1)) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
@@ -158,8 +159,9 @@ class Get extends Action
             ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-        ;
+            ->addHeader('Content-Security-Policy', "sandbox; script-src 'none';")
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setContentDisposition(Response::DISPOSITION_ATTACHMENT, (string) $file->getAttribute('name', ''));
 
         $source = '';
         if (!empty($file->getAttribute('openSSLCipher'))) { // Decrypt

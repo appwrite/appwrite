@@ -6,13 +6,32 @@ import { parse } from 'tldts'
 import type { Models } from '@appwrite.io/console'
 
 /**
- * Check if a rule has logs available for viewing (string or array with content)
+ * Whether a rule offers its logs. A rule that is not verified always does. A
+ * verified rule offers them once a certificate check has written any.
  */
-export function canViewRuleLogs(logs: unknown): boolean {
-  if (!logs) return false
-  if (typeof logs === 'string') return logs.length > 0
-  if (Array.isArray(logs)) return logs.length > 0
+export function canViewRuleLogs(rule: {
+  status: string
+  logs?: unknown
+}): boolean {
+  if (rule.status !== 'verified') return true
+  if (typeof rule.logs === 'string') return rule.logs.length > 0
+  if (Array.isArray(rule.logs)) return rule.logs.length > 0
   return false
+}
+
+/**
+ * Whether a rule can be retried: its verification has not succeeded, or it is
+ * verified and its certificate needs action, as its status badge shows: the
+ * renewal failed or is blocked, or the certificate expired.
+ */
+export function canRetryRule(
+  rule: { status: string; expireAt?: string; certificateStatus?: string },
+  now: Date = new Date(),
+): boolean {
+  if (rule.status === 'created' || rule.status === 'unverified') return true
+  if (rule.status !== 'verified') return false
+  if (['failed', 'blocked'].includes(rule.certificateStatus ?? '')) return true
+  return !!rule.expireAt && new Date(rule.expireAt).getTime() < now.getTime()
 }
 
 /**
@@ -36,6 +55,8 @@ export function proxyRuleServesActiveDeployment(
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
+import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
+import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -60,11 +81,49 @@ export function getApexDomain(domain: string): string | null {
 }
 
 /**
+ * DNS provider "Name" for a domain: `@` for an apex domain, otherwise the
+ * labels in front of the registrable domain (`mail` for `mail.example.com`).
+ * Providers append the zone themselves, so a full hostname here would end up
+ * as `mail.example.com.example.com`.
+ */
+export function getRecordName(domain: string): string {
+  const normalized = domain.trim().toLowerCase()
+  const apex = getApexDomain(normalized)
+  if (!apex || apex === normalized) return '@'
+  return normalized.slice(0, -(apex.length + 1))
+}
+
+/**
+ * TXT record that proves a project owns a domain: the project ID at
+ * `_appwrite.<domain>`, named relative to the registrable domain.
+ */
+export function getClaimRecord(domain: string, projectId: string) {
+  const name = getRecordName(domain)
+  return {
+    type: 'TXT' as const,
+    name: name === '@' ? '_appwrite' : `_appwrite.${name}`,
+    value: projectId,
+    ttl: 3600,
+  }
+}
+
+/**
+ * Whether a rule create was refused until the project proves it owns the
+ * domain with the claim record. Cloud answers 400 `rule_verification_failed`
+ * for a domain that already points to Appwrite (self-hosted never does on a
+ * create), and 409 `rule_claim_required` for one another project holds.
+ */
+export function isDomainClaimError(error: unknown): boolean {
+  const { type } = getAppwriteErrorInfo(error)
+  return type === 'rule_verification_failed' || type === 'rule_claim_required'
+}
+
+/**
  * Check if domain is Appwrite Cloud (isCloud)
  */
 export function isCloud(): boolean {
   try {
-    return getBaseEndpoint().includes('cloud.appwrite.io')
+    return isCloudEndpointUrl(getBaseEndpoint())
   } catch {
     return false
   }

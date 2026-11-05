@@ -238,13 +238,15 @@ abstract class Action extends DatabasesAction
             $ids[$id] = true;
         }
 
-        $stored = empty($ids) ? new Document() : $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->findOne($collectionTableId, [
-            Query::equal('$id', \array_map(\strval(...), \array_keys($ids))),
-            Query::select(['$id']),
-        ]));
+        foreach (\array_chunk(\array_map(\strval(...), \array_keys($ids)), \max(1, $dbForDatabases->getMaxQueryValues())) as $chunk) {
+            $stored = $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->findOne($collectionTableId, [
+                Query::equal('$id', $chunk),
+                Query::select(['$id']),
+            ]));
 
-        if (!$stored->isEmpty()) {
-            return new Exception($this->getDuplicateException(), previous: $previous, params: [$stored->getId()]);
+            if (!$stored->isEmpty()) {
+                return new Exception($this->getDuplicateException(), previous: $previous, params: [$stored->getId()]);
+            }
         }
 
         return new Exception(

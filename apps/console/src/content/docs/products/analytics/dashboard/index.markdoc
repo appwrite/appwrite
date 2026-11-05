@@ -1,0 +1,72 @@
+---
+layout: article
+title: Dashboard
+description: A tour of the Appwrite Analytics dashboard, from the metrics and chart to date ranges, live visitors, and the cards that break traffic down by source, page, location, technology, bots, and custom events.
+---
+
+Each property has a dashboard on its **Analytics** tab. It shows the property's traffic for the date range you pick: the headline metrics, a chart over time, and cards that break visits down by where they came from, what they viewed, and who sent them.
+
+# Metrics and chart {% #metrics %}
+
+{% only_dark %}
+![Dashboard of a property with the metric tabs and the Unique visitors chart compared with the previous period](/images/docs/analytics/dark/dashboard.avif)
+{% /only_dark %}
+{% only_light %}
+![Dashboard of a property with the metric tabs and the Unique visitors chart compared with the previous period](/images/docs/analytics/dashboard.avif)
+{% /only_light %}
+
+The top of the dashboard has a tab for each metric: **Unique visitors**, **Visits**, **Pageviews**, **Views per visit**, **Bounce rate**, **Visit duration**, and **Engagement time**. Each tab shows the total for the date range and the change from the comparison period. Select a tab to plot that metric on the chart.
+
+Hover over the chart to read the value at each point. Drag across the chart to zoom the dashboard into that stretch of time.
+
+The tab totals and the chart can count visits differently: the **Visits** total counts visits that started in the range, while each point on the chart counts the visits with an event in that hour or day. With a **Page** or **Event** filter, **Unique visitors** and **Visits** add up the chart's points. For how each metric is calculated, see [Metrics](/docs/products/analytics/metrics#dashboard-metrics).
+
+# Date range {% #date-range %}
+
+The date picker sets the range for the whole dashboard. Pick a preset, such as **Last 24 hours**, **Last 7 days**, **Month to date**, or **Last 12 months**, or select start and end dates on the calendar and click **Apply**.
+
+Next to the date picker, **1h** and **1d** switch the chart between hourly and daily points. Hourly points are available for ranges of 31 days or less.
+
+Ranges that start before your plan's retention period start at the oldest data you can access. See [Limits and retention](/docs/products/analytics/limits#retention).
+
+# Filters and comparisons {% #filters %}
+
+**Filters** narrows every metric, chart, and card to traffic that matches, such as visitors from one country or one campaign. **Compare** draws a second period on the chart, such as the previous period or the same period last year. See [Filter and compare traffic](/docs/products/analytics/filters).
+
+To download what the dashboard shows, use **Export**. See [Export a report](/docs/products/analytics/export).
+
+# Cards {% #cards %}
+
+{% only_dark %}
+![Pages card with the top pages, and Locations card with a world map of visitors](/images/docs/analytics/dark/pages-locations.avif)
+{% /only_dark %}
+{% only_light %}
+![Pages card with the top pages, and Locations card with a world map of visitors](/images/docs/analytics/pages-locations.avif)
+{% /only_light %}
+
+Below the chart, cards break traffic down by one dimension at a time. Each card has tabs for related views.
+
+- **Traffic sources**: **Channels**, **Sources**, and **Campaigns**. See [Traffic sources](/docs/products/analytics/sources).
+- **Humans vs bots**: the split between people and bots by **Visitors** or **Events**, with **By type** and **Top agents** below it. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Pages**: **Top pages**, **Entry pages**, **Exit pages**, and **Hostnames**.
+- **Locations**: **Map**, **Countries**, **Regions**, and **Cities**.
+- **Technology**: **Browsers**, **Operating systems**, **Devices**, and **Screen sizes**.
+- **AI agents and crawlers**: **Agents** and **Categories**. See [Bots and AI traffic](/docs/products/analytics/bots).
+- **Custom events**: the events you send, by name. See [Track custom events](/docs/products/analytics/custom-events).
+
+For what each value means, see [Breakdowns](/docs/products/analytics/metrics#breakdowns).
+
+Rows are ranked by visitors, except on **Custom events**, which ranks events by how many times they were sent. Click **Show more** under a card to see more rows, up to 500. The dashboard remembers the tab you select on each card.
+
+Click a row to filter the dashboard to that value. Rows on **Entry pages** and **Exit pages** can't be used as filters. Right-click a row for more actions, such as excluding the value, copying it, or [blocking it with Firewall](/docs/products/analytics/firewall).
+
+# Live visitors {% #live %}
+
+{% only_dark %}
+![Live visitors popover listing the pages visitors are on](/images/docs/analytics/dark/live-visitors.avif)
+{% /only_dark %}
+{% only_light %}
+![Live visitors popover listing the pages visitors are on](/images/docs/analytics/live-visitors.avif)
+{% /only_light %}
+
+The **online** count in the property header shows unique visitors with any event in the last five minutes. It updates every 30 seconds while the dashboard is open, and doesn't depend on the date range or filters. Click it to see the pages those visitors are on.

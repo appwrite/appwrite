@@ -34,6 +34,21 @@ $charset = $dsn->getParam('charset') // utf8
 $timezone = $dsn->getParam('timezone') // UTC
 ```
 
+Build a DSN from values you don't control with `DSN::from()`. Each part is encoded, and the DSN is refused if a part would read back differently, so a `?` in a path or an `@` in a user can't reshape it:
+
+```php
+$dsn = DSN::from(
+    scheme: 's3',
+    host: 'minio.example.com',
+    user: $accessKey,
+    password: $secretKey,
+    port: 9000,
+    path: $bucket,
+    params: ['region' => 'us-east-1'],
+);
+$connection = (string) $dsn; // s3://...@minio.example.com:9000/bucket?region=us-east-1
+```
+
 ## Tests
 
 ```bash
@@ -42,7 +57,7 @@ composer test
 
 ## System Requirements
 
-Utopia DSN requires PHP 8.0 or later. We recommend using the latest PHP version whenever possible.
+Utopia DSN requires PHP 8.1 or later. We recommend using the latest PHP version whenever possible.
 
 ## Copyright and license
 
