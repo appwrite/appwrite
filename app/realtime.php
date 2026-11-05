@@ -469,7 +469,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
     // Runs once, in the background: other traffic is served meanwhile and presence writes wait for it.
     // A restarted worker 0 skips it once it has finished.
-    if ($workerId === 0 && $bootCleanupFinished->get() === 0) {
+    if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted' && $workerId === 0 && $bootCleanupFinished->get() === 0) {
         go(function () use ($bootCleanupFinished, $bootedAt, $bootDeadline, $container, $containerId, $presenceState): void {
             $span = Span::init('realtime.presences.cleanup');
             $started = \microtime(true);
