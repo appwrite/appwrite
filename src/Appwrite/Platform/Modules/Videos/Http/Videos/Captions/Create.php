@@ -149,7 +149,7 @@ class Create extends Base
         if ($default) {
             // After the insert, so a failed create cannot cost the video its
             // default track.
-            $this->clearDefault($dbForProject, $authorization, $video, $caption->getId());
+            $this->clearDefault($dbForProject, $authorization, $user, $video, $caption->getId());
         } else {
             // Uploads outrank auto-extracted tracks: when the current default is
             // an embedded track for the same language, the upload takes the flag
@@ -226,34 +226,50 @@ class Create extends Base
     /**
      * Only one track per video may be the default, so demote any current holder.
      */
-    private function clearDefault(Database $dbForProject, Authorization $authorization, Document $video, string $captionId): void
+    private function clearDefault(Database $dbForProject, Authorization $authorization, User $user, Document $video, string $captionId): void
     {
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
         // The video row is the lock: two requests promoting different tracks
         // at once would otherwise each demote the other and leave no default.
         // Under the lock the later request wins, and its own row is re-asserted
-        // in case the earlier one already demoted it.
-        $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $video, $captionId): void {
-            $dbForProject->getDocument('videos', $video->getId(), forUpdate: true);
+        // in case the earlier one already demoted it. Session callers take that
+        // lock through document ACL. API keys and privileged users are not on
+        // the document's permission list, so they skip it. Caption rows have no
+        // permissions; their writes stay skipped after the parent was authorized.
+        $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $video, $captionId, $isAPIKey, $isPrivilegedUser): void {
+            if ($isAPIKey || $isPrivilegedUser) {
+                $locked = $authorization->skip(fn () => $dbForProject->getDocument('videos', $video->getId(), forUpdate: true));
+            } else {
+                $locked = $dbForProject->getDocument('videos', $video->getId(), forUpdate: true);
+            }
 
-            $existing = $dbForProject->find('videosCaptions', [
-                Query::equal('videoInternalId', [$video->getSequence()]),
-                Query::equal('default', [true]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]);
+            if ($locked->isEmpty()) {
+                throw new Exception(Exception::VIDEO_NOT_FOUND);
+            }
 
-            $promoted = false;
-            foreach ($existing as $caption) {
-                if ($caption->getId() === $captionId) {
-                    $promoted = true;
-                    continue;
+            $authorization->skip(function () use ($dbForProject, $video, $captionId): void {
+                $existing = $dbForProject->find('videosCaptions', [
+                    Query::equal('videoInternalId', [$video->getSequence()]),
+                    Query::equal('default', [true]),
+                    Query::limit(APP_LIMIT_SUBQUERY),
+                ]);
+
+                $promoted = false;
+                foreach ($existing as $caption) {
+                    if ($caption->getId() === $captionId) {
+                        $promoted = true;
+                        continue;
+                    }
+
+                    $dbForProject->updateDocument('videosCaptions', $caption->getId(), new Document(['default' => false]));
                 }
 
-                $dbForProject->updateDocument('videosCaptions', $caption->getId(), new Document(['default' => false]));
-            }
-
-            if (!$promoted) {
-                $dbForProject->updateDocument('videosCaptions', $captionId, new Document(['default' => true]));
-            }
-        }));
+                if (!$promoted) {
+                    $dbForProject->updateDocument('videosCaptions', $captionId, new Document(['default' => true]));
+                }
+            });
+        });
     }
 }
