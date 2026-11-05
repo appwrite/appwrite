@@ -59,7 +59,7 @@ While the subscription gives access, the user has the `subscriber` [label](/docs
 
 # Start selling with Dodo Payments and Appwrite
 
-The Dodo Payments templates are available now on [Appwrite Cloud](/sign-in), and they ship to self-hosted Appwrite in an upcoming release. Open **Functions** > **Templates** in the Appwrite Console and search for **Dodo**. Pick the payments template if customers pay once, or the subscriptions template if they pay on a schedule.
+The Dodo Payments templates are available on [Appwrite Cloud](/sign-in) and in self-hosted Appwrite 2.6.0 and later. Open **Functions** > **Templates** in the Appwrite Console and search for **Dodo**. Pick the payments template if customers pay once, or the subscriptions template if they pay on a schedule.
 
 ![Dodo Payments templates in the Appwrite Console](/images/blog/announcing-dodo-payments-templates/template.avif)
 

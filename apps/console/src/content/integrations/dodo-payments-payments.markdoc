@@ -13,6 +13,7 @@ product:
     vendor: Dodo Payments
     description: 'Dodo Payments is a Merchant of Record for SaaS, AI, and digital products that handles payments, tax, and billing in 220+ countries.'
 platform:
+    - 'Self-hosted'
     - 'Cloud'
 images:
     - /images/integrations/dodo-payments-payments/cover.avif
@@ -54,7 +55,7 @@ Next, head to **Developer** > **API Keys** and click **Create New Key**. Give th
 
 ## Step 2: Create the Appwrite Function
 
-For this step, you must [create an account on Appwrite Cloud](/sign-in) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. The Dodo Payments templates are available on Appwrite Cloud today and ship to self-hosted Appwrite in an upcoming release. If you self-host Appwrite, there are [additional setup steps](/docs/advanced/self-hosting/configuration/functions) to use Appwrite Function templates.
+For this step, you must [create an account on Appwrite Cloud](/sign-in) or [self-host Appwrite](/docs/advanced/self-hosting) if you haven't already. The Dodo Payments templates are available on Appwrite Cloud and in self-hosted Appwrite 2.6.0 and later. If you self-host Appwrite, there are [additional setup steps](/docs/advanced/self-hosting/configuration/functions) to use Appwrite Function templates.
 
 Head over to the Appwrite Console, navigate to the **Functions** page, click the **Templates** tab, and search for the **Payments with Dodo Payments** function template. Click **Create from template**.
 
