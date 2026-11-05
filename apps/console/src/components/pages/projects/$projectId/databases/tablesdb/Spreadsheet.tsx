@@ -2096,8 +2096,15 @@ function RowEditDrawer({
                                                 return null
                                               }
                                             })()
-                                          : (parseNumericField(e.target.value) ??
-                                            null)
+                                          : (() => {
+                                              const parsed = parseNumericField(
+                                                e.target.value,
+                                              )
+                                              if (parsed === undefined) return null
+                                              return fieldType === 'integer'
+                                                ? Math.trunc(parsed)
+                                                : parsed
+                                            })()
                                     handleFieldChange(key, val)
                                   }}
                                   min={
