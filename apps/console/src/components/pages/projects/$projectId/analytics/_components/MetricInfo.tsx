@@ -32,7 +32,7 @@ export const ANALYTICS_METRIC_INFO = {
   visitDuration:
     'Average session length, from first to last event. Single-event sessions count as 0s.',
   engagementTime:
-    'Average time the page was in the foreground per session. Sessions with no engagement are excluded.',
+    'Average time the page or app was in the foreground per session. Sessions with no engagement are excluded.',
   scrollDepth: 'How far down the page visitors scrolled, on average.',
   channels:
     'Channels group referrers into types such as search, social or direct. Sources show the individual referrer. Campaigns break down the utm_* parameters on landing URLs.',

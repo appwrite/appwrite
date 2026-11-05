@@ -124,9 +124,9 @@ const OVERVIEW_METRICS: {
   { key: 'engagementTime', label: 'Engagement time', info: 'engagementTime', format: formatDuration, source: 'aggregate', axis: 'duration' },
 ]
 
-// In display order; the first leads the chart. A default Flutter app sends
-// screen_view, not pageview, so pageview-based metrics would read 0 or 100%.
-// Agents relay from servers, where visitors mean little.
+// In display order; the first leads the chart. Flutter's lifecycle events
+// never interact, so bounce rate reads oddly on apps. Agents relay from
+// servers, where visitors mean little.
 const METRICS_BY_TYPE: Record<
   AnalyticsPropertyType,
   readonly AnalyticsChartMetric[]
@@ -135,8 +135,10 @@ const METRICS_BY_TYPE: Record<
   [AnalyticsPropertyType.Mobile]: [
     'visitors',
     'visits',
+    'pageviews',
     'events',
     'users',
+    'viewsPerVisit',
     'visitDuration',
     'engagementTime',
   ],

@@ -396,7 +396,7 @@ test.describe('analytics property (mocked API)', () => {
     })
   })
 
-  test('leaves pageview metrics off a mobile property', async ({ page }) => {
+  test('leaves bounce rate off a mobile property', async ({ page }) => {
     await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
     await openProperty(page)
 
@@ -407,7 +407,9 @@ test.describe('analytics property (mocked API)', () => {
     await expect(metrics).toHaveText([
       /^Unique visitors/,
       /^Visits/,
+      /^Pageviews/,
       /^Events/,
+      /^Views per visit/,
       /^Visit duration/,
       /^Engagement time/,
     ])
