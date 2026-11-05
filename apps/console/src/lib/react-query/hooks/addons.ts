@@ -1,5 +1,5 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
-import { Addon } from '@appwrite.io/console'
+import type { Addon } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { DEFAULT_STALE_TIME } from './constants'
