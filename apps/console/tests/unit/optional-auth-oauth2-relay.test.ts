@@ -35,3 +35,15 @@ describe('transfer link auth redirects', () => {
     expect(shouldRedirectToConsoleMfa('/transfer')).toBe(true)
   })
 })
+
+describe('integration guide auth redirects', () => {
+  test('keeps a guest on the catalog and on each integration guide', () => {
+    expect(shouldRedirectGuestToSignIn('/integrations')).toBe(false)
+    expect(
+      shouldRedirectGuestToSignIn('/integrations/dodo-payments-payments'),
+    ).toBe(false)
+    expect(
+      shouldRedirectGuestToSignIn('/integrations/lemon-squeezy-payments/'),
+    ).toBe(false)
+  })
+})
