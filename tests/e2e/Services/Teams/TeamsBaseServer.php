@@ -255,6 +255,9 @@ trait TeamsBaseServer
         $teamUid = $this->createTeamHelper()['teamUid'];
         $email = uniqid() . 'target@localhost.test';
 
+        /**
+         * Test for SUCCESS
+         */
         $membership = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
