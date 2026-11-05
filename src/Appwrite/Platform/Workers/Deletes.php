@@ -25,6 +25,7 @@ use Throwable;
 use Utopia\Abuse\Adapter\TimeLimit\Database as AbuseDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
+use Utopia\Cache\Adapter\Storage;
 use Utopia\Cache\Cache;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Config\Config;
@@ -44,6 +45,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
+use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\Storage\Exception\NotFoundException;
 use Utopia\System\System;
@@ -859,6 +861,22 @@ class Deletes extends Action
     }
 
     /**
+     * Every place a project's cached responses can be, whatever percentage is routed
+     * to the device: lowering it later must not bring a purged entry back.
+     *
+     * @return array<Cache>
+     */
+    private function getResponseCaches(string $projectId): array
+    {
+        $root = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId;
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+
+        return $connection === ''
+            ? [new Cache(new Filesystem($root))]
+            : [new Cache(new Filesystem($root)), new Cache(new Storage(getDevice($root, $connection)))];
+    }
+
+    /**
      * @param Document $project
      * @param callable $getProjectDB
      * @param string $resource
@@ -871,9 +889,7 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
 
-        $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
-        );
+        $caches = $this->getResponseCaches($projectId);
 
         $queries = [
             Query::equal('resource', [$resource])
@@ -890,14 +906,12 @@ class Deletes extends Action
             'cache',
             $queries,
             $dbForProject,
-            function (Document $document) use ($cache, $projectId) {
-                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
-
-                if ($cache->purge($document->getId())) {
-                    Console::success('Deleting cache file: ' . $path);
-                } else {
-                    Console::error('Failed to delete cache file: ' . $path);
+            function (Document $document) use ($caches, $projectId) {
+                foreach ($caches as $cache) {
+                    $cache->purge($document->getId());
                 }
+
+                Console::success('Deleted cache file: ' . APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId());
             }
         );
     }
@@ -915,9 +929,7 @@ class Deletes extends Action
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
 
-        $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
-        );
+        $caches = $this->getResponseCaches($projectId);
 
         $queries = [
             Query::select([...$this->selects, 'accessedAt']),
@@ -930,14 +942,12 @@ class Deletes extends Action
             'cache',
             $queries,
             $dbForProject,
-            function (Document $document) use ($cache, $projectId) {
-                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
-
-                if ($cache->purge($document->getId())) {
-                    Console::success('Deleting cache file: ' . $path);
-                } else {
-                    Console::error('Failed to delete cache file: ' . $path);
+            function (Document $document) use ($caches, $projectId) {
+                foreach ($caches as $cache) {
+                    $cache->purge($document->getId());
                 }
+
+                Console::success('Deleted cache file: ' . APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId());
             }
         );
     }
@@ -1276,11 +1286,16 @@ class Deletes extends Action
                 Console::error('Failed to delete builds storage directory: ' . $th->getMessage());
             }
 
-            try {
-                $deviceForCache = new TelemetryDevice($telemetry, getDevice(APP_STORAGE_CACHE . '/app-' . $projectId));
-                $deviceForCache->delete($deviceForCache->getRoot(), true);
-            } catch (Throwable $th) {
-                Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
+            // Where the API writes: always the local directory, and the device once one is set.
+            $cacheRoot = APP_STORAGE_CACHE . '/app-' . $projectId;
+            $cacheConnection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+            foreach ($cacheConnection === '' ? [new Local($cacheRoot)] : [new Local($cacheRoot), getDevice($cacheRoot, $cacheConnection)] as $device) {
+                try {
+                    $deviceForCache = new TelemetryDevice($telemetry, $device);
+                    $deviceForCache->delete($deviceForCache->getRoot(), true);
+                } catch (Throwable $th) {
+                    Console::error('Failed to delete cache storage directory: ' . $th->getMessage());
+                }
             }
 
             try {

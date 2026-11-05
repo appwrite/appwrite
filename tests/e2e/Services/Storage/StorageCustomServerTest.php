@@ -24,6 +24,9 @@ use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\DSN\DSN;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Device\S3;
 use Utopia\System\System;
 
 use function Swoole\Coroutine\run;
@@ -142,6 +145,83 @@ final class StorageCustomServerTest extends Scope
 
         $this->assertEquals(200, $cached['headers']['status-code']);
         $this->assertEquals('image/png', $cached['headers']['content-type']);
+    }
+
+    public function testFilePreviewCacheStore(): void
+    {
+        $project = $this->getProject(true);
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $project['$id'],
+            'x-appwrite-key' => $project['apiKey'],
+        ];
+
+        $root = '/storage/cache/app-' . $project['$id'];
+        $devices = [new Local($root)];
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+        if ($connection !== '') {
+            $dsn = new DSN($connection);
+            $devices[] = new S3(
+                $dsn->getPath() . $root,
+                $dsn->getUser() ?? '',
+                $dsn->getPassword() ?? '',
+                System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''),
+                $dsn->getParam('region'),
+                bucket: $dsn->getPath(),
+            );
+        }
+        $stored = fn (): int => \array_sum(\array_map(fn ($device) => \count($device->listFiles($device->getRoot())->files), $devices));
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Cache store',
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        $upload = function () use ($bucket, $headers): string {
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', ['content-type' => 'multipart/form-data'] + $headers, [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            ]);
+            $this->assertSame(201, $file['headers']['status-code']);
+
+            return $file['body']['$id'];
+        };
+        $preview = fn (string $fileId): array => $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $fileId . '/preview', $headers, ['width' => 77, 'output' => 'png']);
+
+        $fileId = $upload();
+        $this->assertSame('miss', $preview($fileId)['headers']['x-appwrite-cache']);
+        $this->assertEventually(fn () => $this->assertSame('hit', $preview($fileId)['headers']['x-appwrite-cache']));
+
+        // An emptied store refills, though the row is fresh and the signature unchanged.
+        foreach ($devices as $device) {
+            $device->delete($device->getRoot(), true);
+        }
+        $this->assertSame(0, $stored());
+        $this->assertSame('miss', $preview($fileId)['headers']['x-appwrite-cache']);
+        $this->assertEventually(fn () => $this->assertSame('hit', $preview($fileId)['headers']['x-appwrite-cache']));
+        $this->assertSame(1, $stored());
+
+        // A purge clears where the API wrote.
+        $delete = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $fileId, $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+        $this->assertEventually(fn () => $this->assertSame(0, $stored()), 30_000, 500);
+
+        // So does deleting the project.
+        $fileId = $upload();
+        $this->assertSame('miss', $preview($fileId)['headers']['x-appwrite-cache']);
+        $this->assertEventually(fn () => $this->assertSame('hit', $preview($fileId)['headers']['x-appwrite-cache']));
+        $this->assertSame(1, $stored());
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/projects/' . $project['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+        $this->assertEventually(fn () => $this->assertSame(0, $stored()), 60_000, 500);
     }
 
     public function testCreateBucket(): void
