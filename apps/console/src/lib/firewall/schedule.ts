@@ -65,8 +65,33 @@ export const FIREWALL_SCHEDULE_INTERVAL_MIN = 2
 export const FIREWALL_SCHEDULE_INTERVAL_MAX = 365
 
 const MODES = new Set<string>(FIREWALL_SCHEDULE_MODES.map((m) => m.value))
-const DATE = /^\d{4}-\d{2}-\d{2}$/
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
+const isDigits = (value: string) =>
+  value.length > 0 && [...value].every((char) => char >= '0' && char <= '9')
+
+/** YYYY-MM-DD. Shape only: the API rejects a date that does not exist. */
+function isDate(value: string): boolean {
+  const parts = value.split('-')
+  return (
+    parts.length === 3 &&
+    parts[0].length === 4 &&
+    parts[1].length === 2 &&
+    parts[2].length === 2 &&
+    parts.every(isDigits)
+  )
+}
+
+/** HH:MM on a 24-hour clock. */
+function isTime(value: string): boolean {
+  const parts = value.split(':')
+  return (
+    parts.length === 2 &&
+    parts[0].length === 2 &&
+    parts[1].length === 2 &&
+    parts.every(isDigits) &&
+    Number(parts[0]) <= 23 &&
+    Number(parts[1]) <= 59
+  )
+}
 
 export function scheduleUsesDays(mode: FirewallScheduleMode): boolean {
   return mode === 'weekly' || mode === 'biweekly'
@@ -161,12 +186,12 @@ export function isScheduleDraftComplete(draft: FirewallScheduleDraft): boolean {
   ) {
     return false
   }
-  if (scheduleUsesAnchor(draft.mode) && !DATE.test(draft.anchor)) return false
+  if (scheduleUsesAnchor(draft.mode) && !isDate(draft.anchor)) return false
   if (draft.allDay) return true
 
   return (
-    TIME.test(draft.startTime) &&
-    TIME.test(draft.endTime) &&
+    isTime(draft.startTime) &&
+    isTime(draft.endTime) &&
     draft.startTime !== draft.endTime
   )
 }
