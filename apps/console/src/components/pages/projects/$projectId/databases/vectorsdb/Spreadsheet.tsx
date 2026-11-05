@@ -2115,11 +2115,15 @@ function RowEditDrawer({
                                                 return null
                                               }
                                             })()
-                                          : fieldType === 'integer'
-                                            ? parseInt(e.target.value, 10) ||
-                                              null
-                                            : parseFloat(e.target.value) ||
-                                              null
+                                          : (() => {
+                                              const parsed =
+                                                fieldType === 'integer'
+                                                  ? parseInt(e.target.value, 10)
+                                                  : parseFloat(e.target.value)
+                                              return Number.isNaN(parsed)
+                                                ? null
+                                                : parsed
+                                            })()
                                     handleFieldChange(key, val)
                                   }}
                                   min={
