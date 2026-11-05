@@ -372,11 +372,20 @@ final class StorageCustomServerTest extends Scope
         [$headers, $filesystem, $device] = $this->getCacheFixture();
 
         ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
-        foreach ($this->getCacheKeys($device) as $key) {
-            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
-        }
 
-        $this->assertNotFalse(\file_put_contents(self::CACHE_OUTAGE_STATE, \json_encode(['headers' => $headers, 'path' => $path, 'entries' => $entries])));
+        // One width with a copy on the filesystem for the outage to fall back to, one without.
+        $widths = \array_keys(\array_filter($entries, fn (array $entry): bool => $entry['onDevice']));
+        $this->assertGreaterThanOrEqual(2, \count($widths));
+        [$copied, $uncopied] = $widths;
+        $this->copyCacheEntryToFilesystem($filesystem, $device, $entries[$copied]['key']);
+
+        $this->assertNotFalse(\file_put_contents(self::CACHE_OUTAGE_STATE, \json_encode([
+            'headers' => $headers,
+            'path' => $path,
+            'entries' => $entries,
+            'copied' => $copied,
+            'uncopied' => $uncopied,
+        ])));
     }
 
     /**
@@ -393,7 +402,7 @@ final class StorageCustomServerTest extends Scope
         }
 
         $state = \json_decode((string) \file_get_contents(self::CACHE_OUTAGE_STATE), true);
-        ['headers' => $headers, 'path' => $path, 'entries' => $entries] = $state;
+        ['headers' => $headers, 'path' => $path, 'entries' => $entries, 'copied' => $copied, 'uncopied' => $uncopied] = $state;
         $request = function (int $width) use ($headers, $path): array {
             $started = \microtime(true);
             $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
@@ -411,14 +420,13 @@ final class StorageCustomServerTest extends Scope
         $this->assertLessThan(2, $elapsed);
 
         // On the device side a copy on the filesystem answers once the read has failed.
-        $width = \array_key_first(\array_filter($entries, fn (array $entry): bool => $entry['onDevice']));
-        [$preview, $elapsed] = $request($width);
+        [$preview, $elapsed] = $request($copied);
         $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
-        $this->assertSame($entries[$width]['body'], \md5($preview['body']));
+        $this->assertSame($entries[$copied]['body'], \md5($preview['body']));
         $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
 
-        // With no copy the route regenerates. Width 1 is outside what warmPreviewCache requests.
-        [$preview, $elapsed] = $request(1);
+        // With no copy the route regenerates.
+        [$preview, $elapsed] = $request($uncopied);
         $this->assertSame('miss', $preview['headers']['x-appwrite-cache']);
         $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
 
@@ -426,7 +434,7 @@ final class StorageCustomServerTest extends Scope
         // pool, not an error. They're all on one key, so each of them has the filesystem copy to answer with.
         $workers = \swoole_cpu_num() * (int) System::getEnv('_APP_WORKER_PER_CORE', '6');
         $started = \microtime(true);
-        $previews = $this->client->callConcurrently(\array_fill(0, $workers * 8, [Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']]));
+        $previews = $this->client->callConcurrently(\array_fill(0, $workers * 8, [Client::METHOD_GET, $path, $headers, ['width' => $copied, 'output' => 'png']]));
         $elapsed = \microtime(true) - $started;
         foreach ($previews as $preview) {
             $this->assertSame(200, $preview['headers']['status-code']);
