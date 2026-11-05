@@ -16,6 +16,10 @@ All notable changes to `utopia-php/query` are documented in this file.
   absorbs the escaping backslash. PostgreSQL and SQLite throw for a NUL byte.
   The ClickHouse schema builder's `Enum8` values double quotes like its other
   literals instead of escaping them with a backslash.
+  The MySQL and MariaDB literals assume the server's default `sql_mode`:
+  under `NO_BACKSLASH_ESCAPES` a backslash is an ordinary character, so a
+  comment or default `C:\x` is stored as `C:\\x`. Doubled quotes hold in both
+  modes, so a value still cannot close its literal.
 - `Tokenizer` and `AST\Parser` take a `StringLiteral`; each dialect tokenizer
   defaults to its dialect's case and `Parser` to `Backslash`. The SQLite
   tokenizer also reads backtick-quoted identifiers, which its builder emits.
