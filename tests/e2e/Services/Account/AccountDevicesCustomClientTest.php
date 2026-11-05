@@ -111,14 +111,27 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertNotEquals($userOneId, $userTwoId);
 
         /**
-         * Test for SUCCESS - the device now holds both sessions, the last one active
+         * Test for SUCCESS - the device now holds both sessions, the last one active.
+         * A created session joins the device from a post-response shutdown hook (like the
+         * session-limit hook), so the active pointer is eventually consistent; poll for it.
          */
-        $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => $deviceKey . '=' . $deviceCookie,
-            'x-appwrite-project' => $projectId,
-        ]);
+        $response = null;
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'cookie' => $deviceKey . '=' . $deviceCookie,
+                'x-appwrite-project' => $projectId,
+            ]);
+            if (
+                $response['headers']['status-code'] === 200
+                && \count($response['body']['sessions']) === 2
+                && ($response['body']['activeSessionId'] ?? '') === $sessionTwoId
+            ) {
+                break;
+            }
+            \usleep(250000);
+        }
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(2, $response['body']['sessions']);
