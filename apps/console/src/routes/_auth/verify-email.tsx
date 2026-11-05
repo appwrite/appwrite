@@ -26,12 +26,12 @@ import {
 } from '@/lib/react-query/hooks/auth'
 import { CONSOLE_ENTRY_PATH } from '@/lib/root-guest-redirect'
 import {
-  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 import { measureOpenAiAdsRegistrationCompleted } from '@/lib/openai-ads'
 import { hasConsoleImpersonationSessionTarget } from '@/lib/console-impersonation'
 import { useRouter } from '@tanstack/react-router'

@@ -42,10 +42,8 @@ import {
   hasConsoleImpersonationSessionTarget,
   readConsoleImpersonationTargetUserId,
 } from '@/lib/console-impersonation'
-import {
-  isValidRelativeRedirect,
-  resolvePostAuthRedirect,
-} from '@/lib/post-auth-navigation'
+import { resolvePostAuthRedirect } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 import { registerPasskey } from '@/lib/passkeys'
 import { isHttpUnauthorizedError } from '@/lib/utils/error-formatting'
 import {

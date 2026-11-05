@@ -42,12 +42,12 @@ import {
   isConsoleMfaRequiredError,
 } from '@/lib/react-query/hooks/auth'
 import {
-  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 
 const searchSchema = z.object({

@@ -6,12 +6,12 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import {
-  isValidRelativeRedirect,
   prefetchPostAuthDestination,
   requiresConsoleEmailVerification,
   resolvePostAuthRedirect,
   toRedirectNavigateOptions,
 } from '@/lib/post-auth-navigation'
+import { isValidRelativeRedirect } from '@/lib/relative-redirect'
 import { resolvePostAuthOrganizationId } from '@/lib/ensure-personal-org'
 import {
   mfaFactorsQueryOptions,
