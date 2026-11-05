@@ -599,18 +599,20 @@ class Handler
             return $closing;
         }
 
-        foreach (($event['data']['events'] ?? []) as $name) {
-            $parts = \explode('.', $name);
-            if (\count($parts) !== 3 || $parts[0] !== 'teams' || $parts[1] === '*' || $parts[2] !== 'delete') {
-                continue;
-            }
+        // A team id may contain periods, so splitting the event name positionally would miss
+        // teams.my.team.delete. Take the id from the deleted document and confirm this message
+        // is that team's delete; a membership delete carries the membership id, so its event
+        // name is not teams.{thatId}.delete and will not match.
+        $teamId = (string) ($event['data']['payload']['$id'] ?? '');
+        if ($teamId === '' || !\in_array('teams.' . $teamId . '.delete', $event['data']['events'] ?? [], true)) {
+            return $closing;
+        }
 
-            $connections = $projectId === 'console'
-                ? $this->realtime->getTeamAdminConnections($parts[1])
-                : $this->realtime->getTeamConnections($projectId, $parts[1]);
-            foreach ($connections as $connection) {
-                $closing[$connection] = true;
-            }
+        $connections = $projectId === 'console'
+            ? $this->realtime->getTeamAdminConnections($teamId)
+            : $this->realtime->getTeamConnections($projectId, $teamId);
+        foreach ($connections as $connection) {
+            $closing[$connection] = true;
         }
 
         return $closing;
