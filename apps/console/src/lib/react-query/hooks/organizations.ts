@@ -255,6 +255,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     supportsFreeEmailValidation: false,
     supportsCorporateEmailValidation: false,
     backupsEnabled: false,
+    functionsAllowCron: true,
     usagePerProject: false,
     supportedAddons: {
       baa: false,
