@@ -83,7 +83,7 @@ use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Web\Update as Updat
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Create as CreateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\Windows\Update as UpdateWindowsPlatform;
 use Appwrite\Platform\Modules\Project\Http\Project\Platforms\XList as ListPlatforms;
-use Appwrite\Platform\Modules\Project\Http\Project\Policies\AccountSwitching\Update as UpdateAccountSwitchingPolicy;
+use Appwrite\Platform\Modules\Project\Http\Project\Policies\AccountDevices\Update as UpdateAccountDevicesPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyAliasedEmail\Update as UpdateDenyAliasedEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyCorporateEmail\Update as UpdateDenyCorporateEmailPolicy;
 use Appwrite\Platform\Modules\Project\Http\Project\Policies\DenyDisposableEmail\Update as UpdateDenyDisposableEmailPolicy;
@@ -214,7 +214,7 @@ class Http extends Service
         $this->addAction('updateProjectDenyFreeEmailPolicy', UpdateDenyFreeEmailPolicy::class);
         $this->addAction('updateProjectDenyCorporateEmailPolicy', UpdateDenyCorporateEmailPolicy::class);
         $this->addAction('updateProjectDenyRealtimeGuestsPolicy', UpdateDenyRealtimeGuestsPolicy::class);
-        $this->addAction('updateProjectAccountSwitchingPolicy', UpdateAccountSwitchingPolicy::class);
+        $this->addAction('updateProjectAccountDevicesPolicy', UpdateAccountDevicesPolicy::class);
 
         // Auth Methods
         $this->addAction('updateProjectAuthMethod', UpdateAuthMethod::class);

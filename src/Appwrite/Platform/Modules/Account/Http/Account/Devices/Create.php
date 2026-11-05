@@ -92,8 +92,8 @@ class Create extends Action
         Event $queueForEvents,
         Authorization $authorization,
     ): void {
-        if (($project->getAttribute('auths', [])['accountSwitching'] ?? true) === false) {
-            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Account switching is disabled for this project');
+        if (($project->getAttribute('auths', [])['accountDevices'] ?? true) === false) {
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Account devices are disabled for this project');
         }
 
         // A browser that already holds a valid device keeps it: devs call this on every app

@@ -4,10 +4,10 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 
-class PolicyAccountSwitching extends PolicyBase
+class PolicyAccountDevices extends PolicyBase
 {
     public array $conditions = [
-        '$id' => 'account-switching',
+        '$id' => 'account-devices',
     ];
 
     public function __construct()
@@ -16,7 +16,7 @@ class PolicyAccountSwitching extends PolicyBase
 
         $this->addRule('enabled', [
             'type' => self::TYPE_BOOLEAN,
-            'description' => 'Whether account switching is enabled. When disabled, clients can no longer be created.',
+            'description' => 'Whether account devices are enabled. When disabled, new account devices can no longer be created.',
             'default' => true,
             'example' => true,
         ]);
@@ -24,11 +24,11 @@ class PolicyAccountSwitching extends PolicyBase
 
     public function getName(): string
     {
-        return 'Policy Account Switching';
+        return 'Policy Account Devices';
     }
 
     public function getType(): string
     {
-        return Response::MODEL_POLICY_ACCOUNT_SWITCHING;
+        return Response::MODEL_POLICY_ACCOUNT_DEVICES;
     }
 }

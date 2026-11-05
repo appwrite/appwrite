@@ -194,8 +194,8 @@ class XList extends Action
                 'origins' => Ceremony::getOrigins($project),
             ]),
             new Document([
-                '$id' => 'account-switching',
-                'enabled' => $auths['accountSwitching'] ?? true,
+                '$id' => 'account-devices',
+                'enabled' => $auths['accountDevices'] ?? true,
             ]),
         ];
     }
