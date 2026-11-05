@@ -7,7 +7,7 @@ use Utopia\Query\StringLiteral;
 
 class ClickHouse extends BaseSerializer
 {
-    public function __construct(StringLiteral $literal = StringLiteral::Unicode)
+    public function __construct(StringLiteral $literal = StringLiteral::BackslashUtf8)
     {
         parent::__construct($literal);
     }

@@ -44,7 +44,7 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
     use Trait\StatisticalAggregates;
     use Trait\StringAggregates;
 
-    protected StringLiteral $literal = StringLiteral::Unicode;
+    protected StringLiteral $literal = StringLiteral::BackslashUtf8;
 
     /**
      * @var array<Query>

@@ -23,7 +23,7 @@ class ClickHouse extends Schema implements TableComments, ColumnComments, DropPa
     use Trait\MaterializedViews;
     use Trait\Views;
 
-    protected StringLiteral $literal = StringLiteral::Unicode;
+    protected StringLiteral $literal = StringLiteral::BackslashUtf8;
 
     #[\Override]
     public function table(string $name): Table\ClickHouse

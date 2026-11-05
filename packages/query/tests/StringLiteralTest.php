@@ -30,10 +30,10 @@ final class StringLiteralTest extends TestCase
             'standard quote' => [StringLiteral::Standard, "it's", "'it''s'"],
             'standard backslash' => [StringLiteral::Standard, "a\\b'c", "'a\\b''c'"],
             'standard multibyte before backslash' => [StringLiteral::Standard, "Zo\u{EB}\\x", "'Zo\u{EB}\\x'"],
-            'unicode quote' => [StringLiteral::Unicode, "it's", "'it''s'"],
-            'unicode backslash before quote' => [StringLiteral::Unicode, "x\\'", "'x\\\\'''"],
-            'unicode multibyte before backslash' => [StringLiteral::Unicode, "Zo\u{EB}\\x", "'Zo\u{EB}\\\\x'"],
-            'unicode keeps nul' => [StringLiteral::Unicode, "a\0b", "'a\0b'"],
+            'backslash utf8 quote' => [StringLiteral::BackslashUtf8, "it's", "'it''s'"],
+            'backslash utf8 backslash before quote' => [StringLiteral::BackslashUtf8, "x\\'", "'x\\\\'''"],
+            'backslash utf8 multibyte before backslash' => [StringLiteral::BackslashUtf8, "Zo\u{EB}\\x", "'Zo\u{EB}\\\\x'"],
+            'backslash utf8 keeps nul' => [StringLiteral::BackslashUtf8, "a\0b", "'a\0b'"],
         ];
     }
 
