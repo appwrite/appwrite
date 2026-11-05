@@ -8,9 +8,9 @@ use Utopia\Http\Route;
 
 /**
  * One rate limit a route declares in its `abuse` label: what the count is kept per, how many hits it may take in a
- * window, and what counts as a hit. Each limit carries its own numbers, so a network key never inherits the
- * tight limit meant for an account key, or the reverse. Nothing resets a limit before its window ends, so no
- * success can clear a count an attacker is running up.
+ * window, what counts as a hit, and who it counts for. Each limit carries its own numbers, so a network key never
+ * inherits the tight limit meant for an account key, or the reverse. Nothing resets a limit before its window
+ * ends, so no success can clear a count an attacker is running up.
  *
  * ```php
  * ->label('abuse', [
@@ -34,6 +34,7 @@ final readonly class Limit
         public int $limit,
         public int $seconds,
         public bool $failures,
+        public bool $everyone,
     ) {
         if ($by === [] || $limit < 1 || $seconds < 1) {
             throw new \InvalidArgumentException('An abuse limit needs at least one part, a limit and a window of at least 1.');
@@ -52,9 +53,9 @@ final readonly class Limit
      *
      * @param list<string> $by
      */
-    public static function attempts(array $by, int $limit, int $seconds = 3600): self
+    public static function attempts(array $by, int $limit, int $seconds = 3600, bool $everyone = false): self
     {
-        return new self($by, $limit, $seconds, false);
+        return new self($by, $limit, $seconds, false, $everyone);
     }
 
     /**
@@ -64,9 +65,20 @@ final readonly class Limit
      *
      * @param list<string> $by
      */
-    public static function failures(array $by, int $limit, int $seconds = 3600): self
+    public static function failures(array $by, int $limit, int $seconds = 3600, bool $everyone = false): self
     {
-        return new self($by, $limit, $seconds, true);
+        return new self($by, $limit, $seconds, true, $everyone);
+    }
+
+    /**
+     * Does a request from this caller count against this limit? A caller trusted with throughput, an API key or a
+     * privileged console caller, is exempt from the limits that only pace legitimate work. A limit that is the
+     * only cap on guesses at a secret the request carries sets `everyone`, and then it counts for every caller:
+     * a trusted caller is not trusted with the inbox or handset behind a verification code.
+     */
+    public function counts(bool $trusted): bool
+    {
+        return ! $trusted || $this->everyone;
     }
 
     /**

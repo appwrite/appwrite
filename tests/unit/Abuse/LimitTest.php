@@ -30,6 +30,25 @@ final class LimitTest extends TestCase
         $this->assertSame(3600, $limit->seconds);
     }
 
+    public function testTrustedCallersAreExemptFromAThroughputLimit(): void
+    {
+        $limit = Limit::attempts(['url', 'ip'], 10);
+
+        $this->assertFalse($limit->everyone);
+        $this->assertTrue($limit->counts(trusted: false));
+        $this->assertFalse($limit->counts(trusted: true));
+    }
+
+    public function testALimitForEveryoneCountsTrustedCallersToo(): void
+    {
+        // A key, or a console caller in admin mode, guessing the code on a verification confirmation route.
+        $limit = Limit::attempts(['url', 'param.userId'], 10, everyone: true);
+
+        $this->assertTrue($limit->everyone);
+        $this->assertTrue($limit->counts(trusted: false));
+        $this->assertTrue($limit->counts(trusted: true));
+    }
+
     /**
      * @return \Iterator<string, array{list<string>, int, int}>
      */
