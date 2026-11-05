@@ -3955,6 +3955,7 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Your resources': 'プロジェクトのリソース',
   'View all databases': 'すべてのデータベースを表示',
   'View all sites': 'すべてのサイトを表示',
+  'Files up to': 'ファイル上限',
   'View all functions': 'すべての関数を表示',
   'View all buckets': 'すべてのバケットを表示',
   'View all users': 'すべてのユーザーを表示',

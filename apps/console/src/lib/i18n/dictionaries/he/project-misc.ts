@@ -3879,6 +3879,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Your resources': 'המשאבים שלכם',
   'View all databases': 'צפייה בכל מסדי הנתונים',
   'View all sites': 'צפייה בכל האתרים',
+  'Files up to': 'קבצים עד',
   'View all functions': 'צפייה בכל הפונקציות',
   'View all buckets': 'צפייה בכל הבאקטים',
   'View all users': 'צפייה בכל המשתמשים',
