@@ -789,10 +789,6 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
-            if ($streamed === true) {
-                unset($executionResponse['headers']['content-length'], $executionResponse['headers']['Content-Length']);
-            }
-
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
