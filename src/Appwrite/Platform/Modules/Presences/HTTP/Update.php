@@ -172,14 +172,21 @@ class Update extends PlatformAction
 
         $updates = new Document($updateData);
 
+        // A permission change can narrow who may read the presence. The list cache keys only on the
+        // caller's roles and query and returns rows verbatim, so a narrowed presence keeps being
+        // served from a still-valid page unless the cache is dropped. Purge on any permission change,
+        // not only when the caller opts in with purge=true.
+        $permissionsChanged = false;
         if ($permissions !== null) {
             $presenceState->setPermissions($updates, $permissions, $user, $authorization);
+            $permissionsChanged = true;
         } elseif ($userId !== null && $userId !== $presence->getAttribute('userId')) {
             $presenceState->setPermissions($updates, null, $user, $authorization, ownerOverride: $userId);
+            $permissionsChanged = true;
         }
 
         if (empty($updateData) && $permissions === null) {
-            if ($purge) {
+            if ($purge || $permissionsChanged) {
                 $presenceState->purgeListCache($dbForProject);
             }
             $response->dynamic($presence, Response::MODEL_PRESENCE);
@@ -196,7 +203,7 @@ class Update extends PlatformAction
             throw new Exception(Exception::DOCUMENT_UPDATE_CONFLICT, $e->getMessage(), previous: $e);
         }
 
-        if ($purge) {
+        if ($purge || $permissionsChanged) {
             $presenceState->purgeListCache($dbForProject);
         }
 
