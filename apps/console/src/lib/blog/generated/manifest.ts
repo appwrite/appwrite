@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "customer-story-creators-mind",
+    "href": "/blog/post/customer-story-creators-mind",
+    "title": "How Creators Mind runs 2,600+ coaching apps on Appwrite",
+    "description": "Learn how Creators Mind built a white-label learning management system (LMS) on Appwrite that powers 2,600+ coaching apps for Indian educators and reaches nearly 10 million students.",
+    "date": "2026-11-06",
+    "lastUpdated": "2026-11-06",
+    "timeToRead": 6,
+    "author": "aditya-oberai",
+    "category": "customer-stories",
+    "featured": false,
+    "cover": "/images/blog/customer-story-creators-mind/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-apns-one-click-setup",
     "href": "/blog/post/announcing-apns-one-click-setup",
     "title": "Announcing one-click APNs setup with the Appwrite CLI",
