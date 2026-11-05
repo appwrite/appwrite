@@ -13,6 +13,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
@@ -78,7 +79,7 @@ class Delete extends Action
         ?string $deviceId,
         Request $request,
         Response $response,
-        Document $project,
+        Project $project,
         Database $dbForProject,
         ?Document $device,
         bool $domainVerification,

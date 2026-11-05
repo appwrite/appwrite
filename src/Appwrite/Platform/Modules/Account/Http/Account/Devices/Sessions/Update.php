@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Token as ProofsToken;
@@ -83,7 +84,7 @@ class Update extends Action
         string $sessionId,
         Request $request,
         Response $response,
-        Document $project,
+        Project $project,
         Database $dbForProject,
         ?Document $device,
         Locale $locale,
