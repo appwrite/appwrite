@@ -1,5 +1,4 @@
 import sharp from 'sharp'
-import { assertPublicCoverImageUrl } from '@/lib/cover-generator/image-url-guard'
 import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
 import { buildCoverExportFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 export { buildCoverExportFontStyleBlock, buildCoverFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
@@ -138,7 +137,10 @@ export async function resolveCoverImageHref(
                 : 'application/octet-stream'
     return readCoverPublicAssetDataUri(value, mime)
   }
-  if (/^https?:\/\//i.test(value)) return value
+  // Only inline uploads (data:) and bundled public assets (/) are rendered. A
+  // caller-supplied remote URL is refused rather than fetched server-side,
+  // which would be an SSRF vector (the render endpoint is unauthenticated when
+  // the marketing profile is active).
   return null
 }
 
@@ -153,22 +155,10 @@ export async function loadCoverImageBuffer(
   }
 
   const href = await resolveCoverImageHref(source)
-  if (!href) return null
-  if (href.startsWith('data:')) {
-    const match = href.match(/^data:[^;]+;base64,(.+)$/)
-    if (!match?.[1]) return null
-    return Buffer.from(match[1], 'base64')
-  }
-  try {
-    // Attacker-controlled href: block internal/link-local targets (SSRF) and do
-    // not follow redirects, which could otherwise bounce a public host to one.
-    await assertPublicCoverImageUrl(href)
-    const response = await fetch(href, { redirect: 'error' })
-    if (!response.ok) return null
-    return Buffer.from(await response.arrayBuffer())
-  } catch {
-    return null
-  }
+  if (!href?.startsWith('data:')) return null
+  const match = href.match(/^data:[^;]+;base64,(.+)$/)
+  if (!match?.[1]) return null
+  return Buffer.from(match[1], 'base64')
 }
 
 /** Breathing room so icon artwork is not flush against the export slot edge. */
