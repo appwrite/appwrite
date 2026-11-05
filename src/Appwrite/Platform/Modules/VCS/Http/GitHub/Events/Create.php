@@ -676,7 +676,11 @@ class Create extends Action
             try {
                 $authorization->skip(fn () => $dbForProject->createDocument('reviews', $review));
             } catch (DuplicateException) {
-                // A redelivery of a comment whose review was refused before.
+                // A redelivered comment whose review failed before now shows why it is refused.
+                $authorization->skip(fn () => $dbForProject->updateDocument('reviews', $reviewId, new Document([
+                    'reason' => $error->getMessage(),
+                    'completedAt' => DateTime::now(),
+                ])));
             }
 
             return;
