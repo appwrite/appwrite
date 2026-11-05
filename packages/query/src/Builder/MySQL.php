@@ -42,6 +42,8 @@ class MySQL extends SQL implements
     use Trait\Upsert;
     use Trait\UpsertSelect;
 
+    protected const string LIKE_ESCAPE = '!';
+
     private const int FULL_TEXT_MINIMUM_WORD_LENGTH = 3;
 
     private const array FULL_TEXT_STOPWORDS = [
@@ -210,11 +212,17 @@ class MySQL extends SQL implements
     public function setJsonRemove(string $column, mixed $value): static
     {
         $this->jsonSets[$column] = new Condition(
-            'JSON_REMOVE(' . $this->resolveAndWrap($column) . ', JSON_UNQUOTE(JSON_SEARCH(' . $this->resolveAndWrap($column) . ', \'one\', ?)))',
-            [$value],
+            'JSON_REMOVE(' . $this->resolveAndWrap($column) . ', JSON_UNQUOTE(JSON_SEARCH(' . $this->resolveAndWrap($column) . ', \'one\', ?, \'' . static::LIKE_ESCAPE . '\')))',
+            [$this->escapeLikeValue($value)],
         );
 
         return $this;
+    }
+
+    #[\Override]
+    protected function likeEscape(): string
+    {
+        return ' ESCAPE \'' . static::LIKE_ESCAPE . '\'';
     }
 
     #[\Override]

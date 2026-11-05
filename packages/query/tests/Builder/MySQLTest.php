@@ -297,7 +297,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['Jo%'], $result->bindings);
     }
 
@@ -309,7 +309,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `name` NOT LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `name` NOT LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['Jo%'], $result->bindings);
     }
 
@@ -321,7 +321,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `email` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `email` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%.com'], $result->bindings);
     }
 
@@ -333,7 +333,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `email` NOT LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `email` NOT LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%.com'], $result->bindings);
     }
 
@@ -345,7 +345,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%php%'], $result->bindings);
     }
 
@@ -357,7 +357,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? OR `bio` LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? ESCAPE \'!\' OR `bio` LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%php%', '%js%'], $result->bindings);
     }
 
@@ -369,7 +369,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`tags` LIKE ? OR `tags` LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`tags` LIKE ? ESCAPE \'!\' OR `tags` LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%a%', '%b%'], $result->bindings);
     }
 
@@ -381,7 +381,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`perms` LIKE ? AND `perms` LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`perms` LIKE ? ESCAPE \'!\' AND `perms` LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%read%', '%write%'], $result->bindings);
     }
 
@@ -393,7 +393,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `bio` NOT LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `bio` NOT LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%php%'], $result->bindings);
     }
 
@@ -405,7 +405,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`bio` NOT LIKE ? AND `bio` NOT LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`bio` NOT LIKE ? ESCAPE \'!\' AND `bio` NOT LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%php%', '%js%'], $result->bindings);
     }
 
@@ -2901,7 +2901,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::startsWith('col', 'abc'));
-        $this->assertSame('`col` LIKE ?', $sql);
+        $this->assertSame('`col` LIKE ? ESCAPE \'!\'', $sql);
         $this->assertSame(['abc%'], $builder->getBindings());
     }
 
@@ -2909,7 +2909,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::notStartsWith('col', 'abc'));
-        $this->assertSame('`col` NOT LIKE ?', $sql);
+        $this->assertSame('`col` NOT LIKE ? ESCAPE \'!\'', $sql);
         $this->assertSame(['abc%'], $builder->getBindings());
     }
 
@@ -2917,7 +2917,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::endsWith('col', 'xyz'));
-        $this->assertSame('`col` LIKE ?', $sql);
+        $this->assertSame('`col` LIKE ? ESCAPE \'!\'', $sql);
         $this->assertSame(['%xyz'], $builder->getBindings());
     }
 
@@ -2925,7 +2925,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::notEndsWith('col', 'xyz'));
-        $this->assertSame('`col` NOT LIKE ?', $sql);
+        $this->assertSame('`col` NOT LIKE ? ESCAPE \'!\'', $sql);
         $this->assertSame(['%xyz'], $builder->getBindings());
     }
 
@@ -2933,7 +2933,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::containsString('col', ['val']));
-        $this->assertSame('`col` LIKE ?', $sql);
+        $this->assertSame('`col` LIKE ? ESCAPE \'!\'', $sql);
         $this->assertSame(['%val%'], $builder->getBindings());
     }
 
@@ -2941,7 +2941,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::containsString('col', ['a', 'b']));
-        $this->assertSame('(`col` LIKE ? OR `col` LIKE ?)', $sql);
+        $this->assertSame('(`col` LIKE ? ESCAPE \'!\' OR `col` LIKE ? ESCAPE \'!\')', $sql);
         $this->assertSame(['%a%', '%b%'], $builder->getBindings());
     }
 
@@ -2949,7 +2949,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::containsAny('col', ['a', 'b']));
-        $this->assertSame('(`col` LIKE ? OR `col` LIKE ?)', $sql);
+        $this->assertSame('(`col` LIKE ? ESCAPE \'!\' OR `col` LIKE ? ESCAPE \'!\')', $sql);
         $this->assertSame(['%a%', '%b%'], $builder->getBindings());
     }
 
@@ -2957,7 +2957,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::containsAll('col', ['a', 'b']));
-        $this->assertSame('(`col` LIKE ? AND `col` LIKE ?)', $sql);
+        $this->assertSame('(`col` LIKE ? ESCAPE \'!\' AND `col` LIKE ? ESCAPE \'!\')', $sql);
         $this->assertSame(['%a%', '%b%'], $builder->getBindings());
     }
 
@@ -2965,7 +2965,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::notContains('col', ['val']));
-        $this->assertSame('`col` NOT LIKE ?', $sql);
+        $this->assertSame('`col` NOT LIKE ? ESCAPE \'!\'', $sql);
         $this->assertSame(['%val%'], $builder->getBindings());
     }
 
@@ -2973,7 +2973,7 @@ class MySQLTest extends TestCase
     {
         $builder = new Builder();
         $sql = $builder->compileFilter(Query::notContains('col', ['a', 'b']));
-        $this->assertSame('(`col` NOT LIKE ? AND `col` NOT LIKE ?)', $sql);
+        $this->assertSame('(`col` NOT LIKE ? ESCAPE \'!\' AND `col` NOT LIKE ? ESCAPE \'!\')', $sql);
         $this->assertSame(['%a%', '%b%'], $builder->getBindings());
     }
 
@@ -3319,7 +3319,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%'], $result->bindings);
     }
 
@@ -3331,7 +3331,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%'], $result->bindings);
     }
 
@@ -3343,7 +3343,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%%'], $result->bindings);
     }
 
@@ -3355,7 +3355,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? OR `bio` LIKE ? OR `bio` LIKE ? OR `bio` LIKE ? OR `bio` LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? ESCAPE \'!\' OR `bio` LIKE ? ESCAPE \'!\' OR `bio` LIKE ? ESCAPE \'!\' OR `bio` LIKE ? ESCAPE \'!\' OR `bio` LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%a%', '%b%', '%c%', '%d%', '%e%'], $result->bindings);
     }
 
@@ -3367,7 +3367,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`perms` LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`perms` LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%read%'], $result->bindings);
     }
 
@@ -3379,7 +3379,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `bio` NOT LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `bio` NOT LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%%'], $result->bindings);
     }
 
@@ -5923,16 +5923,16 @@ class MySQLTest extends TestCase
     {
         $result = new Builder()->from('t')->filter([Query::containsString('bio', ['100%'])])->build();
         $this->assertBindingCount($result);
-        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ?', $result->query);
-        $this->assertSame(['%100\%%'], $result->bindings);
+        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ? ESCAPE \'!\'', $result->query);
+        $this->assertSame(['%100!%%'], $result->bindings);
     }
 
     public function testStartsWithWithWildcard(): void
     {
         $result = new Builder()->from('t')->filter([Query::startsWith('name', '%admin')])->build();
         $this->assertBindingCount($result);
-        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ?', $result->query);
-        $this->assertSame(['\%admin%'], $result->bindings);
+        $this->assertSame('SELECT * FROM `t` WHERE `name` LIKE ? ESCAPE \'!\'', $result->query);
+        $this->assertSame(['!%admin%'], $result->bindings);
     }
 
     public function testCursorWithNullValue(): void
@@ -7360,7 +7360,7 @@ class MySQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE `docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?))) WHERE `id` IN (?)', $result->query);
+        $this->assertSame('UPDATE `docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))) WHERE `id` IN (?)', $result->query);
     }
 
     public function testSetJsonPath(): void
@@ -8834,7 +8834,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame(['100\\%%'], $result->bindings);
+        $this->assertSame(['100!%%'], $result->bindings);
     }
 
     public function testStartsWithEscapesUnderscore(): void
@@ -8845,10 +8845,10 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame(['a\\_b%'], $result->bindings);
+        $this->assertSame(['a!_b%'], $result->bindings);
     }
 
-    public function testStartsWithEscapesBackslash(): void
+    public function testStartsWithKeepsBackslashLiteral(): void
     {
         $result = new Builder()
             ->from('t')
@@ -8858,7 +8858,7 @@ class MySQLTest extends TestCase
 
         /** @var string $binding */
         $binding = $result->bindings[0];
-        $this->assertSame("path\\\\%", $binding);
+        $this->assertSame('path\\%', $binding);
     }
 
     public function testEndsWithEscapesSpecialChars(): void
@@ -8869,7 +8869,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame(['%\\%test\\_'], $result->bindings);
+        $this->assertSame(['%!%test!_'], $result->bindings);
     }
 
     public function testContainsMultipleValuesUsesOr(): void
@@ -8880,7 +8880,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? OR `bio` LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? ESCAPE \'!\' OR `bio` LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%php%', '%js%'], $result->bindings);
     }
 
@@ -8892,7 +8892,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? AND `bio` LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`bio` LIKE ? ESCAPE \'!\' AND `bio` LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%php%', '%js%'], $result->bindings);
     }
 
@@ -8904,7 +8904,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE (`bio` NOT LIKE ? AND `bio` NOT LIKE ?)', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE (`bio` NOT LIKE ? ESCAPE \'!\' AND `bio` NOT LIKE ? ESCAPE \'!\')', $result->query);
         $this->assertSame(['%x%', '%y%'], $result->bindings);
     }
 
@@ -8916,7 +8916,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertStringNotContainsString('(', $result->query);
     }
 
@@ -9345,7 +9345,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `name` NOT LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `name` NOT LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['foo%'], $result->bindings);
     }
 
@@ -9357,7 +9357,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `name` NOT LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `name` NOT LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%bar'], $result->bindings);
     }
 
@@ -10402,7 +10402,7 @@ class MySQLTest extends TestCase
         $this->assertBindingCount($result);
 
         $this->assertSame(
-            'SELECT `id`, `name`, `price` FROM `products` WHERE `price` > ? AND `price` <= ? AND `category` IN (?) AND `name` LIKE ?',
+            'SELECT `id`, `name`, `price` FROM `products` WHERE `price` > ? AND `price` <= ? AND `category` IN (?) AND `name` LIKE ? ESCAPE \'!\'',
             $result->query
         );
         $this->assertSame([10, 500, 'electronics', 'Pro%'], $result->bindings);
@@ -12257,7 +12257,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `data` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `data` LIKE ? ESCAPE \'!\'', $result->query);
     }
 
     public function testEscapeLikeValueWithNumeric(): void
@@ -12268,7 +12268,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `col` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `col` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%42%'], $result->bindings);
     }
 
@@ -12280,7 +12280,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `col` LIKE ?', $result->query);
+        $this->assertSame('SELECT * FROM `t` WHERE `col` LIKE ? ESCAPE \'!\'', $result->query);
         $this->assertSame(['%1%'], $result->bindings);
     }
 
@@ -13559,7 +13559,7 @@ class MySQLTest extends TestCase
         $this->assertBindingCount($result);
 
         $this->assertSame(
-            'SELECT * FROM `t` WHERE (`role` IN (?) OR `score` > ? OR `suspended_at` IS NULL OR `email` LIKE ?)',
+            'SELECT * FROM `t` WHERE (`role` IN (?) OR `score` > ? OR `suspended_at` IS NULL OR `email` LIKE ? ESCAPE \'!\')',
             $result->query
         );
         $this->assertSame(['admin', 95, 'vip%'], $result->bindings);
@@ -13660,8 +13660,8 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ?', $result->query);
-        $this->assertSame(['%100\%\_test%'], $result->bindings);
+        $this->assertSame('SELECT * FROM `t` WHERE `bio` LIKE ? ESCAPE \'!\'', $result->query);
+        $this->assertSame(['%100!%!_test%'], $result->bindings);
     }
 
     public function testCompoundSortAscDesc(): void
@@ -14359,7 +14359,7 @@ class MySQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE `documents` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?))) WHERE `id` IN (?)', $result->query);
+        $this->assertSame('UPDATE `documents` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))) WHERE `id` IN (?)', $result->query);
     }
 
     public function testUpdateWithCaseExpression(): void
@@ -14694,7 +14694,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame(['%\_test'], $result->bindings);
+        $this->assertSame(['%!_test'], $result->bindings);
     }
 
     public function testStartsWithWithPercentWildcard(): void
@@ -14705,7 +14705,7 @@ class MySQLTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        $this->assertSame(['50\%%'], $result->bindings);
+        $this->assertSame(['50!%%'], $result->bindings);
     }
 
     public function testNotBetweenCombinedWithOrFilter(): void

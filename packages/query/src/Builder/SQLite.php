@@ -134,6 +134,12 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
     }
 
     #[\Override]
+    protected function likeEscape(): string
+    {
+        return ' ESCAPE \'' . static::LIKE_ESCAPE . '\'';
+    }
+
+    #[\Override]
     public function setJsonIntersect(string $column, array $values): static
     {
         $wrapped = $this->resolveAndWrap($column);

@@ -586,7 +586,7 @@ class MariaDBTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE `docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?))) WHERE `id` IN (?)', $result->query);
+        $this->assertSame('UPDATE `docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))) WHERE `id` IN (?)', $result->query);
     }
 
     public function testSetJsonPath(): void

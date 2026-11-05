@@ -14,6 +14,10 @@ All notable changes to `utopia-php/query` are documented in this file.
   absorbs the escaping backslash. PostgreSQL and SQLite throw for a NUL byte.
   The ClickHouse schema builder's `Enum8` values double quotes like its other
   literals instead of escaping them with a backslash.
+- MySQL and MariaDB LIKE predicates compile to `col LIKE ? ESCAPE '!'` (and
+  `NOT LIKE`) with `!`-escaped bindings, SQLite's to `col LIKE ? ESCAPE '\'`,
+  and MySQL's `setJsonRemove()` to `JSON_SEARCH(col, 'one', ?, '!')`.
+  Statement text and bindings matched in tests or caches change accordingly.
 
 ### Fixed
 
@@ -53,6 +57,17 @@ All notable changes to `utopia-php/query` are documented in this file.
   no longer accept a trailing newline, which their `$` anchors matched
   before. Among them: JSON paths in the MySQL, PostgreSQL and SQLite builders,
   `JoinBuilder::on()` and `where()` columns, and the `Tenant` hook's column.
+- The MySQL and MariaDB builders escape LIKE wildcards with `!` and declare it
+  with `ESCAPE '!'`. They escaped with a backslash, which under
+  `NO_BACKSLASH_ESCAPES` is no escape character, so `contains('50%')` also
+  matched `500`. A backslash in a value is now matched as itself.
+- The SQLite builder declares `ESCAPE '\'`. SQLite's LIKE has no escape
+  character by default, so the backslash-escaped `%` and `_` matched a
+  backslash followed by any characters instead of themselves.
+- The MySQL builder's `setJsonRemove()` escapes the LIKE pattern
+  `JSON_SEARCH()` matches its value with and passes `!` as the escape
+  character, so a value containing `%` or `_` removes only the element equal
+  to it.
 
 ## 0.7.2
 

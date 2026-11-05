@@ -79,6 +79,8 @@ abstract class Builder implements
 
     protected const string CURSOR_COLUMN = '_cursor';
 
+    protected const string LIKE_ESCAPE = '\\';
+
     protected StringLiteral $literal = StringLiteral::Backslash;
 
     protected string $table = '';
@@ -1666,12 +1668,9 @@ abstract class Builder implements
     {
         /** @var string $rawVal */
         $rawVal = $values[0];
-        $val = $this->escapeLikeValue($rawVal);
-        $this->addBinding($prefix . $val . $suffix, $column);
-        $like = $this->getLikeKeyword();
-        $keyword = $not ? 'NOT ' . $like : $like;
+        $this->addBinding($prefix . $this->escapeLikeValue($rawVal) . $suffix, $column);
 
-        return $attribute . ' ' . $keyword . ' ?';
+        return $this->compileLikePredicate($attribute, $not);
     }
 
     /**
@@ -1679,18 +1678,17 @@ abstract class Builder implements
      */
     protected function compileContains(string $attribute, array $values, ?string $column = null): string
     {
-        $like = $this->getLikeKeyword();
         /** @var array<string> $values */
         if (\count($values) === 1) {
             $this->addBinding('%' . $this->escapeLikeValue($values[0]) . '%', $column);
 
-            return $attribute . ' ' . $like . ' ?';
+            return $this->compileLikePredicate($attribute);
         }
 
         $parts = [];
         foreach ($values as $value) {
             $this->addBinding('%' . $this->escapeLikeValue($value) . '%', $column);
-            $parts[] = $attribute . ' ' . $like . ' ?';
+            $parts[] = $this->compileLikePredicate($attribute);
         }
 
         return '(' . \implode(' OR ', $parts) . ')';
@@ -1701,12 +1699,11 @@ abstract class Builder implements
      */
     protected function compileContainsAll(string $attribute, array $values, ?string $column = null): string
     {
-        $like = $this->getLikeKeyword();
         /** @var array<string> $values */
         $parts = [];
         foreach ($values as $value) {
             $this->addBinding('%' . $this->escapeLikeValue($value) . '%', $column);
-            $parts[] = $attribute . ' ' . $like . ' ?';
+            $parts[] = $this->compileLikePredicate($attribute);
         }
 
         return '(' . \implode(' AND ', $parts) . ')';
@@ -1717,26 +1714,35 @@ abstract class Builder implements
      */
     protected function compileNotContains(string $attribute, array $values, ?string $column = null): string
     {
-        $like = $this->getLikeKeyword();
         /** @var array<string> $values */
         if (\count($values) === 1) {
             $this->addBinding('%' . $this->escapeLikeValue($values[0]) . '%', $column);
 
-            return $attribute . ' NOT ' . $like . ' ?';
+            return $this->compileLikePredicate($attribute, true);
         }
 
         $parts = [];
         foreach ($values as $value) {
             $this->addBinding('%' . $this->escapeLikeValue($value) . '%', $column);
-            $parts[] = $attribute . ' NOT ' . $like . ' ?';
+            $parts[] = $this->compileLikePredicate($attribute, true);
         }
 
         return '(' . \implode(' AND ', $parts) . ')';
     }
 
+    protected function compileLikePredicate(string $attribute, bool $not = false): string
+    {
+        return $attribute . ' ' . ($not ? 'NOT ' : '') . $this->getLikeKeyword() . ' ?' . $this->likeEscape();
+    }
+
     protected function getLikeKeyword(): string
     {
         return 'LIKE';
+    }
+
+    protected function likeEscape(): string
+    {
+        return '';
     }
 
     /**
@@ -1752,7 +1758,9 @@ abstract class Builder implements
             $value = '';
         }
 
-        return \str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+        $escape = static::LIKE_ESCAPE;
+
+        return \str_replace([$escape, '%', '_'], [$escape . $escape, $escape . '%', $escape . '_'], $value);
     }
 
     /**
