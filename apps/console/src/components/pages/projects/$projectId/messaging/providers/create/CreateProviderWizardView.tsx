@@ -8,7 +8,17 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID, SmtpEncryption } from '@appwrite.io/console'
-import { ChevronRight, Mail, Phone, Bell } from 'lucide-react'
+import {
+  ChevronRight,
+  Mail,
+  Phone,
+  Bell,
+  Check,
+  Download,
+  Eye,
+  EyeOff,
+  FileJson,
+} from 'lucide-react'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,6 +55,16 @@ import {
   ResendOneClickSetup,
   type ResendOneClickSetupHandle,
 } from './_components/ResendOneClickSetup'
+import {
+  FcmOneClickSetup,
+  type FcmOneClickSetupHandle,
+} from './_components/FcmOneClickSetup'
+
+/** Wizard providers with a one-click setup panel, keyed by quick-setup id. */
+const ONE_CLICK_PROVIDER_IDS = ['resend', 'fcm'] as const
+
+/** Field keys rendered as a generated-credential card while one-click owns them. */
+const GENERATED_SERVICE_ACCOUNT_KEYS = new Set(['serviceAccountJSON'])
 
 type ProviderType = 'email' | 'sms' | 'push'
 
@@ -567,6 +587,24 @@ function parseJson(value: unknown, label: string): unknown {
   }
 }
 
+function formatByteSize(text: string): string {
+  const bytes = new Blob([text]).size
+  return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`
+}
+
+/** A download name from the JSON's project_id, falling back to a generic one. */
+function serviceAccountFileName(text: string): string {
+  try {
+    const parsed = JSON.parse(text) as { project_id?: unknown }
+    if (typeof parsed.project_id === 'string' && parsed.project_id) {
+      return `${parsed.project_id}-service-account.json`
+    }
+  } catch {
+    // Not valid JSON yet; use the generic name.
+  }
+  return 'service-account.json'
+}
+
 function defaultsForProvider(p: ProviderConfig): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const f of p.fields) {
@@ -595,6 +633,10 @@ export function CreateProviderWizardView() {
   const [step, setStep] = useState<'pick' | 'configure'>('pick')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [values, setValues] = useState<Record<string, unknown>>({})
+  // The FCM service account JSON carries a private key. Once one-click mints it
+  // we show it as a generated-credential card (view/download) rather than dump
+  // the secret into a plaintext textarea; cleared once the user edits by hand.
+  const [serviceAccountGenerated, setServiceAccountGenerated] = useState(false)
 
   const { project } = useProject(pid)
   const search = useSearch({ strict: false })
@@ -604,7 +646,8 @@ export function CreateProviderWizardView() {
   )
   const handledReturnRef = useRef(false)
   const [autoStartOneClick, setAutoStartOneClick] = useState(false)
-  const oneClickRef = useRef<ResendOneClickSetupHandle | null>(null)
+  const resendOneClickRef = useRef<ResendOneClickSetupHandle | null>(null)
+  const fcmOneClickRef = useRef<FcmOneClickSetupHandle | null>(null)
 
   const { features } = useConsoleProfile()
   const providers = useMemo(
@@ -635,23 +678,28 @@ export function CreateProviderWizardView() {
   }, [step, selected])
 
   // Returning from a provider authorization: the redirect wiped this wizard's
-  // state, so reopen the Resend step. On success the one-click panel picks
-  // the flow back up and fills the fields; on failure the user is back on the
-  // empty form, minus the connection, and can retry or type the key by hand.
+  // state, so reopen the configure step for the provider that was authorized.
+  // On success the one-click panel picks the flow back up and fills the fields;
+  // on failure the user is back on the empty form, minus the connection, and
+  // can retry or enter the credentials by hand.
   useEffect(() => {
     if (!quickSetupReturn || handledReturnRef.current) return
     handledReturnRef.current = true
 
-    const resend = PROVIDERS.find((p) => p.id === 'resend')
-    if (quickSetupReturn.providerId !== 'resend' || !resend) return
+    const returnedId = quickSetupReturn.providerId
+    const target = ONE_CLICK_PROVIDER_IDS.some((id) => id === returnedId)
+      ? PROVIDERS.find((p) => p.id === returnedId)
+      : undefined
+    if (!target) return
 
     navigate({
       search: ((prev: unknown) => stripQuickSetupReturn(prev)) as never,
       replace: true,
     })
 
-    setSelectedId(resend.id)
-    setValues(defaultsForProvider(resend))
+    setSelectedId(target.id)
+    setValues(defaultsForProvider(target))
+    setServiceAccountGenerated(false)
     setStep('configure')
 
     if (quickSetupReturn.status === 'failed') {
@@ -667,9 +715,17 @@ export function CreateProviderWizardView() {
       if (!selected) throw new Error('No provider selected')
       const projectSdk = sdk.forProject(pid)
       const request = selected.submit(projectSdk, ID.unique(), values)
-      // Whether a minted key stays or goes is decided by this request alone,
-      // even if the wizard is closed before it settles.
-      oneClickRef.current?.settleCredential(values.apiKey, request)
+      // Whether a minted credential stays or goes is decided by this request
+      // alone, even if the wizard is closed before it settles. Each one-click
+      // panel keys on the field it filled.
+      if (selected.id === 'fcm') {
+        fcmOneClickRef.current?.settleCredential(
+          values.serviceAccountJSON,
+          request,
+        )
+      } else {
+        resendOneClickRef.current?.settleCredential(values.apiKey, request)
+      }
       return await request
     },
     onSuccess: async (provider) => {
@@ -691,6 +747,7 @@ export function CreateProviderWizardView() {
   const handlePickProvider = (p: ProviderConfig) => {
     setSelectedId(p.id)
     setValues(defaultsForProvider(p))
+    setServiceAccountGenerated(false)
     setStep('configure')
     setAutoStartOneClick(false)
   }
@@ -744,7 +801,7 @@ export function CreateProviderWizardView() {
           {/* Needs the console's Resend OAuth2 provider, which only cloud has. */}
           {selected.id === 'resend' && isCloudProfile() ? (
             <ResendOneClickSetup
-              ref={oneClickRef}
+              ref={resendOneClickRef}
               projectName={project?.name ?? ''}
               values={values}
               autoStart={autoStartOneClick}
@@ -759,9 +816,35 @@ export function CreateProviderWizardView() {
               }
             />
           ) : null}
+          {/* Needs the console's Google OAuth2 provider, which only cloud has. */}
+          {selected.id === 'fcm' && isCloudProfile() ? (
+            <FcmOneClickSetup
+              ref={fcmOneClickRef}
+              projectName={project?.name ?? ''}
+              values={values}
+              autoStart={autoStartOneClick}
+              onFill={(fields) => {
+                setValues((prev) => ({
+                  ...prev,
+                  serviceAccountJSON: fields.serviceAccountJSON,
+                  ...(fields.name ? { name: fields.name } : {}),
+                }))
+                setServiceAccountGenerated(true)
+              }}
+            />
+          ) : null}
           <ProviderForm
             provider={selected}
             values={values}
+            generatedKeys={
+              serviceAccountGenerated
+                ? GENERATED_SERVICE_ACCOUNT_KEYS
+                : undefined
+            }
+            onEditGenerated={(key) => {
+              if (key === 'serviceAccountJSON')
+                setServiceAccountGenerated(false)
+            }}
             onChange={(key, value) =>
               setValues((prev) => ({ ...prev, [key]: value }))
             }
@@ -850,10 +933,16 @@ function ProviderCard({
 function ProviderForm({
   provider,
   values,
+  generatedKeys,
+  onEditGenerated,
   onChange,
 }: {
   provider: ProviderConfig
   values: Record<string, unknown>
+  /** Field keys currently shown as a generated-credential card. */
+  generatedKeys?: Set<string>
+  /** User chose to edit a generated field by hand; fall back to the raw input. */
+  onEditGenerated?: (key: string) => void
   onChange: (key: string, value: unknown) => void
 }) {
   return (
@@ -863,6 +952,8 @@ function ProviderForm({
           key={field.key}
           field={field}
           value={values[field.key]}
+          generated={generatedKeys?.has(field.key) ?? false}
+          onEdit={() => onEditGenerated?.(field.key)}
           onChange={(v) => onChange(field.key, v)}
         />
       ))}
@@ -873,14 +964,31 @@ function ProviderForm({
 function FieldRenderer({
   field,
   value,
+  generated = false,
+  onEdit,
   onChange,
 }: {
   field: ProviderField
   value: unknown
+  /** The value was minted by one-click; render it as a credential card. */
+  generated?: boolean
+  onEdit?: () => void
   onChange: (value: unknown) => void
 }) {
   const t = useT()
   const id = `provider-field-${field.key}`
+
+  if (field.type === 'json' && generated && typeof value === 'string') {
+    return (
+      <GeneratedJsonField
+        id={id}
+        label={field.label}
+        required={field.required}
+        value={value}
+        onEdit={() => onEdit?.()}
+      />
+    )
+  }
 
   if (field.type === 'switch') {
     return (
@@ -998,6 +1106,117 @@ function FieldRenderer({
       {field.helper && (
         <p className="text-[12px] text-muted-foreground">{t(field.helper)}</p>
       )}
+    </div>
+  )
+}
+
+/**
+ * A one-click-minted service account JSON, shown as a credential card instead
+ * of the plaintext textarea: the file carries a private key, so it stays hidden
+ * behind View (reveal on demand) and Download, like a secret rather than a form
+ * value. "Edit manually" hands control back to the raw textarea.
+ */
+function GeneratedJsonField({
+  id,
+  label,
+  required,
+  value,
+  onEdit,
+}: {
+  id: string
+  label: string
+  required?: boolean
+  value: string
+  onEdit: () => void
+}) {
+  const t = useT()
+  const [revealed, setRevealed] = useState(false)
+  const sizeLabel = useMemo(() => formatByteSize(value), [value])
+
+  const download = () => {
+    const blob = new Blob([value], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = serviceAccountFileName(value)
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>
+        {t(label)}
+        {required && <RequiredMark />}
+      </Label>
+      <div
+        id={id}
+        className="space-y-3 rounded-lg border border-border bg-card px-4 py-3"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <FileJson className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+              <Check className="h-3.5 w-3.5 text-green-600" />
+              {t('Service account JSON generated')}
+              <span className="font-normal text-muted-foreground">
+                · {sizeLabel}
+              </span>
+            </p>
+            <p className="text-[12px] text-muted-foreground">
+              {t(
+                'Contains a private key. View or download it to review before creating.',
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-[12px]"
+            onClick={() => setRevealed((v) => !v)}
+          >
+            {revealed ? (
+              <EyeOff className="me-1.5 h-3.5 w-3.5" />
+            ) : (
+              <Eye className="me-1.5 h-3.5 w-3.5" />
+            )}
+            {revealed ? t('Hide') : t('View')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-[12px]"
+            onClick={download}
+          >
+            <Download className="me-1.5 h-3.5 w-3.5" />
+            {t('Download')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 text-[12px]"
+            onClick={onEdit}
+          >
+            {t('Edit manually')}
+          </Button>
+        </div>
+        {revealed ? (
+          <Textarea
+            readOnly
+            value={value}
+            className="min-h-[140px] font-mono text-[12px]"
+          />
+        ) : null}
+      </div>
     </div>
   )
 }

@@ -24,15 +24,26 @@
  * same flow serves every entry in `providers.ts`.
  */
 
-import { Query, type Models } from '@appwrite.io/console'
+import { OAuthProvider, Query, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { buildQuickSetupOAuthUrls, isProviderTokenExpired } from './quick-setup'
-import type { AvailableSmtpQuickSetupProvider } from './providers'
 
 export interface ProviderAccessToken {
   token: string
   /** ISO 8601 expiry reported by Appwrite. */
   expiry: string
+}
+
+/**
+ * The minimum a provider must expose for the OAuth2 round trip and the token
+ * reconnect rules below. Both the SMTP quick setup providers and the FCM
+ * quick setup satisfy it, so authorization and token handling stay in one
+ * place rather than being reimplemented per surface.
+ */
+export interface QuickSetupOAuthProvider {
+  id: string
+  oauth: { provider: OAuthProvider; scopes: string[] }
+  api: { isUnauthorizedError(error: unknown): boolean }
 }
 
 /** No usable provider token for this account; only a new OAuth2 flow can help. */
@@ -87,7 +98,7 @@ export async function resolveProviderAccessToken(
  * stale outcome from an earlier attempt cannot ride along.
  */
 export function startProviderAuthorization(
-  provider: AvailableSmtpQuickSetupProvider,
+  provider: QuickSetupOAuthProvider,
 ): void {
   if (typeof window === 'undefined') {
     throw new Error('Provider authorization requires a browser')

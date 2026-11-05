@@ -3242,6 +3242,39 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'API key created and filled in below. Review and create the provider.':
     'API キーを作成し、以下に入力しました。内容を確認してプロバイダーを作成してください。',
   'One-click setup': 'ワンクリックセットアップ',
+  // FCM one-click setup
+  'Connect with Google': 'Google で接続',
+  'Let Appwrite create a service account for a Firebase project and fill this field.':
+    'Firebase プロジェクトのサービスアカウントを Appwrite に作成させ、このフィールドを自動入力します。',
+  'Loading Firebase projects…': 'Firebase プロジェクトを読み込んでいます…',
+  'Enabling the required Google APIs…': '必要な Google API を有効化しています…',
+  'Creating the service account…': 'サービスアカウントを作成しています…',
+  'Firebase project': 'Firebase プロジェクト',
+  'Generate credentials': '認証情報を生成',
+  'No Firebase projects found on this account.':
+    'このアカウントに Firebase プロジェクトが見つかりません。',
+  'Open Firebase': 'Firebase を開く',
+  'Service account created and filled in below. Review and create the provider.':
+    'サービスアカウントを作成し、下に入力しました。内容を確認してプロバイダーを作成してください。',
+  'Google was connected without permission to create the credential. Reconnect and allow the requested access, or paste the service account JSON below.':
+    'Google は認証情報を作成する権限なしで接続されました。再接続して要求された権限を許可するか、下にサービスアカウントの JSON を貼り付けてください。',
+  'This project blocks service account key creation. Paste the service account JSON from the Firebase console below.':
+    'このプロジェクトではサービスアカウントキーの作成がブロックされています。Firebase コンソールのサービスアカウント JSON を下に貼り付けてください。',
+  'Your Google account cannot create service accounts on this project. Paste the service account JSON below, or ask a project owner to run this.':
+    'お使いの Google アカウントではこのプロジェクトでサービスアカウントを作成できません。下にサービスアカウントの JSON を貼り付けるか、プロジェクトのオーナーに実行を依頼してください。',
+  'Reconnect your Google account to continue.':
+    '続行するには Google アカウントを再接続してください。',
+  Reconnect: '再接続',
+  'Enable the API': 'API を有効化',
+  'One-click FCM sender': 'ワンクリック FCM 送信者',
+  'Sets up Firebase for you instead of doing it by hand. It runs the same steps our docs walk you through.':
+    '手作業の代わりに Firebase をセットアップします。ドキュメントで説明している手順と同じ処理を実行します。',
+  'The only reason we ask for Google access is to do that setup for you.':
+    'Google へのアクセスを求めるのは、このセットアップを代わりに行うためだけです。',
+  'This can take up to a minute. Keep this tab open.':
+    '最大 1 分ほどかかる場合があります。このタブを開いたままにしてください。',
+  'A Google API required for setup is not enabled on this console. Enable it, wait a minute, then try again.':
+    'セットアップに必要な Google API がこのコンソールで有効になっていません。有効化し、1 分ほど待ってから再試行してください。',
   'Notify me': '通知を受け取る',
   'You will be notified': '通知されます',
   "You'll no longer be notified about this provider.":
