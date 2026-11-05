@@ -23,43 +23,46 @@ The command reads the bundle ID and team ID from your Xcode project (or `app.jso
 - Adds an Apple platform for the bundle ID to your project if it has none. Without one, Appwrite rejects your app's requests, device registration included.
 - Checks with Apple that the bundle ID is registered as an App ID with Push Notifications turned on. APNs rejects pushes for any other bundle ID with `TopicDisallowed`. The CLI asks before it signs in to Apple or changes anything.
 
-In an Expo project, also set the entitlement and background mode in `app.json`, because `expo prebuild` regenerates the `ios` folder. The CLI prints the exact keys to add.
+In an Expo project, `expo prebuild` regenerates the `ios` folder and drops these changes. Set them in `app.json` (or `app.config.json`) as well:
 
-When both providers are already set up and enabled, running the command again leaves them as they are. It still updates Xcode, adds the Apple platform if it's missing, and checks the App ID. To replace the key, pass `--force` or `--key-path`. The CLI then updates the existing providers instead of creating duplicates.
+{% table %}
+* Setting
+* Value
+---
+* `expo.ios.entitlements["aps-environment"]`
+* `"development"`
+---
+* `expo.ios.infoPlist.UIBackgroundModes`
+* `["remote-notification"]`, added to any modes you already have
+{% /table %}
 
-If either provider is missing or disabled, the CLI gets a key the same way as on a first run, and creates or updates both providers with it, including the one that was already working.
+## Provide a key {% #key %}
 
-## Use a key you already have {% #existing-key %}
+The CLI needs an APNs auth key (`.p8`). Use one you already have, or let the CLI create one:
 
-Put the `.p8` file in your project folder and run `appwrite init apns`. The CLI uses it without asking, or lets you pick one when there are several. To use a key stored somewhere else, pass its path, and add `--team-id` if your project doesn't set a team:
+- **A `.p8` in your project folder.** Run `appwrite init apns`. The CLI uses the key without asking, or lets you pick one if there are several.
+- **A `.p8` stored somewhere else.** Pass `--key-path` with the file's path. Add `--team-id` if your project doesn't set a team.
+- **A new key from your Apple ID.** Pass `--create-key`. The CLI signs in with your Apple ID, password, and two-factor code, then creates the key. This option is experimental.
+- **A new key from the Apple Developer portal.** Run `appwrite init apns` and pick the portal. The CLI opens it and waits up to 15 minutes for the downloaded `.p8` to appear in your project folder or `~/Downloads`.
 
-```bash
-appwrite init apns --key-path ~/keys/AuthKey_Q4GAU66T2N.p8 --team-id ABCDE12345
-```
+When the CLI finds no key and you don't pass `--create-key` or `--key-path`, it asks which way you want.
 
-## Create the key with your Apple ID {% #create-key %}
+When the CLI creates a key:
 
-With `--create-key`, the CLI signs in with your Apple ID (password and two-factor code) and creates the APNs key for you, so you don't need to visit the Apple Developer portal. This option is experimental.
+- It saves the key as `AuthKey_<KEYID>.p8` in your project folder. Apple lets you download a key only once, so keep the file somewhere safe and out of version control. The CLI warns you when git would commit it.
+- Apple allows two APNs keys per team, and one key works for every app on the team. When both are taken, the CLI lists them and stops. Pass `--key-path` with a key you saved earlier, or revoke one you no longer use in the Apple Developer portal.
+- It saves your Apple sign-in, so later runs skip the password and two-factor code until Apple expires the session. The `appwrite` and `expo` setups keep it in `~/.appwrite/apns/<setup>/`, readable only by you. The `fastlane` setup uses fastlane's own saved session. `--reset` signs in again and creates a new key.
+- It signs in to Apple through one of three setups: `appwrite` (the default), `expo` (`@expo/apple-utils`), or `fastlane` (spaceship). If one stops working, switch with `--provider` or the `APPWRITE_APNS_SETUP` environment variable, for example `--provider fastlane`. This only picks how the CLI signs in to Apple. It has nothing to do with the APNs providers in your Appwrite project.
 
-```bash
-appwrite init apns --create-key
-```
+## Run it again {% #rerun %}
 
-When both providers are already set up and enabled, `--create-key` alone leaves them as they are. Add `--force` to create a new key and put it on both providers.
+You can run `appwrite init apns` as often as you like. It never creates duplicate providers. What it does with the key depends on the providers you already have:
 
-The CLI saves the new key as `AuthKey_<KEYID>.p8` in your project folder. Apple lets you download a key only once, so keep the file somewhere safe and out of version control. The CLI warns you when git would commit it.
+- **Both providers are set up and enabled.** The CLI keeps both providers and their key. It still updates Xcode, adds the Apple platform if it's missing, and checks the App ID. `--create-key` alone changes nothing here.
+- **You pass `--force`, `--key-path`, or `--reset`.** The CLI puts the new key on both providers.
+- **One or both providers are missing or disabled.** The CLI gets a key as on a first run, then creates or updates both providers with it, including one that was already working.
 
-The CLI saves your Apple sign-in, so later runs skip the password and two-factor code until Apple expires the session. The `appwrite` and `expo` setups keep it in `~/.appwrite/apns/<setup>/`, readable only by you. The `fastlane` setup uses fastlane's own saved session. Pass `--reset` to sign in again. `--reset` also creates a new key.
-
-Apple allows two APNs keys per team, and one key works for every app on the team. When both are taken, the CLI lists them and stops. Pass `--key-path` with a key you saved earlier, or revoke one you no longer use in the Apple Developer portal.
-
-When no key is found and `--create-key` isn't passed, the CLI asks how to provide one: sign in with your Apple ID and create it, create it in the Apple Developer portal, or use a file you already have. With the portal, the CLI opens the page and waits up to 15 minutes for the downloaded `.p8` to appear in your project folder or `~/Downloads`.
-
-The CLI can talk to Apple in three interchangeable ways: `appwrite` (the default), `expo` (`@expo/apple-utils`) or `fastlane` (spaceship). Pick one with `--provider` or the `APPWRITE_APNS_SETUP` environment variable. If one stops working, switch to another. This flag only picks how the CLI signs in to Apple. It has nothing to do with the APNs providers in your Appwrite project.
-
-```bash
-appwrite init apns --create-key --provider fastlane
-```
+To create a new key for providers that already work, pass `--create-key --force`.
 
 ## Options {% #cli-options %}
 
@@ -113,9 +116,12 @@ appwrite init apns --create-key --provider fastlane
 
 ## Run in CI {% #ci %}
 
-`APPWRITE_APPLE_ID` and `APPWRITE_APPLE_PASSWORD` answer the Apple ID and password prompts, and the CLI never prints their values. The two-factor code always needs a terminal, so in CI pass `--key-path` instead. The App ID check uses a saved Apple sign-in if there is one. Without one, it reports that it skipped the check. It only fails the command when `--register-app-id` is passed.
+Without a terminal, the CLI can't ask for a two-factor code or show a picker. In CI:
 
-Without a terminal, the CLI can't show a picker either. Pass `--bundle-id` when your project has more than one app, and `--team-id` when it doesn't set a team:
+- Pass an existing key with `--key-path`. Creating a key always needs a two-factor code.
+- Pass `--bundle-id` when your project has more than one app, and `--team-id` when it doesn't set a team.
+- Set `APPWRITE_APPLE_ID` and `APPWRITE_APPLE_PASSWORD` to answer the Apple ID and password prompts. The CLI never prints their values.
+- The App ID check uses a saved Apple sign-in if there is one, and otherwise reports that it skipped the check. It only fails the command when you pass `--register-app-id`.
 
 ```bash
 appwrite init apns --key-path ./AuthKey_Q4GAU66T2N.p8 --bundle-id com.example.app --team-id ABCDE12345
