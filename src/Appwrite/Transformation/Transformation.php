@@ -46,25 +46,30 @@ class Transformation
         return $this;
     }
 
+    /**
+     * Applies every valid adapter in order, skipping the rest.
+     *
+     * @return bool Whether any adapter applied
+     */
     public function transform(): bool
     {
+        $output = $this->input;
+        $applied = false;
+
         foreach ($this->adapters as $adapter) {
             if (!$adapter->isValid($this->traits)) {
-                return false;
+                continue;
             }
-        }
 
-        $output = $this->input;
-
-        foreach ($this->adapters as $adapter) {
             $adapter->setInput($output);
             $adapter->transform();
             $output = $adapter->getOutput();
+            $applied = true;
         }
 
         $this->output = $output;
 
-        return true;
+        return $applied;
     }
 
     public function getOutput(): mixed
