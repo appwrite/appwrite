@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Cache\Adapter;
 
 use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 use Utopia\Cache\Adapter;
 use Utopia\Psr7\Stream;
@@ -46,18 +47,9 @@ class Storage implements Adapter
     {
         try {
             $stream = $this->device->read($this->getPath($key));
-            $header = $stream->read(self::HEADER_SIZE);
+            $time = $this->readTime($stream);
 
-            if (\strlen($header) !== self::HEADER_SIZE) {
-                return false;
-            }
-
-            /** @var array{1: int} $time */
-            $time = unpack('J', $header);
-            $now = time();
-
-            // A time in the future means the object was not written by this adapter.
-            return $time[1] <= $now && $time[1] + $ttl > $now ? $stream->getContents() : false;
+            return $time !== null && $time + $ttl > time() ? $stream->getContents() : false;
         } catch (StorageException | RuntimeException) {
             return false;
         }
@@ -115,7 +107,10 @@ class Storage implements Adapter
             }
 
             $stream = $this->device->read($path, etag: $etag);
-            $stream->read(self::HEADER_SIZE);
+
+            if ($this->readTime($stream) === null) {
+                return false;
+            }
 
             $this->device->replace($path, new Stream($this->header() . $stream->getContents()), $etag, self::CONTENT_TYPE);
 
@@ -198,6 +193,24 @@ class Storage implements Adapter
             '..' => '%2E%2E',
             default => $name,
         });
+    }
+
+    /**
+     * The write time at the start of the stream, or null if the object was not
+     * written by this adapter: too short, or a time in the future.
+     */
+    private function readTime(StreamInterface $stream): ?int
+    {
+        $header = $stream->read(self::HEADER_SIZE);
+
+        if (\strlen($header) !== self::HEADER_SIZE) {
+            return null;
+        }
+
+        /** @var array{1: int} $time */
+        $time = unpack('J', $header);
+
+        return $time[1] <= time() ? $time[1] : null;
     }
 
     private function header(): string

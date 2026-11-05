@@ -180,6 +180,8 @@ final class StorageTest extends Base
             file_put_contents($path . '/key', $body);
 
             $this->assertFalse($adapter->load('key', 60), $body);
+            $this->assertFalse($adapter->touch('key'), $body);
+            $this->assertSame($body, file_get_contents($path . '/key'));
         }
     }
 
