@@ -119,6 +119,26 @@ describe('getRuleStatusBadgeConfig', () => {
     expect(config.hint).toBeDefined()
   })
 
+  test('shows a rule whose DNS check failed as a failed verification', () => {
+    expect(
+      getRuleStatusBadgeConfig(
+        { status: 'unverified', certificateStatus: '' },
+        NOW,
+      ),
+    ).toEqual({ variant: 'error', label: 'Verification failed' })
+  })
+
+  test('keeps the certificate label for a failed certificate, and on a server that reports no certificate state', () => {
+    for (const certificateStatus of [undefined, 'failed']) {
+      expect(
+        getRuleStatusBadgeConfig(
+          { status: 'unverified', certificateStatus },
+          NOW,
+        ),
+      ).toEqual({ variant: 'error', label: 'Certificate generation failed' })
+    }
+  })
+
   test('keeps the issuing badge while a blocked certificate is retried', () => {
     expect(
       getRuleStatusBadgeConfig(
