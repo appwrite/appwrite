@@ -4942,6 +4942,123 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    /**
+     * An identity whose provider never verified its email must not hand its account over
+     * to whoever later signs in with that address from a provider that does verify it.
+     * Otherwise linking a provider that returns an arbitrary unverified address
+     * pre-hijacks every future sign-in for the owner of that address.
+     */
+    public function testOAuth2UnverifiedIdentityEmailDoesNotAdoptAccount(): void
+    {
+        // A fresh project keeps the mock OAuth emails away from parallel tests.
+        $project = $this->getProject(true);
+        $projectId = $project['$id'];
+        $victimEmail = 'victim.' . \bin2hex(\random_bytes(8)) . '@localhost.test';
+
+        // Both mock providers answer with the victim's address: `mock` attests it, `mock-unverified` does not
+        foreach (['mock-unverified', 'mock'] as $provider) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+                'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            ], [
+                'provider' => $provider,
+                'appId' => 'canonical-' . $victimEmail,
+                'secret' => '123456',
+                'enabled' => true,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+        }
+
+        // The attacker owns an account under an address of their own
+        $attackerEmail = 'attacker.' . \bin2hex(\random_bytes(8)) . '@localhost.test';
+
+        $attacker = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => Id::unique(),
+            'email' => $attackerEmail,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $attacker['headers']['status-code']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $attackerEmail,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $session['headers']['status-code']);
+
+        $sessionCookieKey = 'a_session_' . $projectId;
+        $attackerCookie = $sessionCookieKey . '=' . $session['cookies'][$sessionCookieKey];
+
+        // ... and links a provider that hands back the victim's address without verifying it
+        $response = $this->followMockOAuth2Flow('/account/sessions/oauth2/mock-unverified', [
+            'x-appwrite-project' => $projectId,
+            'cookie' => $attackerCookie,
+        ]);
+
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success', $response['headers']['location']);
+
+        $attackerCookie = $sessionCookieKey . '=' . $response['cookies'][$sessionCookieKey];
+
+        $identities = $this->client->call(Client::METHOD_GET, '/account/identities', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $attackerCookie,
+        ]);
+
+        $this->assertEquals(200, $identities['headers']['status-code']);
+        $this->assertEquals(1, $identities['body']['total']);
+        $this->assertEquals($victimEmail, $identities['body']['identities'][0]['providerEmail']);
+
+        /**
+         * Test for SUCCESS - the victim signs in from a clean browser with a provider that
+         * verifies the address, and lands in an account of their own
+         */
+        $response = $this->followMockOAuth2Flow('/account/tokens/oauth2/mock', [
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        $this->assertStringStartsWith('http://localhost/v1/mock/tests/general/oauth2/success?', $response['headers']['location']);
+
+        $params = [];
+        \parse_str((string) \parse_url($response['headers']['location'], PHP_URL_QUERY), $params);
+
+        $this->assertNotEmpty($params['userId'] ?? null);
+        $this->assertNotEquals($attacker['body']['$id'], $params['userId']);
+
+        $victim = $this->client->call(Client::METHOD_GET, '/users/' . $params['userId'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $victim['headers']['status-code']);
+        $this->assertEquals($victimEmail, $victim['body']['email']);
+        $this->assertTrue($victim['body']['emailVerification']);
+
+        // The attacker's account keeps its own address, and the victim's session is none of theirs
+        $attacker = $this->client->call(Client::METHOD_GET, '/users/' . $attacker['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $project['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $attacker['headers']['status-code']);
+        $this->assertEquals($attackerEmail, $attacker['body']['email']);
+    }
+
     public function testCreateAccountAfterOAuth2AccountDelete(): void
     {
         // A fresh project keeps the fixed mock OAuth email away from parallel tests.
@@ -9119,6 +9236,60 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_bad_request', $response['body']['type']);
+    }
+
+    /**
+     * Native sign-in reaches the same identity-email lookup as the browser flow, so an
+     * unverified address on a linked identity must not adopt its account here either.
+     */
+    public function testCreateIdTokenSessionUnverifiedIdentityEmailDoesNotAdopt(): void
+    {
+        $this->updateMockProvider(true);
+        $projectId = $this->getProject()['$id'];
+        $victimEmail = 'victim.' . \bin2hex(\random_bytes(8)) . '@localhost.test';
+
+        // The attacker owns an account under an address of their own ...
+        $attacker = $this->createFreshAccountWithSession();
+
+        // ... and links a provider that hands back the victim's address without verifying it
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $victimEmail,
+                'email_verified' => false,
+            ]),
+        ], ['cookie' => 'a_session_' . $projectId . '=' . $attacker['session']]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($attacker['id'], $response['body']['userId']);
+
+        /**
+         * Test for SUCCESS - the victim signs in with a verified claim for that address
+         * and lands in an account of their own
+         */
+        $response = $this->createIdTokenSession([
+            'provider' => 'mock',
+            'idToken' => $this->mintIdToken([
+                'sub' => 'idtoken-' . \uniqid('', true),
+                'email' => $victimEmail,
+                'email_verified' => true,
+            ]),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEquals($attacker['id'], $response['body']['userId']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($victimEmail, $account['body']['email']);
+        $this->assertTrue($account['body']['emailVerification']);
     }
 
     public function testCreateIdTokenSessionRevokesUnverifiedAccountCredentials(): void
