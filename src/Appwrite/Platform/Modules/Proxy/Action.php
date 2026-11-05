@@ -6,6 +6,7 @@ use Appwrite\Bus\Events\RuleCreated;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\DNS as ValidatorDNS;
+use Appwrite\Network\Validator\DomainClaim as ValidatorDomainClaim;
 use Appwrite\Platform\Action as PlatformAction;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
@@ -268,6 +269,15 @@ class Action extends PlatformAction
             Span::add('dns.timing', \microtime(true) - $validationStart);
             Span::add('dns.domain', $domain->get());
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, $mainValidator->getDescription());
+        }
+
+        // The targets above are shared by every project on this installation, so reaching
+        // them proves nothing about who owns the domain. A claim record names the project
+        // the domain belongs to, and decides the rule once it is published.
+        $claimValidator = new ValidatorDomainClaim($rule->getAttribute('projectId', ''), $dnsServers, $dnsValidatorClass);
+        if (!$claimValidator->isValid($domain->get())) {
+            Span::add('dns.domain', $domain->get());
+            throw new Exception(Exception::RULE_VERIFICATION_FAILED, $claimValidator->getDescription());
         }
     }
 
