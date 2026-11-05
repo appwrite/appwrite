@@ -3,6 +3,7 @@
 namespace Appwrite\Autogravity;
 
 use Utopia\Cache\Cache;
+use Utopia\Span\Span;
 
 class Detector
 {
@@ -37,10 +38,23 @@ class Detector
             && $cached['y'] >= 0
             && $cached['y'] <= 1
         ) {
+            Span::add('autogravity.cache', true);
             return new Gravity((float) $cached['x'], (float) $cached['y']);
         }
 
-        $gravity = $this->client->analyze($source);
+        Span::add('autogravity.cache', false);
+        Span::add('autogravity.bytes', \strlen($source));
+
+        try {
+            $gravity = $this->client->analyze($source);
+        } catch (\Throwable $e) {
+            Span::add('autogravity.error', $e->getMessage());
+            if ($e->getCode() !== 0) {
+                Span::add('autogravity.status', $e->getCode());
+            }
+            throw $e;
+        }
+
         $this->cache->save($key, $gravity->getArrayCopy());
 
         return $gravity;
