@@ -75,6 +75,7 @@ class Create extends Action
             ->inject('cookieDomain')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('mode')
             ->inject('session')
             ->callback($this->action(...));
     }
@@ -92,6 +93,7 @@ class Create extends Action
         ?string $cookieDomain,
         Event $queueForEvents,
         Authorization $authorization,
+        string $mode,
         ?Document $current,
     ): void {
         if (($project->getAttribute('auths', [])['accountDevices'] ?? true) === false) {
@@ -150,8 +152,10 @@ class Create extends Action
 
         // Adopt the caller's current session so the account they are already signed in as is
         // in the device and switchable, not just sessions created after the device exists.
+        // Skipped in admin mode: there the current session belongs to the console user in the
+        // platform database, not the target project database this device is written to.
         $sessions = [];
-        if ($current instanceof Document && empty($current->getAttribute('deviceId', ''))) {
+        if ($mode !== APP_MODE_ADMIN && $current instanceof Document && empty($current->getAttribute('deviceId', ''))) {
             $authorization->skip(fn () => $dbForProject->updateDocument('sessions', $current->getId(), new Document([
                 'deviceId' => $device->getId(),
                 'deviceInternalId' => $device->getSequence(),
