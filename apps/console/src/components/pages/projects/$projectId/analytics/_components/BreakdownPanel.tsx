@@ -12,7 +12,7 @@ import {
   type AnalyticsRange,
 } from '@/lib/react-query/hooks'
 import { BreakdownRow, RowRank } from './BreakdownRow'
-import { BreakdownDialog } from './BreakdownDialog'
+import { BREAKDOWN_DIALOG_MAX_ROWS, BreakdownDialog } from './BreakdownDialog'
 import { MetricInfo, type AnalyticsMetricInfoKey } from './MetricInfo'
 import { useAnalyticsFilters } from './analytics-filters-context'
 import { isKnownBreakdownValue } from '@/lib/analytics/breakdown-values'
@@ -265,7 +265,8 @@ export function BreakdownPanel({
     propertyId,
     active.dimension,
     range,
-    undefined,
+    // The API ranks by visitors, so an events card takes every row to re-rank.
+    valueKey === 'visitors' ? undefined : BREAKDOWN_DIALOG_MAX_ROWS,
     true,
     filters,
     active.propKey,
@@ -273,7 +274,6 @@ export function BreakdownPanel({
 
   // Unknown rows (no referrer, unparseable agent, unknown location) are
   // dropped, and shares are computed among the known values.
-  // The API ranks by visitors; re-rank when the card measures events.
   const { rows, columnTotal, max } = useMemo(() => {
     const known = breakdown.filter((entry) => isKnownBreakdownValue(entry.value))
     const ranked =

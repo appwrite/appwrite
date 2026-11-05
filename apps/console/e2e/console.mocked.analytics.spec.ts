@@ -156,10 +156,13 @@ function metricsFor(url: URL, options: MockOptions): Models.AnalyticsMetric[] {
     if (propKey === 'source') return [row('ads', 9)]
     // Ranked by visitors, as the API does; events disagree with that order.
     if (propKey === 'model')
-      return [
-        row('gpt-5', 2, { events: 40 }),
-        row('claude-sonnet-5-5', 1, { events: 900 }),
-      ]
+      return options.agentProps
+        ? [
+            row('gpt-5', 2, { events: 40 }),
+            row('claude-sonnet-5-5', 1, { events: 900 }),
+          ]
+        : []
+    if (propKey === 'tool') return []
     if (options.agentProps) return [row('model', 3), row('plan', 2)]
     return [row('plan', 52), row('source', 9)]
   }

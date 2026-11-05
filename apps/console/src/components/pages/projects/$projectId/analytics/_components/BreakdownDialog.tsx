@@ -103,7 +103,9 @@ export function BreakdownDialog({
 }: BreakdownDialogProps) {
   const t = useT()
   const [activeTab, setActiveTab] = useState(initialTabId ?? tabs[0]?.id ?? '')
-  const [limit, setLimit] = useState(BREAKDOWN_DIALOG_PAGE_SIZE)
+  const [limit, setLimit] = useState(
+    valueKey === 'visitors' ? BREAKDOWN_DIALOG_PAGE_SIZE : BREAKDOWN_DIALOG_MAX_ROWS,
+  )
   const [filter, setFilter] = useState('')
 
   const active = tabs.find((tab) => tab.id === activeTab) ?? tabs[0]

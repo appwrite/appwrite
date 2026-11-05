@@ -343,7 +343,13 @@ export function View({
     { projectId, propertyId, range },
     filters,
   )
-  const modelTabs = useModelTabs({ projectId, propertyId, range }, filters)
+  const resolvedType = propertyType(property)
+  const panels = PANELS_BY_TYPE[resolvedType]
+  const modelTabs = useModelTabs(
+    { projectId, propertyId, range },
+    filters,
+    panels.has('models'),
+  )
 
   // Hourly buckets are capped at 31 days and daily buckets need more than a
   // day, same rules as the Usage charts.
@@ -491,8 +497,6 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
-  const resolvedType = propertyType(property)
-  const panels = PANELS_BY_TYPE[resolvedType]
   const breakdownCount = [...panels].filter(
     (panel) =>
       panel !== 'users' && panel !== 'eventProps' && panel !== 'models',
