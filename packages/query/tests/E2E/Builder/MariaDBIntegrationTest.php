@@ -993,10 +993,10 @@ class MariaDBIntegrationTest extends IntegrationTestCase
     }
 
     /**
-     * @param  list<string>  $expected
+     * @param  list<mixed>  $expected
      */
     #[DataProvider('jsonRemovals')]
-    public function testJsonSetRemoveMatchesLiterally(bool $noBackslashEscapes, string $tags, string $value, array $expected): void
+    public function testJsonSetRemoveMatchesLiterally(bool $noBackslashEscapes, string $tags, mixed $value, array $expected): void
     {
         $pdo = $this->connectMariadb();
         $this->trackMariadbTable('tagged');
@@ -1011,5 +1011,10 @@ class MariaDBIntegrationTest extends IntegrationTestCase
         $this->inSqlMode($pdo, $noBackslashEscapes, fn (): array => $this->executeOnMariadb($update));
 
         $this->assertSame($expected, $this->storedTags($pdo));
+    }
+
+    protected static function jsonSearchMatchesNumbers(): bool
+    {
+        return true;
     }
 }

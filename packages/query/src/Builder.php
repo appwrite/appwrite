@@ -81,6 +81,8 @@ abstract class Builder implements
 
     protected const string LIKE_ESCAPE = '\\';
 
+    protected const bool DECLARES_LIKE_ESCAPE = false;
+
     protected StringLiteral $literal = StringLiteral::Backslash;
 
     protected string $table = '';
@@ -1742,7 +1744,7 @@ abstract class Builder implements
 
     protected function likeEscape(): string
     {
-        return '';
+        return static::DECLARES_LIKE_ESCAPE ? ' ESCAPE ' . $this->literal->quote(static::LIKE_ESCAPE) : '';
     }
 
     /**

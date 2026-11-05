@@ -22,6 +22,8 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
     use Trait\Upsert;
     use Trait\UpsertSelect;
 
+    protected const bool DECLARES_LIKE_ESCAPE = true;
+
     protected StringLiteral $literal = StringLiteral::Standard;
 
     /** @var array<string, Condition> */
@@ -131,12 +133,6 @@ class SQLite extends SQL implements Json, ConditionalAggregates, StringAggregate
         );
 
         return $this;
-    }
-
-    #[\Override]
-    protected function likeEscape(): string
-    {
-        return ' ESCAPE \'' . static::LIKE_ESCAPE . '\'';
     }
 
     #[\Override]

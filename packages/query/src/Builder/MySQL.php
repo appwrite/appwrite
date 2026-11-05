@@ -44,6 +44,8 @@ class MySQL extends SQL implements
 
     protected const string LIKE_ESCAPE = '!';
 
+    protected const bool DECLARES_LIKE_ESCAPE = true;
+
     private const int FULL_TEXT_MINIMUM_WORD_LENGTH = 3;
 
     private const array FULL_TEXT_STOPWORDS = [
@@ -211,18 +213,13 @@ class MySQL extends SQL implements
     #[\Override]
     public function setJsonRemove(string $column, mixed $value): static
     {
+        $wrapped = $this->resolveAndWrap($column);
         $this->jsonSets[$column] = new Condition(
-            'JSON_REMOVE(' . $this->resolveAndWrap($column) . ', JSON_UNQUOTE(JSON_SEARCH(' . $this->resolveAndWrap($column) . ', \'one\', ?, \'' . static::LIKE_ESCAPE . '\')))',
+            'COALESCE(JSON_REMOVE(' . $wrapped . ', JSON_UNQUOTE(JSON_SEARCH(' . $wrapped . ', \'one\', ?, ' . $this->literal->quote(static::LIKE_ESCAPE) . '))), ' . $wrapped . ')',
             [$this->escapeLikeValue($value)],
         );
 
         return $this;
-    }
-
-    #[\Override]
-    protected function likeEscape(): string
-    {
-        return ' ESCAPE \'' . static::LIKE_ESCAPE . '\'';
     }
 
     #[\Override]

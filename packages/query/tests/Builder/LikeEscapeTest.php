@@ -13,7 +13,7 @@ use Utopia\Query\Builder\SQLite;
 use Utopia\Query\Query;
 use Utopia\Query\Tests\AssertsBindingCount;
 
-class LikeEscapeTest extends TestCase
+final class LikeEscapeTest extends TestCase
 {
     use AssertsBindingCount;
 
@@ -73,6 +73,7 @@ class LikeEscapeTest extends TestCase
             yield $name . ' escape' => [clone $builder, 'wow!', 'wow!!'];
             yield $name . ' backslash' => [clone $builder, 'C:\\x', 'C:\\x'];
             yield $name . ' plain' => [clone $builder, 'tag', 'tag'];
+            yield $name . ' integer' => [clone $builder, 5, '5'];
         }
     }
 
@@ -87,9 +88,34 @@ class LikeEscapeTest extends TestCase
         $this->assertBindingCount($result);
 
         $this->assertSame(
-            'UPDATE `docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))) WHERE `id` IN (?)',
+            'UPDATE `docs` SET `tags` = COALESCE(JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))), `tags`) WHERE `id` IN (?)',
             $result->query,
         );
         $this->assertSame([$binding, 1], $result->bindings);
+    }
+
+    /**
+     * @return iterable<string, array{bool, string}>
+     */
+    public static function clickHouseLikeFallbacks(): iterable
+    {
+        yield 'like' => [false, '`c` LIKE ?'];
+        yield 'not like' => [true, '`c` NOT LIKE ?'];
+    }
+
+    #[DataProvider('clickHouseLikeFallbacks')]
+    public function testClickHouseLikeFallbackOmitsEscapeClause(bool $not, string $sql): void
+    {
+        $builder = new class () extends ClickHouse {
+            /**
+             * @return array{string, list<mixed>}
+             */
+            public function like(bool $not): array
+            {
+                return [$this->compileLike('`c`', ['a_%'], '%', '%', $not), $this->getBindingValues()];
+            }
+        };
+
+        $this->assertSame([$sql, ['%a\\_\\%%']], $builder->like($not));
     }
 }

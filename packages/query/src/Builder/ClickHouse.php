@@ -603,7 +603,6 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
         /** @var string $rawVal */
         $rawVal = $values[0];
 
-        // startsWith: prefix='', suffix='%'
         if ($prefix === '' && $suffix === '%') {
             $func = $not ? 'NOT startsWith' : 'startsWith';
             $this->addBinding($rawVal, $column);
@@ -611,7 +610,6 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
             return $func . '(' . $attribute . ', ?)';
         }
 
-        // endsWith: prefix='%', suffix=''
         if ($prefix === '%' && $suffix === '') {
             $func = $not ? 'NOT endsWith' : 'endsWith';
             $this->addBinding($rawVal, $column);
@@ -619,12 +617,9 @@ class ClickHouse extends BaseBuilder implements Hints, ConditionalAggregates, Ta
             return $func . '(' . $attribute . ', ?)';
         }
 
-        // Fallback for any other LIKE pattern (should not occur in practice)
-        $val = $this->escapeLikeValue($rawVal);
-        $this->addBinding($prefix . $val . $suffix, $column);
-        $keyword = $not ? 'NOT LIKE' : 'LIKE';
+        $this->addBinding($prefix . $this->escapeLikeValue($rawVal) . $suffix, $column);
 
-        return $attribute . ' ' . $keyword . ' ?';
+        return $this->compileLikePredicate($attribute, $not);
     }
 
     /**

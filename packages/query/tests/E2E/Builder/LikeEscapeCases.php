@@ -10,6 +10,8 @@ trait LikeEscapeCases
 {
     private const array PATTERN_VALUES = ['50%', '500', 'a_c', 'abc', 'wow!', 'wow', 'x!_y', 'x!zy', 'C:\\dir', 'C:dir'];
 
+    abstract protected static function jsonSearchMatchesNumbers(): bool;
+
     /**
      * @return iterable<string, array{bool, Query, list<string>}>
      */
@@ -33,7 +35,7 @@ trait LikeEscapeCases
     }
 
     /**
-     * @return iterable<string, array{bool, string, string, list<string>}>
+     * @return iterable<string, array{bool, string, mixed, list<mixed>}>
      */
     public static function jsonRemovals(): iterable
     {
@@ -42,6 +44,9 @@ trait LikeEscapeCases
             'underscore' => ['["axb", "a_b"]', 'a_b', ['axb']],
             'escape' => ['["wow", "wow!"]', 'wow!', ['wow']],
             'backslash' => ['["axb", "a\\\\b"]', 'a\\b', ['axb']],
+            'absent' => ['["a", "b"]', 'c', ['a', 'b']],
+            'absent wildcard' => ['["a", "b"]', '%', ['a', 'b']],
+            'integer' => ['[5, "a"]', 5, static::jsonSearchMatchesNumbers() ? ['a'] : [5, 'a']],
         ];
 
         foreach (['default' => false, 'no backslash escapes' => true] as $mode => $noBackslashEscapes) {
@@ -70,7 +75,7 @@ trait LikeEscapeCases
     }
 
     /**
-     * @return list<string>
+     * @return list<mixed>
      */
     private function storedTags(PDO $pdo): array
     {
@@ -79,7 +84,7 @@ trait LikeEscapeCases
         $tags = $statement->fetchColumn();
         $this->assertIsString($tags);
 
-        /** @var list<string> */
+        /** @var list<mixed> */
         return \json_decode($tags, true, flags: JSON_THROW_ON_ERROR);
     }
 

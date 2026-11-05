@@ -21,6 +21,11 @@ All notable changes to `utopia-php/query` are documented in this file.
 
 ### Fixed
 
+- MySQL and MariaDB `setJsonRemove()` leaves the column unchanged when the
+  value is not in the array. `JSON_SEARCH()` returned NULL for a missing value,
+  and for any non-string value on MySQL, and `JSON_REMOVE()` with a NULL path
+  set the whole column to NULL, or failed on a `NOT NULL` column in strict
+  mode. The statement is now wrapped in `COALESCE(..., col)`.
 - Raw conditions are enclosed in parentheses where they are ANDed with other
   conditions: `Query::raw()` filters, `whereRaw()` in SELECT, UPDATE and
   DELETE, `havingRaw()`, `JoinBuilder::whereRaw()` and `onRaw()`, the

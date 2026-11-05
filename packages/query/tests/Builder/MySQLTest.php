@@ -7360,7 +7360,7 @@ class MySQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE `docs` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))) WHERE `id` IN (?)', $result->query);
+        $this->assertSame('UPDATE `docs` SET `tags` = COALESCE(JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))), `tags`) WHERE `id` IN (?)', $result->query);
     }
 
     public function testSetJsonPath(): void
@@ -14359,7 +14359,7 @@ class MySQLTest extends TestCase
             ->update();
         $this->assertBindingCount($result);
 
-        $this->assertSame('UPDATE `documents` SET `tags` = JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))) WHERE `id` IN (?)', $result->query);
+        $this->assertSame('UPDATE `documents` SET `tags` = COALESCE(JSON_REMOVE(`tags`, JSON_UNQUOTE(JSON_SEARCH(`tags`, \'one\', ?, \'!\'))), `tags`) WHERE `id` IN (?)', $result->query);
     }
 
     public function testUpdateWithCaseExpression(): void
