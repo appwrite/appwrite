@@ -661,11 +661,18 @@ export function View({
                   />
                 ) : null}
                 {panels.has('technology') ? (
-                  <TechnologyPanel
-                    projectId={projectId}
-                    propertyId={propertyId}
-                    range={range}
-                  />
+                  // With an odd panel count (mobile) it would sit alone on its row.
+                  <div
+                    className={
+                      panels.size % 2 === 1 ? 'lg:col-span-2' : 'contents'
+                    }
+                  >
+                    <TechnologyPanel
+                      projectId={projectId}
+                      propertyId={propertyId}
+                      range={range}
+                    />
+                  </div>
                 ) : null}
                 {panels.has('bots') ? (
                   <BotsPanel
