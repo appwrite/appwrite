@@ -19,6 +19,7 @@ const DISPLAY_NAME_OVERRIDES: Record<string, string> = {
   [OAuthProvider.Tiktok]: 'TikTok',
   [OAuthProvider.TradeshiftBox]: 'Tradeshift Sandbox',
   [OAuthProvider.Vipps]: 'Vipps MobilePay',
+  [OAuthProvider.VippsSandbox]: 'Vipps MobilePay Sandbox',
   [OAuthProvider.Oidc]: 'OpenID Connect',
   [OAuthProvider.Fusionauth]: 'FusionAuth',
   [OAuthProvider.Huggingface]: 'Hugging Face',
