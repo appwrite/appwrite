@@ -556,7 +556,8 @@ class State
      * host's earlier runs and any host not in `$liveHosts` (only this host's when null). Rows
      * without a hostname are kept, as their host is unknown. Only rows untouched since
      * `$before` go, so a socket served meanwhile keeps its presence. Purges the list cache,
-     * decrements usage and emits a delete event per presence, like a socket closing.
+     * decrements usage and sends a realtime delete event per presence, as a socket closing
+     * does (realtime only, no webhooks or functions; no user lookup, as delivery uses the payload).
      * Returns how many were deleted.
      *
      * @param list<string>|null $liveHosts
