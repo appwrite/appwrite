@@ -851,6 +851,17 @@ Http::init()
                     ->addHeader('Cache-Control', $cacheControl)
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($cacheLog->getAttribute('mimeType'));
+
+                // The action that sets Vary never runs on a hit. Repeat the
+                // route's cache.vary headers so a private cache does not reuse
+                // negotiated bytes for a different Accept.
+                $vary = $route->getLabel('cache.vary', []);
+                if (\is_array($vary) && $vary !== []) {
+                    $response->addHeader('Vary', \implode(', ', \array_map(
+                        static fn (string $header): string => \ucwords($header, '-'),
+                        $vary
+                    )));
+                }
                 $storageCacheOperationsCounter->add(1, ['result' => 'hit']);
                 if (! $isImageTransformation || ! $isDisabled) {
                     Span::add('storage.cache.hit', true);
