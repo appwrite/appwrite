@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Utopia\Console\PHPStan;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\CallLike;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\StaticCall;
@@ -50,14 +51,12 @@ class DisallowShellStringRule implements Rule
             return [];
         }
 
-        $command = $node->getArgs()[0] ?? null;
-        if ($command === null) {
-            return [];
-        }
+        if ($node instanceof FuncCall && $this->isProcOpen($node, $scope)) {
+            $command = $this->argument($node, 'command');
+            if (!$command instanceof Arg || $scope->getType($command->value)->isArray()->yes()) {
+                return [];
+            }
 
-        $type = $scope->getType($command->value);
-
-        if ($node instanceof FuncCall && $this->isProcOpen($node, $scope) && !$type->isArray()->yes()) {
             return [
                 RuleErrorBuilder::message('proc_open() given a string runs it through a shell. Pass argv, or build a Utopia\Console\Command and run it with Console::execute().')
                     ->identifier('function.disallowedShell')
@@ -65,7 +64,13 @@ class DisallowShellStringRule implements Rule
             ];
         }
 
-        if ($node instanceof StaticCall && $this->isConsoleExecute($node, $scope) && $type->isString()->yes()) {
+        if ($node instanceof StaticCall && $this->isConsoleExecute($node, $scope)) {
+            // A union such as Command|string reaches the shell whenever it holds the string
+            $command = $this->argument($node, 'cmd');
+            if (!$command instanceof Arg || $scope->getType($command->value)->isString()->no()) {
+                return [];
+            }
+
             return [
                 RuleErrorBuilder::message('Console::execute() runs a string through a shell. Pass a Utopia\Console\Command instead.')
                     ->identifier('staticMethod.disallowedShell')
@@ -74,6 +79,23 @@ class DisallowShellStringRule implements Rule
         }
 
         return [];
+    }
+
+    /**
+     * The argument a call passes as $parameter: named, which PHP allows in any
+     * order, or else the first one written in place.
+     */
+    private function argument(CallLike $node, string $parameter): ?Arg
+    {
+        foreach ($node->getArgs() as $argument) {
+            if ($argument->name?->toString() === $parameter) {
+                return $argument;
+            }
+        }
+
+        $first = $node->getArgs()[0] ?? null;
+
+        return $first instanceof Arg && !$first->name instanceof Identifier && !$first->unpack ? $first : null;
     }
 
     private function isProcOpen(FuncCall $node, Scope $scope): bool

@@ -24,6 +24,9 @@ final class DisallowShellStringRuleTest extends RuleTestCase
             ['proc_open() given a string runs it through a shell. Pass argv, or build a Utopia\Console\Command and run it with Console::execute().', 25],
             ['Console::execute() runs a string through a shell. Pass a Utopia\Console\Command instead.', 26],
             ['Console::execute() runs a string through a shell. Pass a Utopia\Console\Command instead.', 27],
+            ['proc_open() given a string runs it through a shell. Pass argv, or build a Utopia\Console\Command and run it with Console::execute().', 28],
+            ['Console::execute() runs a string through a shell. Pass a Utopia\Console\Command instead.', 29],
+            ['Console::execute() runs a string through a shell. Pass a Utopia\Console\Command instead.', 30],
         ]);
     }
 }

@@ -376,22 +376,22 @@ class Install extends Action
 
         // Start Swoole-based installer server in background. The script sends its
         // output to a log file, so the shell exits at once instead of waiting on a
-        // pipe the server holds open, and prints its PID. The log path and the
-        // command reach it as positional parameters, never in its text.
+        // pipe the server holds open, and prints its PID. The variable name, the
+        // log path and the command reach it as positional parameters, never in
+        // its text, and the secret arrives on stdin so no process list shows it.
         $secret = Secret::generate()->value;
         $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
         $server = (new Command('sh'))
             ->flag('-c')
-            ->argument('log=$1; shift; "$@" > "$log" 2>&1 & echo $!')
+            ->argument('IFS= read -r secret; export "$1=$secret"; log=$2; shift 2; "$@" > "$log" 2>&1 & echo $!')
             ->argument('sh')
+            ->argument(Secret::ENVIRONMENT)
             ->argument($logFile)
-            ->argument('env')
-            ->argument(Secret::ENVIRONMENT . '=' . $secret)
             ->argument('php')
             ->argument(dirname(__DIR__) . '/Installer/Server.php');
         $stdout = '';
         $stderr = '';
-        Console::execute($server, '', $stdout, $stderr);
+        Console::execute($server, $secret . "\n", $stdout, $stderr);
         $pid = (int) \trim($stdout);
 
         \register_shutdown_function(function () use ($pid) {
@@ -977,6 +977,8 @@ class Install extends Action
                 ->option('--project-name', 'appwrite')
                 ->option('--project-directory', $composePath)
                 ->argument('exec')
+                // migrate needs no terminal, and older Compose v2 refuses one it cannot allocate
+                ->flag('-T')
                 ->argument('appwrite')
                 ->argument('migrate');
         } else {
