@@ -413,7 +413,7 @@ class Base extends Action
         $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
 
         if (!empty($commitDetails['commitHash'])) {
-            $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
+            $domain = self::commitDomain($project, $site, $commitDetails['commitHash'], $sitesDomain);
             $ruleId = md5($domain);
             try {
                 $rule = $authorization->skip(
@@ -537,6 +537,19 @@ class Base extends Action
         }
 
         return $filter->apply($input);
+    }
+
+    /**
+     * The resource's preview domain for a commit. The project-and-resource hash
+     * keeps the hostname unique per site, so two projects (or two sites) building
+     * the same commit cannot collide on one global preview rule and have one
+     * project's build served under another's commit URL.
+     */
+    public static function commitDomain(Document $project, Document $resource, string $commitHash, string $sitesDomain): string
+    {
+        $resourceProjectHash = \substr(\hash('sha256', $project->getId() . ':' . $resource->getId()), 0, BranchDomainFilter::RESOURCE_HASH_LENGTH);
+
+        return \strtolower('commit-' . \substr($commitHash, 0, 16) . '-' . $resourceProjectHash . '.' . $sitesDomain);
     }
 
     /**
