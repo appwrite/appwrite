@@ -1077,9 +1077,12 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
     'תיעוד מזהה המשתמש המחובר באירועים שנשלחים מסשן לקוח, כדי לספור ולפלח תנועה לפי משתמש. מבקרים אנונימיים אינם מושפעים. המזהים הם מזהי המשתמשים של הפרויקט, לעולם לא כתובות אימייל או שמות. יש להפעיל זאת רק אם מדיניות הפרטיות מכסה קישור של נתוני אנליטיקס לחשבונות משתמשים.',
   'Tracking is enabled': 'המעקב פעיל',
-  'Primary domain being tracked. Optional for native apps.':
-    'הדומיין הראשי שנמצא במעקב. אופציונלי עבור אפליקציות נייטיב.',
+  'Primary domain being tracked. May be empty for mobile and agent properties.':
+    'הדומיין הראשי שנמצא במעקב. יכול להישאר ריק בנכסים של מובייל וסוכנים.',
   'Domain updated': 'הדומיין עודכן',
+  'Type updated': 'הסוג עודכן',
+  'Only changes which panels the dashboard shows.':
+    'משנה רק אילו חלוניות מוצגות בלוח הבקרה.',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     'מקורות שמורשים לשלוח אירועי מעקב. השתמשו ב-* כדי לאפשר את כל המקורות.',
   'https://example.com': 'https://example.com',
@@ -1156,6 +1159,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Exit pages': 'דפי יציאה',
   'Where visitors came from': 'מהיכן הגיעו המבקרים',
   'Most visited paths': 'הנתיבים הנצפים ביותר',
+  Screens: 'מסכים',
+  'Most viewed screens': 'המסכים הנצפים ביותר',
   'Where visitors are browsing from': 'מהיכן המבקרים גולשים',
   'What visitors are browsing with': 'באיזה כלים המבקרים גולשים',
   'Human visitors versus bots': 'מבקרים אנושיים מול בוטים',
@@ -1184,6 +1189,14 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'iOS, Android, web ודסקטופ מבסיס קוד אחד.',
   'Any language, straight against the HTTP API.':
     'כל שפה, ישירות מול ה-API של HTTP.',
+  'Websites and browser apps.': 'אתרים ואפליקציות דפדפן.',
+  'iOS and Android apps.': 'אפליקציות iOS ו-Android.',
+  'AI agents and backend services, over the API.':
+    'סוכני AI ושירותי צד שרת, דרך ה-API.',
+  'Decides which panels the dashboard shows. You can change it later in settings.':
+    'קובע אילו חלוניות יוצגו בלוח הבקרה. אפשר לשנות זאת בהמשך בהגדרות.',
+  'The site you are tracking. Page paths in reports link to it.':
+    'האתר שבמעקב. נתיבי הדפים בדוחות מקשרים אליו.',
   'Install the SDK': 'התקנת ה-SDK',
   'Initialize tracking': 'אתחול המעקב',
   'Turn on automatic tracking': 'הפעלת מעקב אוטומטי',

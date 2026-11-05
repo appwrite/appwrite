@@ -104,6 +104,21 @@ const PAGE_TABS: BreakdownTab[] = [
   { id: 'hosts', label: 'Hostnames', dimension: AnalyticsDimension.Hostname },
 ]
 
+// Same dimensions for mobile apps, which report screen names instead of URLs.
+const SCREEN_TABS: BreakdownTab[] = [
+  { id: 'top', label: 'Top screens', dimension: AnalyticsDimension.Page },
+  {
+    id: 'entry',
+    label: 'Entry screens',
+    dimension: AnalyticsDimension.EntryPage,
+  },
+  {
+    id: 'exit',
+    label: 'Exit screens',
+    dimension: AnalyticsDimension.ExitPage,
+  },
+]
+
 /** `example.com`, `https://example.com/` → `example.com`. */
 function bareHost(value: string): string {
   return value.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '')
@@ -130,17 +145,26 @@ export function pageRowHref(
   return undefined
 }
 
-export function PagesPanel(props: PanelProps) {
+export function PagesPanel({
+  screens,
+  ...props
+}: PanelProps & {
+  screens?: boolean
+}) {
   // Cached by the page header already; used to turn paths into links.
   const { property } = useAnalyticsProperty(props.projectId, props.propertyId)
   return (
     <BreakdownPanel
       {...props}
-      rowHref={(value, tabId) => pageRowHref(value, tabId, property?.domain)}
+      rowHref={
+        screens
+          ? undefined
+          : (value, tabId) => pageRowHref(value, tabId, property?.domain)
+      }
       cardId="pages"
-      title="Pages"
-      description="Most visited paths"
-      tabs={PAGE_TABS}
+      title={screens ? 'Screens' : 'Pages'}
+      description={screens ? 'Most viewed screens' : 'Most visited paths'}
+      tabs={screens ? SCREEN_TABS : PAGE_TABS}
       // Rank numbers come from the panel (and the modal's own rank column),
       // not renderLeading, so they're never drawn twice.
       ranked

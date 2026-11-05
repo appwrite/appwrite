@@ -718,9 +718,12 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   "Record the signed-in user's ID on events sent from a client session, so you can count and break down traffic by user. Anonymous visitors aren't affected. IDs are your project's user IDs, never emails or names. Turn this on only if your privacy policy covers linking analytics to user accounts.":
     'クライアントセッションから送信されたイベントに、サインイン中のユーザーの ID を記録します。これにより、ユーザー単位でトラフィックを集計・内訳表示できます。匿名の訪問者には影響しません。ID はプロジェクトのユーザー ID で、メールアドレスや名前は記録されません。プライバシーポリシーでアナリティクスとユーザーアカウントの紐付けを扱っている場合にのみ有効にしてください。',
   'Tracking is enabled': '計測は有効です',
-  'Primary domain being tracked. Optional for native apps.':
-    '計測対象の主要ドメインです。ネイティブアプリの場合は任意です。',
+  'Primary domain being tracked. May be empty for mobile and agent properties.':
+    '計測対象の主要ドメインです。モバイルとエージェントのプロパティでは空欄でもかまいません。',
   'Domain updated': 'ドメインを更新しました',
+  'Type updated': 'タイプを更新しました',
+  'Only changes which panels the dashboard shows.':
+    'ダッシュボードに表示するパネルだけが変わります。',
   'Origins allowed to send tracking events. Use * to allow all origins.':
     '計測イベントの送信を許可するオリジンです。* を指定するとすべてのオリジンを許可します。',
   'https://example.com': 'https://example.com',
@@ -799,6 +802,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Exit pages': '出口ページ',
   'Where visitors came from': '訪問者の流入元',
   'Most visited paths': '最も閲覧されたパス',
+  Screens: '画面',
+  'Most viewed screens': '最も閲覧された画面',
   'Where visitors are browsing from': '訪問者の閲覧地域',
   'What visitors are browsing with': '訪問者の利用環境',
   'Human visitors versus bots': '人間の訪問者とボットの比較',
@@ -827,6 +832,14 @@ export const jaProjectMiscDictionary: Record<string, string> = {
     '1 つのコードベースから iOS、Android、web、デスクトップへ。',
   'Any language, straight against the HTTP API.':
     '任意の言語から HTTP API を直接呼び出します。',
+  'Websites and browser apps.': 'Web サイトとブラウザアプリ。',
+  'iOS and Android apps.': 'iOS と Android のアプリ。',
+  'AI agents and backend services, over the API.':
+    'AI エージェントやバックエンドサービスから API 経由で。',
+  'Decides which panels the dashboard shows. You can change it later in settings.':
+    'ダッシュボードに表示するパネルが決まります。後から設定で変更できます。',
+  'The site you are tracking. Page paths in reports link to it.':
+    '計測するサイトです。レポートのページパスはこのサイトにリンクします。',
   'Install the SDK': 'SDK をインストール',
   'Initialize tracking': '計測を初期化',
   'Turn on automatic tracking': '自動計測を有効化',

@@ -23,6 +23,7 @@ import { resolveUsageChartIntervalWithin } from '@/lib/usage/chart-interval'
 import {
   AnalyticsDimension,
   AnalyticsInterval,
+  type AnalyticsPropertyType,
   ID,
   Query,
   type Models,
@@ -1139,6 +1140,7 @@ export type CreateAnalyticsPropertyInput = {
   propertyId?: string
   name: string
   domain?: string
+  type?: AnalyticsPropertyType
 }
 
 export function useCreateAnalyticsProperty(
@@ -1154,6 +1156,7 @@ export function useCreateAnalyticsProperty(
         propertyId: input.propertyId?.trim() || ID.unique(),
         name: input.name.trim(),
         domain: input.domain?.trim() || undefined,
+        type: input.type,
       })
     },
     onSuccess: async () => {
@@ -1177,6 +1180,7 @@ export type UpdateAnalyticsPropertyInput = {
   enabled?: boolean
   allowedOrigins?: string[]
   identifyUsers?: boolean
+  type?: AnalyticsPropertyType
 }
 
 export function useUpdateAnalyticsProperty(
@@ -1199,6 +1203,7 @@ export function useUpdateAnalyticsProperty(
         ...(input.identifyUsers !== undefined && {
           identifyUsers: input.identifyUsers,
         }),
+        ...(input.type !== undefined && { type: input.type }),
       })
     },
     onSuccess: async (property) => {
