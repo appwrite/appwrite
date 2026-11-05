@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import { readCoverPublicAssetDataUri } from '@/lib/cover-generator/public-assets'
-import { getCoverRenderSiteOrigin } from '@/lib/cover-generator/render-context'
+import { getDefaultSiteOrigin } from '@/lib/marketing/site-origin'
 import { buildCoverExportFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 export { buildCoverExportFontStyleBlock, buildCoverFontStyleBlock } from '@/lib/cover-generator/cover-export-font-styles'
 import {
@@ -138,7 +138,7 @@ export async function resolveCoverImageHref(
                 : 'application/octet-stream'
     return readCoverPublicAssetDataUri(value, mime)
   }
-  // A remote URL is fetched server-side, so only the site's own origin is
+  // A remote URL is fetched server-side, so only the configured site origin is
   // allowed (diagram nodes reference site-hosted screenshots). Any other host
   // — including internal/link-local targets — is refused, which closes the
   // SSRF without a fragile address denylist. The render endpoint is
@@ -151,7 +151,10 @@ function isAllowedRemoteCoverImageUrl(value: string): boolean {
   try {
     const url = new URL(value)
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
-    return url.origin === new URL(getCoverRenderSiteOrigin()).origin
+    // Anchor on the configured origin (VITE_SITE_ORIGIN / appwrite.io), never a
+    // request-derived host — the Host / X-Forwarded-Host header is attacker
+    // controlled and would otherwise let the allowlist point anywhere.
+    return url.origin === new URL(getDefaultSiteOrigin()).origin
   } catch {
     return false
   }
