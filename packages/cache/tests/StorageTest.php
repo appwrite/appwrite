@@ -206,7 +206,7 @@ final class StorageTest extends Base
     {
         $this->expectException(TransportException::class);
 
-        (new Storage($this->unavailable()))->purge('key');
+        new Storage($this->unavailable())->purge('key');
     }
 
     private function unavailable(): Local
