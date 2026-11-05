@@ -1242,7 +1242,6 @@
     "TS2769: No overload matches this call.": 1
   },
   "src/lib/react-query/hooks/usage-events.ts": {
-    "TS2552: Cannot find name 'StorageUsageChartOverview'. Did you mean 'DatabaseUsageChartOverview'?": 1,
     "TS6133: 'dateRangePresetId' is declared but its value is never read.": 5,
     "TS6133: 'keepPreviousUsageChartDataForResource' is declared but its value is never read.": 1,
     "TS6133: 'logRetentionHours' is declared but its value is never read.": 5,
