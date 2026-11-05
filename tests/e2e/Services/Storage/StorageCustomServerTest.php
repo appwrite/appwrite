@@ -25,6 +25,7 @@ use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\DSN\DSN;
+use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\System\System;
@@ -36,6 +37,14 @@ final class StorageCustomServerTest extends Scope
     use StorageBase;
     use ProjectCustom;
     use SideServer;
+
+    private const string CACHE_OUTAGE_STATE = '/tmp/appwrite-response-cache-outage.json';
+
+    /**
+     * Seconds a request may take with the device down: a read and a copy, each a 3s
+     * timeout retried once, and margin. A default client's 30s timeout can't fit in this.
+     */
+    private const int CACHE_OUTAGE_BUDGET = 15;
 
     /**
      * @var array Cached bucket data for tests
@@ -156,20 +165,8 @@ final class StorageCustomServerTest extends Scope
             'x-appwrite-key' => $project['apiKey'],
         ];
 
-        $root = '/storage/cache/app-' . $project['$id'];
-        $devices = [new Local($root)];
         $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
-        if ($connection !== '') {
-            $dsn = new DSN($connection);
-            $devices[] = new S3(
-                $dsn->getPath() . $root,
-                $dsn->getUser() ?? '',
-                $dsn->getPassword() ?? '',
-                System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''),
-                $dsn->getParam('region'),
-                bucket: $dsn->getPath(),
-            );
-        }
+        $devices = $this->getCacheStores($project['$id']);
         $stored = fn (): int => \array_sum(\array_map(fn ($device) => \count($device->listFiles($device->getRoot())->files), $devices));
 
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
@@ -227,6 +224,320 @@ final class StorageCustomServerTest extends Scope
         ]);
         $this->assertSame(204, $deleted['headers']['status-code']);
         $this->assertEventually(fn () => $this->assertSame(0, $stored()), 60_000, 500);
+    }
+
+    #[Group('responseCache')]
+    public function testFilePreviewCacheSplitsKeysByPercent(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+        $percent = (int) System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0');
+
+        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
+        $onDevice = $this->getCacheKeys($device);
+        $onFilesystem = $this->getCacheKeys($filesystem);
+
+        $this->assertCount(\count($entries), [...$onDevice, ...$onFilesystem]);
+        foreach ($onDevice as $key) {
+            $this->assertLessThan($percent, \crc32($key) % 100, $key . ' is on the device');
+        }
+        foreach ($onFilesystem as $key) {
+            $this->assertGreaterThanOrEqual($percent, \crc32($key) % 100, $key . ' is on the filesystem');
+        }
+        if ($percent < 100) {
+            $this->assertNotEmpty($onDevice);
+            $this->assertNotEmpty($onFilesystem);
+        }
+
+        // Every key answers from the side it landed on, and stays there.
+        foreach ($entries as $width => $entry) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+            $this->assertSame($entry['body'], \md5($preview['body']));
+        }
+        $this->assertSame($onDevice, $this->getCacheKeys($device));
+        $this->assertSame($onFilesystem, $this->getCacheKeys($filesystem));
+    }
+
+    #[Group('responseCache')]
+    public function testFilePreviewCacheCopiesFilesystemEntryToDevice(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
+        $onDevice = $this->getCacheKeys($device);
+        $this->assertNotEmpty($onDevice);
+
+        // As if these keys were written before the percentage was raised over them.
+        foreach ($onDevice as $key) {
+            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
+            $device->delete($device->getPath($key));
+        }
+        $this->assertSame([], $this->getCacheKeys($device));
+
+        foreach ($entries as $width => $entry) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache'], 'served from the filesystem, not regenerated');
+            $this->assertSame($entry['body'], \md5($preview['body']));
+        }
+
+        // Copied across with the same bytes, and the original kept so lowering the percentage finds it warm.
+        $this->assertSame($onDevice, $this->getCacheKeys($device));
+        $this->assertCount(\count($entries), $this->getCacheKeys($filesystem));
+        foreach ($onDevice as $key) {
+            $this->assertSame(\md5_file($filesystem->getPath($key)), \md5((string) $device->read($device->getPath($key))));
+        }
+
+        // The copy answers once the original is gone.
+        foreach ($onDevice as $key) {
+            $filesystem->delete($filesystem->getPath($key));
+        }
+        foreach ($entries as $width => $entry) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        }
+    }
+
+    #[Group('responseCache')]
+    public function testFilePreviewCachePurgeClearsBothStores(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        ['path' => $path] = $this->warmPreviewCache($headers, $filesystem, $device);
+        foreach ($this->getCacheKeys($device) as $key) {
+            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
+        }
+        $this->assertNotEmpty($this->getCacheKeys($device));
+        $this->assertNotEmpty($this->getCacheKeys($filesystem));
+
+        $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $this->assertEventually(function () use ($filesystem, $device): void {
+            $this->assertSame([], $this->getCacheKeys($filesystem), 'the filesystem');
+            $this->assertSame([], $this->getCacheKeys($device), 'the device');
+        }, 30_000, 500);
+    }
+
+    #[Group('responseCache')]
+    public function testProjectDeletionClearsBothCacheStores(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        $this->warmPreviewCache($headers, $filesystem, $device);
+        foreach ($this->getCacheKeys($device) as $key) {
+            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
+        }
+        $this->assertNotEmpty($this->getCacheKeys($device));
+        $this->assertNotEmpty($this->getCacheKeys($filesystem));
+
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/projects/' . $headers['x-appwrite-project'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $this->assertEventually(function () use ($filesystem, $device): void {
+            $this->assertSame([], $this->getCacheKeys($filesystem), 'the filesystem');
+            $this->assertSame([], $this->getCacheKeys($device), 'the device');
+        }, 60_000, 500);
+    }
+
+    /**
+     * MinIO closes a connection idle for 30 seconds, which is what the pooled ones are by then.
+     */
+    #[Group('responseCache')]
+    public function testFilePreviewCacheSurvivesAClosedIdleConnection(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
+
+        \sleep(35);
+
+        foreach ($entries as $width => $entry) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        }
+    }
+
+    /**
+     * Leaves entries for the outage test to read after CI has taken the device down: the
+     * test process can't, and once it's down they can no longer be written or found.
+     */
+    #[Group('responseCache')]
+    public function testFilePreviewCachePrepareOutage(): void
+    {
+        [$headers, $filesystem, $device] = $this->getCacheFixture();
+
+        ['path' => $path, 'entries' => $entries] = $this->warmPreviewCache($headers, $filesystem, $device);
+        foreach ($this->getCacheKeys($device) as $key) {
+            $this->copyCacheEntryToFilesystem($filesystem, $device, $key);
+        }
+
+        $this->assertNotFalse(\file_put_contents(self::CACHE_OUTAGE_STATE, \json_encode(['headers' => $headers, 'path' => $path, 'entries' => $entries])));
+    }
+
+    /**
+     * Runs twice in the Response Cache lane: with the device paused, so connections are
+     * accepted and never answered, and with it stopped, so its name no longer resolves.
+     */
+    #[Group('responseCacheOutage')]
+    public function testFilePreviewCacheSurvivesDeviceOutage(): void
+    {
+        $handle = \curl_init(System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''));
+        \curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 2]);
+        if (System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '') === '' || \curl_exec($handle) !== false) {
+            $this->markTestSkipped('Needs the cache device to be down');
+        }
+
+        $state = \json_decode((string) \file_get_contents(self::CACHE_OUTAGE_STATE), true);
+        ['headers' => $headers, 'path' => $path, 'entries' => $entries] = $state;
+        $request = function (int $width) use ($headers, $path): array {
+            $started = \microtime(true);
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame(200, $preview['headers']['status-code']);
+            $this->assertSame('image/png', $preview['headers']['content-type']);
+
+            return [$preview, \microtime(true) - $started];
+        };
+
+        // On the filesystem side nothing waits on the device.
+        $width = \array_key_first(\array_filter($entries, fn (array $entry): bool => ! $entry['onDevice']));
+        [$preview, $elapsed] = $request($width);
+        $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        $this->assertSame($entries[$width]['body'], \md5($preview['body']));
+        $this->assertLessThan(2, $elapsed);
+
+        // On the device side a copy on the filesystem answers once the read has failed.
+        $width = \array_key_first(\array_filter($entries, fn (array $entry): bool => $entry['onDevice']));
+        [$preview, $elapsed] = $request($width);
+        $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        $this->assertSame($entries[$width]['body'], \md5($preview['body']));
+        $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
+
+        // With no copy the route regenerates. Width 1 is outside what warmPreviewCache requests.
+        [$preview, $elapsed] = $request(1);
+        $this->assertSame('miss', $preview['headers']['x-appwrite-cache']);
+        $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
+
+        // Twice as many requests per worker as it has device connections: the rest get a miss from the
+        // pool, not an error. They're all on one key, so each of them has the filesystem copy to answer with.
+        $workers = \swoole_cpu_num() * (int) System::getEnv('_APP_WORKER_PER_CORE', '6');
+        $started = \microtime(true);
+        $previews = $this->client->callConcurrently(\array_fill(0, $workers * 8, [Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']]));
+        $elapsed = \microtime(true) - $started;
+        foreach ($previews as $preview) {
+            $this->assertSame(200, $preview['headers']['status-code']);
+            $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
+        }
+        $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
+    }
+
+    /**
+     * @return array<Device> The filesystem, then the device when one is configured
+     */
+    private function getCacheStores(string $projectId): array
+    {
+        $root = '/storage/cache/app-' . $projectId;
+        $connection = System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '');
+        if ($connection === '') {
+            return [new Local($root)];
+        }
+
+        $dsn = new DSN($connection);
+
+        return [new Local($root), new S3(
+            $dsn->getPath() . $root,
+            $dsn->getUser() ?? '',
+            $dsn->getPassword() ?? '',
+            System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''),
+            $dsn->getParam('region'),
+            bucket: $dsn->getPath(),
+        )];
+    }
+
+    /**
+     * @return array{0: array<string, string>, 1: Local, 2: S3} A new project's headers and its two stores
+     */
+    private function getCacheFixture(): array
+    {
+        if (System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '') === '' || System::getEnv('_APP_STORAGE_CACHE_PERCENT', '0') === '0') {
+            $this->markTestSkipped('Needs keys routed to a cache device');
+        }
+
+        $project = $this->getProject(true);
+
+        return [
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $project['$id'],
+                'x-appwrite-key' => $project['apiKey'],
+            ],
+            ...$this->getCacheStores($project['$id']),
+        ];
+    }
+
+    /**
+     * Caches a run of preview sizes, each its own key, noting where each one landed.
+     *
+     * @param array<string, string> $headers
+     * @return array{path: string, entries: array<int, array{key: string, body: string, onDevice: bool}>}
+     */
+    private function warmPreviewCache(array $headers, Local $filesystem, S3 $device): array
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Cache stores',
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', ['content-type' => 'multipart/form-data'] + $headers, [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+
+        $path = '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'] . '/preview';
+        $entries = [];
+        foreach (\range(20, 51) as $width) {
+            $before = $this->getCacheKeys($device);
+            $beforeFilesystem = $this->getCacheKeys($filesystem);
+
+            $params = ['width' => $width, 'output' => 'png'];
+            $first = $this->client->call(Client::METHOD_GET, $path, $headers, $params);
+            $this->assertSame('miss', $first['headers']['x-appwrite-cache']);
+            $this->assertEventually(fn () => $this->assertSame('hit', $this->client->call(Client::METHOD_GET, $path, $headers, $params)['headers']['x-appwrite-cache']));
+
+            $added = \array_diff($this->getCacheKeys($device), $before);
+            $addedFilesystem = \array_diff($this->getCacheKeys($filesystem), $beforeFilesystem);
+            $this->assertCount(1, [...$added, ...$addedFilesystem]);
+            $entries[$width] = [
+                'key' => [...$added, ...$addedFilesystem][0],
+                'body' => \md5($first['body']),
+                'onDevice' => $added !== [],
+            ];
+        }
+
+        return ['path' => $path, 'entries' => $entries];
+    }
+
+    /**
+     * @return array<string> A store's keys in order: an entry's file name is its key
+     */
+    private function getCacheKeys(Device $store): array
+    {
+        $keys = \array_map(fn ($file): string => \basename($file->path), $store->listFiles($store->getRoot())->files);
+        \sort($keys);
+
+        return $keys;
+    }
+
+    private function copyCacheEntryToFilesystem(Local $filesystem, S3 $device, string $key): void
+    {
+        $filesystem->write($filesystem->getPath($key), $device->read($device->getPath($key)));
     }
 
     public function testCreateBucket(): void
