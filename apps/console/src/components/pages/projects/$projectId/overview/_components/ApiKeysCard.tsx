@@ -22,6 +22,7 @@ import {
   overviewListBodyHeight,
 } from './OverviewListCard'
 import { OVERVIEW_CONNECT_ROW_LIMIT } from './AppsCard'
+import { useAnalytics } from '@/hooks/use-analytics'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
@@ -78,6 +79,7 @@ export function ApiKeysCard({
   onCopy: (text: string, field: string) => void
 }) {
   const t = useT()
+  const { track } = useAnalytics()
   const bodyHeight = overviewListBodyHeight(rows)
 
   if (isLoading) {
@@ -95,7 +97,14 @@ export function ApiKeysCard({
             variant="action"
             label={t('Create API key')}
             onClick={onCreate}
-            analytics="create-api-key"
+            track={{
+              event: 'Overview Resource Create Clicked',
+              props: {
+                resource: 'api-keys',
+                placement: 'empty-card',
+                action: 'create',
+              },
+            }}
           />
         }
       >
@@ -111,7 +120,14 @@ export function ApiKeysCard({
               <button
                 key={id}
                 type="button"
-                onClick={onCreate}
+                onClick={() => {
+                  track('Overview Quick Start Clicked', {
+                    resource: 'api-keys',
+                    option: id,
+                  })
+                  onCreate()
+                }}
+                data-analytics-track="manual"
                 className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-[12px] text-foreground transition-colors hover:bg-muted/60"
               >
                 <LanguageIcon language={id} size="sm" />
@@ -135,13 +151,23 @@ export function ApiKeysCard({
       action={{
         label: t('Create API key'),
         onClick: onCreate,
-        analytics: 'create-api-key',
+        track: {
+          event: 'Overview Resource Create Clicked',
+          props: {
+            resource: 'api-keys',
+            placement: 'header',
+            action: 'create',
+          },
+        },
       }}
       footer={
         <OverviewListFooter
           label={t('View all API keys')}
           link={{ to: '/projects/$projectId/api-keys', params: { projectId } }}
-          analytics="overview-resource-view-all"
+          track={{
+            event: 'Overview Resource View All Clicked',
+            props: { resource: 'api-keys' },
+          }}
         />
       }
     >
@@ -252,7 +278,10 @@ export function ApiKeysCard({
                 </>
               }
               onClick={() => onUpdate(apiKey.id)}
-              analytics="overview-resource-open"
+              track={{
+                event: 'Overview Resource Opened',
+                props: { resource: 'api-keys' },
+              }}
             />
           </ApiKeyContextMenu>
         )
@@ -268,6 +297,14 @@ export function ApiKeysCard({
               : undefined
           }
           onClick={onCreate}
+          track={{
+            event: 'Overview Resource Create Clicked',
+            props: {
+              resource: 'api-keys',
+              placement: 'filler',
+              action: 'create',
+            },
+          }}
         />
       ) : null}
     </OverviewListCard>

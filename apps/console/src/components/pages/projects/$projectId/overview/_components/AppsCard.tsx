@@ -12,6 +12,7 @@ import {
   overviewListBodyHeight,
 } from './OverviewListCard'
 import type { AddAppKind } from '@/lib/add-app-wizard/types'
+import { useAnalytics } from '@/hooks/use-analytics'
 import { useT } from '@/lib/i18n/translate'
 import {
   getPlatformDisplayName,
@@ -58,6 +59,9 @@ export function AppsCard({
 }) {
   const t = useT()
   const projectConnect = useProjectConnectDialog()
+  const { track } = useAnalytics()
+  const trackQuickStart = (option: string) =>
+    track('Overview Quick Start Clicked', { resource: 'apps', option })
   const shown = platforms.slice(0, OVERVIEW_CONNECT_ROW_LIMIT)
   const bodyHeight = overviewListBodyHeight(rows)
 
@@ -72,7 +76,14 @@ export function AppsCard({
             variant="action"
             label={t('Add app')}
             onClick={() => onAdd()}
-            analytics="add-platform"
+            track={{
+              event: 'Overview Resource Create Clicked',
+              props: {
+                resource: 'apps',
+                placement: 'empty-card',
+                action: 'create',
+              },
+            }}
           />
         }
       >
@@ -88,7 +99,11 @@ export function AppsCard({
               <button
                 key={kind}
                 type="button"
-                onClick={() => onAdd(kind)}
+                onClick={() => {
+                  trackQuickStart(kind)
+                  onAdd(kind)
+                }}
+                data-analytics-track="manual"
                 className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-[12px] text-foreground transition-colors hover:bg-muted/60"
               >
                 <PlatformIcon platform={kind} size="sm" />
@@ -99,7 +114,11 @@ export function AppsCard({
           {projectConnect ? (
             <button
               type="button"
-              onClick={() => projectConnect.openConnect('mcp')}
+              onClick={() => {
+                trackQuickStart('agent')
+                projectConnect.openConnect('mcp')
+              }}
+              data-analytics-track="manual"
               className="mt-3 flex items-center gap-1.5 text-[12px] text-muted-foreground transition-colors hover:text-foreground"
             >
               <McpIcon className="h-3.5 w-3.5" />
@@ -120,13 +139,19 @@ export function AppsCard({
       action={{
         label: t('Add app'),
         onClick: () => onAdd(),
-        analytics: 'add-platform',
+        track: {
+          event: 'Overview Resource Create Clicked',
+          props: { resource: 'apps', placement: 'header', action: 'create' },
+        },
       }}
       footer={
         <OverviewListFooter
           label={t('View all apps')}
           link={{ to: '/projects/$projectId/apps', params: { projectId } }}
-          analytics="overview-resource-view-all"
+          track={{
+            event: 'Overview Resource View All Clicked',
+            props: { resource: 'apps' },
+          }}
         />
       }
     >
@@ -160,7 +185,10 @@ export function AppsCard({
                 </span>
               }
               onClick={() => onSelect(platform)}
-              analytics="overview-resource-open"
+              track={{
+                event: 'Overview Resource Opened',
+                props: { resource: 'apps', platform: type },
+              }}
             />
           </PlatformContextMenu>
         )
@@ -176,6 +204,10 @@ export function AppsCard({
               : undefined
           }
           onClick={() => onAdd()}
+          track={{
+            event: 'Overview Resource Create Clicked',
+            props: { resource: 'apps', placement: 'filler', action: 'create' },
+          }}
         />
       ) : null}
     </OverviewListCard>

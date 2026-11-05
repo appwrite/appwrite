@@ -21,7 +21,7 @@ import {
   MySQLDolphinIcon,
   PostgresElephantIcon,
 } from '../../databases/_components/database-mascot-icons'
-import { analyticsAttrs } from '@/lib/analytics-actions'
+import { useOverviewTrack } from './OverviewListCard'
 import { isCloudDedicatedDatabasesEnabled } from '@/lib/database-routes'
 import { useT } from '@/lib/i18n/translate'
 import { cn } from '@/lib/utils'
@@ -101,7 +101,12 @@ export function ResourceQuickStart({
       )}
       <div className="mt-auto grid grid-cols-3 gap-2">
         {tiles.map((tile) => (
-          <QuickStartTileLink key={tile.key} tile={tile} disabled={!canStart} />
+          <QuickStartTileLink
+            key={tile.key}
+            resource={id}
+            tile={tile}
+            disabled={!canStart}
+          />
         ))}
       </div>
     </div>
@@ -120,6 +125,10 @@ function GitImport({
   disabled: boolean
 }) {
   const t = useT()
+  const { trackAttrs, onTrack } = useOverviewTrack({
+    event: 'Overview Quick Start Clicked',
+    props: { resource: 'sites', option: 'git-import' },
+  })
   const content = (
     <>
       <span className="flex shrink-0 items-center -space-x-1.5">
@@ -156,7 +165,8 @@ function GitImport({
         className,
         'hover:border-foreground/25 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
       )}
-      {...analyticsAttrs('overview-quick-start')}
+      onClick={onTrack}
+      {...trackAttrs}
     >
       {content}
     </Link>
@@ -165,13 +175,20 @@ function GitImport({
 
 /** A tile with a link opens it; one without shows what the service does. */
 function QuickStartTileLink({
+  resource,
   tile,
   disabled,
 }: {
+  resource: OverviewResourceId
   tile: QuickStartTile
   /** No permission to follow the link: the tile dims. */
   disabled: boolean
 }) {
+  // `option` is the tile key: a fixed id such as `postgres` or `node`.
+  const { trackAttrs, onTrack } = useOverviewTrack({
+    event: 'Overview Quick Start Clicked',
+    props: { resource, option: tile.key },
+  })
   const interactive = !!tile.link && !disabled
   const content = (
     <>
@@ -200,7 +217,8 @@ function QuickStartTileLink({
     <Link
       {...tile.link}
       className="group/tile min-w-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-      {...analyticsAttrs('overview-quick-start')}
+      onClick={onTrack}
+      {...trackAttrs}
     >
       {content}
     </Link>

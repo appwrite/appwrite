@@ -27,7 +27,6 @@ import {
 } from './OverviewListCard'
 import { ResourceQuickStart } from './ResourceQuickStart'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import type { AnalyticsActionId } from '@/lib/analytics-actions'
 import { getSiteScreenshotFilePreviewUrl } from '@/lib/appwrite/sdk'
 import {
   canCreateBucket,
@@ -95,9 +94,8 @@ type ResourceConfig = {
   /** Shown in the create filler when it spans two rows. */
   fillerHint: string
   loadError: string
-  analytics: AnalyticsActionId
   /** First step of an empty card when it is not `create`. */
-  start?: { label: string; analytics: AnalyticsActionId }
+  start?: { label: string; action: string }
 }
 
 // English source copy; translated at render.
@@ -110,7 +108,6 @@ const RESOURCES: Record<OverviewResourceId, ResourceConfig> = {
     create: 'Create database',
     fillerHint: 'Keep data apart by environment, customer, or workload.',
     loadError: 'Failed to load databases',
-    analytics: 'create-database',
   },
   sites: {
     navItem: 'sites',
@@ -120,7 +117,6 @@ const RESOURCES: Record<OverviewResourceId, ResourceConfig> = {
     create: 'Create site',
     fillerHint: 'Deploy another app, a landing page, or your docs.',
     loadError: 'Failed to load sites',
-    analytics: 'create-site',
   },
   functions: {
     navItem: 'functions',
@@ -130,7 +126,6 @@ const RESOURCES: Record<OverviewResourceId, ResourceConfig> = {
     create: 'Create function',
     fillerHint: 'Add a webhook, a scheduled job, or an event handler.',
     loadError: 'Failed to load functions',
-    analytics: 'create-function',
   },
   storage: {
     navItem: 'storage',
@@ -140,7 +135,6 @@ const RESOURCES: Record<OverviewResourceId, ResourceConfig> = {
     create: 'Create bucket',
     fillerHint: 'Group files with their own permissions and limits.',
     loadError: 'Failed to load buckets',
-    analytics: 'create-bucket',
   },
   auth: {
     navItem: 'auth',
@@ -150,7 +144,6 @@ const RESOURCES: Record<OverviewResourceId, ResourceConfig> = {
     create: 'Create user',
     fillerHint: 'Add a user by hand, or let people sign up from your app.',
     loadError: 'Failed to load users',
-    analytics: 'create-user',
   },
   messaging: {
     navItem: 'messaging',
@@ -160,9 +153,8 @@ const RESOURCES: Record<OverviewResourceId, ResourceConfig> = {
     create: 'Create topic',
     fillerHint: 'Group subscribers to message them all at once.',
     loadError: 'Failed to load topics',
-    analytics: 'create-topic',
     // Nothing reaches a topic until a provider can deliver it.
-    start: { label: 'Add provider', analytics: 'create-provider' },
+    start: { label: 'Add provider', action: 'add-provider' },
   },
 }
 
@@ -411,7 +403,14 @@ function ResourceCard({
               link={resourceStartLink(id, projectId) ?? createLink}
               disabled={!canStart}
               disabledTooltip={noPermission}
-              analytics={config.start.analytics}
+              track={{
+                event: 'Overview Resource Create Clicked',
+                props: {
+                  resource: id,
+                  placement: 'empty-card',
+                  action: config.start.action,
+                },
+              }}
             />
           ) : (
             <OverviewListFooter
@@ -420,7 +419,14 @@ function ResourceCard({
               link={createLink}
               disabled={!canCreate}
               disabledTooltip={noPermission}
-              analytics={config.analytics}
+              track={{
+                event: 'Overview Resource Create Clicked',
+                props: {
+                  resource: id,
+                  placement: 'empty-card',
+                  action: 'create',
+                },
+              }}
             />
           )
         }
@@ -444,13 +450,19 @@ function ResourceCard({
         link: createLink,
         disabled: !canCreate,
         disabledTooltip: noPermission,
-        analytics: config.analytics,
+        track: {
+          event: 'Overview Resource Create Clicked',
+          props: { resource: id, placement: 'header', action: 'create' },
+        },
       }}
       footer={
         <OverviewListFooter
           label={t(config.viewAll)}
           link={resourceListLink(id, projectId)}
-          analytics="overview-resource-view-all"
+          track={{
+            event: 'Overview Resource View All Clicked',
+            props: { resource: id },
+          }}
         />
       }
     >
@@ -476,7 +488,10 @@ function ResourceCard({
                 ) : null
               }
               link={item.link}
-              analytics="overview-resource-open"
+              track={{
+                event: 'Overview Resource Opened',
+                props: { resource: id },
+              }}
             />
           ))}
           {fillerRows > 0 ? (
@@ -485,7 +500,10 @@ function ResourceCard({
               description={fillerRows > 1 ? t(config.fillerHint) : undefined}
               link={createLink}
               disabled={!canCreate}
-              analytics={config.analytics}
+              track={{
+                event: 'Overview Resource Create Clicked',
+                props: { resource: id, placement: 'filler', action: 'create' },
+              }}
             />
           ) : null}
         </>

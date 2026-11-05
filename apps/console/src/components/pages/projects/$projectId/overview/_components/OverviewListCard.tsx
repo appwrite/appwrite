@@ -8,7 +8,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { analyticsAttrs, type AnalyticsActionId } from '@/lib/analytics-actions'
+import { useAnalytics } from '@/hooks/use-analytics'
+import type { AnalyticsProps } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { RESOURCE_CARD_BASE_CLASSNAME } from '../../shared/ResourceCard'
 
@@ -30,13 +31,37 @@ export function overviewListBodyHeight(rows: number): number {
   )
 }
 
+export type OverviewEventName =
+  | 'Overview Resource Opened'
+  | 'Overview Resource Create Clicked'
+  | 'Overview Resource View All Clicked'
+  | 'Overview Quick Start Clicked'
+
+/**
+ * Manual Plausible event for a dashboard control. Props are fixed enums
+ * (`resource`, `placement`, `option`) so each option can be compared.
+ */
+export type OverviewTrack = {
+  event: OverviewEventName
+  props: AnalyticsProps
+}
+
+/** Sends the event on click; the root tracker skips the control. */
+export function useOverviewTrack(track?: OverviewTrack) {
+  const { track: send } = useAnalytics()
+  return {
+    trackAttrs: track ? { 'data-analytics-track': 'manual' } : {},
+    onTrack: track ? () => send(track.event, track.props) : undefined,
+  }
+}
+
 type CardAction = {
   label: string
   link?: LinkProps
   onClick?: () => void
   disabled?: boolean
   disabledTooltip?: string
-  analytics?: AnalyticsActionId
+  track?: OverviewTrack
 }
 
 /**
@@ -98,6 +123,7 @@ export function OverviewListCard({
 }
 
 function CardHeaderAction({ action }: { action: CardAction }) {
+  const { trackAttrs, onTrack } = useOverviewTrack(action.track)
   const button = (
     <Button
       variant="ghost"
@@ -105,9 +131,12 @@ function CardHeaderAction({ action }: { action: CardAction }) {
       className="ms-auto h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
       aria-label={action.label}
       disabled={action.disabled}
-      onClick={action.onClick}
+      onClick={() => {
+        onTrack?.()
+        action.onClick?.()
+      }}
       asChild={!!action.link && !action.disabled}
-      {...(action.analytics ? analyticsAttrs(action.analytics) : {})}
+      {...trackAttrs}
     >
       {action.link && !action.disabled ? (
         <Link {...action.link}>
@@ -149,7 +178,7 @@ export function OverviewListRow({
   trailing,
   link,
   onClick,
-  analytics,
+  track,
   ref,
   className: triggerClassName,
   ...triggerProps
@@ -161,8 +190,9 @@ export function OverviewListRow({
   trailing?: ReactNode
   link?: LinkProps
   onClick?: () => void
-  analytics?: AnalyticsActionId
+  track?: OverviewTrack
 }) {
+  const { trackAttrs, onTrack } = useOverviewTrack(track)
   const className = cn(
     OVERVIEW_LIST_ROW_CLASSNAME,
     'group/row flex w-full min-w-0 shrink-0 items-center gap-3 rounded-lg px-2.5 text-start transition-colors',
@@ -191,16 +221,14 @@ export function OverviewListRow({
       ) : null}
     </>
   )
-  const attrs = {
-    ...triggerProps,
-    ...(analytics ? analyticsAttrs(analytics) : {}),
-  }
+  const attrs = { ...triggerProps, ...trackAttrs }
   if (link) {
     return (
       <Link
         {...link}
         {...(attrs as HTMLAttributes<HTMLAnchorElement>)}
         ref={ref as Ref<HTMLAnchorElement>}
+        onClick={onTrack}
         className={className}
       >
         {content}
@@ -208,18 +236,22 @@ export function OverviewListRow({
     )
   }
   if (onClick) {
+    const activate = () => {
+      onTrack?.()
+      onClick()
+    }
     return (
       <div
         role="button"
         tabIndex={0}
         {...(attrs as HTMLAttributes<HTMLDivElement>)}
         ref={ref as Ref<HTMLDivElement>}
-        onClick={onClick}
+        onClick={activate}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget) return
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
-            onClick()
+            activate()
           }
         }}
         className={className}
@@ -269,7 +301,7 @@ export function OverviewListFiller({
   link,
   onClick,
   disabled = false,
-  analytics,
+  track,
 }: {
   label: string
   /** Pass only when the filler spans more than one row. */
@@ -277,8 +309,9 @@ export function OverviewListFiller({
   link?: LinkProps
   onClick?: () => void
   disabled?: boolean
-  analytics?: AnalyticsActionId
+  track?: OverviewTrack
 }) {
+  const { trackAttrs, onTrack } = useOverviewTrack(track)
   const className = cn(
     'group/filler flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-muted-foreground/25 px-4 text-center transition-colors',
     disabled
@@ -298,17 +331,24 @@ export function OverviewListFiller({
       ) : null}
     </>
   )
-  const attrs = analytics ? analyticsAttrs(analytics) : {}
   if (disabled) return <div className={className}>{content}</div>
   if (link) {
     return (
-      <Link {...link} className={className} {...attrs}>
+      <Link {...link} className={className} onClick={onTrack} {...trackAttrs}>
         {content}
       </Link>
     )
   }
   return (
-    <button type="button" onClick={onClick} className={className} {...attrs}>
+    <button
+      type="button"
+      onClick={() => {
+        onTrack?.()
+        onClick?.()
+      }}
+      className={className}
+      {...trackAttrs}
+    >
       {content}
     </button>
   )
@@ -322,7 +362,7 @@ export function OverviewListFooter({
   variant = 'link',
   disabled = false,
   disabledTooltip,
-  analytics,
+  track,
 }: {
   label: string
   link?: LinkProps
@@ -331,8 +371,9 @@ export function OverviewListFooter({
   variant?: 'link' | 'action'
   disabled?: boolean
   disabledTooltip?: string
-  analytics?: AnalyticsActionId
+  track?: OverviewTrack
 }) {
+  const { trackAttrs, onTrack } = useOverviewTrack(track)
   const className = cn(
     'group/footer flex h-10 w-full shrink-0 items-center justify-between gap-2 border-t border-border px-4 text-[12px] transition-colors',
     variant === 'action'
@@ -353,7 +394,6 @@ export function OverviewListFooter({
       <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover/footer:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover/footer:-translate-x-0.5" />
     </>
   )
-  const attrs = analytics ? analyticsAttrs(analytics) : {}
   if (disabled) {
     const footer = <div className={className}>{content}</div>
     if (!disabledTooltip) return footer
@@ -372,13 +412,21 @@ export function OverviewListFooter({
   }
   if (link) {
     return (
-      <Link {...link} className={className} {...attrs}>
+      <Link {...link} className={className} onClick={onTrack} {...trackAttrs}>
         {content}
       </Link>
     )
   }
   return (
-    <button type="button" onClick={onClick} className={className} {...attrs}>
+    <button
+      type="button"
+      onClick={() => {
+        onTrack?.()
+        onClick?.()
+      }}
+      className={className}
+      {...trackAttrs}
+    >
       {content}
     </button>
   )
