@@ -1,19 +1,12 @@
+import type * as Api from './api'
+import type { AlertComparator as Comparator, AlertMetric as Metric, AlertStatus as Status, MonitorResourceType, MonitorStatus as State, MonitorType as Kind } from './api'
 /**
- * Monitor and alert models: the generated `Models.Monitor` and `Models.Alert`,
+ * Monitor and alert models: the generated `Api.Monitor` and `Api.Alert`,
  * with the enums the console matches on read as string unions. Editions add
  * metrics, resource types and monitor types this spec does not enumerate, and
  * the console renders those too, so the unions carry them alongside.
  */
 
-import type {
-  AlertComparator as Comparator,
-  AlertMetric as Metric,
-  AlertStatus as Status,
-  Models,
-  MonitorResourceType,
-  MonitorStatus as State,
-  MonitorType as Kind,
-} from '@appwrite.io/console'
 
 export type AlertMetric =
   | `${Metric}`
@@ -40,7 +33,7 @@ export type MonitorStatus = `${State}`
 export type AlertStatus = `${Status}`
 
 export type Monitor = Omit<
-  Models.Monitor,
+  Api.Monitor,
   'type' | 'resourceType' | 'status'
 > & {
   type: MonitorType
@@ -48,12 +41,12 @@ export type Monitor = Omit<
   status: MonitorStatus
 }
 
-export type MonitorList = Omit<Models.MonitorList, 'monitors'> & {
+export type MonitorList = Omit<Api.MonitorList, 'monitors'> & {
   monitors: Monitor[]
 }
 
 export type Alert = Omit<
-  Models.Alert,
+  Api.Alert,
   'type' | 'resourceType' | 'status' | 'metric' | 'comparator'
 > & {
   type: MonitorType
@@ -63,7 +56,7 @@ export type Alert = Omit<
   comparator: AlertComparator
 }
 
-export type AlertList = Omit<Models.AlertList, 'alerts'> & {
+export type AlertList = Omit<Api.AlertList, 'alerts'> & {
   alerts: Alert[]
 }
 
