@@ -524,22 +524,6 @@ export function useDeleteVideo(projectId: string | null | undefined) {
   })
 }
 
-export function useCreateVideoTimeline(
-  projectId: string | null | undefined,
-  videoId: string | null | undefined,
-) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: () =>
-      sdk.forProject(projectId!).videos.createTimeline({ videoId: videoId! }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: videoKeys.timeline(projectId, videoId),
-      })
-    },
-  })
-}
-
 export function useCreateVideoRenditions(
   projectId: string | null | undefined,
   videoId: string | null | undefined,
@@ -685,7 +669,7 @@ export type VideoProfileInput = {
 
 /** True when probe metadata includes an audio stream (after prepare / encode probe). */
 export function videoSourceHasAudio(
-  video: Pick<Models.Video, 'audioCodec' | 'duration' | 'status'> | null | undefined,
+  video: Pick<Models.Video, 'audioCodec' | 'duration'> | null | undefined,
 ): boolean {
   if (!video) return false
   if (video.audioCodec?.trim()) return true

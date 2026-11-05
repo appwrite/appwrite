@@ -471,7 +471,7 @@ export function VideoStreamPlayer({
     readyIds.hls.length + readyIds.cmaf.length + readyIds.dash.length > 0
 
   const sourceMissingAudio =
-    video.status === 'ready' &&
+    (video.timelineStatus === 'ready' || video.timelineStatus === 'skipped') &&
     (video.duration ?? 0) > 0 &&
     !videoSourceHasAudio(video)
 

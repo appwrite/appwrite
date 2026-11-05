@@ -14,7 +14,6 @@ import {
   GalleryHorizontal,
   Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import {
   VideoActionButton,
   VideoFact,
@@ -22,7 +21,6 @@ import {
   VideoSectionCard,
 } from '../../_components/VideoPage'
 import { VideoUrlRow } from '../../_components/VideoUrlRow'
-import { useVideoDetailActions } from '../../_components/video-detail-actions'
 import { TimelineThumbnail } from '../../_components/player/TimelineThumbnail'
 import { CodeBlock } from '@/components/global/shared/CodeBlock'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -33,15 +31,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useQuery } from '@tanstack/react-query'
 import {
   isVideoMetadataReady,
-  useCreateVideoTimeline,
-  useProjectVideo,
   useVideoTimeline,
+  videoQueryOptions,
   type VideoTimelineCue,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatPlaybackTime } from '@/lib/utils/video-format'
 import { useT } from '@/lib/i18n/translate'
 
@@ -61,18 +58,19 @@ export function View() {
     projectId: string
     videoId: string
   }
-  const { writeDisabledReason } = useVideoDetailActions()
-  const { data: video } = useProjectVideo(projectId, videoId)
-  const [requested, setRequested] = useState(false)
-  const timelineQuery = useVideoTimeline(projectId, videoId, {
-    pollWhileMissing: requested,
+  const { data: video } = useQuery({
+    ...videoQueryOptions(projectId, videoId),
+    refetchInterval: (query) => {
+      const status = query.state.data?.timelineStatus
+      return status === 'pending' || status === 'started' ? 3000 : false
+    },
   })
-  const createTimeline = useCreateVideoTimeline(projectId, videoId)
+  const generating =
+    video?.timelineStatus === 'pending' || video?.timelineStatus === 'started'
+  const timelineQuery = useVideoTimeline(projectId, videoId, {
+    pollWhileMissing: generating,
+  })
   const timeline = timelineQuery.data
-
-  useEffect(() => {
-    if (timeline) setRequested(false)
-  }, [timeline])
 
   const sheets = useMemo(
     () => new Set((timeline?.cues ?? []).map((cue) => cue.imageUrl)).size,
@@ -92,30 +90,10 @@ export function View() {
 
   // Probed audio-only files report a duration but no frame size; the worker produces no WebVTT for them.
   const audioOnly = video.duration > 0 && !isVideoMetadataReady(video)
-  const generateDisabledReason =
-    writeDisabledReason ??
-    (audioOnly ? t('Audio-only videos have no frames for a timeline.') : null)
-  const generating = requested || createTimeline.isPending
-
-  const generate = () =>
-    createTimeline.mutate(undefined, {
-      onSuccess: () => {
-        setRequested(true)
-        toast.success(t('Timeline generation started'))
-      },
-      onError: (error) =>
-        toast.error(getErrorMessage(error) || t('Failed to generate timeline')),
-    })
+  const failed = video.timelineStatus === 'error'
 
   return (
-    <VideoPage
-      title={t('Timeline')}
-      term="timeline"
-      createLabel={timeline ? t('Regenerate timeline') : t('Generate timeline')}
-      onCreate={generate}
-      createDisabled={generating || Boolean(generateDisabledReason)}
-      createDisabledTooltip={generateDisabledReason ?? undefined}
-    >
+    <VideoPage title={t('Timeline')} term="timeline">
       {timelineQuery.isLoading ? (
         <p className="text-[13px] text-muted-foreground">
           {t('Loading timeline...')}
@@ -138,23 +116,20 @@ export function View() {
         ) : (
           <EmptyState
             icon={GalleryHorizontal}
-            title={t('No timeline yet')}
-            description={t(
-              'Generate a timeline to get scrubbing thumbnails and a preview image for this video.',
-            )}
+            title={failed ? t('Timeline failed') : t('No timeline yet')}
+            description={
+              failed
+                ? video.timelineError ||
+                  t('The timeline job failed before it could sample frames.')
+                : audioOnly
+                  ? t('Audio-only videos have no frames for a timeline.')
+                  : t(
+                      'Creating a video starts the timeline. Thumbnails appear here when the job finishes.',
+                    )
+            }
             isEmpty
             hasFilters={false}
             variant="card"
-            action={
-              <VideoActionButton
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={generate}
-                disabledReason={generateDisabledReason}
-              >
-                {t('Generate timeline')}
-              </VideoActionButton>
-            }
           />
         )
       ) : (
