@@ -3874,4 +3874,48 @@ export const heProjectMiscDictionary: Record<string, string> = {
   "You'll still see these alerts in console notifications.":
     'ההתראות האלה עדיין יופיעו בהתראות ב-Console.',
   'Saving...': 'שומר...',
+
+  // Project dashboard: resources, apps and API keys
+  'Your resources': 'המשאבים שלכם',
+  'View all databases': 'צפייה בכל מסדי הנתונים',
+  'View all sites': 'צפייה בכל האתרים',
+  'View all functions': 'צפייה בכל הפונקציות',
+  'View all buckets': 'צפייה בכל הבאקטים',
+  'View all users': 'צפייה בכל המשתמשים',
+  'View all topics': 'צפייה בכל הנושאים',
+  'View all API keys': 'צפייה בכל מפתחות ה-API',
+  'Failed to load sites': 'טעינת האתרים נכשלה',
+  'Failed to load functions': 'טעינת הפונקציות נכשלה',
+  'Failed to load buckets': 'טעינת הבאקטים נכשלה',
+  'Failed to load users': 'טעינת המשתמשים נכשלה',
+  'Failed to load topics': 'טעינת הנושאים נכשלה',
+  'Store, query, and sync your app data with a managed database.':
+    'אחסון, שאילתות וסנכרון של נתוני האפליקציה שלכם במסד נתונים מנוהל.',
+  'Run backend code on HTTP requests, events, or a schedule.':
+    'הריצו קוד צד שרת בתגובה לבקשות HTTP, לאירועים או לפי תזמון.',
+  'Keep data apart by environment, customer, or workload.':
+    'הפרידו נתונים לפי סביבה, לקוח או עומס עבודה.',
+  'Deploy another app, a landing page, or your docs.':
+    'פרסו אפליקציה נוספת, דף נחיתה או את התיעוד שלכם.',
+  'Add a webhook, a scheduled job, or an event handler.':
+    'הוסיפו Webhook, משימה מתוזמנת או טיפול באירועים.',
+  'Group files with their own permissions and limits.':
+    'קבצו קבצים עם הרשאות ומגבלות משלהם.',
+  'Add a user by hand, or let people sign up from your app.':
+    'הוסיפו משתמש ידנית, או אפשרו הרשמה מהאפליקציה שלכם.',
+  'Group subscribers to message them all at once.':
+    'קבצו מנויים כדי לשלוח הודעה לכולם בבת אחת.',
+  'Add each web, mobile, or desktop app that calls this project.':
+    'הוסיפו כל אפליקציית Web, מובייל או דסקטופ שפונה לפרויקט הזה.',
+  'Give your servers and scripts scoped access to this project.':
+    'העניקו לשרתים ולסקריפטים שלכם גישה לפרויקט הזה עם הרשאות מוגדרות.',
+  'Use a key per server or environment, with only the scopes it needs.':
+    'השתמשו במפתח נפרד לכל שרת או סביבה, עם ההרשאות הנחוצות בלבד.',
+  'Upload and serve files with permissions, encryption, and image previews.':
+    'העלו והגישו קבצים עם הרשאות, הצפנה ותצוגות מקדימות לתמונות.',
+  'Sign users in with email, OAuth providers, phone, or passkeys.':
+    'אפשרו למשתמשים להתחבר עם אימייל, ספקי OAuth, טלפון או מפתחות גישה.',
+  'Send email, SMS, and push notifications to your users.':
+    'שלחו למשתמשים שלכם אימיילים, הודעות SMS והתראות פוש.',
+  'Auto-deploy on every push': 'פריסה אוטומטית בכל push',
 }

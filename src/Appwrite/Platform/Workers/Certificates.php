@@ -453,7 +453,7 @@ class Certificates extends Action
                 // Send email to security email. Past the attempts maintenance retries, a certificate
                 // about to expire is checked twice a day: one more email for that, not one per check.
                 if ($attempts <= self::MAX_GENERATION_ATTEMPTS + 1) {
-                    $this->notifyError($domain->get(), $e->getMessage(), $attempts, $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
+                    $this->notifyError($domain->get(), $e->getMessage(), $attempts, $renewing, $certificate->getAttribute('expireDate'), $publisherForMails, $plan, $dbForPlatform->getDocument('projects', 'console'));
                 }
 
                 throw $e;
@@ -657,12 +657,14 @@ class Certificates extends Action
      * @param string $domain Domain that caused the error
      * @param string $errorMessage Verbose error message
      * @param int $attempt How many times it failed already
+     * @param bool $renewing Whether the domain already serves a certificate
+     * @param string|null $expireDate When that certificate expires, if recorded
      * @param MailPublisher $publisherForMails
      * @param array $plan
      * @return void
      * @throws Exception
      */
-    private function notifyError(string $domain, string $errorMessage, int $attempt, MailPublisher $publisherForMails, array $plan, Document $console): void
+    private function notifyError(string $domain, string $errorMessage, int $attempt, bool $renewing, ?string $expireDate, MailPublisher $publisherForMails, array $plan, Document $console): void
     {
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
@@ -673,8 +675,21 @@ class Certificates extends Action
         // Send mail to administrator mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
         $template->setParam('{{domain}}', $domain);
-        $template->setParam('{{error}}', \nl2br($errorMessage));
+        // Escape the error before adding line breaks, so the breaks render
+        $template->setParam('{{error}}', \nl2br(\htmlspecialchars($errorMessage, ENT_QUOTES, 'UTF-8')), escapeHtml: false);
         $template->setParam('{{attempts}}', $attempt);
+
+        $expiry = 'Your domain has no valid certificate until one is generated.';
+        if ($renewing) {
+            $expiry = 'The existing certificate keeps serving your domain until it expires.';
+        }
+        if ($renewing && !empty($expireDate)) {
+            $expiresOn = (new \DateTime($expireDate))->format('Y-m-d');
+            $expiry = \strtotime($expireDate) <= \time()
+                ? 'The existing certificate expired on ' . $expiresOn . '.'
+                : 'The existing certificate keeps serving your domain until it expires on ' . $expiresOn . '.';
+        }
+        $template->setParam('{{expiry}}', $expiry);
 
         $body = $template->render();
 
@@ -683,11 +698,12 @@ class Certificates extends Action
             'domain' => $domain,
             'logoUrl' => $plan['logoUrl'] ?? APP_EMAIL_LOGO_URL,
             'accentColor' => $plan['accentColor'] ?? APP_EMAIL_ACCENT_COLOR,
-            'twitterUrl' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
-            'discordUrl' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
-            'githubUrl' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
-            'termsUrl' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
-            'privacyUrl' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+            'twitter' => $plan['twitterUrl'] ?? APP_SOCIAL_TWITTER,
+            'discord' => $plan['discordUrl'] ?? APP_SOCIAL_DISCORD,
+            'github' => $plan['githubUrl'] ?? APP_SOCIAL_GITHUB_APPWRITE,
+            'terms' => $plan['termsUrl'] ?? APP_EMAIL_TERMS_URL,
+            'privacy' => $plan['privacyUrl'] ?? APP_EMAIL_PRIVACY_URL,
+            'platform' => $plan['platformName'] ?? APP_NAME,
         ];
 
         $subject = $locale->getText("emails.certificate.subject");
