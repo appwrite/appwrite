@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: Set up APNs for an iOS app with one CLI command
-date: 2026-11-04
+date: 2026-11-05
 cover: /images/blog/announcing-apns-one-click-setup/cover.avif
 tags: messaging, cli
 ---
