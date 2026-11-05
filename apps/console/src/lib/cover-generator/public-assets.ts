@@ -1,7 +1,6 @@
 import { access, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
-import { getCoverRenderSiteOrigin } from '@/lib/cover-generator/render-context'
+import { getDefaultSiteOrigin, resolveSiteAssetUrl } from '@/lib/marketing/site-origin'
 
 /**
  * Resolve bundled static assets for server-side cover rendering.
@@ -17,7 +16,8 @@ async function fetchCoverPublicAssetBuffer(
   relativePath: string,
 ): Promise<Buffer | null> {
   const normalized = relativePath.replace(/^\/+/, '')
-  const url = resolveSiteAssetUrl(`/${normalized}`, getCoverRenderSiteOrigin())
+  // The configured origin, never the request's: the Host header would pick the fetch target.
+  const url = resolveSiteAssetUrl(`/${normalized}`, getDefaultSiteOrigin())
 
   try {
     const response = await fetch(url)
