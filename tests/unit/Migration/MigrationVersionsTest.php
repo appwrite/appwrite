@@ -452,7 +452,8 @@ final class MigrationVersionsTest extends TestCase
     /**
      * The 2.6.x/2.7.0 upgrade path creates the video collections from V25, so
      * the shared-tables rule holds there too: the metadata row belongs to no
-     * tenant, and a second project on the host sees the collections.
+     * tenant, and a second project on the host sees the collections. The
+     * created schema keeps retained size and the job failure reason.
      */
     public function testV25SharedTablesCreateGlobalVideoCollections(): void
     {
@@ -516,6 +517,35 @@ final class MigrationVersionsTest extends TestCase
             $this->assertFalse($metadata->isEmpty(), "Expected metadata for \"{$collectionId}\" to exist");
             $this->assertNull($metadata->getTenant(), "Expected \"{$collectionId}\" metadata to be global");
         }
+
+        $attributeIds = function (string $collectionId) use ($database): array {
+            $ids = [];
+            foreach ($database->getCollection($collectionId)->getAttribute('attributes', []) as $attribute) {
+                $ids[] = $attribute instanceof Document ? $attribute->getAttribute('$id') : ($attribute['$id'] ?? '');
+            }
+
+            return $ids;
+        };
+
+        foreach (['videosRenditions', 'videosCaptions', 'videosTimelines'] as $collectionId) {
+            $this->assertContains('size', $attributeIds($collectionId), "Expected \"{$collectionId}\" to store retained bytes");
+        }
+
+        $reasons = [
+            'videos' => ['timelineStatus', 'timelineError'],
+            'videosRenditions' => ['error'],
+            'videosCaptions' => ['error'],
+        ];
+        foreach ($reasons as $collectionId => $expected) {
+            $ids = $attributeIds($collectionId);
+            foreach ($expected as $attributeId) {
+                $this->assertContains($attributeId, $ids, "Expected \"{$collectionId}\" to carry the job failure reason");
+            }
+        }
+
+        $timelineAttributeIds = $attributeIds('videosTimelines');
+        $this->assertNotContains('second', $timelineAttributeIds);
+        $this->assertNotContains('type', $timelineAttributeIds);
 
         $migrate('tenant-b');
 
