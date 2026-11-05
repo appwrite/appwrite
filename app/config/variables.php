@@ -153,6 +153,42 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_NOTIFICATIONS_PUSH_APNS',
+                'description' => "Push service that delivers alerts to the iOS devices console users sign in on. Use the following format: 'apns://[KEY_ID]:[TEAM_ID]@[BUNDLE_ID]', adding '?sandbox=true' for development builds, with the APNs auth key (.p8) in _APP_NOTIFICATIONS_PUSH_APNS_KEY. Leave empty to disable alert pushes.",
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_PUSH_APNS_KEY',
+                'description' => 'APNs auth key (.p8 contents) that _APP_NOTIFICATIONS_PUSH_APNS signs with.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM',
+                'description' => "Push service that delivers alerts to the Android devices console users sign in on. Use the following format: 'fcm://[FIREBASE_PROJECT_ID]', with the service account JSON in _APP_NOTIFICATIONS_PUSH_FCM_KEY. Leave empty to disable alert pushes to Android.",
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_NOTIFICATIONS_PUSH_FCM_KEY',
+                'description' => 'Firebase service account JSON that _APP_NOTIFICATIONS_PUSH_FCM signs with; it has to belong to the project _APP_NOTIFICATIONS_PUSH_FCM names.',
+                'introduction' => '2.7.1',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN',
                 'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'. Multiple domains can be separated by commas.',
                 'introduction' => '',
@@ -175,6 +211,15 @@ return [
                 'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
                 'introduction' => '',
                 'default' => 'functions.localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOMAIN_FUNCTIONS_FALLBACK',
+                'description' => 'Comma-separated list of additional domains that serve function preview URLs, for example a previous value of _APP_DOMAIN_FUNCTIONS. Rules cannot claim these domains.',
+                'introduction' => '2.7.0',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -461,7 +506,7 @@ return [
             [
                 'name' => '_APP_LOGGING_FORMAT',
                 'description' => 'Controls how Appwrite writes span/trace logs to container stdout/stderr. Use `pretty` (default) for multi-line terminal output, or `json` for newline-delimited JSON (NDJSON) that log aggregators such as Better Stack, Loki, or CloudWatch can ingest as a single entry per span.',
-                'introduction' => '2.7.0',
+                'introduction' => '1.9.6',
                 'default' => 'pretty',
                 'required' => false,
                 'question' => '',
@@ -597,6 +642,15 @@ return [
                 'default' => 'postgresql',
                 'required' => true,
                 'question' => 'Choose your database (postgresql|mariadb|mongodb)',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REALTIME_BOOT_TIMEOUT',
+                'description' => 'Seconds a realtime server waits at boot for the cleanup of presences left by stopped realtime servers. Presence updates wait for the cleanup until this passes, then go ahead, and the cleanup carries on in the background. Set it to 0 to never wait; a user who reconnects during the cleanup may then keep showing as online until the next cleanup. Applies to self-hosted only. Default value is: 30.',
+                'introduction' => '2.7.0',
+                'default' => '30',
+                'required' => false,
+                'question' => '',
                 'filter' => ''
             ],
             [
@@ -1632,6 +1686,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_COMPUTE_STREAMING',
+                'description' => 'Allows a function or site served on its domain to send its response in chunks as the runtime produces it, so a progressively rendered page or an event stream reaches the client before it has finished. By default, set to \'enabled\'. Set to \'disabled\' to send each response only once it is complete. Requires an executor that supports response format 0.12.0.',
+                'introduction' => '2.7.0',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_FUNCTIONS_SCHEDULE_SPREAD',
                 'description' => 'Number of seconds over which scheduled executions sharing the same cron slot are spread, using a stable per-function offset, so they don\'t all start in the same second. Each function keeps a consistent slot within the window, preserving exact run intervals. The default value is 0 (disabled): every execution is enqueued at the exact cron time.',
                 'introduction' => '2.0.0',
@@ -1890,6 +1953,48 @@ return [
                 'name' => '_APP_VCS_WEBHOOK_URL',
                 'description' => 'Base URL Appwrite advertises to self-hosted VCS providers when registering repository webhooks, if different from the public domain (e.g. a Docker-internal address). Falls back to the public domain when unset.',
                 'introduction' => '2.0.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'Reviews',
+        'description' => 'AI code review for GitHub pull requests, run by the appwrite/hansi service. Optional: reviews stay off until `_APP_REVIEWS_SECRET` is set, and the installer adds the service only then. The service reads jobs from the Redis queue at `_APP_REDIS_HOST` and `_APP_REDIS_PORT`, with `_APP_REDIS_USER` and `_APP_REDIS_PASS`. It runs reviews read-only, without sandboxes. The GitHub App needs these repository permissions: Contents and Metadata (read), Pull requests, Issues and Checks (read and write). It must also subscribe to the "Pull request", "Issue comment" and "Pull request review comment" events. Comments that mention the app (`_APP_VCS_GITHUB_APP_NAME`) are answered, and "@app review" asks for a review.',
+        'variables' => [
+            [
+                'name' => '_APP_REVIEWS_SECRET',
+                'description' => 'Enables code reviews. The secret the code review service sends in the `X-Appwrite-Reviews-Secret` header to report results and request installation tokens. Leave it empty to keep reviews disabled: repositories cannot be enrolled, pull requests queue no reviews and the internal review routes reject every call. **Keep it a secret**.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_MODEL',
+                'description' => 'The model that reviews pull requests, as an AI Gateway model ID such as `anthropic/claude-sonnet-5.5`. Required when reviews are enabled.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_VERIFY_MODEL',
+                'description' => 'The model that double-checks findings before they are posted, as an AI Gateway model ID. Empty uses `_APP_REVIEWS_MODEL`.',
+                'introduction' => '2.7.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_REVIEWS_AI_GATEWAY_KEY',
+                'description' => 'API key for the Vercel AI Gateway, which serves the review models. **Keep it a secret**.',
+                'introduction' => '2.7.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',

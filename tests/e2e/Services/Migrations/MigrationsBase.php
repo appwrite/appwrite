@@ -3792,16 +3792,21 @@ trait MigrationsBase
         ];
 
         $labels = ['vip' . \substr(Id::unique(), 0, 8), 'beta' . \substr(Id::unique(), 0, 8)];
+        $prefs = ['theme' => 'dark', 'limits' => ['seats' => 5]];
 
         // Set labels on source. The labels endpoint is PUT /project/labels — the
         // generic project update endpoint doesn't accept a labels param.
         $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceKeyHeaders, [
             'labels' => $labels,
         ]);
+        $this->client->call(Client::METHOD_PUT, '/project/prefs', $sourceKeyHeaders, [
+            'prefs' => $prefs,
+        ]);
 
         $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_PROJECT_LABELS,
+                Resource::TYPE_PROJECT_PREFERENCES,
             ],
             'endpoint' => $this->webEndpoint,
             'projectId' => $sourceProjectId,
@@ -3809,7 +3814,9 @@ trait MigrationsBase
         ]);
 
         $this->assertEquals('completed', $result['status']);
-        $this->assertEquals([Resource::TYPE_PROJECT_LABELS], $result['resources']);
+        $this->assertEquals([Resource::TYPE_PROJECT_LABELS, Resource::TYPE_PROJECT_PREFERENCES], $result['resources']);
+        $this->assertSame(1, $result['statusCounters'][Resource::TYPE_PROJECT_PREFERENCES]['success']);
+        $this->assertSame(0, $result['statusCounters'][Resource::TYPE_PROJECT_PREFERENCES]['error']);
         $this->assertArrayHasKey(Resource::TYPE_PROJECT_LABELS, $result['statusCounters']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['error']);
         $this->assertEquals(0, $result['statusCounters'][Resource::TYPE_PROJECT_LABELS]['pending']);
@@ -3821,9 +3828,15 @@ trait MigrationsBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEqualsCanonicalizing($labels, $response['body']['labels']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/project/prefs', $destinationKeyHeaders);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame($prefs, $response['body']);
+
         // Restore both projects.
         $this->client->call(Client::METHOD_PUT, '/project/labels', $sourceKeyHeaders, ['labels' => []]);
         $this->client->call(Client::METHOD_PUT, '/project/labels', $destinationKeyHeaders, ['labels' => []]);
+        $this->client->call(Client::METHOD_PUT, '/project/prefs', $sourceKeyHeaders, ['prefs' => new \stdClass()]);
+        $this->client->call(Client::METHOD_PUT, '/project/prefs', $destinationKeyHeaders, ['prefs' => new \stdClass()]);
     }
 
     public function testAppwriteMigrationServices(): void
@@ -8227,6 +8240,73 @@ trait MigrationsBase
         $this->assertArrayHasKey('name', $decoded[0], 'JSON documents should contain name field');
         $this->assertArrayHasKey('email', $decoded[0], 'JSON documents should contain email field');
         $this->assertStringContainsString('Test User', $decoded[0]['name'], 'JSON should contain test data');
+
+        // The download link streams the whole collection, so a key that cannot read the data must not
+        // receive it, even though the export already exists (it was created by the full project key above).
+        $migrationsOnly = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'migrations.write']),
+        ]);
+        $this->assertEquals(200, $migrationsOnly['headers']['status-code']);
+        $this->assertEquals('completed', $migrationsOnly['body']['status']);
+        $this->assertArrayNotHasKey('downloadUrl', (array) $migrationsOnly['body']['options']);
+
+        // A key that can read the collection's data still receives the link.
+        $dataReader = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'documents.read', 'rows.read']),
+        ]);
+        $this->assertEquals(200, $dataReader['headers']['status-code']);
+        $this->assertArrayHasKey('downloadUrl', (array) $dataReader['body']['options']);
+
+        // A read grant for another database family must not expose this family's dump: the gate
+        // demands the scope its own family's export creation demanded, not any data read scope.
+        $otherFamily = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'documentsdb.documents.read']),
+        ]);
+        $this->assertEquals(200, $otherFamily['headers']['status-code']);
+        $this->assertArrayNotHasKey('downloadUrl', (array) $otherFamily['body']['options']);
+
+        // The list endpoint redacts on the same rule as the single read.
+        $listAsMigrationsOnly = $this->client->call(Client::METHOD_GET, '/migrations', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read']),
+        ], [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertEquals(200, $listAsMigrationsOnly['headers']['status-code']);
+        $listed = null;
+        foreach ($listAsMigrationsOnly['body']['migrations'] as $candidate) {
+            if ($candidate['$id'] === $migrationId) {
+                $listed = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($listed);
+        $this->assertArrayNotHasKey('downloadUrl', (array) $listed['options']);
+
+        $listAsDataReader = $this->client->call(Client::METHOD_GET, '/migrations', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getNewKey(['migrations.read', 'documents.read', 'rows.read']),
+        ], [
+            'queries' => [Query::limit(100)->toString()],
+        ]);
+        $this->assertEquals(200, $listAsDataReader['headers']['status-code']);
+        $listedForReader = null;
+        foreach ($listAsDataReader['body']['migrations'] as $candidate) {
+            if ($candidate['$id'] === $migrationId) {
+                $listedForReader = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($listedForReader);
+        $this->assertArrayHasKey('downloadUrl', (array) $listedForReader['options']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [

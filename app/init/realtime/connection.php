@@ -7,6 +7,7 @@ use Appwrite\Auth\Key;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Utopia\Auth\Hashes\Sha;
@@ -33,17 +34,6 @@ return function (Container $container): void {
         $projectId = $request->getParam('project', '');
 
         return \is_string($projectId) ? $projectId : '';
-    };
-
-    $getMode = static function (Request $request, Document $project) use ($getProjectId): string {
-        $mode = $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
-        $projectId = $getProjectId($request);
-
-        if (!empty($projectId) && $project->getId() !== $projectId) {
-            $mode = APP_MODE_ADMIN;
-        }
-
-        return $mode;
     };
 
     $getDbForPlatform = static function (Authorization $authorization) {
@@ -116,9 +106,11 @@ return function (Container $container): void {
         return new Authorization();
     }, []);
 
-    $container->set('mode', function (Request $request, Document $project) use ($getMode): string {
-        return $getMode($request, $project);
-    }, ['request', 'project']);
+    // A connection names its project once and acts in it: unlike an HTTP route, it never acts on a
+    // project other than the one it names, so admin mode is only ever asked for.
+    $container->set('mode', function (Request $request): string {
+        return $request->getParam('mode', $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT));
+    }, ['request']);
 
     $container->set('project', function (Request $request, Document $console, Authorization $authorization) use ($getProjectId, $getDbForPlatform) {
         $projectId = $getProjectId($request);
@@ -132,7 +124,7 @@ return function (Container $container): void {
         return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
     }, ['request', 'console', 'authorization']);
 
-    $container->set('originValidator', function (array $platform, Request $request, Document $project, Authorization $authorization, string $mode) use ($findRule) {
+    $container->set('originValidator', function (array $platform, Request $request, Project $project, Authorization $authorization, string $mode) use ($findRule) {
         $allowedHostnames = [...($platform['hostnames'] ?? [])];
 
         /* Add the console host, the console web app can live apart from the API host */
@@ -167,7 +159,7 @@ return function (Container $container): void {
         $allowedSchemes = [...($platform['schemas'] ?? [])];
         if (!$project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             $allowedSchemes[] = 'exp';
-            $allowedSchemes[] = 'appwrite-callback-' . $project->getId();
+            $allowedSchemes[] = $project->getCallbackScheme();
             $allowedSchemes = [...$allowedSchemes, ...Platform::getSchemes($project->getAttribute('platforms', []))];
         }
 
@@ -181,13 +173,12 @@ return function (Container $container): void {
         return $proofForToken;
     }, []);
 
-    $container->set('store', function (Request $request, Document $project, Document $console) use ($getMode): Store {
-        $mode = $getMode($request, $project);
+    $container->set('store', function (Request $request, Project $project, Project $console, string $mode): Store {
         $store = new Store();
 
-        $store->setKey('a_session_' . $project->getId());
+        $store->setKey($project->getSessionKey());
         if ($mode === APP_MODE_ADMIN) {
-            $store->setKey('a_session_' . $console->getId());
+            $store->setKey($console->getSessionKey());
         }
 
         $store->decode(
@@ -211,11 +202,9 @@ return function (Container $container): void {
         }
 
         return $store;
-    }, ['request', 'project', 'console']);
+    }, ['request', 'project', 'console', 'mode']);
 
-    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken) use ($getMode, $getDbForPlatform, $getDbForProject) {
-        $mode = $getMode($request, $project);
-
+    $container->set('user', function (Request $request, Document $project, Document $console, Authorization $authorization, Store $store, Token $proofForToken, string $mode) use ($getDbForPlatform, $getDbForProject) {
         $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
             ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
             : ($project->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null);
@@ -334,14 +323,12 @@ return function (Container $container): void {
         $dbForProject->setMetadata('user', $user->getId());
 
         return $user;
-    }, ['request', 'project', 'console', 'authorization', 'store', 'proofForToken']);
+    }, ['request', 'project', 'console', 'authorization', 'store', 'proofForToken', 'mode']);
 
-    $container->set('session', function (Request $request, Document $project, Document $console, User $user, Store $store, Token $proofForToken) use ($getMode): ?Document {
+    $container->set('session', function (Request $request, Document $project, Document $console, User $user, Store $store, Token $proofForToken, string $mode): ?Document {
         if ($user->isEmpty()) {
             return null;
         }
-
-        $mode = $getMode($request, $project);
 
         $sessionsInvalidatedAt = $mode === APP_MODE_ADMIN
             ? ($console->getAttribute('auths', [])['sessionsInvalidatedAt'] ?? null)
@@ -381,7 +368,7 @@ return function (Container $container): void {
         }
 
         return null;
-    }, ['request', 'project', 'console', 'user', 'store', 'proofForToken']);
+    }, ['request', 'project', 'console', 'user', 'store', 'proofForToken', 'mode']);
 
     // A connection holds no token to present again, so it ends when the JWT it was
     // opened with expires, as an HTTP request with that JWT would then fail.
@@ -407,7 +394,7 @@ return function (Container $container): void {
         return \is_int($expire) ? $expire : null;
     }, ['request', 'user']);
 
-    $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
+    $container->set('impersonatorUser', function (Request $request, Document $project, Document $user, Authorization $authorization, string $mode) use ($getDbForPlatform, $getDbForProject) {
         if ($user->isEmpty() || !$user->getAttribute('impersonator', false)) {
             return new Document();
         }
@@ -422,7 +409,6 @@ return function (Container $container): void {
             return new Document();
         }
 
-        $mode = $getMode($request, $project);
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
         $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
@@ -457,9 +443,9 @@ return function (Container $container): void {
                 || (!empty($request->getHeaderLine('x-appwrite-key', '')) && !empty($request->getHeaderLine('x-appwrite-user', '')))
             ) ? 'console' : $project->getId(),
         ]);
-    }, ['request', 'project', 'user', 'authorization']);
+    }, ['request', 'project', 'user', 'authorization', 'mode']);
 
-    $container->set('targetUser', function (Request $request, Document $project, Document $user, Document $impersonatorUser, Authorization $authorization) use ($getMode, $getDbForPlatform, $getDbForProject) {
+    $container->set('targetUser', function (Request $request, Document $project, Document $user, Document $impersonatorUser, Authorization $authorization, string $mode) use ($getDbForPlatform, $getDbForProject) {
         if ($impersonatorUser->isEmpty()) {
             return $user;
         }
@@ -468,7 +454,6 @@ return function (Container $container): void {
         $impersonateEmail = $request->getHeaderLine('x-appwrite-impersonate-user-email', (string)($request->getParam('impersonateemail', '') ?: $request->getParam('impersonateEmail', '')));
         $impersonatePhone = $request->getHeaderLine('x-appwrite-impersonate-user-phone', (string)($request->getParam('impersonatephone', '') ?: $request->getParam('impersonatePhone', '')));
 
-        $mode = $getMode($request, $project);
         $dbForPlatform = $getDbForPlatform($authorization);
         $dbForProject = $getDbForProject($project, $authorization);
         $userDb = ($mode === APP_MODE_ADMIN || $project->getId() === 'console') ? $dbForPlatform : $dbForProject;
@@ -482,5 +467,5 @@ return function (Container $container): void {
         }
 
         return $user;
-    }, ['request', 'project', 'user', 'impersonatorUser', 'authorization']);
+    }, ['request', 'project', 'user', 'impersonatorUser', 'authorization', 'mode']);
 };

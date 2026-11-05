@@ -266,7 +266,6 @@ function isMinimalDebugMenuBadge(
 const DEBUG_MENU_THEME_BADGES: Record<string, string> = {
   light: 'Light',
   dark: 'Dark',
-  system: 'System',
   crazy: 'Crazy',
   stealth: 'Stealth',
   premium: 'Premium',
@@ -1251,7 +1250,6 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     const themeSource: Array<{ label: string; themeValue: string }> = [
       { label: '☀️ Light', themeValue: 'light' },
       { label: '🌙 Dark', themeValue: 'dark' },
-      { label: '💻 System', themeValue: 'system' },
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
       { label: '✨ Premium', themeValue: 'premium' },
@@ -1619,7 +1617,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           statusAlertMenuItem,
           {
             label: 'Theme',
-            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'system'],
+            badge: DEBUG_MENU_THEME_BADGES[theme ?? 'dark'],
             icon: <Palette className="h-3 w-3" />,
             submenu: themeOptions,
           },
@@ -1762,6 +1760,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 'alerts',
                 profileId,
                 features.alerts,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
+                'Review',
+                'Show the Review product (AI code review of GitHub pull requests) in projects where the server has reviews enabled.',
+                'reviews',
+                profileId,
+                features.reviews,
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
@@ -2117,6 +2123,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.videos,
     features.analytics,
     features.alerts,
+    features.reviews,
     features.analyticsTrafficFilter,
     features.appwritePush,
     features.nativeDbsMongo,

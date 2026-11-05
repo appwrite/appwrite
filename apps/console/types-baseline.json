@@ -278,7 +278,6 @@
     "TS2571: Object is of type 'unknown'.": 4
   },
   "src/components/pages/projects/$projectId/activity/ActivityLogDrawer.tsx": {
-    "TS2304: Cannot find name 'Globe'.": 1,
     "TS2339: Property 'clientCode' does not exist on type 'ActivityEvent'.": 3,
     "TS2339: Property 'clientEngine' does not exist on type 'ActivityEvent'.": 1,
     "TS2339: Property 'clientEngineVersion' does not exist on type 'ActivityEvent'.": 1,
@@ -799,7 +798,6 @@
     "TS6133: 'ArrowLeft' is declared but its value is never read.": 1
   },
   "src/components/pages/projects/$projectId/overview/Overview.tsx": {
-    "TS2304: Cannot find name 'AddAppKind'.": 2,
     "TS2322: Type '{ className: string; isPanelVisible: boolean; dateRange: DateRange; chartInterval: UsageChartInterval; chartData: OverviewStorageChartPoint[]; isLoading: boolean; isRefreshing: boolean; isError: boolean; onRetry: (() => undefined) | undefined; upgradeOrgId: string | undefined; errorTitle: string; errorMessage: Element; }' is not assignable to type 'IntrinsicAttributes & OverviewStorageChartProps'.": 1,
     "TS2322: Type 'null | undefined | { keys?: unknown[] | undefined; }' is not assignable to type 'KeyList | null | undefined'.": 1
   },
@@ -849,9 +847,6 @@
   "src/components/pages/projects/$projectId/settings/domains/RetryDomain.tsx": {
     "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
   },
-  "src/components/pages/projects/$projectId/settings/domains/VerifyDomain.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 1
-  },
   "src/components/pages/projects/$projectId/shared/ConnectProject.tsx": {
     "TS2345: Argument of type 'unknown' is not assignable to parameter of type 'undefined | { prefs?: Record<string, unknown> | undefined; }'.": 1
   },
@@ -883,9 +878,6 @@
   "src/components/pages/projects/$projectId/sites/SiteDeployments.tsx": {
     "TS18046: 'deployment' is of type 'unknown'.": 6,
     "TS2571: Object is of type 'unknown'.": 8
-  },
-  "src/components/pages/projects/$projectId/sites/SiteDomains.tsx": {
-    "TS2367: This comparison appears to be unintentional because the types 'ProxyRuleStatus' and '\"created\"' have no overlap.": 2
   },
   "src/components/pages/projects/$projectId/sites/SiteOverview.tsx": {
     "TS2339: Property 'data' does not exist on type '{ deployments: Deployment[]; total: number; isLoading: boolean; isFetching: boolean; error: Error | null; refetch: (options?: RefetchOptions | undefined) => Promise<QueryObserverResult<{ deployments: Deployment[]; total: number; }, Error>>; }'.": 2,
@@ -1195,9 +1187,6 @@
     "TS2323: Cannot redeclare exported variable 'isPostgresPromoBannerVisible'.": 2,
     "TS2484: Export declaration conflicts with exported declaration of 'isPostgresPromoBannerVisible'.": 1
   },
-  "src/lib/react-query/hooks/addons.ts": {
-    "TS2305: Module '\"@appwrite.io/console\"' has no exported member 'Addon'.": 1
-  },
   "src/lib/react-query/hooks/assistant.ts": {
     "TS6133: 'params' is declared but its value is never read.": 1
   },
@@ -1239,9 +1228,6 @@
     "TS2345: Argument of type 'DedicatedDatabaseOperation' is not assignable to parameter of type 'DedicatedDatabase'.": 1,
     "TS2345: Argument of type 'DedicatedDatabaseOperation' is not assignable to parameter of type 'Updater<DedicatedDatabase | null | undefined, DedicatedDatabase | null | undefined>'.": 1,
     "TS6133: 'PostgresListTablesOptions' is declared but its value is never read.": 1
-  },
-  "src/lib/react-query/hooks/project-domains.ts": {
-    "TS2769: No overload matches this call.": 1
   },
   "src/lib/react-query/hooks/sites.ts": {
     "TS2322: Type 'string | undefined' is not assignable to type 'string'.": 1,

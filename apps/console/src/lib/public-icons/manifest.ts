@@ -193,6 +193,7 @@ export const PUBLIC_ICON_FILENAMES = [
   'vapor.svg',
   'vercel.svg',
   'vimeo.svg',
+  'vipps.svg',
   'vite.svg',
   'vk.svg',
   'vonage.svg',

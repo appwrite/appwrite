@@ -32,6 +32,7 @@ use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Appwrite\Usage\Operations;
 use Appwrite\Usage\Policy as UsagePolicy;
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hook\FunctionCache;
 use Appwrite\Utopia\Database\Hook\Joins;
@@ -44,7 +45,6 @@ use GraphQL\Error\Error as GraphQLError;
 use OpenRuntimes\Orchestrator\Jobs;
 use Swoole\Table;
 use Utopia\Agents\Adapters\Appwrite as AppwriteAdapter;
-use Utopia\Agents\Agent;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Argon2;
@@ -308,13 +308,13 @@ return function (Container $context): void {
     /**
      * List of allowed request schemes for the request.
      */
-    $context->set('allowedSchemes', function (array $platform, Document $project, string $mode) {
+    $context->set('allowedSchemes', function (array $platform, Project $project, string $mode) {
         $allowed = [...($platform['schemas'] ?? [])];
 
         if (! $project->isEmpty() && $project->getId() !== 'console' && $mode !== APP_MODE_ADMIN) {
             /* Add hardcoded schemes */
             $allowed[] = 'exp';
-            $allowed[] = 'appwrite-callback-' . $project->getId();
+            $allowed[] = $project->getCallbackScheme();
 
             /* Add platform configured schemes */
             $platforms = $project->getAttribute('platforms', []);
@@ -448,7 +448,7 @@ return function (Container $context): void {
         ['allowedHostnames', 'allowedSchemes']
     );
 
-    $context->set('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
+    $context->set('user', function (string $mode, Project $project, Project $console, Request $request, Response $response, Database $dbForProject, Database $dbForPlatform, Store $store, Token $proofForToken, $authorization) {
         /**
          * Handles user authentication and session validation.
          *
@@ -470,10 +470,10 @@ return function (Container $context): void {
          */
         $authorization->setStatus(true);
 
-        $store->setKey('a_session_' . $project->getId());
+        $store->setKey($project->getSessionKey());
 
         if ($mode === APP_MODE_ADMIN) {
-            $store->setKey('a_session_' . $console->getId());
+            $store->setKey($console->getSessionKey());
         }
 
         $store->decode(
@@ -619,10 +619,13 @@ return function (Container $context): void {
         return $match->params['projectId'] ?? '';
     }, ['request', 'utopia']);
 
-    $context->set('project', function ($dbForPlatform, $request, $console, $authorization, Http $utopia, string $projectIdFromPath) {
-        /** @var Appwrite\Utopia\Request $request */
-        /** @var Utopia\Database\Database $dbForPlatform */
-        /** @var Utopia\Database\Document $console */
+    /**
+     * The ID of the project the request names: the `project` param or the X-Appwrite-Project
+     * header, else the access key of an S3 request or the path of a deprecated project alias.
+     * Empty, or `console`, for the console. Kept apart from the project document so that a
+     * comparison with what the client sent never depends on how the document was looked up.
+     */
+    $context->set('projectId', function (Request $request, Http $utopia, string $projectIdFromPath): string {
         $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
         // Realtime channel "project" can send project=Query array
         if (! \is_string($projectId)) {
@@ -668,14 +671,16 @@ return function (Container $context): void {
             }
         }
 
+        return $projectId;
+    }, ['request', 'utopia', 'projectIdFromPath']);
+
+    $context->set('project', function (string $projectId, Database $dbForPlatform, Document $console, Authorization $authorization) {
         if ($projectId === '' || $projectId === 'console') {
             return $console;
         }
 
-        $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-
-        return $project;
-    }, ['dbForPlatform', 'request', 'console', 'authorization', 'utopia', 'projectIdFromPath']);
+        return $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+    }, ['projectId', 'dbForPlatform', 'console', 'authorization']);
 
     $context->set('session', function (User $user, Store $store, Token $proofForToken, Request $request, Document $project, Document $console, string $mode) {
         if ($user->isEmpty()) {
@@ -798,7 +803,10 @@ return function (Container $context): void {
                 return $over;
             }
 
-            return \min($complexity * $limit, $over);
+            // graphql-php still runs the list resolver (a REST find() + count()) when @skip/@include
+            // removes every selected field and the child complexity is 0, so charge at least one unit
+            // per row; otherwise the same field aliased many times repeats unbounded work at no cost.
+            return \min(\max($complexity, 1) * $limit, $over);
         };
 
         $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
@@ -880,7 +888,7 @@ return function (Container $context): void {
 
     $context->set('audit', fn ($dbForProject) => new Audit(new AdapterDatabase($dbForProject)), ['dbForProject']);
 
-    $context->set('mode', function ($request, Document $project) {
+    $context->set('mode', function ($request, string $projectId) {
         /** @var Appwrite\Utopia\Request $request */
 
         /**
@@ -894,18 +902,20 @@ return function (Container $context): void {
             $mode = $request->getHeaderLine('x-appwrite-mode', APP_MODE_DEFAULT);
         }
 
-        $projectId = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
+        $named = $request->getParam('project', $request->getHeaderLine('x-appwrite-project', ''));
         // GitLab webhook bodies carry a 'project' object, not a project ID
-        if (! \is_string($projectId)) {
-            $projectId = $request->getHeaderLine('x-appwrite-project', '');
+        if (! \is_string($named)) {
+            $named = $request->getHeaderLine('x-appwrite-project', '');
         }
 
-        if ($projectId !== '' && $project->getId() !== $projectId) {
+        // The request acts on a project other than the one it names, as a deprecated alias
+        // under /v1/projects/:projectId does for the console
+        if ($named !== '' && $projectId !== $named) {
             $mode = APP_MODE_ADMIN;
         }
 
         return $mode;
-    }, ['request', 'project']);
+    }, ['request', 'projectId']);
 
     $context->set('requestTimestamp', function ($request) {
         // TODO: Move this to the Request class itself
@@ -1170,12 +1180,10 @@ return function (Container $context): void {
     $context->set('deviceForFunctions', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId())), ['project', 'telemetry']);
     $context->set('deviceForBuilds', fn ($project, Telemetry $telemetry) => new Device\Telemetry($telemetry, getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId())), ['project', 'telemetry']);
 
-    $context->set('embeddingAgent', function ($register) {
-        $adapter = new AppwriteAdapter();
-        $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'));
-        $adapter->setTimeout((int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'));
-        return new Agent($adapter);
-    }, ['register']);
+    $context->set('embedder', fn () => new AppwriteAdapter(
+        endpoint: System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://appwrite-embedding:3000/embed'),
+        timeout: (int) System::getEnv('_APP_EMBEDDING_TIMEOUT', '30000'),
+    ));
 
     $context->set('geo', fn (Locale $locale, ?GeoClient $geoClient, Table $geoRecords) => new Geo(
         $geoClient,

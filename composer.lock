@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "074cceb2ac7d489bceff880b253c68fe",
+    "content-hash": "910160c960ca23fa21c63a30f0c100ef",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "32.1.0",
+            "version": "32.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6"
+                "reference": "58b5464354e7226517122cddcf519872a0f3fc62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/92e840031d688c933acfde19e5114ca6f5ca2bb6",
-                "reference": "92e840031d688c933acfde19e5114ca6f5ca2bb6",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/58b5464354e7226517122cddcf519872a0f3fc62",
+                "reference": "58b5464354e7226517122cddcf519872a0f3fc62",
                 "shasum": ""
             },
             "require": {
@@ -111,10 +111,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/32.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/32.2.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-10-28T08:19:04+00:00"
+            "time": "2026-11-03T11:11:00+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -2869,16 +2869,16 @@
         },
         {
             "name": "symfony/http-client",
-            "version": "v7.4.19",
+            "version": "v7.4.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client.git",
-                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7"
+                "reference": "ed012bfca0f7b45d97016efcdf9b0639c52a1722"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client/zipball/3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
-                "reference": "3a523f38dc399337ec45b2ab9628e8c37ceb23c7",
+                "url": "https://api.github.com/repos/symfony/http-client/zipball/ed012bfca0f7b45d97016efcdf9b0639c52a1722",
+                "reference": "ed012bfca0f7b45d97016efcdf9b0639c52a1722",
                 "shasum": ""
             },
             "require": {
@@ -2946,7 +2946,7 @@
                 "http"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client/tree/v7.4.19"
+                "source": "https://github.com/symfony/http-client/tree/v7.4.23"
             },
             "funding": [
                 {
@@ -2966,7 +2966,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-08T13:28:43+00:00"
+            "time": "2026-11-04T08:27:22+00:00"
         },
         {
             "name": "symfony/http-client-contracts",
@@ -3877,16 +3877,16 @@
         },
         {
             "name": "symfony/serializer",
-            "version": "v8.1.8",
+            "version": "v8.1.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/serializer.git",
-                "reference": "df54c4fe859d945eb633d2c5e6a410ce535f21e4"
+                "reference": "05624c94507c3acf065b6486bb626f0d741af459"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/serializer/zipball/df54c4fe859d945eb633d2c5e6a410ce535f21e4",
-                "reference": "df54c4fe859d945eb633d2c5e6a410ce535f21e4",
+                "url": "https://api.github.com/repos/symfony/serializer/zipball/05624c94507c3acf065b6486bb626f0d741af459",
+                "reference": "05624c94507c3acf065b6486bb626f0d741af459",
                 "shasum": ""
             },
             "require": {
@@ -3952,7 +3952,7 @@
             "description": "Handles serializing and deserializing data structures, including object graphs, into array structures or other formats like XML and JSON.",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/serializer/tree/v8.1.8"
+                "source": "https://github.com/symfony/serializer/tree/v8.1.11"
             },
             "funding": [
                 {
@@ -3972,7 +3972,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-28T09:40:25+00:00"
+            "time": "2026-11-04T08:39:20+00:00"
         },
         {
             "name": "symfony/service-contracts",
@@ -4861,16 +4861,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "5.13.17",
+            "version": "5.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9"
+                "reference": "92ee10585c83dc83805b468784e71faa44316b44"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/be65dd140b1f01386a1a93307c2de2ec326ad4e9",
-                "reference": "be65dd140b1f01386a1a93307c2de2ec326ad4e9",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/92ee10585c83dc83805b468784e71faa44316b44",
+                "reference": "92ee10585c83dc83805b468784e71faa44316b44",
                 "shasum": ""
             },
             "require": {
@@ -4886,7 +4886,8 @@
                 "brianium/paratest": "^7",
                 "phpunit/phpunit": "^11",
                 "rector/rector": "^2.4",
-                "squizlabs/php_codesniffer": "^4"
+                "squizlabs/php_codesniffer": "^4",
+                "utopia-php/client": "^0.6"
             },
             "type": "library",
             "autoload": {
@@ -4907,9 +4908,9 @@
             "description": "SDK generator for Appwrite APIs across multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/5.13.17"
+                "source": "https://github.com/appwrite/sdk-generator/tree/5.15.0"
             },
-            "time": "2026-10-24T11:32:35+00:00"
+            "time": "2026-11-03T14:36:04+00:00"
         },
         {
             "name": "brianium/paratest",

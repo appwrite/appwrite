@@ -4,6 +4,8 @@ import type { GitHubStarHistoryPoint } from '@/lib/marketing/github-stars-histor
 type GithubStarsFile = {
   stars: number
   fetchedAt: string
+  forks?: number
+  commits?: number
   history?: GitHubStarHistoryPoint[]
 }
 
@@ -24,6 +26,17 @@ function formatStars(count: number): string {
   return String(count)
 }
 
+/** Generated count as a compact "5.8K+" stat; `fallback` when not generated. */
+function formatGeneratedStat(
+  count: number | undefined,
+  fallback: string,
+): string {
+  if (typeof count !== 'number' || !Number.isFinite(count) || count <= 0) {
+    return fallback
+  }
+  return `${formatStars(Math.round(count))}+`
+}
+
 /** Whole thousands for compact "K+" / "k+" marketing stats. */
 export const GITHUB_STARS_THOUSANDS = Math.floor(GITHUB_STARS_COUNT / 1000)
 
@@ -31,12 +44,13 @@ export const MARKETING_SOCIAL_STATS = {
   github: {
     stat: formatStars(GITHUB_STARS_COUNT),
     link: 'https://github.com/appwrite/appwrite',
-    commits: '27K+',
+    commits: formatGeneratedStat(githubStars.commits, '27K+'),
     pullRequests: '4.7K+',
     issues: '3K+',
     openIssues: '600+',
     closedIssues: '3.3K+',
-    forks: '4.4K+',
+    forks: formatGeneratedStat(githubStars.forks, '4.4K+'),
+    // Curated: GitHub's REST contributor count caps far below the repo page.
     contributors: '800+',
   },
   discord: {

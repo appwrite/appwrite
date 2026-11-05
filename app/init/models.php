@@ -159,6 +159,7 @@ use Appwrite\Utopia\Response\Model\OAuth2Stripe;
 use Appwrite\Utopia\Response\Model\OAuth2TikTok;
 use Appwrite\Utopia\Response\Model\OAuth2Tradeshift;
 use Appwrite\Utopia\Response\Model\OAuth2Twitch;
+use Appwrite\Utopia\Response\Model\OAuth2Vipps;
 use Appwrite\Utopia\Response\Model\OAuth2Webflow;
 use Appwrite\Utopia\Response\Model\OAuth2WordPress;
 use Appwrite\Utopia\Response\Model\OAuth2X;
@@ -209,6 +210,10 @@ use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntime;
 use Appwrite\Utopia\Response\Model\ProviderRepositoryRuntimeList;
 use Appwrite\Utopia\Response\Model\Report;
 use Appwrite\Utopia\Response\Model\ResourceToken;
+use Appwrite\Utopia\Response\Model\Review;
+use Appwrite\Utopia\Response\Model\ReviewEvent;
+use Appwrite\Utopia\Response\Model\ReviewFinding;
+use Appwrite\Utopia\Response\Model\ReviewRepository;
 use Appwrite\Utopia\Response\Model\Row;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Runtime;
@@ -321,6 +326,9 @@ Response::setModel(new BaseList('VectorsDB Collections List', Response::MODEL_VE
 Response::setModel(new BaseList('Embedding list', Response::MODEL_EMBEDDING_LIST, 'embeddings', Response::MODEL_EMBEDDING));
 Response::setModel(new BaseList('Insights List', Response::MODEL_INSIGHT_LIST, 'insights', Response::MODEL_INSIGHT));
 Response::setModel(new BaseList('Reports List', Response::MODEL_REPORT_LIST, 'reports', Response::MODEL_REPORT));
+Response::setModel(new BaseList('Reviews List', Response::MODEL_REVIEW_LIST, 'reviews', Response::MODEL_REVIEW));
+Response::setModel(new BaseList('Review Events List', Response::MODEL_REVIEW_EVENT_LIST, 'events', Response::MODEL_REVIEW_EVENT));
+Response::setModel(new BaseList('Review Repositories List', Response::MODEL_REVIEW_REPOSITORY_LIST, 'repositories', Response::MODEL_REVIEW_REPOSITORY));
 
 // Entities
 Response::setModel(new Database());
@@ -478,6 +486,7 @@ Response::setModel(new OAuth2Keycloak());
 Response::setModel(new OAuth2Oidc());
 Response::setModel(new OAuth2Okta());
 Response::setModel(new OAuth2Kick());
+Response::setModel(new OAuth2Vipps());
 Response::setModel(new OAuth2Apple());
 Response::setModel(new OAuth2Microsoft());
 Response::setModel(new OAuth2Resend());
@@ -564,6 +573,10 @@ Response::setModel(new MigrationFirebaseProject());
 Response::setModel(new Insight());
 Response::setModel(new InsightCTA());
 Response::setModel(new Report());
+Response::setModel(new Review());
+Response::setModel(new ReviewEvent());
+Response::setModel(new ReviewFinding());
+Response::setModel(new ReviewRepository());
 
 // Tests (keep last)
 Response::setModel(new Mock());

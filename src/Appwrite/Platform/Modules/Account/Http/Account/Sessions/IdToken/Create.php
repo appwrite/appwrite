@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\Sessions\IdToken;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\OIDC\IdTokenVerifier;
 use Appwrite\Auth\OIDC\Jwks;
@@ -86,9 +87,7 @@ class Create extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->label('abuse-reset', [201])
+            ->label('abuse', [Limit::failures(['projectId', 'url', 'ip'], 10)])
             ->param('provider', '', new WhiteList($idTokenProviders, true), 'OAuth2 provider that issued the ID token. Currently, supported providers are: ' . \implode(', ', $documentedProviders) . '.', enum: new Enum(name: 'IdTokenProvider', exclude: ['mock', 'mock-unverified']))
             ->param('idToken', '', new Text(8192, 0), 'OpenID Connect ID token (JWT) obtained natively from the provider, for example via Google Credential Manager or Sign in with Apple.')
             ->param('nonce', '', new Text(256, 0), 'Raw nonce used when requesting the ID token. Required for Apple, and whenever the token carries a nonce claim, which must match it. Ignored when the provider issued the token without a nonce.', true)

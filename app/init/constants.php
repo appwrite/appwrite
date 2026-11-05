@@ -41,9 +41,13 @@ const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements
 const APP_LIMIT_ARRAY_LABELS_SIZE = 1000; // Default maximum of how many labels elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_SCOPES_SIZE = 200; // Default maximum of how many scope elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
+const APP_LIMIT_AUDIT_REASON_LENGTH = 256; // Maximum length of the X-Appwrite-Reason header kept on an audit log
 const APP_LIMIT_ROLE_LENGTH = 81; // Maximum length of a team role: `project-<projectId>-<role>` is 9 template characters around two 36-character IDs
 const APP_LIMIT_SUBQUERY = 1000;
 const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 25;
+const APP_LIMIT_REVIEWS_PULL = 100; // Reviews of one pull request the review service reads back, newest first
+const APP_LIMIT_REVIEW_FINDINGS = 1000; // Findings of one pull request the review service reads back at once
+const APP_LIMIT_REVIEW_LEARNINGS = 100; // Learnings of a repository a review is given, oldest first
 const APP_LIMIT_REALTIME_CONNECTIONS = 32; // Maximum open realtime connections per project user on one worker
 const APP_LIMIT_REALTIME_GUEST_CONNECTIONS = 128; // Maximum open realtime guest connections per IP, or IPv6 /64, per project on one worker
 const APP_LIMIT_MQTT_KEEP_ALIVE = 1200; // MQTT keep-alive in seconds for a client that disables it, and the longest an MQTT 5.0 client is granted
@@ -108,7 +112,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.6.2';
+const APP_VERSION_STABLE = '2.7.1';
 const APP_READINESS_MARKER = '/tmp/.appwrite-ready';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -518,6 +522,12 @@ const REALTIME_CONCURRENCY_INTERVAL = '5m';
 // sampled is lost for good.
 const REALTIME_CONCURRENCY_LAG_SECONDS = 300;
 
+// Default for _APP_REALTIME_BOOT_TIMEOUT: longest a presence write waits at boot for the self-hosted cleanup.
+const REALTIME_BOOT_TIMEOUT_SECONDS = 30;
+
+// A realtime process whose heartbeat (every 5s) is older than this counts as gone.
+const REALTIME_HEARTBEAT_WINDOW_SECONDS = 60;
+
 // Realtime metrics
 const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
@@ -545,6 +555,7 @@ const RESOURCE_TYPE_TEAMS = 'teams';
 const RESOURCE_TYPE_EMBEDDINGS_TEXT = 'embeddingsText';
 const RESOURCE_TYPE_INSIGHTS = 'insights';
 const RESOURCE_TYPE_REPORTS = 'reports';
+const RESOURCE_TYPE_REVIEWS = 'reviews';
 const RESOURCE_TYPE_MONITORS = 'monitors';
 
 // Insight types — engine-specific so the CTA action can reference the right public API.

@@ -602,6 +602,30 @@ class Realtime extends MessagingAdapter
     }
 
     /**
+     * Connection IDs of every connection in a project that still holds a team's role.
+     * Deleting the team ends them so a reconnect rebuilds the roles without it, instead
+     * of the socket keeping the team role and its access until it happens to reconnect.
+     *
+     * @return array<int, mixed>
+     */
+    public function getTeamConnections(string $projectId, string $teamId): array
+    {
+        if ($teamId === '') {
+            return [];
+        }
+
+        $role = Role::team($teamId)->toString();
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) === $projectId && \in_array($role, $connection['roles'] ?? [], true)) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
      * Sends an event to the Realtime Server
      * @param string $projectId
      * @param array $payload
@@ -1061,25 +1085,38 @@ class Realtime extends MessagingAdapter
      * @return array
      * @throws \Exception
      */
-    public static function fromPayload(string $event, Document $payload, ?Document $project = null, ?Document $database = null, ?Document $collection = null, ?Document $bucket = null): array
+    public static function fromPayload(string $event, Document $payload, ?Document $project = null, ?Document $database = null, ?Document $collection = null, ?Document $bucket = null, ?string $userId = null): array
     {
         $channels = [];
         $roles = [];
         $permissionsChanged = false;
         $projectId = null;
+        // The part of a `users.{userId}.…` event after the id; set in the users case, where a
+        // dotted id spans more than one dot so part indices cannot delimit it.
+        $suffix = [];
         // TODO: add method here to remove all the magic index accesses
         $parts = explode('.', $event);
 
         switch ($parts[0]) {
             case 'users':
+                // A custom user id may contain dots, so it cannot be read from the split event
+                // name without truncating at the first dot (addressing another user's account).
+                // The authoritative id is the event's userId param; fall back to parts[1] only
+                // when it is absent (e.g. a direct caller that does not pass it).
+                $accountUserId = ($userId !== null && $userId !== '') ? $userId : ($parts[1] ?? '');
                 $channels[] = 'account';
-                $channels[] = 'account.' . $parts[1];
-                $roles = [Role::user(Id::custom($parts[1]))->toString()];
+                $channels[] = 'account.' . $accountUserId;
+                $roles = [Role::user(Id::custom($accountUserId))->toString()];
                 // Roles come from the user document (verification, labels, status,
                 // sessions), so the user's open connections re-resolve when it changes,
                 // as they already do for memberships.
                 $permissionsChanged = true;
-                $suffix = \array_slice($parts, 2);
+                // The suffix is what follows `users.{userId}.`; slicing by dot count would
+                // mis-split a dotted id, so strip the known prefix instead.
+                $prefix = 'users.' . $accountUserId . '.';
+                $suffix = \str_starts_with($event, $prefix)
+                    ? \explode('.', \substr($event, \strlen($prefix)))
+                    : \array_slice($parts, 2);
                 foreach (self::USER_EVENTS_WITHOUT_ACCESS_CHANGE as $pattern) {
                     $segments = \explode('.', $pattern);
                     if (\count($segments) !== \count($suffix)) {
@@ -1264,12 +1301,13 @@ class Realtime extends MessagingAdapter
         // like `users.U.sessions.S.create` or `users.U.challenges.C.create` would
         // otherwise be suffixed as `account.create` — making a subscription to
         // `account.create` receive unrelated session/challenge/recovery/verification
-        // events. Restrict suffixing to top-level user events where the action sits
-        // at parts[2] (`users.U.create`, `users.U.update.email`, etc.).
+        // events. Restrict suffixing to top-level user events where the action is the first
+        // segment after the id (`users.U.create`, `users.U.update.email`, etc.). The parsed
+        // suffix is used rather than parts[2] so a dotted user id does not shift its position.
         if (
             $action !== null
             && $parts[0] === 'users'
-            && ($parts[2] ?? null) !== $action
+            && ($suffix[0] ?? null) !== $action
         ) {
             $action = null;
         }
@@ -1281,8 +1319,11 @@ class Realtime extends MessagingAdapter
                 $segCount = \count($segments);
                 $leafIsResource = \in_array($segments[$segCount - 1], self::RESOURCE_LEAF_NAMES, true);
                 $parentIsResource = $segCount >= 2 && \in_array($segments[$segCount - 2], self::RESOURCE_LEAF_NAMES, true);
+                // An account channel's id (the userId) may span several segments when it holds
+                // dots, pushing `account` out of the leaf/parent window; it is still suffixable.
+                $isAccountChannel = $segments[0] === 'account';
 
-                if ($leafIsResource || $parentIsResource) {
+                if ($leafIsResource || $parentIsResource || $isAccountChannel) {
                     $augmented[] = $channel. '.' .$action;
                 }
             }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Organization\Http\Transfers;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -32,8 +33,7 @@ class Get extends Action
             ->desc('Get project transfer')
             ->groups(['api', 'organization'])
             ->label('scope', 'projects.read')
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'ip:{ip},url:{url}')
+            ->label('abuse', [Limit::attempts(['ip', 'url'], 10)])
             ->label('sdk', new Method(
                 namespace: 'organization',
                 group: 'transfers',
