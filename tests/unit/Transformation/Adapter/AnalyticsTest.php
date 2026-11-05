@@ -17,6 +17,7 @@ final class AnalyticsTest extends TestCase
     {
         yield 'html' => [['content-type' => 'text/html'], true];
         yield 'html with charset' => [['Content-Type' => 'text/html; charset=utf-8'], true];
+        yield 'mixed case' => [['content-type' => 'Text/HTML'], true];
         yield 'identity encoding' => [['content-type' => 'text/html', 'Content-Encoding' => 'identity'], true];
         yield 'gzip' => [['content-type' => 'text/html', 'content-encoding' => 'gzip'], false];
         yield 'brotli' => [['content-type' => 'text/html', 'Content-Encoding' => 'br'], false];

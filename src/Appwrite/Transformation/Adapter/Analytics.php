@@ -38,7 +38,7 @@ class Analytics extends Adapter
             return false;
         }
 
-        return \str_contains($contentType, 'text/html');
+        return \str_contains(\strtolower($contentType), 'text/html');
     }
 
     public function transform(): void
