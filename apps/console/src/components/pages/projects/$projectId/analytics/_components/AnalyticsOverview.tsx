@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { FORCE_LTR_CLASS } from '@/lib/layout/force-ltr'
 import { createCompactCountAxisTickFormatter } from '@/lib/usage/format-metric'
@@ -123,6 +123,35 @@ const OVERVIEW_METRICS: {
   { key: 'visitDuration', label: 'Visit duration', info: 'visitDuration', format: formatDuration, source: 'aggregate', axis: 'duration' },
   { key: 'engagementTime', label: 'Engagement time', info: 'engagementTime', format: formatDuration, source: 'aggregate', axis: 'duration' },
 ]
+
+type OverviewTile = {
+  key: AnalyticsChartMetric
+  label?: string
+  info?: AnalyticsMetricInfoKey
+}
+
+// Flutter's screen and lifecycle events never interact, so bounce rate reads
+// oddly on apps. Agents relay from servers, where visitors mean little.
+// prettier-ignore
+const TILES_BY_TYPE: Record<AnalyticsPropertyType, readonly OverviewTile[]> = {
+  [AnalyticsPropertyType.Web]: OVERVIEW_METRICS.map(({ key }) => ({ key })),
+  [AnalyticsPropertyType.Mobile]: [
+    { key: 'visitors' },
+    { key: 'visits', label: 'Sessions' },
+    { key: 'pageviews', label: 'Screen views', info: 'screenViews' },
+    { key: 'events' },
+    { key: 'users' },
+    { key: 'viewsPerVisit', label: 'Screens per session', info: 'screensPerSession' },
+    { key: 'visitDuration', label: 'Session duration' },
+    { key: 'engagementTime', info: 'appEngagementTime' },
+  ],
+  [AnalyticsPropertyType.Agent]: [
+    { key: 'events' },
+    { key: 'visits', label: 'Sessions' },
+    { key: 'users' },
+    { key: 'visitDuration', label: 'Session duration' },
+  ],
+}
 
 /** Value of a series-backed metric for one bucket. */
 function bucketValue(
@@ -319,6 +348,7 @@ type AnalyticsOverviewProps = {
   onRefresh: () => void
   /** Include the Users tab (see useShowUsersPanel). */
   showUsers: boolean
+  type: AnalyticsPropertyType
 }
 
 /**
@@ -344,6 +374,7 @@ export function AnalyticsOverview({
   comparisonRange,
   onRefresh,
   showUsers,
+  type,
 }: AnalyticsOverviewProps) {
   const t = useT()
   const [hasRevealed, setHasRevealed] = useState(false)
@@ -404,12 +435,19 @@ export function AnalyticsOverview({
 
   // `users` counts identified traffic only, so it stays hidden on properties
   // that never record a user ID rather than showing a permanent 0.
-  const metrics = showUsers
-    ? OVERVIEW_METRICS
-    : OVERVIEW_METRICS.filter((metric) => metric.key !== 'users')
+  const metrics = TILES_BY_TYPE[type].flatMap((tile) =>
+    tile.key === 'users' && !showUsers
+      ? []
+      : [
+          {
+            ...OVERVIEW_METRICS.find((metric) => metric.key === tile.key)!,
+            ...tile,
+          },
+        ],
+  )
 
   // Aggregate metrics can't be read with some filters, so while one is
-  // active the chart falls back to visitors (the tab explains why).
+  // active the chart falls back to the first tab (the tab explains why).
   const requestedMetric =
     metrics.find((metric) => metric.key === activeSeries) ?? metrics[0]
   const activeMetric =

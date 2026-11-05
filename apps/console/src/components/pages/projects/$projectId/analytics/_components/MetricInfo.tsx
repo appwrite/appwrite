@@ -24,15 +24,20 @@ export const ANALYTICS_METRIC_INFO = {
     'Every tracked event, pageviews and custom events alike, including repeats by the same visitor.',
   visits: 'Sessions with at least one event in the selected range.',
   pageviews: 'Pages viewed, including repeat views of the same page.',
+  screenViews: 'Screens viewed, including repeat views of the same screen.',
   users:
     'Distinct identified users. Only events that carry a user ID are counted; anonymous visitors are left out.',
   viewsPerVisit: 'Average pageviews per session (pageviews ÷ visits).',
+  screensPerSession:
+    'Average screen views per session (screen views ÷ sessions).',
   bounceRate:
     'Share of sessions with only a single event. Lower usually means visitors explore further.',
   visitDuration:
     'Average session length, from first to last event. Single-event sessions count as 0s.',
   engagementTime:
     'Average time the page was in the foreground per session. Sessions with no engagement are excluded.',
+  appEngagementTime:
+    'Average time the app was in the foreground per session. Sessions with no engagement are excluded.',
   scrollDepth: 'How far down the page visitors scrolled, on average.',
   channels:
     'Channels group referrers into types such as search, social or direct. Sources show the individual referrer. Campaigns break down the utm_* parameters on landing URLs.',

@@ -1,5 +1,5 @@
 import type { Page, Request, Route } from '@playwright/test'
-import type { Models } from '@appwrite.io/console'
+import { AnalyticsPropertyType, type Models } from '@appwrite.io/console'
 import { expect, test } from './fixtures'
 
 /**
@@ -66,7 +66,7 @@ const PROJECT = {
   authMethods: [] as Models.Project['authMethods'],
 } satisfies Partial<Models.Project>
 
-function property(identifyUsers: boolean) {
+function property(identifyUsers: boolean, type?: AnalyticsPropertyType) {
   return {
     $id: PROPERTY_ID,
     $createdAt: NOW,
@@ -76,6 +76,7 @@ function property(identifyUsers: boolean) {
     enabled: true,
     allowedOrigins: ['*'],
     identifyUsers,
+    ...(type ? { type } : {}),
     accessedAt: NOW,
     firstAccessedAt: NOW,
   } satisfies Partial<Models.AnalyticsProperty>
@@ -100,6 +101,7 @@ type MockOptions = {
   identifyUsers?: boolean
   /** User IDs present in the data (sent by a server with an API key). */
   hasUsers?: boolean
+  type?: AnalyticsPropertyType
 }
 
 type Mock = { metrics: URL[]; patches: Request[] }
@@ -196,10 +198,13 @@ async function mockAppwriteApi(
         mock.patches.push(request)
         identifyUsers = request.postDataJSON().identifyUsers ?? identifyUsers
       }
-      return json(200, property(identifyUsers))
+      return json(200, property(identifyUsers, options.type))
     }
     if (apiPath === '/analytics/properties')
-      return json(200, { total: 1, properties: [property(identifyUsers)] })
+      return json(200, {
+        total: 1,
+        properties: [property(identifyUsers, options.type)],
+      })
 
     if (apiPath === '/account') return json(200, ACCOUNT)
     if (apiPath === '/account/prefs') {
@@ -373,6 +378,39 @@ test.describe('analytics property (mocked API)', () => {
     await expect(card(page, 'Users').getByText('user-a')).toBeVisible({
       timeout: 30_000,
     })
+  })
+
+  test('picks overview tiles for a mobile property', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Mobile })
+    await openProperty(page)
+
+    const tiles = page.locator('[role="button"][aria-pressed]')
+    await expect(tiles.getByText('Screen views', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(
+      tiles.getByText('Session duration', { exact: true }),
+    ).toBeVisible()
+    await expect(tiles.getByText('Pageviews', { exact: true })).toHaveCount(0)
+    await expect(tiles.getByText('Bounce rate', { exact: true })).toHaveCount(0)
+  })
+
+  test('leads with events for an agent property', async ({ page }) => {
+    await mockAppwriteApi(page, { type: AnalyticsPropertyType.Agent })
+    await openProperty(page)
+
+    // Metric tiles carry an info hint; the interval toggle is also pressable.
+    const tiles = page
+      .locator('[role="button"][aria-pressed]')
+      .filter({ has: page.getByRole('button', { name: 'More info' }) })
+    await expect(tiles.first()).toContainText('Events', { timeout: 30_000 })
+    await expect(tiles.first()).toHaveAttribute('aria-pressed', 'true')
+    await expect(tiles).toHaveText([
+      /^Events/,
+      /^Sessions/,
+      /^Session duration/,
+    ])
+    await attachScreenshot(page, 'property-agent-tiles')
   })
 
   test('turns user identification on', async ({ page }) => {
