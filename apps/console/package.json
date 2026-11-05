@@ -102,7 +102,7 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "9.6.1",
     "@renoun/screenshot": "^0.3.3",
-    "@sentry/bun": "10.55.0",
+    "@sentry/bun": "11.8.0",
     "@sentry/tanstackstart-react": "^10.40.0",
     "@stripe/stripe-js": "^4.8.0",
     "@tailwindcss/vite": "^4.0.6",
