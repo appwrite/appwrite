@@ -3956,6 +3956,10 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Times follow the time zone this schedule was created in:':
     '時刻はこのスケジュールを作成したタイムゾーンに従います:',
   'Your local time zone:': 'ローカルのタイムゾーン:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'このルールには、このバージョンのコンソールでは表示できないスケジュールがあります。削除するか新しいスケジュールを設定しない限り、そのまま保持されます。',
+  'Remove schedule': 'スケジュールを削除',
+  'The schedule will be removed when you save.': '保存するとスケジュールが削除されます。',
   'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
     '特定の曜日や時間帯にのみこのルールを適用します。オフの場合、ルールは常に有効です。',
   Repeat: '繰り返し',

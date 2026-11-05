@@ -3879,6 +3879,10 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Times follow the time zone this schedule was created in:':
     'השעות לפי אזור הזמן שבו נוצר התזמון:',
   'Your local time zone:': 'אזור הזמן המקומי שלכם:',
+  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.':
+    'לכלל הזה יש תזמון שגרסה זו של הקונסולה לא יכולה להציג. הוא נשמר אלא אם תסירו אותו או תגדירו תזמון חדש.',
+  'Remove schedule': 'הסרת התזמון',
+  'The schedule will be removed when you save.': 'התזמון יוסר כשתשמרו.',
   'Apply this rule only on certain days or at certain times. When off, the rule is always active.':
     'החלת הכלל רק בימים או בשעות מסוימים. כשהאפשרות כבויה, הכלל פעיל תמיד.',
   Repeat: 'חזרה',

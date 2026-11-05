@@ -1,4 +1,5 @@
 import { Clock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumberInput } from '@/components/ui/number-input'
@@ -29,10 +30,20 @@ type RuleScheduleProps = {
   value: FirewallScheduleDraft
   onChange: (next: FirewallScheduleDraft) => void
   disabled?: boolean
+  /**
+   * The rule has a stored schedule this form cannot show, such as a mode added after this
+   * Console was built. It is kept on save unless the user removes or replaces it.
+   */
+  unreadable?: { removed: boolean; onRemove: () => void }
 }
 
 /** When a firewall rule is active. Off means always active. */
-export function RuleSchedule({ value, onChange, disabled }: RuleScheduleProps) {
+export function RuleSchedule({
+  value,
+  onChange,
+  disabled,
+  unreadable,
+}: RuleScheduleProps) {
   const t = useT()
   const set = (patch: Partial<FirewallScheduleDraft>) =>
     onChange({ ...value, ...patch })
@@ -264,6 +275,30 @@ export function RuleSchedule({ value, onChange, disabled }: RuleScheduleProps) {
               </div>
             )}
           </div>
+        </div>
+      ) : unreadable ? (
+        <div
+          className="flex items-start justify-between gap-3 border-t border-border px-4 py-3 text-[12px] text-muted-foreground"
+          data-testid="firewall-schedule-unreadable"
+        >
+          <p>
+            {unreadable.removed
+              ? t('The schedule will be removed when you save.')
+              : t(
+                  'This rule has a schedule this version of the Console cannot show. It is kept unless you remove it or set a new one.',
+                )}
+          </p>
+          {unreadable.removed ? null : (
+            <Button
+              type="button"
+              variant="link"
+              className="shrink-0 text-[12px]"
+              onClick={unreadable.onRemove}
+              disabled={disabled}
+            >
+              {t('Remove schedule')}
+            </Button>
+          )}
         </div>
       ) : null}
     </div>

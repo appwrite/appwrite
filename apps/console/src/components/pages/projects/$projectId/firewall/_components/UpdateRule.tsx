@@ -105,6 +105,9 @@ export function UpdateRule({
     defaultScheduleDraft('UTC', todayIn('UTC')),
   )
 
+  const [removeUnreadableSchedule, setRemoveUnreadableSchedule] =
+    useState(false)
+
   useEffect(() => {
     if (!open || !rule) return
     setName(rule.name)
@@ -135,6 +138,7 @@ export function UpdateRule({
       draftsFromParsedConditions(parseFirewallConditions(rule.conditions)),
     )
     const timeZone = getUserTimeZone()
+    setRemoveUnreadableSchedule(false)
     setSchedule(
       scheduleDraftFromRule(rule.schedule, timeZone, todayIn(timeZone)),
     )
@@ -163,8 +167,11 @@ export function UpdateRule({
       (location.trim().length > 0 && statusCode > 0)) &&
     isScheduleDraftComplete(schedule)
 
-  // Switching the schedule off removes it only when the rule has one.
+  // Switching the schedule off removes it only when the rule has one this form can show. A
+  // stored schedule it cannot read is kept unless the user explicitly removes it.
   const hadSchedule = scheduleDraftFromRule(rule.schedule, 'UTC', '').enabled
+  const hasUnreadableSchedule =
+    !hadSchedule && typeof rule.schedule === 'object' && rule.schedule !== null
 
   const handleSubmit = async () => {
     if (!canSubmit) return
@@ -188,7 +195,10 @@ export function UpdateRule({
         ttl,
         location: location.trim(),
         statusCode,
-        schedule: scheduleUpdatePayload(schedule, hadSchedule),
+        schedule: scheduleUpdatePayload(
+          schedule,
+          hadSchedule || removeUnreadableSchedule,
+        ),
       })
       toast.success(t('Firewall rule updated'))
       onOpenChange(false)
@@ -470,6 +480,14 @@ export function UpdateRule({
                 value={schedule}
                 onChange={setSchedule}
                 disabled={updateMutation.isPending}
+                unreadable={
+                  hasUnreadableSchedule
+                    ? {
+                        removed: removeUnreadableSchedule,
+                        onRemove: () => setRemoveUnreadableSchedule(true),
+                      }
+                    : undefined
+                }
               />
 
               <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
