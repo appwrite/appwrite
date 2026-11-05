@@ -96,17 +96,9 @@ TrackingObserver(
 )
 ```
 
-# Count screens as pageviews {% #pageviews %}
+# Screens as pageviews {% #pageviews %}
 
-Several dashboard figures count `pageview` events only: **Pageviews**, **Views per visit**, **Bounce rate**, and the **Entry pages** and **Exit pages** tabs. With the default `screen_view` name, every visit in an app reads as a bounce with no pageviews.
-
-To fill these figures from your screens, have the observer send screen views as `pageview` events.
-
-```client-flutter
-TrackingObserver(tracking, eventName: 'pageview')
-```
-
-The props stay the same. Visits with two or more screen views then stop counting as bounces, and the first and last screens of each visit appear as entry and exit pages.
+A `screen_view` counts as a view, the same as a `pageview` on the web. Screen views fill **Pageviews** and **Views per visit**, and the first and last screens of each visit appear as entry and exit screens. You don't need to rename them.
 
 # Track screens yourself {% #screen-view %}
 

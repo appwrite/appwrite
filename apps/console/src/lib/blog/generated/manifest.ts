@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-dodo-payments-templates",
+    "href": "/blog/post/announcing-dodo-payments-templates",
+    "title": "Introducing Dodo Payments templates for Appwrite",
+    "description": "Sell one-time products and subscriptions with Dodo Payments and Appwrite Functions. Two new templates store paid orders and grant subscriber access for you.",
+    "date": "2026-11-05",
+    "lastUpdated": "2026-11-05",
+    "timeToRead": 4,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-dodo-payments-templates/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "incident-report-sites-functions-runtime-vulnerability",
     "href": "/blog/post/incident-report-sites-functions-runtime-vulnerability",
     "title": "Incident report: Sites & Functions runtime vulnerability, November 1st, 2026",

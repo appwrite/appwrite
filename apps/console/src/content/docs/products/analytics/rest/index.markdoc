@@ -25,7 +25,7 @@ curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPER
 
 Appwrite responds with `204 No Content`.
 
-An event named `pageview` counts as a pageview. Any other name is a custom event. Add `props` to attach details, as a flat list that alternates keys and values.
+An event named `pageview` or `screen_view` counts as a pageview. Any other name is a custom event. Add `props` to attach details, as a flat list that alternates keys and values.
 
 ```bash
 curl -X POST 'https://<REGION>.cloud.appwrite.io/v1/analytics/properties/<PROPERTY_ID>/events' \
