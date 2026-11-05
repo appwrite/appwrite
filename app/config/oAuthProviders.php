@@ -366,7 +366,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Paypal',
+        'class' => 'Appwrite\\Auth\\OAuth2\\PaypalSandbox',
     ],
     'podio' => [
         'name' => 'Podio',
@@ -465,7 +465,7 @@ return [
         'form' => false,
         'beta' => false,
         'mock' => false,
-        'class' => 'Appwrite\\Auth\\OAuth2\\Tradeshift',
+        'class' => 'Appwrite\\Auth\\OAuth2\\TradeshiftBox',
     ],
     'twitch' => [
         'name' => 'Twitch',
