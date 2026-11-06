@@ -105,6 +105,7 @@ export function isBudgetLimitReached(
 export {
   isPlanUsageLimitReached,
   isProjectLockedByPlanUsage,
+  isProjectLockedByProjectUsage,
 } from '@/lib/billing/billing-limits'
 
 /**
