@@ -6,9 +6,9 @@ cover: /images/blog/announcing-appwrite-push/cover.avif
 tags: messaging, sdk
 ---
 
-[Appwrite Push](/docs/products/messaging/appwrite-push) is a new push provider in Appwrite Messaging that sends notifications to your apps without Firebase.
+[Appwrite Push](/docs/products/messaging/appwrite-push) is a new push provider in Appwrite Messaging. It sends notifications to your apps straight from Appwrite, so you don't need a Firebase project or your users' device tokens.
 
-With FCM, you create a Firebase project, upload its service account key, and collect a device token from every install before you can send anything. With Appwrite Push:
+With Appwrite Push:
 
 - You create the provider in the Console without any credentials.
 - Your app subscribes with the Appwrite SDK after the user signs in.
