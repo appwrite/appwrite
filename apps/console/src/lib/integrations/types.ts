@@ -14,6 +14,9 @@ export type IntegrationCategorySlug =
   | 'sites'
   | 'storage'
   | 'deployments'
+  | 'developer-tools'
+  | 'migrations'
+  | 'self-hosting'
 
 export type IntegrationProduct = {
   avatar: string

@@ -711,6 +711,7 @@ export const heMarketingDictionary: Record<string, string> = {
     'שירות ההודעות הרחיב את הפלטפורמה עם יכולות אימייל, פוש ו-SMS, והעניק לצוותים כלים נייטיביים לתקשורת עם משתמשים ולהתראות.',
   'Method': 'מתודה',
   'MFA enabled': 'MFA מופעל',
+  'Migrations': 'מיגרציות',
   'Min 12 chars': 'לפחות 12 תווים',
   'Miss': 'החטאה',
   'Model': 'מודל',
@@ -721,6 +722,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'More about the Appwrite Network': 'גלו עוד על Appwrite Network', // pragma: allowlist secret
   'More customers': 'עוד לקוחות',
   'More providers': 'עוד ספקים',
+  'Move your data to Appwrite': 'העבירו את הנתונים שלכם ל-Appwrite',
   'My functions': 'הפונקציות שלי',
   'N/A': 'לא זמין',
   'mySHOEFITTER sized 12,000+ feet accurately for major EU retailers':
@@ -933,6 +935,7 @@ export const heMarketingDictionary: Record<string, string> = {
     'שחזור גרסה מחליף את הפריסה המוגשת. שום קוד לא נמחק, משתנה או נבנה מחדש, כך שההתאוששות כמעט מיידית וללא השבתה.',
   'Round-the-clock Slack and email from our engineering team.': 'זמינות מסביב לשעון ב-Slack ובאימייל מצוות ההנדסה שלנו.',
   'rows': 'שורות',
+  'Run Appwrite on your own infrastructure': 'הריצו את Appwrite על התשתית שלכם',
   'Run Enterprise on fully managed Appwrite Cloud or as a premium self-hosted edition in your environment.': // pragma: allowlist secret
     'הריצו את Enterprise על Appwrite Cloud בניהול מלא או כמהדורת פרימיום באירוח עצמי בסביבה שלכם.', // pragma: allowlist secret
   'Run on localhost': 'הרצה על localhost',
@@ -1187,6 +1190,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Title': 'כותרת',
   'TLS encryption': 'הצפנת TLS',
   'to register and connect your domain.': 'כדי לרשום ולחבר את הדומיין שלכם.',
+  'Tools and frameworks for building on Appwrite': 'כלים ופריימוורקים לפיתוח על Appwrite',
   'Top GitHub projects': 'פרויקטים מובילים ב-GitHub',
   'Top paths': 'נתיבים מובילים',
   'Topic': 'נושא',

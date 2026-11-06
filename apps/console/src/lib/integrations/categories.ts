@@ -56,6 +56,21 @@ export const INTEGRATION_CATEGORIES: IntegrationCategory[] = [
     heading: 'Deployments',
     description: 'Seamlessly deploy your code',
   },
+  {
+    slug: 'developer-tools',
+    heading: 'Developer tools',
+    description: 'Tools and frameworks for building on Appwrite',
+  },
+  {
+    slug: 'migrations',
+    heading: 'Migrations',
+    description: 'Move your data to Appwrite',
+  },
+  {
+    slug: 'self-hosting',
+    heading: 'Self-hosting',
+    description: 'Run Appwrite on your own infrastructure',
+  },
 ]
 
 export const INTEGRATION_CATEGORY_ORDER = INTEGRATION_CATEGORIES.map((c) => c.slug)
