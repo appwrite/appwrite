@@ -12,15 +12,13 @@ return [
             "Access to create, update, and delete organization projects",
         "category" => "Projects",
     ],
-    "devKeys.read" => [
-        "description" => 'Access to read project\'s development keys',
-        "category" => "Other",
-        "deprecated" => true,
+    "organization.projects.keys.read" => [
+        "description" => 'Access to read organization projects\' API keys',
+        "category" => "Projects",
     ],
-    "devKeys.write" => [
+    "organization.projects.keys.write" => [
         "description" =>
-            "Access to create, update, and delete project\'s development keys",
-        "category" => "Other",
-        "deprecated" => true,
+            "Access to create, update, and delete organization projects' API keys",
+        "category" => "Projects",
     ],
 ];

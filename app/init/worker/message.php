@@ -2,7 +2,10 @@
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Deployment\Deployments;
+use Appwrite\Deployment\Retention;
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\ProjectContext;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Realtime;
@@ -12,15 +15,14 @@ use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Cache;
-use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
-use Utopia\Logger\Log;
 use Utopia\Pools\Group;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Message;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
@@ -34,8 +36,6 @@ use Utopia\Telemetry\Adapter as Telemetry;
  * must be fresh for each worker job.
  */
 return function (Container $container): void {
-    $container->set('log', fn () => new Log(), []);
-
     $container->set('usage', fn () => new Context(), []);
 
     $container->set('authorization', function () {
@@ -45,28 +45,43 @@ return function (Container $container): void {
         return $authorization;
     }, []);
 
-    $container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+    $container->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
         $pools,
         $cache,
         $authorization
-    ), ['pools', 'cache', 'authorization']);
+    ), ['register', 'pools', 'cache', 'authorization']);
 
     $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(), ['databaseFactory']);
 
-    $container->set('project', function ($message, Database $dbForPlatform) {
-        $payload = $message->getPayload() ?? [];
+    $container->set('projectContext', function (Message $message): ProjectContext {
+        $payload = $message->getPayload();
+        $project = $payload['project'] ?? [];
+
+        return ProjectContext::fromArray(\is_array($project) ? $project : []);
+    }, ['message']);
+
+    $container->set('project', function (Message $message, ProjectContext $projectContext, Document $console, Database $dbForPlatform) {
+        $payload = $message->getPayload();
         $project = new Document($payload['project'] ?? []);
 
-        if ($project->isEmpty() || $project->getId() === 'console') {
+        if ($project->isEmpty()) {
             return $project;
+        }
+
+        if ($project->getId() === 'console') {
+            return new Document($console->getArrayCopy());
         }
 
         $project = $dbForPlatform->getDocument('projects', $project->getId());
 
         Span::add('project.id', $project->getId());
 
+        if ($projectContext->sequence !== '' && (string) $project->getSequence() !== $projectContext->sequence) {
+            return new Document();
+        }
+
         return $project;
-    }, ['message', 'dbForPlatform']);
+    }, ['message', 'projectContext', 'console', 'dbForPlatform']);
 
     $container->set('dbForProject', fn (DatabaseFactory $databaseFactory, Document $project, Database $dbForPlatform) => $project->isEmpty() || $project->getId() === 'console'
         ? $dbForPlatform
@@ -77,8 +92,13 @@ return function (Container $container): void {
 
     $container->set('getProjectDB', function (DatabaseFactory $databaseFactory, Database $dbForPlatform) {
         return function (Document $project) use ($databaseFactory, $dbForPlatform): Database {
-            if ($project->isEmpty() || $project->getId() === 'console') {
+            if ($project->getId() === 'console') {
                 return $dbForPlatform;
+            }
+
+            // An empty project is one deleted after the job was queued, never the platform.
+            if ($project->isEmpty()) {
+                throw new \Exception('Project not found');
             }
 
             return $databaseFactory->project(
@@ -88,43 +108,23 @@ return function (Container $container): void {
         };
     }, ['databaseFactory', 'dbForPlatform']);
 
-    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project) {
-        return function (Document $database, ?Document $projectDocument = null) use ($databaseFactory, $project): Database {
-            $projectDocument ??= $project;
+    $container->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $messageProject) {
+        return function (Document $database, ?Document $project = null) use ($databaseFactory, $messageProject): Database {
+            $project ??= $messageProject;
 
             // Backwards-compatibility: older or seeded legacy databases may not have a DSN stored
             // in the "database" attribute. In that case, fall back to the project's database DSN.
             $databaseConfig = $database->getAttribute('database', '') === ''
-                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $projectDocument->getAttribute('database', '')]))
+                ? new Document(\array_merge($database->getArrayCopy(), ['database' => $project->getAttribute('database', '')]))
                 : $database;
 
             return $databaseFactory->tenant(
                 $databaseConfig,
-                $projectDocument,
+                $project,
                 APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
             );
         };
     }, ['databaseFactory', 'project']);
-
-    $container->set('getLogsDB', function (DatabaseFactory $databaseFactory) {
-        $database = null;
-
-        return function (?Document $project = null) use ($databaseFactory, &$database) {
-            if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-                $database->setTenant($project->getSequence());
-
-                return $database;
-            }
-
-            $database = $databaseFactory->logs(
-                $project,
-                APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER,
-                APP_DATABASE_QUERY_MAX_VALUES_WORKER
-            );
-
-            return $database;
-        };
-    }, ['databaseFactory']);
 
     $container->set('abuseRetention', function () {
         return \time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day
@@ -190,68 +190,9 @@ return function (Container $container): void {
 
     // Only the Builds worker uses this, handing template-into-repo pushes to
     // the jobs-service.
-    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform) {
-        return new Deployments($jobs, $dbForProject, $project, $platform);
-    }, ['jobs', 'dbForProject', 'project', 'platform']);
-
-    $container->set('logError', function (Registry $register, Document $project) {
-        return function (Throwable $error, string $namespace, string $action, ?array $extras = null) use ($register, $project) {
-            $logger = $register->get('logger');
-
-            if ($logger) {
-                $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
-
-                $log = new Log();
-                $log->setNamespace($namespace);
-                $log->setServer(System::getEnv('_APP_LOGGING_SERVICE_IDENTIFIER', \gethostname()));
-                $log->setVersion($version);
-                $log->setType(Log::TYPE_ERROR);
-                $log->setMessage($error->getMessage());
-
-                $log->addTag('code', $error->getCode());
-                $log->addTag('verboseType', \get_class($error));
-                $log->addTag('projectId', $project->getId());
-
-                $log->addExtra('file', $error->getFile());
-                $log->addExtra('line', $error->getLine());
-                $log->addExtra('trace', $error->getTraceAsString());
-
-                if ($error->getPrevious() !== null) {
-                    if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                        $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
-                    }
-                    $log->addExtra('previousFile', $error->getPrevious()->getFile());
-                    $log->addExtra('previousLine', $error->getPrevious()->getLine());
-                }
-
-                foreach (($extras ?? []) as $key => $value) {
-                    $log->addExtra($key, $value);
-                }
-
-                $log->setAction($action);
-
-                $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
-                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-                try {
-                    $responseCode = $logger->addLog($log);
-                    Console::info('Error log pushed with status code: ' . $responseCode);
-                } catch (Throwable $th) {
-                    Console::error('Error pushing log: ' . $th->getMessage());
-                }
-            }
-
-            Console::warning("Failed: {$error->getMessage()}");
-            Console::warning($error->getTraceAsString());
-
-            if ($error->getPrevious() !== null) {
-                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
-                    Console::warning("Previous Failed: {$error->getPrevious()->getMessage()}");
-                }
-                Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
-            }
-        };
-    }, ['register', 'project']);
+    $container->set('deployments', function (Jobs $jobs, Database $dbForProject, Document $project, array $platform, BuildPublisher $publisherForBuilds) {
+        return new Deployments($jobs, $dbForProject, $project, $platform, $publisherForBuilds);
+    }, ['jobs', 'dbForProject', 'project', 'platform', 'publisherForBuilds']);
 
     $container->set('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
         return function (Document $project) use ($dbForPlatform, $getProjectDB) {
@@ -275,4 +216,6 @@ return function (Container $container): void {
 
         return (int) ($plan['executionsRetentionCount'] ?? 100);
     }, ['project', 'plan']);
+
+    $container->set('deploymentRetention', fn (): Retention => new Retention(), []);
 };

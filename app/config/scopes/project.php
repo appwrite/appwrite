@@ -17,6 +17,8 @@ return [
         'description' => 'Access to read project usage metrics',
         'category' => 'Project',
     ],
+    // TODO: Remove keys.read and keys.write from project key scopes once the Console, CLI and SDKs
+    // manage project keys through the Organization API (organization.projects.keys.*)
     "keys.read" => [
         "description" =>
             "Access to read project\'s keys",
@@ -202,6 +204,74 @@ return [
         'deprecated' => true,
     ],
 
+    // DocumentsDB
+    'documentsdb.read' => [
+        'description' => 'Access to read document databases',
+        'category' => 'Databases',
+    ],
+    'documentsdb.write' => [
+        'description' => 'Access to create, update, and delete document databases',
+        'category' => 'Databases',
+    ],
+    'documentsdb.collections.read' => [
+        'description' => 'Access to read document database collections',
+        'category' => 'Databases',
+    ],
+    'documentsdb.collections.write' => [
+        'description' => 'Access to create, update, and delete document database collections',
+        'category' => 'Databases',
+    ],
+    'documentsdb.documents.read' => [
+        'description' => 'Access to read document database documents',
+        'category' => 'Databases',
+    ],
+    'documentsdb.documents.write' => [
+        'description' => 'Access to create, update, and delete document database documents',
+        'category' => 'Databases',
+    ],
+    'documentsdb.indexes.read' => [
+        'description' => 'Access to read document database collection indexes',
+        'category' => 'Databases',
+    ],
+    'documentsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete document database collection indexes',
+        'category' => 'Databases',
+    ],
+
+    // VectorsDB
+    'vectorsdb.read' => [
+        'description' => 'Access to read vector databases',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.write' => [
+        'description' => 'Access to create, update, and delete vector databases',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.collections.read' => [
+        'description' => 'Access to read vector database collections',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.collections.write' => [
+        'description' => 'Access to create, update, and delete vector database collections',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.documents.read' => [
+        'description' => 'Access to read vector database documents',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.documents.write' => [
+        'description' => 'Access to create, update, and delete vector database documents',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.read' => [
+        'description' => 'Access to read vector database collection indexes',
+        'category' => 'Databases',
+    ],
+    'vectorsdb.indexes.write' => [
+        'description' => 'Access to create, update, and delete vector database collection indexes',
+        'category' => 'Databases',
+    ],
+
     // Storage
     'buckets.read' => [
         'description' => 'Access to read storage buckets',
@@ -337,6 +407,18 @@ return [
             "Access to create, update, and delete webhooks",
         'category' => 'Other',
     ],
+    'monitors.read' => [
+        'description' => 'Access to read monitors',
+        'category' => 'Other',
+    ],
+    'monitors.write' => [
+        'description' => 'Access to create, update, and delete monitors',
+        'category' => 'Other',
+    ],
+    'alerts.read' => [
+        'description' => 'Access to read the alerts monitors raise',
+        'category' => 'Other',
+    ],
     'locale.read' => [
         'description' => 'Access to use Locale service',
         'category' => 'Other',
@@ -345,13 +427,20 @@ return [
         'description' => 'Access to use Avatars service',
         'category' => 'Other',
     ],
+    'avatars.write' => [
+        'description' => 'Access to update and delete the user photo',
+        'category' => 'Other',
+    ],
     'health.read' => [
         'description' => 'Access to use Health service',
         'category' => 'Other',
     ],
+    // The Assistant endpoint is gone, but OAuth2 clients registered with this scope
+    // (e.g. the ChatGPT app) still request it, so it must stay a known scope.
     'assistant.read' => [
-        'description' => 'Access to use Assistant service',
+        'description' => 'Access to use Assistant service. This scope is deprecated, the Assistant service has been removed.',
         'category' => 'Other',
+        'deprecated' => true,
     ],
     'migrations.read' => [
         'description' => 'Access to read migrations',
@@ -396,6 +485,15 @@ return [
     'reports.write' => [
         'description' => 'Access to delete reports under Advisor service.',
         'category' => 'Advisor',
+    ],
+    // Reviews
+    'reviews.read' => [
+        'description' => 'Access to read code review repositories and reviews.',
+        'category' => 'Reviews',
+    ],
+    'reviews.write' => [
+        'description' => 'Access to turn code review on and off for repositories.',
+        'category' => 'Reviews',
     ],
     'presences.read' => [
         'description' => 'Access to read your project\'s presences',

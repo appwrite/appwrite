@@ -8,11 +8,12 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\DateTime;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
@@ -44,13 +45,13 @@ final class PresenceConsoleClientTest extends Scope
     public function testConsolePresenceUpsertAndUpdateBroadcastRealtime(): void
     {
         $user = $this->getUser();
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
 
         $client = $this->openConsolePresenceSocket($user, $presenceId);
         $needsCleanup = false;
 
         try {
-            $upsertMetadata = ['testRunId' => ID::unique(), 'case' => 'console-upsert'];
+            $upsertMetadata = ['testRunId' => Id::unique(), 'case' => 'console-upsert'];
             $upsert = $this->client->call(
                 Client::METHOD_PUT,
                 '/presences/' . $presenceId,
@@ -118,17 +119,13 @@ final class PresenceConsoleClientTest extends Scope
 
     public function testExpiredConsolePresenceDeletedByMaintenance(): void
     {
-        $presenceId = ID::unique();
-        // Set a near-future expiry to satisfy validation, then wait until it is in the past.
-        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
+        $headers = $this->getIsolatedConsoleUserHeaders();
+        $presenceId = Id::unique();
 
         $upsert = $this->client->call(
             Client::METHOD_PUT,
             '/presences/' . $presenceId,
-            \array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-            ], $this->getHeaders()),
+            $headers,
             [
                 'status' => 'online',
                 'metadata' => ['case' => 'console-expiry'],
@@ -141,13 +138,13 @@ final class PresenceConsoleClientTest extends Scope
         );
         $this->assertSame(200, $upsert['headers']['status-code']);
 
+        // Compute expiry immediately before PATCH. The API requires a future
+        // datetime; stamping it before upsert can already be in the past under load.
+        $expiresAt = DateTime::format((new \DateTime())->modify('+2 seconds'));
         $expire = $this->client->call(
             Client::METHOD_PATCH,
             '/presences/' . $presenceId,
-            \array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-            ], $this->getHeaders()),
+            $headers,
             [
                 'expiresAt' => $expiresAt,
             ]
@@ -160,14 +157,11 @@ final class PresenceConsoleClientTest extends Scope
 
         // The API hides expired presences (404) before maintenance runs, so poll for the
         // expiry to elapse instead of sleeping on a fixed timer.
-        $this->assertEventually(function () use ($presenceId) {
+        $this->assertEventually(function () use ($presenceId, $headers) {
             $get = $this->client->call(
                 Client::METHOD_GET,
                 '/presences/' . $presenceId,
-                \array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => 'console',
-                ], $this->getHeaders())
+                $headers
             );
 
             $this->assertSame(404, $get['headers']['status-code']);
@@ -177,8 +171,24 @@ final class PresenceConsoleClientTest extends Scope
         // (previously skipped for the console project).
         $stdout = '';
         $stderr = '';
-        $code = Console::execute('docker exec appwrite maintenance --type=trigger', '', $stdout, $stderr);
+        $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+    }
+
+    private function getIsolatedConsoleUserHeaders(): array
+    {
+        $sharedUser = $this->getUser();
+        $isolatedUser = $this->getUser(true);
+        // Keep the shared user cached: its next upsert would refresh the expired row that
+        // queued maintenance is about to delete by id.
+        self::$user['console'] = $sharedUser;
+
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $isolatedUser['session'],
+        ];
     }
 
     private function openConsolePresenceSocket(array $user, string $presenceId): WebSocketClient
@@ -199,10 +209,36 @@ final class PresenceConsoleClientTest extends Scope
             ]
         );
 
-        $connected = \json_decode($client->receive(), true);
-        $this->assertSame('connected', $connected['type'] ?? null);
+        $this->receiveConnected($client);
 
         return $client;
+    }
+
+    private function receiveConnected(WebSocketClient $client, int $timeoutMs = 3000): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $raw = $client->receive();
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            $frame = \json_decode($raw, true);
+            if (!\is_array($frame)) {
+                continue;
+            }
+
+            $this->assertSame(
+                'connected',
+                $frame['type'] ?? null,
+                'First realtime frame must be the handshake, got: ' . \json_encode($frame)
+            );
+            return;
+        }
+
+        $this->fail('Timed out waiting for connected websocket frame on console.');
     }
 
     private function receivePresenceFrame(

@@ -18,6 +18,12 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 | `composer check` | Same as `analyze` |
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
+| `bin/monorepo validate` | Check every `packages/<name>` against the standard shape and the root autoload wiring |
+| `bin/monorepo check <name> [--fix]` | Pint, PHPStan (package `phpstan.neon`) and Rector for one package |
+| `bin/monorepo test <name> [--linked]` | Package unit tier (`composer test`), plus `test:e2e` against its compose file when defined |
+| `bin/monorepo absorb <name> [url]` | Import a library with history, strip hoisted QA, write mirror plumbing |
+| `bin/monorepo split <name> --dry-run` | Synthesize the mirror history and print its head without pushing |
+| `bin/monorepo release <name> <version>` | Tag `<name>/<version>` and push it; CI mirrors the tag and publishes the release |
 
 `composer check` / `composer analyze` over the whole project is very slow. Prefer specific files during development.
 
@@ -43,11 +49,12 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Vcs** -- Git provider helpers
   - **Deployment** -- build and deploy helpers
   - **Usage** -- metrics
-  - **Utopia** -- HTTP `Request` / `Response` / models (Appwrite adapters on Utopia)
+  - **Utopia** -- extensions of Utopia libraries, `src/Appwrite/Utopia/{Lib}` (`Database`, `Fetch`, `Messaging`, `Request`, `Response`, `WebSocket`, …); see [Libraries](#libraries)
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
-- **src/Utopia/** -- Composer PSR-4 overrides of Utopia packages (currently `Bus` only)
+- **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
+- **apps/** -- deployable applications with their own runtime, image, and release (`console`: the web Console, Bun + TanStack Start, shipped as `appwrite/new`). Not Utopia packages: no Composer autoload, no split mirror. Do not confuse with `app/`, the PHP server. See [apps/README.md](apps/README.md) and [Console](#console).
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
 - **app/views/** -- server-side templates (installer, errors, proxy)
@@ -55,14 +62,20 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 - **app/http.php**, **app/worker.php**, **app/realtime.php**, **app/cli.php** -- process entry harnesses
 - **app/controllers/** -- leftover HTTP controllers; new endpoints go in modules
 - **bin/** -- CLI entry points (`worker`, `worker-*`, `schedule`, `schedule-*`, `queue-*`, plus `doctor`, `install`, `migrate`, `realtime`, …)
-- **docs/** -- references, tutorials, SDK getting-started notes
+- **docs/** -- references, tutorials, SDK getting-started notes, [release process](docs/releases.md)
 - **tests/e2e/**, **tests/unit/** -- tests; **public/** -- fonts, images, generated SDKs
+
+## Console
+
+Console and UI work uses the code in `apps/console`. Follow [apps/console/AGENTS.md](apps/console/AGENTS.md) for that app's agent guidance.
 
 ## Libraries
 
 `src/Appwrite/` is domain libraries, not a dumping ground. Each directory solves **one problem**. Do not grow a library into a second concern; add a new directory instead. See [Layout](#layout) for the current set.
 
-Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it belongs in the `utopia-php` ecosystem as a Composer dependency, not under `src/Appwrite/`. Overrides of Utopia packages live in `src/Utopia/` (currently `Bus` only).
+Keep Appwrite-specific domain here (product events, SDK specs, GraphQL, usage, migrations, platform modules). If a library is **generic enough to build any kind of app** — validators, storage, cache, queues, HTTP, databases, locks, DNS — it is a Utopia package, not `src/Appwrite/` code. Packages already absorbed live under `packages/<name>` in the standard shape described in [rfc/monorepo.md](rfc/monorepo.md) and are loaded directly through the root autoload; the rest are still Composer dependencies until their absorb PR lands.
+
+Code that extends, subclasses, adapts or wraps a Utopia library goes in `src/Appwrite/Utopia/{Lib}/` (namespace `Appwrite\Utopia\{Lib}`), mirroring the library name: [`Utopia/Database/Validator`](src/Appwrite/Utopia/Database/Validator), [`Utopia/Database/Documents/User.php`](src/Appwrite/Utopia/Database/Documents/User.php), [`Utopia/Request`](src/Appwrite/Utopia/Request), [`Utopia/Response`](src/Appwrite/Utopia/Response). Appwrite-domain logic stays in its own domain namespace or platform module, not under `Utopia/`. Behavior any app would need belongs in the Utopia library itself: fix the library instead of adding an app-side gap-filler.
 
 ## Modules
 
@@ -151,7 +164,9 @@ HTTP actions `use Utopia\Platform\Scope\HTTP`. Constructor methods (chain on `$t
 | `inject()` | Object dependency from the container — see [Reuse](#reuse) |
 | `callback()` | Handler. Use `$this->action(...)` |
 
-Common `label()` keys: `scope` (`teams.write`), `event` (`teams.[teamId].create`), `audits.event` / `audits.resource`, `sdk` (`new Method(...)`), `resourceType`, `usage.resource` / `usage.metric` / `usage.params`, `abuse-key` / `abuse-limit` / `abuse-time`, `docs` (`false` for non-public routes). Example: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php); aliases: [`Webhooks/Http/Webhooks/XList.php`](src/Appwrite/Platform/Modules/Webhooks/Http/Webhooks/XList.php); abuse/usage: [`Tokens/Http/Tokens/Buckets/Files/Create.php`](src/Appwrite/Platform/Modules/Tokens/Http/Tokens/Buckets/Files/Create.php).
+Common `label()` keys: `scope` (`teams.write`), `event` (`teams.[teamId].create`), `audits.event` / `audits.resource`, `sdk` (`new Method(...)`), `resourceType`, `usage.resource` / `usage.metric` / `usage.params`, `abuse` (a list of `Limit::attempts([...parts], ...)` / `Limit::failures(...)`, see [`Abuse/Limit.php`](src/Appwrite/Abuse/Limit.php)), `docs` (`false` for non-public routes). Example: [`Teams/Http/Teams/Create.php`](src/Appwrite/Platform/Modules/Teams/Http/Teams/Create.php); aliases: [`Webhooks/Http/Webhooks/XList.php`](src/Appwrite/Platform/Modules/Webhooks/Http/Webhooks/XList.php); abuse/usage: [`Tokens/Http/Tokens/Buckets/Files/Create.php`](src/Appwrite/Platform/Modules/Tokens/Http/Tokens/Buckets/Files/Create.php).
+
+On list endpoints, do not add a separate `search` parameter; callers pass search queries via `Query.search()` within the `queries` param. On `new Method(...)`, write the `description:` inline as a heredoc (`<<<EOT ... EOT`); do not reference external markdown files.
 
 Workers and tasks are also `Action` classes, without HTTP path/method. Workers: `desc` + `inject('message')` + other objects + `callback` — [`Workers/Mails.php`](src/Appwrite/Platform/Workers/Mails.php). Tasks: `desc` + CLI `param`s + `inject` + `callback` — [`Tasks/QueueRetry.php`](src/Appwrite/Platform/Tasks/QueueRetry.php).
 
@@ -222,6 +237,8 @@ Actions should read like a story. The `action()` method is the plot: [`Teams/Htt
 ## Conventions
 
 - PSR-12 (Pint), PSR-4 autoloading. Avoid dependencies outside the `utopia-php` ecosystem. Never hardcode credentials — use env vars. Code changes may require a container restart; logs live on the relevant container.
+- Do not add regular expressions (`preg_*`, regex patterns passed to validators). Use string functions (`str_starts_with`, `str_ends_with`, `str_contains`, `strlen`, `substr`, `explode`, `ctype_*`) or an existing validator instead; regex is hard to review and easy to get subtly wrong. If nothing else works, explain why in the PR.
+- Build every command with `Utopia\Console\Command` and run it with `Console::execute()`, never as a string. PHPStan rejects `exec()`, `shell_exec()`, `system()`, `passthru()`, `popen()`, `escapeshellarg()` and `escapeshellcmd()`, and `proc_open()` or `Console::execute()` given a string. A script that needs shell logic is a constant passed to `sh -c`, with its values as positional parameters (`"$1"`): see `Git::cloneCommand()`. `proc_open()` with an argv array is allowed for a child that needs the terminal.
 - When updating documents, pass only changed attributes as a sparse Document:
 
 ```php
@@ -272,18 +289,35 @@ Add a qualifier only when the verb or single name is ambiguous (`createStringCol
 - **Modules:** PascalCase, prefer one word (`Teams`, `Storage`); standard abbreviations OK (`VCS`, `JWT`, `SMTP`). Workers/tasks: PascalCase domain noun. `bin/` entry points: kebab-case with a role prefix (`worker-functions`).
 - **Identifiers:** HTTP `getName()` is `{restVerb}` or `{restVerb}{Resource}`. Workers: lowercase plural (`functions`). Tasks: lowercase, matching the bin script.
 - **Paths:** lowercase, kebab-case where needed, plural resources. Route params camelCase; `Id` suffix when multiple IDs appear (`:teamId`, `:deploymentId`). JSON camelCase; system fields keep `$` prefixes (`$id`, `$createdAt`).
-- **Scopes:** `{resource}.{read|write}`; special scopes `account`, `public`. **Events:** `teams.[teamId].create`. **Audits:** `audits.event` `{resource}.{action}`; `audits.resource` `{type}/{id}`.
+- **Scopes:** `{resource}.{read|write}`; special scopes `account`, `public`. Scopes are never removed: keys, functions, sites and OAuth2/MCP clients store them. Retire one with `'deprecated' => true`; `app/config/scopes/lock.json` records every shipped scope and `tests/unit/General/ScopesTest.php` fails on a removal or an unlocked addition. **Events:** `teams.[teamId].create`. **Audits:** `audits.event` `{resource}.{action}`; `audits.resource` `{type}/{id}`.
 - **Collections:** lowercase plural. Attributes camelCase; do not prefix with the collection name. `resourceType` is usually plural (`functions`, `sites`, `deployments`).
 - **DI:** inject object dependencies only (`$dbForProject`, `$queueForEvents`, `$user`). `{role}For{Target}` only when multiple of that role coexist (`dbForProject` / `dbForPlatform`). Register new resources in `app/init/resources.php` and `app/init/resources/request.php`. Never inject callbacks or global-shaped functions to reuse logic — see [Reuse](#reuse).
-- **Models:** class PascalCase; `getName()` matches. `Response::MODEL_*` constants `SCREAMING_SNAKE_CASE`; values camelCase singular (`team`) or `{name}List`.
+- **Models:** class PascalCase; `getName()` matches. `Response::MODEL_*` constants `SCREAMING_SNAKE_CASE`; values camelCase singular (`team`) or `{name}List`. A required rule needs a `default` its schema accepts (an enum member, an array for an array rule), because SDK models fill a field an older server does not send from it; without one, make the rule `required => false`. An object default (`new \stdClass()`) never reaches the spec, so a new nested-model rule needs `required => false`.
 - **Env:** `_APP_` + `SCREAMING_SNAKE_CASE`.
 - **Spans:** in handlers only `Span::add($key, $value)` — never `Span::init`, `setError`, or `Span::finish`. Keys `snake_case`; dots only for child relationships (`project.id`, `storage.bucket.id`). Cross-cutting ids (`project.id`, `function.id`, `user.id`) stay at top level, not under a subsystem.
+
+## Collections
+
+Project collections are defined in [`app/config/collections/projects.php`](app/config/collections/projects.php) (merged with `common.php` into `Config::getParam('collections')['projects']`). That config is the source of truth for which collections a project owns.
+
+When a project is deleted, [`Deletes::cleanDatabaseCollections()`](src/Appwrite/Platform/Workers/Deletes.php) walks every collection in `_metadata`. On a shared-tables host, a collection **in** the config gets only the deleted tenant's rows removed; a collection **not** in the config gets `deleteCollection()`, which drops the shared table and its global (`_tenant` null) metadata for **every project on the host**.
+
+Order matters when a patch script creates a new project collection:
+
+1. **First** add the collection to `app/config/collections/projects.php`, then merge and deploy it.
+2. **Only then** run the patch script that creates the collection.
+
+On a shared-tables host, the patch script must create the collection as a **global shared collection**: call `$dbForProject->setTenant(null)` before `createCollection()` so the table and its `_metadata` row belong to no tenant and are shared by every project on the host. If it is created while a project's tenant is set, its `_metadata` row gets that project's tenant and the collection is missing for every other project on the host.
+
+Never hardcode a collection schema only inside a patch script. If the collection exists before it is in the config, the next project deletion on that host wipes it for every tenant. This happened to `analyticsProperties` on every Cloud shared-tables host within minutes of the patch running.
 
 ## Tests
 
 **E2E** (`tests/e2e/Services/{Service}/`) is the contract for the HTTP/API surface. Cover every route for **success and failure** through the real API: status codes, headers, cookies, response shape, SDK-visible contracts, validation, auth, scopes, permissions, project mode, and client vs server vs console sides. Also cover persistence, queue-visible behavior, worker and CLI-task integration, and cross-subsystem workflows users can observe. Shared logic in `{Service}Base` traits; suites `{Feature}{ConsoleClientTest|CustomClientTest|CustomServerTest}`. Use `Tests\E2E\Client` and existing scope traits (`Scope`, `ProjectCustom`, `SideClient`, `SideServer`, `ProjectConsole`). Methods `test{Verb}` or `test{Verb}{Qualifier}`. Group assertions under `Test for SUCCESS` / `Test for FAILURE` blocks. Generate unique IDs, emails, and names so parallel runs do not collide.
 
-**Unit** (`tests/unit/`) covers **local src libraries only** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters). Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
+**Unit** (`tests/unit/`) covers **local src libraries** (`src/Appwrite/Auth`, `Network`, `URL`, validators, mappers, parsers, filters), plus **contract locks** for configuration clients persist (`tests/unit/General/ScopesTest.php` against `app/config/scopes/lock.json`). A contract lock pins what must never disappear from a published catalog; do not use it to mirror config shape or values. Path mirrors source; class `{ClassUnderTest}Test`. Use `PHPUnit\Framework\TestCase`, data providers for matrices, and named fakes over anonymous mocks. Do **not** unit-test HTTP route actions (`Platform/Modules/**/Http`), CLI tasks, or workers — e2e covers those surfaces; unit-test the libraries they call. If an e2e test finds a library bug and no unit test fails, add a unit regression on that library. Never use reflection to reach private members. Do not run Swoole coroutine work in the shared unit process. Never call production third-party services from automated tests.
+
+CI runs only the e2e lanes a change can affect, using [`.github/ci/e2e.json`](.github/ci/e2e.json). Add a new e2e service there, and list the module and controller paths it covers. Any file the map doesn't claim runs every lane.
 
 Structure tests as Arrange, Act, Assert. Assert observable behavior (status, body fields, error type, permission outcome, persisted value), not private call order. Avoid full-document assertions when a sparse check is enough. Avoid sleeps; prefer existing polling helpers. Run the narrowest command that validates the change (`composer lint <file>`, a single `--filter`, one service suite) before broadening.
 
@@ -298,25 +332,4 @@ Preview builds set the flag on **both** the `specs` and `sdks` steps in `.github
 
 ## Releases
 
-### Patch version
-
-When bumping a patch (e.g. `1.9.0` → `1.9.1`):
-
-- [`docker-compose.yml`](docker-compose.yml) — `appwrite-console` image tag (`appwrite/new:X.Y.Z`)
-- [`app/init/constants.php`](app/init/constants.php) — set `APP_VERSION_STABLE`; increment `APP_CACHE_BUSTER` by 1
-- [`README.md`](README.md) and [`README-CN.md`](README-CN.md) — `appwrite/appwrite:X.Y.Z` in all three install blocks each
-- [`src/Appwrite/Migration/Migration.php`](src/Appwrite/Migration/Migration.php) — add the version to `$versions`, mapping to a new migration class or the same class as the previous version
-
-Ask the user to review, publish notes on the [Appwrite changelog](https://appwrite.io/changelog), generate specs if the API changed, and add request/response filters if needed.
-
-### Self-hosted RC / final
-
-A release is not ready until a **fresh install** and an **upgrade from the previous stable** both work with realistic data. Previous baseline = highest stable semver tag lower than the target (ignore RC/beta/alpha; prefer `git ls-remote --tags origin`).
-
-**Fresh install:** `docker compose down -v` then `up -d --force-recreate --build --wait`. Check `docker compose ps` / logs for crash loops, missing env, failed workers. Hit `/v1/health/version` on the public port. Run unit tests, `tests/e2e/General`, and service e2e. Exercise console users, projects, databases/rows, storage, and (when in scope) functions/sites through public APIs — not empty-stack health checks alone.
-
-**Upgrade:** install the previous stable image, seed broad data (empty values, long strings, relationships, mixed permissions), keep volumes, switch to the target image, run migrate. Migration must complete, be idempotent, and preserve seeded data through public API reads/writes.
-
-**Metadata:** `APP_VERSION_STABLE` / `APP_CACHE_BUSTER`; Appwrite and console tags in `docker-compose.yml` and [`app/views/install/compose.phtml`](app/views/install/compose.phtml); README install snippets; `Migration.php` `$versions`; [changelog](https://appwrite.io/changelog). For public API breaks: request filters in `src/Appwrite/Utopia/Request/Filters/V*.php`, response filters in `src/Appwrite/Utopia/Response/Filters/V*.php`, registered in [`app/controllers/general.php`](app/controllers/general.php) for `x-appwrite-response-format`. Unit-test filters under `tests/unit/Utopia/{Request,Response}/Filters`; add e2e with that header when routing, auth, or persistence is involved.
-
-Do not approve an RC/final until both gates pass, metadata matches the target, and unintended public breaks have filters (or the owner documents the break on the changelog).
+Self-hosted release process (branches, version bump, notes, publish, specs, install/upgrade gates) lives in [docs/releases.md](docs/releases.md). Read it before preparing or publishing a release.

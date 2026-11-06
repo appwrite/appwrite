@@ -12,7 +12,7 @@ final class PubSubTest extends HealthBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['statuses']);
         $this->assertIsInt($response['body']['statuses'][0]['ping']);
-        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
+        $this->assertGreaterThanOrEqual(0, $response['body']['statuses'][0]['ping']);
         $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
     }
 }

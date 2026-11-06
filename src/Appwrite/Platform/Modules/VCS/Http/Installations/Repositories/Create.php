@@ -57,6 +57,7 @@ class Create extends Action
             ->inject('user')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
@@ -69,11 +70,16 @@ class Create extends Action
         InstallationTokens $installationTokens,
         Document $user,
         Response $response,
-        Database $dbForPlatform
+        Database $dbForPlatform,
+        Document $project
     ) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
+            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
+        }
+
+        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
@@ -121,7 +127,8 @@ class Create extends Action
 
             try {
                 $repository = $vcs->createRepository($owner, $name, $private);
-            } catch (Exception $exception) {
+            } catch (\Throwable $exception) {
+                // Adapters raise their own exceptions; the console shows a provider failure's message
                 throw new Exception(Exception::GENERAL_PROVIDER_FAILURE, "VCS provider failed to process the request: " . $exception->getMessage());
             }
         }

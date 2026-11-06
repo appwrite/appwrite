@@ -1,0 +1,46 @@
+---
+// Astro renders this page on the server; the auth state is client-side.
+---
+
+<html lang="en">
+  <head><title>Home</title></head>
+  <body>
+    <div id="app"><p>Loading...</p></div>
+
+    <script>
+      import { Account } from 'appwrite'
+      import { client } from '../lib/appwrite'
+
+      const account = new Account(client)
+      const app = document.querySelector('#app')
+
+      function render(user) {
+        if (!user) {
+          app.innerHTML = `
+            <p>Sign in to get started.</p>
+            <p>
+              <a href="/sign-in">Sign in</a> ·
+              <a href="/sign-up">Sign up</a>
+            </p>
+          `
+          return
+        }
+        app.innerHTML = `
+          <p>Hello, ${user.name}</p>
+          <button type="button" id="sign-out">Sign out</button>
+        `
+        document
+          .querySelector('#sign-out')
+          .addEventListener('click', async () => {
+            await account.deleteSession({ sessionId: 'current' })
+            render(null)
+          })
+      }
+
+      account
+        .get()
+        .then((user) => render(user))
+        .catch(() => render(null))
+    </script>
+  </body>
+</html>

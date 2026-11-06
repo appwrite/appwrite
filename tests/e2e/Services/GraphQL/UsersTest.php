@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 final class UsersTest extends Scope
@@ -33,7 +33,7 @@ final class UsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => 'password',
                 'name' => 'Project User',
@@ -71,7 +71,7 @@ final class UsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'api-key',
                 'domain' => 'domain',
@@ -92,7 +92,7 @@ final class UsersTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'targetId' => ID::unique(),
+                'targetId' => Id::unique(),
                 'userId' => $user['_id'],
                 'providerType' => 'email',
                 'providerId' => $providerId,
@@ -126,12 +126,14 @@ final class UsersTest extends Scope
 
     public function testGetUsers()
     {
+        $user = $this->setupUser();
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_USERS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'queries' => [
+                    Query::equal('$id', [$user['_id']])->toString(),
                     Query::limit(100)->toString(),
                     Query::offset(0)->toString(),
                 ],
@@ -143,10 +145,18 @@ final class UsersTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
+        $this->assertEquals(200, $users['headers']['status-code']);
         $this->assertIsArray($users['body']['data']);
         $this->assertArrayNotHasKey('errors', $users['body']);
         $this->assertIsArray($users['body']['data']['usersList']);
-        $this->assertGreaterThan(0, \count($users['body']['data']['usersList']));
+        $this->assertCount(1, $users['body']['data']['usersList']['users']);
+        $this->assertEquals($user['_id'], $users['body']['data']['usersList']['users'][0]['_id']);
+
+        // Nested target values must survive beyond the key-escaping depth limit.
+        $this->assertContains([
+            'providerType' => 'email',
+            'identifier' => $user['email'],
+        ], $users['body']['data']['usersList']['users'][0]['targets']);
     }
 
     public function testGetUser()
@@ -584,4 +594,5 @@ final class UsersTest extends Scope
         $this->assertIsNotArray($user['body']);
         $this->assertEquals(204, $user['headers']['status-code']);
     }
+
 }

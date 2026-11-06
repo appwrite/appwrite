@@ -14,7 +14,7 @@ use Appwrite\Utopia\Request\Validator\File;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -74,7 +74,7 @@ class Create extends Action
                 type: MethodType::UPLOAD,
                 packaging: true,
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Function ID.', false, ['dbForProject'])
+            ->param('functionId', '', fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Function ID.', false, ['dbForProject'])
             ->param('entrypoint', null, new Nullable(new Text(1028)), 'Entrypoint File.', true)
             ->param('commands', null, new Nullable(new Text(8192, 0)), 'Build Commands.', true)
             ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
@@ -87,6 +87,7 @@ class Create extends Action
             ->inject('deviceForFunctions')
             ->inject('deviceForLocal')
             ->inject('deployments')
+            ->inject('buildTimeout')
             ->inject('plan')
             ->inject('authorization')
             ->inject('locks')
@@ -107,6 +108,7 @@ class Create extends Action
         Device $deviceForFunctions,
         Device $deviceForLocal,
         Deployments $deployments,
+        int $buildTimeout,
         array $plan,
         Authorization $authorization,
         callable $locks
@@ -162,7 +164,7 @@ class Create extends Action
         }
 
         $contentRange = $request->getHeaderLine('content-range');
-        $deploymentId = ID::unique();
+        $deploymentId = Id::unique();
         $chunk = 1;
         $chunks = 1;
 
@@ -174,6 +176,11 @@ class Create extends Action
             // TODO make `end >= $fileSize` in next breaking version
             if (is_null($start) || is_null($end) || is_null($fileSize) || $end > $fileSize) {
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+            }
+
+            $idValidator = new UID();
+            if (!$idValidator->isValid($deploymentId)) {
+                throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
             }
 
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
@@ -228,6 +235,11 @@ class Create extends Action
                         throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
                     }
 
+                    // The chunk count and size were fixed by the first chunk.
+                    if ((int) $deployment->getAttribute('sourceSize', 0) !== $fileSize) {
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
+
                     $chunks = $deployment->getAttribute('sourceChunksTotal', 1);
                     $uploaded = $deployment->getAttribute('sourceChunksUploaded', 0);
                     $metadata = $deployment->getAttribute('sourceMetadata', []);
@@ -273,21 +285,8 @@ class Create extends Action
             return;
         }
 
-        $chunksUploaded = $deviceForFunctions->upload(
-            $deviceForLocal->read($fileTmpName),
-            $path,
-            $metadata['content_type'] ?? '',
-            $chunk,
-            $chunks,
-            $metadata
-        );
-
-        if (empty($chunksUploaded)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
-        }
-
         try {
-            $locks($lockKey, 600, function () use ($activate, &$chunks, $chunksUploaded, $commands, $dbForProject, $deploymentId, $deviceForFunctions, $entrypoint, $fileSize, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $chunk, &$chunks, $commands, $contentRange, $dbForProject, $deploymentId, $deviceForFunctions, $fileSize, $deviceForLocal, $entrypoint, $fileTmpName, &$function, $path, &$metadata, $mergeUploadMetadata, $deployments, $queueForEvents, $response, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 
@@ -313,10 +312,39 @@ class Create extends Action
                     }
                 }
 
+                // Keep chunk writes and assembly under the same lock so another
+                // request cannot count or assemble a partially written chunk.
+                $chunksUploaded = $deviceForFunctions->upload(
+                    $deviceForLocal->read($fileTmpName),
+                    $path,
+                    $metadata['content_type'] ?? '',
+                    $chunk,
+                    $chunks,
+                    $metadata
+                );
+
+                if (empty($chunksUploaded)) {
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
+                }
+
                 $chunksUploaded = max($uploaded, $chunksUploaded, (int) ($metadata['chunks'] ?? 0));
 
                 if ($chunksUploaded === $chunks && $uploaded < $chunks) {
                     $deviceForFunctions->finalize($path, $chunks, $metadata);
+
+                    // A chunk can carry more or fewer bytes than its range announces.
+                    if (!empty($contentRange) && $deviceForFunctions->getFileSize($path) !== $fileSize) {
+                        $deviceForFunctions->delete($path);
+
+                        // Marked failed and fully uploaded so a retry returns it instead of writing to the removed source.
+                        $deployments->upload($function, $deployment->setAttributes([
+                            'status' => 'failed',
+                            'buildLogs' => 'Uploaded size does not match the size announced by Content-Range.',
+                            'sourceChunksUploaded' => $chunks,
+                        ]));
+
+                        throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
+                    }
 
                     $fileSize = $deviceForFunctions->getFileSize($path);
 
@@ -333,7 +361,7 @@ class Create extends Action
                         'activate' => $activate,
                         'sourceMetadata' => $metadata,
                         'type' => $type,
-                    ]));
+                    ]), $buildTimeout);
                 } else {
                     $deployment = $deployments->upload($function, $deployment->setAttributes([
                         'sourceChunksUploaded' => $chunksUploaded,

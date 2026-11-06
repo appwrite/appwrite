@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Attribute;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute\Increment as IncrementDocumentAttribute;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -33,14 +34,12 @@ class Increment extends IncrementDocumentAttribute
             ->desc('Increment document attribute')
             ->groups(['api', 'database'])
             ->label('event', 'documentsdb.[databaseId].collections.[collectionId].documents.[documentId].update')
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
@@ -59,8 +58,8 @@ class Increment extends IncrementDocumentAttribute
             ->param('collectionId', '', new UID(), 'Collection ID.')
             ->param('documentId', '', new UID(), 'Document ID.')
             ->param('attribute', '', new Key(), 'Attribute key.')
-            ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
-            ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true)
+            ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true, example: '1')
+            ->param('max', null, new Numeric(), 'Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.', true, example: '100')
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')

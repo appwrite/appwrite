@@ -4,8 +4,10 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
-use Utopia\Console;
+use Appwrite\Platform\Installer\Validator\AppDomain;
+use Utopia\Console\Console;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -24,14 +26,16 @@ class Upgrade extends Install
 
         $this
             ->desc('Upgrade Appwrite')
-            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
-            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('http-port', '', new Port(), 'Server HTTP port, optionally bound to a host IP (127.0.0.1:80)', true)
+            ->param('https-port', '', new Port(), 'Server HTTPS port, optionally bound to a host IP (127.0.0.1:443)', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->param('database', '', new Text(length: 0, min: 0), 'Ignored: an upgrade always keeps the database the installation already uses', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
+            ->param('channel', Install::CHANNEL_STABLE, new WhiteList([Install::CHANNEL_STABLE, Install::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
+            ->param('domain', '', new AppDomain(), 'Appwrite hostname, also used as the custom domain CNAME target', true)
             ->param('migrate', false, new Boolean(true), 'Run database migration after upgrade', true)
             ->callback($this->action(...));
     }
@@ -45,6 +49,8 @@ class Upgrade extends Install
         bool $noStart,
         string $database,
         string $topology = 'combined',
+        string $channel = Install::CHANNEL_STABLE,
+        string $domain = '',
         bool $migrate = false,
     ): void {
         $this->isUpgrade = true;
@@ -64,7 +70,9 @@ class Upgrade extends Install
             return;
         }
 
-        // Detect database from existing installation (CLI param is intentionally ignored)
+        // An upgrade always keeps the engine the installation already uses, so the
+        // requested value is only kept to tell the user it is being ignored.
+        $requestedDatabase = $database;
         $database = null;
         $compose = new Compose($data);
         foreach ($compose->getServices() as $service) {
@@ -89,9 +97,17 @@ class Upgrade extends Install
             Console::info('No _APP_DB_ADAPTER found in existing configuration, defaulting to mariadb.');
         }
 
+        if ($requestedDatabase !== '' && $requestedDatabase !== $database) {
+            Console::warning(
+                "Ignoring --database={$requestedDatabase}: this installation uses {$database} and an upgrade preserves it."
+                . " Appwrite cannot move an existing installation between database engines;"
+                . " switching requires a new installation and transferring your data into it."
+            );
+        }
+
         $this->lockedDatabase = $database;
 
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database, $topology);
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database, $topology, $channel, $domain);
     }
 
     protected function startWebServer(

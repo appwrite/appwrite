@@ -2,8 +2,10 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
+use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -12,15 +14,18 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hook\RelatedUpdates;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Nullable;
 
 class Delete extends Action
@@ -52,9 +57,7 @@ class Delete extends Action
             ->label('audits.event', 'document.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -73,15 +76,16 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteRow',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
-            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Document ID.', false, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
+            ->inject('queueForRealtime')
             ->inject('usage')
             ->inject('transactionState')
             ->inject('plan')
@@ -100,6 +104,7 @@ class Delete extends Action
         Database $dbForProject,
         callable $getDatabasesDB,
         Event $queueForEvents,
+        Realtime $queueForRealtime,
         Context $usage,
         TransactionState $transactionState,
         array $plan,
@@ -121,7 +126,7 @@ class Delete extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
         // Read permission should not be required for delete
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
 
@@ -141,7 +146,7 @@ class Delete extends Action
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
-            if ($transaction->isEmpty()) {
+            if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
                 throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
@@ -166,7 +171,7 @@ class Delete extends Action
 
             // Stage the operation in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -175,15 +180,7 @@ class Delete extends Action
                 'data' => [],
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -191,6 +188,9 @@ class Delete extends Action
             $response->noContent();
             return;
         }
+
+        $recorder = new RelatedUpdates();
+        $dbForDatabases->addHook($recorder);
 
         try {
             $dbForDatabases->withRequestTimestamp($requestTimestamp, function () use ($dbForDatabases, $database, $collection, $documentId) {
@@ -203,23 +203,15 @@ class Delete extends Action
             throw new Exception($this->getConflictException());
         } catch (RestrictedException) {
             throw new Exception($this->getRestrictedException());
+        } finally {
+            $related = $recorder->stop();
         }
-
-        $collectionsCache = [];
-
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization
-        );
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1);
+            ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 
         $response->addHeader('X-Debug-Operations', 1);
 
@@ -227,7 +219,7 @@ class Delete extends Action
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
             )
         );
 
@@ -241,6 +233,96 @@ class Delete extends Action
             ->setContext($this->getCollectionsEventsContext(), $collection)
             ->setPayload($response->output($document, $this->getResponseModel()), sensitive: $relationships);
 
+        // The delete already happened, so failing to notify related documents must not fail it
+        try {
+            $this->triggerRelationshipUpdates(
+                database: $database,
+                collection: $collection,
+                related: $related,
+                dbForProject: $dbForProject,
+                queueForEvents: $queueForEvents,
+                queueForRealtime: $queueForRealtime,
+                response: $response,
+                authorization: $authorization
+            );
+        } catch (\Throwable $e) {
+            Console::warning('Failed to publish relationship updates: ' . $e->getMessage());
+        }
+
         $response->noContent();
+    }
+
+    /**
+     * Publish an update for each related document the delete changed
+     *
+     * @param array<Document> $related
+     */
+    private function triggerRelationshipUpdates(
+        Document $database,
+        Document $collection,
+        array $related,
+        Database $dbForProject,
+        Event $queueForEvents,
+        Realtime $queueForRealtime,
+        UtopiaResponse $response,
+        Authorization $authorization
+    ): void {
+        if (empty($related)) {
+            return;
+        }
+
+        // Related documents carry the internal collection id, so map it back through the two-way relationships
+        $relatedCollections = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            if (
+                $attribute->getAttribute('type') !== ColumnType::Relationship->value
+                || !$attribute->getAttribute('twoWay')
+            ) {
+                continue;
+            }
+
+            $relatedCollection = $authorization->skip(fn () => $dbForProject->getDocument(
+                'database_' . $database->getSequence(),
+                $attribute->getAttribute('relatedCollection')
+            ));
+            if ($relatedCollection->isEmpty()) {
+                continue;
+            }
+
+            $relatedCollections['database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence()] = $relatedCollection;
+        }
+
+        foreach ($related as $peer) {
+            $relatedCollection = $relatedCollections[$peer->getCollection()] ?? null;
+            if ($relatedCollection === null) {
+                continue;
+            }
+
+            $sensitive = \array_map(
+                fn (Document $attr) => $attr->getAttribute('key'),
+                \array_filter(
+                    $relatedCollection->getAttribute('attributes', []),
+                    fn (Document $attr) => $attr->getAttribute('type') === ColumnType::Relationship->value
+                )
+            );
+
+            $peer->setAttribute('$databaseId', $database->getId());
+            $peer->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $relatedCollection->getId());
+
+            // Clone so the delete event stays intact for the shutdown hook.
+            $event = clone $queueForEvents;
+            $event->reset()
+                ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].update')
+                ->setParam('databaseId', $database->getId())
+                ->setParam('collectionId', $relatedCollection->getId())
+                ->setParam('tableId', $relatedCollection->getId())
+                ->setParam('documentId', $peer->getId())
+                ->setParam('rowId', $peer->getId())
+                ->setContext($this->getCollectionsEventsContext(), $relatedCollection)
+                // Filter through the model directly; output() would replace the audited response payload.
+                ->setPayload($response->getModel($this->getResponseModel())->filter($peer)->getArrayCopy(), sensitive: $sensitive);
+
+            $queueForRealtime->from($event)->trigger();
+        }
     }
 }

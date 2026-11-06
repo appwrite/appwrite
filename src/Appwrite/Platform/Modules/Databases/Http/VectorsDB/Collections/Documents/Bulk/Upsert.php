@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorsDB\Collections\Documents\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Upsert as DocumentsUpsert;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -32,14 +33,12 @@ class Upsert extends DocumentsUpsert
             ->setHttpPath('/v1/vectorsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Upsert documents')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'vectorsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'document.create')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', [
                 new Method(
                     namespace: 'vectorsDB',
@@ -58,7 +57,7 @@ class Upsert extends DocumentsUpsert
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID.')
-            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'])
+            ->param('documents', [], fn (array $plan) => new ArrayList(new JSONObject(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of document data as JSON objects. May contain partial documents.', false, ['plan'], example: '[{"$id":"example1","embeddings":[0.12,-0.55,0.88,1.02],"metadata":{"name":"First document"}}]')
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -70,6 +69,8 @@ class Upsert extends DocumentsUpsert
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('eventProcessor')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

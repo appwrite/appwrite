@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Extend\Exception;
@@ -32,6 +33,7 @@ class Delete extends Action
             ->groups(['api', 'database', 'transactions'])
             ->label('scope', 'documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'databases',
                 group: 'transactions',
@@ -50,7 +52,7 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteTransaction',
                 )
             ))
-            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Transaction ID.', false, ['dbForProject'])
+            ->param('transactionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Transaction ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
@@ -62,7 +64,7 @@ class Delete extends Action
     {
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
-        if ($transaction->isEmpty()) {
+        if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
 

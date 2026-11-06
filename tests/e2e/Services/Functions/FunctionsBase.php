@@ -6,8 +6,9 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -195,6 +196,16 @@ trait FunctionsBase
         return $variable;
     }
 
+    protected function updateVariable(string $functionId, string $variableId, mixed $params): mixed
+    {
+        $variable = $this->client->call(Client::METHOD_PUT, '/functions/' . $functionId . '/variables/' . $variableId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), $params);
+
+        return $variable;
+    }
+
     protected function getFunction(string $functionId): mixed
     {
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, array_merge([
@@ -258,15 +269,28 @@ trait FunctionsBase
     protected function packageFunction(string $function): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
-        $tarPath = "$folderPath/code.tar.gz";
+        $tarPath = \sys_get_temp_dir() . '/appwrite-function-' . $function . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     protected function createDeployment(string $functionId, mixed $params = []): mixed
@@ -341,6 +365,46 @@ trait FunctionsBase
         return $execution;
     }
 
+    /**
+     * The decoded response body of an execution that completed.
+     *
+     * Decoding the response directly reports a failed execution as
+     * `json_decode(): Argument #1 ($json) must be of type string, null given`,
+     * which names neither the execution nor what went wrong with it. The
+     * runtime reports both in the execution itself, so surface them.
+     *
+     * @return array<mixed>
+     */
+    protected function executionOutput(mixed $execution): array
+    {
+        $body = $execution['body'] ?? [];
+
+        $this->assertContains(
+            $execution['headers']['status-code'] ?? 0,
+            [200, 201],
+            'the execution request failed: ' . \json_encode($body)
+        );
+
+        $this->assertSame(
+            'completed',
+            $body['status'] ?? '',
+            'execution ' . ($body['$id'] ?? '?') . ' did not complete'
+                . "\n  responseStatusCode: " . ($body['responseStatusCode'] ?? '?')
+                . "\n  errors: " . \trim((string) ($body['errors'] ?? ''))
+                . "\n  logs: " . \trim((string) ($body['logs'] ?? ''))
+        );
+
+        $output = \json_decode((string) ($body['responseBody'] ?? ''), true);
+
+        $this->assertIsArray(
+            $output,
+            'the execution completed but its body is not JSON: '
+                . \var_export($body['responseBody'] ?? null, true)
+        );
+
+        return $output;
+    }
+
     protected function deleteFunction(string $functionId): mixed
     {
         $function = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, array_merge([
@@ -354,7 +418,7 @@ trait FunctionsBase
     protected function setupFunctionDomain(string $functionId, string $subdomain = ''): string
     {
         $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
-        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $subdomain = $subdomain ? $subdomain : Id::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/function', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

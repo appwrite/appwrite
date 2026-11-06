@@ -69,6 +69,16 @@ return [
         'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
         'code' => 503,
     ],
+    Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE => [
+        'name' => Exception::GENERAL_PWNED_PASSWORDS_UNAVAILABLE,
+        'description' => 'The breached password service could not be reached, so the password could not be verified. Please try again later.',
+        'code' => 503,
+    ],
+    Exception::GENERAL_CACHE_UNAVAILABLE => [
+        'name' => Exception::GENERAL_CACHE_UNAVAILABLE,
+        'description' => "The cache could not confirm the request's changes, so they may or may not have been applied. Read the affected resources back before retrying.",
+        'code' => 503,
+    ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
         'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
@@ -271,6 +281,11 @@ return [
         'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_PWNED => [
+        'name' => Exception::USER_PASSWORD_PWNED,
+        'description' => 'The password you are trying to use has been exposed in a known data breach. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
@@ -306,6 +321,31 @@ return [
         'name' => Exception::USER_AUTHENTICATOR_NOT_FOUND,
         'description' => 'Authenticator could not be found on the current user.',
         'code' => 404,
+    ],
+    Exception::USER_REAUTHENTICATION_REQUIRED => [
+        'name' => Exception::USER_REAUTHENTICATION_REQUIRED,
+        'description' => 'This action requires a recent sign-in. Sign in again or complete an MFA challenge, then retry.',
+        'code' => 401,
+    ],
+    Exception::USER_PASSKEY_NOT_FOUND => [
+        'name' => Exception::USER_PASSKEY_NOT_FOUND,
+        'description' => 'Passkey with the requested ID could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_PASSKEY_ALREADY_EXISTS => [
+        'name' => Exception::USER_PASSKEY_ALREADY_EXISTS,
+        'description' => 'This passkey is already registered in the project.',
+        'code' => 409,
+    ],
+    Exception::USER_PASSKEY_LIMIT_EXCEEDED => [
+        'name' => Exception::USER_PASSKEY_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of passkeys for this user has been reached. Delete an existing passkey to add a new one.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSKEY_INVALID => [
+        'name' => Exception::USER_PASSKEY_INVALID,
+        'description' => 'The passkey credential could not be verified. Please restart the ceremony and try again.',
+        'code' => 401,
     ],
     Exception::USER_RECOVERY_CODES_NOT_FOUND => [
         'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
@@ -345,6 +385,16 @@ return [
     Exception::USER_OAUTH2_UNAUTHORIZED => [
         'name' => Exception::USER_OAUTH2_UNAUTHORIZED,
         'description' => 'OAuth2 provider rejected the unauthorized request.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_TOKEN_INVALID => [
+        'name' => Exception::USER_OAUTH2_TOKEN_INVALID,
+        'description' => 'The provided ID token is invalid, expired, or failed verification.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_STATE_INVALID => [
+        'name' => Exception::USER_OAUTH2_STATE_INVALID,
+        'description' => 'The OAuth2 sign-in was not started from this browser, or it took too long to complete. Please start the sign-in again.',
         'code' => 401,
     ],
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
@@ -407,6 +457,11 @@ return [
         'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
         'code' => 403,
     ],
+    Exception::USER_IMPERSONATION_READ_ONLY => [
+        'name' => Exception::USER_IMPERSONATION_READ_ONLY,
+        'description' => 'This account action is not allowed while impersonating a user.',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
         'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
@@ -457,6 +512,11 @@ return [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
         'description' => 'Membership with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MEMBERSHIP_ALREADY_EXISTS => [
+        'name' => Exception::MEMBERSHIP_ALREADY_EXISTS,
+        'description' => 'Membership with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
         'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
@@ -608,7 +668,7 @@ return [
     ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
-        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if it belongs to installationId you provided.',
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if the installation you provided still has access to it.',
         'code' => 404,
     ],
     Exception::REPOSITORY_NOT_FOUND => [
@@ -791,6 +851,11 @@ return [
     Exception::DATABASE_QUERY_ORDER_NULL => [
         'name' => Exception::DATABASE_QUERY_ORDER_NULL,
         'description' => 'The order attribute/column had a null value. Cursor pagination requires all documents/rows order attribute/column values are non-null.',
+        'code' => 400,
+    ],
+    Exception::DATABASE_QUERY_OUT_OF_RANGE => [
+        'name' => Exception::DATABASE_QUERY_OUT_OF_RANGE,
+        'description' => 'The query computed a value outside the range the database can represent. Try narrowing the query or aggregating a different attribute/column.',
         'code' => 400,
     ],
 
@@ -1136,6 +1201,31 @@ return [
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
     ],
+    Exception::TRANSFER_NOT_FOUND => [
+        'name' => Exception::TRANSFER_NOT_FOUND,
+        'description' => 'Transfer with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TRANSFER_INVALID_SECRET => [
+        'name' => Exception::TRANSFER_INVALID_SECRET,
+        'description' => 'The transfer secret is invalid. Please ask the sender for a new transfer link.',
+        'code' => 401,
+    ],
+    Exception::TRANSFER_EXPIRED => [
+        'name' => Exception::TRANSFER_EXPIRED,
+        'description' => 'The transfer has expired. Please ask the sender for a new transfer link.',
+        'code' => 410,
+    ],
+    Exception::TRANSFER_RECIPIENT_MISMATCH => [
+        'name' => Exception::TRANSFER_RECIPIENT_MISMATCH,
+        'description' => 'The transfer can only be claimed by its recipient.',
+        'code' => 403,
+    ],
+    Exception::TRANSFER_ALREADY_OWNED => [
+        'name' => Exception::TRANSFER_ALREADY_OWNED,
+        'description' => 'The resource already belongs to this recipient.',
+        'code' => 400,
+    ],
     Exception::PROJECT_ALREADY_EXISTS => [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
@@ -1231,6 +1321,42 @@ return [
         'description' => 'Webhook with the same ID already exists. Try again with a different ID.',
         'code' => 409,
     ],
+    Exception::WEBHOOK_DELIVERY_FAILED => [
+        'name' => Exception::WEBHOOK_DELIVERY_FAILED,
+        'description' => 'One or more webhook deliveries failed.',
+        'code' => 502,
+        'publish' => false,
+    ],
+    Exception::MONITOR_NOT_FOUND => [
+        'name' => Exception::MONITOR_NOT_FOUND,
+        'description' => 'Monitor with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MONITOR_ALREADY_EXISTS => [
+        'name' => Exception::MONITOR_ALREADY_EXISTS,
+        'description' => 'Monitor with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::MONITOR_RULES_INVALID => [
+        'name' => Exception::MONITOR_RULES_INVALID,
+        'description' => 'The monitor\'s rules are invalid. A usage monitor takes one rule comparing a metric with a threshold, optionally scoped with equal(\'resourceType\') and equal(\'resourceId\') rules.',
+        'code' => 400,
+    ],
+    Exception::MONITOR_TYPE_MISMATCH => [
+        'name' => Exception::MONITOR_TYPE_MISMATCH,
+        'description' => 'The monitor is of a different type. Update it with the route for its type.',
+        'code' => 400,
+    ],
+    Exception::MONITOR_RESOURCE_NOT_FOUND => [
+        'name' => Exception::MONITOR_RESOURCE_NOT_FOUND,
+        'description' => 'The resource the monitor watches could not be found in this project.',
+        'code' => 400,
+    ],
+    Exception::ALERT_NOT_FOUND => [
+        'name' => Exception::ALERT_NOT_FOUND,
+        'description' => 'Alert with the requested ID could not be found.',
+        'code' => 404,
+    ],
     Exception::KEY_NOT_FOUND => [
         'name' => Exception::KEY_NOT_FOUND,
         'description' => 'Key with the requested ID could not be found.',
@@ -1243,13 +1369,8 @@ return [
     ],
     Exception::KEY_CREATION_DENIED => [
         'name' => Exception::KEY_CREATION_DENIED,
-        'description' => 'An API key cannot be created from a request authorized with an API key. Authenticate with a session instead. To create a short-lived key from a server, use the ephemeral key endpoint.',
+        'description' => 'This request cannot create or change the key. A JWT cannot create or change keys, an API key cannot create another stored API key, and a key never gives out scopes it does not hold or an expiry later than its own. Authenticate with a session instead, or use the ephemeral key endpoint for a short-lived key within your key\'s grant.',
         'code' => 403,
-    ],
-    Exception::DEV_KEY_GONE => [
-        'name' => Exception::DEV_KEY_GONE,
-        'description' => 'Dev key creation is no longer available.',
-        'code' => 410,
     ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
@@ -1279,6 +1400,11 @@ return [
     Exception::VARIABLE_CANNOT_UNSET_SECRET => [
         'name' => Exception::VARIABLE_CANNOT_UNSET_SECRET,
         'description' => 'Secret variables cannot be marked as non-secret. Please re-create the variable if this is your intention.',
+        'code' => 400,
+    ],
+    Exception::VARIABLE_INVALID_KEY => [
+        'name' => Exception::VARIABLE_INVALID_KEY,
+        'description' => 'Variable key is not a valid environment variable name. Update or delete the variable, then retry the deployment.',
         'code' => 400,
     ],
     Exception::GRAPHQL_NO_QUERY => [
@@ -1327,6 +1453,11 @@ return [
         'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
         'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
         'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_UNAUTHORIZED => [
+        'name' => Exception::MIGRATION_SOURCE_UNAUTHORIZED,
+        'description' => 'The source API key cannot read the requested resources of the source project. Verify the projectId, the API key, and that the key has read scopes for every resource you are migrating.',
+        'code' => 401,
     ],
     Exception::MIGRATION_SOURCE_TYPE_INVALID => [
         'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,
@@ -1440,7 +1571,7 @@ return [
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
-        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
+        'description' => 'Message with the requested ID has no recipients (topics, users, targets, or emails).',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SENT => [
@@ -1505,6 +1636,11 @@ return [
         'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
         'code' => 403,
     ],
+    Exception::ORGANIZATION_CREATION_PROHIBITED => [
+        'name' => Exception::ORGANIZATION_CREATION_PROHIBITED,
+        'description' => 'This self-hosted instance already has an organization. Ask an organization owner to invite you instead.',
+        'code' => 403,
+    ],
     Exception::PROJECT_ID_MISSING => [
         'name' => Exception::PROJECT_ID_MISSING,
         'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
@@ -1547,6 +1683,28 @@ return [
     Exception::REPORT_ALREADY_EXISTS => [
         'name' => Exception::REPORT_ALREADY_EXISTS,
         'description' => 'Report with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
+    ],
+
+    /** Reviews */
+    Exception::REVIEW_NOT_FOUND => [
+        'name' => Exception::REVIEW_NOT_FOUND,
+        'description' => 'Review with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_CHAT_NOT_FOUND => [
+        'name' => Exception::REVIEW_CHAT_NOT_FOUND,
+        'description' => 'No answer was queued for the requested comment on this repository and pull request.',
+        'code' => 404,
+    ],
+    Exception::REVIEW_STATUS_INVALID => [
+        'name' => Exception::REVIEW_STATUS_INVALID,
+        'description' => 'The review has already ended and its status can no longer change.',
+        'code' => 409,
+    ],
+    Exception::REVIEW_REPOSITORY_ALREADY_EXISTS => [
+        'name' => Exception::REVIEW_REPOSITORY_ALREADY_EXISTS,
+        'description' => 'Code review is already on for this repository in this project.',
         'code' => 409,
     ],
 ];

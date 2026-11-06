@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Users\Http\Users\Scrypt\Modified;
 
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -11,7 +12,9 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
+use InvalidArgumentException;
 use Utopia\Auth\Hashes\ScryptModified;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -50,7 +53,7 @@ class Create extends Base
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('email', '', new EmailValidator(), 'User email.')
             ->param('password', '', new Password(), 'User password hashed using Scrypt Modified.')
             ->param('passwordSalt', '', new Text(128), 'Salt used to hash password.')
@@ -62,18 +65,23 @@ class Create extends Base
             ->inject('dbForProject')
             ->inject('hooks')
             ->inject('plan')
+            ->inject('proofForPassword')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan): void
+    public function action(string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ProofsPassword $proofForPassword): void
     {
         $scryptModified = new ScryptModified();
-        $scryptModified
-            ->setSalt($passwordSalt)
-            ->setSaltSeparator($passwordSaltSeparator)
-            ->setSignerKey($passwordSignerKey);
+        try {
+            $scryptModified
+                ->setSalt($passwordSalt)
+                ->setSaltSeparator($passwordSaltSeparator)
+                ->setSignerKey($passwordSignerKey);
+        } catch (InvalidArgumentException $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+        }
 
-        $user = $this->createUser($scryptModified, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
+        $user = $this->createUser($scryptModified, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan, $proofForPassword);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

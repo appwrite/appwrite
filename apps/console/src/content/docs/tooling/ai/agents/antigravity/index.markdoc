@@ -1,0 +1,69 @@
+---
+layout: article
+title: Google Antigravity
+description: Learn how you can add the Appwrite MCP server to Agent Manager in Google Antigravity to interact with both the Appwrite API and documentation.
+---
+
+{% section #quick-start-prompts step=1 title="Quick start prompts" %}
+
+Get started quickly with these pre-built prompts for common Appwrite integrations:
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/tooling/ai/quickstart-prompts" %}
+Browse all quick start prompts
+{% /arrow_link %}
+
+{% /section %}
+
+{% section #step-2 step=2 title="Add the MCP server" %}
+
+Connect the Appwrite MCP server to Antigravity for deeper integration with the Appwrite API and documentation. It is a remote HTTP server, so there are no additional pre-requisites to install.
+
+To add the Appwrite MCP server, open Antigravity and go to the drop-down (...) menu in the Agent window . From there, navigate to Manage MCP Servers in the MCP Store, and then click View raw config in the main panel to add your custom MCP server.
+
+Update the `mcp_config.json` file to include the Appwrite MCP server:
+
+```json
+{
+  "mcpServers": {
+    "appwrite": {
+      "serverUrl": "https://mcp.appwrite.io/"
+    }
+  }
+}
+```
+
+{% info title="Use the serverUrl key" %}
+
+Antigravity requires the `serverUrl` key for remote MCP servers. Using fields like `url` or `httpUrl` will cause tool registration to fail silently.
+
+{% /info %}
+
+The server uses OAuth for authentication. When Antigravity first connects to the server, your browser opens so you can sign in to your Appwrite account and authorize access.
+
+Head back to the Managed MCP Server page and click refresh.
+
+{% /section %}
+
+{% section #step-3 step=3 title="Test the integration" %}
+
+Open **Agent Manager** in Antigravity to test your MCP integration. You can try out the following example prompts:
+
+**Example prompts:**
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `How do I implement file uploads with Appwrite Storage?`
+
+![Antigravity Agent chat](/images/docs/mcp/antigravity/agent-chat.avif)
+
+{% /section %}

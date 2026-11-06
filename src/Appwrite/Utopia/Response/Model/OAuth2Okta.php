@@ -25,6 +25,11 @@ class OAuth2Okta extends OAuth2Base
         return 'Kiq0000000000000000000000000000000000000-00000000000H2L5-3SJ-vRV';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['none', 'login', 'consent'];
+    }
+
     public function __construct()
     {
         parent::__construct();

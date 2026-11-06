@@ -1,0 +1,56 @@
+---
+layout: article
+title: Chat with the Agent
+description: Open the Appwrite Agent panel or fullscreen chat, send prompts, and manage a conversation.
+---
+
+Chat is the primary way you use the Appwrite Agent. The same conversations appear in the side panel and in fullscreen; choose the shell that matches the job. Stay in the panel when the Console page is still your focus. Switch to fullscreen when the thread itself is the work.
+
+# Open the Agent {% #open-the-agent %}
+
+### Right-hand panel
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io).
+2. Click the **Agent** control in the Console header.
+3. The Agent panel opens on the right. Your panel open state can persist in account preferences.
+
+### Fullscreen
+
+1. Go to `/agent` (or `/agent/{conversationId}` for a specific thread).
+2. Use the conversation list, composer, settings, and automations from the dedicated Agent shell.
+
+{% info title="Keyboard shortcuts" %}
+The Console includes shortcuts to create a new agent conversation, create an automation, and focus the composer. Open the shortcuts dialog from the Console for the current key bindings.
+{% /info %}
+
+# Start or continue a conversation {% #start-or-continue %}
+
+1. Click **Create agent** for a new thread, or select an existing conversation.
+2. Confirm a project is in scope (from the route or the composer project selector). New conversations need a resolvable project.
+3. Optionally choose a [model](/docs/products/agent/models) from the model picker. The choice is saved on the conversation.
+4. Type a prompt, pick a suggestion chip, or use voice input. Optionally attach files before sending.
+5. Send the message and watch the reply and tool timeline update live.
+
+Suggestion chips change with MCP readiness: how-to prompts when tools are unavailable, action prompts when an enabled MCP connection can run tools.
+
+# Work with a turn {% #work-with-a-turn %}
+
+While the Agent is working, the turn owns the conversation. **Stop** cancels an in-progress run. **Retry** asks the Agent to try again after a failure or stop. **Edit and resend** changes a prior user message and continues from that point.
+
+If you keep typing while a turn is running, follow-ups wait in a short queue and send when the run finishes. You can adjust or drop queued items before they go out.
+
+When the Agent needs a decision, [clarifying prompts](/docs/products/agent/actions#clarification) may appear mid-turn. Answer them to continue the same run rather than starting a new chat.
+
+After a reply, you can copy text, use text-to-speech where supported, or leave thumbs up / thumbs down feedback.
+
+# Tips for better results {% #tips-for-better-results %}
+
+Ground the Agent in the right place before you ask. Stay on the project or page you mean, or set the project in the composer. Be specific: include resource names, error text, and the outcome you want.
+
+Connect [Appwrite MCP](/docs/products/agent/connect-mcp) when you want the Agent to list or change resources. Save standing preferences in [memory](/docs/products/agent/memory) instead of repeating them every chat. For one-off context (this incident, this screenshot), put it in the message or an attachment rather than in memory.
+
+For voice, dictate your prompt, then say **submit now**. A short countdown lets you cancel if the transcript is wrong before the message sends.
+
+{% arrow_link href="/docs/products/agent/connect-mcp" %}
+Connect Appwrite MCP
+{% /arrow_link %}

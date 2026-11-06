@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
 
 class Provider extends Model
 {
@@ -54,8 +55,8 @@ class Provider extends Model
             ])
             ->addRule('credentials', [
                 'type' => self::TYPE_JSON,
-                'description' => 'Provider credentials.',
-                'default' => [],
+                'description' => 'Provider credentials. Secret values are write-only and never returned.',
+                'default' => new \stdClass(),
                 'example' => [
                     'key' => '123456789'
                 ],
@@ -63,12 +64,45 @@ class Provider extends Model
             ->addRule('options', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Provider options.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'required' => false,
                 'example' => [
                     'from' => 'sender-email@mydomain'
                 ],
             ]);
+    }
+
+    /**
+     * Process Document before returning it to the client
+     *
+     * @return Document
+     */
+    public function filter(Document $document): Document
+    {
+        // Earlier APNs provider updates stored a changed bundle ID under `bundle`; show the one delivery uses.
+        $credentials = $document->getAttribute('credentials');
+        if (\is_array($credentials) && isset($credentials['bundle'])) {
+            $credentials['bundleId'] = $credentials['bundle'];
+            unset($credentials['bundle']);
+            $document->setAttribute('credentials', $credentials);
+        }
+
+        // Secrets are write-only; identifiers such as bundleId, teamId or region stay readable.
+        if (\is_array($credentials)) {
+            foreach (['apiKey', 'apiSecret', 'authKey', 'authToken', 'password', 'secretKey', 'serviceAccountJSON'] as $secret) {
+                unset($credentials[$secret]);
+            }
+            $document->setAttribute('credentials', $credentials);
+        }
+
+        foreach (['credentials', 'options'] as $attribute) {
+            $value = $document->getAttribute($attribute);
+            if (\is_array($value) && empty($value)) {
+                $document->setAttribute($attribute, new \stdClass());
+            }
+        }
+
+        return $document;
     }
 
     /**

@@ -10,11 +10,11 @@ use Utopia\Config\Config;
 
 /**
  * Proves job resolution for combined and dedicated worker modes keeps the
- * databases queue at maxCoroutines=1 — parallel schema jobs risk deadlocks.
+ * databases queue at coroutines=1 — parallel schema jobs risk deadlocks.
  */
 final class JobsTest extends TestCase
 {
-    /** @var array<string, array{queue: string, queueEnv?: string, maxCoroutines?: int}> */
+    /** @var array<string, array{queue: string, queueEnv?: string, coroutines?: int}> */
     private array $config;
 
     protected function setUp(): void
@@ -30,8 +30,8 @@ final class JobsTest extends TestCase
             $this->env(['_APP_WORKER_MAX_COROUTINES' => '61']),
         );
 
-        $this->assertSame(1, $jobs['databases']['maxCoroutines']);
-        $this->assertSame(8, $jobs['functions']['maxCoroutines']);
+        $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame(8, $jobs['functions']['coroutines']);
         $this->assertSame('database_db_main', $jobs['databases']['queue']);
     }
 
@@ -44,7 +44,7 @@ final class JobsTest extends TestCase
         );
 
         $this->assertCount(1, $jobs);
-        $this->assertSame(1, $jobs['databases']['maxCoroutines']);
+        $this->assertSame(1, $jobs['databases']['coroutines']);
     }
 
     public function testDedicatedNonDatabasesAllowsGlobalOverride(): void
@@ -55,7 +55,7 @@ final class JobsTest extends TestCase
             $this->env(['_APP_WORKER_MAX_COROUTINES' => '99']),
         );
 
-        $this->assertSame(99, $jobs['functions']['maxCoroutines']);
+        $this->assertSame(99, $jobs['functions']['coroutines']);
     }
 
     public function testDedicatedDatabasesWithoutOverrideStaysAtOne(): void
@@ -66,7 +66,7 @@ final class JobsTest extends TestCase
             $this->env([]),
         );
 
-        $this->assertSame(1, $jobs['databases']['maxCoroutines']);
+        $this->assertSame(1, $jobs['databases']['coroutines']);
     }
 
     public function testPartialCombinedStillPinsDatabases(): void
@@ -77,8 +77,8 @@ final class JobsTest extends TestCase
             $this->env(['_APP_WORKER_MAX_COROUTINES' => '50']),
         );
 
-        $this->assertSame(1, $jobs['databases']['maxCoroutines']);
-        $this->assertSame(8, $jobs['functions']['maxCoroutines']);
+        $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame(8, $jobs['functions']['coroutines']);
     }
 
     public function testQueueEnvOverrideStillApplies(): void
@@ -90,7 +90,7 @@ final class JobsTest extends TestCase
         );
 
         $this->assertSame('database_db_custom', $jobs['databases']['queue']);
-        $this->assertSame(1, $jobs['databases']['maxCoroutines']);
+        $this->assertSame(1, $jobs['databases']['coroutines']);
     }
 
     /**

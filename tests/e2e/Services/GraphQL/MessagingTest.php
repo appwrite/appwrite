@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\DSN\DSN;
 use Utopia\System\System;
 
@@ -34,21 +34,21 @@ final class MessagingTest extends Scope
 
         $providersParams = [
             'Sendgrid' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender Name',
                 'fromEmail' => 'sender-email@my-domain.com',
             ],
             'Resend' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Resend1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender Name',
                 'fromEmail' => 'sender-email@my-domain.com',
             ],
             'Mailgun' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
@@ -57,52 +57,54 @@ final class MessagingTest extends Scope
                 'isEuRegion' => false,
             ],
             'Twilio' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
                 'from' => '+123456789',
             ],
             'Telesign' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Telesign1',
                 'customerId' => 'my-username',
                 'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
             'Textmagic' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
                 'from' => '+123456789',
             ],
             'Msg91' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
                 'templateId' => '123456'
             ],
             'Vonage' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
             'Fcm' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'Apns' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -198,7 +200,9 @@ final class MessagingTest extends Scope
                     'type' => 'service_account',
                     'project_id' => 'test-project',
                     'private_key_id' => 'test-project-id',
-                    'private_key' => "test-private-key",
+                    'client_email' => 'test@appwrite.iam.gserviceaccount.com',
+                    'token_uri' => 'https://oauth2.googleapis.com/token',
+                    'private_key' => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
             'Apns' => [
@@ -264,7 +268,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'topicId' => ID::unique(),
+                'topicId' => Id::unique(),
                 'name' => 'topic1',
             ],
         ];
@@ -326,7 +330,7 @@ final class MessagingTest extends Scope
 
         $providerParam = [
             'sendgrid' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
                 'fromName' => 'Sender',
@@ -350,7 +354,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'targetId' => ID::unique(),
+                'targetId' => Id::unique(),
                 'providerType' => 'email',
                 'userId' => $userId,
                 'providerId' => $providerId,
@@ -373,7 +377,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'subscriberId' => ID::unique(),
+                'subscriberId' => Id::unique(),
                 'topicId' => $topicId,
                 'targetId' => $targetId,
             ],
@@ -419,7 +423,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => $apiKey,
                 'domain' => $domain,
@@ -442,7 +446,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'topicId' => ID::unique(),
+                'topicId' => Id::unique(),
                 'name' => 'topic1',
             ],
         ];
@@ -458,7 +462,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'random1-mail@mail.org',
                 'password' => 'password',
                 'name' => 'Messaging User',
@@ -476,7 +480,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'targetId' => ID::unique(),
+                'targetId' => Id::unique(),
                 'providerType' => 'email',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
@@ -495,7 +499,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'subscriberId' => ID::unique(),
+                'subscriberId' => Id::unique(),
                 'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
                 'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
             ],
@@ -511,7 +515,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => ID::unique(),
+                'messageId' => Id::unique(),
                 'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'subject' => 'Khali beats Undertaker',
                 'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -581,7 +585,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'Msg91-1',
                 'senderId' => $senderId,
                 'authKey' => $authKey,
@@ -602,7 +606,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'topicId' => ID::unique(),
+                'topicId' => Id::unique(),
                 'name' => 'topic1',
             ],
         ];
@@ -618,7 +622,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'random3-email@mail.org',
                 'password' => 'password',
                 'name' => 'Messaging User',
@@ -636,7 +640,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'targetId' => ID::unique(),
+                'targetId' => Id::unique(),
                 'providerType' => 'sms',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
@@ -655,7 +659,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'subscriberId' => ID::unique(),
+                'subscriberId' => Id::unique(),
                 'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
                 'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
             ],
@@ -671,7 +675,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => ID::unique(),
+                'messageId' => Id::unique(),
                 'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'content' => '454665',
             ],
@@ -738,13 +742,15 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => ID::unique(),
+                'providerId' => Id::unique(),
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
                     'type' => 'service_account',
                     "project_id" => "test-project",
                     "private_key_id" => "test-private-key-id",
-                    "private_key" => "test-private-key",
+                    "client_email" => "test@appwrite.iam.gserviceaccount.com",
+                    "token_uri" => "https://oauth2.googleapis.com/token",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
                 ]
             ],
         ];
@@ -762,7 +768,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'topicId' => ID::unique(),
+                'topicId' => Id::unique(),
                 'name' => 'topic1',
             ],
         ];
@@ -778,7 +784,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => 'random5-mail@mail.org',
                 'password' => 'password',
                 'name' => 'Messaging User',
@@ -796,7 +802,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'targetId' => ID::unique(),
+                'targetId' => Id::unique(),
                 'providerType' => 'push',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
@@ -815,7 +821,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'subscriberId' => ID::unique(),
+                'subscriberId' => Id::unique(),
                 'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
                 'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
             ],
@@ -831,7 +837,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => ID::unique(),
+                'messageId' => Id::unique(),
                 'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'title' => 'Push Notification Title',
                 'body' => 'Push Notifiaction Body',
@@ -1077,9 +1083,17 @@ final class MessagingTest extends Scope
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $subscriber = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/subscribers/' . $subscriberId, \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(404, $subscriber['headers']['status-code']);
 
         // Clear cache after deletion
         $key = $this->getProject()['$id'];
@@ -1125,7 +1139,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => ID::unique(),
+                'messageId' => Id::unique(),
                 'status' => 'draft',
                 'topics' => [$email['topics'][0]],
                 'subject' => 'Khali beats Undertaker',
@@ -1198,7 +1212,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => ID::unique(),
+                'messageId' => Id::unique(),
                 'status' => 'draft',
                 'topics' => [$sms['topics'][0]],
                 'content' => '345463',
@@ -1270,7 +1284,7 @@ final class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'messageId' => ID::unique(),
+                'messageId' => Id::unique(),
                 'status' => 'draft',
                 'topics' => [$push['topics'][0]],
                 'title' => 'Push Notification Title',

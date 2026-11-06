@@ -3,6 +3,12 @@
 namespace Appwrite\Auth;
 
 use Appwrite\Auth\OAuth2\Exception;
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Client;
+use Utopia\Client\Exception\DestinationException;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 abstract class OAuth2
 {
@@ -34,13 +40,14 @@ abstract class OAuth2
     /**
      * OAuth2 constructor.
      *
+     * @param Client $client Carries every request to the provider; its destination decides which addresses it may reach
      * @param string $appId
      * @param string $appSecret
      * @param string $callback
      * @param array  $state
      * @param array $scopes
      */
-    public function __construct(string $appId, string $appSecret, string $callback, array $state = [], array $scopes = [])
+    public function __construct(protected readonly Client $client, string $appId, string $appSecret, string $callback, array $state = [], array $scopes = [])
     {
         $this->appID = $appId;
         $this->appSecret = $appSecret;
@@ -104,6 +111,23 @@ abstract class OAuth2
      * @return string
      */
     abstract public function getUserName(string $accessToken): string;
+
+    /**
+     * Return the URL of the user's profile photo from the provider.
+     *
+     * Returns an empty string when the provider does not expose a photo or
+     * the user has not set one. Concrete adapters override this only when
+     * their API reliably provides a photo URL; the base implementation is a
+     * safe no-op so all existing adapters remain valid without changes.
+     *
+     * @param string $accessToken
+     *
+     * @return string
+     */
+    public function getUserPhoto(string $accessToken): string
+    {
+        return '';
+    }
 
     /**
      * @param $scope
@@ -187,29 +211,34 @@ abstract class OAuth2
      */
     protected function request(string $method, string $url = '', array $headers = [], string $payload = ''): string
     {
-        $ch = \curl_init($url);
-
-        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        \curl_setopt($ch, CURLOPT_HEADER, 0);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        \curl_setopt($ch, CURLOPT_USERAGENT, 'Appwrite OAuth2');
-
-        if (!empty($payload)) {
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-            $headers[] = 'Content-length: ' . \strlen($payload);
+        $fields = [Header::USER_AGENT => 'Appwrite OAuth2'];
+        foreach ($headers as $header) {
+            [$name, $value] = \array_map(trim(...), \explode(':', $header, 2)) + [1 => ''];
+            $fields[$name] = $value;
         }
 
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        // Send the request & save response to $response
-        $response = \curl_exec($ch);
-
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        if ($code >= 400) {
-            throw new Exception($response, $code);
+        $factory = new RequestFactory();
+        $request = empty($payload)
+            ? $factory->createRequest($method, $url)
+            : $factory->body($method, $url, $payload, ContentType::FORM_URLENCODED);
+        foreach ($fields as $name => $value) {
+            $request = $request->withHeader($name, $value);
         }
 
-        return (string)$response;
+        try {
+            $response = $this->client->sendRequest($request);
+        } catch (DestinationException $exception) {
+            throw new Exception($exception->getMessage(), 400);
+        } catch (ClientExceptionInterface) {
+            return '';
+        }
+
+        $body = (string) $response->getBody();
+
+        if ($response->getStatusCode() >= 400) {
+            throw new Exception($body, $response->getStatusCode());
+        }
+
+        return $body;
     }
 }

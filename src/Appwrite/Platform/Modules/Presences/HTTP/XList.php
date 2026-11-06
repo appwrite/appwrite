@@ -45,7 +45,7 @@ class XList extends PlatformAction
                 namespace: 'presences',
                 group: 'presences',
                 name: 'list',
-                desc: 'List presences',
+                summary: 'List presences',
                 description: '/docs/references/presences/list.md',
                 auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
@@ -92,7 +92,7 @@ class XList extends PlatformAction
         }
 
         $groupedQueries = Query::groupByType($queries);
-        $filterQueries = $groupedQueries['filters'];
+        $filterQueries = $groupedQueries->filters;
 
         // should be excluded from the user provided query as user query would be used for caching only
         // otherwise cache will always miss due to the datetime now

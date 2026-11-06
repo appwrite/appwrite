@@ -26,7 +26,7 @@ class Get extends DatabaseGet
             ->setHttpPath('/v1/documentsdb/:databaseId')
             ->desc('Get database')
             ->groups(['api', 'database'])
-            ->label('scope', 'databases.read')
+            ->label('scope', 'documentsdb.read')
             ->label('usage.resource', 'database/{request.databaseId}')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('sdk', new Method(
@@ -43,7 +43,7 @@ class Get extends DatabaseGet
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->callback($this->action(...));

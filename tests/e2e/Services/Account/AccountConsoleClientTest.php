@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class AccountConsoleClientTest extends Scope
 {
@@ -18,14 +18,14 @@ final class AccountConsoleClientTest extends Scope
 
     public function testCreateRecoveryEmailBranding(): void
     {
-        $email = ID::unique() . '@appwrite.io';
+        $email = Id::unique() . '@appwrite.io';
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Recovery User',
@@ -66,7 +66,7 @@ final class AccountConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -88,7 +88,7 @@ final class AccountConsoleClientTest extends Scope
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         // Create team — user becomes sole owner and only member
-        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+        $team = $this->createTeamFixture([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -97,7 +97,7 @@ final class AccountConsoleClientTest extends Scope
             'teamId' => 'unique()',
             'name' => 'myteam'
         ]);
-        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         // Account deletion should succeed even with active membership
         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
@@ -124,7 +124,7 @@ final class AccountConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -167,7 +167,7 @@ final class AccountConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -216,7 +216,7 @@ final class AccountConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => 'otpuser2@appwrite.io'
         ]);
 

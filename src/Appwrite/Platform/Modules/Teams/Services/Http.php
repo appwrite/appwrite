@@ -24,22 +24,22 @@ class Http extends Service
         $this->type = Service::TYPE_HTTP;
 
         // Teams
-        $this->addAction(CreateTeam::getName(), new CreateTeam());
-        $this->addAction(GetTeam::getName(), new GetTeam());
-        $this->addAction(ListTeams::getName(), new ListTeams());
-        $this->addAction(DeleteTeam::getName(), new DeleteTeam());
-        $this->addAction(UpdateTeamName::getName(), new UpdateTeamName());
+        $this->addAction('createTeam', CreateTeam::class);
+        $this->addAction('getTeam', GetTeam::class);
+        $this->addAction('listTeams', ListTeams::class);
+        $this->addAction('deleteTeam', DeleteTeam::class);
+        $this->addAction('updateTeamName', UpdateTeamName::class);
 
         // Preferences
-        $this->addAction(GetPreferences::getName(), new GetPreferences());
-        $this->addAction(UpdatePreferences::getName(), new UpdatePreferences());
+        $this->addAction('getTeamPreferences', GetPreferences::class);
+        $this->addAction('updateTeamPreferences', UpdatePreferences::class);
 
         // Memberships
-        $this->addAction(CreateMembership::getName(), new CreateMembership());
-        $this->addAction(GetMembership::getName(), new GetMembership());
-        $this->addAction(ListMemberships::getName(), new ListMemberships());
-        $this->addAction(UpdateMembership::getName(), new UpdateMembership());
-        $this->addAction(DeleteMembership::getName(), new DeleteMembership());
-        $this->addAction(UpdateMembershipStatus::getName(), new UpdateMembershipStatus());
+        $this->addAction('createTeamMembership', CreateMembership::class);
+        $this->addAction('getTeamMembership', GetMembership::class);
+        $this->addAction('listTeamMemberships', ListMemberships::class);
+        $this->addAction('updateTeamMembership', UpdateMembership::class);
+        $this->addAction('deleteTeamMembership', DeleteMembership::class);
+        $this->addAction('updateTeamMembershipStatus', UpdateMembershipStatus::class);
     }
 }

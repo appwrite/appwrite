@@ -5,12 +5,14 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\SMTP\Tests;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Extend\Exception as Exception;
+use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\SDK\Specification\Validator\PasswordFormat;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -60,12 +62,12 @@ class Create extends Action
                 ],
                 contentType: ContentType::NONE,
             ))
-            ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
+            ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.', example: '["recipient@example.com"]')
             ->param('senderName', '', new Text(256), 'Name of the email sender', optional: true, deprecated: true) // Backwards compatibility
             ->param('senderEmail', '', new Email(), 'Email of the sender', optional: true, deprecated: true) // Backwards compatibility
             ->param('replyTo', '', new Email(), 'Reply to email', optional: true, deprecated: true) // Backwards compatibility
             ->param('host', '', new Hostname(), 'SMTP server host name', optional: true, deprecated: true) // Backwards compatibility
-            ->param('port', null, new Integer(), 'SMTP server port', optional: true, deprecated: true) // Backwards compatibility
+            ->param('port', null, new Integer(), 'SMTP server port', optional: true, deprecated: true, example: '587') // Backwards compatibility
             ->param('username', '', new Text(256), 'SMTP server username', optional: true, deprecated: true) // Backwards compatibility
             ->param('password', '', new PasswordFormat(new Text(256)), 'SMTP server password', optional: true, deprecated: true) // Backwards compatibility
             ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', optional: true, deprecated: true) // Backwards compatibility
@@ -73,6 +75,7 @@ class Create extends Action
             ->inject('project')
             ->inject('publisherForMails')
             ->inject('platform')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -93,6 +96,7 @@ class Create extends Action
         Document $project,
         MailPublisher $publisherForMails,
         array $platform,
+        PublicHostname $publicHostname,
     ): void {
         // Backwards compatibility: use inline params if provided, otherwise fall back to project SMTP config.
         // When inline params are provided they are treated as self-contained — project config is ignored
@@ -137,6 +141,11 @@ class Create extends Action
 
         if (empty($port)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'SMTP port must be configured on the project to send a test email.');
+        }
+
+        $hostname = new Host($publicHostname);
+        if (!$hostname->isValid($host)) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $hostname->getDescription());
         }
 
         // Fallback to sender details when reply-to is not explicitly configured

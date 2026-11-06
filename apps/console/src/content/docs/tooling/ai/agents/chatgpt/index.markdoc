@@ -1,0 +1,85 @@
+---
+layout: article
+title: ChatGPT
+description: Connect Appwrite to ChatGPT with the remote MCP server, OAuth, and agent skills so ChatGPT can call your project and search the docs.
+faqs:
+  - question: How do I connect Appwrite to ChatGPT?
+    answer: Add a custom ChatGPT connector or App with the MCP URL https://mcp.appwrite.io and the server name appwrite. Then complete OAuth. Also run npx skills add appwrite/skills so ChatGPT has current SDK and CLI patterns.
+  - question: Do I need an API key for the ChatGPT connector?
+    answer: No. Cloud uses OAuth. You sign in to Appwrite and authorize the connector. Self-hosted Appwrite still uses a local stdio server with a project API key.
+  - question: Is the ChatGPT connector the same as Codex?
+    answer: No. The ChatGPT connector is for ChatGPT chat and Apps. Codex inside ChatGPT uses the Codex plugin plus `codex mcp add appwrite --url https://mcp.appwrite.io/`.
+---
+
+Use Appwrite when ChatGPT is writing an app that needs auth, databases, storage, functions, or hosting. One remote MCP server covers API actions and docs search. Do not add separate `appwrite-api` and `appwrite-docs` servers.
+
+{% section #install-skills step=1 title="Install Appwrite skills" %}
+
+Skills give ChatGPT current Appwrite CLI and SDK patterns. In a project directory, run:
+
+```bash
+npx skills add appwrite/skills
+```
+
+If you are using Codex inside ChatGPT, you can also install the [Appwrite Codex plugin](/docs/tooling/ai/agents/codex). Skills and MCP work together: skills teach the agent how to write Appwrite code, MCP lets it act on a live project.
+
+{% /section %}
+
+{% section #add-connector step=2 title="Add the ChatGPT connector" %}
+
+ChatGPT talks to Appwrite through a custom [MCP connector](https://mcp.appwrite.io). There is nothing to install locally.
+
+1. Open ChatGPT settings and go to **Connectors** (sometimes labeled **Apps**).
+2. Create a custom connector.
+3. Set the MCP server URL to:
+
+```
+https://mcp.appwrite.io
+```
+
+4. Use **appwrite** as the server name if the form asks for one.
+5. Save, then connect. ChatGPT opens a browser window so you can sign in to Appwrite and authorize access.
+
+The connector uses OAuth. You do not create an API key for Cloud. If ChatGPT cannot complete the redirect, confirm you are signed in to Appwrite Cloud and that pop-ups are allowed.
+
+{% info title="Codex in ChatGPT" %}
+
+For the Codex coding agent inside ChatGPT, follow the [Codex setup](/docs/tooling/ai/agents/codex) as well. Codex uses `codex mcp add appwrite --url https://mcp.appwrite.io/`. The connector above is for ChatGPT chat and Apps.
+
+{% /info %}
+
+{% /section %}
+
+{% section #quick-start-prompts step=3 title="Quick start prompts" %}
+
+Get started with these pre-built prompts for common Appwrite integrations:
+
+{% cards %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/tanstack-start" title="TanStack Start" icon="web-icon-tanstack" %}
+{% /cards_item %}
+{% cards_item href="/docs/tooling/ai/quickstart-prompts/nextjs" title="Next.js" icon="icon-nextjs" %}
+{% /cards_item %}
+{% /cards %}
+
+{% arrow_link href="/docs/tooling/ai/quickstart-prompts" %}
+Browse all quick start prompts
+{% /arrow_link %}
+
+{% /section %}
+
+{% section #test step=4 title="Test the integration" %}
+
+After the connector shows as connected, try:
+
+**Example prompts:**
+
+- `Create a new user in my Appwrite project`
+- `List all databases in my project`
+- `Show me the tables in my database`
+- `How do I set up real-time subscriptions in Appwrite?`
+- `Show me how to authenticate users with OAuth`
+- `How do I implement file uploads with Appwrite Storage?`
+
+If ChatGPT cannot see tools, reconnect the connector and confirm the URL is exactly `https://mcp.appwrite.io` with no extra path.
+
+{% /section %}

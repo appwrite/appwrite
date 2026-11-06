@@ -3,7 +3,9 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Fetch\Client as FetchClient;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 
 class HuggingFace extends OAuth2
 {
@@ -185,6 +187,18 @@ class HuggingFace extends OAuth2
      *
      * @return string
      */
+    public function getUserPhoto(string $accessToken): string
+    {
+        $user = $this->getUser($accessToken);
+
+        return $user['picture'] ?? '';
+    }
+
+    /**
+     * @param string $accessToken
+     *
+     * @return string
+     */
     public function getUserName(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
@@ -232,22 +246,24 @@ class HuggingFace extends OAuth2
 
     public function verifyCredentials(): void
     {
-        $client = new FetchClient();
-        $client->addHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $client->addHeader('Authorization', 'Basic ' . \base64_encode($this->appID . ':' . $this->appSecret));
+        $response = $this->client
+            ->withTimeout(15)
+            ->withFollowRedirects(maxHops: 5)
+            ->sendRequest((new RequestFactory())->form(
+                Method::POST,
+                'https://huggingface.co/oauth/token',
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => 'intentionally-invalid-code',
+                    'redirect_uri' => 'intentionally-invalid-redirect',
+                    'client_id' => $this->appID,
+                ],
+                [
+                    Header::AUTHORIZATION => 'Basic ' . \base64_encode($this->appID . ':' . $this->appSecret),
+                ],
+            ));
 
-        $response = $client->fetch(
-            url: 'https://huggingface.co/oauth/token',
-            method: FetchClient::METHOD_POST,
-            body: [
-                'grant_type' => 'authorization_code',
-                'code' => 'intentionally-invalid-code',
-                'redirect_uri' => 'intentionally-invalid-redirect',
-                'client_id' => $this->appID,
-            ]
-        );
-
-        $json = \json_decode($response->getBody(), true);
+        $json = \json_decode((string) $response->getBody(), true);
 
         if (isset($json['error']) && $json['error'] === 'invalid_client') {
             throw new \Exception('Hugging Face application with the provided Client ID and/or Client Secret is invalid.');

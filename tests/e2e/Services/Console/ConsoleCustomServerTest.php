@@ -93,6 +93,8 @@ final class ConsoleCustomServerTest extends Scope
 
         $scopeIds = \array_column($response['body']['scopes'], '$id');
         $this->assertContains('projects.read', $scopeIds);
+        $this->assertContains('organization.projects.keys.read', $scopeIds);
+        $this->assertContains('organization.projects.keys.write', $scopeIds);
 
         $projectsRead = null;
         foreach ($response['body']['scopes'] as $scope) {

@@ -1,0 +1,117 @@
+---
+layout: post
+title: Solving CORS errors with Appwrite
+description: Understanding why you are getting CORS error when sending a request to an Appwrite backend and how to debug.
+date: 2024-01-16
+lastUpdated: 2026-06-29
+cover: /images/blog/cors-error/cors_cover.avif
+timeToRead: 3
+author: dennis-ivy
+category: tutorials
+featured: false
+callToAction: true
+faqs:
+  - question: "What is a CORS error?"
+    answer: "CORS (Cross-Origin Resource Sharing) is a browser mechanism that controls which origins can access a server. A CORS error occurs when the server you are sending a request to has not added your frontend's origin to its list of allowed origins. The browser blocks the request to prevent untrusted sites from reading data from your backend."
+  - question: "How do I fix a CORS error in Appwrite?"
+    answer: "Open the Appwrite Console, go to your project's Overview tab, and add a platform with the hostname your app is running on (for example, localhost in development or your production domain). Make sure the hostname matches exactly, with no protocol or port. See [Appwrite platforms](/docs/products/auth) and the Console for setup."
+  - question: "Why am I still getting a CORS error after adding my hostname?"
+    answer: "Common causes are typos in the hostname, leaving localhost set after deploying to production, an incorrect project ID in your client SDK initialization, or using the wrong regional endpoint for your project. A 4xx response from any of these will cause the browser to surface it as a CORS error."
+  - question: "Do I need a different Appwrite endpoint for each region?"
+    answer: "Yes. Your project lives in one region (for example NYC, FRA, or SYD), and you must use the matching regional endpoint such as nyc.cloud.appwrite.io. Using a different region's endpoint will return a 'not accessible in this region' response that the browser reports as a CORS error."
+  - question: "Can I use a wildcard origin to bypass CORS in Appwrite?"
+    answer: "Appwrite supports wildcard platforms, but it is not recommended for production. A wildcard means any website can make requests to your project, which defeats the purpose of CORS. Add each origin you actually use as a separate platform instead."
+  - question: "Why does the CORS error not show me the real server response?"
+    answer: "CORS is enforced by the browser before your JavaScript can read the response. So even if the server returned a useful error message (like 'project ID invalid'), the browser strips it out. Check the Network tab in your browser's devtools to see the raw status code and response body."
+---
+
+I want to address an issue I've seen popping up on Stack Overflow and the Appwrite Discord server and address some of the reasons you may be getting this error, then walk you through some of the steps you can take to try and resolve it as well.
+
+The error message you'll see in your console when trying to make a request to an Appwrite backend will look something like this: `Access blocked by CORS policy.`
+
+# Understanding CORS
+
+Before we start debugging this, let's talk about what a CORS error is.
+
+Without diving deep into the topic, CORS (Cross-Origin Resource Sharing ) is a mechanism that allows a server to specify which origins can access it. By origins, I mean URLs.
+
+Site A, our server sitting at `myapi.com` won't allow request coming from site B, which is our client app sitting at `myfrontend.com`.
+
+This happens because our server has not added site B, `myfrontend.com`, to its list of allowed origins.
+Any request coming from a URL that is not listed in our server's allowed origins will be rejected by our CORS policy.
+The solution in this case would be to simply add `myfrontend.com` to the list of allowed origins.
+
+![CORS error appwrite](/images/blog/cors-error/cors_example.avif)
+
+CORS is crucial because it provides a secure way to make requests across different origins.
+Without CORS, any website would be able to make requests to our server, and this would lead to major problems.
+Imagine a malicious third party making a website `myfr0nt3nd.com` that key logs your user name and password, before making requests to your backend to validate the combination.
+
+# Why you are getting a CORS error
+
+Now let's try to figure this all out in the context of Appwrite and why you may be getting this error.
+I have listed four main reasons. If more arise, I will update the article to include them.
+
+1. Origin not set in Console
+2. Origin is set incorrectly
+3. Bad ID on request
+4. Endpoint mismatch
+
+## 1 - Origin not set in Console
+
+First, you'll want to check your Appwrite Console to make sure you have added a hostname and are making a request from the correct hostname.
+Make sure you have added a platform in your Appwrite console by going to the **Overview** tab, select your platform or adding one if you have none, and then ensure you have added a hostname.
+
+A hostname is simply the domain you will be making the request from. In development, this will most likely be `localhost`. No need to add a port number or protocol here.
+
+## 2 - Origin is set incorrectly
+
+The second issue I often see is a hostname that is not properly configured. This is usually a typo or, more often, a mistake made when switching between a local domain and live domain. Developers will often deploy their website and wonder why they are getting this error, only to find they still have their hostname set as localhost.
+
+So if you find this is why you were getting a CORS error, you have a few ways of solving this.
+
+1. Update hostname each time you switch between localhost and live URL. This is not ideal since you would be switching back and forth constantly.
+2. Add a wildcard to allow requests from any origin - Not secure
+3. Add multiple origins - This can be done by adding another "platform" and simply specifying the second and third origins as you add them. - Recommended
+
+## 3 - Incorrect ID on request
+
+This one happens because of an improperly configured request, such as a typo when specifying a project ID. For example, when using the `listRows` method,
+if the project ID is set incorrectly when the client is initialized, you will receive a CORS error.
+
+Without diving into the details about how CORS works, the problem occurs when the browser tries to check if the origin is allowed.
+The request returns a `40X` response, so the entire CORS check fails.
+
+## 4 - Endpoint mismatch
+
+A common issue that can cause CORS errors is using the wrong endpoint for your project's region. This happens when your project is hosted in one region (like NYC or SYD) but you're trying to connect to an endpoint from a different region (like FRA).
+
+For example, if your project is in the NYC region but you're using `fra.cloud.appwrite.io` or `cloud.appwrite.io`, the server will respond with "Project is not accessible in this region." However, you won't see this error message because CORS blocks the communication before you can read the response.
+
+**To fix this:**
+- Check your project's region in the Appwrite Console
+- Use the correct regional endpoint (e.g., `nyc.cloud.appwrite.io` for NYC projects)
+- Update your client configuration to use the right endpoint
+
+## Other things to consider
+
+In most cases, the issues people face have to do with one of the above reasons listed and can be solved with the given suggestions.
+However, if you are still running into issues, I'll keep an ongoing list of other possibilities and things to check for.
+
+- Disabled CORS in browser.  (I've seen people have this issue with browser extensions)
+
+## Additional resources
+Visit our documentation, Discord server, YouTube channel, or Threads page to find more resources on this topic.
+
+{% arrow_link href="https://appwrite.io/docs/advanced/security/abuse-protection/" %}
+Learn more in our documentation
+{% /arrow_link %}
+{% arrow_link href="https://appwrite.io/discord" %}
+Join the Appwrite Discord server
+{% /arrow_link %}
+{% arrow_link href="https://www.youtube.com/watch?v=oEpRh9H5l5g" %}
+Follow the tutorial on YouTube
+{% /arrow_link %}
+{% arrow_link href="https://appwrite.io/threads" %}
+Search past support threads
+{% /arrow_link %}

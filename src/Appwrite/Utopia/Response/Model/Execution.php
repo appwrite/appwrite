@@ -5,7 +5,8 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Document;
+use Utopia\Database\Role;
 
 class Execution extends Model
 {
@@ -123,9 +124,9 @@ class Execution extends Model
             ])
             ->addRule('duration', [
                 'type' => self::TYPE_FLOAT,
-                'description' => 'Resource(function/site) execution duration in seconds.',
+                'description' => 'Total time the resource(function/site) took to respond, in seconds.',
                 'default' => 0,
-                'example' => 0.400,
+                'example' => 1.230,
             ])
             ->addRule('scheduledAt', [
                 'type' => self::TYPE_DATETIME,
@@ -135,6 +136,55 @@ class Execution extends Model
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
+    }
+
+    /**
+     * Normalize HTTP header values to the public string contract.
+     */
+    public function filter(Document $document): Document
+    {
+        foreach (['requestHeaders', 'responseHeaders'] as $attribute) {
+            $headers = $document->getAttribute($attribute, []);
+            if (!\is_array($headers)) {
+                continue;
+            }
+
+            foreach ($headers as $index => $header) {
+                if ($header instanceof Document) {
+                    $header->setAttribute('value', $this->stringify($header->getAttribute('value')));
+                    continue;
+                }
+
+                if (\is_array($header) && \array_key_exists('value', $header)) {
+                    $header['value'] = $this->stringify($header['value']);
+                    $headers[$index] = $header;
+                }
+            }
+
+            $document->setAttribute($attribute, $headers);
+        }
+
+        return $document;
+    }
+
+    /**
+     * Join multi-value headers and stringify scalars such as a numeric content-length.
+     */
+    private function stringify(mixed $value): string
+    {
+        if (\is_array($value)) {
+            return \implode(', ', \array_map($this->stringify(...), $value));
+        }
+
+        if (\is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (\is_scalar($value)) {
+            return (string) $value;
+        }
+
+        return '';
     }
 
     /**

@@ -11,8 +11,10 @@ use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -48,7 +50,7 @@ class XList extends Action
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
@@ -72,20 +74,47 @@ class XList extends Action
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
-        // Set internal queries
+
         $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
-        $memberships = array_map(function ($membership) use ($dbForProject, $user) {
+
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+            $membershipId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Membership '{$membershipId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        try {
+            $memberships = $dbForProject->find('memberships', $queries);
+            $total = $includeTotal ? $dbForProject->count('memberships', Query::groupByType($queries)->filters, APP_LIMIT_COUNT) : 0;
+        } catch (OrderException $e) {
+            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        }
+
+        $memberships = \array_map(function (Document $membership) use ($dbForProject, $user): Document {
             $team = $dbForProject->getDocument('teams', $membership->getAttribute('teamId'));
-            $membership
+
+            return $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
                 ->setAttribute('userEmail', $user->getAttribute('email'));
-            return $membership;
-        }, $dbForProject->find('memberships', $queries));
+        }, $memberships);
 
         $response->dynamic(new Document([
             'memberships' => $memberships,
-            'total' => $includeTotal ? count($memberships) : 0,
+            'total' => $total,
         ]), Response::MODEL_MEMBERSHIP_LIST);
     }
 }

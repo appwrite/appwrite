@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * Declares ext-scrypt's function for PHPStan (via `scanFiles`), so analysis
+ * gives the same result whether or not the extension is loaded.
+ */
+function scrypt(string $password, string $salt, int $N, int $r, int $p, int $key_length, bool $raw_output = false): string|false
+{
+}

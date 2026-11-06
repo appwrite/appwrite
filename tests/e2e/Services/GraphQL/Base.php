@@ -3,7 +3,8 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Image\Image;
 
 trait Base
@@ -1191,8 +1192,8 @@ trait Base
                 }';
 
             case self::GET_DOCUMENT:
-                return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!) {
-                    databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId) {
+                return 'query getDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $queries: [String!] = []) {
+                    databasesGetDocument(databaseId: $databaseId, collectionId: $collectionId, documentId: $documentId, queries: $queries) {
                         _id
                         _collectionId
                         _permissions
@@ -1200,8 +1201,8 @@ trait Base
                     }
                 }';
             case self::GET_DOCUMENTS:
-                return 'query listDocuments($databaseId: String!, $collectionId: String!){
-                    databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId) {
+                return 'query listDocuments($databaseId: String!, $collectionId: String!, $queries: [String!] = []) {
+                    databasesListDocuments(databaseId: $databaseId, collectionId: $collectionId, queries: $queries) {
                         total
                         documents {
                             _id
@@ -1209,7 +1210,7 @@ trait Base
                             _permissions
                             data
                         }
-                    }   
+                    }
                 }';
             case self::CREATE_DOCUMENT:
                 return 'mutation createDocument($databaseId: String!, $collectionId: String!, $documentId: String!, $data: Json!, $permissions: [String!]){
@@ -1217,6 +1218,7 @@ trait Base
                         _id
                         _collectionId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_DOCUMENTS:
@@ -1242,8 +1244,8 @@ trait Base
                     }
                 }';
             case self::GET_ROW:
-                return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!) {
-                    tablesDBGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId) {
+                return 'query getRow($databaseId: String!, $tableId: String!, $rowId: String!, $queries: [String!] = []) {
+                    tablesDBGetRow(databaseId: $databaseId, tableId: $tableId, rowId: $rowId, queries: $queries) {
                         _id
                         _tableId
                         _permissions
@@ -1269,6 +1271,7 @@ trait Base
                         _id
                         _tableId
                         _permissions
+                        data
                     }
                 }';
             case self::CREATE_CUSTOM_ENTITY:
@@ -1505,8 +1508,12 @@ trait Base
                             status
                             email
                             emailVerification
+                            targets {
+                                providerType
+                                identifier
+                            }
                         }
-                    }   
+                    }
                 }';
             case self::CREATE_USER:
                 return 'mutation createUser($userId: String!, $email: String!, $password: String!, $name: String){
@@ -3368,7 +3375,14 @@ trait Base
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

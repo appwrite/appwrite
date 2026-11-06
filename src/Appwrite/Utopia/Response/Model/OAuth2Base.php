@@ -94,6 +94,32 @@ abstract class OAuth2Base extends Model
         return $this->getProviderLabel() . ' OAuth2 ' . $this->getClientSecretLabel() . '.';
     }
 
+    /**
+     * Prompt values the provider accepts. Providers that return values get a
+     * `prompt` rule.
+     *
+     * @return array<int, string> e.g. ['none', 'consent']
+     */
+    public function getPromptValues(): array
+    {
+        return [];
+    }
+
+    /**
+     * Prompt values used when none are configured.
+     *
+     * @return array<int, string>
+     */
+    public function getPromptDefault(): array
+    {
+        return [];
+    }
+
+    public function getPromptDescription(): string
+    {
+        return $this->getProviderLabel() . ' OAuth2 prompt values.';
+    }
+
     public function __construct()
     {
         $this
@@ -121,5 +147,17 @@ abstract class OAuth2Base extends Model
                 'default' => '',
                 'example' => $this->getClientSecretExample(),
             ]);
+
+        $promptValues = $this->getPromptValues();
+        if (!empty($promptValues)) {
+            $this->addRule('prompt', [
+                'type' => self::TYPE_ENUM,
+                'description' => $this->getPromptDescription(),
+                'default' => $this->getPromptDefault(),
+                'example' => $this->getPromptDefault() ?: [$promptValues[0]],
+                'array' => true,
+                'enum' => $promptValues,
+            ]);
+        }
     }
 }

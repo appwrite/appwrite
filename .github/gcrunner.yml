@@ -1,0 +1,67 @@
+runners:
+  small:
+    family: c3d
+    cpu: 2+4
+    ram: 8+16
+    disk: 80gb
+
+  standard:
+    family: c3d
+    cpu: 4+8
+    ram: 16+32
+    disk: 80gb
+
+  # The extra disk is the layer cache, not the workload.
+  build:
+    family: c3d
+    cpu: 8
+    ram: 32
+    disk: 100gb
+
+  publish:
+    family: c3d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+
+  e2e:
+    family: c3d
+    cpu: 4+8
+    ram: 16+32
+    disk: 80gb
+
+  # Databases and TablesDB run three paratest processes against every adapter.
+  e2e-large:
+    family: c3d
+    cpu: 8+16
+    ram: 32+64
+    disk: 80gb
+
+  # A preempted console database lane leaks its dedicated database.
+  e2e-long:
+    family: c3d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+    spot: false
+
+  # A preempted image build leaves a half-pushed digest.
+  image:
+    family: c3d
+    cpu: 4
+    ram: 16
+    disk: 80gb
+    spot: false
+
+  deploy:
+    family: c3d
+    cpu: 4
+    ram: 8
+    disk: 80gb
+    spot: false
+
+  snippets-qa:
+    family: c3d
+    cpu: 4
+    ram: 16
+    disk: 80gb

@@ -1,0 +1,29 @@
+services:
+  mariadb:
+    image: mariadb:10.11
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+    ports:
+      - "13307:3306"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.11-alpine
+    environment:
+      - CLICKHOUSE_DB=default
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=clickhouse
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    ports:
+      - "18123:8123"
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--host=localhost", "--port=9000", "--query=SELECT 1", "--format=Null"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s

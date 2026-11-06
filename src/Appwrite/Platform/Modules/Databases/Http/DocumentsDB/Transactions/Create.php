@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Create as TransactionsCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -25,8 +26,9 @@ class Create extends TransactionsCreate
             ->setHttpPath('/v1/documentsdb/transactions')
             ->desc('Create transaction')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'transactions',

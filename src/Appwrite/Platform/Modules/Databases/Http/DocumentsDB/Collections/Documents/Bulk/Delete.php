@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Collections\Documents\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk\Delete as DocumentsDelete;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -32,14 +33,12 @@ class Delete extends DocumentsDelete
             ->setHttpPath('/v1/documentsdb/:databaseId/collections/:collectionId/documents')
             ->desc('Delete documents')
             ->groups(['api', 'database'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('audits.event', 'documents.delete')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: $this->getSdkGroup(),
@@ -56,7 +55,7 @@ class Delete extends DocumentsDelete
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
-            ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+            ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true, example: '["{\"method\":\"equal\",\"attribute\":\"$id\",\"values\":[\"<DOCUMENT_ID>\"]}"]')
             ->param('transactionId', null, new UID(), 'Transaction ID for staging the operation.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -68,6 +67,8 @@ class Delete extends DocumentsDelete
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('eventProcessor')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

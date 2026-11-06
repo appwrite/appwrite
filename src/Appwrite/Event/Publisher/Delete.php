@@ -3,7 +3,7 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Delete as DeleteMessage;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Delete extends Base
@@ -23,5 +23,10 @@ readonly class Delete extends Base
     public function getSize(bool $failed = false, ?Queue $queue = null): int
     {
         return $this->getQueueSize($queue ?? $this->queue, $failed);
+    }
+
+    public function getAge(?Queue $queue = null): int
+    {
+        return $this->getQueueAge($queue ?? $this->queue);
     }
 }

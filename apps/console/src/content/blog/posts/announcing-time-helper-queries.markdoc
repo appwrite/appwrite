@@ -1,0 +1,94 @@
+---
+layout: post
+title: "Announcing time helper queries: Cleaner, more expressive time-based queries"
+description: Handle time-based filtering directly in your queries using new helpers for created and updated timestamps.
+date: 2025-09-02
+lastUpdated: 2026-06-29
+cover: /images/blog/announcing-time-helper-queries/cover.avif
+timeToRead: 5
+author: jake-barnby
+category: announcements
+featured: false
+faqs:
+  - question: "What are time helper queries in Appwrite Databases?"
+    answer: "Time helper queries are dedicated operators (`createdBefore`, `createdAfter`, `updatedBefore`, `updatedAfter`) that filter rows by their `$createdAt` and `$updatedAt` timestamps. They replace verbose range comparisons against system attributes with a more direct, intent-revealing syntax."
+  - question: "How do I filter Appwrite rows by date?"
+    answer: "Use the time helper queries with an ISO-8601 date string, for example `Query.createdAfter(new Date('2024-01-01').toISOString())`. You can combine multiple helpers in the same query to express a range, such as everything created in a specific month or updated after a given backup."
+  - question: "What is ISO-8601 date format?"
+    answer: "ISO-8601 is the international standard for representing dates and times, for example `2024-10-05T14:48:00Z`. The `Z` suffix denotes UTC. Appwrite expects timestamps in ISO-8601 because it is unambiguous and sorts correctly as a string, which makes it ideal for queries and APIs."
+  - question: "What is the difference between createdBefore and updatedBefore?"
+    answer: "`createdBefore` filters by when the row was first inserted, while `updatedBefore` filters by when it was last modified. Use `createdBefore` for archival or retention policies based on initial entry, and `updatedBefore` to find data that has been stale or untouched since a given point."
+  - question: "Can I combine time helper queries with other filters?"
+    answer: "Yes. Time helpers compose with any other query operator, so you can express conditions like `status = published AND createdAfter = 2024-01-01`. This makes them well-suited for feeds, dashboards, and incremental sync jobs that need both temporal and field-level filtering."
+  - question: "Are time helper queries available on self-hosted Appwrite?"
+    answer: "Yes. Time helper queries are available on both Appwrite Cloud and self-hosted installations. Make sure your server and [Appwrite Databases](/docs/products/databases) SDK are recent enough to include the new operators."
+---
+If you’ve ever built a feed, a dashboard, or an audit report, you know how often you need to slice data by time. “Show me posts from last week,” “Export everything updated after the last backup,” or “Delete anything created before a certain retention window.”
+
+These time-based queries show up in so many of the apps you build, and when you’re working with dates, you naturally think in terms of *before* and *after*.
+
+To make this workflow smoother, we’re excited to announce **time helper queries:** A new way to filter rows by creation and update times using simple, expressive syntax.
+
+# A better way to query by dates
+
+Many workflows depend on knowing when a row was created or last updated. Whether you’re loading new items into a feed, exporting data that has changed since the previous run, or applying retention rules, you often need to filter by time.
+
+Previously, this meant comparing against `$createdAt` or `$updatedAt` using range operators. That approach works, but it adds extra noise to your queries. To make this more direct, you can now use dedicated helpers that map exactly to these common cases:
+
+- `createdBefore`: Find rows created before a given date
+- `createdAfter`: Find rows created after a given date
+- `updatedBefore`: Find rows updated before a given date
+- `updatedAfter`: Find rows updated after a given date
+
+```server-nodejs
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const result = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.createdBefore(new Date('2023').toISOString()),
+        Query.createdAfter(new Date('2000').toISOString()),
+        Query.updatedBefore(new Date('2025').toISOString()),
+        Query.updatedAfter(new Date('2000').toISOString())
+    ]
+})
+```
+
+# Where does this help?
+
+Time-based filtering shows up in countless scenarios:
+
+- **Feeds & timelines:** Fetch everything after a user’s last session.
+- **Analytics dashboards:** Chart data for “last 7 days” or “last quarter.”
+- **Exports & reports:** Generate monthly summaries or audits.
+- **Archival & compliance:** Isolate data for retention or deletion policies.
+- **Incremental jobs:** Process only rows updated after your last run.
+
+# Immediate benefits
+
+Here are some tangible benefits these new set of queries bring in:
+
+- **Readable queries:** Express intent directly (`createdBefore`) instead of referencing `$createdAt` fields.
+- **Less boilerplate:** Faster to write, easier to maintain.
+- **Predictable behaviour:** Filters are **range-exclusive**, keeping boundaries clean.
+- **Error resistant:** Fewer chances of typos or mis-referencing internal attributes.
+
+For devs, it’s about code clarity and scalability. Clean, expressive queries reduce friction in reviews, onboarding, and long-term maintenance.
+
+# Get started
+
+Time helper queries are live on Appwrite Cloud and Self-Hosted. They are designed to make time-based filtering more intuitive and maintainable as your applications scale. 
+
+Instead of cluttered conditions around internal fields, you now have simple operators that make intent explicit, reduce boilerplate, and help ensure your queries remain clean and predictable even as datasets grow larger and more complex.
+
+# More resources
+
+- [Read the documentation to get started](/docs/products/databases/queries#time-helpers)
+- [Announcing Opt-in relationship loading: Granular control for smarter data fetching](/blog/post/announcing-opt-in-relationship-loading)
+- [Announcing an improved Appwrite Databases. A completely new look, feel, and experience](/blog/post/announcing-appwrite-databases-new-ui)
+- [Announcing Database Upsert: Simplify your database interactions](/blog/post/announcing-database-upsert)

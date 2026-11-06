@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Proxy\Http\Rules\API;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Certificate;
 use Appwrite\Extend\Exception;
@@ -13,9 +14,8 @@ use Appwrite\Utopia\Response;
 use Utopia\Bus\Bus;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
 use Utopia\Validator\Domain as ValidatorDomain;
@@ -59,9 +59,7 @@ class Create extends Action
                     )
                 ]
             ))
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'userId:{userId}, url:{url}')
-            ->label('abuse-time', 60)
+            ->label('abuse', [Limit::attempts(['userId', 'url'], 10, seconds: 60)])
             ->param('domain', null, new ValidatorDomain(), 'Domain name.')
             ->inject('response')
             ->inject('project')
@@ -69,7 +67,6 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
             ->inject('platform')
-            ->inject('log')
             ->inject('authorization')
             ->inject('bus')
             ->callback($this->action(...));
@@ -83,14 +80,18 @@ class Create extends Action
         Event $queueForEvents,
         Database $dbForPlatform,
         array $platform,
-        Log $log,
         Authorization $authorization,
         Bus $bus,
     ) {
+        // DNS is case-insensitive, and the rule ID below is derived from the
+        // lowercased domain. Store the same canonical form so the row matches
+        // its own ID and downstream certificate providers.
+        $domain = \strtolower($domain);
+
         $this->validateDomainRestrictions($domain, $platform);
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : ID::unique();
+        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5(\strtolower($domain)) : Id::unique();
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
@@ -115,7 +116,7 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());
@@ -132,6 +133,8 @@ class Create extends Action
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]),
                 action: \Appwrite\Event\Certificate::ACTION_GENERATION,
+                // verifyRule() above passed, which is what put the rule in this status.
+                skipDomainValidation: true,
             ));
         }
 

@@ -1,0 +1,195 @@
+---
+layout: post
+title: Fixing OAuth2 authentication issues in Appwrite
+description: Learn how to fix OAuth2 and third-party cookie issues in Appwrite.
+date: 2025-02-18
+lastUpdated: 2026-06-29
+cover: /images/blog/fixing-oauth2-issues-in-appwrite-cloud/cover.avif
+timeToRead: 5
+author: ebenezer-don
+category: tutorials
+faqs:
+  - question: "Why does my OAuth2 login in Appwrite work in some browsers but not others?"
+    answer: "It is a third-party cookie issue. When your app domain differs from Appwrite's domain, the browser treats Appwrite's session cookie as third-party. Browsers like Brave and Safari block these by default, and Chrome is moving in the same direction. The OAuth redirect succeeds, but the session cookie never gets stored."
+  - question: "How do I fix the OAuth2 session issue with Appwrite?"
+    answer: "Switch from `createOAuth2Session` to `createOAuth2Token`. The token-based flow returns a `userId` and `secret` after the provider consent screen, and you exchange them for a session with `createSession`. The browser never has to accept a cross-origin cookie, so the flow works everywhere."
+  - question: "What is the difference between createOAuth2Session and createOAuth2Token?"
+    answer: "`createOAuth2Session` relies on Appwrite setting a session cookie on its own domain, which fails when third-party cookies are blocked. `createOAuth2Token` returns a one-time `userId` and `secret` that your app exchanges for a session on your own domain. The token approach is more compatible with modern browsers and follows current OAuth2 best practices."
+  - question: "Can I use a custom domain instead of switching auth flows?"
+    answer: "Yes. If you configure a custom domain for [Appwrite Auth](/docs/products/auth) so the session cookie and your app share the same root domain, the browser no longer treats it as third-party. The token-based flow is usually simpler, but custom domains are a valid option, especially if you want a unified domain across your stack."
+  - question: "Do I need to change my OAuth provider settings?"
+    answer: "Update the callback URL in your provider (Google, GitHub, etc.) to match the new redirect target. Beyond that, the OAuth provider config does not change. The shift from session-based to token-based auth happens entirely between your app and Appwrite."
+  - question: "Is the token-based OAuth flow secure?"
+    answer: "Yes. It follows OAuth2 best practices: the secret is single-use, short-lived, and exchanged for a session immediately. Because the flow does not rely on third-party cookies, it actually has fewer cross-site security pitfalls than the older session-based flow."
+---
+
+# Fixing OAuth2 authentication issues in Appwrite
+
+When integrating OAuth2 authentication with Appwrite, you might face an issue where authentication appears to succeed, but users remain logged out. The OAuth flow completes, the app redirects back as expected, yet when the app checks for an authenticated session, no user data is found.
+
+This issue can be frustrating because:
+
+- **It works in some browsers but fails in others (e.g., Brave).**
+- **It works on some devices but fails on others, or works sometimes and not others.**
+- **It correctly redirects after login but doesn't recognize the user session.**
+
+If this sounds familiar, you're not alone. Let's break down why this happens and how to fix it.
+
+# What's causing the issue?
+
+The root cause is related to how modern browsers handle third-party cookies. When your app domain differs from Appwrite's domain, for example `cloud.appwrite.io` in Appwrite Cloud, browsers treat Appwrite's session cookies as third-party cookies and may block them.
+
+There are two ways to solve this issue:
+
+1. **Use OAuth2 Tokens (Recommended)**: A modern, privacy-friendly approach that doesn't rely on third-party cookies
+2. **Use Custom Domains**: Configure Appwrite to use your domain for all operations
+
+# Solution 1: Use OAuth2 tokens
+
+The most straightforward solution is to use Appwrite's OAuth2 token-based authentication. This approach:
+
+- Works across all browsers, including those that block third-party cookies
+- Provides better security and privacy
+- Doesn't require additional infrastructure setup
+
+## How OAuth2 token authentication works
+
+Instead of using the traditional `createOAuth2Session`, we use `createOAuth2Token` which implements a more privacy-friendly flow:
+
+1. User clicks "Sign in with Provider" (e.g., Google, GitHub)
+2. App calls `createOAuth2Token` which redirects to the provider's consent screen
+3. After consent, provider redirects back with a token
+4. App creates a session using this token
+5. Session is established without relying on third-party cookies
+
+## Implementation example
+
+Here's a generic example of how to implement OAuth2 token authentication:
+
+```jsx
+// 1. Initialize your Appwrite client
+const client = new Client()
+  .setEndpoint('<https://cloud.appwrite.io/v1>')
+  .setProject('YOUR_PROJECT_ID')
+
+const account = new Account(client)
+
+// 2. Implement the sign-in function
+const signInWithGoogle = () => {
+  const baseUrl = window.location.origin
+
+  // Instead of createOAuth2Session, use createOAuth2Token
+  account.createOAuth2Token(
+    {
+      provider: 'google',
+      success: `${baseUrl}/auth/callback`,
+      failure: `${baseUrl}/auth`
+  },
+  )
+}
+
+// 3. Implement the callback handler
+const handleCallback = async (userId, secret) => {
+  try {
+    // Create a session using the OAuth2 token
+    await account.createSession({
+      userId,
+      secret
+    })
+
+    // Get the user data
+    const user = await account.get()
+
+    // User is now authenticated!
+    return user
+  } catch (error) {
+    console.error('Authentication failed:', error)
+    throw error
+  }
+}
+```
+
+## Why this solution works
+
+- **No Third-Party Cookies**: The flow doesn't rely on cookies from external domains
+- **Modern Security**: Uses token-based authentication, following OAuth2 best practices
+- **Universal Compatibility**: Works across all browsers and devices
+- **Simple Implementation**: Requires minimal code changes to implement
+
+# Solution 2: Use custom domains
+
+If you prefer to use session-based authentication or need to use custom domains for other reasons, you can configure Appwrite to use your domain for all operations.
+
+## Step 1: Set up a custom domain for your Appwrite project
+
+1. **Go to the Appwrite Console → Project Settings.**
+2. **Add your custom domain (e.g., `appwrite.your-app.com`).**
+3. **Follow the DNS setup instructions (CNAME or A record) and verify the domain.**
+
+Once your custom domain is verified, Appwrite will allow you to use it instead of `cloud.appwrite.io` for API requests.
+
+## Step 2: Update your Appwrite client to use your custom domain
+
+Modify your Appwrite client configuration so that all API requests, including authentication, use your custom domain instead of `cloud.appwrite.io`.
+
+```jsx
+import { Client, Account } from 'appwrite'
+
+const client = new Client()
+  .setEndpoint('<https://appwrite.your-app.com/v1>') // Use your custom domain
+  .setProject('YOUR_PROJECT_ID')
+
+const account = new Account(client)
+```
+
+Now, all authentication requests, including session management, happen on your custom domain. Cookies set by Appwrite will now be first-party cookies, eliminating the cross-domain issue that was causing authentication failures.
+
+## Step 3: Modify the OAuth callback URL in your OAuth provider
+
+1. **Go to your OAuth provider and update the "Authorized redirect URIs"**:
+    - **Before (default Appwrite Cloud domain)**:
+
+        ```
+        <https://cloud.appwrite.io/v1/account/sessions/oauth2/callback>
+        ```
+
+    - **After (your custom domain)**:
+
+        ```
+        <https://appwrite.your-app.com/v1/account/sessions/oauth2/callback>
+        ```
+
+2. Save changes and deploy.
+
+By making this change, your OAuth provider will now redirect users back to **your custom domain** after authentication. This ensures the OAuth flow remains within your domain and avoids session cookies being stored under `cloud.appwrite.io`.
+
+# Which solution should you choose?
+
+Both solutions are valuable and can be used independently or together, depending on your needs. Here's how to think about them:
+
+## OAuth2 tokens (Solution 1)
+
+- Quick to implement
+- Works across all browsers
+- Modern and privacy-friendly
+- No infrastructure changes needed
+
+## Custom domains (Solution 2)
+
+- Complete control over your domain
+- Consistent branding
+- First-party cookies support
+
+The solutions aren't mutually exclusive - they solve the same problem from different angles and can complement each other if needed.
+
+# Summary
+
+Appwrite offers OAuth2 tokens and custom domains to solve authentication issues in modern browsers. OAuth2 tokens provide immediate, cross-browser compatibility without infrastructure changes, while custom domains give you complete control over your authentication flow.
+
+Need extra help? Check the [documentation](https://appwrite.io/docs/products/auth) or ask for support in the Appwrite [Discord community](https://appwrite.io/discord).
+
+# Further reading
+
+- [Building custom authentication flows with Appwrite](https://appwrite.io/blog/post/building-custom-auth-flows?doFollow=true)
+- [How to set up Google authentication in React with Appwrite](https://appwrite.io/blog/post/set-up-google-auth-appwrite-react?doFollow=true)
+- [A modern developer's guide to user authentication](https://appwrite.io/blog/post/guide-to-user-authentication?doFollow=true)

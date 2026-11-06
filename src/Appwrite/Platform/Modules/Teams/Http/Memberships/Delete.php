@@ -86,55 +86,59 @@ class Delete extends Action
 
         $this->validate($profile, $team, $dbForProject);
 
-        if ($project->getId() === 'console') {
-            // Quick check:
-            // fetch up to 2 owners to determine if only one exists
-            $ownersCount = $dbForProject->count(
+        // An organization must keep a confirmed owner, whoever deletes the membership: a session, or an API key.
+        // Locking the team first serializes concurrent changes to its owners; counting after the delete,
+        // in the same transaction, keeps an unauthorized caller on the 401 path.
+        $isConfirmedOwner = $project->getId() === 'console'
+            && $membership->getAttribute('confirm', false)
+            && \in_array('owner', $membership->getAttribute('roles', []), true);
+
+        $dbForProject->withTransaction(function () use ($dbForProject, $membership, $team, $isConfirmedOwner) {
+            if ($isConfirmedOwner) {
+                $dbForProject->getDocument('teams', $team->getId(), forUpdate: true);
+            }
+
+            try {
+                $dbForProject->deleteDocument('memberships', $membership->getId());
+            } catch (AuthorizationException $exception) {
+                throw new Exception(Exception::USER_UNAUTHORIZED);
+            }
+
+            if (!$isConfirmedOwner) {
+                return;
+            }
+
+            $owners = $dbForProject->count(
                 collection: 'memberships',
                 queries: [
-                    Query::contains('roles', ['owner']),
-                    Query::equal('teamInternalId', [$team->getSequence()])
+                    Query::containsAny('roles', ['owner']),
+                    Query::equal('teamInternalId', [$team->getSequence()]),
+                    Query::equal('confirm', [true]),
                 ],
-                max: 2
+                max: 1
             );
 
-            // Is the deletion being requested by the user on their own membership and they are also the owner?
-            $isSelfOwner =
-                in_array('owner', $membership->getAttribute('roles')) &&
-                $membership->getAttribute('userInternalId') === $user->getSequence();
-
-            if ($ownersCount === 1 && $isSelfOwner) {
-                /**
-                 * Prevent removal if the user is the only owner, this is because -
-                 *
-                 * 1. Other roles [if exists] can neither add a new owner nor delete the organization.
-                 * 2. If the only owner is removed, while there were no other members, the organization isn't marked for deletion and stays in a limbo.
-                 */
+            if ($owners === 0) {
+                // Other roles can neither add an owner nor delete the organization, so it would be left unmanageable
                 throw new Exception(Exception::MEMBERSHIP_DELETION_PROHIBITED, 'There must be at least one owner in the organization.');
             }
-        }
-
-        try {
-            $dbForProject->deleteDocument('memberships', $membership->getId());
-        } catch (AuthorizationException $exception) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
+        });
 
         $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         // This membership is primary for the team, update the primary to next member.
         if ($team->getAttribute('userInternalId') === $membership->getAttribute('userInternalId')) {
-            $membership = $dbForProject->findOne('memberships', [
+            $successor = $dbForProject->findOne('memberships', [
                 Query::equal('teamInternalId', [$team->getSequence()]),
                 Query::equal('confirm', [true]),
             ]);
 
-            if (!$membership->isEmpty()) {
-                $team->setAttribute('userId', $membership->getAttribute('userId'));
-                $team->setAttribute('userInternalId', $membership->getAttribute('userInternalId'));
+            if (!$successor->isEmpty()) {
+                $team->setAttribute('userId', $successor->getAttribute('userId'));
+                $team->setAttribute('userInternalId', $successor->getAttribute('userInternalId'));
                 $dbForProject->updateDocument('teams', $team->getId(), new Document([
-                    'userId' => $membership->getAttribute('userId'),
-                    'userInternalId' => $membership->getAttribute('userInternalId'),
+                    'userId' => $successor->getAttribute('userId'),
+                    'userInternalId' => $successor->getAttribute('userInternalId'),
                 ]));
             }
         }

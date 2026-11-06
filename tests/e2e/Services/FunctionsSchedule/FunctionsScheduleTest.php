@@ -5,18 +5,84 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\FunctionsSchedule;
 
 use Appwrite\ID;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Role;
 
 final class FunctionsScheduleTest extends Scope
 {
     use FunctionsBase;
     use ProjectCustom;
     use SideServer;
+
+    /**
+     * @return \Iterator<string, array{string}>
+     */
+    public static function invalidSchedules(): \Iterator
+    {
+        yield 'plain descending range' => ['0 22-3 * * *'];
+        yield 'descending range in a list' => ['0 22-3,5 * * *'];
+    }
+
+    #[DataProvider('invalidSchedules')]
+    public function testCreateScheduleValidation(string $schedule): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Invalid schedule',
+            'runtime' => 'node-22',
+            'schedule' => $schedule,
+        ]);
+
+        $this->assertSame(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
+    }
+
+    #[DataProvider('invalidSchedules')]
+    public function testUpdateScheduleValidation(string $invalidSchedule): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $schedule = '0 22-23,0-3 * * *';
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Overnight schedule',
+            'runtime' => 'node-22',
+            'schedule' => $schedule,
+        ]);
+
+        try {
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame($schedule, $function['body']['schedule']);
+
+            /**
+             * Test for FAILURE
+             */
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Invalid schedule',
+                'runtime' => 'node-22',
+                'schedule' => $invalidSchedule,
+            ]);
+
+            $this->assertSame(400, $function['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $function['body']['type']);
+
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame($schedule, $function['body']['schedule']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
 
     public function testCreateScheduledExecution()
     {
@@ -52,6 +118,198 @@ final class FunctionsScheduleTest extends Scope
         }, 180000, 5000);
 
         $this->cleanupFunction($functionId);
+    }
+
+    /**
+     * @return \Iterator<string, array{mixed}>
+     */
+    public static function invalidIntervals(): \Iterator
+    {
+        yield 'negative' => [-60];
+        yield 'fraction' => [1.5];
+        yield 'word' => ['hourly'];
+        yield 'above integer column' => [2147483648];
+    }
+
+    #[DataProvider('invalidIntervals')]
+    public function testCreateIntervalValidation(mixed $interval): void
+    {
+        /**
+         * Test for FAILURE
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Invalid interval',
+            'runtime' => 'node-22',
+            'interval' => $interval,
+        ]);
+
+        $this->assertSame(400, $function['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $function['body']['type']);
+    }
+
+    public function testCreateInterval(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $function = $this->createFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Hourly',
+            'runtime' => 'node-22',
+            'interval' => 60,
+        ]);
+
+        $this->assertSame(201, $function['headers']['status-code']);
+        $this->assertSame(60, $function['body']['interval']);
+        $this->assertSame('', $function['body']['schedule']);
+        $functionId = $function['body']['$id'];
+
+        try {
+            $function = $this->getFunction($functionId);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame(60, $function['body']['interval']);
+
+            $function = $this->createFunction([
+                'functionId' => ID::unique(),
+                'name' => 'Null interval',
+                'runtime' => 'node-22',
+                'interval' => null,
+            ]);
+            $this->assertSame(201, $function['headers']['status-code']);
+            $this->assertSame(0, $function['body']['interval']);
+            $this->cleanupFunction($function['body']['$id']);
+
+            /**
+             * Test for FAILURE
+             */
+            $function = $this->createFunction([
+                'functionId' => ID::unique(),
+                'name' => 'Both',
+                'runtime' => 'node-22',
+                'schedule' => '0 * * * *',
+                'interval' => 60,
+            ]);
+            $this->assertSame(400, $function['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $function['body']['type']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
+    public function testUpdateInterval(): void
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Cron',
+            'runtime' => 'node-22',
+            'schedule' => '0 * * * *',
+        ]);
+
+        try {
+            /**
+             * Test for SUCCESS
+             */
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Interval',
+                'runtime' => 'node-22',
+                'interval' => 45,
+            ]);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame(45, $function['body']['interval']);
+            $this->assertSame('', $function['body']['schedule']);
+
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Renamed',
+                'runtime' => 'node-22',
+            ]);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame(45, $function['body']['interval']);
+
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Unscheduled',
+                'runtime' => 'node-22',
+                'interval' => 0,
+            ]);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame(0, $function['body']['interval']);
+
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Interval',
+                'runtime' => 'node-22',
+                'interval' => 45,
+            ]);
+            $this->assertSame(45, $function['body']['interval']);
+
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Cron',
+                'runtime' => 'node-22',
+                'schedule' => '0 0 * * *',
+            ]);
+            $this->assertSame(200, $function['headers']['status-code']);
+            $this->assertSame(0, $function['body']['interval']);
+            $this->assertSame('0 0 * * *', $function['body']['schedule']);
+
+            /**
+             * Test for FAILURE
+             */
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Both',
+                'runtime' => 'node-22',
+                'schedule' => '0 0 * * *',
+                'interval' => 60,
+            ]);
+            $this->assertSame(400, $function['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $function['body']['type']);
+
+            $function = $this->updateFunction($functionId, [
+                'name' => 'Invalid',
+                'runtime' => 'node-22',
+                'interval' => -1,
+            ]);
+            $this->assertSame(400, $function['headers']['status-code']);
+            $this->assertSame('general_argument_invalid', $function['body']['type']);
+
+            $function = $this->getFunction($functionId);
+            $this->assertSame(0, $function['body']['interval']);
+            $this->assertSame('0 0 * * *', $function['body']['schedule']);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
+    }
+
+    public function testCreateIntervalExecution(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Every minute',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'interval' => 1,
+            'timeout' => 10,
+        ]);
+
+        try {
+            $this->setupDeployment($functionId, [
+                'code' => $this->packageFunction('basic'),
+                'activate' => true
+            ]);
+
+            $this->assertEventually(function () use ($functionId) {
+                $executions = $this->listExecutions($functionId);
+
+                $this->assertSame(200, $executions['headers']['status-code']);
+
+                $triggers = \array_column($executions['body']['executions'], 'trigger');
+                $this->assertContains('schedule', $triggers);
+            }, 180000, 5000);
+        } finally {
+            $this->cleanupFunction($functionId);
+        }
     }
 
     public function testCreateScheduledAtExecution(): void
@@ -108,6 +366,25 @@ final class FunctionsScheduleTest extends Scope
         $this->assertCount(1, $execution['body']['requestHeaders']);
         $this->assertEquals('x-appwrite-client-ip', $execution['body']['requestHeaders'][0]['name']);
         $this->assertNotEmpty($execution['body']['requestHeaders'][0]['value']);
+
+        // The stored schedule is client-readable, so it must not carry the server-minted ephemeral API key or
+        // user JWT. The worker re-mints both when the schedule fires; only the client IP is kept.
+        $schedules = $this->client->call(Client::METHOD_GET, '/projects/' . $this->getProject()['$id'] . '/schedules', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]);
+        $this->assertEquals(200, $schedules['headers']['status-code']);
+        $scheduled = \array_values(\array_filter(
+            $schedules['body']['schedules'],
+            fn (array $schedule): bool => ($schedule['resourceId'] ?? '') === $executionId,
+        ));
+        $this->assertCount(1, $scheduled);
+        $storedHeaders = $scheduled[0]['data']['headers'] ?? [];
+        $this->assertArrayNotHasKey('x-appwrite-key', $storedHeaders);
+        $this->assertArrayNotHasKey('x-appwrite-user-jwt', $storedHeaders);
+        $this->assertArrayHasKey('x-appwrite-client-ip', $storedHeaders);
+        $this->assertEquals('custom-value', $storedHeaders['x-custom-header'] ?? null);
 
         $this->assertEventually(function () use ($functionId, $executionId) {
             $execution = $this->getExecution($functionId, $executionId);

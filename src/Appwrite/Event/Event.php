@@ -2,9 +2,11 @@
 
 namespace Appwrite\Event;
 
+use Appwrite\Event\Message\ProjectContext;
+use Appwrite\Event\Message\UserContext;
 use InvalidArgumentException;
 use Utopia\Database\Document;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 class Event
@@ -14,11 +16,15 @@ class Event
 
     public const DELETE_QUEUE_NAME = 'v1-deletes';
 
+    public const MAINTENANCE_QUEUE_NAME = 'v1-maintenance';
+
     public const AUDITS_QUEUE_NAME = 'v1-audits';
 
     public const MAILS_QUEUE_NAME = 'v1-mails';
 
     public const NOTIFICATIONS_QUEUE_NAME = 'v1-notifications';
+
+    public const ALERTS_QUEUE_NAME = 'v1-alerts';
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
@@ -36,6 +42,8 @@ class Event
     public const BUILDS_QUEUE_NAME = 'v1-builds';
 
     public const JOBS_QUEUE_NAME = 'v1-jobs';
+
+    public const REVIEWS_QUEUE_NAME = 'v1-reviews';
 
     public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
 
@@ -333,12 +341,12 @@ class Event
     {
         $trimmed = [];
 
-        if ($this->project) {
-            $trimmed['project'] = new Document([
-                '$id' => $this->project->getId(),
-                '$sequence' => $this->project->getSequence(),
-                'database' => $this->project->getAttribute('database')
-            ]);
+        if ($this->project !== null) {
+            $trimmed['project'] = ProjectContext::fromDocument($this->project)->toArray();
+        }
+
+        if ($this->user !== null) {
+            $trimmed['user'] = UserContext::fromDocument($this->user)->toArray();
         }
 
         return $trimmed;
@@ -364,7 +372,7 @@ class Event
         $payload = array_merge($this->preparePayload(), $this->trimPayload());
 
         try {
-            return $this->publisher->enqueue($queue, $payload);
+            return $this->publisher->publish($queue, $payload);
         } catch (\Throwable $th) {
             if ($this->critical) {
                 throw $th;
@@ -386,7 +394,7 @@ class Event
             'userId' => $this->userId,
             'payload' => $this->payload,
             'context' => $this->context,
-            'events' => Event::generateEvents($this->getEvent(), $this->getParams())
+            'events' => Event::generateEvents($this->getEvent(), $this->getParams(), $this->getContext('database'))
         ];
     }
 
@@ -520,7 +528,9 @@ class Event
         }
 
         /**
-         * Create all possible patterns including placeholders.
+         * Create all possible patterns including placeholders, most specific first:
+         * consumers such as the functions worker take the first event as the name of
+         * the event that actually happened.
          */
         if ($action) {
             if ($subSubResource) {
@@ -536,10 +546,10 @@ class Event
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource, $action]);
                 $patterns[] = \implode('.', [$type, $resource, $subType, $subResource]);
             } else {
+                if ($attribute) {
+                    $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
+                }
                 $patterns[] = \implode('.', [$type, $resource, $action]);
-            }
-            if ($attribute) {
-                $patterns[] = \implode('.', [$type, $resource, $action, $attribute]);
             }
         }
         if ($subSubResource) {
@@ -562,6 +572,9 @@ class Event
         foreach ($patterns as $eventPattern) {
             $events[] = \str_replace($paramKeys, $paramValues, $eventPattern);
             $events[] = \str_replace($paramKeys, '*', $eventPattern);
+            // Several permutations produce the same wildcard pattern. Deduplicate
+            // before substituting values, preserving the first occurrence order.
+            $wildcards = [];
             foreach ($paramKeys as $key) {
                 foreach ($paramKeys as $current) {
                     if ($subSubResource) {
@@ -569,20 +582,21 @@ class Event
                             if ($subCurrent === $current || $subCurrent === $key) {
                                 continue;
                             }
-                            $filtered1 = \array_filter($paramKeys, fn (string $k) => $k === $subCurrent);
-                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered1, '*', $eventPattern));
-                            $filtered2 = \array_filter($paramKeys, fn (string $k) => $k === $current);
-                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', \str_replace($filtered1, '*', $eventPattern)));
-                            $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered2, '*', $eventPattern));
+                            $wildcard = \str_replace(\is_string($subCurrent) ? $subCurrent : [], '*', $eventPattern);
+                            $wildcards[$wildcard] = true;
+                            $wildcards[\str_replace(\is_string($current) ? $current : [], '*', $wildcard)] = true;
+                            $wildcards[\str_replace(\is_string($current) ? $current : [], '*', $eventPattern)] = true;
                         }
                     } else {
                         if ($current === $key) {
                             continue;
                         }
-                        $filtered = \array_filter($paramKeys, fn (string $k) => $k === $current);
-                        $events[] = \str_replace($paramKeys, $paramValues, \str_replace($filtered, '*', $eventPattern));
+                        $wildcards[\str_replace(\is_string($current) ? $current : [], '*', $eventPattern)] = true;
                     }
                 }
+            }
+            foreach ($wildcards as $wildcard => $_) {
+                $events[] = \str_replace($paramKeys, $paramValues, $wildcard);
             }
         }
 

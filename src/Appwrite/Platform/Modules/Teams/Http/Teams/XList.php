@@ -88,12 +88,14 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $filterQueries = Query::groupByType($queries)->filters;
         try {
             $results = $dbForProject->find('teams', $queries);
             $total = $includeTotal ? $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         $response->dynamic(new Document([

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Rows\Column;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute\Increment as IncrementDocumentAttribute;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -40,9 +41,7 @@ class Increment extends IncrementDocumentAttribute
             ->label('audits.event', 'rows.update')
             ->label('audits.resource', 'database/{request.databaseId}/table/{request.tableId}')
             ->label('usage.resource', 'database/{request.databaseId}/table/{request.tableId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -57,13 +56,13 @@ class Increment extends IncrementDocumentAttribute
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
-            ->param('rowId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Row ID.', false, ['dbForProject'])
-            ->param('column', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column key.', false, ['dbForProject'])
-            ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true)
-            ->param('max', null, new Nullable(new Numeric()), 'Maximum value for the column. If the current value is greater than this value, an error will be thrown.', true)
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Table ID.', false, ['dbForProject'])
+            ->param('rowId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Row ID.', false, ['dbForProject'])
+            ->param('column', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Column key.', false, ['dbForProject'])
+            ->param('value', 1, new Numeric(), 'Value to increment the column by. The value must be a number.', true, example: '1')
+            ->param('max', null, new Nullable(new Numeric()), 'Maximum value for the column. If the current value is greater than this value, an error will be thrown.', true, example: '100')
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

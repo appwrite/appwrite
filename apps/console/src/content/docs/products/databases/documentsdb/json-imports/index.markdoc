@@ -1,0 +1,94 @@
+---
+layout: article
+title: JSON imports
+description: Create documents in a DocumentsDB collection by uploading a JSON file. Seed test data, restore a dataset, or migrate from another system without writing custom scripts.
+---
+
+Appwrite's JSON Import feature allows you to create multiple documents in a collection by uploading a single JSON file. This is especially useful for importing existing data, seeding test environments, or migrating from other systems.
+
+# Prepare your JSON file {% #prepare-file %}
+
+Your JSON file is an array of objects, where each object becomes one document in the collection. DocumentsDB is schemaless, so each object can hold its own set of fields.
+
+An example of a valid JSON file:
+
+```json
+[
+  {
+    "title": "Harry Potter and the Sorcerer's Stone",
+    "author": "J.K. Rowling",
+    "year": 1997,
+    "available": true
+  },
+  {
+    "title": "The Fellowship of the Ring",
+    "author": "J.R.R. Tolkien",
+    "year": 1954,
+    "available": true
+  }
+]
+```
+
+Each object is validated before being imported.
+
+# Custom document IDs {% #custom-ids %}
+
+You can include a `$id` field on any object to set a custom document ID. If you omit it, Appwrite generates a unique ID for the document automatically.
+
+```json
+[
+  {
+    "$id": "book-1",
+    "title": "Harry Potter and the Sorcerer's Stone",
+    "author": "J.K. Rowling"
+  }
+]
+```
+
+# Handle duplicate IDs {% #duplicate-ids %}
+
+When an imported document uses a `$id` that already exists in the collection, Appwrite decides what to do based on the duplicate handling you choose:
+
+- **Fail** (default): the import stops at the first conflicting ID.
+- **Skip**: conflicting documents are ignored, and the rest are imported.
+- **Overwrite**: existing documents are replaced with the imported version.
+
+# Permissions {% #permissions %}
+
+You can set document level permissions by including a `$permissions` field with an array of permission strings. Make sure document level security is enabled for your collection.
+
+```json
+[
+  {
+    "$id": "book-1",
+    "$permissions": ["read(\"any\")", "update(\"users\")", "delete(\"user:user_id\")"],
+    "title": "Harry Potter and the Sorcerer's Stone"
+  }
+]
+```
+
+The roles used are API strings that can be found in the [permissions documentation](/docs/apis/rest#roles).
+
+# Import documents from the Console {% #import-console %}
+
+{% only_dark %}
+![JSON import from the collection toolbar](/images/docs/databases/dark/documentsdb-import-export.avif)
+{% /only_dark %}
+{% only_light %}
+![JSON import from the collection toolbar](/images/docs/databases/documentsdb-import-export.avif)
+{% /only_light %}
+
+To import documents using the Appwrite Console:
+
+1. Go to your project and navigate to **Databases**
+2. Select your database and open the target collection
+3. Click the import (upload) icon in the collection toolbar
+4. Upload a new JSON file or choose an existing file from your Storage bucket
+
+JSON imports run as background tasks. The Console displays a floating progress bar while the import is active.
+
+# Additional resources {% #additional-resources %}
+
+- [JSON exports](/docs/products/databases/documentsdb/json-exports)
+- [Documents](/docs/products/databases/documentsdb/documents)
+- [Database permissions](/docs/products/databases/documentsdb/permissions)

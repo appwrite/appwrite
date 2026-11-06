@@ -25,10 +25,6 @@ class Generator
         ],
     ];
 
-    private const array OPTIONAL_SERVICES = [
-        'enableAssistant' => 'appwrite-assistant',
-    ];
-
     private const array TOPOLOGY_SERVICE_GROUPS = [
         'topology' => [
             'default' => 'combined',
@@ -37,26 +33,17 @@ class Generator
                     'appwrite-worker',
                     'appwrite-task-scheduler',
                 ],
-                'separate' => [
-                    'appwrite-worker-webhooks',
-                    'appwrite-worker-deletes',
-                    'appwrite-worker-databases',
-                    'appwrite-worker-builds',
-                    'appwrite-worker-jobs',
-                    'appwrite-worker-screenshots',
-                    'appwrite-worker-certificates',
-                    'appwrite-worker-executions',
-                    'appwrite-worker-functions',
-                    'appwrite-worker-mails',
-                    'appwrite-worker-notifications',
-                    'appwrite-worker-messaging',
-                    'appwrite-worker-migrations',
-                    'appwrite-task-scheduler-functions',
-                    'appwrite-task-scheduler-executions',
-                    'appwrite-task-scheduler-messages',
-                ],
+                'separate' => [],
             ],
+            'profile' => 'separate',
         ],
+    ];
+
+    /**
+     * Services behind a profile that are kept, without the profile, only when their param is true.
+     */
+    private const array OPTIONAL_SERVICE_GROUPS = [
+        'reviews' => ['appwrite-hansi'],
     ];
 
     private const array LOCAL_VOLUME_PREPENDS = [
@@ -67,16 +54,18 @@ class Generator
     ];
 
     private const array HOST_PATH_REWRITABLE_BINDS = [
-        './mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro',
+        './mongo-init.js:/mongo-init.js:ro',
         './mongo-entrypoint.sh:/mongo-entrypoint.sh:ro',
+        './clickhouse-config.xml:/etc/clickhouse-server/config.d/appwrite.xml:ro',
+        './clickhouse-init.sh:/docker-entrypoint-initdb.d/clickhouse-init.sh:ro',
     ];
 
     private const array PARAM_DEFAULTS = [
         'version' => 'latest',
         'database' => 'postgresql',
         'hostPath' => '',
-        'enableAssistant' => false,
         'topology' => 'combined',
+        'reviews' => false,
     ];
 
     private const array DEPENDENCY_SELECTORS = [
@@ -169,6 +158,10 @@ class Generator
             }
         }
 
+        foreach (\array_keys(self::OPTIONAL_SERVICE_GROUPS) as $param) {
+            $params[$param] = $params[$param] === true;
+        }
+
         $params['hostPath'] = \rtrim((string)$params['hostPath'], '/');
 
         return $params;
@@ -194,6 +187,20 @@ class Generator
      */
     private function filterServices(array $services): array
     {
+        foreach (self::OPTIONAL_SERVICE_GROUPS as $param => $names) {
+            foreach ($names as $name) {
+                if (!isset($services[$name]) || !\is_array($services[$name])) {
+                    continue;
+                }
+
+                if ($this->params[$param]) {
+                    unset($services[$name]['profiles']);
+                } else {
+                    unset($services[$name]);
+                }
+            }
+        }
+
         foreach (self::SELECTABLE_SERVICE_GROUPS as $param => $config) {
             foreach ($config['services'] as $service) {
                 if ($service !== $this->params[$param]) {
@@ -202,30 +209,49 @@ class Generator
             }
         }
 
-        foreach (self::OPTIONAL_SERVICES as $param => $service) {
-            if (empty($this->params[$param])) {
-                unset($services[$service]);
-            }
-        }
-
         foreach (self::TOPOLOGY_SERVICE_GROUPS as $param => $config) {
             $selected = $this->params[$param];
-            foreach ($config['modes'] as $mode => $names) {
-                if ($mode === $selected) {
+            $profile = $config['profile'];
+            $combined = $config['modes']['combined'];
+
+            if ($selected === 'separate') {
+                foreach ($services as &$service) {
+                    if (!\is_array($service)) {
+                        continue;
+                    }
+
+                    $base = $service['extends']['service'] ?? null;
+                    if (!\is_string($base) || !\in_array($base, $combined, true) || !isset($services[$base])) {
+                        continue;
+                    }
+
+                    $service = \array_replace_recursive($services[$base], $service);
+                    unset($service['extends'], $service['profiles']);
+                }
+                unset($service);
+            }
+
+            foreach ($services as $name => &$service) {
+                if (!\is_array($service)) {
                     continue;
                 }
-                foreach ($names as $name) {
+
+                $profiles = $service['profiles'] ?? [];
+                if ($selected === 'combined' && \in_array($profile, $profiles, true)) {
                     unset($services[$name]);
+                    continue;
+                }
+
+                if ($selected === 'separate') {
+                    if (\in_array($name, $combined, true)) {
+                        $service['profiles'] = ['combined'];
+                    } elseif (\in_array($profile, $profiles, true)) {
+                        unset($service['profiles']);
+                    }
                 }
             }
+            unset($service);
         }
-
-        foreach ($services as &$service) {
-            if (\is_array($service)) {
-                unset($service['profiles']);
-            }
-        }
-        unset($service);
 
         return $services;
     }

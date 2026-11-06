@@ -1,0 +1,893 @@
+---
+layout: post
+title: Build an offline-first journal app with RxDB and Appwrite
+description: Learn how you can use RxDB to setup data replication and enable offline synchronization with Appwrite Databases in a JavaScript app.
+date: 2025-04-17
+lastUpdated: 2026-06-29
+cover: /images/blog/offline-first-journal/cover.avif
+timeToRead: 14
+author: aditya-oberai
+category: integrations
+callToAction: true
+faqs:
+  - question: "What is RxDB and why use it with Appwrite?"
+    answer: "RxDB is a local-first, reactive NoSQL database for JavaScript apps. Pairing it with [Appwrite Databases](/docs/products/databases) gives you local storage with automatic two way sync, so your app keeps working offline and pushes changes to the server when connectivity returns."
+  - question: "Does RxDB officially support Appwrite?"
+    answer: "Yes. RxDB ships a replication plugin specifically for Appwrite Databases. It handles the push and pull replication loop, so you only need to configure the database, table, and a few schema fields."
+  - question: "Why does the entries table need a `deleted` boolean field?"
+    answer: "RxDB does not hard delete records. It uses soft deletes via a `deleted` flag so the deletion can replicate to other clients without losing data in offline scenarios. Without this field, sync will not work correctly."
+  - question: "Can I use a framework other than SvelteKit for this pattern?"
+    answer: "Yes. RxDB runs in any JavaScript environment, including React, Vue, Angular, React Native, and Electron. The replication plugin for Appwrite is framework agnostic, so the same sync logic carries over."
+  - question: "How does real-time sync work between clients?"
+    answer: "RxDB watches local changes and pushes them to Appwrite. Appwrite's [Realtime API](/docs/products/databases) then broadcasts those updates, and RxDB pulls them down on other clients. The result is near instant sync across devices when they are online."
+  - question: "What storage engine should I pick for the browser?"
+    answer: "IndexedDB is the default choice for browsers and PWAs because it is persistent and supports the data sizes a journal app would need. RxDB also supports SQLite and filesystem storage for mobile and desktop targets."
+---
+
+Ever found yourself staring at a loading spinner in a no-network zone, wishing your app could just work offline? Whether you're building a journal, a field notes app, or anything in between, offline data synchronization is no longer a luxury but a necessity. There is some good news, though. If you’re building with JavaScript, Appwrite Databases now features a direct integration with RxDB, making it easier than ever to build real-world apps that stay in sync online and offline.
+
+# What is RxDB?
+
+RxDB (Reactive Database) is a local-first NoSQL database designed for JavaScript-based web and mobile applications. What sets RxDB apart is its reactive, offline-first architecture, making it ideal for apps that need to store and sync data locally, especially when internet connectivity is spotty or intermittent.
+
+## Key features of RxDB
+
+- **Local-first storage**: RxDB stores data locally using browser-compatible storage engines like IndexedDB, SQLite, and even filesystem-based storage on mobile platforms. This makes it perfect for apps that need to function completely offline.
+- **Reactive data streams**: Built on top of RxJS, RxDB turns queries into live data streams. That means when the underlying data changes (locally or remotely), your UI updates automatically in real-time. There is no polling, no refreshing, just smooth reactivity.
+- **Seamless replication**: RxDB supports push-pull replication with various remote databases, including Appwrite Databases. This allows two-way syncing: it pushes local changes to a backend and pulls new changes down.
+- **Security and extensibility**: RxDB comes with optional encryption, schema validation, conflict resolution strategies, and plugins for custom behaviors like attachments, migrations, and leader election in multi-tab apps.
+- **Cross-platform support**: It runs smoothly in browsers, PWAs, React Native, Electron, and other environments, making it a versatile choice for building cross-platform apps with consistent offline sync logic.
+
+## Synchronize data between RxDB and Appwrite Databases
+
+RxDB has recently introduced a plugin that allows developers to replicate data to Appwrite Databases, meaning all your client app’s locally stored data can be synchronized. Since RxDB stores all data locally, your app can continue to function with zero internet, and information is synced to an external Appwrite database as soon as connectivity returns. Additionally, Appwrite’s Realtime API and RxDB’s live replication allow data to be instantaneously updated across multiple clients.
+
+# Building an offline-first journal app
+
+To understand how to build an offline-first application with RxDB and Appwrite, let’s build a journal app. Our app will be a simplified version of the [demo app](https://offline-journal.vercel.app/) shown below.
+
+![Demo app](/images/blog/offline-first-journal/demo.avif)
+
+Our tech stack for this app will be:
+
+- **SvelteKit**, configured as a Progressive Web App (PWA)
+- **IndexedDB**, to store local data
+- **Appwrite Cloud**, for external replication
+
+## Configure your Appwrite project
+
+First, [create an Appwrite Cloud account](https://cloud.appwrite.io/) if you haven’t already. Once your project is ready, go to the **Settings** page and copy your project ID and API endpoint for further usage. Next, go to the **Databases** page from the left sidebar, create a new database with the ID `journals`, and then a table with the ID `entries` (save both IDs for further usage).
+
+Next, head to the **Columns** tab and add the following:
+
+| Key | Type | Size | Required |
+| --- | --- | --- | --- |
+| `title` | Varchar | 100 | Yes |
+| `content` | MediumText |  | Yes |
+| `createdAt` | Integer |  | Yes |
+| `updatedAt` | Integer |  | Yes |
+| `deleted` | Boolean |  | Yes |
+
+> **Note:** The `deleted` column is necessary to add because RxDB does not hard delete any data, only soft deletes to prevent data loss in offline scenarios.
+
+Then, head to the **Settings** tab of your table, scroll down to the **Permissions** section, and add the following:
+
+| Role | Create | Read | Update | Delete |
+| --- | --- | --- | --- | --- |
+| Any | Yes | Yes | Yes | Yes |
+
+## Prepare the app logic
+
+Once our Appwrite project is set up, let’s start building our app. 
+
+### Create a SvelteKit app
+
+To create the SvelteKit app, open up your terminal and run the following command:
+
+```sh
+npx sv create
+```
+
+This will load the Svelte CLI, where you can enter the following inputs to create a minimal app:
+
+- Where would you like your project to be created? **>** `offline-journal`
+- Which template would you like? **>** `SvelteKit minimal`
+- Add type checking with TypeScript? **>** `No`
+- What would you like to add to your project? **>** `prettier, eslint`
+- Which package manager do you want to install dependencies with? **>** `npm`
+
+Once that is done, enter the app’s working directory and install all dependencies by running the following commands:
+
+```sh
+cd offline-journal
+npm install
+```
+
+### Install the Appwrite Web SDK
+
+Now, that the SvelteKit app is created, install the Appwrite Web SDK by running the following command:
+
+```sh
+npm install appwrite
+```
+
+In the root directory of your app, create a `.env` file and add the information you saved from your Appwrite project:
+
+```env
+PUBLIC_APPWRITE_ENDPOINT=your-appwrite-cloud-endpoint
+PUBLIC_APPWRITE_PROJECT_ID=your-project-id
+PUBLIC_APPWRITE_DATABASE_ID=your-database-id
+PUBLIC_APPWRITE_TABLE_ID=your-table-id
+```
+
+Next, in the `src/lib` subdirectory, create a file `appwrite.js` and add the following code:
+
+```js
+import { Client } from 'appwrite';
+import {
+	PUBLIC_APPWRITE_ENDPOINT,
+	PUBLIC_APPWRITE_PROJECT_ID,
+	PUBLIC_APPWRITE_DATABASE_ID,
+	PUBLIC_APPWRITE_TABLE_ID
+} from '$env/static/public';
+
+export const appwriteConfig = {
+	endpoint: PUBLIC_APPWRITE_ENDPOINT,
+	projectId: PUBLIC_APPWRITE_PROJECT_ID,
+	databaseId: PUBLIC_APPWRITE_DATABASE_ID,
+	tableId: PUBLIC_APPWRITE_TABLE_ID
+};
+
+export const client = new Client()
+	.setEndpoint(appwriteConfig.endpoint)
+	.setProject(appwriteConfig.projectId);
+```
+
+### Setup RxDB
+
+To set up RxDB, first install the RxDB library in your app by running the following command:
+
+```sh
+npm install rxdb
+```
+
+Next, in the `src/lib` directory, create a files `databases.js` and add the following imports:
+
+```js
+// RxDB imports
+import { createRxDatabase, addRxPlugin, RxCollectionBase } from 'rxdb/plugins/core';
+import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder';
+import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
+import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
+import { replicateAppwrite } from 'rxdb/plugins/replication-appwrite';
+
+// Appwrite imports
+import { ID } from 'appwrite';
+import { client, appwriteConfig } from './appwrite.js';
+
+addRxPlugin(RxDBQueryBuilderPlugin);
+addRxPlugin(RxDBUpdatePlugin);
+```
+
+The RxDB imports include core RxDB functionalities to create databases and collections and to add plugins, the query builder plugin for complex read queries, the update plugin for updating data, the Dexie.js storage plugin to use IndexedDB as the local database, and the Appwrite replication plugin to manage data replication in the external Appwrite database.
+
+### Create a local database
+
+To create a local database, first, we must prepare the database schema. To do so, add the following code in the `databases.js` file:
+
+```js
+const journalSchema = {
+	title: 'journal entry schema',
+	version: 0,
+	primaryKey: 'id',
+	type: 'object',
+	properties: {
+		id: {
+			type: 'string',
+			maxLength: 100
+		},
+		title: {
+			type: 'string'
+		},
+		content: {
+			type: 'string'
+		},
+		createdAt: {
+			type: 'number'
+		},
+		updatedAt: {
+			type: 'number'
+		}
+	},
+	required: ['id', 'title', 'content', 'createdAt', 'updatedAt']
+};
+```
+
+Then, we create the database and collection using the Dexie.js plugin by adding the following code just after the schema:
+
+```js
+let dbPromise = null;
+
+export const getDB = async () => {
+	if (dbPromise) return dbPromise;
+
+	try {
+		// Create the database
+		dbPromise = createRxDatabase({
+			name: 'journals', // Name must match the database ID from Appwrite
+			storage: getRxStorageDexie()
+		});
+
+		const db = await dbPromise;
+
+		// Add collections
+		await db.addCollections({
+			entries: { // Name must match the table ID from Appwrite
+				schema: journalSchema
+			}
+		});
+
+		// Set up replication
+		setupReplication(db);
+
+		return db;
+	} catch (error) {
+		console.error('Database creation error:', error);
+		throw error;
+	}
+};
+```
+
+### Setup data replication
+
+To setup replication in the Appwrite database, add the following code to the `databases.js` file:
+
+```js
+let replicationState = null;
+
+const setupReplication = async (db) => {
+	try {
+		// Start replication
+		replicationState = replicateAppwrite({
+			replicationIdentifier: 'journals-replication',
+			client,
+			databaseId: appwriteConfig.databaseId,
+			collectionId: appwriteConfig.tableId,
+			deletedField: 'deleted',
+			collection: db.entries,
+			pull: {
+				batchSize: 25 // Can be updated
+			},
+			push: {
+				batchSize: 25 // Can be updated
+			}
+		});
+
+		// Handle replication events
+		replicationState.error$.subscribe((error) => {
+			console.error('Replication error:', error);
+		});
+
+		replicationState.active$.subscribe((active) => {
+		});
+
+		return replicationState;
+	} catch (error) {
+		console.error('Replication setup error:', error);
+	}
+};
+```
+
+### Add database operations
+
+Lastly, add the following helper functions for different database operations in the `databases.js` file:
+
+```js
+export const getJournals = async () => {
+	const db = await getDB();
+	return db.entries.find().sort({ updatedAt: 'desc' }).exec();
+};
+
+export const getJournal = async (id) => {
+	const db = await getDB();
+	return db.entries.findOne({ selector: { id } }).exec();
+};
+
+export const createJournal = async (journalData) => {
+	const db = await getDB();
+	const timestamp = Date.now();
+	return db.entries.insert({
+		id: ID.unique(),
+		createdAt: timestamp,
+		updatedAt: timestamp,
+		...journalData
+	});
+};
+
+export const updateJournal = async (id, journalData) => {
+	const db = await getDB();
+	const journal = await getJournal(id);
+
+	if (!journal) throw new Error('Journal entry not found');
+	return journal.update({
+		$set: {
+			...journalData,
+			updatedAt: Date.now()
+		}
+	});
+};
+
+export const deleteJournal = async (id) => {
+	const db = await getDB();
+	const journal = await getJournal(id);
+
+	if (!journal) throw new Error('Journal entry not found');
+
+	return journal.remove();
+};
+```
+
+## Develop the UI
+
+Now that our database library functions are set up, let’s create all journal-related pages.
+
+> **Note:** To maintain conciseness, we will skip all styling-related CSS. You can find examples of the same in our [demo app’s GitHub repo](https://github.com/appwrite-community/offline-journal/tree/main/src).
+
+### List all journal entries
+
+We will list all journal entries on the index page of the app. Head to the `src/routes` directory, create a `+page.js` file and add the following code:
+
+```js
+import { getJournals } from '$lib/database';
+
+/** @type {import('./$types').PageLoad} */
+export async function load({ url }) {
+	let journals = null;
+
+	try {
+		journals = await getJournals();
+	} catch (err) {
+		console.error('Error fetching journals:', err);
+		journals = [];
+	}
+
+	return {
+		journals
+	}
+}
+```
+
+This will pre-load all journal entries before the page renders. Then, open the `+page.svelte` file and edit it to the following code:
+
+```html
+<script>
+	import { getJournals, deleteJournal } from '$lib/database.js';
+	
+	let { data } = $props();
+	let journals = $state(data.journals);
+	let error = $state(null);
+
+	async function handleDelete(id) {
+		if (confirm('Are you sure you want to delete this journal entry?')) {
+			try {
+				await deleteJournal(id);
+				await loadJournals();
+			} catch (err) {
+				error = err.message;
+			}
+		}
+	}
+
+	function formatDate(timestamp) {
+		return new Date(timestamp).toLocaleString();
+	}
+</script>
+
+<svelte:head>
+	<title>Journal App</title>
+</svelte:head>
+
+<main>
+	<header>
+		<h1>My Journal</h1>
+	</header>
+
+	{#if error}
+		<div class="error-message">
+			<p>{error}</p>
+			<button onclick={() => (error = null)}>Dismiss</button>
+		</div>
+	{/if}
+
+	<div class="actions">
+		<a href="/journal/new" class="new-entry-btn">New Journal Entry</a>
+	</div>
+
+	{#if journals.length === 0}
+		<div class="empty-state">
+			<p>You don't have any journal entries yet.</p>
+			<a href="/journal/new">Create your first entry</a>
+		</div>
+	{:else}
+		<div class="journal-entries">
+			{#each journals as journal (journal.id)}
+				<div class="journal-card">
+					<div class="journal-header">
+						<h2>{journal.title}</h2>
+						<div class="journal-actions">
+							<a href={`/journal/${journal.id}`} class="view-btn">View</a>
+							<a href={`/journal/${journal.id}/edit`} class="edit-btn">Edit</a>
+							<button class="delete-btn" onclick={() => handleDelete(journal.id)}>Delete</button>
+						</div>
+					</div>
+					<div class="journal-preview">
+						{#if journal.content.length > 150}
+							<p>{journal.content.substring(0, 150)}...</p>
+						{:else}
+							<p>{journal.content}</p>
+						{/if}
+					</div>
+					<div class="journal-footer">
+						<div class="timestamp">
+							<span>Created: {formatDate(journal.createdAt)}</span>
+							<span>Updated: {formatDate(journal.updatedAt)}</span>
+						</div>
+					</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</main>
+```
+
+This page will trigger the creation of a local database the first time it is launched and set up replication with Appwrite. All existing journal entries will then be loaded from IndexedDB and rendered as cards on the page. Each journal entry card allows you to access pages, view, edit, or delete an entry from the database. The page will also allow you to create a new journal entry.
+
+### View a journal entry
+
+In the `src/routes` directory, create a subdirectory `journal`, within which you must create another subdirectory `[id]`, and add a `+page.svelte` file with the following code:
+
+```html
+<script>
+	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { deleteJournal, getJournal } from '$lib/database.js';
+	import { goto } from '$app/navigation';
+
+	let journal = $state(null);
+	let error = $state(null);
+	let loading = $state(true);
+
+	async function handleDelete() {
+		if (confirm('Are you sure you want to delete this journal entry?')) {
+			try {
+				await deleteJournal(journal.id);
+				goto('/');
+			} catch (err) {
+				error = err.message;
+			}
+		}
+	}
+
+	function formatDate(timestamp) {
+		return new Date(timestamp).toLocaleString();
+	}
+
+	onMount(async () => {
+		try {
+			loading = true;
+			journal = await getJournal(page.params.id);
+			if (!journal) {
+				error = 'Journal entry not found';
+			}
+		} catch (err) {
+			error = err.message;
+		} finally {
+			loading = false;
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>{journal ? journal.title : 'Loading...'} | Journal App</title>
+</svelte:head>
+
+<main>
+	<header>
+		<a href="/" class="back-btn">← Back to Journal</a>
+	</header>
+
+	{#if error}
+		<div class="error-message">
+			<p>{error}</p>
+			<button onclick={() => (error = null)}>Dismiss</button>
+		</div>
+	{/if}
+	{#if loading}
+		<div class="loading">Loading...</div>
+	{:else if journal}
+		<article class="journal-entry">
+			<div class="journal-header">
+				<h1>{journal.title}</h1>
+				<div class="journal-actions">
+					<a href={`/journal/${journal.id}/edit`} class="edit-btn">Edit</a>
+					<button class="delete-btn" onclick={handleDelete}>Delete</button>
+				</div>
+			</div>
+			<div class="journal-meta">
+				<div class="timestamp">
+					<span>Created: {formatDate(journal.createdAt)}</span>
+					<span>Updated: {formatDate(journal.updatedAt)}</span>
+				</div>
+			</div>
+
+			<div class="journal-content">
+				<p>{journal.content}</p>
+			</div>
+		</article>
+	{:else}
+		<div class="not-found">
+			<p>Journal entry not found</p>
+			<a href="/">Return to Journal</a>
+		</div>
+	{/if}
+</main>
+```
+
+When accessing this page, the `[id]` in the URL acts as a slug for fetching data pertaining to a specific journal entry and rendering it on the page.
+
+### Edit a journal entry
+
+In the `src/routes/journal/[id]` directory, create a subdirectory `edit`, and add a `+page.svelte` file with the following code:
+
+```html
+<script>
+	import { preventDefault } from 'svelte/legacy';
+	import { page } from '$app/state';
+	import { updateJournal, getJournal } from '$lib/database.js';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+
+	let journal = $state(null);
+	let title = $state('');
+	let content = $state('');
+	let saving = $state(false);
+	let error = $state(null);
+	let loading = $state(true);
+
+	async function handleSubmit() {
+		if (!title || !content) {
+			error = 'Title and content are required.';
+			return;
+		}
+
+		try {
+			saving = true;
+			await updateJournal(journal.id, {
+				title,
+				content
+			});
+
+			// Navigate to the journal entry view
+			goto(`/journal/${journal.id}`);
+		} catch (err) {
+			error = err.message;
+			saving = false;
+		}
+	}
+
+	onMount(async () => {
+		try {
+			loading = true;
+			journal = await getJournal(page.params.id);
+			if (journal) {
+				title = journal.title;
+				content = journal.content;
+			} else {
+				error = 'Journal entry not found';
+			}
+		} catch (err) {
+			error = err.message;
+		} finally {
+			loading = false;
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>Edit Journal Entry | Journal App</title>
+</svelte:head>
+
+<main>
+	<header>
+		<h1>Edit Journal Entry</h1>
+		<a href={`/journal/${page.params.id}`} class="back-btn">← Back to Entry</a>
+	</header>
+
+	{#if error}
+		<div class="error-message">
+			<p>{error}</p>
+			<button onclick={() => (error = null)}>Dismiss</button>
+		</div>
+	{/if}
+	{#if loading}
+		<p>Loading...</p>
+	{:else if journal}
+		<form onsubmit={preventDefault(handleSubmit)}>
+			<div class="form-group">
+				<label for="title">Title</label>
+				<input
+					type="text"
+					id="title"
+					bind:value={title}
+					placeholder="Enter a title for your journal entry"
+					disabled={saving}
+					required
+				/>
+			</div>
+			<div class="form-group">
+				<label for="content">Content</label>
+				<textarea
+					id="content"
+					bind:value={content}
+					placeholder="Write your thoughts here..."
+					rows="15"
+					disabled={saving}
+					required
+				></textarea>
+			</div>
+
+			<div class="form-actions">
+				<button
+					type="button"
+					class="cancel-btn"
+					onclick={() => goto(`/journal/${journal.id}`)}
+					disabled={saving}>Cancel</button
+				>
+				<button type="submit" class="save-btn" disabled={saving}>
+					{saving ? 'Saving...' : 'Save Changes'}
+				</button>
+			</div>
+		</form>
+	{:else}
+		<div class="not-found">
+			<p>Journal entry not found</p>
+			<a href="/">Return to Journal</a>
+		</div>
+	{/if}
+</main>
+```
+
+This page will load the data for a specific journal entry and allow the user to edit its title and content. Saving the edited content will also update the entry's “updated at” time.
+
+### Add a new journal entry
+
+In the `src/routes/journal` directory, create a subdirectory `new`, and add a `+page.svelte` file with the following code:
+
+```html
+<script>
+	import { preventDefault } from 'svelte/legacy';
+	import { createJournal } from '$lib/database.js';
+	import { goto } from '$app/navigation';
+	let title = $state('');
+	let content = $state('');
+	let loading = $state(false);
+	let error = $state(null);
+
+	async function handleSubmit() {
+		if (!title || !content) {
+			error = 'Title and content are required.';
+			return;
+		}
+		try {
+			loading = true;
+			const journal = await createJournal({
+				title,
+				content
+			});
+
+			// Navigate back to the main page
+			goto('/');
+		} catch (err) {
+			error = err.message;
+			loading = false;
+		}
+	}
+</script>
+
+<svelte:head>
+	<title>New Journal Entry</title>
+</svelte:head>
+
+<main>
+	<header>
+		<h1>New Journal Entry</h1>
+		<a href="/" class="back-btn">← Back to Journal</a>
+	</header>
+
+	{#if error}
+		<div class="error-message">
+			<p>{error}</p>
+			<button onclick={() => (error = null)}>Dismiss</button>
+		</div>
+	{/if}
+
+	<form onsubmit={preventDefault(handleSubmit)}>
+		<div class="form-group">
+			<label for="title">Title</label>
+			<input
+				type="text"
+				id="title"
+				bind:value={title}
+				placeholder="Enter a title for your journal entry"
+				disabled={loading}
+				required
+			/>
+		</div>
+		<div class="form-group">
+			<label for="content">Content</label>
+			<textarea
+				id="content"
+				bind:value={content}
+				placeholder="Write your thoughts here..."
+				rows="15"
+				disabled={loading}
+				required
+			></textarea>
+		</div>
+
+		<div class="form-actions">
+			<button type="button" class="cancel-btn" onclick={() => goto('/')} disabled={loading}
+				>Cancel</button
+			>
+			<button type="submit" class="save-btn" disabled={loading}>
+				{loading ? 'Saving...' : 'Save Entry'}
+			</button>
+		</div>
+	</form>
+</main>
+```
+
+This page features a form that would allow the user to add a new journal entry to the database.
+
+## Configure app as a PWA
+
+For easier offline usage, let’s configure the web app to work as a PWA to offer an offline-first experience. For those who aren’t aware, a PWA or Progress Web App is a type of web application that can be installed on a device as a standalone app, offering a native-like experience.
+
+To configure our web app as a PWA, you must follow four steps.
+
+### Create a manifest.json file
+
+In the `static/` directory, create a new `manifest.json` file and add the following code:
+
+```json
+{
+	"name": "Offline Journal",
+	"short_name": "Journal",
+	"description": "A private offline-first journaling application",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#4a76a8",
+	"icons": [
+		{
+			"src": "icons/icon-192-192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "icons/icon-512-512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any maskable"
+		}
+	]
+}
+```
+
+### Add app icons
+
+In the `static/` directory, create a subdirectory `icons/`and add two icons files of the sizes `192px x 192px` and `512px x 512px`. You can [download our demo app’s icons](https://github.com/appwrite-community/offline-journal/tree/main/static/icons) from our GitHub repo as a placeholder. Ensure that the file names for both images comply with those in the `manifest.json` file.
+
+### Link manifest file in the app.html file
+
+In the `src/` directory, open the `app.html` file and add the following code within the `<head>` tags:
+
+```html
+<link rel="manifest" href="/manifest.json" />
+```
+
+### Create a service worker
+
+In the `src/` directory, create a subdirectory `service-worker`, and add a file `index.js` with the following code:
+
+```js
+/// <reference types="@sveltejs/kit" />
+
+// @ts-nocheck
+import { build, files, version } from '$service-worker';
+
+// Create a unique cache name for this deployment
+const CACHE = `cache-${version}`;
+
+const ASSETS = [
+	...build, // the app itself
+	...files // everything in `static`
+];
+
+self.addEventListener('install', (event) => {
+	// Create a new cache and add all files to it
+	async function addFilesToCache() {
+		const cache = await caches.open(CACHE);
+		await cache.addAll(ASSETS);
+	}
+
+	event.waitUntil(addFilesToCache());
+});
+
+self.addEventListener('activate', (event) => {
+	// Remove previous cached data from disk
+	async function deleteOldCaches() {
+		for (const key of await caches.keys()) {
+			if (key !== CACHE) await caches.delete(key);
+		}
+	}
+
+	event.waitUntil(deleteOldCaches());
+});
+
+self.addEventListener('fetch', (event) => {
+	// ignore POST requests etc
+	if (event.request.method !== 'GET') return;
+
+	async function respond() {
+		const url = new URL(event.request.url);
+		const cache = await caches.open(CACHE);
+
+		// `build`/`files` can always be served from the cache
+		if (ASSETS.includes(url.pathname)) {
+			return cache.match(url.pathname);
+		}
+
+		// for everything else, try the network first, but
+		// fall back to the cache if we're offline
+		try {
+			const response = await fetch(event.request);
+
+			if (response.status === 200) {
+				cache.put(event.request, response.clone());
+			}
+
+			return response;
+		} catch {
+			return cache.match(event.request);
+		}
+	}
+
+	event.respondWith(respond());
+});
+```
+
+## Test the app
+
+To locally deploy and test the app, run the following command in your terminal:
+
+```sh
+npm run dev
+```
+
+You can then visit `https://localhost:5173` in your browser and try out the app.
+
+# Next steps
+
+And with that, our offline-first journal app built with RxJS and SvelteKit is ready!
+
+We developed a more complex version of this app, featuring an authentication implementation and better styling, and deployed it publicly to try out: https://offline-journal.vercel.app/
+
+You can find the source code for this application in our [GitHub repo](https://github.com/appwrite-community/offline-journal).
+
+Learn more about RxDB and Appwrite:
+
+- [RxDB docs for Appwrite](https://rxdb.info/replication-appwrite.html#do-other-things-with-the-replication-state)
+- [Appwrite offline sync docs](/docs/products/databases/offline)
+- [RxDB in the Integrations catalog](/integrations/replication-rxdb)

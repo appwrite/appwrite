@@ -1,0 +1,57 @@
+---
+layout: tutorial
+title: Run the flow
+description: Start both apps and sign in with your product end to end.
+step: 7
+---
+
+Everything is in place. Run both apps and sign in.
+
+# Start both apps {% #start %}
+
+In two terminals:
+
+```sh
+# in consumer/
+pnpm dev
+```
+
+```sh
+# in provider/
+pnpm dev
+```
+
+Vantage is at `http://localhost:4100` and TaskFlow's consent screen at `http://localhost:4000`.
+
+# Sign in {% #sign-in %}
+
+Open `http://localhost:4100` and click **Sign in with TaskFlow**. You will:
+
+1. Land on TaskFlow's consent screen and sign in with a TaskFlow user.
+2. See exactly what Vantage is requesting, and approve it.
+3. Return to Vantage, signed in, with your TaskFlow name and email on the dashboard.
+
+That round trip is a complete OAuth 2.1 authorization code flow against your project's OAuth2 server.
+
+# What each side did {% #recap %}
+
+- **TaskFlow** enabled the OAuth2 server, registered Vantage as a confidential client, and hosted a consent screen that authenticates its users and approves grants.
+- **Vantage** redirected to the authorize endpoint, exchanged the returned code for tokens on its server, and read the user's profile from userinfo. The client secret never left its server.
+
+Because the flow is standards-based, a real integrator does not have to use Appwrite or TanStack Start. Any OAuth or OpenID Connect client library pointed at your project's [discovery URL](/docs/products/auth/oauth-server/quick-start#discovery) works the same way.
+
+The full source for both apps is on GitHub at [appwrite-community/oauth-guide-taskflow](https://github.com/appwrite-community/oauth-guide-taskflow).
+
+# Next steps {% #next-steps %}
+
+{% cards %}
+{% cards_item href="/docs/products/auth/oauth-server/tokens" title="Tokens" %}
+Refresh access tokens, and revoke them on sign-out.
+{% /cards_item %}
+{% cards_item href="/docs/products/auth/oauth-server/scopes" title="Scopes" %}
+Add custom scopes to represent permissions in your product.
+{% /cards_item %}
+{% cards_item href="/docs/products/auth/oauth-server/device-flow" title="Device flow" %}
+Support TVs, CLIs, and other input-constrained devices.
+{% /cards_item %}
+{% /cards %}

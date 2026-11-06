@@ -3,7 +3,7 @@
 namespace Appwrite\Event\Publisher;
 
 use Appwrite\Event\Message\Jobs as JobsMessage;
-use Utopia\Queue\Publisher;
+use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
 
 readonly class Jobs extends Base

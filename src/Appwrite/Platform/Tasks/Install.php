@@ -2,21 +2,34 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Auth\EncryptionKey;
+use Appwrite\Auth\JobsSecret;
 use Appwrite\Docker\Compose;
+use Appwrite\Docker\Compose\Files;
 use Appwrite\Docker\Compose\Generator;
 use Appwrite\Docker\Env;
+use Appwrite\Installer\Report;
+use Appwrite\Installer\Secret;
+use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
+use Appwrite\Platform\Installer\Validator\AppDomain;
 use Appwrite\Utopia\View;
 use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
-use Utopia\Auth\Proofs\Token;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
-use Utopia\Fetch\Client;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Header;
+use Utopia\Psr7\Method;
+use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -35,8 +48,12 @@ class Install extends Action
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
     private const string PATTERN_SESSION_COOKIE = '/a_session_console=([^;]+)/';
 
+    public const string CHANNEL_STABLE = 'stable';
+    public const string CHANNEL_NIGHTLY = 'nightly';
+
     private const string APPWRITE_API_URL = 'http://appwrite';
-    private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
+    private const string PROJECT = 'console';
+    private const string INSTALLATIONS_URL = 'https://cloud.appwrite.io/v1/growth/installations';
 
     protected bool $isUpgrade = false;
     protected bool $migrate = false;
@@ -45,6 +62,7 @@ class Install extends Action
     protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
     protected string $topology = 'combined';
+    protected string $channel = self::CHANNEL_STABLE;
 
     public static function getName(): string
     {
@@ -55,14 +73,16 @@ class Install extends Action
     {
         $this
             ->desc('Install Appwrite')
-            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
-            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('http-port', '', new Port(), 'Server HTTP port, optionally bound to a host IP (127.0.0.1:80)', true)
+            ->param('https-port', '', new Port(), 'Server HTTPS port, optionally bound to a host IP (127.0.0.1:443)', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->param('database', 'postgresql', new WhiteList(['postgresql', 'mariadb', 'mongodb']), 'Database to use (postgresql|mariadb|mongodb)', true)
             ->param('topology', 'combined', new WhiteList(['combined', 'separate']), 'Worker and scheduler topology (combined|separate)', true)
+            ->param('channel', self::CHANNEL_STABLE, new WhiteList([self::CHANNEL_STABLE, self::CHANNEL_NIGHTLY]), 'Release channel to track (stable|nightly). Nightly is unsupported and moves daily.', true)
+            ->param('domain', '', new AppDomain(), 'Appwrite hostname, also used as the custom domain CNAME target', true)
             ->callback($this->action(...));
     }
 
@@ -74,8 +94,11 @@ class Install extends Action
         string $interactive,
         bool $noStart,
         string $database,
-        string $topology
+        string $topology,
+        string $channel = self::CHANNEL_STABLE,
+        string $domain = ''
     ): void {
+        $this->channel = $channel;
         $isUpgrade = $this->isUpgrade;
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
@@ -127,10 +150,7 @@ class Install extends Action
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
-                $ports = [
-                    $defaultHttpPort => $defaultHttpPort,
-                    $defaultHttpsPort => $defaultHttpsPort
-                ];
+                $ports = [];
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
 
@@ -169,15 +189,25 @@ class Install extends Action
                             $vars[$key]['default'] = $value;
                         }
                     }
+
+                    // The compose file publishes ${_APP_HTTP_PORT} and ${_APP_HTTPS_PORT}, so .env holds the ports in use.
+                    $defaultHttpPort = ($env->list()['_APP_HTTP_PORT'] ?? '') ?: $defaultHttpPort;
+                    $defaultHttpsPort = ($env->list()['_APP_HTTPS_PORT'] ?? '') ?: $defaultHttpsPort;
                 }
 
-                foreach ($ports as $key => $value) {
-                    if ($value === $defaultHttpPort) {
-                        $defaultHttpPort = $key;
+                // A literal port in the compose file is what is published, even if .env says otherwise.
+                foreach ($ports as $published => $target) {
+                    $published = (string) $published;
+                    if (\str_starts_with($published, '$')) {
+                        continue;
                     }
 
-                    if ($value === $defaultHttpsPort) {
-                        $defaultHttpsPort = $key;
+                    if ($target === '80') {
+                        $defaultHttpPort = $published;
+                    }
+
+                    if ($target === '443') {
+                        $defaultHttpsPort = $published;
                     }
                 }
             }
@@ -225,7 +255,6 @@ class Install extends Action
         // Skip the web installer when explicit CLI params are provided
         if ($interactive === 'Y' && Console::isInteractive() && !$this->hasExplicitCliParams()) {
             Console::success('Starting web installer...');
-            Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
             $detectedDb = ($existingInstallation && isset($existingDatabase)) ? $existingDatabase : null;
@@ -234,30 +263,7 @@ class Install extends Action
         }
 
         // Fall back to CLI mode
-        $enableAssistant = false;
-        $assistantExistsInOldCompose = false;
-        if ($existingInstallation) {
-            try {
-                $compose->getService('appwrite-assistant');
-                $assistantExistsInOldCompose = true;
-            } catch (\Throwable) {
-                /* ignore */
-            }
-        }
-
-        if ($interactive === 'Y' && Console::isInteractive()) {
-            $prompt = 'Add Appwrite Assistant? (Y/n)' . ($assistantExistsInOldCompose ? ' [Currently enabled]' : '');
-            $answer = Console::confirm($prompt);
-
-            if (empty($answer)) {
-                $enableAssistant = $assistantExistsInOldCompose;
-            } else {
-                $enableAssistant = \strtolower($answer) === 'y';
-            }
-        } elseif ($assistantExistsInOldCompose) {
-            $enableAssistant = true;
-        }
-
+        $source = ($interactive === 'Y' && Console::isInteractive()) ? Report::SOURCE_CLI : Report::SOURCE_CLI_HEADLESS;
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHttpPort . ')');
             $httpPort = ($httpPort) ?: $defaultHttpPort;
@@ -268,30 +274,22 @@ class Install extends Action
             $httpsPort = ($httpsPort) ?: $defaultHttpsPort;
         }
 
+        $portValidator = new Port();
+        foreach (['HTTP' => $httpPort, 'HTTPS' => $httpsPort] as $label => $port) {
+            if (!$portValidator->isValid($port)) {
+                Console::error("Invalid {$label} port '{$port}'. " . $portValidator->getDescription() . '.');
+                Console::exit(1);
+            }
+        }
+
         $userInput = [];
+        if ($domain !== '') {
+            $userInput['_APP_DOMAIN'] = $domain;
+            $userInput['_APP_DOMAIN_TARGET'] = $domain;
+        }
+
         foreach ($vars as $var) {
-            if ($var['name'] === '_APP_ASSISTANT_OPENAI_API_KEY') {
-                if (!$enableAssistant) {
-                    $userInput[$var['name']] = '';
-                    continue;
-                }
-
-                if (!empty($var['default'])) {
-                    $userInput[$var['name']] = $var['default'];
-                    continue;
-                }
-
-                if (Console::isInteractive() && $interactive === 'Y') {
-                    $userInput[$var['name']] = Console::confirm('Enter your OpenAI API key for Appwrite Assistant:');
-                    if (empty($userInput[$var['name']])) {
-                        Console::warning('No API key provided. Assistant will be disabled.');
-                        $enableAssistant = false;
-                        $userInput[$var['name']] = '';
-                    }
-                } else {
-                    $userInput[$var['name']] = '';
-                }
-
+            if (isset($userInput[$var['name']])) {
                 continue;
             }
 
@@ -333,7 +331,7 @@ class Install extends Action
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
         $input = $this->prepareEnvironmentVariables($userInput, $vars, $shouldGenerateSecrets);
-        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade, migrate: $this->migrate);
+        $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade, migrate: $this->migrate, source: $source);
     }
 
 
@@ -352,7 +350,7 @@ class Install extends Action
             $enabledDatabases[] = $lockedDatabase;
         }
 
-        $this->setInstallerConfig([
+        $config = [
             'defaultHttpPort' => $defaultHttpPort,
             'defaultHttpsPort' => $defaultHttpsPort,
             'organization' => $organization,
@@ -365,22 +363,45 @@ class Install extends Action
             'enabledDatabases' => $enabledDatabases,
             'isLocal' => $this->isLocalInstall(),
             'hostPath' => $this->hostPath ?: null,
-        ]);
+        ];
 
-        // Start Swoole-based installer server in background
-        // Redirect stdout/stderr to a log file so exec() returns immediately
-        // (otherwise the backgrounded process holds the pipe open and exec() hangs)
-        $serverScript = \escapeshellarg(dirname(__DIR__) . '/Installer/Server.php');
+        // Restarting the installer rewrites this config, which would drop the version an
+        // interrupted upgrade started from -- the one record left once the compose file and
+        // .env read as the version being installed.
+        if (isset($installerConfig['upgradeFrom'])) {
+            $config['upgradeFrom'] = $installerConfig['upgradeFrom'];
+        }
+
+        $this->setInstallerConfig($config);
+
+        // Start Swoole-based installer server in background. The script sends its
+        // output to a log file, so the shell exits at once instead of waiting on a
+        // pipe the server holds open, and prints its PID. The variable name, the
+        // log path and the command reach it as positional parameters, never in
+        // its text, and the secret arrives on stdin so no process list shows it.
+        $secret = Secret::generate()->value;
         $logFile = \sys_get_temp_dir() . '/appwrite-installer-server.log';
-        $output = [];
-        \exec("php {$serverScript} > " . \escapeshellarg($logFile) . " 2>&1 & echo \$!", $output);
-        $pid = isset($output[0]) ? (int) $output[0] : 0;
+        $server = (new Command('sh'))
+            ->flag('-c')
+            ->argument('IFS= read -r secret; export "$1=$secret"; log=$2; shift 2; "$@" > "$log" 2>&1 & echo $!')
+            ->argument('sh')
+            ->argument(Secret::ENVIRONMENT)
+            ->argument($logFile)
+            ->argument('php')
+            ->argument(dirname(__DIR__) . '/Installer/Server.php');
+        $stdout = '';
+        $stderr = '';
+        Console::execute($server, $secret . "\n", $stdout, $stderr);
+        $pid = (int) \trim($stdout);
 
         \register_shutdown_function(function () use ($pid) {
             if ($pid > 0 && \function_exists('posix_kill')) {
                 @\posix_kill($pid, SIGTERM);
             }
         });
+        Console::info('Installer secret: ' . $secret);
+        Console::info('Open your browser at: http://localhost:' . $port . '/?secret=' . $secret);
+
         \sleep(1);
 
         if (!$this->waitForWebServer($port)) {
@@ -402,7 +423,6 @@ class Install extends Action
     {
         $input = [];
         $password = new Password();
-        $token = new Token();
 
         // Start with all defaults
         foreach ($vars as $var) {
@@ -410,15 +430,7 @@ class Install extends Action
             $default = $var['default'] ?? null;
             $hasDefault = $default !== null && $default !== '';
 
-            if ($filter === 'token') {
-                if ($hasDefault) {
-                    $input[$var['name']] = $default;
-                } elseif ($shouldGenerateSecrets) {
-                    $input[$var['name']] = $token->generate();
-                } else {
-                    $input[$var['name']] = '';
-                }
-            } elseif ($filter === 'password') {
+            if ($filter === 'password') {
                 if ($hasDefault) {
                     $input[$var['name']] = $default;
                 } elseif ($shouldGenerateSecrets) {
@@ -434,9 +446,21 @@ class Install extends Action
 
         // Override with user inputs
         foreach ($userInput as $key => $value) {
-            if ($value !== null && ($value !== '' || $key === '_APP_ASSISTANT_OPENAI_API_KEY')) {
+            if ($value !== null && $value !== '') {
                 $input[$key] = $value;
             }
+        }
+
+        foreach ($vars as $var) {
+            if (($var['filter'] ?? null) !== 'token') {
+                continue;
+            }
+            $name = $var['name'];
+            $value = $input[$name] ?? '';
+            $value = is_string($value) ? $value : '';
+            $input[$name] = $name === '_APP_JOBS_SECRET'
+                ? JobsSecret::resolve($value)
+                : EncryptionKey::resolve($value, $shouldGenerateSecrets);
         }
 
         // Multiline values (e.g. GitHub App PEM private keys) are allowed; env.phtml
@@ -502,6 +526,7 @@ class Install extends Action
             return;
         }
 
+        $this->installerConfig = $config;
         putenv('APPWRITE_INSTALLER_CONFIG=' . $json);
         $path = InstallerServer::INSTALLER_CONFIG_FILE;
         if (@file_put_contents($path, $json) === false) {
@@ -523,6 +548,7 @@ class Install extends Action
         array $account = [],
         ?callable $onComplete = null,
         bool $migrate = false,
+        string $source = Report::SOURCE_CLI,
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
@@ -550,17 +576,78 @@ class Install extends Action
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
 
-        $version = \getenv('_APP_VERSION') ?: (\defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
+        $stableVersion = \defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest';
+        $version = \getenv('_APP_VERSION') ?: $stableVersion;
+
+        // A nightly image reports the tag it was pulled under -- 2.0-nightly.<date> --
+        // which names a channel rather than a release, and so cannot be carried forward:
+        // there is no X.Y to re-derive a nightly tag from, and writing it back would keep
+        // an install asking for the stable channel on nightly. The release the image was
+        // built from is compiled in, and both channels take their tag from it.
+        if ($this->isNightlyTag($version)) {
+            $version = $stableVersion;
+        }
+
+        // The nightly channel tracks the minor line rather than one release, so the
+        // tag has to stay rolling -- pinning X.Y.Z would freeze the install on a
+        // single build. See the Releases section of AGENTS.md.
+        if ($this->channel === self::CHANNEL_NIGHTLY) {
+            $version = $this->nightlyTag($version);
+        }
+
         if ($isLocalInstall) {
             $version = 'local';
+        }
+
+        // Read before the compose file and .env are rewritten below, which would replace
+        // the version being upgraded from with the one being upgraded to. The compose file
+        // is authoritative -- it is what the running containers were started from -- and
+        // .env covers installations whose compose file is missing or unreadable.
+        $installedVersion = '';
+        if ($isUpgrade) {
+            $existingCompose = $this->readExistingCompose();
+
+            if ($existingCompose !== '') {
+                try {
+                    $tag = (new Compose($existingCompose))->getService('appwrite')->getImageVersion();
+
+                    // Compose files before 2.0 interpolate the tag, so the service reads
+                    // back "${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}" and
+                    // the part after the first colon is an expression, not a version.
+                    // Anything that does not start with a digit is left to .env below,
+                    // which holds the value that expression resolves to.
+                    if (\preg_match('/^\d/', $tag) === 1) {
+                        $installedVersion = $tag;
+                    }
+                } catch (\Throwable) {
+                    // No appwrite service to read a tag from; .env below covers it.
+                }
+            }
+
+            if ($installedVersion === '') {
+                $existingEnv = @\file_get_contents($this->path . '/' . $this->getEnvFileName());
+                $installedVersion = $existingEnv === false
+                    ? ''
+                    : (string) ((new Env($existingEnv))->list()['_APP_VERSION'] ?? '');
+            }
+
+            // An attempt that was interrupted after rewriting those files leaves both
+            // reading as the version being installed, which would look like an upgrade with
+            // nothing to cross. Remember the version first, so a resumed attempt still knows
+            // where it started; the infrastructure changes below forget it once applied.
+            $installerConfig = $this->readInstallerConfig();
+
+            if ($installedVersion === '' || $installedVersion === $version) {
+                $installedVersion = (string) ($installerConfig['upgradeFrom'] ?? '');
+            } elseif (($installerConfig['upgradeFrom'] ?? null) !== $installedVersion) {
+                $this->setInstallerConfig(\array_merge($installerConfig, ['upgradeFrom' => $installedVersion]));
+            }
         }
 
         if (!$isLocalInstall && $this->hostPath === '') {
             $this->hostPath = $this->detectInstallerHostPath($this->path) ?? '';
         }
 
-        $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
-        $enableAssistant = trim($assistantKey) !== '';
         $enabledRuntimes = \array_unique(\array_filter(\array_map(
             'trim',
             \explode(',', ($input['_APP_FUNCTIONS_RUNTIMES'] ?? '') . ',' . ($input['_APP_SITES_RUNTIMES'] ?? ''))
@@ -585,8 +672,9 @@ class Install extends Action
             'version' => $version,
             'database' => $database,
             'hostPath' => $this->hostPath,
-            'enableAssistant' => $enableAssistant,
             'topology' => $this->topology,
+            // Reviews are optional: the review service is added only once its secret is set.
+            'reviews' => ($input['_APP_REVIEWS_SECRET'] ?? '') !== '',
         ]);
 
         $templateForEnv->setParam('vars', $input);
@@ -643,8 +731,44 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
-            if ($database === 'mongodb' && !$useExistingConfig && $startIndex <= 1) {
-                $this->copyMongoFilesIfNeeded();
+            if (!$useExistingConfig && $startIndex <= 1) {
+                $this->copyConfigFiles(match ($database) {
+                    'mongodb' => ['clickhouse-config.xml', 'clickhouse-init.sh', 'mongo-entrypoint.sh', 'mongo-init.js'],
+                    default => ['clickhouse-config.xml', 'clickhouse-init.sh'],
+                });
+            }
+
+            // Changes to what the containers run on, rather than to what is inside the
+            // database. The new compose file and .env are written by now, and a volume or a
+            // mount can only be moved while nothing is attached to it -- so this has to
+            // happen before anything starts, including a start the operator does by hand
+            // after --no-start. Not bounded by the step being resumed from: a version is
+            // only still here because the changes for it have not all landed yet, whichever
+            // step the attempt that left it got to.
+            if ($isUpgrade && $installedVersion !== '') {
+                $applied = true;
+
+                foreach (InfrastructureMigration::between($installedVersion, $version) as $migration) {
+                    Console::info('Applying infrastructure changes from ' . $migration->getName() . '...');
+
+                    try {
+                        $applied = $migration->setContext($input, $this->path)->execute() && $applied;
+                    } catch (\Throwable $error) {
+                        // The containers still start: what could not be changed is reported
+                        // rather than taking the upgrade down with it.
+                        $applied = false;
+                        Console::warning('Infrastructure changes from ' . $migration->getName() . ' failed: ' . $error->getMessage());
+                    }
+                }
+
+                // Forgotten only once everything landed, so anything that failed is tried
+                // again next time; from here a later upgrade reads its starting version off
+                // the compose file rather than replaying this one.
+                if ($applied) {
+                    $installerConfig = $this->readInstallerConfig();
+                    unset($installerConfig['upgradeFrom']);
+                    $this->setInstallerConfig($installerConfig);
+                }
             }
 
             if (!$noStart) {
@@ -652,6 +776,7 @@ class Install extends Action
                 if ($shouldStartContainers) {
                     $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                     $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
+
                     $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI, $progress, $isUpgrade);
 
                     if (!$isUpgrade) {
@@ -702,16 +827,6 @@ class Install extends Action
                     }
                 }
 
-                // Run tracking in a coroutine when inside a Swoole
-                // request so it doesn't block the worker.
-                if (Coroutine::getCid() !== -1) {
-                    go(function () use ($input, $isUpgrade, $version, $account) {
-                        $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
-                    });
-                } else {
-                    $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
-                }
-
                 if ($isCLI) {
                     Console::success('Appwrite installed successfully');
                 }
@@ -719,6 +834,16 @@ class Install extends Action
                 if ($isCLI) {
                     Console::success('Installation files created. Run "docker compose up -d" to start Appwrite');
                 }
+            }
+
+            $report = $this->report($input, $isUpgrade, $version, $account, $source, !$noStart);
+
+            // Run tracking in a coroutine when inside a Swoole
+            // request so it doesn't block the worker.
+            if (Coroutine::getCid() !== -1) {
+                go(fn () => $this->track($report));
+            } else {
+                $this->track($report);
             }
         } catch (\Throwable $e) {
             if ($currentStep) {
@@ -731,6 +856,35 @@ class Install extends Action
             }
             throw $e;
         }
+    }
+
+    /**
+     * The tags nightly.yml publishes: `nightly`, `X.Y-nightly` and
+     * `X.Y-nightly.<date>`. A self-hoster's own tag that happens to mention the
+     * word is theirs, not this channel's, and is carried forward untouched.
+     */
+    private function isNightlyTag(string $version): bool
+    {
+        return $version === 'nightly'
+            || \str_ends_with($version, '-nightly')
+            || \str_contains($version, '-nightly.');
+    }
+
+    /**
+     * The rolling nightly tag for the minor line a stable version belongs to,
+     * e.g. 2.0.1 -> 2.0-nightly.
+     */
+    private function nightlyTag(string $version): string
+    {
+        [$major, $minor] = \array_pad(\explode('.', $version), 2, '');
+
+        if (!\ctype_digit($major) || !\ctype_digit($minor)) {
+            Console::warning("Cannot derive a nightly tag from '{$version}'; using the bare nightly tag.");
+
+            return 'nightly';
+        }
+
+        return "{$major}.{$minor}-nightly";
     }
 
     private function createInitialAdminAccount(array $account, ?callable $progress, string $apiUrl, string $domain): void
@@ -816,31 +970,27 @@ class Install extends Action
 
         if ($isLocalInstall) {
             $composePath = $this->hostPath !== '' ? $this->hostPath : $this->path;
-            $command = [
-                'docker',
-                'compose',
-                '--env-file',
-                $composePath . '/' . $this->getEnvFileName(),
-                '-f',
-                $composePath . '/' . $this->getComposeFileName(),
-                '--project-name',
-                'appwrite',
-                '--project-directory',
-                $composePath,
-                'exec',
-                'appwrite',
-                'migrate',
-            ];
+            $command = (new Command('docker'))
+                ->argument('compose')
+                ->option('--env-file', $composePath . '/' . $this->getEnvFileName())
+                ->option('-f', $composePath . '/' . $this->getComposeFileName())
+                ->option('--project-name', 'appwrite')
+                ->option('--project-directory', $composePath)
+                ->argument('exec')
+                // migrate needs no terminal, and older Compose v2 refuses one it cannot allocate
+                ->flag('-T')
+                ->argument('appwrite')
+                ->argument('migrate');
         } else {
-            $command = ['docker', 'exec', 'appwrite', 'migrate'];
+            $command = (new Command('docker'))->argument('exec')->argument('appwrite')->argument('migrate');
         }
-        $commandLine = implode(' ', array_map(escapeshellarg(...), $command));
 
-        $output = [];
-        \exec($commandLine . ' 2>&1', $output, $exit);
+        $stdout = '';
+        $stderr = '';
+        $exit = Console::execute($command, '', $stdout, $stderr);
 
         if ($exit !== 0) {
-            $message = trim(implode("\n", $output));
+            $message = trim($stdout . "\n" . $stderr);
             $this->updateProgress(
                 $progress,
                 InstallerServer::STEP_MIGRATION,
@@ -859,68 +1009,73 @@ class Install extends Action
         );
     }
 
-    private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
+    private function report(array $input, bool $isUpgrade, string $version, array $account, string $source, bool $started): ?Report
     {
-        if ($this->isLocalInstall()) {
-            return;
+        $environment = $input['_APP_ENV'] ?? 'development';
+        if (Report::optedOut((string) System::getEnv('DO_NOT_TRACK', ''), $environment, $this->isLocalInstall())) {
+            return null;
         }
 
-        // Opt out via DO_NOT_TRACK (https://donottrack.sh/)
-        $doNotTrack = \strtolower((string) System::getEnv('DO_NOT_TRACK', ''));
-        if (\in_array($doNotTrack, ['1', 'true', 'yes'], true)) {
-            return;
-        }
-
-        $appEnv = $input['_APP_ENV'] ?? 'development';
         $domain = $input['_APP_DOMAIN'] ?? 'localhost';
+        $loopback = Report::isLoopback($domain);
+        $hostIp = $loopback ? $domain : @gethostbyname($domain);
 
-        /* local or test instance */
-        if ($appEnv !== 'production') {
-            return;
+        // A loopback host is a local or test instance; count it, but without the account.
+        if ($loopback) {
+            $account = [];
         }
 
-        /* prod but local or test instance */
-        if ($domain === 'localhost'
-            || str_starts_with($domain, '127.')
-            || str_starts_with($domain, '0.0.0.0')
-        ) {
-            return;
+        // nproc counts the processing units this process may use, which a container can
+        // limit. The report is best effort: a host without nproc reports no count.
+        $stdout = '';
+        $stderr = '';
+        $cpus = @Console::execute(new Command('nproc'), '', $stdout, $stderr) === 0 ? ((int) \trim($stdout) ?: null) : null;
+        try {
+            $ram = System::getMemoryTotal() ?: null;
+        } catch (\Throwable) {
+            $ram = null;
         }
 
-        $type = $isUpgrade ? 'upgrade' : 'install';
-        $database = $input['_APP_DB_ADAPTER'] ?? 'postgresql';
-        $name = $account['name'] ?? 'Admin';
-        $email = $account['email'] ?? 'admin@selfhosted.local';
+        return new Report(
+            action: $isUpgrade ? Report::ACTION_UPGRADE : Report::ACTION_INSTALL,
+            source: $source,
+            version: $version,
+            channel: $this->channel,
+            topology: $this->topology,
+            domain: $domain,
+            database: $input['_APP_DB_ADAPTER'] ?? 'postgresql',
+            started: $started,
+            name: $account['name'] ?? null,
+            email: $account['email'] ?? null,
+            ip: ($hostIp !== $domain) ? $hostIp : null,
+            os: php_uname('s') . ' ' . php_uname('r'),
+            arch: php_uname('m'),
+            cpus: $cpus,
+            ram: $ram,
+        );
+    }
 
-        $hostIp = @gethostbyname($domain);
-
-        $payload = [
-            'action' => $type,
-            'account' => 'self-hosted',
-            'url' => 'https://' . $domain,
-            'category' => 'self_hosted',
-            'label' => 'self_hosted_' . $type,
-            'version' => $version,
-            'data' => json_encode([
-                'name' => $name,
-                'email' => $email,
-                'domain' => $domain,
-                'database' => $database,
-                'ip' => ($hostIp !== $domain) ? $hostIp : null,
-                'os' => php_uname('s') . ' ' . php_uname('r'),
-                'arch' => php_uname('m'),
-                'cpus' => ((int) trim((string) \shell_exec('nproc'))) ?: null,
-                'ram' => (int) round(((float) trim((string) \shell_exec('grep MemTotal /proc/meminfo | awk \'{print $2}\''))) / 1024),
-            ]),
-        ];
+    private function track(?Report $report): void
+    {
+        if ($report === null || !$report->sendable()) {
+            return;
+        }
 
         try {
-            $client = new Client();
-            $client
-                ->setConnectTimeout(5000)
-                ->setTimeout(5000)
-                ->addHeader('Content-Type', 'application/json')
-                ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $payload);
+            (new Client(new CurlAdapter()))
+                ->withConnectTimeout(5)
+                ->withTimeout(5)
+                ->withFollowRedirects(maxHops: 5)
+                ->sendRequest((new RequestFactory())->body(
+                    Method::POST,
+                    self::INSTALLATIONS_URL,
+                    \json_encode($report->payload(), JSON_THROW_ON_ERROR),
+                    ContentType::JSON,
+                    [
+                        Header::USER_AGENT => $report->userAgent(),
+                        'X-Appwrite-Project' => self::PROJECT,
+                    ],
+                ));
         } catch (\Throwable) {
             // tracking shouldn't block installation
         }
@@ -937,13 +1092,19 @@ class Install extends Action
      */
     private function waitForApiReady(string $domain, string $httpPort, bool $isLocalInstall, ?callable $progress, string $step = InstallerServer::STEP_ACCOUNT_SETUP): string
     {
-        $client = new Client();
-        $client
-            ->setTimeout(2000)
-            ->setConnectTimeout(2000)
-            ->addHeader('Host', $domain);
+        $client = (new Client(new CurlAdapter()))
+            ->withTimeout(2)
+            ->withConnectTimeout(2)
+            ->withFollowRedirects(maxHops: 5);
+        $requestFactory = new RequestFactory();
 
         $healthPath = '/v1/health/version';
+
+        // A port bound to one host interface (127.0.0.1:80) is still reached on its port.
+        $separator = \strrpos($httpPort, ':');
+        if ($separator !== false) {
+            $httpPort = \substr($httpPort, $separator + 1);
+        }
 
         if ($isLocalInstall) {
             $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))
@@ -961,7 +1122,10 @@ class Install extends Action
         for ($i = 0; $i < self::HEALTH_CHECK_ATTEMPTS; $i++) {
             foreach ($candidates as $url) {
                 try {
-                    $response = $client->fetch($url);
+                    $request = $requestFactory
+                        ->createRequest(Method::GET, $url)
+                        ->withHeader(Header::HOST, $domain);
+                    $response = $client->sendRequest($request);
                     if ($response->getStatusCode() === 200) {
                         return \rtrim(\substr($url, 0, -\strlen($healthPath)), '/');
                     }
@@ -1003,26 +1167,23 @@ class Install extends Action
      */
     private function connectInstallerToAppwriteNetwork(): void
     {
-        $network = escapeshellarg('appwrite');
-
         // Resolve our own container ID — works regardless of how the
         // container was started (--name, random name, etc.).
         $containerId = trim((string) @file_get_contents('/etc/hostname'));
         if ($containerId === '') {
             $containerId = InstallerServer::DEFAULT_CONTAINER;
         }
-        $container = escapeshellarg($containerId);
+        $connect = (new Command('docker'))->argument('network')->argument('connect')->argument('appwrite')->argument($containerId);
 
         $outputStr = '';
         for ($i = 0; $i < 10; $i++) {
-            $output = [];
-            @exec("docker network connect {$network} {$container} 2>&1", $output, $exitCode);
-
-            if ($exitCode === 0) {
+            $stdout = '';
+            $stderr = '';
+            if (Console::execute($connect, '', $stdout, $stderr) === 0) {
                 return;
             }
 
-            $outputStr = implode(' ', $output);
+            $outputStr = trim($stdout . ' ' . $stderr);
             if (str_contains($outputStr, 'already exists')) {
                 return;
             }
@@ -1035,39 +1196,50 @@ class Install extends Action
 
     private function makeApiCall(string $endpoint, array $body, bool $extractSession = false, string $apiUrl = self::APPWRITE_API_URL, string $domain = 'localhost')
     {
-        $client = new Client();
-        $client
-            ->setTimeout(30000)
-            ->setConnectTimeout(10000)
-            ->addHeader('Content-Type', 'application/json')
-            ->addHeader('X-Appwrite-Project', 'console')
-            ->addHeader('Host', $domain);
+        $response = (new Client(new CurlAdapter()))
+            ->withTimeout(30)
+            ->withConnectTimeout(10)
+            ->withFollowRedirects(maxHops: 5)
+            ->sendRequest((new RequestFactory())->body(
+                Method::POST,
+                $apiUrl . $endpoint,
+                \json_encode($body, JSON_THROW_ON_ERROR),
+                ContentType::JSON,
+                [
+                    'X-Appwrite-Project' => self::PROJECT,
+                    Header::HOST => $domain,
+                ],
+            ));
 
-        $url = $apiUrl . $endpoint;
-        $response = $client->fetch($url, Client::METHOD_POST, $body);
+        $body = (string) $response->getBody();
 
         if ($response->getStatusCode() !== 201) {
-            $error = $response->json();
-            $message = $error['message'] ?? ('HTTP ' . $response->getStatusCode() . ': ' . $response->getBody());
+            $error = \json_decode($body, true, flags: JSON_THROW_ON_ERROR);
+            $message = $error['message'] ?? ('HTTP ' . $response->getStatusCode() . ': ' . $body);
             throw new \Exception("API call failed ({$endpoint}): {$message}");
         }
 
-        $data = $response->json();
+        $data = \json_decode($body, true, flags: JSON_THROW_ON_ERROR);
         if (!isset($data['$id'])) {
             throw new \Exception('API response missing ID field');
         }
 
         if ($extractSession) {
-            $headers = $response->getHeaders();
-            $setCookie = $headers['set-cookie'] ?? $headers['Set-Cookie'] ?? null;
+            // The last Set-Cookie carrying the session wins, as it would in a browser
+            $secret = null;
+            foreach ($response->getHeader(Header::SET_COOKIE) as $setCookie) {
+                if (preg_match(self::PATTERN_SESSION_COOKIE, $setCookie, $matches)) {
+                    $secret = $matches[1];
+                }
+            }
 
-            if (!$setCookie || !preg_match(self::PATTERN_SESSION_COOKIE, $setCookie, $matches)) {
+            if ($secret === null) {
                 throw new \Exception('Session created but no cookie found');
             }
 
             return [
                 'id' => $data['$id'],
-                'secret' => urldecode($matches[1]),
+                'secret' => urldecode($secret),
                 'expire' => $data['expire'] ?? null
             ];
         }
@@ -1126,29 +1298,35 @@ class Install extends Action
         }
     }
 
-    private function copyMongoFilesIfNeeded(): void
+    /**
+     * Copy the files the compose file bind-mounts next to itself.
+     *
+     * @param array<string> $files
+     */
+    private function copyConfigFiles(array $files): void
     {
-        $files = [
-            'mongo-entrypoint.sh',
-            'mongo-init.js',
-        ];
-
         foreach ($files as $file) {
             $source = $this->buildFromProjectPath('/' . $file);
             if (file_exists($source)) {
                 $target = $this->path . '/' . $file;
+                // A local install writes into the project root itself, and copy() fails onto the same file
+                if (\realpath($source) === \realpath($target)) {
+                    continue;
+                }
                 if (@copy($source, $target) === false) {
                     $lastError = error_get_last();
                     $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
                     throw new \RuntimeException('Failed to copy ' . $file . ' to ' . $target . ': ' . $errorMsg);
                 }
+                // copy() drops the executable bit, which decides how the ClickHouse entrypoint runs its init script.
+                @chmod($target, fileperms($source) & 0777);
             }
         }
     }
 
     protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI, ?callable $progress = null, bool $isUpgrade = false): void
     {
-        $env = '';
+        $env = [];
         if (!$useExistingConfig) {
             foreach ($input as $key => $value) {
                 if ($value === null || $value === '') {
@@ -1157,7 +1335,7 @@ class Install extends Action
                 if (!preg_match(self::PATTERN_ENV_VAR_NAME, $key)) {
                     throw new \Exception("Invalid environment variable name: $key");
                 }
-                $env .= $key . '=' . \escapeshellarg((string) $value) . ' ';
+                $env[] = $key . '=' . $value;
             }
         }
 
@@ -1169,7 +1347,6 @@ class Install extends Action
         if ($isLocalInstall && $this->hostPath !== '') {
             $composePath = $this->hostPath;
         }
-        $composeFile = $composePath . '/' . $this->getComposeFileName();
         $envFile = $composePath . '/' . $this->getEnvFileName();
 
         $command = [
@@ -1177,9 +1354,11 @@ class Install extends Action
             'compose',
             '--env-file',
             $envFile,
-            '-f',
-            $composeFile,
         ];
+        foreach ((new Files($this->path, $this->getComposeFileName()))->names() as $name) {
+            $command[] = '-f';
+            $command[] = $composePath . '/' . $name;
+        }
 
         if ($isLocalInstall) {
             $command[] = '--project-name';
@@ -1189,23 +1368,17 @@ class Install extends Action
         $command[] = '--project-directory';
         $command[] = $composePath;
 
-        $validateCommand = $command;
-        $validateCommand[] = 'config';
-        $validateCommand[] = '--quiet';
-        \exec($env . implode(' ', array_map(escapeshellarg(...), $validateCommand)) . ' 2>&1', $validateOutput, $validateExit);
-        if ($validateExit !== 0) {
-            $message = trim(implode("\n", $validateOutput));
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute($this->compose($env, [...$command, 'config', '--quiet']), '', $stdout, $stderr) !== 0) {
+            $message = trim($stdout . "\n" . $stderr);
             throw new \RuntimeException('Invalid Docker Compose file', 0, $message !== '' ? new \RuntimeException($message) : null);
         }
 
-        $command[] = 'up';
-        $command[] = '-d';
-        $command[] = '--remove-orphans';
-        $command[] = '--renew-anon-volumes';
-        $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command));
+        $up = $this->compose($env, [...$command, 'up', '-d', '--remove-orphans', '--renew-anon-volumes']);
 
         if ($progress) {
-            $totalServices = $this->countComposeServices($composeFile);
+            $totalServices = $this->countComposeServices($this->compose($env, [...$command, 'config', '--services']));
             if ($totalServices > 0) {
                 $verb = $isUpgrade ? 'Restarting' : 'Starting';
                 try {
@@ -1218,43 +1391,65 @@ class Install extends Action
                 } catch (\Throwable) {
                 }
             }
-            $result = $this->execWithContainerProgress($commandLine, $totalServices, $progress, $isUpgrade);
-            $output = $result['output'];
+            $result = $this->execWithContainerProgress($up, $totalServices, $progress, $isUpgrade);
+            $message = trim(implode("\n", $result['output']));
             $exit = $result['exit'];
         } else {
-            \exec($commandLine . ' 2>&1', $output, $exit);
+            $exit = Console::execute($up, '', $stdout, $stderr);
+            $message = trim($stdout . "\n" . $stderr);
         }
 
         if ($exit !== 0) {
-            $message = trim(implode("\n", $output));
             $previous = $message !== '' ? new \RuntimeException($message) : null;
             throw new \RuntimeException('Failed to start containers', 0, $previous);
         }
-        if ($isLocalInstall && $isCLI && !empty($output)) {
-            Console::log(implode("\n", $output));
+        if ($isLocalInstall && $isCLI && $message !== '') {
+            Console::log($message);
         }
     }
 
-    private function countComposeServices(string $composeFile): int
+    /**
+     * docker compose run through env, so its variables reach it as arguments
+     * rather than as a shell assignment in front of it.
+     *
+     * @param list<string> $env KEY=value pairs
+     * @param list<string> $argv
+     */
+    private function compose(array $env, array $argv): Command
     {
-        $content = @file_get_contents($composeFile);
-        if ($content === false) {
+        $command = new Command('env');
+        foreach ([...$env, ...$argv] as $argument) {
+            $command->argument($argument);
+        }
+
+        return $command;
+    }
+
+    /**
+     * Services in the merged compose configuration, overrides included.
+     */
+    private function countComposeServices(Command $command): int
+    {
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute($command, '', $stdout, $stderr) !== 0) {
             return 0;
         }
-        $count = preg_match_all('/^\s*container_name:/m', $content);
-        return $count !== false ? $count : 0;
+
+        return count(array_filter(explode("\n", $stdout), fn (string $service): bool => trim($service) !== ''));
     }
 
-    private function execWithContainerProgress(string $commandLine, int $totalServices, callable $progress, bool $isUpgrade): array
+    private function execWithContainerProgress(Command $command, int $totalServices, callable $progress, bool $isUpgrade): array
     {
         $verb = $isUpgrade ? 'Restarting' : 'Starting';
         $message = "$verb Docker containers...";
         $started = 0;
         $output = [];
 
+        // argv, with stderr joining stdout: the progress lines arrive on either
         $process = proc_open(
-            $commandLine . ' 2>&1',
-            [1 => ['pipe', 'w']],
+            $command->toArray(),
+            [1 => ['pipe', 'w'], 2 => ['redirect', 1]],
             $pipes
         );
 
@@ -1434,20 +1629,17 @@ class Install extends Action
             return null;
         }
 
-        $command = \implode(' ', \array_map(\escapeshellarg(...), [
-            'docker',
-            'inspect',
-            '--format',
-            '{{ json .Mounts }}',
-            $containerId,
-        ]));
-        $output = [];
-        @\exec($command . ' 2>/dev/null', $output, $exitCode);
-        if ($exitCode !== 0 || empty($output)) {
+        $inspect = (new Command('docker'))
+            ->argument('inspect')
+            ->option('--format', '{{ json .Mounts }}')
+            ->argument($containerId);
+        $stdout = '';
+        $stderr = '';
+        if (Console::execute($inspect, '', $stdout, $stderr) !== 0 || \trim($stdout) === '') {
             return null;
         }
 
-        $mounts = \json_decode(\implode("\n", $output), true);
+        $mounts = \json_decode($stdout, true);
         if (!\is_array($mounts)) {
             return null;
         }

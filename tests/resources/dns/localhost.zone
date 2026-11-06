@@ -1,0 +1,3 @@
+$TTL 60
+localhost. IN SOA ns.localhost. hostmaster.localhost. 1 3600 600 86400 60
+localhost. IN NS ns.localhost.

@@ -4,9 +4,9 @@ namespace Tests\E2E\Services\Tokens;
 
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 trait TokensBase
 {
@@ -28,7 +28,7 @@ trait TokensBase
             ],
             [
                 'name' => 'Test Bucket',
-                'bucketId' => ID::unique(),
+                'bucketId' => Id::unique(),
                 'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
             ]
         );
@@ -44,7 +44,7 @@ trait TokensBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ],
             [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             ]
         );
@@ -87,7 +87,7 @@ trait TokensBase
             ],
             [
                 'name' => 'Test Bucket',
-                'bucketId' => ID::unique(),
+                'bucketId' => Id::unique(),
                 'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
             ]
         );
@@ -106,7 +106,7 @@ trait TokensBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ],
             [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             ]
         );
@@ -189,6 +189,26 @@ trait TokensBase
         $this->assertEquals(401, $failedDownload['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $failedDownload['body']['type']);
         $this->assertEquals('No permissions provided for action \'read\'', $failedDownload['body']['message']);
+    }
+
+    public function testPreviewFileWithInvalidTokenType(): void
+    {
+        $data = $this->setupBucketAndFile();
+        $fileId = $data['fileId'];
+        $bucketId = $data['bucketId'];
+        $guestHeaders = $data['guestHeaders'];
+
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview',
+            $guestHeaders,
+            [
+                'token' => ['invalid']
+            ]
+        );
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
     }
 
     public function testPreviewFileWithToken(): void
@@ -328,7 +348,7 @@ trait TokensBase
             ],
             [
                 'name' => 'Test Bucket',
-                'bucketId' => ID::unique(),
+                'bucketId' => Id::unique(),
                 'fileSecurity' => true,
                 'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
             ]
@@ -348,7 +368,7 @@ trait TokensBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ],
             [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'permissions' => [ Permission::read(Role::label('devrel')) ],
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             ]

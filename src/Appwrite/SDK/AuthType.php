@@ -15,4 +15,14 @@ enum AuthType: string
      * auth types that make them reachable (ADMIN, KEY, ...).
      */
     case ORGANIZATION = APP_AUTH_TYPE_ORGANIZATION;
+
+    public function getPlatform(): ?string
+    {
+        return match ($this) {
+            self::SESSION => APP_SDK_PLATFORM_CLIENT,
+            self::JWT, self::KEY => APP_SDK_PLATFORM_SERVER,
+            self::ADMIN => APP_SDK_PLATFORM_CONSOLE,
+            self::ORGANIZATION => null,
+        };
+    }
 }

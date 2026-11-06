@@ -1,0 +1,91 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot access property \$onWebSocketConnect on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: src/Adapter/Workerman.php
+
+		-
+			message: '#^Cannot call method close\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Adapter/Workerman.php
+
+		-
+			message: '#^Cannot call method send\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: src/Adapter/Workerman.php
+
+		-
+			message: '#^Possibly invalid array key type mixed\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: src/Adapter/Workerman.php
+
+		-
+			message: '#^Method Utopia\\WebSocket\\Client\:\:receive\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Client.php
+
+		-
+			message: '#^Part \$this\-\>client\-\>errCode \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Part \$this\-\>client\-\>errMsg \(mixed\) of encapsed string cannot be cast to string\.$#'
+			identifier: encapsedStringPart.nonString
+			count: 4
+			path: src/Client.php
+
+		-
+			message: '#^Binary operation "\.\=" between string and mixed results in an error\.$#'
+			identifier: assignOp.invalid
+			count: 1
+			path: tests/E2E/AdapterTest.php
+
+		-
+			message: '#^Method Utopia\\WebSocket\\Tests\\E2E\\AdapterTest\:\:getInfo\(\) should return array\{memory_used\: int, batches_sent\: int\} but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: tests/E2E/AdapterTest.php
+
+		-
+			message: '#^Parameter \#1 \$json of function json_decode expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/AdapterTest.php
+
+		-
+			message: '#^Parameter \#1 \$string of function strlen expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/E2E/AdapterTest.php
+
+		-
+			message: '#^Cannot access offset ''request_uri'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/Fixtures/Swoole/server.php
+
+		-
+			message: '#^Cannot access offset 0 on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/Fixtures/Swoole/server.php
+
+		-
+			message: '#^Cannot call method set\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/Fixtures/Swoole/server.php
+
+		-
+			message: '#^Parameter \#2 \(mixed\) of echo cannot be converted to string\.$#'
+			identifier: echo.nonString
+			count: 1
+			path: tests/Fixtures/Swoole/server.php

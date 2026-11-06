@@ -1,0 +1,418 @@
+<?php
+
+namespace Appwrite\Platform\Modules\S3\Http\S3;
+
+use Appwrite\Event\Event;
+use Appwrite\Event\Publisher\Audit as AuditPublisher;
+use Appwrite\Event\Publisher\Delete as DeletePublisher;
+use Appwrite\Event\Publisher\Func as FunctionPublisher;
+use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\EventProcessor;
+use Appwrite\Platform\Modules\S3\Responses\S3Xml;
+use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Response;
+use Utopia\Cache\Cache;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Http\Adapter\Swoole\Request;
+use Utopia\Platform\Action;
+use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
+
+class Get extends Base
+{
+    public static function getName(): string
+    {
+        return 's3Get';
+    }
+
+    public function __construct()
+    {
+        parent::__construct(Action::HTTP_REQUEST_METHOD_GET);
+    }
+
+    protected function route(Request $request, Response $response, Database $dbForProject, Document $project, Document $team, User $user, Device $deviceForFiles, callable $locks, Cache $cache, Event $queueForEvents, DeletePublisher $publisherForDeletes, AuditPublisher $publisherForAudits, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, EventProcessor $eventProcessor): void
+    {
+        $isHead = $request->getMethod() === Action::HTTP_REQUEST_METHOD_HEAD
+            || \in_array($this->query($request, 'x-id'), ['HeadObject', 'HeadBucket'], true);
+        [$bucketId, $key] = $this->parts($request);
+
+        if ($bucketId === '') {
+            $this->authorize($request, $project, $team, $user, ['buckets.read']);
+            if ($isHead) {
+                $response->send('');
+                return;
+            }
+
+            $buckets = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('buckets', [Query::limit(1000)]));
+            $this->sendXml($response, S3Xml::listBuckets($buckets));
+            return;
+        }
+
+        if ($key === '') {
+            $bucketOperation = $isHead
+                || $this->hasQuery($request, 'acl')
+                || $this->hasQuery($request, 'location')
+                || $this->unsupportedSubresource($request);
+            $this->authorize($request, $project, $team, $user, [$bucketOperation ? 'buckets.read' : 'files.read']);
+            $bucket = $this->bucket($dbForProject, $bucketId);
+
+            if ($isHead) {
+                $response->send('');
+                return;
+            }
+
+            if ($this->hasQuery($request, 'acl')) {
+                $this->sendXml($response, S3Xml::accessControlPolicy());
+                return;
+            }
+            if ($this->hasQuery($request, 'location')) {
+                $this->sendXml($response, S3Xml::bucketLocation());
+                return;
+            }
+            if ($this->unsupportedSubresource($request)) {
+                $this->sendXml($response, S3Xml::error('NotImplemented', 'This S3 feature is not supported by Appwrite Storage.', $request->getURI()), Response::STATUS_CODE_NOT_IMPLEMENTED);
+                return;
+            }
+            if ($this->hasQuery($request, 'uploads')) {
+                $this->sendXml($response, S3Xml::listMultipartUploads($bucketId, $this->getMultipartUploads($locks, $cache, $dbForProject, $project, $deviceForFiles, $bucket)));
+                return;
+            }
+
+            $files = $this->uniqueObjects($dbForProject->getAuthorization()->skip(fn () => \iterator_to_array($dbForProject->cursor('bucket_' . $bucket->getSequence(), [
+                Query::orderAsc('$sequence'),
+            ], batchSize: 1000), false)));
+            if ($this->query($request, 'list-type') === '2') {
+                $this->sendXml($response, S3Xml::listObjectsV2(
+                    $bucketId,
+                    $files,
+                    $this->query($request, 'prefix'),
+                    $this->query($request, 'delimiter'),
+                    (int) $this->query($request, 'max-keys', '1000'),
+                    $this->query($request, 'continuation-token'),
+                    $this->query($request, 'start-after')
+                ));
+                return;
+            }
+
+            $this->sendXml($response, S3Xml::listObjects(
+                $bucketId,
+                $files,
+                $this->query($request, 'prefix'),
+                $this->query($request, 'delimiter'),
+                (int) $this->query($request, 'max-keys', '1000'),
+                $this->query($request, 'marker')
+            ));
+            return;
+        }
+
+        $this->authorize($request, $project, $team, $user, ['files.read']);
+        $bucket = $this->bucket($dbForProject, $bucketId);
+
+        if ($this->query($request, 'uploadId') !== '') {
+            $parts = $this->getMultipartParts($this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key));
+            $this->sendXml($response, S3Xml::listParts($bucketId, $key, $this->query($request, 'uploadId'), $parts));
+            return;
+        }
+
+        $isAcl = $this->hasQuery($request, 'acl');
+        $isUnsupported = $this->unsupportedSubresource($request);
+        $ifNoneMatch = $request->getHeaderLine('if-none-match');
+        $ifMatch = $request->getHeaderLine('if-match');
+        $originalHeaders = $response->getHeaders();
+        for ($attempt = 0; ; $attempt++) {
+            $delivery = new class () {
+                public bool $started = false;
+                public int $remaining = 0;
+                public string $buffer = '';
+                public string $path = '';
+            };
+            try {
+                // Local pins an open handle under the writer lock. S3 uses an
+                // immutable version path and one backend GET after lock release.
+                [$file, $body] = $locks($this->objectLockKey($project, $bucket, $key), 600, function () use ($dbForProject, $deviceForFiles, $bucket, $key, $isHead, $isAcl, $isUnsupported, $ifNoneMatch, $ifMatch, $request, $delivery): array {
+                    $file = $this->getObject($dbForProject, $bucket, $key);
+                    $body = null;
+                    $delivery->path = $file->getAttribute('path', '');
+                    $size = (int) $file->getAttribute('sizeOriginal', 0);
+                    $range = $this->range($request, $size);
+                    $etag = '"' . $file->getAttribute('signature', '') . '"';
+                    if ($deviceForFiles->getType() === DeviceType::Local && !$isHead && !$isAcl && !$isUnsupported
+                        && $ifNoneMatch !== $etag && ($ifMatch === '' || $ifMatch === $etag) && $range !== false) {
+                        $body = $range === null
+                            ? $deviceForFiles->read($file->getAttribute('path', ''))
+                            : $deviceForFiles->read($file->getAttribute('path', ''), $range[0], $range[1] - $range[0] + 1);
+                    }
+                    return [$file, $body];
+                }, timeout: 120.0);
+
+                if ($isAcl) {
+                    $this->sendXml($response, S3Xml::accessControlPolicy());
+                    return;
+                }
+                if ($isUnsupported) {
+                    $this->sendXml($response, S3Xml::error('NotImplemented', 'This S3 feature is not supported by Appwrite Storage.', $request->getURI()), Response::STATUS_CODE_NOT_IMPLEMENTED);
+                    return;
+                }
+
+                $size = (int) $file->getAttribute('sizeOriginal', 0);
+                $range = $this->range($request, $size);
+                $etag = '"' . $file->getAttribute('signature', '') . '"';
+
+                if ($ifNoneMatch === $etag) {
+                    $this->applyContentHeaders($response, $request, $file);
+                    $response
+                        ->addHeader('ETag', $etag)
+                        ->setStatusCode(Response::STATUS_CODE_NOT_MODIFIED)
+                        ->send('');
+                    return;
+                }
+                if ($ifMatch !== '' && $ifMatch !== $etag) {
+                    $this->sendXml($response, S3Xml::error('PreconditionFailed', 'At least one of the pre-conditions you specified did not hold.', $request->getURI()), Response::STATUS_CODE_PRECONDITION_FAILED);
+                    return;
+                }
+
+                if ($range === false) {
+                    $response->addHeader('Content-Range', 'bytes */' . $size);
+                    $this->sendXml($response, S3Xml::error('InvalidRange', 'The requested range is not satisfiable.', $request->getURI()), Response::STATUS_CODE_REQUESTED_RANGE_NOT_SATISFIABLE);
+                    return;
+                }
+
+                $this->applyContentHeaders($response, $request, $file);
+                $response
+                    ->addHeader('ETag', $etag)
+                    ->addHeader('Accept-Ranges', 'bytes');
+
+                $lastModified = \strtotime($file->getUpdatedAt() ?: $file->getCreatedAt());
+                if ($lastModified !== false) {
+                    $response->addHeader('Last-Modified', \gmdate('D, d M Y H:i:s', $lastModified) . ' GMT');
+                }
+
+                $metadata = $file->getAttribute('metadata', []);
+                foreach (($metadata['userMetadata'] ?? []) as $name => $value) {
+                    $response->addHeader('x-amz-meta-' . $name, (string) $value);
+                }
+
+                foreach ([
+                    'cacheControl' => 'Cache-Control',
+                    'contentEncoding' => 'Content-Encoding',
+                    'contentLanguage' => 'Content-Language',
+                    'expires' => 'Expires',
+                ] as $attribute => $header) {
+                    $value = (string) ($metadata[$attribute] ?? '');
+                    if ($value !== '') {
+                        $response->addHeader($header, $value);
+                    }
+                }
+
+                foreach ([
+                    'response-cache-control' => 'Cache-Control',
+                    'response-content-encoding' => 'Content-Encoding',
+                    'response-content-language' => 'Content-Language',
+                    'response-expires' => 'Expires',
+                ] as $parameter => $header) {
+                    $value = $this->query($request, $parameter);
+                    if ($value !== '') {
+                        $response->setHeader($header, $value);
+                    }
+                }
+
+                if ($range !== null) {
+                    [$start, $end] = $range;
+                    $response
+                        ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT)
+                        ->addHeader('Content-Range', 'bytes ' . $start . '-' . $end . '/' . $size)
+                        ->addHeader('Content-Length', (string) ($end - $start + 1));
+                } else {
+                    $response->addHeader('Content-Length', (string) $size);
+                }
+
+                if ($isHead) {
+                    $response->send('');
+                    return;
+                }
+
+                if ($body === null && $deviceForFiles->getType() === DeviceType::Local) {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Missing object stream.');
+                }
+
+                // S3 returns the stored object representation, including for byte ranges.
+                $response->setAcceptEncoding('');
+                $delivery->remaining = $range === null ? $size : $range[1] - $range[0] + 1;
+                try {
+                    if ($deviceForFiles->getType() !== DeviceType::Local) {
+                        $small = $delivery->remaining <= MAX_OUTPUT_CHUNK_SIZE;
+                        $delivery->buffer = '';
+                        if (!$small) {
+                            $response->removeHeader('Content-Length');
+                        }
+                        $deviceForFiles->stream($file->getAttribute('path', ''), static function (string $chunk) use ($response, $small, $delivery): void {
+                            if (\strlen($chunk) > $delivery->remaining) {
+                                throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Object read exceeded its captured size.');
+                            }
+                            $delivery->remaining -= \strlen($chunk);
+                            if ($small) {
+                                $delivery->buffer .= $chunk;
+                            } elseif ($chunk !== '') {
+                                $delivery->started = true;
+                                $response->chunk($chunk, false);
+                            }
+                        }, $range === null ? 0 : $range[0], $range === null ? null : $delivery->remaining);
+                        if ($delivery->remaining !== 0) {
+                            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Incomplete object read.');
+                        }
+                        if ($small) {
+                            $response->send($delivery->buffer);
+                        } else {
+                            $response->chunk('', true);
+                        }
+                        return;
+                    }
+                    if ($delivery->remaining <= MAX_OUTPUT_CHUNK_SIZE) {
+                        $chunk = $delivery->remaining === 0 ? '' : $body->read($delivery->remaining);
+                        if (\strlen($chunk) !== $delivery->remaining) {
+                            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Incomplete object read.');
+                        }
+                        $response->send($chunk);
+                        return;
+                    }
+
+                    $response->removeHeader('Content-Length');
+                    while ($delivery->remaining > 0) {
+                        $chunk = $body->read(\min(MAX_OUTPUT_CHUNK_SIZE, $delivery->remaining));
+                        if ($chunk === '') {
+                            throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Incomplete object read.');
+                        }
+                        $delivery->remaining -= \strlen($chunk);
+                        $delivery->started = true;
+                        $response->chunk($chunk, $delivery->remaining === 0);
+                    }
+                } catch (\Throwable $error) {
+                    if ($delivery->started) {
+                        $response->abort();
+                    }
+                    throw $error;
+                } finally {
+                    $body?->close();
+                }
+            } catch (\Throwable $error) {
+                if ($delivery->started || $delivery->path === '') {
+                    throw $error;
+                }
+                $latest = $this->getObject($dbForProject, $bucket, $key);
+                if ($latest->getAttribute('path', '') === $delivery->path) {
+                    throw $error;
+                }
+                // A writer deleted the captured path before our backend GET opened.
+                // No bytes escaped: retry once, discarding the old version's headers.
+                foreach ($response->getHeaders() as $name => $values) {
+                    $response->removeHeader($name);
+                }
+                foreach ($originalHeaders as $name => $values) {
+                    foreach ($values as $value) {
+                        $response->addHeader($name, $value);
+                    }
+                }
+                $response->setStatusCode(Response::STATUS_CODE_OK);
+                if ($attempt > 0) {
+                    $this->sendXml($response, S3Xml::error('SlowDown', 'The object changed repeatedly while it was being read. Please retry.', $request->getURI()), Response::STATUS_CODE_SERVICE_UNAVAILABLE);
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * Same content headers as GET /storage/.../view: block script execution
+     * and never render SVG or types outside storage-mimes as a document.
+     * Stored Content-Disposition and response-* query overrides cannot
+     * change that for those types.
+     */
+    private function applyContentHeaders(Response $response, Request $request, Document $file): void
+    {
+        $storedType = (string) $file->getAttribute('mimeType', 'application/octet-stream');
+        $contentType = $storedType;
+        $overrideType = $this->query($request, 'response-content-type');
+        if ($overrideType !== '') {
+            $contentType = $overrideType;
+        }
+
+        $metadata = $file->getAttribute('metadata', []);
+        $disposition = (string) ($metadata['contentDisposition'] ?? '');
+        $overrideDisposition = $this->query($request, 'response-content-disposition');
+        if ($overrideDisposition !== '') {
+            $disposition = $overrideDisposition;
+        }
+
+        $response
+            ->setContentType($contentType)
+            ->addHeader('Content-Security-Policy', "script-src 'none';")
+            ->setHeader('X-Content-Type-Options', 'nosniff');
+
+        if ($this->requiresAttachment($storedType, $contentType)) {
+            $response->setContentDisposition(Response::DISPOSITION_ATTACHMENT, (string) $file->getAttribute('name', ''));
+        } elseif ($disposition !== '') {
+            $response->setHeader('Content-Disposition', $disposition);
+        }
+    }
+
+    private function requiresAttachment(string ...$contentTypes): bool
+    {
+        $mimes = \array_map(
+            static fn (mixed $mime): string => \strtolower(\trim((string) $mime)),
+            Config::getParam('storage-mimes'),
+        );
+        foreach ($contentTypes as $contentType) {
+            $contentType = \strtolower(\trim(\explode(';', $contentType, 2)[0]));
+            if ($contentType === '' || $contentType === 'image/svg+xml' || !\in_array($contentType, $mimes, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array{0: int, 1: int}|false|null
+     */
+    private function range(Request $request, int $size): array|false|null
+    {
+        $header = \trim($request->getHeaderLine('range'));
+        if ($header === '') {
+            return null;
+        }
+
+        if (!\preg_match('/^bytes=(\d*)-(\d*)$/', $header, $matches)) {
+            return false;
+        }
+        if ($size <= 0) {
+            return false;
+        }
+
+        $start = $matches[1];
+        $end = $matches[2];
+        if ($start === '' && $end === '') {
+            return false;
+        }
+
+        if ($start === '') {
+            $suffix = (int) $end;
+            if ($suffix <= 0) {
+                return false;
+            }
+
+            return [\max(0, $size - $suffix), \max(0, $size - 1)];
+        }
+
+        $start = (int) $start;
+        $end = $end === '' ? $size - 1 : (int) $end;
+
+        if ($start >= $size || $start > $end) {
+            return false;
+        }
+
+        return [$start, \min($end, $size - 1)];
+    }
+}

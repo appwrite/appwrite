@@ -1,0 +1,314 @@
+/**
+ * Create deployment via manual .tar.gz upload.
+ * Validates file type (.tar.gz only) and max size. Supports onProgress for upload UI.
+ */
+
+import { useState, useRef } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Upload, Loader2, FileArchive } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { useT } from '@/lib/i18n/translate'
+import { closeDialogBeforeOverlayUnmount } from '@/lib/utils/overlay-lock'
+import { cn } from '@/lib/utils'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  DEPLOYMENT_ARCHIVE_ACCEPT,
+  isDeploymentArchive,
+} from '@/lib/deployment-archive'
+import { projectQueryOptions } from '@/lib/react-query/hooks/projects'
+import { useConsoleVariables } from '@/lib/react-query/hooks/console-variables'
+import { useOrganizationPlan } from '@/lib/react-query/hooks/organizations'
+import { getActiveProfileFeatures } from '@/lib/console-profiles'
+
+export type CreateManualDeploymentResourceType = 'function' | 'site'
+
+/** The server's own fallback when _APP_COMPUTE_SIZE_LIMIT is unset. */
+export const DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES = 30_000_000
+
+export interface CreateManualDeploymentModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  resourceType: CreateManualDeploymentResourceType
+  projectId: string
+  resourceId: string
+  onSuccess?: () => void
+  /** Max file size in bytes; defaults to the limit the server enforces for the project */
+  maxFileSizeBytes?: number
+}
+
+export function CreateManualDeploymentModal({
+  open,
+  onOpenChange,
+  resourceType,
+  projectId,
+  resourceId,
+  onSuccess,
+  maxFileSizeBytes: maxFileSizeBytesProp,
+}: CreateManualDeploymentModalProps) {
+  const t = useT()
+  const { data: project } = useQuery(projectQueryOptions(projectId))
+  const { computeSizeLimit } = useConsoleVariables(project?.region)
+  const { plan } = useOrganizationPlan(project?.teamId)
+  const planSize = plan?.deploymentSize
+  // As on the server, a Cloud plan's deploymentSize replaces _APP_COMPUTE_SIZE_LIMIT
+  // and 0 means no limit. MAX_SAFE_INTEGER is the stand-in plan from a failed
+  // request, so the limit is unknown.
+  const serverSizeLimit = !getActiveProfileFeatures().billing
+    ? (computeSizeLimit ?? DEFAULT_DEPLOYMENT_UPLOAD_MAX_BYTES)
+    : planSize !== undefined && planSize < Number.MAX_SAFE_INTEGER
+      ? planSize * 1_000_000
+      : undefined
+  const maxFileSizeBytes = maxFileSizeBytesProp ?? serverSizeLimit
+  // Floor, so the shown limit never exceeds what is enforced
+  const maxMb = Math.floor((maxFileSizeBytes ?? 0) / 1_000_000)
+  const queryClient = useQueryClient()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+
+  const reset = () => {
+    setFile(null)
+    setIsDragging(false)
+    setUploadProgress(null)
+    setValidationError(null)
+    if (inputRef.current) {
+      inputRef.current.value = ''
+    }
+  }
+
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) reset()
+    onOpenChange(isOpen)
+  }
+
+  const validateFile = (f: File): string | null => {
+    if (!isDeploymentArchive(f)) {
+      return t('Only .tar.gz files are allowed.')
+    }
+    if (maxFileSizeBytes && f.size > maxFileSizeBytes) {
+      return `${t('File is too large. Maximum size:')} ${maxMb}MB`
+    }
+    return null
+  }
+
+  const applyFile = (chosen: File | undefined) => {
+    setValidationError(null)
+    if (!chosen) {
+      setFile(null)
+      return
+    }
+    const err = validateFile(chosen)
+    if (err) {
+      setValidationError(err)
+      setFile(null)
+      if (inputRef.current) inputRef.current.value = ''
+      return
+    }
+    setFile(chosen)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    applyFile(e.target.files?.[0])
+  }
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!file) throw new Error('No file selected')
+      const projectSdk = sdk.forProject(projectId)
+      if (resourceType === 'function') {
+        return await projectSdk.functions.createDeployment({
+          functionId: resourceId,
+          code: file,
+          activate: true,
+          onProgress: (progress) => {
+            if (progress.chunksTotal && progress.chunksTotal > 0) {
+              setUploadProgress(
+                Math.round(
+                  (progress.chunksUploaded / progress.chunksTotal) * 100,
+                ),
+              )
+            }
+          },
+        })
+      }
+      return await projectSdk.sites.createDeployment({
+        siteId: resourceId,
+        code: file,
+        activate: true,
+        onProgress: (progress) => {
+          if (progress.chunksTotal && progress.chunksTotal > 0) {
+            setUploadProgress(
+              Math.round(
+                (progress.chunksUploaded / progress.chunksTotal) * 100,
+              ),
+            )
+          }
+        },
+      })
+    },
+    onSuccess: () => {
+      closeDialogBeforeOverlayUnmount(() => {
+        handleClose(false)
+      })
+      const deployKey =
+        resourceType === 'function'
+          ? ['deployments', 'function', projectId, resourceId]
+          : ['deployments', 'site', projectId, resourceId]
+      queryClient.refetchQueries({ queryKey: deployKey })
+      if (resourceType === 'site') {
+        queryClient.invalidateQueries({
+          queryKey: ['site', 'project', projectId, resourceId],
+        })
+      }
+      toast.success(t('Deployment created successfully'))
+      onSuccess?.()
+    },
+    onError: (err: Error) => {
+      toast.error(err?.message ?? t('Failed to create deployment'))
+      setUploadProgress(null)
+    },
+  })
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (mutation.isPending) return
+    e.dataTransfer.dropEffect = 'copy'
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    if (mutation.isPending) return
+    applyFile(e.dataTransfer.files?.[0])
+  }
+
+  const handleSubmit = () => {
+    if (!file) {
+      setValidationError(t('Please select a .tar.gz file.'))
+      return
+    }
+    const err = validateFile(file)
+    if (err) {
+      setValidationError(err)
+      return
+    }
+    mutation.mutate()
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 text-start">
+          <DialogTitle>{t('Create manual deployment')}</DialogTitle>
+          <DialogDescription className="text-[13px] mt-2">
+            {maxFileSizeBytes ? (
+              <>
+                {t(
+                  'Upload a .tar.gz archive of your code. Maximum file size is',
+                )}{' '}
+                {maxMb}MB.
+              </>
+            ) : (
+              t('Upload a .tar.gz archive of your code.')
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="border-t border-border" />
+        <div className="px-6 pb-4 pt-0">
+          <input
+            ref={inputRef}
+            type="file"
+            accept={DEPLOYMENT_ARCHIVE_ACCEPT}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              if (!mutation.isPending) inputRef.current?.click()
+            }}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={cn(
+              'flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed py-8 px-4 cursor-pointer transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+              isDragging
+                ? 'border-primary bg-primary/5'
+                : 'border-border bg-muted/20 hover:bg-muted/30',
+              mutation.isPending && 'pointer-events-none opacity-60',
+            )}
+          >
+            {file ? (
+              <span className="pointer-events-none flex items-center gap-2 text-[13px] text-foreground">
+                <FileArchive className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium truncate max-w-[240px]">
+                  {file.name}
+                </span>
+                <span className="text-muted-foreground">
+                  ({(file.size / 1024).toFixed(1)} KB)
+                </span>
+              </span>
+            ) : (
+              <span className="pointer-events-none flex flex-col items-center">
+                <Upload className="h-10 w-10 text-muted-foreground mb-2" />
+                <span className="text-[13px] text-muted-foreground text-center">
+                  {t('Drop a .tar.gz file here or click to browse')}
+                </span>
+              </span>
+            )}
+          </button>
+          {validationError && (
+            <p className="mt-2 text-[12px] text-destructive">
+              {validationError}
+            </p>
+          )}
+          {uploadProgress !== null && (
+            <div className="mt-3 flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <span className="text-[13px] text-muted-foreground">
+                {t('Uploading…')} {uploadProgress}%
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => handleClose(false)}
+            disabled={mutation.isPending}
+            className="h-9 text-[13px]"
+          >
+            {t('Cancel')}
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!file || mutation.isPending}
+            className="h-9 text-[13px]"
+          >
+            {t('Create deployment')}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}

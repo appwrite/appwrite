@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Account\Http\Account\MFA\Challenges;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Event\Event;
@@ -37,6 +38,7 @@ class Update extends Action
             ->desc('Update MFA challenge (confirmation)')
             ->groups(['api', 'account', 'mfa'])
             ->label('scope', 'account')
+            ->label('impersonation', 'allow')
             ->label('event', 'users.[userId].sessions.[sessionId].create')
             ->label('audits.event', 'challenges.update')
             ->label('audits.resource', 'user/{response.userId}')
@@ -76,8 +78,7 @@ class Update extends Action
                     contentType: ContentType::JSON
                 )
             ])
-            ->label('abuse-limit', 10)
-            ->label('abuse-key', 'url:{url},challengeId:{param-challengeId}')
+            ->label('abuse', [Limit::attempts(['url', 'param.challengeId'], 10)])
             ->param('challengeId', '', new Text(256), 'ID of the challenge.')
             ->param('otp', '', new Text(256), 'Valid verification token.')
             ->inject('project')
@@ -146,8 +147,10 @@ class Update extends Action
             return false;
         };
 
+        $step = $type === Type::TOTP ? Challenge\TOTP::step($user, $otp) : null;
+
         $success = (match ($type) {
-            Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
+            Type::TOTP => $step !== null,
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
@@ -159,7 +162,19 @@ class Update extends Action
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $dbForProject->deleteDocument('challenges', $challengeId);
+        // Claim the challenge under the user row lock an address change takes, which deletes challenges sent to the old address
+        $dbForProject->withTransaction(function () use ($dbForProject, $user, $challengeId, $step) {
+            $dbForProject->getDocument('users', $user->getId(), forUpdate: true);
+
+            // A TOTP code is single-use: spend its step so no other challenge or session can redeem it again
+            if ($step !== null && !Challenge\TOTP::spend($dbForProject, $user, $step)) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+
+            if (!$dbForProject->deleteDocument('challenges', $challengeId)) {
+                throw new Exception(Exception::USER_INVALID_TOKEN);
+            }
+        });
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $factors = $session->getAttribute('factors', []);
@@ -176,7 +191,8 @@ class Update extends Action
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId());
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret', 'providerAccessToken', 'providerRefreshToken']);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     }

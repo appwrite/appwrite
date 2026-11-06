@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\DocumentsDB\Transactions\Operations;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Transactions\Operations\Create as OperationsCreate;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -27,13 +28,26 @@ class Create extends OperationsCreate
             ->setHttpPath('/v1/documentsdb/transactions/:transactionId/operations')
             ->desc('Create operations')
             ->groups(['api', 'database', 'transactions'])
-            ->label('scope', 'documents.write')
+            ->label('scope', 'documentsdb.documents.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: 'documentsDB',
                 group: 'transactions',
                 name: 'createOperations',
                 description: '/docs/references/documentsdb/create-operations.md',
+                requestExamples: [
+                    'createDocument' => [
+                        'summary' => 'Stage a document creation',
+                        'value' => ['operations' => [[
+                            'action' => 'create',
+                            'databaseId' => '<DATABASE_ID>',
+                            'collectionId' => '<COLLECTION_ID>',
+                            'documentId' => '<DOCUMENT_ID>',
+                            'data' => ['username' => 'walter.obrien'],
+                        ]]],
+                    ],
+                ],
                 auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -47,6 +61,7 @@ class Create extends OperationsCreate
             ->param('operations', [], new ArrayList(new Operation(type: 'documentsdb')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')

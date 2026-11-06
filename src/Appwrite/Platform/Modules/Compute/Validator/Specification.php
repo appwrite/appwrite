@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Compute\Validator;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Specification extends Validator
 {

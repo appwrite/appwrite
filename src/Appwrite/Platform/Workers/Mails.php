@@ -2,12 +2,18 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Alert\Unsubscribe;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\SMTP\Breaker;
+use Appwrite\SMTP\Refusal;
+use Appwrite\SMTP\Validator\Host;
 use Appwrite\Template\Template;
 use Exception;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
-use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Platform\Action;
@@ -21,7 +27,9 @@ class Mails extends Action
 {
     protected int $previewMaxLen = 150;
 
-    protected string $whitespaceCodes = '&#xa0;&#x200C;&#x200B;&#x200D;&#x200E;&#x200F;&#xFEFF;';
+    // Zero-width non-joiner + no-break space only: spam filters such as rspamd treat these as
+    // preview padding, while direction marks (U+200E, U+200F) count as hidden text (HIDDEN_TEXT).
+    protected string $whitespaceCodes = '&#x200C;&nbsp;';
 
 
     public static function getName(): string
@@ -39,8 +47,8 @@ class Mails extends Action
             ->inject('message')
             ->inject('project')
             ->inject('register')
-            ->inject('log')
             ->inject('telemetry')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -56,12 +64,12 @@ class Mails extends Action
      * @param Message $message
      * @param Document $project
      * @param Registry $register
-     * @param Log $log
      * @param Telemetry $telemetry
+     * @param PublicHostname $publicHostname
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Registry $register, Log $log, Telemetry $telemetry): void
+    public function action(Message $message, Document $project, Registry $register, Telemetry $telemetry, PublicHostname $publicHostname): void
     {
         $payload = $message->getPayload();
 
@@ -76,14 +84,14 @@ class Mails extends Action
         }
 
         $type = empty($smtp) ? 'cloud' : 'smtp';
-        $log->addTag('type', $type);
+        Span::add('type', $type);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
-        $template = $payload['template'] ?? 'unknown';
+        $template = ($payload['template'] ?? '') ?: 'unknown';
         $recipientDomain = \strtolower(\substr(\strrchr($recipient, '@') ?: '', 1));
 
         Span::add('mail.template', $template);
@@ -95,9 +103,37 @@ class Mails extends Action
         $body = $payload['body'];
         $preview = $payload['preview'] ?? '';
 
+        $variables['year'] = date('Y');
+
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+        }
+        // render() will return the subject in <p> tags, so use strip_tags() to remove them
+        $subject = \strip_tags($subjectTemplate->render());
+
+        $heading = $subject;
+        if (!empty($variables['heading'])) {
+            $headingTemplate = Template::fromString($variables['heading']);
+            foreach ($variables as $key => $value) {
+                $headingTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $heading = $headingTemplate->render(useContent: true);
+        }
         $variables['subject'] = $subject;
-        $variables['heading'] = $variables['heading'] ?? $subject;
-        $variables['year'] = date("Y");
+        $variables['heading'] = $heading;
+
+        // Expand the body's placeholders once, so values are inserted literally
+        if (!empty($body)) {
+            $bodyContent = Template::fromString($body);
+            foreach ($variables as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value);
+            }
+            foreach ($this->richTextParams as $key => $value) {
+                $bodyContent->setParam('{{' . $key . '}}', $value, escapeHtml: false);
+            }
+            $body = $bodyContent->render(useContent: true);
+        }
 
         $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'];
@@ -107,12 +143,12 @@ class Mails extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            // TODO: hotfix for redirect param
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+            $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
         foreach ($this->richTextParams as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
+        $bodyTemplate->setParam('{{unsubscribeLink}}', Unsubscribe::link((string) ($variables['unsubscribeUrl'] ?? '')), escapeHtml: false);
 
         $previewWhitespace = '';
 
@@ -124,9 +160,10 @@ class Mails extends Action
             // render() will return the subject in <p> tags, so use strip_tags() to remove them
             $preview = \strip_tags($previewTemplate->render());
 
-            $previewLen = strlen($preview);
+            // Pad up to previewMaxLen characters; each padding unit is two characters
+            $previewLen = \mb_strlen($preview);
             if ($previewLen < $this->previewMaxLen) {
-                $previewWhitespace =  str_repeat($this->whitespaceCodes, $this->previewMaxLen - $previewLen);
+                $previewWhitespace = \str_repeat($this->whitespaceCodes, \intdiv($this->previewMaxLen - $previewLen, 2));
             }
         }
 
@@ -136,29 +173,34 @@ class Mails extends Action
 
         $body = $bodyTemplate->render();
 
-        $subjectTemplate = Template::fromString($subject);
-        foreach ($variables as $key => $value) {
-            $subjectTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
-        }
-        // render() will return the subject in <p> tags, so use strip_tags() to remove them
-        $subject = \strip_tags($subjectTemplate->render());
+        $breaker = null;
+        if ($type === 'smtp') {
+            Span::add('mail.smtp_host', $smtp['host']);
 
-        /** @var EmailAdapter $adapter */
-        $adapter = empty($smtp)
-            ? $register->get('smtp')
-            : new SMTP(
-                host: $smtp['host'],
-                port: (int) $smtp['port'],
-                username: $smtp['username'] ?? '',
-                password: $smtp['password'] ?? '',
-                smtpSecure: $smtp['secure'] ?? '',
-                smtpAutoTLS: false,
-                xMailer: 'Appwrite Mailer',
-                timeout: 10,
-                keepAlive: true,
-                timelimit: 30,
-            );
-        $adapter->setTelemetry($telemetry);
+            // A host that registers no shared cache sends without the breaker.
+            $breaker = $register->has('cache') ? new Breaker($register->get('cache'), $project->getId(), $smtp['host']) : null;
+
+            if ($breaker?->isOpen() === true) {
+                Span::add('mail.status', 'skipped');
+                Span::add('mail.breaker', 'open');
+
+                Console::warning('Mail skipped, project SMTP breaker open: project=' . $project->getId() . ' host=' . $smtp['host']);
+
+                return;
+            }
+
+            // A host that does not resolve yet is retried below; one that reaches a private address never can be.
+            $host = new Host($publicHostname, resolved: false);
+            if (!$host->isValid($smtp['host'])) {
+                Span::add('mail.status', 'skipped');
+                Span::add('mail.error', 'host');
+                Span::add('mail.error.message', $host->getDescription());
+
+                Console::warning('Mail skipped, project SMTP host refused: project=' . $project->getId() . ' host=' . $smtp['host'] . ' reason=' . $host->getDescription());
+
+                return;
+            }
+        }
 
         // Resolve from/replyTo using fallback hierarchy: Custom options > SMTP config > Defaults
         $defaultFromEmail = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
@@ -200,35 +242,109 @@ class Mails extends Action
             ];
         }
 
-        $emailMessage = new EmailMessage(
-            to: [['email' => $recipient, 'name' => $name]],
-            subject: $subject,
-            content: $body,
-            fromName: $fromName,
-            fromEmail: $fromEmail,
-            replyToName: $replyToName,
-            replyToEmail: $replyTo,
-            attachments: $attachments,
-            html: true,
-        );
-        $emailMessage->setOrigin(MESSAGE_SEND_TYPE_INTERNAL);
-
         try {
-            $result = $adapter->send($emailMessage);
+            $emailMessage = new EmailMessage(
+                to: [['email' => $recipient, 'name' => $name]],
+                subject: $subject,
+                content: $body,
+                fromName: $fromName,
+                fromEmail: $fromEmail,
+                replyToName: $replyToName,
+                replyToEmail: $replyTo,
+                attachments: $attachments,
+                html: true,
+                headers: $payload['headers'] ?? [],
+            );
+            $emailMessage
+                ->setOrigin(MESSAGE_SEND_TYPE_INTERNAL)
+                ->setTemplate($template);
 
-            if (($result['deliveredTo'] ?? 0) === 0) {
-                $error = $result['results'][0]['error'] ?? ($result['error'] ?? 'Unknown error');
-                throw new Exception($error);
-            }
+            // A pooled adapter belongs to this send alone; a project's own SMTP is
+            // dialled for it, on the addresses just checked, and closed after.
+            $adapter = empty($smtp) ? null : new SMTP(
+                host: $smtp['host'],
+                port: (int) $smtp['port'],
+                username: $smtp['username'] ?? '',
+                password: $smtp['password'] ?? '',
+                smtpSecure: $smtp['secure'] ?? '',
+                smtpAutoTLS: false,
+                xMailer: 'Appwrite Mailer',
+                timeout: 10,
+                keepAlive: false,
+                timelimit: 30,
+                addresses: new Host($publicHostname)->addresses($smtp['host']),
+            );
+
+            $send = static function (EmailAdapter $adapter) use ($emailMessage, $telemetry): array {
+                $adapter->setTelemetry($telemetry);
+
+                return $adapter->send($emailMessage);
+            };
+
+            $result = $adapter instanceof EmailAdapter ? $send($adapter) : $register->get('smtp')->use($send);
+        } catch (InvalidArgumentException $error) {
+            // The address or name can never be delivered, so a retry cannot help.
+            Span::add('mail.status', 'skipped');
+            Span::add('mail.error', $error->getType());
+            Span::add('mail.error.message', $error->getMessage());
+
+            return;
         } catch (\Throwable $error) {
             Span::add('mail.status', 'failure');
+            Span::add('mail.error.message', $error->getMessage());
 
-            if ($type === 'smtp') {
-                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+            // The adapter reports a refusal in its result, classified below. What
+            // it throws instead is nothing the server said, so nothing says the
+            // next attempt fails the same way. Only NATS reports the last attempt.
+            if ($type === 'smtp' && $message->isLastAttempt()) {
+                $this->abandon($project, $smtp['host'], $error->getMessage());
+
+                return;
             }
-            throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
+
+            throw new Exception('Error sending mail: ' . $error->getMessage(), $type === 'smtp' ? 401 : 500);
+        }
+
+        if (($result['deliveredTo'] ?? 0) === 0) {
+            $failure = $result['results'][0] ?? [];
+
+            if (Refusal::isFinal($type === 'smtp', $failure)) {
+                $code = (int) ($failure['code'] ?? 0);
+                $tripped = $breaker?->record($code) === true;
+
+                Span::add('mail.status', 'refused');
+                Span::add('mail.refused', $code);
+                if ($tripped) {
+                    Span::add('mail.breaker', 'tripped');
+                }
+
+                Console::warning('Mail refused by project SMTP: project=' . $project->getId() . ' host=' . $smtp['host'] . ' code=' . $code . ($tripped ? ' breaker=tripped' : ''));
+
+                return;
+            }
+
+            Span::add('mail.status', 'failure');
+
+            $reason = $failure['error'] ?? ($result['error'] ?? 'Unknown error');
+            if ($type === 'smtp' && $message->isLastAttempt()) {
+                $this->abandon($project, $smtp['host'], $reason);
+
+                return;
+            }
+
+            throw new Exception('Error sending mail: ' . $reason, $type === 'smtp' ? 401 : 500);
         }
 
         Span::add('mail.status', 'success');
+    }
+
+    /**
+     * The project's own SMTP failed the last attempt; acknowledge instead of dead-lettering.
+     */
+    private function abandon(Document $project, string $host, string $reason): void
+    {
+        Span::add('mail.status', 'abandoned');
+
+        Console::warning('Mail abandoned after the last attempt on project SMTP: project=' . $project->getId() . ' host=' . $host . ' reason=' . $reason);
     }
 }

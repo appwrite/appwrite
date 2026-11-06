@@ -4,15 +4,17 @@
  * Initializes console project document.
  */
 
+use Appwrite\Auth\Passkey\Console as PasskeyConsole;
 use Appwrite\Network\Platform;
-use Utopia\Database\Helpers\ID;
+use Utopia\Config\Config;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 $console = [
-    '$id' => ID::custom('console'),
-    '$sequence' => ID::custom('console'),
+    '$id' => Id::custom('console'),
+    '$sequence' => Id::custom('console'),
     'name' => 'Appwrite',
-    '$collection' => ID::custom('projects'),
+    '$collection' => Id::custom('projects'),
     'description' => 'Appwrite core engine',
     'logo' => '',
     'teamId' => null,
@@ -20,7 +22,7 @@ $console = [
     'keys' => [],
     'platforms' => [
         [
-            '$collection' => ID::custom('platforms'),
+            '$collection' => Id::custom('platforms'),
             'name' => 'Localhost',
             'type' => Platform::TYPE_WEB,
             'hostname' => 'localhost',
@@ -50,14 +52,31 @@ $console = [
         'canonicalEmails' => false,
         'freeEmails' => false,
         'corporateEmails' => false,
-        'invalidateSessions' => true
+        'invalidateSessions' => true,
+        // Passkey sign-in bound to the console's host; _APP_CONSOLE_PASSKEY_ORIGINS adds origins under it
+        ...PasskeyConsole::getAuths(Config::getParam('platform')['consoleUrl'], System::getEnv('_APP_CONSOLE_PASSKEY_ORIGINS', '')),
     ],
     'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
     'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
     'oAuthProviders' => [
         'githubEnabled' => true,
         'githubSecret' => System::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+        'githubAppid' => System::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
+        'gitlabEnabled' => true,
+        // Auth\OAuth2\Gitlab reads its endpoint out of a JSON-encoded secret, so
+        // _APP_CONSOLE_GITLAB_ENDPOINT travels with the credential. Stays empty when
+        // unconfigured so the account OAuth2 routes keep reporting the provider as disabled.
+        'gitlabSecret' => empty(System::getEnv('_APP_CONSOLE_GITLAB_SECRET', '')) ? '' : \json_encode([
+            'clientSecret' => System::getEnv('_APP_CONSOLE_GITLAB_SECRET', ''),
+            'endpoint' => System::getEnv('_APP_CONSOLE_GITLAB_ENDPOINT', 'https://gitlab.com'),
+        ]),
+        'gitlabAppid' => System::getEnv('_APP_CONSOLE_GITLAB_APP_ID', ''),
+        'bitbucketEnabled' => true,
+        'bitbucketSecret' => System::getEnv('_APP_CONSOLE_BITBUCKET_SECRET', ''),
+        'bitbucketAppid' => System::getEnv('_APP_CONSOLE_BITBUCKET_APP_ID', ''),
+        'googleEnabled' => true,
+        'googleSecret' => System::getEnv('_APP_CONSOLE_GOOGLE_SECRET', ''),
+        'googleAppid' => System::getEnv('_APP_CONSOLE_GOOGLE_APP_ID', ''),
     ],
     'smtpBaseTemplate' => APP_BRANDED_EMAIL_BASE_TEMPLATE,
 ];

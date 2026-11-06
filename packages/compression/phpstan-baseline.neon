@@ -1,0 +1,97 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Brotli\:\:compress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Brotli.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Brotli\:\:decompress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Brotli.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Deflate\:\:compress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Deflate.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Deflate\:\:decompress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Deflate.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\GZIP\:\:compress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/GZIP.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\GZIP\:\:decompress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/GZIP.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\LZ4\:\:compress\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/LZ4.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\LZ4\:\:decompress\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/LZ4.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Snappy\:\:compress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Snappy.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Snappy\:\:decompress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Snappy.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\XZ\:\:compress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/XZ.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\XZ\:\:decompress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/XZ.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Zstd\:\:compress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Zstd.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Algorithms\\Zstd\:\:decompress\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Algorithms/Zstd.php
+
+		-
+			message: '#^Method Utopia\\Compression\\Compression\:\:fromAcceptEncoding\(\) has parameter \$supported with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Compression.php
+
+		-
+			message: '#^Parameter \#1 \$keys of function array_fill_keys expects an array of values castable to string, list given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Compression.php

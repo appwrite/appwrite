@@ -50,15 +50,6 @@ class Project extends Model
                 'example' => 'fra',
             ])
 
-            // Resource: Dev Keys
-            ->addRule('devKeys', [
-                'type' => Response::MODEL_DEV_KEY,
-                'description' => 'Deprecated since 1.9.5: List of dev keys.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
-            ])
-
             // Resource: SMTP
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
@@ -146,6 +137,15 @@ class Project extends Model
                 'array' => true,
             ])
 
+            // Resource: Preferences
+            ->addRule('prefs', [
+                'type' => Response::MODEL_PREFERENCES,
+                'description' => 'Project preferences as a key-value object',
+                'required' => false,
+                'default' => new \stdClass(),
+                'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
+            ])
+
             // Resource: Billing
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
@@ -156,8 +156,8 @@ class Project extends Model
             ->addRule('onboarding', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Stage progress (completed or skipped) with timestamps and actor types, keyed by stage id.',
-                'default' => [],
-                'example' => [],
+                'default' => new \stdClass(),
+                'example' => new \stdClass(),
             ])
 
             // Resource: Auth methods
@@ -242,6 +242,16 @@ class Project extends Model
         $this->expandConsoleAccessedAt($document);
         $document->setAttribute('wafEnabled', (bool) $document->getAttribute('wafEnabled', false));
 
+        $onboarding = $document->getAttribute('onboarding', []);
+        if (\is_array($onboarding) && empty($onboarding)) {
+            $document->setAttribute('onboarding', new \stdClass());
+        }
+
+        $prefs = $document->getAttribute('prefs', []);
+        if (\is_array($prefs) && empty($prefs)) {
+            $document->setAttribute('prefs', new \stdClass());
+        }
+
         return $document;
     }
 
@@ -312,7 +322,7 @@ class Project extends Model
         foreach (Config::getParam('auth', []) as $id => $method) {
             $authMethods[] = new Document([
                 '$id' => $id,
-                'enabled' => $values[$method['key']] ?? $method['default'] ?? true
+                'enabled' => $values[$method['key']] ?? $method['enabled'] ?? true,
             ]);
         }
 

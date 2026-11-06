@@ -126,7 +126,7 @@ class Migration extends Model
             ->addRule('statusCounters', [
                 'type' => self::TYPE_JSON,
                 'description' => 'A group of counters that represent the total progress of the migration.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => '{"Database": {"PENDING": 0, "SUCCESS": 1, "ERROR": 0, "SKIP": 0, "PROCESSING": 0, "WARNING": 0}}',
             ])
             ->addRule('resourceData', [
@@ -146,7 +146,7 @@ class Migration extends Model
             ->addRule('options', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Migration options used during the migration process.',
-                'default' => [],
+                'default' => new \stdClass(),
                 'example' => '{"bucketId": "exports", "notify": false}',
             ])
         ;
@@ -174,6 +174,13 @@ class Migration extends Model
 
     public function filter(Document $document): Document
     {
+        foreach (['statusCounters', 'options'] as $attribute) {
+            $value = $document->getAttribute($attribute);
+            if (\is_array($value) && empty($value)) {
+                $document->setAttribute($attribute, new \stdClass());
+            }
+        }
+
         $errors = $document->getAttribute('errors', []);
         if (empty($errors)) {
             return $document;

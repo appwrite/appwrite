@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -20,16 +20,16 @@ trait TeamsBase
      */
     protected function createTeamHelper(string $name = 'Arsenal', array $roles = ['player']): array
     {
-        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $response = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => $name,
             'roles' => $roles,
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $response['headers']['status-code']);
 
         return [
             'teamUid' => $response['body']['$id'],
@@ -42,16 +42,16 @@ trait TeamsBase
         /**
          * Test for SUCCESS
          */
-        $response1 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $response1 = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Arsenal',
             'roles' => ['player'],
         ]);
 
-        $this->assertEquals(201, $response1['headers']['status-code']);
+        $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $response1['headers']['status-code']);
         $this->assertNotEmpty($response1['body']['$id']);
         $this->assertEquals('Arsenal', $response1['body']['name']);
         $this->assertGreaterThan(-1, $response1['body']['total']);
@@ -112,14 +112,35 @@ trait TeamsBase
             $this->assertEquals('There must be at least one owner in the organization.', $response['body']['message']);
         }
 
-        $teamId = ID::unique();
-        $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $teamId = Id::unique();
+        $response2 = $this->postTeam(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'teamId' => $teamId,
             'name' => 'Manchester United'
         ]);
+
+        // Self-hosted refuses a second console organization. An edition that lifts the
+        // limit (cloud) answers 201 and takes the regular team path below; the fresh
+        // instance policy test covers the refusal on its own.
+        if ($this->getProject()['$id'] === 'console' && $response2['headers']['status-code'] === 403) {
+            $this->assertEquals('organization_creation_prohibited', $response2['body']['type']);
+
+            $headers = array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => 'console',
+            ], $this->getHeaders());
+            $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, []);
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $response = $this->postTeam($headers, [
+                'teamId' => $response1['body']['$id'],
+                'name' => 'John',
+            ]);
+            $this->assertEquals(403, $response['headers']['status-code']);
+            $this->assertEquals('organization_creation_prohibited', $response['body']['type']);
+            return;
+        }
 
         $this->assertEquals(201, $response2['headers']['status-code']);
         $this->assertNotEmpty($response2['body']['$id']);
@@ -134,7 +155,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Newcastle'
         ]);
 
@@ -144,6 +165,29 @@ trait TeamsBase
         $this->assertGreaterThan(-1, $response3['body']['total']);
         $this->assertIsInt($response3['body']['total']);
         $this->assertEquals(true, $dateValidator->isValid($response3['body']['$createdAt']));
+
+        // A project-scoped role is longer than a bare ID
+        $role = 'project-' . Id::unique() . '-developer';
+        $response4 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => Id::unique(),
+            'name' => 'Aston Villa',
+            'roles' => [$role],
+        ]);
+
+        $this->assertEquals(201, $response4['headers']['status-code']);
+
+        // An API key creates the team without a creator membership to read the role from
+        if ($this->getSide() !== 'server') {
+            $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $response4['body']['$id'] . '/memberships', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertContains($role, $memberships['body']['memberships'][0]['roles']);
+        }
 
         /**
          * Test for FAILURE
@@ -362,6 +406,19 @@ trait TeamsBase
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        foreach ([true, false] as $includeTotal) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [Query::search('name', 'Arsenal')->toString()],
+                'total' => $includeTotal,
+            ]);
+
+            $this->assertEquals(400, $response['headers']['status-code']);
+            $this->assertEquals('general_query_invalid', $response['body']['type']);
+        }
+
         /**
          * Test for SUCCESS with total=false
          */
@@ -385,15 +442,15 @@ trait TeamsBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $response = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo'
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);
@@ -404,7 +461,7 @@ trait TeamsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo New'
         ]);
 
@@ -433,17 +490,17 @@ trait TeamsBase
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $response = $this->createTeamFixture(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Demo'
         ]);
 
         $teamUid = $response['body']['$id'];
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($this->getProject()['$id'] === 'console' ? 200 : 201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals('Demo', $response['body']['name']);
         $this->assertGreaterThan(-1, $response['body']['total']);

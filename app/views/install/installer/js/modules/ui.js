@@ -241,13 +241,23 @@
             if (key === 'database') {
                 value = toDatabaseLabel(formState?.database);
             }
-            if (key === 'emailCertificates' && !value) {
-                value = formState?.accountEmail;
-            }
             if (value) {
                 node.textContent = value;
             }
         });
+
+        // Nothing entered and no account email to borrow: shown as a tag, the way the
+        // other absent settings on this panel are, rather than an empty row.
+        const emailNode = root.querySelector('[data-review-value="emailCertificates"]');
+        if (emailNode) {
+            const email = (formState?.emailCertificates || formState?.accountEmail || '').trim();
+            emailNode.textContent = email || 'Empty';
+            emailNode.classList.toggle('badge', !email);
+            emailNode.classList.toggle('badge-neutral', !email);
+            emailNode.classList.toggle('typography-text-xs-400', !email);
+            emailNode.classList.toggle('typography-text-m-500', Boolean(email));
+            emailNode.classList.toggle('text-neutral-primary', Boolean(email));
+        }
 
         const badge = root.querySelector('[data-review-badge]');
         if (badge) {
@@ -263,14 +273,6 @@
             httpsBadge.textContent = forceHttps ? 'HTTPS' : 'HTTP';
             httpsBadge.classList.remove('badge-success', 'badge-neutral');
             httpsBadge.classList.add(forceHttps ? 'badge-success' : 'badge-neutral');
-        }
-
-        const assistantBadge = root.querySelector('[data-review-assistant-badge]');
-        if (assistantBadge) {
-            const hasAssistantKey = Boolean((formState?.assistantOpenAIKey || '').trim());
-            assistantBadge.textContent = hasAssistantKey ? 'Enabled' : 'Disabled';
-            assistantBadge.classList.remove('badge-success', 'badge-neutral');
-            assistantBadge.classList.add(hasAssistantKey ? 'badge-success' : 'badge-neutral');
         }
     };
 

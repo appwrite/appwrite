@@ -1,0 +1,277 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 2
+			path: src/Base.php
+
+		-
+			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: src/Base.php
+
+		-
+			message: '#^Cannot access offset ''default'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Cannot access offset ''injections'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Cannot access offset ''optional'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Cannot access offset ''skipValidation'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Base\:\:prepare\(\) has parameter \$requestParams with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Base\:\:prepare\(\) has parameter \$values with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Base\:\:start\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Base\:\:validate\(\) has parameter \$param with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(string\)\: mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Parameter \#1 \$key of function array_key_exists expects int\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Base.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Parameter \#2 \$param of method Utopia\\Servers\\Base\:\:validate\(\) expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Parameter \#3 \$dependencies of method Utopia\\DI\\Container\:\:set\(\) expects list\<string\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Base.php
+
+		-
+			message: '#^Cannot access offset ''value'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:getDependencies\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:getGroups\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:getInjections\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:getParams\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:getParamsValues\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:groups\(\) has parameter \$groups with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:param\(\) has parameter \$aliases with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Method Utopia\\Servers\\Hook\:\:param\(\) has parameter \$injections with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function usort expects callable\(mixed, mixed\)\: int, Closure\(array, array\)\: int\<\-1, 1\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Property Utopia\\Servers\\Hook\:\:\$groups type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Property Utopia\\Servers\\Hook\:\:\$injections type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Property Utopia\\Servers\\Hook\:\:\$labels type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Property Utopia\\Servers\\Hook\:\:\$params type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Hook.php
+
+		-
+			message: '#^Cannot access offset ''aliases'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot access offset ''enum'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot access offset ''name'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot access offset ''value'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method action\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method desc\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method getAction\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method getDependencies\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method getDesc\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method getGroups\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method getInjections\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method getParams\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 9
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method groups\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method inject\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method param\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 5
+			path: tests/HookTest.php
+
+		-
+			message: '#^Cannot call method setParamValue\(\) on Utopia\\Servers\\Hook\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: tests/HookTest.php
+
+		-
+			message: '#^Parameter \#2 \$array of method PHPUnit\\Framework\\Assert\:\:assertArrayHasKey\(\) expects array\<mixed\>\|ArrayAccess\<\(int\|string\), covariant mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/HookTest.php

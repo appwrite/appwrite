@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Proxy;
 
 use Tests\E2E\Client;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -12,8 +13,7 @@ trait ProxyBase
 
     protected function tearDown(): void
     {
-        // Cleanup for testRuleVerification test
-        // Required as it uses static domain name
+        // Cleanup fixture rules left by failed verification tests
         $rules = $this->listRules([
             'queries' => [
                 Query::endsWith('domain', 'webapp.com')->toString(),
@@ -203,6 +203,120 @@ trait ProxyBase
 
         $rule = $this->createAPIRule($domain . '/some-path');
         $this->assertEquals(400, $rule['headers']['status-code']);
+    }
+
+    public function testCreateRuleOnFunctionsFallbackDomain(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $domain = \uniqid() . '.fallback.localhost';
+        $ruleId = $this->setupAPIRule($domain);
+        $rule = $this->getRule($ruleId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('verified', $rule['body']['status']);
+        $this->cleanupRule($ruleId);
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->createAPIRule('fallback.localhost');
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        $rule = $this->createAPIRule('nested.' . \uniqid() . '.fallback.localhost');
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        // A sibling name that merely ends with the platform domain string is not a subdomain of it
+        // (here the second label is 'xfallback', not 'fallback'), so it must not be claimed as
+        // Appwrite-owned and auto-verified; it takes the normal DNS path like any custom domain.
+        $lookalike = $this->createAPIRule(\uniqid() . '.xfallback.localhost');
+        $this->assertSame(201, $lookalike['headers']['status-code']);
+        $this->assertNotSame('verified', $lookalike['body']['status']);
+        $this->cleanupRule($lookalike['body']['$id']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', 'fallback.localhost');
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertSame(401, $response['headers']['status-code']);
+        $this->assertIsString($response['body']);
+        $this->assertStringContainsString('cannot be used for security reasons', $response['body']);
+    }
+
+    public function testCreateAPIRuleFoldsDomainCase(): void
+    {
+        $domain = \uniqid() . '-Case.Custom.LOCALHOST';
+        $canonical = \strtolower($domain);
+
+        $rule = $this->createAPIRule($domain);
+        $this->assertEquals(201, $rule['headers']['status-code'], \json_encode($rule));
+        $this->assertEquals($canonical, $rule['body']['domain']);
+
+        // Re-read, so this pins what was persisted rather than how the create
+        // response was shaped. The stored value is what the delete path and the
+        // certificate providers are handed.
+        $fetched = $this->getRule($rule['body']['$id']);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertEquals($canonical, $fetched['body']['domain']);
+
+        // Deleting a mixed-case rule is the path that broke: a non-canonical
+        // stored domain must not stop the rule from being removed.
+        $this->cleanupRule($rule['body']['$id']);
+    }
+
+    public function testDeleteAPIRule(): void
+    {
+        $domain = \uniqid() . '-delete-api.custom.localhost';
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(204, $rule['headers']['status-code']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->getRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        $rule = $this->deleteRule($ruleId);
+        $this->assertEquals(404, $rule['headers']['status-code']);
+        $this->assertEquals('rule_not_found', $rule['body']['type']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $ruleId = $this->setupAPIRule($domain);
+
+        $rules = $this->listRules([
+            'queries' => [Query::equal('domain', [$domain])->toString()],
+        ]);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertEquals($ruleId, $rules['body']['rules'][0]['$id']);
+
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/versions');
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
+        });
+
+        $this->cleanupRule($ruleId);
     }
 
     public function testCreateRedirectRule(): void
@@ -417,8 +531,39 @@ trait ProxyBase
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt the resource\'s manually uploaded deployment');
 
         $this->cleanupRule($ruleId);
+    }
+
+    public function testCreateSiteRuleWithNullBranch(): void
+    {
+        $setup = $this->setupSite();
+        $siteId = $setup['siteId'];
+        $this->assertNotEmpty($setup['deploymentId']);
+
+        $omitted = $this->getRule($this->setupSiteRule(\uniqid() . '-site-omitted-branch.custom.localhost', $siteId));
+        $this->assertSame(200, $omitted['headers']['status-code']);
+
+        // A null branch behaves like an omitted one instead of failing the deployment lookup
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'domain' => \uniqid() . '-site-null-branch.custom.localhost',
+            'siteId' => $siteId,
+            'branch' => null,
+        ]);
+        $this->assertSame(201, $rule['headers']['status-code']);
+
+        $rule = $this->getRule($rule['body']['$id']);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame($omitted['body']['deploymentId'], $rule['body']['deploymentId']);
+        $this->assertSame($omitted['body']['deploymentVcsProviderBranch'], $rule['body']['deploymentVcsProviderBranch']);
+
+        $this->cleanupRule($omitted['body']['$id']);
+        $this->cleanupRule($rule['body']['$id']);
+        $this->cleanupSite($siteId);
     }
 
     public function testCreateFunctionBranchRule(): void
@@ -437,10 +582,135 @@ trait ProxyBase
 
         $rule = $this->getRule($ruleId);
         $this->assertEquals(200, $rule['headers']['status-code']);
+        $this->assertEmpty($rule['body']['deploymentId'], 'a branch-pinned rule must not adopt the resource\'s manually uploaded deployment');
 
         $this->cleanupRule($ruleId);
 
         $this->cleanupFunction($functionId);
+    }
+
+    public function testUpdateSiteRule(): void
+    {
+        $first = $this->setupSite();
+        $second = $this->setupSite();
+        $ruleId = $this->setupSiteRule(\uniqid() . '-site-update.custom.localhost', $first['siteId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $rule = $this->updateSiteRule($ruleId, $second['siteId']);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame($second['siteId'], $rule['body']['deploymentResourceId']);
+        $this->assertSame($second['deploymentId'], $rule['body']['deploymentId']);
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->updateSiteRule($ruleId, $second['siteId'], 'dev');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $rule['body']['type']);
+        $this->assertSame($second['deploymentId'], $this->getRule($ruleId)['body']['deploymentId']);
+
+        $rule = $this->updateSiteRule($ruleId, 'missing');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_resource_not_found', $rule['body']['type']);
+
+        $rule = $this->updateFunctionRule($ruleId, $second['siteId']);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $rule = $this->updateSiteRule('missing', $second['siteId']);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $this->cleanupSite($first['siteId']);
+        $this->cleanupSite($second['siteId']);
+    }
+
+    public function testUpdateFunctionRule(): void
+    {
+        $first = $this->setupFunction();
+        $second = $this->setupFunction();
+        $domain = \uniqid() . '-function-update.custom.localhost';
+        $ruleId = $this->setupFunctionRule($domain, $first['functionId']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $rule = $this->updateFunctionRule($ruleId, $second['functionId']);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame($second['functionId'], $rule['body']['deploymentResourceId']);
+        $this->assertSame($second['deploymentId'], $rule['body']['deploymentId']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+        $this->assertEventually(function () use ($proxyClient, $second) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/ping');
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame($second['functionId'], $response['body']['APPWRITE_FUNCTION_ID']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->updateFunctionRule($ruleId, $second['functionId'], 'dev');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('deployment_not_found', $rule['body']['type']);
+
+        $rule = $this->updateFunctionRule($ruleId, 'missing');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_resource_not_found', $rule['body']['type']);
+
+        $rule = $this->updateSiteRule($ruleId, $second['functionId']);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $this->cleanupFunction($first['functionId']);
+        $this->cleanupFunction($second['functionId']);
+    }
+
+    public function testUpdateRedirectRule(): void
+    {
+        $siteId = $this->setupSite()['siteId'];
+        $domain = \uniqid() . '-redirect-update.custom.localhost';
+        $ruleId = $this->setupRedirectRule($domain, 'https://jsonplaceholder.typicode.com/todos/1', 301, 'site', $siteId);
+
+        /**
+         * Test for SUCCESS
+         */
+        $rule = $this->updateRedirectRule($ruleId, 'https://jsonplaceholder.typicode.com/todos/2', 307, 'site', $siteId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('https://jsonplaceholder.typicode.com/todos/2', $rule['body']['redirectUrl']);
+        $this->assertSame(307, $rule['body']['redirectStatusCode']);
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://appwrite.test');
+        $proxyClient->addHeader('x-appwrite-hostname', $domain);
+        $this->assertEventually(function () use ($proxyClient) {
+            $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false);
+            $this->assertSame(307, $response['headers']['status-code']);
+            $this->assertSame('https://jsonplaceholder.typicode.com/todos/2', $response['headers']['location']);
+        });
+
+        /**
+         * Test for FAILURE
+         */
+        $rule = $this->updateRedirectRule($ruleId, 'https://jsonplaceholder.typicode.com/todos/2', 307, 'function', 'missing');
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_resource_not_found', $rule['body']['type']);
+
+        $rule = $this->updateRedirectRule($ruleId, 'https://jsonplaceholder.typicode.com/todos/2', 303, 'site', $siteId);
+        $this->assertSame(400, $rule['headers']['status-code']);
+
+        $rule = $this->updateSiteRule($ruleId, $siteId);
+        $this->assertSame(404, $rule['headers']['status-code']);
+        $this->assertSame('rule_not_found', $rule['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $this->cleanupSite($siteId);
     }
 
     public function testUpdateRule(): void
@@ -502,6 +772,11 @@ trait ProxyBase
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rule['body']);
         $this->assertArrayHasKey('logs', $rule['body']);
         $this->assertArrayHasKey('renewAt', $rule['body']);
+        // No certificate was requested for an unverified domain
+        $this->assertArrayHasKey('expireAt', $rule['body']);
+        $this->assertSame('', $rule['body']['expireAt']);
+        $this->assertArrayHasKey('certificateStatus', $rule['body']);
+        $this->assertSame('', $rule['body']['certificateStatus']);
 
         $this->cleanupRule($ruleId);
     }
@@ -542,6 +817,10 @@ trait ProxyBase
         $this->assertArrayHasKey('deploymentVcsProviderBranch', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('logs', $rules['body']['rules'][0]);
         $this->assertArrayHasKey('renewAt', $rules['body']['rules'][0]);
+        $this->assertArrayHasKey('expireAt', $rules['body']['rules'][0]);
+        $this->assertSame('', $rules['body']['rules'][0]['expireAt']);
+        $this->assertArrayHasKey('certificateStatus', $rules['body']['rules'][0]);
+        $this->assertSame('', $rules['body']['rules'][0]['certificateStatus']);
 
         $rule2Domain = \uniqid() . '-list1.custom.localhost';
         $rule2Id = $this->setupAPIRule($rule2Domain);
@@ -642,14 +921,61 @@ trait ProxyBase
         $this->assertCount(0, $rules['body']['rules']);
     }
 
+    public function testListRulesCursorFromOtherProject(): void
+    {
+        $other = $this->getProject(true);
+        $otherRule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $other['$id'],
+            'x-appwrite-key' => $other['apiKey'],
+        ], [
+            'domain' => \uniqid() . '-other.custom.localhost',
+        ]);
+        $this->assertSame(201, $otherRule['headers']['status-code']);
+
+        $ruleId = $this->setupAPIRule(\uniqid() . '-cursor.custom.localhost');
+
+        /**
+         * Test for SUCCESS
+         */
+        $rules = $this->listRules([
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $ruleId]))->toString(),
+            ],
+        ]);
+        $this->assertSame(200, $rules['headers']['status-code']);
+        $this->assertNotContains($ruleId, \array_column($rules['body']['rules'], '$id'));
+
+        /**
+         * Test for FAILURE
+         */
+        // Another project's rule is no cursor here, as if it did not exist.
+        $rules = $this->listRules([
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $otherRule['body']['$id']]))->toString(),
+            ],
+        ]);
+        $this->assertSame(400, $rules['headers']['status-code']);
+        $this->assertSame('general_cursor_not_found', $rules['body']['type']);
+
+        $this->cleanupRule($ruleId);
+        $deleted = $this->client->call(Client::METHOD_DELETE, '/proxy/rules/' . $otherRule['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $other['$id'],
+            'x-appwrite-key' => $other['apiKey'],
+        ]);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+    }
+
     public function testRuleVerification(): void
     {
+        $fixture = \uniqid($this->getSide() . '-');
 
         // 1. Site rule can verify
         $site = $this->setupSite();
         $siteId = $site['siteId'];
 
-        $rule = $this->createSiteRule('stage-site.webapp.com', $siteId);
+        $rule = $this->createSiteRule("{$fixture}.stage-site.webapp.com", $siteId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
@@ -669,13 +995,13 @@ trait ProxyBase
         $function = $this->setupFunction();
         $functionId = $function['functionId'];
 
-        $rule = $this->createFunctionRule('stage-function.webapp.com', $functionId);
+        $rule = $this->createFunctionRule("{$fixture}.stage-function.webapp.com", $functionId);
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
         $this->cleanupRule($rule['body']['$id']);
 
-        $rule = $this->createAPIRule('stage-site.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-site.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
@@ -684,7 +1010,7 @@ trait ProxyBase
         $this->cleanupFunction($functionId);
 
         // 3. Wrong A record fails to verify
-        $rule = $this->createAPIRule('wrong-a-webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.wrong-a-webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
@@ -701,7 +1027,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 4. Correct A record can verify
-        $rule = $this->createAPIRule('webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.correct-a.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
@@ -709,7 +1035,7 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
 
         // 5. Correct CNAME record can verify (no CAA record)
-        $rule = $this->createAPIRule('stage.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);
@@ -717,7 +1043,7 @@ trait ProxyBase
         $this->cleanupRule($rule['body']['$id']);
 
         // 6. Missing CNAME record fails to verify
-        $rule = $this->createAPIRule('stage-missing-cname.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-missing-cname.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('is missing CNAME record', $rule['body']['logs']);
@@ -734,7 +1060,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 7. Wrong CNAME record fails to verify
-        $rule = $this->createAPIRule('stage-wrong-cname.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-wrong-cname.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('has incorrect CNAME value', $rule['body']['logs']);
@@ -751,7 +1077,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 8. Wrong CAA record fails to verify
-        $rule = $this->createAPIRule('stage-wrong-caa.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-wrong-caa.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('unverified', $rule['body']['status']);
         $this->assertStringContainsString('has incorrect CAA value', $rule['body']['logs']);
@@ -768,7 +1094,7 @@ trait ProxyBase
         $this->cleanupRule($ruleId);
 
         // 9. Correct CAA record can verify
-        $rule = $this->createAPIRule('stage-correct-caa.webapp.com');
+        $rule = $this->createAPIRule("{$fixture}.stage-correct-caa.webapp.com");
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->assertEquals('verifying', $rule['body']['status']);
         $this->assertEmpty($rule['body']['logs']);

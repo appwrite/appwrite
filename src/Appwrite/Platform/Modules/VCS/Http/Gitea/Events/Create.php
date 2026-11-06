@@ -10,7 +10,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Appwrite\Vcs\InstallationTokens;
 use Utopia\Bus\Bus;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -282,7 +282,7 @@ class Create extends Action
                 $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
 
                 if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
-                    $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
+                    $providerPullRequestIds = \array_values(\array_diff($providerPullRequestIds, [$providerPullRequestId]));
                     $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), new Document(['providerPullRequestIds' => $providerPullRequestIds])));
                 }
             }

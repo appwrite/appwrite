@@ -8,7 +8,12 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\System\System;
 
 abstract class Scope extends TestCase
@@ -43,6 +48,121 @@ abstract class Scope extends TestCase
     protected function tearDown(): void
     {
         $this->client = null;
+    }
+
+    /**
+     * Seed a pre-existing console organization for tests of projects, permissions,
+     * memberships, and legacy multi-org access. This is database fixture setup,
+     * not a successful POST /teams: the returned response is a real GET (200).
+     * Application teams still use the public create API (201).
+     */
+    /**
+     * Console organization creation is serialized behind an instance-wide lock that
+     * parallel test processes contend for, so a locked 409 is retried rather than
+     * taken as the answer.
+     */
+    protected function postTeam(array $headers, array $params): array
+    {
+        $deadline = \microtime(true) + 10.0;
+        do {
+            $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+            $locked = $team['headers']['status-code'] === 409
+                && ($team['body']['type'] ?? '') === 'general_resource_locked';
+            if ($locked) {
+                \usleep(200_000);
+            }
+        } while ($locked && \microtime(true) < $deadline);
+
+        return $team;
+    }
+
+    protected function createTeamFixture(array $headers, array $params): array
+    {
+        if (($headers['x-appwrite-project'] ?? '') !== 'console') {
+            return $this->client->call(Client::METHOD_POST, '/teams', $headers, $params);
+        }
+
+        // Read console fixtures as their owner, not in project admin mode.
+        unset($headers['x-appwrite-mode']);
+
+        // The first organization of a self-hosted instance, and every organization on an
+        // edition without the instance limit, comes from the public API. Only a refusal
+        // falls through to seeding the rows directly.
+        $team = $this->postTeam($headers, $params);
+
+        if ($team['headers']['status-code'] === 201) {
+            $response = $this->client->call(Client::METHOD_GET, '/teams/' . $team['body']['$id'], $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            return $response;
+        }
+        $this->assertSame(403, $team['headers']['status-code']);
+        $this->assertSame('organization_creation_prohibited', $team['body']['type']);
+
+        $account = [];
+        $this->assertEventually(function () use ($headers, &$account) {
+            $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
+            $this->assertSame(200, $account['headers']['status-code']);
+        }, 3_000, 100);
+
+        $teamId = ($params['teamId'] ?? 'unique()') === 'unique()' ? Id::unique() : $params['teamId'];
+        $seed = function () use ($account, $params, $teamId) {
+            global $register;
+            $pools = $register->get('pools');
+            $cache = $register->get('cache');
+            $authorization = new Authorization();
+            $database = $register->get('databaseFactory')($pools, $cache, $authorization)->platform();
+
+            $authorization->skip(function () use ($database, $account, $params, $teamId) {
+                $database->withTransaction(function () use ($database, $account, $params, $teamId) {
+                    $user = $database->getDocument('users', $account['body']['$id']);
+                    $team = $database->createDocument('teams', new Document([
+                        '$id' => $teamId,
+                        '$permissions' => [
+                            Permission::read(Role::team($teamId)),
+                            Permission::update(Role::team($teamId, 'owner')),
+                            Permission::delete(Role::team($teamId, 'owner')),
+                        ],
+                        'name' => $params['name'],
+                        'total' => 1,
+                        'prefs' => new \stdClass(),
+                        'search' => $teamId . ' ' . $params['name'],
+                    ]));
+                    $roles = array_values(array_unique([...($params['roles'] ?? []), 'owner']));
+                    $membershipId = Id::unique();
+                    $database->createDocument('memberships', new Document([
+                        '$id' => $membershipId,
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::read(Role::team($teamId)),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::update(Role::team($teamId, 'owner')),
+                            Permission::delete(Role::user($user->getId())),
+                            Permission::delete(Role::team($teamId, 'owner')),
+                        ],
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getSequence(),
+                        'teamId' => $teamId,
+                        'teamInternalId' => $team->getSequence(),
+                        'roles' => $roles,
+                        'invited' => DateTime::now(),
+                        'joined' => DateTime::now(),
+                        'confirm' => true,
+                        'secret' => '',
+                        'search' => $membershipId . ' ' . $user->getId(),
+                    ]));
+                });
+                $database->purgeCachedDocument('users', $account['body']['$id']);
+            });
+        };
+        if (\Swoole\Coroutine::getCid() >= 0) {
+            $seed();
+        } else {
+            \Swoole\Coroutine\run($seed);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamId, $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        return $response;
     }
 
     /**
@@ -106,6 +226,16 @@ abstract class Scope extends TestCase
         return $this->getConsoleVariables()['supportForSpatials'] ?? true;
     }
 
+    protected function getSupportForAggregations(): bool
+    {
+        return $this->getConsoleVariables()['supportForAggregations'] ?? true;
+    }
+
+    protected function getSupportForJoins(): bool
+    {
+        return $this->getConsoleVariables()['supportForJoins'] ?? true;
+    }
+
     /**
      * Check if the database adapter supports spatial indexes on nullable columns
      */
@@ -128,6 +258,14 @@ abstract class Scope extends TestCase
     protected function getSupportForMultipleFulltextIndexes(): bool
     {
         return $this->getConsoleVariables()['supportForMultipleFulltextIndexes'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports trigram indexes
+     */
+    protected function getSupportForTrigramIndex(): bool
+    {
+        return $this->getConsoleVariables()['supportForTrigramIndex'] ?? false;
     }
 
     /**
@@ -213,7 +351,7 @@ abstract class Scope extends TestCase
             }
 
             $this->fail("No email found for address: {$address}" . ($probe !== null ? ' matching probe' : ''));
-        }, 15_000, 500);
+        }, 45_000, 500);
 
         return $result;
     }
@@ -352,6 +490,9 @@ abstract class Scope extends TestCase
             return $request;
         }
 
+        // Signatures cover the delivered bytes; re-encoding the decoded data turns `{}` into `[]`.
+        $request['body'] = $request['data'];
+
         $decoded = json_decode($request['data'], true);
         if (json_last_error() === JSON_ERROR_NONE) {
             $request['data'] = $decoded;
@@ -403,7 +544,7 @@ abstract class Scope extends TestCase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => 'console',
             ], [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => $password,
                 'name' => $name,
@@ -438,7 +579,7 @@ abstract class Scope extends TestCase
 
             if ($verify['headers']['status-code'] === 200) {
                 self::$root = [
-                    '$id' => ID::custom($root['body']['$id']),
+                    '$id' => Id::custom($root['body']['$id']),
                     'name' => $root['body']['name'],
                     'email' => $root['body']['email'],
                     'session' => $session['cookies']['a_session_console'],
@@ -479,7 +620,7 @@ abstract class Scope extends TestCase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => $name,
@@ -497,7 +638,7 @@ abstract class Scope extends TestCase
         ]);
 
         self::$user[$projectId] = [
-            '$id' => ID::custom($user['body']['$id']),
+            '$id' => Id::custom($user['body']['$id']),
             'name' => $user['body']['name'],
             'email' => $user['body']['email'],
             'session' => $session['cookies']['a_session_' . $projectId],

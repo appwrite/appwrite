@@ -15,10 +15,49 @@ final class ExecutionTest extends TestCase
         $execution = (new Execution())->filter(new Document([
             'resourceType' => 'sites',
             'resourceId' => 'site-id',
+            'requestHeaders' => [
+                ['name' => 'host', 'value' => ['example.com']],
+                ['name' => 'user-agent', 'value' => ['Agent/1.0', 'Agent/2.0']],
+                ['name' => 'content-type', 'value' => 'application/json'],
+            ],
+            'responseHeaders' => [
+                new Document(['name' => 'content-length', 'value' => ['42']]),
+            ],
         ]));
 
         $this->assertSame('site-id', $execution->getAttribute('resourceId'));
         $this->assertSame('sites', $execution->getAttribute('resourceType'));
+        $this->assertSame([
+            ['name' => 'host', 'value' => 'example.com'],
+            ['name' => 'user-agent', 'value' => 'Agent/1.0, Agent/2.0'],
+            ['name' => 'content-type', 'value' => 'application/json'],
+        ], $execution->getAttribute('requestHeaders'));
+        $this->assertSame('42', $execution->getAttribute('responseHeaders')[0]->getAttribute('value'));
+    }
+
+    public function testHeaderValuesAreStrings(): void
+    {
+        $execution = (new Execution())->filter(new Document([
+            'requestHeaders' => [
+                ['name' => 'x-retries', 'value' => 3],
+                ['name' => 'x-ratio', 'value' => 0.5],
+                ['name' => 'x-forwarded', 'value' => true],
+                ['name' => 'x-ports', 'value' => [80, 443]],
+            ],
+            'responseHeaders' => [
+                ['name' => 'content-length', 'value' => 8807],
+                new Document(['name' => 'age', 'value' => 60]),
+            ],
+        ]));
+
+        $this->assertSame([
+            ['name' => 'x-retries', 'value' => '3'],
+            ['name' => 'x-ratio', 'value' => '0.5'],
+            ['name' => 'x-forwarded', 'value' => 'true'],
+            ['name' => 'x-ports', 'value' => '80, 443'],
+        ], $execution->getAttribute('requestHeaders'));
+        $this->assertSame(['name' => 'content-length', 'value' => '8807'], $execution->getAttribute('responseHeaders')[0]);
+        $this->assertSame('60', $execution->getAttribute('responseHeaders')[1]->getAttribute('value'));
     }
 
     public function testResourceIdentityIsRequired(): void

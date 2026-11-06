@@ -1,0 +1,411 @@
+<?php
+
+namespace Utopia\Messaging\Adapter\Email;
+
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP\NoHostAnswered;
+use Utopia\Messaging\Messages\Email as EmailMessage;
+use Utopia\Messaging\Response;
+use Utopia\SMTP\Auth\Login;
+use Utopia\SMTP\Auth\Plain;
+use Utopia\SMTP\Client;
+use Utopia\SMTP\Encryption;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
+use Utopia\SMTP\Exception\ConnectionException;
+use Utopia\SMTP\Exception\ProtocolException;
+use Utopia\SMTP\Exception\SmtpException;
+use Utopia\SMTP\Exception\TransactionException;
+use Utopia\SMTP\Message as SmtpMessage;
+use Utopia\SMTP\Outcome;
+use Utopia\SMTP\Timeouts;
+use Utopia\SMTP\Tls;
+use Utopia\SMTP\Transport\Native;
+
+class SMTP extends EmailAdapter
+{
+    protected const NAME = 'SMTP';
+
+    private ?Client $client = null;
+
+    /**
+     * @param string $host SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. A port may follow a hostname after a colon (e.g. "smtp1.example.com:25;smtp2.example.com"), and an address literal is bracketed to keep its own colons apart from it (e.g. "[::1]:587"). An encryption prefix may lead each entry (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts are tried in order.
+     * @param int $port The default SMTP server port.
+     * @param string $username Authentication username.
+     * @param string $password Authentication password.
+     * @param string $smtpSecure SMTP Secure prefix. Can be '', 'ssl' or 'tls'
+     * @param bool $smtpAutoTLS Enable/disable SMTP AutoTLS feature. Defaults to false.
+     * @param string $xMailer The value to use for the X-Mailer header.
+     * @param int $timeout SMTP timeout in seconds.
+     * @param bool $keepAlive Whether to reuse the SMTP connection across process() calls.
+     * @param int $timelimit SMTP command timelimit in seconds.
+     * @param int $pingThreshold Seconds a kept session may sit idle before it is probed ahead of the next message. 0 probes before every reuse. A session the server already closed still fails that command; the message is sent again once, on a new connection.
+     * @param int $restartThreshold Messages a kept session carries before it is replaced. 0 disables.
+     * @param array<string, string> $addresses Host => address to dial it on, as each host appears in $host (e.g. "smtp1.example.com" => "203.0.113.10", "[2001:db8::1]" for IPv6), so the connection lands on an address the caller checked. The certificate is still verified against the host. When any address is given, a host not listed is refused; with none, every host is dialled by name.
+     */
+    public function __construct(
+        private readonly string $host,
+        private readonly int $port = 25,
+        private readonly string $username = '',
+        private readonly string $password = '',
+        private readonly string $smtpSecure = '',
+        private readonly bool $smtpAutoTLS = false,
+        private readonly string $xMailer = '',
+        private readonly int $timeout = 30,
+        private readonly bool $keepAlive = false,
+        private readonly int $timelimit = 30,
+        private readonly int $pingThreshold = 30,
+        private readonly int $restartThreshold = 100,
+        private readonly array $addresses = [],
+    ) {
+        parent::__construct();
+        if (!\in_array($this->smtpSecure, ['', 'ssl', 'tls'])) {
+            throw new \InvalidArgumentException('Invalid SMTP secure prefix. Must be "", "ssl" or "tls"');
+        }
+    }
+
+    public function getName(): string
+    {
+        return static::NAME;
+    }
+
+    public function getMaxMessagesPerRequest(): int
+    {
+        return 1000;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function process(EmailMessage $message): array
+    {
+        return $this->deliver($message, true);
+    }
+
+    /**
+     * @param bool $retry Whether a kept session that dies under this send may be replaced once.
+     * @return array{deliveredTo: int, type: string, results: array<array<string, mixed>>}
+     */
+    private function deliver(EmailMessage $message, bool $retry): array
+    {
+        $response = new Response($this->getType());
+        $recipients = $this->recipients($message);
+
+        try {
+            [$client, $reused] = $this->open();
+        } catch (SmtpException $exception) {
+            foreach ($recipients as $email) {
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
+            }
+
+            return $response->toArray();
+        }
+
+        $keep = $this->keepAlive;
+        $stale = false;
+
+        try {
+            $result = $client->send($this->build($message));
+
+            // A server may refuse some recipients and accept others, and the
+            // message still reaches the rest. Each address gets its own answer
+            // rather than every address getting the same one.
+            $response->setDeliveredTo(\count($result->accepted));
+
+            foreach ($result->accepted as $email) {
+                $response->addResult($email);
+            }
+
+            foreach ($result->rejected as $email => $reply) {
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
+            }
+        } catch (TransactionException $exception) {
+            // Every recipient refused: each answers for itself. Otherwise the
+            // refusal was the message's own (MAIL FROM, DATA) and holds for all.
+            foreach ($recipients as $email) {
+                $reply = $exception->rejected[$email] ?? $exception->reply;
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent, $reply->code);
+            }
+
+            // A 421 during RCPT ends the session with the transaction.
+            // It is also how a kept socket answers the first command after the
+            // server has closed it, which is before the message is submitted.
+            $keep = $keep && is_finite($client->idle());
+            $stale = $retry && $reused && $exception->reply->code === 421;
+        } catch (SmtpException $exception) {
+            foreach ($recipients as $email) {
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception), $this->code($exception));
+            }
+
+            $keep = false;
+            // A kept socket that died before the dot. An UnconfirmedException
+            // means the dot was written and the server may have the message.
+            $stale = $retry && $reused && ($exception instanceof ConnectionException || $exception instanceof ProtocolException);
+        } finally {
+            if (!$keep) {
+                $this->drop($client);
+            }
+        }
+
+        // The kept socket failed before this message was submitted. The dot
+        // was not written, so this dials once more. A second failure stands.
+        if ($stale) {
+            return $this->deliver($message, false);
+        }
+
+        return $response->toArray();
+    }
+
+    /**
+     * Teardown only: closing under a send in flight desynchronises it.
+     */
+    public function disconnect(): void
+    {
+        $this->client?->close();
+        $this->client = null;
+    }
+
+    /**
+     * A session for this message, and whether it was kept from an earlier one.
+     *
+     * A fresh dial is not a reuse: a failure there is the server we just
+     * reached, and sending the message again would not be the stale socket.
+     *
+     * @return array{Client, bool}
+     */
+    private function open(): array
+    {
+        if ($this->keepAlive && $this->client instanceof Client && $this->reusable($this->client)) {
+            return [$this->client, true];
+        }
+
+        $this->client?->close();
+        $this->client = null;
+
+        $client = $this->dial();
+
+        if ($this->keepAlive) {
+            $this->client = $client;
+        }
+
+        return [$client, false];
+    }
+
+    private function drop(Client $client): void
+    {
+        if ($this->client === $client) {
+            $this->client = null;
+        }
+
+        $client->close();
+    }
+
+    /**
+     * The first host that answers, tried in the order they were given.
+     */
+    private function dial(): Client
+    {
+        $timeouts = new Timeouts(
+            connect: (float) $this->timeout,
+            read: (float) $this->timelimit,
+            write: (float) $this->timelimit,
+        );
+
+        $failures = [];
+        $permanent = true;
+        $code = 0;
+
+        foreach ($this->hosts() as [$host, $port, $encryption]) {
+            // A host the caller did not check is refused rather than dialled by name.
+            if ($this->addresses !== [] && !isset($this->addresses[$host])) {
+                $failures[] = "{$host}:{$port} (no checked address)";
+
+                continue;
+            }
+
+            $client = new Client(
+                isset($this->addresses[$host]) ? new Native($this->addresses[$host], $port, new Tls(peerName: \trim($host, '[]'))) : new Native($host, $port),
+                gethostname() ?: 'localhost',
+                $this->authenticators(),
+                $encryption,
+                $timeouts,
+            );
+
+            try {
+                // Nothing is dialled until a session is needed, so asking what
+                // the server offers is what settles whether this host answers.
+                $client->capabilities();
+            } catch (SmtpException $exception) {
+                $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+                // One host that may answer differently later is reason enough
+                // to try the whole list again.
+                $permanent = $permanent && $this->permanent($exception);
+                $code = $code ?: $this->code($exception);
+
+                continue;
+            }
+
+            return $client;
+        }
+
+        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent, $code);
+    }
+
+    /**
+     * Whether the server said, with a 5xx reply, that sending the same message
+     * again cannot change its answer. Anything short of that reply is worth
+     * repeating: a connection that dropped or timed out, a 4xx, a reply out of
+     * protocol, and a login failure no reply code stands behind.
+     *
+     * A capability the server lacks is final too: no STARTTLS when encryption is
+     * required, no SMTPUTF8 for a non-ASCII address, a message over the advertised
+     * SIZE. The client falls back to HELO only when EHLO is refused with a 5xx, by a
+     * server that does not speak ESMTP at all, so the extensions a session offers
+     * are the server's, not an artefact of a busy moment.
+     */
+    private function permanent(SmtpException $exception): bool
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->isPermanent(),
+            $exception instanceof NoHostAnswered => $exception->permanent,
+            $exception instanceof CapabilityException => true,
+            $exception instanceof AuthenticationException => $previous instanceof TransactionException && $previous->isPermanent(),
+            default => false,
+        };
+    }
+
+    /**
+     * The reply code the server refused with, or 0 when no reply stands behind the failure.
+     */
+    private function code(SmtpException $exception): int
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->reply->code,
+            $exception instanceof NoHostAnswered => $exception->getCode(),
+            $previous instanceof TransactionException => $previous->reply->code,
+            default => 0,
+        };
+    }
+
+    private function reusable(Client $client): bool
+    {
+        if ($this->restartThreshold > 0 && $client->transactions >= $this->restartThreshold) {
+            return false;
+        }
+
+        if ($client->idle() <= $this->pingThreshold) {
+            return true;
+        }
+
+        return $client->ping();
+    }
+
+    /**
+     * The host string, which may name several servers with their own port and
+     * encryption, as a list of somewhere to try.
+     *
+     * @return list<array{string, int, Encryption}>
+     */
+    private function hosts(): array
+    {
+        $hosts = [];
+
+        foreach (explode(';', $this->host) as $entry) {
+            $entry = trim($entry);
+
+            if ($entry === '') {
+                continue;
+            }
+
+            $encryption = $this->encryption();
+
+            if (preg_match('#^(ssl|tls)://#i', $entry, $matches) === 1) {
+                $encryption = strtolower($matches[1]) === 'ssl' ? Encryption::Implicit : Encryption::StartTls;
+                $entry = substr($entry, \strlen($matches[0]));
+            }
+
+            $port = $this->port;
+
+            // An address literal is mostly colons, so only a bracketed one or a
+            // name carrying none may be followed by a port. PHPMailer's own
+            // pattern reads "::1" as the host ":" on port 1.
+            if (preg_match('/^(\[[^\]]+\]|[^:]+):(\d+)$/', $entry, $matches) === 1) {
+                $entry = $matches[1];
+                $port = (int) $matches[2];
+            }
+
+            $hosts[] = [$entry, $port, $encryption];
+        }
+
+        return $hosts === [] ? [[$this->host, $this->port, $this->encryption()]] : $hosts;
+    }
+
+    /**
+     * The prefix says what to do, and without one the AutoTLS flag decides
+     * whether an offered upgrade is taken.
+     */
+    private function encryption(): Encryption
+    {
+        return match ($this->smtpSecure) {
+            'ssl' => Encryption::Implicit,
+            'tls' => Encryption::StartTls,
+            default => $this->smtpAutoTLS ? Encryption::Opportunistic : Encryption::None,
+        };
+    }
+
+    /**
+     * @return list<Plain|Login>
+     */
+    private function authenticators(): array
+    {
+        // The adapter this replaces treated a literal "0" as no credential,
+        // an artefact of empty() that some configuration still relies on.
+        if (\in_array($this->username, ['', '0'], true) || \in_array($this->password, ['', '0'], true)) {
+            return [];
+        }
+
+        return [new Plain($this->username, $this->password), new Login($this->username, $this->password)];
+    }
+
+    /**
+     * Every address the envelope will carry, which is what a per-recipient
+     * result is keyed by.
+     *
+     * @return list<string>
+     */
+    private function recipients(EmailMessage $message): array
+    {
+        $recipients = [];
+
+        foreach ([...$message->getTo(), ...($message->getCC() ?? []), ...($message->getBCC() ?? [])] as $recipient) {
+            $recipients[$recipient['email']] = true;
+        }
+
+        return array_keys($recipients);
+    }
+
+    private function build(EmailMessage $message): SmtpMessage
+    {
+        $headers = [];
+
+        if ($this->xMailer !== '') {
+            $headers['X-Mailer'] = $this->xMailer;
+        }
+
+        if (Mime::size($message) > self::MAX_ATTACHMENT_BYTES) {
+            throw new \Exception('Attachments size exceeds the maximum allowed size of 25MB');
+        }
+
+        return Mime::message(
+            $message,
+            $message->getTo(),
+            $message->getCC() ?? [],
+            $message->getBCC() ?? [],
+            $headers,
+        );
+    }
+}

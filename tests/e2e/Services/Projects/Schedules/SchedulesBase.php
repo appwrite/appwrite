@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\Projects\Schedules;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\System\System;
 
 trait SchedulesBase
@@ -16,22 +16,15 @@ trait SchedulesBase
             return self::$cachedScheduleProjectData;
         }
 
-        $teamId = ID::unique();
-        $team = null;
-        for ($i = 0; $i < 3; $i++) {
-            $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'teamId' => $teamId,
-                'name' => 'Schedule Test Team',
-            ]);
-            if (\in_array($team['headers']['status-code'], [201, 409])) {
-                break;
-            }
-            \usleep(500000);
-        }
-        $this->assertContains($team['headers']['status-code'], [201, 409]);
+        $teamId = Id::unique();
+        $team = $this->createTeamFixture(array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => $teamId,
+            'name' => 'Schedule Test Team',
+        ]);
+        $this->assertEquals(200, $team['headers']['status-code']);
 
         $project = null;
         for ($i = 0; $i < 3; $i++) {
@@ -39,7 +32,7 @@ trait SchedulesBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'name' => 'Schedule Test Project',
                 'teamId' => $team['body']['$id'] ?? $teamId,
                 'region' => System::getEnv('_APP_REGION', 'default'),
@@ -57,7 +50,7 @@ trait SchedulesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Schedule Test Key',
             'scopes' => [
                 'functions.read',

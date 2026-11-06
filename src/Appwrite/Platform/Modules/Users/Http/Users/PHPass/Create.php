@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Users\Http\Users\PHPass;
 
-use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\Hash\PHPass as PHPassValidator;
 use Appwrite\Hooks\Hooks;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Users\Base;
@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Hashes\PHPass;
+use Utopia\Auth\Proofs\Password as ProofsPassword;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
@@ -50,23 +51,24 @@ class Create extends Base
                     )
                 ]
             ))
-            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'User ID. Choose a custom ID or pass the string `ID.unique()`to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('email', '', new EmailValidator(), 'User email.')
-            ->param('password', '', new Password(), 'User password hashed using PHPass.')
+            ->param('password', '', new PHPassValidator(), 'User password hashed using PHPass.')
             ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
             ->inject('hooks')
             ->inject('plan')
+            ->inject('proofForPassword')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan): void
+    public function action(string $userId, string $email, string $password, ?string $name, Response $response, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ProofsPassword $proofForPassword): void
     {
         $phpass = new PHPass();
 
-        $user = $this->createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan);
+        $user = $this->createUser($phpass, $userId, $email, $password, null, $name, $project, $dbForProject, $hooks, $plan, $proofForPassword);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

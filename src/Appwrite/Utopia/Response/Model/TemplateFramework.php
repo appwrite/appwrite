@@ -63,6 +63,7 @@ class TemplateFramework extends Model
                 'description' => 'Fallback file for SPA. Only relevant for static serve runtime.',
                 'default' => null,
                 'example' => 'index.html',
+                'required' => false,
             ])
         ;
     }

@@ -5,20 +5,14 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Message\Execution;
 use Appwrite\Event\Message\ExecutionCancelled as ExecutionCancelledMessage;
 use Appwrite\Event\Message\Executions as ExecutionsMessage;
+use Appwrite\Execution\Store;
 use Exception;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 
 class Executions extends Action
 {
-    private const int UPSERT_BATCH_SIZE = 100;
-
-    private const array PENDING_STATUSES = ['waiting', 'processing', 'scheduled'];
-
     public static function getName(): string
     {
         return 'executions';
@@ -33,13 +27,13 @@ class Executions extends Action
             ->desc('Executions worker')
             ->groups(['executions'])
             ->inject('message')
-            ->inject('dbForProject')
+            ->inject('executionStore')
             ->callback($this->action(...));
     }
 
     public function action(
         Message $message,
-        Database $dbForProject,
+        Store $executionStore,
     ): void {
         $payload = $message->getPayload();
 
@@ -55,9 +49,7 @@ class Executions extends Action
             Span::add('execution.id', $execution->getId());
             Span::add('execution.cancelled', true);
 
-            if (!$dbForProject->deleteDocument('executions', $execution->getId())) {
-                throw new Exception('Failed to remove cancelled execution');
-            }
+            $executionStore->delete($executionMessage->project->getId(), $execution);
 
             return;
         }
@@ -86,43 +78,17 @@ class Executions extends Action
 
         if ($isBatch) {
             Span::add('executions.count', \count($executions));
+            $executionStore->upsertMany($executionMessage->project->getId(), $executions);
 
-            $pending = \array_values(\array_filter($executions, $this->isPending(...)));
-            $final = \array_values(\array_filter($executions, fn (Document $execution) => !$this->isPending($execution)));
-
-            foreach ($pending as $execution) {
-                $this->create($dbForProject, $execution);
-            }
-
-            if (!empty($final)) {
-                $dbForProject->upsertDocuments('executions', $final, self::UPSERT_BATCH_SIZE);
-            }
-        } else {
-            $execution = $executions[0];
-            Span::add('function.id', $execution->getAttribute('resourceId', ''));
-            Span::add('execution.id', $execution->getId());
-            Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
-            Span::add('resource.type', $execution->getAttribute('resourceType', ''));
-
-            if ($this->isPending($execution)) {
-                $this->create($dbForProject, $execution);
-            } else {
-                $dbForProject->upsertDocument('executions', $execution);
-            }
+            return;
         }
-    }
 
-    private function isPending(Document $execution): bool
-    {
-        return \in_array($execution->getAttribute('status', ''), self::PENDING_STATUSES, true);
-    }
+        $execution = $executions[0];
+        Span::add('function.id', $execution->getAttribute('resourceId', ''));
+        Span::add('execution.id', $execution->getId());
+        Span::add('deployment.id', $execution->getAttribute('deploymentId', ''));
+        Span::add('resource.type', $execution->getAttribute('resourceType', ''));
 
-    private function create(Database $dbForProject, Document $execution): void
-    {
-        try {
-            $dbForProject->createDocument('executions', $execution);
-        } catch (Duplicate) {
-            // A terminal write or a redelivery already created the document.
-        }
+        $executionStore->upsert($executionMessage->project->getId(), $execution);
     }
 }

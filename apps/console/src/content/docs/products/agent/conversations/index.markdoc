@@ -1,0 +1,67 @@
+---
+layout: article
+title: Conversations
+description: Learn how Appwrite Agent conversations work, including context, attachments, voice, queueing, and thread management.
+---
+
+A **conversation** is a chat thread with the Appwrite Agent. Each conversation belongs to your Console account. You can keep many threads, pin the ones you return to often, archive ones you are done with, and open any thread from the right-hand panel or at `/agent`.
+
+Conversations created by [automations](/docs/products/agent/automations) are linked to the automation that produced them. Those runs do not appear in the main Agents list; open them from the automations views so scheduled work stays separate from ad-hoc chats.
+
+# What a conversation contains {% #what-a-conversation-contains %}
+
+| Piece | Purpose |
+|-------|---------|
+| Messages | User and assistant turns, including edits, retries, and scores |
+| Timeline | Tool calls and multi-step activity for a turn |
+| Attachments | Files you upload for the Agent to use in context |
+| Model | The LLM selected for the thread (Appwrite default or a custom model) |
+| Status | Active or archived; archive hides the thread from the main active list |
+
+# Context on every message {% #context-on-every-message %}
+
+Each send (and each edit-and-resend) can include Console context so answers match where you are working:
+
+| Field | Typical source |
+|-------|----------------|
+| Organization / team | Current org route, or the project's organization |
+| Project | Composer project selector, conversation project, or the project route |
+| Page path, title, and URL | The Console page open when you send |
+
+Stay on the project or page you care about before asking project-specific questions. If you start a new conversation from a place with no project in the URL, pick a project in the composer. New threads need a resolvable project; without one, the Agent cannot establish a default scope.
+
+Assistant replies may include placeholders such as `{{APPWRITE_PROJECT_ID}}`. The Console resolves those from your current session so copy-paste snippets stay accurate.
+
+# Creating and managing threads {% #creating-and-managing-threads %}
+
+**Create agent** starts a new conversation. In the fullscreen Agent, the left sidebar lists threads in sections: pinned, active, then archived. In the panel, use the conversation switcher in the Agent chrome.
+
+**Rename** updates the title so the list stays scannable. **Pin** keeps a thread near the top. Pins are stored in your account preferences (including pin order), so they travel with you across browsers once prefs sync. **Archive** removes a thread from the active list without deleting history. The Console does not currently offer an unarchive action in the conversation menu; treat archive as a way to clear the active list when you are finished with a thread. **Delete** permanently removes the conversation.
+
+Keyboard shortcuts (exact bindings are listed in the Console shortcuts dialog) cover creating a new agent conversation, creating an automation, and focusing the composer.
+
+# Messaging and the turn lifecycle {% #messaging %}
+
+You send text from the composer, optionally with attachments. Images preview inline in the thread; other files show as named attachments. There is no hard file-type filter in the uploader; attach what the Agent needs to reason about (screenshots, configs, logs).
+
+While a turn is in progress, the conversation is locked for that run. **Stop** cancels the in-progress run. **Retry** asks the Agent to try again from a failed or incomplete turn. **Edit and resend** changes a prior user message and continues from that point; the superseded original is folded out of the live history as the edit lands.
+
+If you send again while a turn is still running, the Console queues the follow-up and drains the queue when the current run finishes. You can promote, edit, or remove queued items before they send.
+
+After a reply, you can copy text, speak it aloud with text-to-speech where supported, or leave thumbs up / thumbs down feedback.
+
+# Voice input {% #voice-input %}
+
+Where the browser supports speech recognition, you can dictate into the composer. Say **submit now** to send (localized submit phrases exist for supported UI languages; English "submit now" is always accepted). After the trigger phrase, a short cancelable countdown runs so you can abort before the message sends if the transcript is wrong.
+
+# Clarification mid-turn {% #clarification %}
+
+When the Agent needs a decision before continuing, it can present structured [clarifying prompts](/docs/products/agent/actions#clarification): choose from options, confirm a risky step, or enter missing text. Your answer continues the same turn. That is intentional: clarification is part of the work, not a new chat.
+
+# Realtime updates {% #realtime-updates %}
+
+While a turn is running, the Console updates the conversation through realtime events so assistant messages and tool activity appear as they complete. You do not need to refresh the page. Edits and retries merge into the same thread view.
+
+{% arrow_link href="/docs/products/agent/chat" %}
+Chat with the Agent
+{% /arrow_link %}

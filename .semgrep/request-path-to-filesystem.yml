@@ -1,0 +1,117 @@
+rules:
+  - id: php.appwrite.request-path-to-filesystem
+    message: >
+      Request-derived value (route param, header, query, cookie, body)
+      reaches a local filesystem or include call. Resolve with realpath()
+      and check it stays under the intended base directory, or reduce it
+      to basename() / a validated ID before joining it into a path.
+    languages: [php]
+    severity: ERROR
+    mode: taint
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-sources:
+      - patterns:
+          - pattern-either:
+              - pattern: $REQUEST->getParam(...)
+              - pattern: $REQUEST->getParams()
+              - pattern: $REQUEST->getQuery(...)
+              - pattern: $REQUEST->getPayload(...)
+              - pattern: $REQUEST->getHeader(...)
+              - pattern: $REQUEST->getCookie(...)
+              - pattern: $REQUEST->getURI()
+              - pattern: $REQUEST->getRawPayload()
+          - metavariable-regex:
+              metavariable: $REQUEST
+              regex: ^\$[a-zA-Z]*[rR]equest$
+      - patterns:
+          - pattern-inside: |
+              public function action(..., string $P, ...) { ... }
+          - pattern: $P
+      - patterns:
+          - pattern-inside: |
+              $ROUTE->action(function (..., string $P, ...) { ... })
+          - pattern: $P
+    # realpath() alone is not a sanitizer: it resolves `..` and symlinks but
+    # does not keep the result under the base directory. A path counts as
+    # clean only after a containment guard that exits, or inside a branch
+    # that requires containment.
+    pattern-sanitizers:
+      - pattern: basename(...)
+      - pattern: \basename(...)
+      - pattern: ID::custom(...)
+      - patterns:
+          - pattern-either:
+              - pattern-inside: |
+                  if (!str_starts_with($REAL, $BASE)) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (!\str_starts_with($REAL, $BASE)) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (!str_starts_with($REAL, $BASE)) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (!\str_starts_with($REAL, $BASE)) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (substr($REAL, 0, strlen($BASE)) !== $BASE) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (\substr($REAL, 0, \strlen($BASE)) !== $BASE) { ... throw $E; }
+                  ...
+              - pattern-inside: |
+                  if (substr($REAL, 0, strlen($BASE)) !== $BASE) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (\substr($REAL, 0, \strlen($BASE)) !== $BASE) { ... return ...; }
+                  ...
+              - pattern-inside: |
+                  if (str_starts_with($REAL, $BASE)) { ... }
+              - pattern-inside: |
+                  if (\str_starts_with($REAL, $BASE)) { ... }
+              - pattern-inside: |
+                  if (substr($REAL, 0, strlen($BASE)) === $BASE) { ... }
+              - pattern-inside: |
+                  if (\substr($REAL, 0, \strlen($BASE)) === $BASE) { ... }
+          - pattern: $REAL
+    pattern-sinks:
+      - patterns:
+          - pattern-either:
+              - pattern: include $X
+              - pattern: include_once $X
+              - pattern: require $X
+              - pattern: require_once $X
+              - pattern: file_get_contents($X, ...)
+              - pattern: \file_get_contents($X, ...)
+              - pattern: file_put_contents($X, ...)
+              - pattern: \file_put_contents($X, ...)
+              - pattern: fopen($X, ...)
+              - pattern: \fopen($X, ...)
+              - pattern: readfile($X, ...)
+              - pattern: \readfile($X, ...)
+              - pattern: file($X, ...)
+              - pattern: \file($X, ...)
+              - pattern: unlink($X, ...)
+              - pattern: \unlink($X, ...)
+              - pattern: rmdir($X, ...)
+              - pattern: \rmdir($X, ...)
+              - pattern: mkdir($X, ...)
+              - pattern: \mkdir($X, ...)
+              - pattern: rename($X, ...)
+              - pattern: \rename($X, ...)
+              - pattern: copy($X, ...)
+              - pattern: \copy($X, ...)
+              - pattern: scandir($X, ...)
+              - pattern: \scandir($X, ...)
+              - pattern: glob($X, ...)
+              - pattern: \glob($X, ...)
+              - pattern: new \SplFileObject($X, ...)
+              - pattern: new SplFileObject($X, ...)
+          - focus-metavariable: $X

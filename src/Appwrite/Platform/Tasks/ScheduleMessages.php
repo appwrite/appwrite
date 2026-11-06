@@ -9,14 +9,21 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
+use Utopia\Schedule\Source\Row;
+use Utopia\Schedule\Store\Redis as ClaimStore;
 use Utopia\Span\Span;
+use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 
 class ScheduleMessages extends Action
 {
     public const UPDATE_TIMER = 3; // seconds between reconciliations
+
+    /** @var callable(string, int, callable): mixed */
+    private $locks;
 
     public function __construct()
     {
@@ -27,6 +34,8 @@ class ScheduleMessages extends Action
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
+            ->inject('locks')
+            ->inject('pools')
             ->callback($this->action(...));
     }
 
@@ -35,21 +44,32 @@ class ScheduleMessages extends Action
         return 'schedule-messages';
     }
 
-    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(MessagingPublisher $publisherForMessaging, callable $getIsResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry, callable $locks, Group $pools): void
     {
+        $this->locks = $locks;
+
         $source = new Source\Messages($dbForPlatform, $getProjectDB, $getIsResourceBlocked);
 
-        $scheduler = new Scheduler(
-            source: $source,
-            syncSeconds: self::UPDATE_TIMER,
-            telemetry: $telemetry,
-            onError: function (\Throwable $error): void {
-                Span::init('schedule.messages.reconcile');
-                Span::current()?->finish(error: $error);
-            },
-        );
+        // A Redis failure ends the loop that holds the connection; the pool drops it.
+        $pools->get('lock')->use(function (\Redis $redis) use ($source, $telemetry, $publisherForMessaging, $dbForPlatform): void {
+            $scheduler = new Scheduler(
+                source: $source,
+                store: new ClaimStore($redis, self::getName() . ':' . System::getEnv('_APP_REGION', 'default')),
+                syncSeconds: self::UPDATE_TIMER,
+                telemetry: $telemetry,
+                onError: function (\Throwable $error, ?Row $row = null): void {
+                    Span::init('schedule.messages.reconcile');
+                    if ($row?->data instanceof Document) {
+                        Span::add('project.id', (string) $row->data->getAttribute('projectId'));
+                        Span::add('resource.id', (string) $row->data->getAttribute('resourceId'));
+                        Span::add('schedule.id', $row->data->getId());
+                    }
+                    Span::current()?->finish(error: $error);
+                },
+            );
 
-        $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForMessaging, $dbForPlatform));
+            $scheduler->run(fn (array $occurrences): null => $this->dispatch($occurrences, $publisherForMessaging, $dbForPlatform));
+        });
 
         Span::init('schedule.messages.stopped');
         Span::current()?->finish(error: new \RuntimeException('Scheduler loop returned'));
@@ -64,9 +84,24 @@ class ScheduleMessages extends Action
         $accessedAt = $project->getAttribute('accessedAt', 0);
         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
             $now = DateTime::now();
-            $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
-                'accessedAt' => $now
-            ]));
+
+            // Concurrent occurrences each carry their own project snapshot, so
+            // every one of them reads the same stale accessedAt and would write
+            // it. The lock keeps that to one write, as the request path does.
+            ($this->locks)(
+                'lock:platform:projects:'.$project->getId().':accessedAt',
+                APP_PROJECT_ACCESS,
+                function () use ($dbForPlatform, $project, $now): void {
+                    // updateDocument never uses cache, so skip the subqueries.
+                    $dbForPlatform->skipFilters(
+                        fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([
+                            'accessedAt' => $now
+                        ])),
+                        APP_PROJECTS_SUBQUERIES
+                    );
+                }
+            );
+
             $project->setAttribute('accessedAt', $now);
         }
     }

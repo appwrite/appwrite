@@ -105,7 +105,7 @@ class Dispatcher
 
             if ($present && !($param['skipValidation'] ?? false)) {
                 $validator = $param['validator'];
-                if (\is_callable($validator) && !($validator instanceof \Utopia\Validator)) {
+                if (\is_callable($validator) && !($validator instanceof \Utopia\Validator\Validator)) {
                     $validator = $validator();
                 }
                 if (!$validator->isValid($value)) {

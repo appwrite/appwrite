@@ -25,6 +25,7 @@ class Get extends Action
     {
         return [
             UtopiaResponse::MODEL_ATTRIBUTE_BOOLEAN,
+            UtopiaResponse::MODEL_ATTRIBUTE_BIGINT,
             UtopiaResponse::MODEL_ATTRIBUTE_INTEGER,
             UtopiaResponse::MODEL_ATTRIBUTE_FLOAT,
             UtopiaResponse::MODEL_ATTRIBUTE_EMAIL,
@@ -33,6 +34,13 @@ class Get extends Action
             UtopiaResponse::MODEL_ATTRIBUTE_IP,
             UtopiaResponse::MODEL_ATTRIBUTE_DATETIME,
             UtopiaResponse::MODEL_ATTRIBUTE_RELATIONSHIP,
+            UtopiaResponse::MODEL_ATTRIBUTE_POINT,
+            UtopiaResponse::MODEL_ATTRIBUTE_LINE,
+            UtopiaResponse::MODEL_ATTRIBUTE_POLYGON,
+            UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR,
+            UtopiaResponse::MODEL_ATTRIBUTE_TEXT,
+            UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT,
+            UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT,
             UtopiaResponse::MODEL_ATTRIBUTE_STRING,
         ];
     }
@@ -64,9 +72,9 @@ class Get extends Action
                     replaceWith: 'tablesDB.getColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -96,6 +104,21 @@ class Get extends Action
         $filters = $attribute->getAttribute('filters', []);
         foreach ($options as $key => $option) {
             $attribute->setAttribute($key, $option);
+        }
+
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions)) {
+            if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+                $attribute
+                    ->setAttribute('min', $formatOptions['min'] ?? null)
+                    ->setAttribute('max', $formatOptions['max'] ?? null);
+            }
+            if (isset($formatOptions['elements'])) {
+                $attribute->setAttribute('elements', $formatOptions['elements']);
+            }
         }
 
         $model = $this->getModel($type, $format);

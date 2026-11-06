@@ -2,19 +2,25 @@
 
 namespace Appwrite\Database;
 
+use Appwrite\Utopia\Database\Documents\Project;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Hook\UniqueId;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter;
+use Utopia\Database\Adapter\Feature\Schemaless;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Hook\Permissions;
+use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Hook\Tenancy;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Pools\Group;
 use Utopia\System\System;
 
-class Factory
+class Factory implements Provisioner
 {
     public function __construct(
         protected Group $pools,
@@ -35,10 +41,12 @@ class Factory
         $database
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization)
+            ->setDropUnknownAttributes(true)
             ->setNamespace($this->platformNamespace);
 
         $this->configureDocumentTypes($database);
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
+        $this->applyHooks($database);
 
         return $database;
     }
@@ -57,42 +65,61 @@ class Factory
 
         $database
             ->setDatabase($this->database)
-            ->setAuthorization($this->authorization);
+            ->setAuthorization($this->authorization)
+            ->setDropUnknownAttributes(true);
 
         $this->configureDocumentTypes($database);
         $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
 
-        return $this->configureProject($database, $project, $dsn);
+        return $this->applyHooks($this->configureProject($database, $project, $dsn));
     }
 
-    public function logs(
-        ?Document $project = null,
+    /**
+     * The database a project's own collections are created in.
+     *
+     * Built through the same adapter as {@see self::project()}: the collection
+     * metadata cache is keyed by the adapter's hostname, so a provisioning
+     * database that resolved a different one would rotate an epoch no reader
+     * holds and leave its own invalidations unseen.
+     */
+    public function provisioning(Document $project): Database
+    {
+        $dsn = $this->dsn($project->getAttribute('database'));
+
+        return $this->applyHooks(
+            $this->newDatabase($this->adapter($dsn->getHost()))
+                ->setDatabase($this->database)
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence())
+        );
+    }
+
+    public function setup(string $hostname): Database
+    {
+        return $this->applyHooks(
+            $this->newDatabase($this->adapter($hostname))
+                ->setDatabase($this->database)
+                ->setSharedTables(true)
+                ->setTenant(null)
+                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''))
+        );
+    }
+
+    public function overlayLiveDedicatedDsn(
+        Document $databaseDocument,
+        Document $project,
         int $timeout = 0,
         int $maxQueryValues = 0,
-        array $metadata = [],
-    ): Database {
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-        $logsCollections = \array_keys($collections['logs'] ?? []);
-
-        $database = $this->newDatabase($this->adapter('logs'));
-
-        $database
-            ->setDatabase($this->database)
-            ->setAuthorization($this->authorization)
-            ->setSharedTables(true)
-            ->setGlobalCollections($logsCollections)
-            ->setNamespace('logsV1');
-
-        if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
-            $database->setTenant($project->getSequence());
-        }
-
-        $this->configureOptions($database, $timeout, $maxQueryValues, $metadata);
-
-        return $database;
+        bool $cache = true,
+    ): Document {
+        return $databaseDocument;
     }
 
+    /**
+     * Databases and tables the caller owns. Unknown attributes stay a rejected write here:
+     * the schema is theirs, so dropping one would silently discard data they sent.
+     */
     public function tenant(
         Document $databaseDocument,
         Document $project,
@@ -109,9 +136,12 @@ class Factory
 
         $database
             ->setDatabase($this->database)
-            ->setAuthorization($this->authorization);
+            ->setAuthorization($this->authorization)
+            ->setCheckGrants(true);
 
-        $database->getAdapter()->setSupportForAttributes($databaseType !== DOCUMENTSDB);
+        if ($database->getAdapter()->hasFeature(Schemaless::class)) {
+            $database->setSchemaless($databaseType === DATABASE_TYPE_DOCUMENTSDB);
+        }
 
         if ($preserveDates) {
             $database->setPreserveDates(true);
@@ -125,37 +155,49 @@ class Factory
 
         if ($databaseHost !== $projectDsn->getHost()) {
             $dbTypeSharedTables = match ($databaseType) {
-                DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
-                VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
+                DATABASE_TYPE_DOCUMENTSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''))),
+                DATABASE_TYPE_VECTORSDB => \array_filter(\explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''))),
                 default => [],
             };
 
             if (\in_array($databaseHost, $dbTypeSharedTables, true)) {
-                return $database
-                    ->setSharedTables(true)
-                    ->setGlobalCollections($globalCollections)
-                    ->setTenant($project->getSequence())
-                    ->setNamespace($databaseDsn->getParam('namespace'));
+                return $this->applyHooks(
+                    $database
+                        ->setSharedTables(true)
+                        ->setGlobalCollections($globalCollections)
+                        ->setTenant($project->getSequence())
+                        ->setNamespace($databaseDsn->getParam('namespace')),
+                    relationships: true,
+                );
             }
 
-            return $database
-                ->setSharedTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getSequence());
+            return $this->applyHooks(
+                $database
+                    ->setSharedTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getSequence()),
+                relationships: true,
+            );
         }
 
         if (\in_array($projectDsn->getHost(), $sharedTables, true)) {
-            return $database
-                ->setSharedTables(true)
-                ->setGlobalCollections($globalCollections)
-                ->setTenant($project->getSequence())
-                ->setNamespace($projectDsn->getParam('namespace'));
+            return $this->applyHooks(
+                $database
+                    ->setSharedTables(true)
+                    ->setGlobalCollections($globalCollections)
+                    ->setTenant($project->getSequence())
+                    ->setNamespace($projectDsn->getParam('namespace')),
+                relationships: true,
+            );
         }
 
-        return $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
+        return $this->applyHooks(
+            $database
+                ->setSharedTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getSequence()),
+            relationships: true,
+        );
     }
 
     protected function newDatabase(Adapter $adapter, ?Database $destination = null): Database
@@ -165,12 +207,14 @@ class Factory
 
     protected function adapter(string $name): DatabasePool
     {
-        return new DatabasePool($this->pools->get($name));
+        return (new DatabasePool($this->pools->get($name)))->setHostname($name);
     }
 
     protected function configureDocumentTypes(Database $database): Database
     {
-        return $database->setDocumentType('users', User::class);
+        return $database
+            ->setDocumentType('users', User::class)
+            ->setDocumentType('projects', Project::class);
     }
 
     protected function destinationFor(DSN $dsn): ?Database
@@ -194,6 +238,22 @@ class Factory
             ->setSharedTables(false)
             ->setTenant(null)
             ->setNamespace('_' . $project->getSequence());
+    }
+
+    private function applyHooks(Database $database, bool $relationships = false): Database
+    {
+        $database->addHook(new Permissions());
+
+        if ($relationships) {
+            $database->addHook(new Relationships());
+            $database->addHook(new UniqueId());
+        }
+
+        if ($database->hasSharedTables() && $database->getTenant() !== null) {
+            $database->addHook(new Tenancy());
+        }
+
+        return $database;
     }
 
     private function configureOptions(Database $database, int $timeout, int $maxQueryValues, array $metadata): void

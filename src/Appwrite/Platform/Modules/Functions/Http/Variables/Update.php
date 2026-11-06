@@ -5,15 +5,14 @@ namespace Appwrite\Platform\Modules\Functions\Http\Variables;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Base;
+use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -58,16 +57,15 @@ class Update extends Base
                     )
                 ]
             ))
-            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Function unique ID.', false, ['dbForProject'])
-            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
-            ->param('key', null, new Nullable(new Text(255, 0)), 'Variable key. Max length: 255 chars.', true)
+            ->param('functionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Function unique ID.', false, ['dbForProject'])
+            ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Variable unique ID.', false, ['dbForProject'])
+            ->param('key', null, new Nullable(new VariableKey(255)), 'Variable key. Letters, digits and underscores only, must not start with a digit. Max length: 255 chars.', true)
             ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
             ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only functions can read them during build and runtime.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the variable.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')
-            ->inject('dbForPlatform')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -77,11 +75,10 @@ class Update extends Base
         ?string $key,
         ?string $value,
         ?bool $secret,
+        ?string $description,
         Response $response,
         QueueEvent $queueForEvents,
-        Database $dbForProject,
-        Database $dbForPlatform,
-        Authorization $authorization
+        Database $dbForProject
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -98,7 +95,7 @@ class Update extends Base
             throw new Exception(Exception::VARIABLE_CANNOT_UNSET_SECRET);
         }
 
-        if (\is_null($key) && \is_null($value) && \is_null($secret)) {
+        if (\is_null($key) && \is_null($value) && \is_null($secret) && \is_null($description)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID);
         }
 
@@ -117,26 +114,20 @@ class Update extends Base
             $updates->setAttribute('secret', $secret);
         }
 
+        if (!\is_null($description)) {
+            $updates->setAttribute('description', $description);
+        }
+
         try {
             $variable = $dbForProject->updateDocument('variables', $variable->getId(), $updates);
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
 
-        $function->setAttribute('live', false);
-        $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
-
-        // Inform scheduler to pull the latest changes
-        $schedule = $dbForPlatform->getDocument('schedules', $function->getAttribute('scheduleId'));
-        $schedule
-            ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('schedule', $function->getAttribute('schedule'))
-            ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), new Document([
-            'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-            'schedule' => $schedule->getAttribute('schedule'),
-            'active' => $schedule->getAttribute('active'),
-        ])));
+        if (!\is_null($key) || !\is_null($value) || !\is_null($secret)) {
+            $function->setAttribute('live', false);
+            $dbForProject->updateDocument('functions', $function->getId(), new Document(['live' => false]));
+        }
 
         $queueForEvents->setParam('variableId', $variable->getId());
 

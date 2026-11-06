@@ -66,9 +66,9 @@ class Delete extends Action
                     replaceWith: 'tablesDB.deleteIndex',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Index Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Index Key.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('publisherForDatabase')
@@ -116,7 +116,6 @@ class Delete extends Action
 
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_DELETE_INDEX,
             database: $db,
             collection: $this->isCollectionsAPI() ? $collection : null,

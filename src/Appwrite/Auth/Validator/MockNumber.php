@@ -2,8 +2,8 @@
 
 namespace Appwrite\Auth\Validator;
 
-use Utopia\Validator;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 /**
  * MockNumber.

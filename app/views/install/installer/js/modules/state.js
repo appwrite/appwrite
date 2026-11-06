@@ -18,8 +18,8 @@
         emailCertificates: null,
         forceHttps: null,
         opensslKey: null,
-        assistantOpenAIKey: null,
-        topology: 'combined',
+        topology: null,
+        accountName: null,
         accountEmail: null,
         accountPassword: null
     };
@@ -48,12 +48,11 @@
         setStateIfEmpty('emailCertificates', data.defaultEmailCertificates);
         setStateIfEmpty('forceHttps', data.defaultForceHttps === 'true');
         setStateIfEmpty('opensslKey', data.defaultSecretKey);
-        setStateIfEmpty('assistantOpenAIKey', data.defaultAssistantOpenaiKey);
         if (data.lockedDatabase) {
             formState.database = data.lockedDatabase;
         }
         if (data.topology === 'combined' || data.topology === 'separate') {
-            formState.topology = data.topology;
+            setStateIfEmpty('topology', data.topology);
         }
         if (!isUpgradeMode?.()) {
             setStateIfEmpty('database', data.defaultDatabase);
@@ -88,7 +87,6 @@
         if (sanitizedPayload) {
             delete sanitizedPayload.opensslKey;
             delete sanitizedPayload.accountPassword;
-            delete sanitizedPayload.assistantOpenAIKey;
         }
         const lock = {
             installId,

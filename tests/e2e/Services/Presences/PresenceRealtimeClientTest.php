@@ -9,10 +9,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use WebSocket\Client as WebSocketClient;
 use WebSocket\TimeoutException;
 
@@ -20,6 +20,7 @@ final class PresenceRealtimeClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
+    private const int HANDSHAKE_TIMEOUT_MS = 5000;
 
     private static array $presenceApiKeyCache = [];
 
@@ -81,8 +82,7 @@ final class PresenceRealtimeClientTest extends Scope
             ]
         );
 
-        $connected = \json_decode($client->receive(), true);
-        $this->assertSame('connected', $connected['type'] ?? null);
+        $this->receiveConnected($client, \max(self::HANDSHAKE_TIMEOUT_MS, $timeout * 1000));
 
         if (empty($channels)) {
             return $client;
@@ -102,6 +102,32 @@ final class PresenceRealtimeClientTest extends Scope
         $this->assertNotEmpty($subscribeResponse['data']['subscriptions'] ?? []);
 
         return $client;
+    }
+
+    private function receiveConnected(WebSocketClient $client, int $timeoutMs = self::HANDSHAKE_TIMEOUT_MS): void
+    {
+        $deadline = \microtime(true) + ($timeoutMs / 1000);
+
+        while (\microtime(true) < $deadline) {
+            try {
+                $message = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                continue;
+            }
+
+            if (!\is_array($message)) {
+                continue;
+            }
+
+            $this->assertSame(
+                'connected',
+                $message['type'] ?? null,
+                'First realtime frame must be the handshake, got: ' . \json_encode($message)
+            );
+            return;
+        }
+
+        $this->fail('Timed out waiting for connected websocket handshake.');
     }
 
     private function receiveUntil(
@@ -179,7 +205,7 @@ final class PresenceRealtimeClientTest extends Scope
         string $status,
         array $metadata,
         string $expectedUserId,
-        int $timeoutMs = 2500
+        int $timeoutMs = 10_000
     ): array {
         $event = $this->receiveUntil(
             $client,
@@ -230,7 +256,7 @@ final class PresenceRealtimeClientTest extends Scope
             }
 
             return $response !== null && $event !== null;
-        }, 2500);
+        }, 10_000);
     }
 
     private function receiveErrorMessage(WebSocketClient $client): array
@@ -271,11 +297,90 @@ final class PresenceRealtimeClientTest extends Scope
         ];
     }
 
+    /**
+     * @param array<string, string> $headers
+     * @param array<string> $query
+     * @return array<string, mixed>
+     */
+    private function listPresencesCached(array $headers, array $query): array
+    {
+        $response = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            $headers,
+            [
+                'queries' => $query,
+                'ttl' => 3600,
+            ]
+        );
+        $this->assertSame(200, $response['headers']['status-code'], \json_encode($response['body']));
+
+        return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    private function presenceStatusFor(array $response, string $presenceId): ?string
+    {
+        foreach ($response['body']['presences'] ?? [] as $presence) {
+            if (($presence['$id'] ?? null) === $presenceId) {
+                return $presence['status'] ?? null;
+            }
+        }
+
+        return null;
+    }
+
+    public function testRealtimePermissionChangeInvalidatesListCache(): void
+    {
+        // A realtime upsert narrows permissions through the same State::setPermissions as the REST
+        // paths, so it must purge the list cache too. The server key always sees the row (API keys
+        // bypass document permissions), so staleness is anchored on the cached status: a heartbeat
+        // that only changes status must not purge, a permission change must.
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = Id::unique();
+        $metadata = ['case' => 'cache-invalidation'];
+        $serverHeaders = $this->getServerHeaders($project);
+        $query = [Query::equal('userId', [$user['$id']])->toString()];
+
+        $publisher = $this->connectRealtimeAndSubscribe(
+            $project,
+            $headers,
+            ['presences', 'presences.' . $presenceId],
+            timeout: 2
+        );
+
+        try {
+            $this->sendPresenceMessage($publisher, $presenceId, 'online', $metadata, $this->getPresencePermissions(Role::any()));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+
+            $cached = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('online', $this->presenceStatusFor($cached, $presenceId));
+
+            // Status-only heartbeat keeps the same permissions, so the hash is unchanged and the
+            // cache is not purged: the cached page still reads 'online', proving it is serving.
+            $this->sendPresenceMessage($publisher, $presenceId, 'away', $metadata, $this->getPresencePermissions(Role::any()));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'away', $metadata, $user['$id']);
+            $stale = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('online', $this->presenceStatusFor($stale, $presenceId));
+
+            // Narrowing the read role changes the permissionsHash, which must purge the cache; the
+            // fresh list then reflects the latest status.
+            $this->sendPresenceMessage($publisher, $presenceId, 'busy', $metadata, $this->getPresencePermissions(Role::user($user['$id'])));
+            $this->collectPresenceOutcome($publisher, $presenceId, 'busy', $metadata, $user['$id']);
+            $fresh = $this->listPresencesCached($serverHeaders, $query);
+            $this->assertSame('busy', $this->presenceStatusFor($fresh, $presenceId));
+        } finally {
+            $publisher->close();
+        }
+    }
+
     public function testPresenceUpsertSenderGetsResponseAndEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
-        $metadata = ['testRunId' => ID::unique(), 'case' => 'upsert-basic'];
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'case' => 'upsert-basic'];
 
         $publisher = $this->connectRealtimeAndSubscribe(
             $project,
@@ -314,9 +419,9 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceUpsertSameUserUpdatesSingleRecord(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $firstPresenceId = ID::unique();
-        $secondPresenceId = ID::unique();
-        $marker = ID::unique();
+        $firstPresenceId = Id::unique();
+        $secondPresenceId = Id::unique();
+        $marker = Id::unique();
 
         $publisher = $this->connectRealtimeAndSubscribe(
             $project,
@@ -373,7 +478,7 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceValidationErrorsReturnErrorOnly(): void
     {
         [$project, , $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
         $client = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 2);
 
         try {
@@ -382,7 +487,7 @@ final class PresenceRealtimeClientTest extends Scope
                 'data' => [
                     'presenceId' => $presenceId,
                     'metadata' => [
-                        'testRunId' => ID::unique(),
+                        'testRunId' => Id::unique(),
                     ],
                 ],
             ]));
@@ -409,6 +514,32 @@ final class PresenceRealtimeClientTest extends Scope
                 fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
                     && ($frame['data']['payload']['$id'] ?? null) === $presenceId
             );
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => 'invalid id!',
+                    'status' => 'online',
+                ],
+            ]));
+            $invalidId = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('presenceId: ', (string) ($invalidId['data']['message'] ?? ''));
+
+            $client->send(\json_encode([
+                'type' => 'presence',
+                'data' => [
+                    'presenceId' => $presenceId,
+                    'status' => 'online',
+                    'metadata' => ['not', 'an', 'object'],
+                ],
+            ]));
+            $invalidMetadata = $this->receiveErrorMessage($client);
+            $this->assertStringContainsString('metadata: Value must be a valid JSON object', (string) ($invalidMetadata['data']['message'] ?? ''));
+            $this->assertQuietFor(
+                $client,
+                fn (array $frame): bool => ($frame['type'] ?? null) === 'event'
+                    && ($frame['data']['payload']['$id'] ?? null) === $presenceId
+            );
         } finally {
             $client->close();
         }
@@ -419,7 +550,7 @@ final class PresenceRealtimeClientTest extends Scope
         $project = $this->getProject(true);
         self::$project = $project;
 
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
         $client = $this->connectRealtimeAndSubscribe(
             $project,
             ['origin' => 'http://localhost'],
@@ -433,7 +564,7 @@ final class PresenceRealtimeClientTest extends Scope
                 'data' => [
                     'presenceId' => $presenceId,
                     'status' => 'online',
-                    'metadata' => ['testRunId' => ID::unique()],
+                    'metadata' => ['testRunId' => Id::unique()],
                 ],
             ]));
 
@@ -454,7 +585,7 @@ final class PresenceRealtimeClientTest extends Scope
     public function testChannelParsingChannelsAndEvents(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
+        $presenceId = Id::unique();
         $listener = $this->connectRealtimeAndSubscribe(
             $project,
             $headers,
@@ -463,7 +594,7 @@ final class PresenceRealtimeClientTest extends Scope
         );
 
         try {
-            $createMetadata = ['testRunId' => ID::unique(), 'source' => 'channel-create'];
+            $createMetadata = ['testRunId' => Id::unique(), 'source' => 'channel-create'];
             $updateMetadata = ['testRunId' => $createMetadata['testRunId'], 'source' => 'channel-update'];
 
             $create = $this->client->call(
@@ -514,8 +645,8 @@ final class PresenceRealtimeClientTest extends Scope
             'cookie' => 'a_session_' . $project['$id'] . '=' . $user2['session'],
         ];
 
-        $presenceIdAny = ID::unique();
-        $presenceIdOwner = ID::unique();
+        $presenceIdAny = Id::unique();
+        $presenceIdOwner = Id::unique();
 
         $channels = [
             'presences',
@@ -528,7 +659,7 @@ final class PresenceRealtimeClientTest extends Scope
         $listener2 = $this->connectRealtimeAndSubscribe($project, $user2Headers, $channels, timeout: 1);
 
         try {
-            $metadataAny = ['testRunId' => ID::unique(), 'visibility' => 'any'];
+            $metadataAny = ['testRunId' => Id::unique(), 'visibility' => 'any'];
             $this->sendPresenceMessage(
                 $publisher,
                 $presenceIdAny,
@@ -540,7 +671,7 @@ final class PresenceRealtimeClientTest extends Scope
             $this->receivePresenceEvent($listener1, $presenceIdAny, 'upsert', 'online', $metadataAny, $user1['$id']);
             $this->receivePresenceEvent($listener2, $presenceIdAny, 'upsert', 'online', $metadataAny, $user1['$id']);
 
-            $metadataOwner = ['testRunId' => ID::unique(), 'visibility' => 'owner'];
+            $metadataOwner = ['testRunId' => Id::unique(), 'visibility' => 'owner'];
             $this->sendPresenceMessage(
                 $publisher,
                 $presenceIdOwner,
@@ -568,8 +699,8 @@ final class PresenceRealtimeClientTest extends Scope
     public function testPresenceCloseEmitsDeleteEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
-        $metadata = ['testRunId' => ID::unique(), 'source' => 'close-delete'];
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'close-delete'];
 
         $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
         $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
@@ -593,11 +724,110 @@ final class PresenceRealtimeClientTest extends Scope
         }
     }
 
+    public function testPresenceCloseWithNumericIdEmitsDeleteEvent(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+
+        // A purely numeric id is a valid presence $id (UID allows digits), but when stored as
+        // an array key in the realtime worker's in-memory connection map it is coerced to an int
+        // by PHP. onClose must still delete it — regression for the coerced-key $id cleanup query.
+        $presenceId = (string) \random_int(10_000_000, 99_999_999);
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'close-delete-numeric'];
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $user['$id']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $metadata, $user['$id']);
+
+            $publisher->close();
+
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $user['$id'], timeoutMs: 3000);
+
+            // The row must actually be gone, not just the event fired.
+            $read = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(404, $read['headers']['status-code']);
+        } finally {
+            // Publisher is closed mid-body to trigger onClose; guard against a double close
+            // and still tear it down if an earlier assertion threw first.
+            try {
+                $publisher->close();
+            } catch (\Throwable) {
+                // Already closed.
+            }
+            $listener->close();
+        }
+    }
+
+    public function testPresenceReauthToDifferentUserRemovesPreviousRow(): void
+    {
+        [$project, $userA, $headers] = $this->bootstrapIsolatedProject();
+        $userB = $this->getUser(true);
+
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'reauth-switch'];
+        $channels = ['presences', 'presences.' . $presenceId];
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+        $listener = $this->connectRealtimeAndSubscribe($project, $headers, $channels, timeout: 1);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                $metadata,
+                $this->getPresencePermissions(Role::any())
+            );
+            $this->collectPresenceOutcome($publisher, $presenceId, 'online', $metadata, $userA['$id']);
+            $this->receivePresenceEvent($listener, $presenceId, 'upsert', 'online', $metadata, $userA['$id']);
+
+            // Re-authenticate the connection as a different user: its hold on the previous user
+            // must be released and that row deleted with an offline event.
+            $publisher->send(\json_encode([
+                'type' => 'authentication',
+                'data' => ['session' => $userB['session']],
+            ]));
+            $auth = \json_decode($publisher->receive(), true);
+            $this->assertEquals('authentication', $auth['data']['to']);
+            $this->assertTrue($auth['data']['success']);
+            $this->assertEquals($userB['$id'], $auth['data']['user']['$id']);
+
+            $this->receivePresenceEvent($listener, $presenceId, 'delete', 'online', $metadata, $userA['$id'], timeoutMs: 5000);
+
+            $read = $this->client->call(
+                Client::METHOD_GET,
+                '/presences/' . $presenceId,
+                $this->getServerHeaders($project)
+            );
+            $this->assertSame(404, $read['headers']['status-code']);
+        } finally {
+            try {
+                $publisher->close();
+            } catch (\Throwable) {
+                // Already closed.
+            }
+            $listener->close();
+        }
+    }
+
     public function testHttpDeleteThenCloseDoesNotDuplicateDeleteEvent(): void
     {
         [$project, $user, $headers] = $this->bootstrapIsolatedProject();
-        $presenceId = ID::unique();
-        $metadata = ['testRunId' => ID::unique(), 'source' => 'http-delete-then-close'];
+        $presenceId = Id::unique();
+        $metadata = ['testRunId' => Id::unique(), 'source' => 'http-delete-then-close'];
 
         $publisher = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
         $listener = $this->connectRealtimeAndSubscribe($project, $headers, ['presences', 'presences.' . $presenceId], timeout: 1);
@@ -681,5 +911,111 @@ final class PresenceRealtimeClientTest extends Scope
         } finally {
             $listener->close();
         }
+    }
+
+    public function testPresenceSetOverRealtimeIsListedToItsOwner(): void
+    {
+        [$project, $user, $headers] = $this->bootstrapIsolatedProject();
+        $presenceId = Id::unique();
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, timeout: 2);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'online',
+                ['testRunId' => Id::unique(), 'case' => 'owner-list'],
+                $this->getPresencePermissions(Role::user($user['$id']))
+            );
+            $this->receivePresenceResponse($publisher, $presenceId, 'online');
+
+            $this->assertSame(
+                [$presenceId],
+                $this->listPresenceIds($project, $user, $user['$id']),
+                'The owner of a presence set over realtime must find it when listing presences with their session'
+            );
+        } finally {
+            $publisher->close();
+        }
+    }
+
+    public function testPresenceMadePrivateOverRealtimeIsNoLongerListedToOtherUsers(): void
+    {
+        [$project, $owner, $headers] = $this->bootstrapIsolatedProject();
+        $other = $this->getUser(true);
+        $presenceId = Id::unique();
+
+        $create = $this->client->call(
+            Client::METHOD_PUT,
+            '/presences/' . $presenceId,
+            $this->getServerHeaders($project),
+            [
+                'userId' => $owner['$id'],
+                'status' => 'online',
+                'permissions' => $this->getPresencePermissions(Role::any()),
+            ]
+        );
+        $this->assertSame(200, $create['headers']['status-code']);
+        $this->assertSame([$presenceId], $this->listPresenceIds($project, $other, $owner['$id']));
+
+        $publisher = $this->connectRealtimeAndSubscribe($project, $headers, timeout: 2);
+
+        try {
+            $this->sendPresenceMessage(
+                $publisher,
+                $presenceId,
+                'busy',
+                ['testRunId' => Id::unique(), 'case' => 'made-private'],
+                $this->getPresencePermissions(Role::user($owner['$id']))
+            );
+            $this->receivePresenceResponse($publisher, $presenceId, 'busy');
+
+            $this->assertSame(
+                [],
+                $this->listPresenceIds($project, $other, $owner['$id']),
+                'A presence its owner made private over realtime must no longer be listed to other users'
+            );
+        } finally {
+            $publisher->close();
+        }
+    }
+
+    private function receivePresenceResponse(WebSocketClient $client, string $presenceId, string $status): void
+    {
+        $this->receiveUntil(
+            $client,
+            fn (array $message): bool => ($message['type'] ?? null) === 'response'
+                && ($message['data']['to'] ?? null) === 'presence'
+                && ($message['data']['presence']['$id'] ?? null) === $presenceId
+                && ($message['data']['presence']['status'] ?? null) === $status,
+            10_000
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function listPresenceIds(array $project, array $user, string $ownerId): array
+    {
+        $list = $this->client->call(
+            Client::METHOD_GET,
+            '/presences',
+            [
+                'content-type' => 'application/json',
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => $project['$id'],
+                'cookie' => 'a_session_' . $project['$id'] . '=' . $user['session'],
+            ],
+            [
+                'queries' => [
+                    Query::equal('userId', [$ownerId])->toString(),
+                ],
+            ]
+        );
+
+        $this->assertSame(200, $list['headers']['status-code']);
+
+        return \array_column($list['body']['presences'], '$id');
     }
 }

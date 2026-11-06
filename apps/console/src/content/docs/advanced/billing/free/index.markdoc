@@ -1,0 +1,24 @@
+---
+layout: article
+title: Free
+description: Appwrite's Free plan provides a generous free tier. Perfect for budding projects, hobbiests, and side-projects.
+---
+
+Appwrite Cloud provides a **Free** plan to all developers to start building with Appwrite.
+Appwrite Free plan is perfect for personal hobby projects for students and professional developers alike.
+Learn more about the Free plan's generous resource limits on the [pricing page](https://appwrite.io/pricing).
+
+# Create a Free plan organization {% #create-a-free-plan-organizations %}
+
+Appwrite Cloud's different plans are applied at an organization level. Resources on the Free plan are shared across projects, while paid plans offer dedicated resources per project.
+When you create your Appwrite Cloud account, a **Personal Projects** organization using the Free plan is automatically created.
+
+Each Appwrite Cloud account can only have one organization and 2 projects on the **Free** plan.
+
+# Resource limits {% #resource-limits %}
+
+Each plan in Appwrite Cloud has resource limits. The details of these resource limits are on the [pricing page](https://appwrite.io/pricing).
+
+Each resource limit is applied per billing period and resets at the beginning of each billing period. You cannot purchase additional resources under the Free plan.
+
+{% partial file="resource-limits.md" /%}

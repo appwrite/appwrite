@@ -1,0 +1,60 @@
+---
+layout: article
+title: Renewal
+description: Learn how domain expiry, auto-renewal, and billing work for Appwrite-registered domains.
+---
+
+Renewal applies to domains where **Appwrite is the registrar** ([registered](/docs/products/domains/register) or [transferred in](/docs/products/domains/transfer) through Appwrite). [External domains](/docs/products/domains/external) renew at your external registrar. Appwrite does not charge renewal for those names.
+
+# Expiry and renewal dates {% #expiry-and-renewal-dates %}
+
+On the domain detail page and **Settings** tab, Appwrite shows:
+
+- **Expiry date**: when the current registration period ends if not renewed
+- **Renewal date**: when the next renewal cycle applies (aligned with registry data)
+
+Track these dates for domains with auto-renewal disabled.
+
+# Auto-renewal {% #auto-renewal %}
+
+Auto-renewal is available only for Appwrite-registered domains.
+
+1. Open the domain **Settings** tab.
+2. Toggle **Auto renewal**.
+3. Click **Update** to save.
+
+When enabled, Appwrite attempts to renew the domain before expiry using your organization's default payment method. Renewal uses the price stored on the domain (`renewalPrice`) for the quoted period.
+
+{% info title="Payment method required" %}
+Auto-renewal requires a valid payment method on the organization. Update billing details under organization **Settings** > **Billing** if renewal fails.
+{% /info %}
+
+# Renewal retry schedule {% #renewal-retry-schedule %}
+
+If a renewal charge fails, Appwrite retries on a schedule leading up to expiry (multiple attempts across roughly 30 days before the expiration date). You receive email notification when renewal fails or when action is required.
+
+To avoid losing a domain:
+
+- Keep a backup payment method on the organization.
+- Monitor billing emails from Appwrite.
+- Renew manually by ensuring a valid card before the expiry date if auto-renewal is off.
+
+# Registration and transfer charges {% #registration-and-transfer-charges %}
+
+[Registering](/docs/products/domains/register) or [transferring in](/docs/products/domains/transfer) a domain creates an invoice on your organization. Charges appear in organization billing history with the domain name and registration period.
+
+Checkout shows the registration or transfer fee, premium pricing when applicable, and estimated renewal amount for the same period when available. See [Pricing](/docs/products/domains/pricing) for how quotes and premium names work.
+
+# Invoices {% #invoices %}
+
+Domain registration, transfer, and renewal generate invoices you can download from organization billing. Invoice line items include the domain, period length, and charge type (registration, transfer, or renewal).
+
+# Tax and billing address {% #tax-and-billing-address %}
+
+Registration checkout uses the billing address on your organization for tax calculation. Keep registrant contact and billing address current to avoid registry or payment issues.
+
+# Plan limits {% #plan-limits %}
+
+Organization plans cap how many domains you can hold. When [downgrading](/docs/advanced/platform/billing), you may need to remove domains to meet the new limit before the plan change completes.
+
+Removing a domain from Appwrite does not automatically cancel registry registration for Appwrite-registered names unless you also complete [transfer out](/docs/products/domains/transfer#transfer-out) or allow expiry without renewal. See [Delete a domain](/docs/products/domains/delete).

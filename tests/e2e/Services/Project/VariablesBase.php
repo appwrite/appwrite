@@ -5,9 +5,10 @@ namespace Tests\E2E\Services\Project;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -23,7 +24,7 @@ trait VariablesBase
     public function testCreateVariable(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'APP_KEY',
             'my-secret-value',
         );
@@ -59,7 +60,7 @@ trait VariablesBase
     public function testCreateVariableNonSecret(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'PUBLIC_KEY',
             'public-value',
             false
@@ -79,7 +80,7 @@ trait VariablesBase
     public function testCreateVariableSecretValueHidden(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'SECRET_KEY',
             'hidden-value',
             true
@@ -101,7 +102,7 @@ trait VariablesBase
     public function testCreateVariableWithoutAuthentication(): void
     {
         $response = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'NO_AUTH_KEY',
             'no-auth-value',
             null,
@@ -122,10 +123,89 @@ trait VariablesBase
         $this->assertSame(400, $variable['headers']['status-code']);
     }
 
+    public function testCreateVariableDescription(): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $variable = $this->createVariable(ID::unique(), 'STRIPE_KEY', 'sk_test', false, description: 'Stripe key used at checkout');
+
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $variable['body']['description']);
+        $variableId = $variable['body']['$id'];
+
+        $get = $this->getVariable($variableId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('Stripe key used at checkout', $get['body']['description']);
+
+        $plain = $this->createVariable(ID::unique(), 'PLAIN_KEY', 'plain', false);
+
+        $this->assertSame(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->createVariable(ID::unique(), 'LONG_DESCRIPTION', 'value', false, description: \str_repeat('a', 1025));
+
+        $this->assertSame(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+
+        // Cleanup
+        $this->deleteVariable($variableId);
+        $this->deleteVariable($plain['body']['$id']);
+    }
+
+    public function testCreateVariableInvalidKey(): void
+    {
+        // Keys become container env var names; anything that is not a
+        // C_IDENTIFIER is refused at the endpoint.
+        $keys = [
+            '9KEY',
+            'MY KEY',
+            'MY-KEY',
+            'my.key',
+            'FOO=BAR',
+            "TRAILING_TAB\t",
+            'RÉSUMÉ_KEY',
+            "A\x00C\x00M\x00E_API_KEY",
+        ];
+
+        foreach ($keys as $key) {
+            $response = $this->createVariable(Id::unique(), $key, 'value');
+
+            $this->assertSame(400, $response['headers']['status-code'], 'Key ' . \json_encode($key) . ' should be refused');
+        }
+    }
+
+    public function testUpdateVariableInvalidKeyLeavesVariableUnchanged(): void
+    {
+        $variable = $this->createVariable(
+            Id::unique(),
+            'VALID_KEY',
+            'valid-value',
+            false
+        );
+
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        $updated = $this->updateVariable($variableId, "BAD KEY\t", 'new-value');
+        $this->assertSame(400, $updated['headers']['status-code']);
+
+        $get = $this->getVariable($variableId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('VALID_KEY', $get['body']['key']);
+        $this->assertSame('valid-value', $get['body']['value']);
+
+        // Cleanup
+        $this->deleteVariable($variableId);
+    }
+
     public function testCreateVariableMissingKey(): void
     {
         $response = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             null,
             'some-value',
         );
@@ -136,7 +216,7 @@ trait VariablesBase
     public function testCreateVariableMissingValue(): void
     {
         $response = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'MISSING_VALUE_KEY',
             null,
         );
@@ -146,7 +226,7 @@ trait VariablesBase
 
     public function testCreateVariableDuplicateId(): void
     {
-        $variableId = ID::unique();
+        $variableId = Id::unique();
 
         $variable = $this->createVariable(
             $variableId,
@@ -197,7 +277,7 @@ trait VariablesBase
     public function testUpdateVariable(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'ORIGINAL_KEY',
             'original-value',
             false
@@ -227,7 +307,7 @@ trait VariablesBase
     public function testUpdateVariableKey(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'KEY_BEFORE',
             'unchanged-value',
             false
@@ -250,7 +330,7 @@ trait VariablesBase
     public function testUpdateVariableValue(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'UNCHANGED_KEY',
             'value-before',
             false
@@ -273,7 +353,7 @@ trait VariablesBase
     public function testUpdateVariableSetSecret(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'MAKE_SECRET_KEY',
             'some-value',
             false
@@ -297,7 +377,7 @@ trait VariablesBase
     public function testUpdateVariableCannotUnsetSecret(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'UNSET_SECRET_KEY',
             'secret-value',
             true
@@ -324,7 +404,7 @@ trait VariablesBase
     public function testUpdateVariableNoOp(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'NOOP_KEY',
             'noop-value',
             false
@@ -345,7 +425,7 @@ trait VariablesBase
     public function testUpdateVariableWithoutAuthentication(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'AUTH_UPDATE_KEY',
             'auth-value',
         );
@@ -357,6 +437,49 @@ trait VariablesBase
         $response = $this->updateVariable($variableId, 'UPDATED_KEY', null, null, false);
 
         $this->assertSame(401, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteVariable($variableId);
+    }
+
+    public function testUpdateVariableDescription(): void
+    {
+        $variable = $this->createVariable(ID::unique(), 'STRIPE_KEY', 'sk_test', false, description: 'Stripe key used at checkout');
+
+        $this->assertSame(201, $variable['headers']['status-code']);
+        $variableId = $variable['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->updateVariable($variableId, description: 'Rotated quarterly');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $updated['body']['description']);
+        $this->assertSame('STRIPE_KEY', $updated['body']['key']);
+        $this->assertSame('sk_test', $updated['body']['value']);
+
+        $updated = $this->updateVariable($variableId, value: 'sk_live');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('Rotated quarterly', $updated['body']['description']);
+
+        $updated = $this->updateVariable($variableId, description: '');
+
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['description']);
+
+        $get = $this->getVariable($variableId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $updated = $this->updateVariable($variableId, description: \str_repeat('a', 1025));
+
+        $this->assertSame(400, $updated['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $updated['body']['type']);
 
         // Cleanup
         $this->deleteVariable($variableId);
@@ -375,7 +498,7 @@ trait VariablesBase
     public function testGetVariable(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'GET_TEST_KEY',
             'get-test-value',
             false
@@ -413,7 +536,7 @@ trait VariablesBase
     public function testGetVariableWithoutAuthentication(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'AUTH_GET_KEY',
             'auth-get-value',
         );
@@ -436,7 +559,7 @@ trait VariablesBase
     {
         // Create multiple variables
         $variable1 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'LIST_KEY_ALPHA',
             'alpha-value',
             false
@@ -444,7 +567,7 @@ trait VariablesBase
         $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'LIST_KEY_BETA',
             'beta-value',
             true
@@ -452,7 +575,7 @@ trait VariablesBase
         $this->assertSame(201, $variable2['headers']['status-code']);
 
         $variable3 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'LIST_KEY_GAMMA',
             'gamma-value',
             false
@@ -488,14 +611,14 @@ trait VariablesBase
     public function testListVariablesWithLimit(): void
     {
         $variable1 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'LIMIT_KEY_1',
             'limit-value-1',
         );
         $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'LIMIT_KEY_2',
             'limit-value-2',
         );
@@ -518,14 +641,14 @@ trait VariablesBase
     public function testListVariablesWithOffset(): void
     {
         $variable1 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'OFFSET_KEY_1',
             'offset-value-1',
         );
         $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'OFFSET_KEY_2',
             'offset-value-2',
         );
@@ -552,7 +675,7 @@ trait VariablesBase
     public function testListVariablesWithoutTotal(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'NO_TOTAL_KEY',
             'no-total-value',
         );
@@ -572,14 +695,14 @@ trait VariablesBase
     public function testListVariablesCursorPagination(): void
     {
         $variable1 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'CURSOR_KEY_1',
             'cursor-value-1',
         );
         $this->assertSame(201, $variable1['headers']['status-code']);
 
         $variable2 = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'CURSOR_KEY_2',
             'cursor-value-2',
         );
@@ -630,7 +753,7 @@ trait VariablesBase
     public function testDeleteVariable(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'DELETE_KEY',
             'delete-value',
         );
@@ -664,7 +787,7 @@ trait VariablesBase
     public function testDeleteVariableWithoutAuthentication(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'DELETE_AUTH_KEY',
             'delete-auth-value',
         );
@@ -688,7 +811,7 @@ trait VariablesBase
     public function testDeleteVariableRemovedFromList(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'DELETE_LIST_KEY',
             'delete-list-value',
         );
@@ -718,7 +841,7 @@ trait VariablesBase
     public function testDeleteVariableDoubleDelete(): void
     {
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'DOUBLE_DELETE_KEY',
             'double-delete-value',
         );
@@ -738,7 +861,7 @@ trait VariablesBase
 
     // Helpers
 
-    protected function createVariable(string $variableId, ?string $key, ?string $value, ?bool $secret = null, bool $authenticated = true): mixed
+    protected function createVariable(string $variableId, ?string $key, ?string $value, ?bool $secret = null, bool $authenticated = true, ?string $description = null): mixed
     {
         $params = [
             'variableId' => $variableId,
@@ -756,6 +879,10 @@ trait VariablesBase
             $params['secret'] = $secret;
         }
 
+        if ($description !== null) {
+            $params['description'] = $description;
+        }
+
         $headers = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -768,7 +895,7 @@ trait VariablesBase
         return $this->client->call(Client::METHOD_POST, '/project/variables', $headers, $params);
     }
 
-    protected function updateVariable(string $variableId, ?string $key = null, ?string $value = null, ?bool $secret = null, bool $authenticated = true): mixed
+    protected function updateVariable(string $variableId, ?string $key = null, ?string $value = null, ?bool $secret = null, bool $authenticated = true, ?string $description = null): mixed
     {
         $params = [];
 
@@ -782,6 +909,10 @@ trait VariablesBase
 
         if ($secret !== null) {
             $params['secret'] = $secret;
+        }
+
+        if ($description !== null) {
+            $params['description'] = $description;
         }
 
         $headers = [
@@ -849,7 +980,14 @@ trait VariablesBase
         $folderPath = realpath(__DIR__ . '/../../../resources/' . $type) . "/$name";
         $tarPath = "$folderPath/code.tar.gz";
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');

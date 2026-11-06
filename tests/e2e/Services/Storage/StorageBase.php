@@ -4,12 +4,13 @@ namespace Tests\E2E\Services\Storage;
 
 use Appwrite\Extend\Exception;
 use CURLFile;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
@@ -73,7 +74,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -92,7 +93,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -107,7 +108,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
@@ -153,7 +154,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -190,7 +191,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -220,7 +221,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -241,7 +242,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -267,7 +268,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
@@ -362,7 +363,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -380,7 +381,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-1.png'), 'image/png', 'kitten-1.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -400,7 +401,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-3.gif'), 'image/gif', 'kitten-3.gif'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -420,7 +421,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'maximumFileSize' => 6000000001,
@@ -446,7 +447,7 @@ trait StorageBase
             'content-range' => 'bytes 0-' . $size . '/' . $size,
             'x-appwrite-id' => 'unique()',
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile($source, 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -465,7 +466,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -491,6 +492,69 @@ trait StorageBase
         $this->assertNotEmpty($webpView['body']);
     }
 
+    public function testFileViewContentType(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'View Content Types',
+            'compression' => 'gzip',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $cases = [
+            // SVG is executable in a browser, so it is served as a download
+            // (attachment) and never rendered as a top-level document.
+            ['source' => 'logo.svg', 'mimeType' => 'image/svg+xml', 'contentType' => 'image/svg+xml', 'disposition' => 'attachment'],
+            ['source' => 'logo.png', 'mimeType' => 'image/png', 'contentType' => 'image/png', 'disposition' => 'inline'],
+            ['source' => 'document.pdf', 'mimeType' => 'application/pdf', 'contentType' => 'application/pdf', 'disposition' => 'inline'],
+            // HTML is not in the storage-mimes allowlist on purpose: rendering
+            // user uploads as HTML on the API origin would allow stored XSS.
+            ['source' => 'page.html', 'mimeType' => 'text/html', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+            // A TrueType font sniffs as a bare SFNT, so its type comes from the extension.
+            ['source' => '../../public/fonts/Poppins-Bold.ttf', 'mimeType' => 'font/ttf', 'contentType' => 'text/plain', 'disposition' => 'inline'],
+        ];
+
+        foreach ($cases as $case) {
+            $source = realpath(__DIR__ . '/../../../resources/' . $case['source']);
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => Id::unique(),
+                'file' => new CURLFile($source, $case['mimeType'], \basename($source)),
+                'permissions' => [
+                    Permission::read(Role::any()),
+                ],
+            ]);
+
+            $this->assertEquals(201, $file['headers']['status-code'], $case['source']);
+            $this->assertEquals($case['mimeType'], $file['body']['mimeType'], $case['source']);
+
+            $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $view['headers']['status-code'], $case['source']);
+            $this->assertEquals($case['contentType'], $view['headers']['content-type'], $case['source']);
+            $this->assertEquals("script-src 'none';", $view['headers']['content-security-policy'], $case['source']);
+            $this->assertEquals('nosniff', $view['headers']['x-content-type-options'], $case['source']);
+            $this->assertStringStartsWith($case['disposition'] . ';', $view['headers']['content-disposition'], $case['source']);
+            $this->assertEquals(\file_get_contents($source), $view['body'], $case['source']);
+        }
+    }
+
     public function testCreateBucketFileWithFolder(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
@@ -498,7 +562,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Folders',
             'fileSecurity' => true,
             'permissions' => [
@@ -516,7 +580,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'folder' => 'photos/2026',
         ]);
@@ -530,7 +594,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ]);
         $this->assertEquals(201, $rootFile['headers']['status-code']);
@@ -542,7 +606,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'folder' => 'photos/2026',
         ]);
@@ -556,7 +620,7 @@ trait StorageBase
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
                 'folder' => $invalid,
             ]);
@@ -612,7 +676,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
@@ -635,7 +699,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -652,6 +716,91 @@ trait StorageBase
         $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
     }
 
+    public function testBucketFileCompressionAndEncryptionAreNeverNull(): void
+    {
+        // Neither compression nor encryption is configured, so the response
+        // values come from whatever the File model falls back to.
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'Test Bucket',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertTrue($file['body']['encryption']);
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertSame('none', $file['body']['compression']);
+        $this->assertTrue($file['body']['encryption']);
+
+        // A chunked upload creates the file document on the first chunk, before
+        // the algorithm is known, and returns it. Every chunk response is a File.
+        $source = __DIR__ . '/../../../resources/disk-a/large-file.mp4';
+        $size = \filesize($source);
+
+        // Both are skipped above the buffer, so every chunk reports none/false.
+        $this->assertGreaterThan(APP_STORAGE_READ_BUFFER, $size);
+        $chunkSize = 5 * 1024 * 1024;
+        $handle = @\fopen($source, 'rb');
+        $mimeType = \mime_content_type($source);
+        $counter = 0;
+        $id = '';
+        $chunked = null;
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        while (!\feof($handle)) {
+            $curlFile = new CURLFile('data://' . $mimeType . ';base64,' . \base64_encode(@\fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . \min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+            $chunked = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => 'unique()',
+                'file' => $curlFile,
+            ]);
+            $this->assertNotEmpty($chunked['body']['$id']);
+            $this->assertSame('none', $chunked['body']['compression']);
+            $this->assertFalse($chunked['body']['encryption']);
+            $id = $chunked['body']['$id'];
+            $counter++;
+        }
+        \fclose($handle);
+        $this->assertEquals(201, $chunked['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
     public function testCreateBucketFileNoCollidingId(): void
     {
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
@@ -659,7 +808,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'maximumFileSize' => 2000000, //2MB
             'allowedFileExtensions' => ["jpg", "png"],
@@ -676,7 +825,7 @@ trait StorageBase
 
         $bucketId = $bucket['body']['$id'];
 
-        $fileId = ID::unique();
+        $fileId = Id::unique();
 
         $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
@@ -822,7 +971,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/preview-test.jfif'), 'image/jxl', 'preview-test.jfif'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -897,7 +1046,7 @@ trait StorageBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $file5['headers']['status-code']);
-        $this->assertEquals('attachment; filename="logo.png"', $file5['headers']['content-disposition']);
+        $this->assertSame('attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png', $file5['headers']['content-disposition']);
         $this->assertEquals('image/png', $file5['headers']['content-type']);
         $this->assertNotEmpty($file5['body']);
 
@@ -912,7 +1061,7 @@ trait StorageBase
         $originalChunk = \file_get_contents($path, false, null, 0, 100);
 
         $this->assertEquals(206, $file51['headers']['status-code']);
-        $this->assertEquals('attachment; filename="logo.png"', $file51['headers']['content-disposition']);
+        $this->assertSame('attachment; filename="logo.png"; filename*=UTF-8\'\'logo.png', $file51['headers']['content-disposition']);
         $this->assertEquals('image/png', $file51['headers']['content-type']);
         $this->assertNotEmpty($file51['body']);
         $this->assertEquals($originalChunk, $file51['body']);
@@ -944,6 +1093,53 @@ trait StorageBase
 
         $this->assertEquals(416, $file54['headers']['status-code']);
 
+        // Test ranged download - inclusive bounds, so start === end is one byte
+        $size = \filesize($path);
+
+        $file55 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-0',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file55['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $file55['headers']['content-range']);
+        $this->assertEquals('1', $file55['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $file55['body']);
+
+        // Test ranged download - the final byte
+        $file56 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 1) . '-' . ($size - 1),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file56['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $file56['headers']['content-range']);
+        $this->assertEquals('1', $file56['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $file56['body']);
+
+        // Test ranged download - an end past the last byte is clamped to it
+        $file57 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 100) . '-' . ($size + 500),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file57['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 100) . '-' . ($size - 1) . '/' . $size, $file57['headers']['content-range']);
+        $this->assertEquals('100', $file57['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, $size - 100, 100), $file57['body']);
+
+        // Test ranged download - with a start at the end of the file
+        $file58 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $size . '-' . ($size + 500),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(416, $file58['headers']['status-code']);
+
         $file6 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -952,6 +1148,39 @@ trait StorageBase
         $this->assertEquals(200, $file6['headers']['status-code']);
         $this->assertEquals('image/png', $file6['headers']['content-type']);
         $this->assertNotEmpty($file6['body']);
+
+        // Test ranged view - the same guard as download
+        $file61 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=0-0',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file61['headers']['status-code']);
+        $this->assertEquals('bytes 0-0/' . $size, $file61['headers']['content-range']);
+        $this->assertEquals('1', $file61['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, 0, 1), $file61['body']);
+
+        // Test ranged view - the final byte, with an end past it
+        $file62 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . ($size - 1) . '-' . ($size + 500),
+        ], $this->getHeaders()));
+
+        $this->assertEquals(206, $file62['headers']['status-code']);
+        $this->assertEquals('bytes ' . ($size - 1) . '-' . ($size - 1) . '/' . $size, $file62['headers']['content-range']);
+        $this->assertEquals('1', $file62['headers']['content-length']);
+        $this->assertEquals(\file_get_contents($path, false, null, $size - 1, 1), $file62['body']);
+
+        // Test ranged view - with a start at the end of the file
+        $file63 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/view', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'Range' => 'bytes=' . $size . '-',
+        ], $this->getHeaders()));
+
+        $this->assertEquals(416, $file63['headers']['status-code']);
 
         // Test for negative angle values in fileGetPreview
         $file7 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
@@ -987,7 +1216,7 @@ trait StorageBase
         ], $this->getHeaders()));
         $fileData = $file7['body'];
         $this->assertEquals(200, $file7['headers']['status-code']);
-        $this->assertEquals('attachment; filename="large-file.mp4"', $file7['headers']['content-disposition']);
+        $this->assertSame('attachment; filename="large-file.mp4"; filename*=UTF-8\'\'large-file.mp4', $file7['headers']['content-disposition']);
         $this->assertEquals('video/mp4', $file7['headers']['content-type']);
         $this->assertNotEmpty($fileData);
         $this->assertEquals(md5_file(realpath(__DIR__ . '/../../../resources/disk-a/large-file.mp4')), md5($fileData)); // validate the file is downloaded correctly
@@ -1015,7 +1244,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/image-bomb.png'), 'image/png', 'image-bomb.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1037,6 +1266,220 @@ trait StorageBase
         $this->assertStringContainsString('60000x1', $preview['body']['message']);
     }
 
+    public function testFilePreviewOnePixelSideWithGravity(): void
+    {
+        $data = $this->setupBucketFile();
+        $bucketId = $data['bucketId'];
+
+        // kitten-2.jpg is landscape, so a 1px width derives a height below one pixel.
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-2.jpg'), 'image/jpeg', 'kitten-2.jpg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 1,
+            'height' => 0,
+            'gravity' => 'top-left',
+            'output' => 'png',
+        ]);
+
+        $this->assertSame(200, $preview['headers']['status-code']);
+        $this->assertSame('image/png', $preview['headers']['content-type']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($preview['body']);
+        $this->assertSame(1, $image->getImageWidth());
+        $this->assertSame(1, $image->getImageHeight());
+    }
+
+    public function testFileViewSvgIsNotExecutable(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'SVG View Safety',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // A hostile SVG carrying <script>, onload, onclick, and a javascript: href.
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'script.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals('image/svg+xml', $file['body']['mimeType']);
+
+        $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        /**
+         * Test for SUCCESS - the browser is never allowed to execute the SVG:
+         * it is served as a download, not rendered as a top-level document.
+         */
+        $this->assertEquals(200, $view['headers']['status-code']);
+        $this->assertStringStartsWith('attachment;', $view['headers']['content-disposition']);
+        $this->assertEquals("script-src 'none';", $view['headers']['content-security-policy']);
+        $this->assertEquals('nosniff', $view['headers']['x-content-type-options']);
+    }
+
+    public function testFileViewContentDispositionFilename(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'View Filename',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $name = 'café;"name.svg';
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/script.svg'), 'image/svg+xml', 'quoted.svg'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => $name,
+        ]);
+        $this->assertEquals(200, $file['headers']['status-code']);
+        $this->assertSame($name, $file['body']['name']);
+
+        $view = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $file['body']['$id'] . '/view', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $view['headers']['status-code']);
+        $disposition = (string) $view['headers']['content-disposition'];
+        $this->assertStringStartsWith('attachment;', $disposition);
+        $this->assertStringContainsString('filename="caf_name.svg"', $disposition);
+        $this->assertStringContainsString("filename*=UTF-8''" . \rawurlencode($name), $disposition);
+    }
+
+    public function testFileDownloadContentDisposition(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'Download Filename',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/page.html'), 'text/html', 'page.html'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+        $fileId = $file['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $name = 'café "report"\\;.html';
+        $renamed = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => $name,
+        ]);
+        $this->assertSame(200, $renamed['headers']['status-code']);
+        $this->assertSame($name, $renamed['body']['name']);
+
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $download['headers']['status-code']);
+        $this->assertSame('attachment; filename="caf_ report.html"; filename*=UTF-8\'\'' . \rawurlencode($name), $download['headers']['content-disposition']);
+        $this->assertSame('nosniff', $download['headers']['x-content-type-options']);
+        $this->assertSame("sandbox; script-src 'none';", $download['headers']['content-security-policy']);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (["page\n.html", "page\r\n.html", "page\0.html"] as $invalid) {
+            $rejected = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], [
+                'name' => $invalid,
+            ]);
+            $this->assertSame(400, $rejected['headers']['status-code'], \json_encode($invalid));
+        }
+
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertSame(200, $file['headers']['status-code']);
+        $this->assertSame($name, $file['body']['name']);
+    }
+
     public function testFilePreviewCache(): void
     {
         $data = $this->setupBucketFile();
@@ -1046,7 +1489,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::custom('testcache'),
+            'fileId' => Id::custom('testcache'),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1100,7 +1543,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::custom('testcache'),
+            'fileId' => Id::custom('testcache'),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-b/kitten-2.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1111,27 +1554,29 @@ trait StorageBase
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
 
-        //get image preview after
-        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'width' => 300,
-            'height' => 100,
-            'borderRadius' => '50',
-            'opacity' => '0.5',
-            'output' => 'png',
-            'rotation' => '45',
-        ]);
+        // The delete worker invalidates previews asynchronously.
+        $this->assertEventually(function () use ($bucketId, $fileId, $imageBefore) {
+            $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'width' => 300,
+                'height' => 100,
+                'borderRadius' => '50',
+                'opacity' => '0.5',
+                'output' => 'png',
+                'rotation' => '45',
+            ]);
 
-        $this->assertEquals(200, $file3['headers']['status-code']);
-        $this->assertEquals('image/png', $file3['headers']['content-type']);
-        $this->assertNotEmpty($file3['body']);
+            $this->assertEquals(200, $file3['headers']['status-code']);
+            $this->assertEquals('image/png', $file3['headers']['content-type']);
+            $this->assertNotEmpty($file3['body']);
 
-        $imageAfter = new \Imagick();
-        $imageAfter->readImageBlob($file3['body']);
+            $imageAfter = new \Imagick();
+            $imageAfter->readImageBlob($file3['body']);
 
-        $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+            $this->assertNotSame($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
+        }, 10_000, 500);
     }
 
     public function testFilePreviewCacheControlOnCacheHit(): void
@@ -1142,7 +1587,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1221,7 +1666,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1366,7 +1811,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/disk-a/kitten-1.jpg'), 'image/jpeg', 'kitten-1.jpg'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1399,7 +1844,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Partial Upload',
             'fileSecurity' => true,
             'permissions' => [
@@ -1437,7 +1882,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'content-range' => 'bytes 0-' . $end . '/' . $totalSize,
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => $curlFile,
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1489,7 +1934,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Chunked Upload No Read Permission',
             'fileSecurity' => true,
             'permissions' => [
@@ -1504,7 +1949,7 @@ trait StorageBase
         $totalSize = \filesize($source);
         $chunkSize = 5 * 1024 * 1024;
         $mimeType = mime_content_type($source);
-        $fileId = ID::unique();
+        $fileId = Id::unique();
         $uploadedFileId = null;
         $chunksTotal = (int) ceil($totalSize / $chunkSize);
 
@@ -1584,7 +2029,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Out of Order Upload',
             'fileSecurity' => true,
             'permissions' => [
@@ -1628,7 +2073,7 @@ trait StorageBase
 
         // Upload chunks in out-of-order sequence: last chunk first, then first, then middle
         $uploadOrder = [count($chunks) - 1, 0, 1]; // last, first, second (for 3+ chunks)
-        $fileId = ID::unique();
+        $fileId = Id::unique();
         $id = '';
         $uploadedFile = null;
 
@@ -1723,8 +2168,156 @@ trait StorageBase
         ]);
     }
 
-    public function testCreateBucketFileParallelChunksLargeFile(): void
+    /**
+     * Concurrent unauthenticated uploads run the abuse rate limiter from many
+     * coroutines in one HTTP worker. A shared Redis connection there kills the
+     * worker with a fatal Swoole error instead of answering the requests.
+     *
+     * Two assertions, both on observable behavior. Every request must be
+     * answered -- a dead worker cannot answer, so it surfaces as a transport
+     * error or a negative status code. And every answer must carry coherent
+     * rate limit headers, which a limiter reading a corrupted connection
+     * cannot produce. Those headers are only checked for internal coherence,
+     * never against a configured limit. The header check holds whatever the
+     * worker topology is;
+     * the fan-out only decides how likely the requests are to land on one
+     * worker together, so treat this as a regression guard rather than proof
+     * of safety at any given concurrency.
+     */
+    public function testCreateBucketFileParallelUploads(): void
     {
+        $total = 24;
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => Id::unique(),
+            'name' => 'Test Bucket Parallel Upload',
+            'antivirus' => false,
+            'encryption' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $bucketId = $bucket['body']['$id'];
+        $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-uploads-' . $bucketId;
+        mkdir($tmpDirectory);
+
+        try {
+            $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'parallel-upload.bin';
+            file_put_contents($source, str_repeat('parallel upload probe ', 32));
+
+            $endpoint = parse_url($this->client->getEndpoint());
+            $scheme = $endpoint['scheme'] ?? 'http';
+            $host = $endpoint['host'] ?? 'appwrite';
+            $port = $endpoint['port'] ?? ($scheme === 'https' ? 443 : 80);
+            $basePath = rtrim($endpoint['path'] ?? '', '/');
+
+            $responses = [];
+
+            \Swoole\Coroutine\run(function () use ($basePath, $bucketId, $host, $port, $scheme, $source, $total, &$responses): void {
+                $wg = new \Swoole\Coroutine\WaitGroup();
+
+                for ($index = 0; $index < $total; $index++) {
+                    $wg->add();
+                    \Swoole\Coroutine::create(function () use ($basePath, $bucketId, $host, $index, $port, &$responses, $scheme, $source, $wg): void {
+                        try {
+                            $client = new \Swoole\Coroutine\Http\Client($host, (int) $port, $scheme === 'https');
+                            $client->set([
+                                'timeout' => 60,
+                                'ssl_verify_peer' => false,
+                                'ssl_verify_host' => false,
+                            ]);
+                            // No API key or session: the abuse limiter only runs for unprivileged callers.
+                            $client->setHeaders(['x-appwrite-project' => $this->getProject()['$id']]);
+                            $client->setMethod(Client::METHOD_POST);
+                            $client->setData(['fileId' => Id::unique()]);
+                            $client->addFile($source, 'file', 'application/octet-stream', 'parallel-upload.bin');
+                            $client->execute($basePath . '/storage/buckets/' . $bucketId . '/files');
+
+                            $responses[$index] = [
+                                'error' => $client->errMsg,
+                                'headers' => $client->headers ?? [],
+                                'statusCode' => $client->statusCode,
+                            ];
+
+                            $client->close();
+                        } finally {
+                            $wg->done();
+                        }
+                    });
+                }
+
+                $wg->wait();
+            });
+
+            $this->assertCount($total, $responses);
+
+            foreach ($responses as $index => $response) {
+                // A dead worker shows up as a transport error or a negative status code.
+                $this->assertSame('', $response['error'], 'Upload ' . $index . ' failed at the connection level');
+                $this->assertContains($response['statusCode'], [201, 429], 'Upload ' . $index . ' returned ' . $response['statusCode']);
+
+                // The limiter answered from a usable connection, so it can still count.
+                // Coherence only: whatever the route's configured limit is, the
+                // remaining count has to fall inside it.
+                $this->assertArrayHasKey('x-ratelimit-limit', $response['headers'], 'Upload ' . $index . ' carried no rate limit headers');
+                $this->assertArrayHasKey('x-ratelimit-remaining', $response['headers'], 'Upload ' . $index . ' carried no remaining count');
+
+                $limit = (int) $response['headers']['x-ratelimit-limit'];
+                $remaining = (int) $response['headers']['x-ratelimit-remaining'];
+
+                $this->assertGreaterThan(0, $limit, 'Upload ' . $index . ' reported a nonsensical rate limit');
+                $this->assertGreaterThanOrEqual(0, $remaining);
+                $this->assertLessThanOrEqual($limit, $remaining);
+            }
+
+            $this->assertContains(201, array_column($responses, 'statusCode'));
+
+            // The worker must still be serving after the burst.
+            $alive = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $alive['headers']['status-code']);
+        } finally {
+            $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            foreach (glob($tmpDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $file) {
+                unlink($file);
+            }
+
+            if (is_dir($tmpDirectory)) {
+                rmdir($tmpDirectory);
+            }
+        }
+    }
+
+    public static function parallelChunksProvider(): array
+    {
+        return [
+            'distinct chunks' => [false],
+            'duplicate chunks' => [true],
+        ];
+    }
+
+    #[DataProvider('parallelChunksProvider')]
+    public function testCreateBucketFileParallelChunksLargeFile(bool $duplicate): void
+    {
+        // Test for SUCCESS
         $totalSize = 20 * 1024 * 1024;
         $chunkSize = 5 * 1024 * 1024;
         $chunksTotal = (int) ceil($totalSize / $chunkSize);
@@ -1736,7 +2329,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Parallel Chunk Upload',
             'fileSecurity' => true,
             'maximumFileSize' => $totalSize,
@@ -1750,7 +2343,7 @@ trait StorageBase
         $this->assertEquals(201, $bucket['headers']['status-code']);
 
         $bucketId = $bucket['body']['$id'];
-        $fileId = ID::unique();
+        $fileId = Id::unique();
         $tmpDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'appwrite-parallel-upload-' . $fileId;
         $source = $tmpDirectory . DIRECTORY_SEPARATOR . 'large-parallel-upload.bin';
 
@@ -1761,8 +2354,9 @@ trait StorageBase
             $this->assertNotFalse($handle, 'Could not create test file');
 
             $remaining = $totalSize;
-            $block = str_repeat(hash('sha256', $fileId, binary: true), 1024);
             while ($remaining > 0) {
+                // Distinct blocks expose reordered or duplicated chunks in the hash check.
+                $block = str_repeat(hash('sha256', $fileId . ':' . $remaining, binary: true), 1024);
                 $bytes = substr($block, 0, min(strlen($block), $remaining));
                 fwrite($handle, $bytes);
                 $remaining -= strlen($bytes);
@@ -1793,6 +2387,10 @@ trait StorageBase
                 ];
             }
             fclose($sourceHandle);
+
+            if ($duplicate) {
+                $requests = array_merge($requests, $requests);
+            }
 
             $responses = [];
             $endpoint = parse_url($this->client->getEndpoint());
@@ -1852,6 +2450,7 @@ trait StorageBase
 
             ksort($responses);
 
+            $this->assertCount(count($requests), $responses);
             foreach ($responses as $response) {
                 $this->assertSame('', $response['error']);
                 $this->assertContains($response['statusCode'], [200, 201], (string) $response['body']);
@@ -1866,6 +2465,21 @@ trait StorageBase
             $this->assertEquals(200, $uploadedFile['headers']['status-code']);
             $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksTotal']);
             $this->assertEquals($chunksTotal, $uploadedFile['body']['chunksUploaded']);
+
+            // A late retry must return the completed file without writing or finalizing again.
+            $retry = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge(
+                $requests[0]['headers'],
+                ['content-type' => 'multipart/form-data']
+            ), [
+                'fileId' => $fileId,
+                'file' => new CURLFile($requests[0]['chunkPath'], 'application/octet-stream', 'large-parallel-upload.bin'),
+                'permissions' => [Permission::read(Role::any()), Permission::delete(Role::any())],
+            ]);
+
+            $this->assertEquals(200, $retry['headers']['status-code']);
+            $this->assertEquals($fileId, $retry['body']['$id']);
+            $this->assertEquals($chunksTotal, $retry['body']['chunksUploaded']);
+            $this->assertEquals($uploadedFile['body']['signature'], $retry['body']['signature']);
 
             $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
                 'content-type' => 'application/json',
@@ -1909,7 +2523,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Delete',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000,
@@ -1928,7 +2542,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1981,7 +2595,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Size',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -2008,7 +2622,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ]);
 
@@ -2019,7 +2633,7 @@ trait StorageBase
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
         ]);
 
@@ -2046,7 +2660,7 @@ trait StorageBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Parent Filter',
             'fileSecurity' => true,
             'permissions' => [
@@ -2062,7 +2676,7 @@ trait StorageBase
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
                 'folder' => $folder,
                 'permissions' => [Permission::read(Role::any())],

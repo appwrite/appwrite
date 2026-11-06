@@ -1,64 +1,97 @@
-## Getting Started
+## Getting started
 
-### Init your SDK
-Initialize your SDK with your Appwrite server API endpoint and project ID which can be found in your project settings page and your new API secret Key from project's API keys section.
+### Initialize the client
+
+Create a client with your Appwrite endpoint, project ID and an [API key](https://appwrite.io/docs/partners/project/api-keys). Find the endpoint and project ID in your project's **Settings** page, and create an API key with only the scopes you need under **API keys** in the project sidebar.
 
 ```ruby
 require 'appwrite'
 
-client = Appwrite::Client.new()
-
-client
-    .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
-    .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
-    .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
-    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
-;
+client = Appwrite::Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .set_project('<PROJECT_ID>')
+    .set_key(ENV['APPWRITE_API_KEY'])
 ```
 
-### Make Your First Request
-Once your SDK object is set, create any of the Appwrite service objects and choose any request to send. Full documentation for any service method you would like to use can be found in your SDK documentation or in the [API References](https://appwrite.io/docs) section.
+API keys grant server-level access to your project. Keep them out of client-side code and version control.
+
+### Make a request
+
+Create a service object with the client and call any of its methods. Methods take keyword arguments and return model objects such as `Appwrite::Models::User`.
 
 ```ruby
-users = Appwrite::Users.new(client);
+users = Appwrite::Users.new(client)
 
-user = users.create(userId: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
+user = users.create(
+    user_id: Appwrite::ID.unique,
+    email: 'email@example.com',
+    password: 'password',
+    name: "Walter O'Brien"
+)
+
+puts user.id
+puts user.name
 ```
 
-### Full Example
-```ruby
-require 'appwrite'
+See the [API reference](https://appwrite.io/docs/references/cloud/server-ruby/users) for every service and method.
 
-client = Appwrite::Client.new()
+### Work with rows
 
-client
-    .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
-    .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
-    .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
-    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
-;
-
-users = Appwrite::Users.new(client);
-
-user = users.create(userId: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
-```
-
-### Error Handling
-The Appwrite Ruby SDK raises `Appwrite::Exception` object with `message`, `code` and `response` properties. You can handle any errors by catching `Appwrite::Exception` and present the `message` to the user or handle it yourself based on the provided error information. Below is an example.
+Use `Appwrite::TablesDB` to read and write rows. Row fields are available as a hash through `row.data`.
 
 ```ruby
-users = Appwrite::Users.new(client);
+tables_db = Appwrite::TablesDB.new(client)
 
-begin
-    user = users.create(userId: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
-rescue Appwrite::Exception => error
-    puts error.message
+row = tables_db.create_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: Appwrite::ID.unique,
+    data: { title: 'Hello, world', published: true }
+)
+
+puts row.id
+puts row.data['title']
+
+result = tables_db.list_rows(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    queries: [
+        Appwrite::Query.equal('published', true),
+        Appwrite::Query.limit(25)
+    ]
+)
+
+result.rows.each do |row|
+    puts row.data['title']
 end
 ```
 
+### Handle errors
+
+Failed requests raise `Appwrite::Exception`, which carries `message`, `code`, `type` and `response`.
+
+```ruby
+begin
+    user = users.get(user_id: '<USER_ID>')
+rescue Appwrite::Exception => error
+    puts "#{error.code} #{error.type}: #{error.message}"
+end
+```
+
+### Self-hosted Appwrite
+
+Point the client at your own instance instead of Appwrite Cloud. Call `set_self_signed` only in development, when the server uses a self-signed TLS certificate.
+
+```ruby
+client
+    .set_endpoint('https://appwrite.example.com/v1')
+    .set_self_signed
+```
+
 ### Learn more
-You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-server)
-- 📜 [Appwrite Docs](https://appwrite.io/docs)
-- 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Ruby Playground](https://github.com/appwrite/playground-for-ruby)
+
+- [Ruby quick start](https://appwrite.io/docs/quick-starts/ruby)
+- [Ruby API reference](https://appwrite.io/docs/references/cloud/server-ruby/users)
+- [Appwrite docs](https://appwrite.io/docs)
+- [Discord community](https://appwrite.io/discord)
+- [Appwrite Ruby playground](https://github.com/appwrite/playground-for-ruby)

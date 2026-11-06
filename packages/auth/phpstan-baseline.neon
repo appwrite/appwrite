@@ -1,0 +1,175 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Binary operation "%%" between mixed and 10 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Hashes/PHPass.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and 3\|5 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Hashes/PHPass.php
+
+		-
+			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Hashes/PHPass.php
+
+		-
+			message: '#^Binary operation "/" between mixed and 10 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/Hashes/PHPass.php
+
+		-
+			message: '#^Offset float\|int\<min, 30\> might not exist on string\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: src/Hashes/PHPass.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Hashes/PHPass.php
+
+		-
+			message: '#^Parameter \#1 \$codepoint of function chr expects int\<0, 255\>, int\<\-9, 264\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Hashes/PHPass.php
+
+		-
+			message: '#^Cannot access offset ''e'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Cannot access offset ''n'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Method Utopia\\Auth\\Issuers\\Asymmetric\:\:exportPrivateKey\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Method Utopia\\Auth\\Issuers\\Asymmetric\:\:exportPublicKey\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Method Utopia\\Auth\\Issuers\\Asymmetric\:\:getModulus\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Method Utopia\\Auth\\Issuers\\Asymmetric\:\:signInput\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Parameter \#1 \$modulus of method Utopia\\Auth\\Issuers\\Asymmetric\:\:deriveKeyId\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Parameter \#1 \$value of method Utopia\\Auth\\Issuer\:\:base64UrlEncode\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Issuers/Asymmetric.php
+
+		-
+			message: '#^Method Utopia\\Auth\\OAuth2\\AuthorizationDetails\:\:toArray\(\) should return list\<array\<string, mixed\>\> but returns list\<array\<mixed, mixed\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/OAuth2/AuthorizationDetails.php
+
+		-
+			message: '#^Property Utopia\\Auth\\OAuth2\\AuthorizationDetails\:\:\$entries \(list\<array\<string, mixed\>\>\) does not accept list\<array\<mixed, mixed\>\>\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/OAuth2/AuthorizationDetails.php
+
+		-
+			message: '#^Method Utopia\\Auth\\OAuth2\\ResourceIndicators\:\:audience\(\) should return list\<non\-empty\-string\> but returns array\{string\}\.$#'
+			identifier: return.type
+			count: 1
+			path: src/OAuth2/ResourceIndicators.php
+
+		-
+			message: '#^Cannot access offset ''n'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Verifiers/Asymmetric.php
+
+		-
+			message: '#^Method Utopia\\Auth\\Verifiers\\Asymmetric\:\:getModulus\(\) should return string but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Verifiers/Asymmetric.php
+
+		-
+			message: '#^Binary operation "\." between ''m\='' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/Algorithms/Argon2Test.php
+
+		-
+			message: '#^Binary operation "\." between ''p\='' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/Algorithms/Argon2Test.php
+
+		-
+			message: '#^Binary operation "\." between ''t\='' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/Algorithms/Argon2Test.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and 3600 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/Issuers/Asymmetric/AccessTokenTest.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and 3600 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/Issuers/Asymmetric/IdTokenTest.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and 1209600 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: tests/Issuers/Symmetric/RefreshTokenTest.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_intersect expects an array of values castable to string, array given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/OAuth2/AuthorizationDetailsTest.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: tests/Verifiers/AsymmetricTest.php
+
+		-
+			message: '#^Parameter \#2 \$haystack of method PHPUnit\\Framework\\Assert\:\:assertContains\(\) expects iterable, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Verifiers/AsymmetricTest.php

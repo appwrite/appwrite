@@ -6,7 +6,8 @@ use Appwrite\ID;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 
 trait ProxyHelpers
 {
@@ -96,6 +97,41 @@ trait ProxyHelpers
         ]);
 
         return $rule;
+    }
+
+    protected function updateSiteRule(string $ruleId, string $siteId, string $branch = ''): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/site', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'siteId' => $siteId,
+            'branch' => $branch,
+        ]);
+    }
+
+    protected function updateFunctionRule(string $ruleId, string $functionId, string $branch = ''): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/function', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => $functionId,
+            'branch' => $branch,
+        ]);
+    }
+
+    protected function updateRedirectRule(string $ruleId, string $url, int $statusCode, string $resourceType, string $resourceId): mixed
+    {
+        return $this->client->call(Client::METHOD_PATCH, '/proxy/rules/' . $ruleId . '/redirect', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'url' => $url,
+            'statusCode' => $statusCode,
+            'resourceType' => $resourceType,
+            'resourceId' => $resourceId,
+        ]);
     }
 
     protected function deleteRule(string $ruleId): mixed
@@ -263,15 +299,29 @@ trait ProxyHelpers
         $stderr = '';
 
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        // Parallel tests must not truncate an archive another upload is reading.
+        $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $stdout, $stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     private function packageFunction(string $function): CURLFile
@@ -280,14 +330,28 @@ trait ProxyHelpers
         $stderr = '';
 
         $folderPath = realpath(__DIR__ . '/../../../resources/functions') . "/$function";
-        $tarPath = "$folderPath/code.tar.gz";
+        // Parallel tests must not truncate an archive another upload is reading.
+        $tarPath = \sys_get_temp_dir() . '/appwrite-function-' . $function . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $stdout, $stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $stdout, $stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 }

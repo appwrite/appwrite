@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\Locale\GeoRecord;
+use Appwrite\Geo\Geo;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Utopia\Config\Config;
@@ -14,20 +14,29 @@ use Utopia\System\System;
 
 Http::init()
     ->groups(['mfaProtected'])
+    ->inject('user')
+    ->inject('session')
+    ->action(function (User $user, Document $session) {
+        if (!$user->sessionChallengeRecent($session->getId())) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+    });
+
+Http::init()
+    ->groups(['recentSession'])
     ->inject('session')
     ->action(function (Document $session) {
-        $isSessionFresh = false;
-
-        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
-        if (!empty($lastUpdate)) {
-            $now = DateTime::now();
-            $maxAllowedDate = DateTime::addSeconds(new \DateTime($lastUpdate), MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
-
-            $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+        if ($session->isEmpty()) {
+            return; // Scope checks reject guests
         }
 
-        if (!$isSessionFresh) {
-            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        // Signed in, or completed an MFA challenge, within the window
+        $recent = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -SESSION_RECENT_DURATION));
+        $signedInAt = DateTime::formatTz($session->getCreatedAt());
+        $verifiedAt = DateTime::formatTz($session->getAttribute('mfaUpdatedAt'));
+
+        if ($signedInAt < $recent && ($verifiedAt === null || $verifiedAt < $recent)) {
+            throw new Exception(Exception::USER_REAUTHENTICATION_REQUIRED);
         }
     });
 
@@ -36,16 +45,16 @@ Http::init()
     ->inject('route')
     ->inject('request')
     ->inject('project')
-    ->inject('geoRecord')
+    ->inject('geo')
     ->inject('user')
     ->inject('authorization')
-    ->action(function (Route $route, Request $request, Document $project, GeoRecord $geoRecord, User $user, Authorization $authorization) {
+    ->action(function (Route $route, Request $request, Document $project, Geo $geo, User $user, Authorization $authorization) {
         $denylist = System::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist) && $project->getId() === 'console') {
             // A missing or unknown geo lookup ("--") is treated as allowed and falls
             // through to the membership check below, matching the pre-geo-service behavior.
             $countries = \array_map('strtoupper', \array_map('trim', explode(',', $denylist)));
-            $country = \strtoupper($geoRecord->getCountryCode());
+            $country = \strtoupper($geo->get($request->getIP())->getCountryCode());
             if (in_array($country, $countries, true)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
@@ -102,10 +111,14 @@ Http::init()
                 }
                 break;
 
+            case 'passkey':
+                if (($auths[Config::getParam('auth')['passkey']['key']] ?? false) !== true) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkey authentication is disabled for this project');
+                }
+                break;
+
             case 'ldap':
-                // Defaults to disabled, unlike the methods above: a project with
-                // no directory configured cannot authenticate anyone against one.
-                if (($auths[Config::getParam('auth')['ldap']['key']] ?? false) === false) {
+                if (($auths[Config::getParam('auth')['ldap']['key']] ?? false) !== true) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'LDAP authentication is disabled for this project');
                 }
                 break;

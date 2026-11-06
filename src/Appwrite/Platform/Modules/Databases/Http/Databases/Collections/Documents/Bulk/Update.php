@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Bulk;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
@@ -13,18 +14,23 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
+use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Exception\Unique as UniqueException;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Nullable;
@@ -54,14 +60,21 @@ class Update extends Action
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-documents.md',
+                requestExamples: [
+                    'updateSelected' => [
+                        'summary' => 'Update explicitly selected documents',
+                        'value' => [
+                            'data' => ['username' => 'walter.obrien'],
+                            'queries' => ['{"method":"equal","attribute":"$id","values":["<DOCUMENT_ID>"]}'],
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -75,11 +88,11 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateRows',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('data', [], new JSONObject(), 'Document data as JSON object. Include only attribute and value pairs to be updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":33,"isAdmin":false}')
             ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -90,11 +103,20 @@ class Update extends Action
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('eventProcessor')
+            ->inject('user')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string|array|\stdClass $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, string $collectionId, string|array|\stdClass $data, array $queries, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Context $usage, Event $queueForEvents, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor, User $user, Authorization $authorization): void
     {
+        $isAPIKey = $user->isKey($authorization->getRoles());
+        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
+
+        if (!$isAPIKey && !$isPrivilegedUser) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
         $data = $this->normalizeData($data);
 
         if (empty($data)) {
@@ -117,7 +139,7 @@ class Update extends Action
 
         $hasRelationships = \array_filter(
             $collection->getAttribute('attributes', []),
-            fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
         );
 
         if ($hasRelationships) {
@@ -144,6 +166,9 @@ class Update extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = $dbForProject->getDocument('transactions', $transactionId);
+            if (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction)) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
+            }
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
@@ -160,7 +185,7 @@ class Update extends Action
 
             // Stage the operation in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -171,14 +196,7 @@ class Update extends Action
                 ],
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -190,28 +208,34 @@ class Update extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $this->validateTimestamps($data, $dbForDatabases);
         $documents = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(function () use ($plan, &$documents, $dbForDatabases, $database, $collection, $data, $queries) {
-                return $dbForDatabases->updateDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    new Document($data),
-                    $queries,
-                    onNext: function (Document $document) use ($plan, &$documents) {
-                        if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $documents[] = $document;
-                        }
-                    },
-                );
-            });
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $onNext = function (Document $document) use ($plan, &$documents) {
+                if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                    $documents[] = $document;
+                }
+            };
+            $modified = $this->withPermissionPurge(
+                $dbForProject,
+                $database,
+                $collection,
+                isset($data['$permissions']),
+                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext)),
+            );
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
+        } catch (UniqueException $e) {
+            throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception($this->getLimitException(), $e->getMessage());
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
@@ -223,6 +247,7 @@ class Update extends Action
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $modified));
 

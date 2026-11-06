@@ -33,6 +33,7 @@ class TemplateSite extends Model
                 'description' => 'URL hosting a template demo.',
                 'default' => '',
                 'example' => 'https://nextjs-starter.appwrite.network/',
+                'required' => false,
             ])
             ->addRule('screenshotDark', [
                 'type' => self::TYPE_STRING,
@@ -90,6 +91,13 @@ class TemplateSite extends Model
                 'default' => [],
                 'example' => [],
                 'array' => true
+            ])
+            ->addRule('scopes', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Site scopes.',
+                'default' => [],
+                'example' => 'users.read',
+                'array' => true,
             ])
         ;
     }

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Usage\Http\Events;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Usage\Http\Action;
 use Appwrite\SDK\AuthType;
@@ -13,6 +14,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Platform\Enum;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Query\Query;
 use Utopia\System\System;
 use Utopia\Usage\Tenant;
@@ -30,10 +32,17 @@ class XList extends Action
 
     protected const VALID_DIMENSIONS = [
         'path', 'method', 'status', 'service', 'resourceType',
-        'country', 'region', 'hostname', 'ip',
+        'country', 'continentCode', 'city', 'region', 'hostname', 'ip',
         'osName', 'clientType', 'clientName', 'deviceName',
         'sdk', 'sdkVersion',
         'resourceId',
+        // Request attributes recorded for firewall rule matching.
+        'protocol', 'accept', 'acceptLanguage', 'queryKeys',
+        // Extended geo columns (premium Geo DB).
+        'postalCode', 'latitude', 'longitude', 'timeZone', 'weatherCode',
+        // Network / ISP columns (premium Geo DB).
+        'isp', 'autonomousSystemNumber', 'autonomousSystemOrganization',
+        'connectionType', 'connectionUsageType', 'connectionOrganization',
     ];
 
     protected const VALID_ORDER_BY = ['time', 'value'];
@@ -50,13 +59,20 @@ class XList extends Action
      */
     protected const VALID_FILTER_ATTRIBUTES = [
         'path', 'method', 'status', 'service', 'resourceType', 'resourceId',
-        'country', 'region', 'hostname', 'ip',
+        'country', 'continentCode', 'city', 'region', 'hostname', 'ip',
         'osName', 'clientType', 'clientName', 'deviceName',
         'sdk', 'sdkVersion',
+        // Request attributes recorded for firewall rule matching.
+        'protocol', 'accept', 'acceptLanguage', 'queryKeys',
+        // Extended geo columns (premium Geo DB).
+        'postalCode', 'latitude', 'longitude', 'timeZone', 'weatherCode',
+        // Network / ISP columns (premium Geo DB).
+        'isp', 'autonomousSystemNumber', 'autonomousSystemOrganization',
+        'connectionType', 'connectionUsageType', 'connectionOrganization',
     ];
 
     /**
-     * Query::TYPE_* values supported on the filter surface.
+     * Query methods supported on the filter surface.
      * Equality / set membership / null-presence on dimension columns and
      * string prefix-match on path-shaped fields are useful; we deliberately
      * skip numeric inequality and full-text search since time range has its
@@ -64,13 +80,13 @@ class XList extends Action
      * these LowCardinality(String) columns.
      */
     protected const VALID_FILTER_METHODS = [
-        Query::TYPE_EQUAL,
-        Query::TYPE_NOT_EQUAL,
-        Query::TYPE_CONTAINS,
-        Query::TYPE_STARTS_WITH,
-        Query::TYPE_ENDS_WITH,
-        Query::TYPE_IS_NULL,
-        Query::TYPE_IS_NOT_NULL,
+        QueryMethod::Equal,
+        QueryMethod::NotEqual,
+        QueryMethod::Contains,
+        QueryMethod::StartsWith,
+        QueryMethod::EndsWith,
+        QueryMethod::IsNull,
+        QueryMethod::IsNotNull,
     ];
 
     public static function getName(): string
@@ -86,9 +102,7 @@ class XList extends Action
             ->desc('List usage events')
             ->groups(['api', 'usage'])
             ->label('scope', 'usage.read')
-            ->label('abuse-limit', 60)
-            ->label('abuse-time', 60)
-            ->label('abuse-key', 'projectId:{project.$id}')
+            ->label('abuse', [Limit::attempts(['projectId', 'url'], 60, seconds: 60)])
             ->label('sdk', new Method(
                 namespace: 'usage',
                 group: 'events',
@@ -112,7 +126,7 @@ class XList extends Action
                 // Preview SDK builds show the whole surface, so they do not hide.
                 hide: System::getEnv('_APP_SDK_PREVIEW', 'disabled') === 'enabled' ? false : ['server'],
             ))
-            ->param('metrics', [], new ArrayList(new Text(255), 10), 'One to ten metric names. Single-metric callers pass a one-element array.', false)
+            ->param('metrics', [], new ArrayList(new Text(255), 10), 'One to ten metric names. Single-metric callers pass a one-element array.', false, example: '["network.requests"]')
             ->param('queries', [], new ArrayList(new Text(4096), 10), 'Up to 10 filter queries in Utopia syntax. Allowed attributes, also published as the `UsageEventDimension` enum: ' . implode(', ', static::VALID_FILTER_ATTRIBUTES) . '. Allowed methods: equal, notEqual, contains, startsWith, endsWith, isNull, isNotNull. Example: `queries[]=equal("resourceType", ["bucket"])`.', true)
             ->param('interval', null, new Nullable(new WhiteList(static::VALID_INTERVALS)), 'Time interval size. Omit (null) for a flat aggregate over the whole window. Allowed: ' . implode(', ', static::VALID_INTERVALS) . '.', true, enum: new Enum(
                 name: 'UsageInterval',

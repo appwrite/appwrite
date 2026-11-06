@@ -104,6 +104,9 @@ return [
             'impersonator' => [
                 '$description' => 'This event triggers when a user\'s impersonator capability is updated.',
             ],
+            'avatar' => [
+                '$description' => 'This event triggers when a user\'s photo is updated.',
+            ],
         ]
     ],
     'databases' => [
@@ -660,6 +663,22 @@ return [
         'update' => [
             '$description' => 'This event triggers when a proxy rule is updated.',
         ]
+    ],
+    'monitors' => [
+        '$model' => Response::MODEL_MONITOR,
+        '$resource' => true,
+        '$description' => 'This event triggers on any monitor event.',
+        'alerts' => [
+            '$model' => Response::MODEL_ALERT,
+            '$resource' => true,
+            '$description' => 'This event triggers on any alert event.',
+            'firing' => [
+                '$description' => 'This event triggers when a monitor starts firing and opens an alert.',
+            ],
+            'resolved' => [
+                '$description' => 'This event triggers when a monitor recovers and its alert resolves.',
+            ],
+        ],
     ],
     'reports' => [
         '$model' => Response::MODEL_REPORT,

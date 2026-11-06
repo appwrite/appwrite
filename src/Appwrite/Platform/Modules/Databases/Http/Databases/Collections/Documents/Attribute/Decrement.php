@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
+use Appwrite\Abuse\Limit;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -16,15 +17,17 @@ use Appwrite\Utopia\Response as UtopiaResponse;
 use InvalidArgumentException;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Type as TypeException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Numeric;
 
@@ -53,9 +56,7 @@ class Decrement extends Action
             ->label('audits.event', 'documents.update')
             ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
             ->label('usage.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-            ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
-            ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
-            ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+            ->label('abuse', [Limit::attempts(['ip', 'method', 'url', 'userId'], APP_LIMIT_WRITE_RATE_DEFAULT * 2, seconds: APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)])
             ->label('sdk', new Method(
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
@@ -74,13 +75,13 @@ class Decrement extends Action
                     replaceWith: 'tablesDB.decrementRowColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
-            ->param('attribute', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute key.', false, ['dbForProject'])
-            ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
-            ->param('min', null, new Nullable(new Numeric()), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true)
-            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Document ID.', false, ['dbForProject'])
+            ->param('attribute', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute key.', false, ['dbForProject'])
+            ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true, example: '1')
+            ->param('min', null, new Nullable(new Numeric()), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true, example: '0')
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getMaxUidLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -98,12 +99,12 @@ class Decrement extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
 
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
+        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database) || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty()) {
+        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
@@ -112,6 +113,9 @@ class Decrement extends Action
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
+            if (!$transaction->isEmpty() && $this->isTransactionTypeMismatch($transaction)) {
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
+            }
             if ($transaction->isEmpty() || $transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid or non‑pending transaction');
             }
@@ -134,7 +138,7 @@ class Decrement extends Action
 
             // Stage the operation in transaction logs
             $staged = new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'databaseInternalId' => $database->getSequence(),
                 'collectionInternalId' => $collection->getSequence(),
                 'transactionInternalId' => $transaction->getSequence(),
@@ -147,15 +151,7 @@ class Decrement extends Action
                 ],
             ]);
 
-            $dbForProject->withTransaction(function () use ($dbForProject, $transactionId, $staged) {
-                $dbForProject->createDocument('transactionLogs', $staged);
-                $dbForProject->increaseDocumentAttribute(
-                    'transactions',
-                    $transactionId,
-                    'operations',
-                    1
-                );
-            });
+            $this->stage($dbForProject, $transactionId, [$staged], $maxBatch);
 
             $queueForEvents->reset();
 
@@ -173,25 +169,30 @@ class Decrement extends Action
             return;
         }
 
-        $dbForDatabases = $getDatabasesDB($database);
+        $dbForDatabases = $getDatabasesDB($database, $collection);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
         try {
-            $document = $dbForDatabases->decreaseDocumentAttribute(
-                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                id: $documentId,
-                attribute: $attribute,
-                value: $value,
-                min: $min
-            );
+            $document = $dbForDatabases->decreaseDocumentAttribute($collectionTableId, $documentId, $attribute, $value, $min);
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (NotFoundException) {
-            throw new Exception($this->getStructureNotFoundException());
+            throw $dbForDatabases->getDocument($collectionTableId, $documentId)->isEmpty()
+                ? new Exception($this->getNotFoundException(), params: [$documentId])
+                : new Exception($this->getStructureNotFoundException(), params: [$attribute]);
+        } catch (AuthorizationException $e) {
+            throw $dbForDatabases->getDocument($collectionTableId, $documentId)->isEmpty()
+                ? new Exception($this->getNotFoundException(), params: [$documentId])
+                : new Exception(Exception::USER_UNAUTHORIZED, $e->getMessage());
         } catch (LimitException) {
-            throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the minimum value of ' . $min);
-        } catch (TypeException) {
-            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, $this->getSDKNamespace() . ' "' . $attribute . '" is not a number');
+            throw new Exception($this->getLimitException(), \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" has reached the minimum value of ' . $this->getReachedMinimum($collection, $attribute, $min));
+        } catch (TypeException $e) {
+            if ($value <= 0) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            }
+            throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, \ucfirst($this->getAttributeKey()) . ' "' . $attribute . '" is not a number');
         } catch (InvalidArgumentException $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
         }
@@ -200,12 +201,13 @@ class Decrement extends Action
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
             )
         );
 
         $usage
             ->setResource('database')
+            ->setResourceId($database->getId())
             ->setResourceInternalId((string) $database->getSequence())
             ->addMetric($this->getDatabasesOperationWriteMetric(), 1);
 

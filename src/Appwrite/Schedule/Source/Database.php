@@ -65,6 +65,7 @@ abstract class Database implements Source, Changes
             'resourceId' => $document->getAttribute('resourceId'),
             'resourceType' => $document->getAttribute('resourceType'),
             'schedule' => $document->getAttribute('schedule'),
+            'interval' => $document->getAttribute('interval', 0),
             'active' => $document->getAttribute('active'),
             'resourceUpdatedAt' => $document->getAttribute('resourceUpdatedAt'),
             'data' => $document->getAttribute('data', []),
@@ -72,6 +73,9 @@ abstract class Database implements Source, Changes
 
         $project = $this->project((string) $schedule['projectId']);
         if ($project->isEmpty()) {
+            // Finish cleanup before reporting; a failed delete remains available for retry.
+            $this->dbForPlatform->deleteDocument('schedules', $document->getId());
+
             throw new \InvalidArgumentException("Project not found: {$schedule['projectId']}");
         }
 
@@ -92,6 +96,15 @@ abstract class Database implements Source, Changes
     }
 
     /**
+     * Whether the row describes a schedule this source can run. Rows that fail
+     * are reported inactive, so the scheduler drops any entry loaded before.
+     */
+    protected function runnable(Document $schedule): bool
+    {
+        return true;
+    }
+
+    /**
      * @param array<string, mixed> $schedule
      */
     protected function resource(\Utopia\Database\Database $projectDB, array $schedule): Document
@@ -104,11 +117,7 @@ abstract class Database implements Source, Changes
      */
     private function rows(?\DateTimeImmutable $since): iterable
     {
-        // Temporarly accepting both 'fra' and 'default'
-        $regions = [System::getEnv('_APP_REGION', 'default')];
-        if (!\in_array('default', $regions)) {
-            $regions[] = 'default';
-        }
+        $region = System::getEnv('_APP_REGION', 'default');
 
         $limit = 10_000;
         $sum = $limit;
@@ -117,7 +126,7 @@ abstract class Database implements Source, Changes
         while ($sum === $limit) {
             $queries = [
                 Query::limit($limit),
-                Query::equal('region', $regions),
+                Query::equal('region', [$region]),
                 Query::equal('resourceType', [$this->type()]),
             ];
 
@@ -141,7 +150,7 @@ abstract class Database implements Source, Changes
                     id: (string) $schedule->getSequence(),
                     version: $updatedAt,
                     data: $schedule,
-                    active: (bool) $schedule->getAttribute('active', false),
+                    active: (bool) $schedule->getAttribute('active', false) && $this->runnable($schedule),
                     activeFrom: $this->moment($updatedAt),
                 );
             }
@@ -167,10 +176,15 @@ abstract class Database implements Source, Changes
 
         $project = $this->dbForPlatform->skipFilters(
             fn () => $this->dbForPlatform->getDocument('projects', $projectId),
-            ['subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys']
+            APP_PROJECTS_SUBQUERIES
         );
 
-        return $this->projects[$projectId] = $project;
+        // A project may become visible before the next reconciliation.
+        if (!$project->isEmpty()) {
+            $this->projects[$projectId] = $project;
+        }
+
+        return $project;
     }
 
     private function deleteOrphan(string $scheduleId): void

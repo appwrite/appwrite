@@ -30,6 +30,7 @@ class Get extends Action
             ->desc('List MFA recovery codes')
             ->groups(['api', 'account', 'mfaProtected'])
             ->label('scope', 'account')
+            ->label('impersonation', 'deny')
             ->label('sdk', [
                 new Method(
                     namespace: 'account',

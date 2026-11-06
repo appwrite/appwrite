@@ -44,6 +44,7 @@ class Client
             'theme' => $theme,
             'headers' => $headers,
             'sleep' => $sleep,
+            'timeout' => 60000,
             'viewport' => [
                 'width' => self::VIEWPORT_WIDTH,
                 'height' => self::VIEWPORT_HEIGHT,

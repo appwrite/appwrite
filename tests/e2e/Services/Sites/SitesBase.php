@@ -6,8 +6,9 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Console;
-use Utopia\Database\Helpers\ID;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -72,18 +73,20 @@ trait SitesBase
                 throw new Critical('Deployment failed: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
-            $code = Console::execute("docker inspect exc1 --format='{{.State.ExitCode}}'", '', $this->stdout, $this->stderr);
+            $code = Console::execute((new Command('docker'))->argument('inspect')->argument('exc1')->option('--format', '{{.State.ExitCode}}'), '', $this->stdout, $this->stderr);
             if ($code === 0 && \trim($this->stdout) !== '' && \trim($this->stdout) !== '0') {
                 $msg = 'Executor has a problem: ' . $this->stderr . ' (' . $this->stdout . '), current status: ';
 
-                Console::execute("docker logs exc1", '', $this->stdout, $this->stderr);
+                Console::execute((new Command('docker'))->argument('logs')->argument('exc1'), '', $this->stdout, $this->stderr);
                 $msg .= $this->stdout . ' (' . $this->stderr . ')';
 
                 throw new Critical($msg . json_encode($deployment['body'], JSON_PRETTY_PRINT));
             }
 
             $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
-        }, 120000, 500);
+            // The lane runs one paratest process per CPU, each starting builds, so an SSR build
+            // that takes seconds alone takes over two minutes there; builds time out at 900s.
+        }, 300000, 500);
     }
 
     protected function waitDeploymentActivated(string $siteId, string $deploymentId): void
@@ -245,15 +248,32 @@ trait SitesBase
     protected function packageSite(string $site): CURLFile
     {
         $folderPath = realpath(__DIR__ . '/../../../resources/sites') . "/$site";
-        $tarPath = "$folderPath/code.tar.gz";
+        // Unique archive per process: paratest --functional packs the same
+        // fixture from many methods at once. Sharing $folderPath/code.tar.gz
+        // lets one tar truncate the file another CURLFile is still reading
+        // (libcurl: "client mime read EOF fail, only N/M of needed bytes").
+        $tarPath = \sys_get_temp_dir() . '/appwrite-site-' . $site . '-' . \getmypid() . '-' . \uniqid('', true) . '.tar.gz';
 
-        Console::execute("cd $folderPath && tar --exclude code.tar.gz --exclude node_modules -czf code.tar.gz .", '', $this->stdout, $this->stderr);
+        $tar = (new Command('tar'))
+            ->option('--exclude', 'code.tar.gz')
+            ->option('--exclude', 'node_modules')
+            ->flag('-czf')
+            ->argument($tarPath)
+            ->option('-C', $folderPath)
+            ->argument('.');
+        Console::execute($tar, '', $this->stdout, $this->stderr);
 
         if (filesize($tarPath) > 1024 * 1024 * 5) {
             throw new \Exception('Code package is too large. Use the chunked upload method instead.');
         }
 
-        return new CURLFile($tarPath, 'application/x-gzip', \basename($tarPath));
+        register_shutdown_function(static function () use ($tarPath) {
+            if (\is_file($tarPath)) {
+                @\unlink($tarPath);
+            }
+        });
+
+        return new CURLFile($tarPath, 'application/x-gzip', 'code.tar.gz');
     }
 
     protected function createDeployment(string $siteId, mixed $params = []): mixed
@@ -321,7 +341,7 @@ trait SitesBase
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
         $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
-        $subdomain = $subdomain ? $subdomain : ID::unique();
+        $subdomain = $subdomain ? $subdomain : Id::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -407,6 +427,64 @@ trait SitesBase
         ]);
 
         return $site;
+    }
+
+    /**
+     * @return array{siteId: string, deploymentId: string}
+     */
+    protected function setupTemplateDeployment(): array
+    {
+        $template = $this->getTemplate('playground-for-astro');
+        $this->assertSame(200, $template['headers']['status-code']);
+        $framework = $template['body']['frameworks'][0];
+
+        $siteId = $this->setupSite([
+            'siteId' => Id::unique(),
+            'name' => 'Template deployment access',
+            'framework' => $framework['key'],
+            'adapter' => $framework['adapter'],
+            'buildRuntime' => $framework['buildRuntime'],
+            'outputDirectory' => $framework['outputDirectory'],
+            'buildCommand' => $framework['buildCommand'],
+            'installCommand' => $framework['installCommand'],
+            'fallbackFile' => $framework['fallbackFile'],
+        ]);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments/template', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'repository' => $template['body']['providerRepositoryId'],
+            'owner' => $template['body']['providerOwner'],
+            'rootDirectory' => $framework['providerRootDirectory'],
+            'type' => 'tag',
+            'reference' => $template['body']['providerVersion'],
+            'activate' => false,
+        ]);
+        $this->assertSame(202, $deployment['headers']['status-code']);
+
+        return ['siteId' => $siteId, 'deploymentId' => $deployment['body']['$id']];
+    }
+
+    protected function assertTemplateDeploymentIsManageable(): void
+    {
+        ['siteId' => $siteId, 'deploymentId' => $deploymentId] = $this->setupTemplateDeployment();
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertSame(200, $deployment['headers']['status-code']);
+        $this->assertSame($deploymentId, $deployment['body']['$id']);
+
+        $deployments = $this->listDeployments($siteId);
+        $this->assertSame(200, $deployments['headers']['status-code']);
+        $this->assertContains($deploymentId, \array_column($deployments['body']['deployments'], '$id'));
+
+        $deleted = $this->deleteDeployment($siteId, $deploymentId);
+        $this->assertSame(204, $deleted['headers']['status-code']);
+
+        $this->assertSame(404, $this->getDeployment($siteId, $deploymentId)['headers']['status-code']);
+
+        $this->cleanupSite($siteId);
     }
 
     protected function cancelDeployment(string $siteId, string $deploymentId): mixed

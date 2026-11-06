@@ -9,10 +9,13 @@ use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\System\System;
 
 class Key
 {
+    public const string PURPOSE_CLAIM = 'purpose';
+
+    public const string PURPOSE = 'key';
+
     public function __construct(
         protected string $projectId,
         protected string $teamId,
@@ -28,6 +31,10 @@ class Key
         protected bool $projectCheckDisabled = false,
         protected bool $previewAuthDisabled = false,
         protected bool $deploymentStatusIgnored = false,
+        protected bool $runtimeEphemeral = false,
+        protected ?string $expire = null,
+        protected string $hostname = '',
+        protected string $deploymentId = '',
     ) {
     }
 
@@ -71,17 +78,59 @@ class Key
         return $this->expired;
     }
 
+    /**
+     * When the key stops working, or null when it never does.
+     */
+    public function getExpire(): ?string
+    {
+        return $this->expire;
+    }
+
+    /**
+     * Whether a request authorized with this key may create, or change a key into,
+     * a key of the given type with these scopes and expiry.
+     *
+     * A key is a fixed grant, so nothing it makes reaches further than itself: no
+     * scope it does not hold, and no expiry later than its own (none at all when
+     * it expires). Organization keys provisioning project keys are the one
+     * exception on scopes: they hold organization scopes, and
+     * organization.projects.keys.write is the grant to give project keys project
+     * scopes. Their lifetime still bounds what they make.
+     *
+     * @param array<string> $scopes
+     */
+    public function mayCreate(string $type, array $scopes, ?string $expire): bool
+    {
+        if ($this->expire !== null && ($expire === null || new \DateTimeImmutable($expire) > new \DateTimeImmutable($this->expire))) {
+            return false;
+        }
+
+        if ($this->type === API_KEY_ORGANIZATION && \in_array($type, [API_KEY_STANDARD, API_KEY_EPHEMERAL], true)) {
+            return true;
+        }
+
+        return $this->mayGrant($scopes);
+    }
+
+    /**
+     * Whether this key may grant these scopes, such as to a function or site. A key grants no scope it does not hold.
+     *
+     * @param array<string> $scopes
+     */
+    public function mayGrant(array $scopes): bool
+    {
+        return \array_diff($scopes, $this->scopes) === [];
+    }
+
     public function getDisabledMetrics(): array
     {
         return $this->disabledMetrics;
     }
 
-
     public function getHostnameOverride(): bool
     {
         return $this->hostnameOverride;
     }
-
 
     public function isBannerDisabled(): bool
     {
@@ -103,9 +152,50 @@ class Key
         return $this->projectCheckDisabled;
     }
 
+    public function isRuntimeEphemeral(): bool
+    {
+        return $this->runtimeEphemeral;
+    }
+
+    public function getHostname(): string
+    {
+        return $this->hostname;
+    }
+
+    /**
+     * Whether the router may apply this key's preview grants to the rule.
+     */
+    public function isBoundTo(Document $rule): bool
+    {
+        return $this->hostname !== ''
+            && $this->deploymentId !== ''
+            && $this->hostname === $rule->getAttribute('domain', '')
+            && $this->deploymentId === $rule->getAttribute('deploymentId', '');
+    }
+
+    /**
+     * @param array<Document> $keys
+     */
+    public static function find(array $keys, string $secret): ?Document
+    {
+        if ($secret === '') {
+            return null;
+        }
+
+        return \array_find(
+            $keys,
+            static function (Document $candidate) use ($secret): bool {
+                $stored = $candidate->getAttribute('secret');
+
+                return \is_string($stored) && \hash_equals($stored, $secret);
+            },
+        );
+    }
+
     /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or an ephemeral key (JWT).
+     * Invalid, expired-JWT, unknown-prefix, or project-mismatched secrets are refused.
      *
      * @throws Exception
      */
@@ -127,32 +217,18 @@ class Key
         $scopes = $roles[User::ROLE_KEYS]['scopes'] ?? [];
         $expired = false;
 
-        $guestKey = new Key(
-            $project->getId(),
-            '',
-            '',
-            $type,
-            User::ROLE_GUESTS,
-            $roles[User::ROLE_GUESTS]['scopes'] ?? [],
-            'UNKNOWN'
-        );
-
         switch ($type) {
             // Dynamic supported for backwards compatibility
             case API_KEY_EPHEMERAL:
             case 'dynamic':
-                $jwtObj = new JWT(
-                    key: System::getEnv('_APP_OPENSSL_KEY_V1'),
-                    algo: 'HS256',
-                    maxAge: 86400,
-                    leeway: 0
-                );
-
-                $payload = [];
                 try {
-                    $payload = $jwtObj->decode($secret);
+                    $payload = EncryptionKey::decode($secret, maxAge: 86400);
                 } catch (JWTException) {
-                    $expired = true;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
+                if (($payload[self::PURPOSE_CLAIM] ?? '') !== self::PURPOSE) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $name = $payload['name'] ?? 'Ephemeral Key';
@@ -163,10 +239,20 @@ class Key
                 $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
+                $runtimeEphemeral = $payload['runtimeEphemeral'] ?? false;
+                $hostname = $payload['hostname'] ?? '';
+                $deploymentId = $payload['deploymentId'] ?? '';
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
+                $expire = isset($payload['exp']) ? DateTime::format((new \DateTime())->setTimestamp((int) $payload['exp'])) : null;
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
+                }
+
+                // Keys issued before the sequence claim carry none; they expire within a day.
+                $projectSequence = $payload['projectSequence'] ?? null;
+                if (!$projectCheckDisabled && $projectSequence !== null && (string) $projectSequence !== (string) $project->getSequence()) {
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 return new Key(
@@ -183,17 +269,17 @@ class Key
                     $bannerDisabled,
                     $projectCheckDisabled,
                     $previewAuthDisabled,
-                    $deploymentStatusIgnored
+                    $deploymentStatusIgnored,
+                    $runtimeEphemeral,
+                    $expire,
+                    $hostname,
+                    $deploymentId,
                 );
             case API_KEY_STANDARD:
-                $key = $project->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($project->getAttribute('keys', []), $key);
 
                 if (!$key) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $expire = $key->getAttribute('expire');
@@ -212,18 +298,15 @@ class Key
                     $role,
                     $scopes,
                     $name,
-                    $expired
+                    $expired,
+                    expire: $expire ?: null,
                 );
             case API_KEY_ACCOUNT:
-                $key = $user->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($user->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $expire = $key->getAttribute('expire');
@@ -246,20 +329,17 @@ class Key
                     $role,
                     $scopes,
                     $name,
-                    $expired
+                    $expired,
+                    expire: $expire ?: null,
                 );
 
                 return $key;
             case API_KEY_ORGANIZATION:
-                $key = $team->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($team->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {
-                    return $guestKey;
+                    throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 $expire = $key->getAttribute('expire');
@@ -282,12 +362,13 @@ class Key
                     $role,
                     $scopes,
                     $name,
-                    $expired
+                    $expired,
+                    expire: $expire ?: null,
                 );
 
                 return $key;
             default:
-                return $guestKey;
+                throw new Exception(Exception::USER_UNAUTHORIZED);
         }
     }
 }
