@@ -486,6 +486,11 @@ final class ServerTelemetryPublisherConsumer extends ServerTelemetryConsumer imp
         return array_shift($this->queueSizes) ?? 0;
     }
 
+    public function getQueueAge(Queue $queue): int
+    {
+        return 0;
+    }
+
     public function getFailedCount(Queue $queue): int
     {
         return array_shift($this->failedQueueSizes) ?? 0;
@@ -511,6 +516,11 @@ final class ServerTelemetryFailingPublisherConsumer extends ServerTelemetryConsu
     public function getQueueSize(Queue $queue, bool $failedJobs = false): int
     {
         throw new \RuntimeException('Queue size unavailable.');
+    }
+
+    public function getQueueAge(Queue $queue): int
+    {
+        return 0;
     }
 
     public function getFailedCount(Queue $queue): int

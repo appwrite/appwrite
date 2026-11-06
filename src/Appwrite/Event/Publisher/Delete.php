@@ -24,4 +24,9 @@ readonly class Delete extends Base
     {
         return $this->getQueueSize($queue ?? $this->queue, $failed);
     }
+
+    public function getAge(?Queue $queue = null): int
+    {
+        return $this->getQueueAge($queue ?? $this->queue);
+    }
 }

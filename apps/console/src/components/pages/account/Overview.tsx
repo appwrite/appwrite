@@ -66,6 +66,8 @@ import {
   verifyMfaReauth,
 } from '@/components/global/auth/MfaReauthForm'
 import { useT } from '@/lib/i18n/translate'
+import { useIsZeroAccount } from '@/hooks/use-zero-account'
+import { ClaimToUnlock } from '@/components/global/shared/ClaimToUnlock'
 
 // Dependencies for query invalidation
 const Dependencies = {
@@ -318,6 +320,7 @@ export function UpdateNameSection() {
 
 export function UpdateEmailSection() {
   const { account } = useAuth()
+  const zeroLocked = useIsZeroAccount()
   const queryClient = useQueryClient()
   const t = useT()
   const [email, setEmail] = useState('')
@@ -400,7 +403,7 @@ export function UpdateEmailSection() {
                 placeholder={t('Enter email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={updateEmailMutation.isPending}
+                disabled={updateEmailMutation.isPending || zeroLocked}
                 className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 required
               />
@@ -414,7 +417,7 @@ export function UpdateEmailSection() {
                   placeholder={t('Enter password')}
                   value={emailPassword}
                   onChange={(e) => setEmailPassword(e.target.value)}
-                  disabled={updateEmailMutation.isPending}
+                  disabled={updateEmailMutation.isPending || zeroLocked}
                   className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                   required
                 />
@@ -423,14 +426,20 @@ export function UpdateEmailSection() {
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            type="submit"
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={isDisabled}
+          <ClaimToUnlock
+            locked={zeroLocked}
+            reason={t('Claim this project to set an email')}
+            className="inline-block"
           >
-            {t('Update')}
-          </Button>
+            <Button
+              type="submit"
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={isDisabled || zeroLocked}
+            >
+              {t('Update')}
+            </Button>
+          </ClaimToUnlock>
         </div>
       </form>
     </div>
@@ -444,6 +453,7 @@ export function UpdateEmailSection() {
 export function UpdatePasswordSection() {
   const t = useT()
   const { account } = useAuth()
+  const zeroLocked = useIsZeroAccount()
   // Result of the last breached-password check on the console account.
   // Undefined or null means the password has never been checked.
   const passwordPwned = (account as Models.User | undefined)?.passwordPwned
@@ -536,7 +546,7 @@ export function UpdatePasswordSection() {
                 placeholder={t('Enter password')}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                disabled={updatePasswordMutation.isPending}
+                disabled={updatePasswordMutation.isPending || zeroLocked}
                 className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 required
               />
@@ -551,7 +561,7 @@ export function UpdatePasswordSection() {
                 placeholder={t('Enter password')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                disabled={updatePasswordMutation.isPending}
+                disabled={updatePasswordMutation.isPending || zeroLocked}
                 className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 required
               />
@@ -567,14 +577,20 @@ export function UpdatePasswordSection() {
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            type="submit"
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={isDisabled}
+          <ClaimToUnlock
+            locked={zeroLocked}
+            reason={t('Claim this project to set a password')}
+            className="inline-block"
           >
-            {t('Update')}
-          </Button>
+            <Button
+              type="submit"
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={isDisabled || zeroLocked}
+            >
+              {t('Update')}
+            </Button>
+          </ClaimToUnlock>
         </div>
       </form>
     </div>

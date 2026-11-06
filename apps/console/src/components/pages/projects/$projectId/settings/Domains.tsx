@@ -17,8 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { getDomainStatusBadgeConfig } from '@/lib/utils/status-badge'
+import { getRuleStatusBadgeConfig } from '@/lib/utils/status-badge'
 import {
   ExternalLink,
   Loader2,
@@ -41,12 +40,14 @@ import {
 } from '@/lib/utils/proxy-domains'
 import { useT } from '@/lib/i18n/translate'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
-import { VerifyDomainDialog } from './domains/VerifyDomain'
 import { DeleteDomainDialog } from './domains/DeleteDomain'
 import { ViewLogsDialog } from './domains/ViewLogs'
 import { RetryDomainDialog } from './domains/RetryDomain'
 import { ProxyRuleContextMenu } from './domains/ProxyRuleContextMenu'
-import { domainUrl } from '@/lib/domains/url'
+import { RuleStatusBadge } from './domains/RuleStatusBadge'
+import { useVisitUrl } from '@/hooks/use-visit-url'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 
 interface DomainsProps {
   projectId: string
@@ -64,13 +65,13 @@ export function Domains({
   createDisabledTooltip,
 }: DomainsProps) {
   const t = useT()
+  const visitUrl = useVisitUrl()
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(25)
-  const [verifyDomainOpen, setVerifyDomainOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(DOMAINS_DEFAULT_PAGE_SIZE)
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [retryDomainOpen, setRetryDomainOpen] = useState(false)
@@ -78,11 +79,23 @@ export function Domains({
     null,
   )
 
-  const { rules, isLoading } = useProjectDomains(
-    projectId,
-    region,
-    searchValueProp,
-  )
+  const search = useDebouncedValue(searchValueProp.trim(), 300)
+  // Go back to the first page in the same render the search changes, so the old page is never requested.
+  const [pageSearch, setPageSearch] = useState(search)
+  if (pageSearch !== search) {
+    setPageSearch(search)
+    setCurrentPage(0)
+  }
+
+  const { rules, total, isLoading, isFetching, isPlaceholderData, refetch } =
+    useProjectDomains(projectId, region, currentPage, pageSize, search)
+
+  // Deleting the last rule on the last page leaves an empty page; step back to the new last page.
+  useEffect(() => {
+    if (!isFetching && rules.length === 0 && total > 0 && currentPage > 0) {
+      setCurrentPage(Math.ceil(total / pageSize) - 1)
+    }
+  }, [isFetching, rules.length, total, currentPage, pageSize])
   const { domains: orgDomains } = useOrganizationDomains(
     project?.teamId,
     0,
@@ -95,24 +108,6 @@ export function Domains({
     }
     return map
   }, [orgDomains])
-
-  const getStatusBadge = (status: string) => {
-    const config = getDomainStatusBadgeConfig(status)
-    return (
-      <Badge
-        variant={config.variant}
-        className="text-[10px] shrink-0 gap-1.5"
-        title={
-          status === 'verifying'
-            ? t('SSL certificate is being issued. This usually takes a couple of minutes.')
-            : undefined
-        }
-      >
-        {status === 'verifying' && <Loader2 className="h-3 w-3 animate-spin" />}
-        {t(config.label)}
-      </Badge>
-    )
-  }
 
   const handleRetry = (rule: Models.ProxyRule) => {
     openDialogAfterOverlayCloses(() => {
@@ -141,30 +136,11 @@ export function Domains({
   }
 
   const showsFirstRunEmptyState =
-    !isLoading && !searchValueProp.trim() && rules.length === 0
+    !isLoading && !isPlaceholderData && !search && total === 0
   useEffect(() => {
     onFirstRunEmptyChange?.(showsFirstRunEmptyState)
     return () => onFirstRunEmptyChange?.(false)
   }, [onFirstRunEmptyChange, showsFirstRunEmptyState])
-
-  // Filter rules by search
-  const filteredRules = useMemo(() => {
-    if (!searchValueProp.trim()) return rules
-    const search = searchValueProp.toLowerCase()
-    return rules.filter(
-      (rule) =>
-        rule.domain.toLowerCase().includes(search) ||
-        rule.$id.toLowerCase().includes(search),
-    )
-  }, [rules, searchValueProp])
-
-  // Convert 1-indexed page to 0-indexed for pagination
-  const pageIndexed = currentPage - 1
-  const paginatedRules = useMemo(() => {
-    const start = pageIndexed * pageSize
-    const end = start + pageSize
-    return filteredRules.slice(start, end)
-  }, [filteredRules, pageIndexed, pageSize])
 
   return (
     <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -183,7 +159,7 @@ export function Domains({
           addDisabled={createDisabled}
           addDisabledTooltip={createDisabledTooltip}
         />
-      ) : paginatedRules.length === 0 ? (
+      ) : rules.length === 0 ? (
         <EmptyState icon={ExternalLink} hasFilters variant="card" />
       ) : (
         <>
@@ -204,7 +180,7 @@ export function Domains({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedRules.map((rule) => (
+                {rules.map((rule) => (
                   <ProxyRuleContextMenu
                     key={rule.$id}
                     projectId={projectId}
@@ -218,7 +194,7 @@ export function Domains({
                     <TableRow>
                       <TableCell className="px-4 py-3">
                         <a
-                          href={domainUrl(rule.domain)}
+                          href={visitUrl(rule.domain)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 font-mono text-[13px] font-medium link-neutral"
@@ -229,18 +205,20 @@ export function Domains({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(rule.status)}
-                          {rule.status !== 'verified' && (
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="h-auto p-0 text-[13px]"
-                              onClick={() => handleViewLogs(rule)}
-                            >
-                              {t('View logs')}
-                            </Button>
-                          )}
-                          {canRetryRule(rule.status) && (
+                          <RuleStatusBadge rule={rule} />
+                          {getRuleStatusBadgeConfig(rule).variant !==
+                            'success' &&
+                            canViewRuleLogs(rule) && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-[13px]"
+                                onClick={() => handleViewLogs(rule)}
+                              >
+                                {t('View logs')}
+                              </Button>
+                            )}
+                          {canRetryRule(rule) && (
                             <Button
                               variant="link"
                               size="sm"
@@ -272,7 +250,7 @@ export function Domains({
                                   <MenuItemContent icon={FileText}>{t('Logs')}</MenuItemContent>
                                 </DropdownMenuItem>
                               )}
-                              {canRetryRule(rule.status) && (
+                              {canRetryRule(rule) && (
                                 <DropdownMenuItem
                                   onClick={() => handleRetry(rule)}
                                 >
@@ -320,16 +298,16 @@ export function Domains({
             </Table>
           </div>
 
-          {filteredRules.length > 0 && (
+          {total > 0 && (
             <Pagination
-              currentPage={currentPage}
-              totalItems={filteredRules.length}
+              currentPage={currentPage + 1}
+              totalItems={total}
               pageSize={pageSize}
               pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={setCurrentPage}
+              onPageChange={(page) => setCurrentPage(page - 1)}
               onPageSizeChange={(size) => {
                 setPageSize(size)
-                setCurrentPage(1)
+                setCurrentPage(0)
               }}
               itemLabel={t('domains')}
             />
@@ -339,39 +317,14 @@ export function Domains({
 
       {selectedRule && (
         <>
-          <VerifyDomainDialog
-            open={verifyDomainOpen}
-            onOpenChange={setVerifyDomainOpen}
-            projectId={projectId}
-            region={region}
-            rule={selectedRule}
-            organizationDomainId={getOrganizationDomainId(selectedRule)}
-            onReconfigure={(reconfigureDomain) => {
-              setVerifyDomainOpen(false)
-              setSelectedRule(null)
-              navigate({
-                to: '/projects/$projectId/settings/domains/add',
-                params: { projectId },
-                search: reconfigureDomain
-                  ? { domain: reconfigureDomain }
-                  : undefined})
-            }}
-            onVerifySuccess={() => {
-              toast.success(t('Domain verified successfully'))
-              setVerifyDomainOpen(false)
-              setSelectedRule(null)
-            }}
-          />
-
           <RetryDomainDialog
             open={retryDomainOpen}
             onOpenChange={setRetryDomainOpen}
             projectId={projectId}
             region={region}
-            rule={selectedRule}
+            rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
             organizationDomainId={getOrganizationDomainId(selectedRule)}
             onRetrySuccess={() => {
-              toast.success(t('Verification in progress'))
               setRetryDomainOpen(false)
               setSelectedRule(null)
             }}
@@ -381,6 +334,8 @@ export function Domains({
             open={viewLogsOpen}
             onOpenChange={setViewLogsOpen}
             rule={rules.find((r) => r.$id === selectedRule.$id) ?? selectedRule}
+            onRefresh={() => void refetch()}
+            isRefreshing={isFetching}
           />
 
           <DeleteDomainDialog

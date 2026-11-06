@@ -3290,6 +3290,16 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertArrayHasKey('image', $runtime);
         $this->assertArrayHasKey('base', $runtime);
         $this->assertArrayHasKey('supports', $runtime);
+
+        // An API key holds no 'public' scope of its own, but must still reach public endpoints
+        $runtimes = $this->client->call(Client::METHOD_GET, '/functions/runtimes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertSame(200, $runtimes['headers']['status-code']);
+        $this->assertGreaterThan(0, $runtimes['body']['total']);
+        $this->assertNotEmpty($runtimes['body']['runtimes']);
     }
 
     public function testListRuntimesAndSpecificationsTotal(): void

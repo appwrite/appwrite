@@ -5,7 +5,7 @@ import { buildFilterTagFromCompactKey } from '@/lib/table-filters'
 import { useCountryLookups } from '@/lib/react-query/hooks'
 import { resolveCountryDisplayName } from '@/lib/locale/country-lookups'
 import {
-  ANALYTICS_FILTER_COLUMNS,
+  analyticsFilterColumns,
   trafficKindOfFilterKey,
 } from '@/lib/analytics/analytics-filters'
 import { useAnalyticsFilters } from './analytics-filters-context'
@@ -33,7 +33,9 @@ function TagText({ tag }: { tag: string }) {
  */
 export function ActiveFilterChips() {
   const t = useT()
-  const { filterMap, onRemoveFilter, onClearAllFilters } = useAnalyticsFilters()
+  const { filters, filterMap, onRemoveFilter, onClearAllFilters } =
+    useAnalyticsFilters()
+  const columns = analyticsFilterColumns(filters)
   const { lookups: countryLookups } = useCountryLookups()
 
   if (filterMap.size === 0) return null
@@ -54,7 +56,7 @@ export function ActiveFilterChips() {
         const trafficKind = trafficKindOfFilterKey(key)
         const tag = trafficKind
           ? `**${trafficKind === 'human' ? t('Humans') : t('Bots')}** ${t('only')}`
-          : buildFilterTagFromCompactKey(displayKey, ANALYTICS_FILTER_COLUMNS).tag
+          : buildFilterTagFromCompactKey(displayKey, columns).tag
         return (
           <span
             key={`${key.c}:${key.o}:${String(key.v)}`}

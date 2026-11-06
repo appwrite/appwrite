@@ -20,6 +20,7 @@ import {
   useProject,
   useOrganizationScopes,
   useAccountConsents,
+  useConsoleVariables,
 } from '@/lib/react-query/hooks'
 import {
   canSeeProjectNavItem,
@@ -59,6 +60,7 @@ import {
   Package,
   FileText,
   AlertTriangle,
+  GitPullRequest,
   Joystick,
   type LucideIcon,
 } from 'lucide-react'
@@ -74,6 +76,9 @@ import { OnboardingCard } from './OnboardingCard'
 import { useTheme } from 'next-themes'
 import { getConsoleHeaderLogoClass } from '@/lib/html-theme'
 import { ConsoleHeaderLogo } from '@/components/global/shared/ConsoleHeaderLogo'
+import { HalloweenScene } from '@/components/global/shared/HalloweenScene'
+import { Cobweb } from '@/components/global/shared/HalloweenCobwebs'
+import { useHalloween } from '@/hooks/use-halloween'
 import { McpNavIconWithStatus } from '@/components/global/shared/McpNavIconWithStatus'
 import { useI18n } from '@/lib/i18n'
 import { useT } from '@/lib/i18n/translate'
@@ -112,6 +117,7 @@ interface SidebarCopy {
     functions: string
     messaging: string
     videos: string
+    reviews: string
     sites: string
     distribution: string
     activity: string
@@ -281,6 +287,12 @@ const getNavItems = (projectId: string, sidebarCopy: SidebarCopy) => {
           path: `/projects/${projectId}/firewall`,
         },
         {
+          id: 'reviews',
+          label: sidebarCopy.items.reviews,
+          icon: GitPullRequest,
+          path: `/projects/${projectId}/reviews`,
+        },
+        {
           id: 'advisor',
           label: sidebarCopy.items.advisor,
           icon: ScanSearch,
@@ -327,7 +339,8 @@ export function ConsoleSidebar({
   const navRef = useRef<HTMLElement>(null)
   const { isDebugModeOpen } = useDebugMode()
   const { features, isCloud } = useConsoleProfile()
-  const { project } = useProject(projectId)
+  const { project, projectData } = useProject(projectId)
+  const { reviewsEnabled } = useConsoleVariables(project?.region)
   const { access, isLoading: scopesLoading } = useOrganizationScopes(
     project?.teamId,
   )
@@ -359,6 +372,12 @@ export function ConsoleSidebar({
             return (
               features.videos && canSeeProjectNavItem(access, features, item.id)
             )
+          if (item.id === 'reviews')
+            return (
+              features.reviews &&
+              reviewsEnabled &&
+              canSeeProjectNavItem(access, features, item.id)
+            )
           if (item.id === 'agents')
             return (
               showProjectAgents && canShowAgentMcpConnectCta(access, features)
@@ -375,6 +394,7 @@ export function ConsoleSidebar({
     sidebarCopy,
     isCloud,
     showProjectAgents,
+    reviewsEnabled,
   ])
 
   const showOverview = canSeeProjects(access, features)
@@ -383,7 +403,11 @@ export function ConsoleSidebar({
   const showSettings =
     !features.orgRoles ||
     (!scopesLoading && canShowProjectSettings(access, features))
-  const showGetStarted = canShowGetStartedSection(access, features)
+  // An environment is set up from its production project, so it has nothing
+  // to get started with
+  const showGetStarted =
+    canShowGetStartedSection(access, features) && !projectData?.parentId
+  const showHalloweenScene = useHalloween()
   const showAgentNav = canShowAgentMcpConnectCta(access, features)
   const { data: consents } = useAccountConsents({
     enabled: showAgentNav && !!account,
@@ -605,14 +629,23 @@ export function ConsoleSidebar({
       >
         <aside
           className={cn(
-            'console-sidebar flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
+            'console-sidebar relative flex h-full w-full flex-col overflow-hidden border-e border-border bg-background',
             '[transform:translateZ(0)] [backface-visibility:hidden]',
           )}
         >
+          {showHalloweenScene && (
+            <Cobweb
+              size={collapsed ? 56 : 80}
+              className="pointer-events-none absolute start-0 top-0 text-foreground rtl:-scale-x-100"
+            />
+          )}
           {/* Main Navigation */}
           <nav
             ref={navRef}
-            className="overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4"
+            className={cn(
+              'overlay-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4',
+              showHalloweenScene && 'relative z-10 flex flex-col [&>*]:shrink-0',
+            )}
             onKeyDown={handleKeyDown}
             role="navigation"
             aria-label={sidebarCopy.accessibility.mainNavigation}
@@ -632,6 +665,8 @@ export function ConsoleSidebar({
             )}
 
             {visibleCategories.map((category) => renderCategory(category))}
+
+            {showHalloweenScene && <HalloweenScene compact={collapsed} />}
           </nav>
 
           {/* Settings */}

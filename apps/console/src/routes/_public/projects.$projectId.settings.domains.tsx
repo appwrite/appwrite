@@ -4,6 +4,7 @@ import {
   projectDomainsQueryOptions,
   organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DOMAINS_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
@@ -24,7 +25,13 @@ export const Route = createFileRoute(
     // Prefetch critical domains data before rendering to prevent layout shift
     await Promise.all([
       queryClient.ensureQueryData(
-        projectDomainsQueryOptions(projectId, projectData?.region, ''),
+        projectDomainsQueryOptions(
+          projectId,
+          projectData?.region,
+          0,
+          DOMAINS_DEFAULT_PAGE_SIZE,
+          '',
+        ),
       ),
       projectData?.teamId
         ? queryClient

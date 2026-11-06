@@ -22,12 +22,16 @@ import {
 import type { Organization } from '@/lib/utils/mock-data'
 import { listConsoleProjects } from '@/lib/appwrite/console-projects'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  type BudgetUpdate,
+  updateBudgetRecipients,
+} from '@/lib/appwrite/organization-budget'
 import { readMockLocaleCountryCookie } from '@/lib/locale/visitor-country'
 import {
   isStartPlanEligibleCountry,
   START_PLAN_ID,
 } from '@/lib/pricing/start-plan'
-import { confirmPayment } from '@/lib/utils/stripe'
+import { confirmPayment, confirmSetup } from '@/lib/utils/stripe'
 import { resolveStripeProviderMethodId } from '@/lib/billing/addons'
 import { fetchConsoleAccount } from '@/lib/console-account-get'
 import { getConsoleAccountQueryRevision } from '@/lib/console-impersonation'
@@ -46,6 +50,8 @@ import {
 
 const ESTIMATION_STALE_TIME = 5 * 60 * 1000
 const EMPTY_ESTIMATION_INVITES: string[] = []
+// One identity while the list is pending or failed: callers pass it to effects.
+const EMPTY_PROJECTS: Models.Project[] = []
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
 import { resolveOrganizationCanonicalPlan } from '@/lib/utils/plan-filter'
 import {
@@ -99,6 +105,7 @@ export function isBudgetLimitReached(
 export {
   isPlanUsageLimitReached,
   isProjectLockedByPlanUsage,
+  isProjectLockedByProjectUsage,
 } from '@/lib/billing/billing-limits'
 
 /**
@@ -259,6 +266,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     deploymentSize: Number.MAX_SAFE_INTEGER,
     buildSize: Number.MAX_SAFE_INTEGER,
     functionsIntervalMinimum: 0,
+    functionsAllowCron: true,
     databasesAllowEncrypt: true,
     group: 'starter' as Models.BillingPlan['group'],
   }
@@ -972,12 +980,16 @@ export async function deleteOrganization(organizationId: string) {
  * @param params - Budget update parameters
  * @returns Updated organization
  */
-export async function updateOrganizationBudget(params: {
-  organizationId: string
-  budget?: number
-  alerts?: number[]
-}) {
-  return await sdk.forConsole.organizations.updateBudget(params)
+export async function updateOrganizationBudget(params: BudgetUpdate) {
+  const { notify, ...budget } = params
+  // Only a change of recipients sends `notify`: editions without them reject it.
+  if (notify !== undefined) {
+    return await updateBudgetRecipients(sdk.forConsole.client, {
+      ...budget,
+      notify,
+    })
+  }
+  return await sdk.forConsole.organizations.updateBudget(budget)
 }
 
 /**
@@ -1344,6 +1356,28 @@ export async function setPaymentMethodProvider(params: {
     name: params.name,
     state: params.state,
   })
+}
+
+/**
+ * Mutation function to set up a mandate on a saved Indian card
+ *
+ * Starts a mandate setup for the card, runs the bank's OTP, then saves the
+ * card again so the backend records the new mandate.
+ */
+export async function setupPaymentMethodMandate(params: {
+  paymentMethodId: string
+  providerMethodId: string
+  name: string
+  state?: string
+}) {
+  const method = await sdk.forConsole.account.updatePaymentMethodMandateOptions(
+    { paymentMethodId: params.paymentMethodId },
+  )
+  await confirmSetup({
+    clientSecret: method.clientSecret,
+    paymentMethod: params.providerMethodId,
+  })
+  return await setPaymentMethodProvider(params)
 }
 
 /**
@@ -2712,6 +2746,27 @@ export function useSetPaymentMethodProvider() {
 }
 
 /**
+ * Hook to set up a mandate on a saved Indian card
+ *
+ * @returns Mutation object with mutate function
+ */
+export function useSetupPaymentMethodMandate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: setupPaymentMethodMandate,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method'],
+      })
+    },
+  })
+}
+
+/**
  * Hook to set organization default payment method
  *
  * @returns Mutation object with mutate function
@@ -2959,7 +3014,7 @@ export function useOrganizationProjects(
   )
 
   return {
-    projects: data?.projects || [],
+    projects: data?.projects || EMPTY_PROJECTS,
     total: data?.total || 0,
     isLoading,
     error,

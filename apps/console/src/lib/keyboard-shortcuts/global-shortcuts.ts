@@ -1,7 +1,6 @@
 import {
   THEME_DARK_SHORTCUT_RAW,
   THEME_LIGHT_SHORTCUT_RAW,
-  THEME_SYSTEM_SHORTCUT_RAW,
 } from '@/lib/keyboard-shortcuts/theme-shortcuts'
 
 export type ShortcutRef = {
@@ -41,11 +40,6 @@ export const GLOBAL_SHORTCUT_REFS: readonly ShortcutRef[] = [
     id: 'global.theme.dark',
     description: 'Set theme to dark',
     raw: THEME_DARK_SHORTCUT_RAW,
-  },
-  {
-    id: 'global.theme.system',
-    description: 'Set theme to system',
-    raw: THEME_SYSTEM_SHORTCUT_RAW,
   },
 ]
 

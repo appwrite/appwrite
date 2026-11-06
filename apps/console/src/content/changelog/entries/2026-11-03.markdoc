@@ -1,0 +1,24 @@
+---
+layout: changelog
+title: Announcing Appwrite 2.7 for self-hosted deployments
+date: 2026-11-03
+cover: /images/changelog/2026-11-03.avif
+tags: security, auth, realtime, console, infrastructure
+---
+
+Appwrite 2.7 is now available for self-hosting.
+
+This release includes:
+
+- **Server key rotation.** The server key is now versioned. `_APP_OPENSSL_KEY_CURRENT` picks the `_APP_OPENSSL_KEY_V{n}` that signs new tokens and encrypts new data. `_APP_OPENSSL_KEY_OLDEST` is the oldest version still accepted when verifying JWTs, ephemeral keys, resource tokens and OAuth/VCS state. Stored values keep decrypting with the version they record. The new `encryption` task re-encrypts stored data under the current version. With the defaults (`CURRENT=1`, `OLDEST=1`) nothing changes.
+- **Sign out every user in a project.** `DELETE /v1/project/sessions` and a new card on **Auth > Settings** invalidate every session in the project at once. Old session documents are removed in the background, and realtime connections on those sessions are closed, impersonated ones included.
+- **Realtime guests policy.** **Auth > Policies > Realtime** can stop guests from opening realtime subscriptions.
+- **Realtime and MQTT limits.** A realtime connection can hold at most 100 subscriptions, 100 channels and 100 queries in total (nested `and`/`or` queries count), and one project user at most 32 connections per realtime worker. Set the first three with `_APP_LIMIT_REALTIME_SUBSCRIPTIONS`, `_APP_LIMIT_REALTIME_CHANNELS` and `_APP_LIMIT_REALTIME_QUERIES`. The MQTT broker caps topic filters per SUBSCRIBE at 100, connections at 32 per user per worker, and SUBSCRIBE packets at 32 a minute per user when `_APP_OPTIONS_ABUSE` is on. Realtime also closes connections that have been silent for two minutes, so presence no longer sticks for clients that dropped off.
+- **`OTP-Token` email header.** Email OTP sign-in, OTP password recovery, OTP email verification and email MFA challenges carry an `OTP-Token` header bound to the request's origin, so mail clients and password managers can autofill the code only on that origin. It is sent only for HTTPS origins (or `localhost`), so server SDK calls and native apps get the same email as before.
+- **Gitea in Git connect.** Create function, create site, the repository picker and project Git settings offer **Connect Gitea** when `_APP_VCS_GITEA_*` is configured. The connect buttons now show only the providers the server has configured, instead of offering ones whose authorization fails.
+- **Playground.** API Explorer and Realtime now share one **Playground** screen with a REST / Realtime switch. Old Explorer and Realtime links redirect to it.
+- **Console 1.2.138.** Besides the screens above: **Logs** on verified domains, so certificate renewal warnings can be read; a warning and Disconnect action when a site's or function's repository is no longer reachable through its installation; column editor fixes; API explorer keys kept in memory instead of `localStorage` and cleared on sign-out; and patched Zod copies.
+
+{% arrow_link href="https://github.com/appwrite/appwrite/releases/tag/2.7.0" %}
+View the release notes on GitHub
+{% /arrow_link %}

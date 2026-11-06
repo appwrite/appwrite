@@ -2,6 +2,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
+import { ContactSalesLink } from '@/components/global/shared/ContactSalesLink'
+import type { SalesSource } from '@/lib/sales/contact-sales'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n/translate'
 
@@ -18,6 +20,8 @@ interface PlanLimitWarningProps {
   orgId: string | null | undefined
   /** When true, the alert content spans the full viewport width. */
   fullWidth?: boolean
+  /** Set when no self-serve plan lifts the limit: links to sales instead of the upgrade wizard. */
+  salesSource?: SalesSource
 }
 
 export function PlanLimitWarning({
@@ -27,6 +31,7 @@ export function PlanLimitWarning({
   resourceName,
   orgId,
   fullWidth = true,
+  salesSource,
 }: PlanLimitWarningProps) {
   const t = useT()
   const limitNumber =
@@ -51,6 +56,26 @@ export function PlanLimitWarning({
 
   const remaining = Math.max(0, limitNumber - currentCount)
 
+  const capacityLink = salesSource ? (
+    <ContactSalesLink
+      source={salesSource}
+      orgId={orgId}
+      className="font-medium underline hover:no-underline"
+    >
+      {t('Contact sales')}
+    </ContactSalesLink>
+  ) : (
+    orgId && (
+      <Link
+        to="/upgrade"
+        search={{ orgId }}
+        className="font-medium underline hover:no-underline"
+      >
+        {t('Upgrade')}
+      </Link>
+    )
+  )
+
   return (
     <div className="border-b border-border bg-amber-500/5">
       <div
@@ -74,15 +99,7 @@ export function PlanLimitWarning({
                     <>
                       {t('Your plan')} ({planName}) {t('includes up to')}{' '}
                       {limitNumber} {t(resourceName)}.{' '}
-                      {orgId && (
-                        <Link
-                          to="/upgrade"
-                          search={{ orgId }}
-                          className="font-medium underline hover:no-underline"
-                        >
-                          {t('Upgrade')}
-                        </Link>
-                      )}{' '}
+                      {capacityLink}{' '}
                       {t('to unlock more capacity.')}
                     </>
                   ) : (
@@ -91,22 +108,14 @@ export function PlanLimitWarning({
                       {limitNumber} {t(resourceName)}. {t('Remaining:')}{' '}
                       {remaining}
                       .{' '}
-                      {orgId && (
-                        <Link
-                          to="/upgrade"
-                          search={{ orgId }}
-                          className="font-medium underline hover:no-underline"
-                        >
-                          {t('Upgrade')}
-                        </Link>
-                      )}{' '}
+                      {capacityLink}{' '}
                       {t('to unlock more capacity.')}
                     </>
                   )}
                 </span>
               </AlertDescription>
             </div>
-            {orgId && (
+            {orgId && !salesSource && (
               <Button
                 asChild
                 size="sm"

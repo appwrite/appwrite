@@ -20,10 +20,18 @@ export function canViewRuleLogs(rule: {
 }
 
 /**
- * Whether verification of a rule can be retried
+ * Whether a rule can be retried: its verification has not succeeded, or it is
+ * verified and its certificate needs action, as its status badge shows: the
+ * renewal failed or is blocked, or the certificate expired.
  */
-export function canRetryRule(status: string): boolean {
-  return status === 'created' || status === 'unverified'
+export function canRetryRule(
+  rule: { status: string; expireAt?: string; certificateStatus?: string },
+  now: Date = new Date(),
+): boolean {
+  if (rule.status === 'created' || rule.status === 'unverified') return true
+  if (rule.status !== 'verified') return false
+  if (['failed', 'blocked'].includes(rule.certificateStatus ?? '')) return true
+  return !!rule.expireAt && new Date(rule.expireAt).getTime() < now.getTime()
 }
 
 /**
@@ -48,6 +56,9 @@ import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { isCloudEndpointUrl } from '@/lib/debug-endpoint'
+import { getAppwriteErrorInfo } from '@/lib/utils/error-formatting'
+import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
+import { queryClient } from '@/lib/react-query/query-client'
 
 /** Domain validation regex - allows subdomains and apex domains */
 export const DOMAIN_REGEX =
@@ -69,6 +80,44 @@ export function getApexDomain(domain: string): string | null {
   if (!domain?.trim()) return null
   const result = parse(domain.trim().toLowerCase())
   return result.domain ?? null
+}
+
+/**
+ * DNS provider "Name" for a domain: `@` for an apex domain, otherwise the
+ * labels in front of the registrable domain (`mail` for `mail.example.com`).
+ * Providers append the zone themselves, so a full hostname here would end up
+ * as `mail.example.com.example.com`.
+ */
+export function getRecordName(domain: string): string {
+  const normalized = domain.trim().toLowerCase()
+  const apex = getApexDomain(normalized)
+  if (!apex || apex === normalized) return '@'
+  return normalized.slice(0, -(apex.length + 1))
+}
+
+/**
+ * TXT record that proves a project owns a domain: the project ID at
+ * `_appwrite.<domain>`, named relative to the registrable domain.
+ */
+export function getClaimRecord(domain: string, projectId: string) {
+  const name = getRecordName(domain)
+  return {
+    type: 'TXT' as const,
+    name: name === '@' ? '_appwrite' : `_appwrite.${name}`,
+    value: projectId,
+    ttl: 3600,
+  }
+}
+
+/**
+ * Whether a rule create was refused until the project proves it owns the
+ * domain with the claim record. Cloud answers 400 `rule_verification_failed`
+ * for a domain that already points to Appwrite (self-hosted never does on a
+ * create), and 409 `rule_claim_required` for one another project holds.
+ */
+export function isDomainClaimError(error: unknown): boolean {
+  const { type } = getAppwriteErrorInfo(error)
+  return type === 'rule_verification_failed' || type === 'rule_claim_required'
 }
 
 /**
@@ -100,10 +149,41 @@ export function isBuiltInSiteSubdomain(domain: string): boolean {
 export async function ensureApexDomainInOrganization(
   teamId: string,
   domain: string,
-  options?: { skipForSites?: boolean },
+  options?: { skipForSites?: boolean; region?: string },
 ): Promise<void> {
   if (!isCloud() || !teamId || !domain?.trim()) return
   if (options?.skipForSites && isBuiltInSiteSubdomain(domain)) return
+
+  // A zone Appwrite serves is not the organization's to register, as the
+  // server's isAppwriteOwned holds. Cloud's zones are listed so the check holds
+  // when the variables fail to load, and the variables, which carry only the
+  // first sites and functions zone of the project's region, add any other.
+  const owned = [
+    'appwrite.network',
+    'appwrite.run',
+    'appwrite.site',
+    'appwrite.global',
+  ]
+  try {
+    const variables = await queryClient.fetchQuery(
+      consoleVariablesQueryOptions(options?.region),
+    )
+    owned.push(
+      variables._APP_DOMAIN_SITES ?? '',
+      variables._APP_DOMAIN_FUNCTIONS ?? '',
+    )
+  } catch {
+    // Without the variables, still register a custom domain.
+  }
+  const normalized = domain.trim().toLowerCase()
+  if (
+    owned.some(
+      (zone) =>
+        !!zone && (normalized === zone || normalized.endsWith(`.${zone}`)),
+    )
+  ) {
+    return
+  }
 
   const apex = getApexDomain(domain)
   if (!apex) return

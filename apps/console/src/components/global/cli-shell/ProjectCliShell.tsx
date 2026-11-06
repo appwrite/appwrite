@@ -41,6 +41,11 @@ import {
 } from '@/lib/cli-shell/constants'
 import { CLI_SHELL_NEW_TERMINAL_SHORTCUT_RAW } from '@/lib/cli-shell/cli-terminal-shortcuts'
 import { formatDisplayKeys } from '@/lib/keyboard-shortcuts/display'
+import {
+  HalloweenCautionTape,
+  HalloweenCornerTape,
+} from '@/components/global/shared/HalloweenCautionTape'
+import { useHalloween } from '@/hooks/use-halloween'
 import { CliSessionSidebar } from './CliSessionSidebar'
 import { CliTerminalResizableLayout } from './CliTerminalResizableLayout'
 import { CliTerminalSearch } from './CliTerminalSearch'
@@ -380,6 +385,7 @@ function ProjectCliShellPanel({
   }, [fullscreen, isResizing, setHeight])
 
   const isBootstrapping = status === 'bootstrapping'
+  const halloween = useHalloween()
 
   const [headerActionsVisible, setHeaderActionsVisible] = useState(open)
 
@@ -406,6 +412,8 @@ function ProjectCliShellPanel({
           )}
         />
       )}
+
+      {halloween && <HalloweenCautionTape />}
 
       <div
         className="flex h-11 shrink-0 items-center justify-between gap-4 border-b border-border bg-muted/20 px-4 sm:px-6"
@@ -562,6 +570,8 @@ function ProjectCliShellPanel({
         }
         sidebar={<CliSessionSidebar />}
       />
+
+      {halloween && <HalloweenCornerTape />}
     </div>
   )
 }
