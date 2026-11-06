@@ -34,6 +34,7 @@ class Attributes extends Validator
         'subQueryAuthenticators',
         'subQueryChallenges',
         'subQueryDevKeys',
+        'subQueryDeviceSessions',
         'subQueryIndexes',
         'subQueryKeys',
         'subQueryMemberships',
