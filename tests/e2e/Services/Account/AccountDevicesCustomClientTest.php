@@ -408,6 +408,86 @@ final class AccountDevicesCustomClientTest extends Scope
         $this->assertEquals($refreshed['body']['expire'], $response['body']['expire']);
     }
 
+    public function testFallbackCookiesCarryTheDeviceAndTheSession(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $deviceKey = 'a_device_' . $projectId;
+        $sessionKey = 'a_session_' . $projectId;
+
+        $email = \uniqid() . 'fallback@localhost.test';
+        $password = 'password';
+        $this->createUserWithPassword($email, $password);
+
+        // No origin: the request is treated as cross-site, so credentials travel in X-Fallback-Cookies
+        // instead of cookies, as for a client that blocks third-party cookies
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        /**
+         * Test for SUCCESS - the device is handed back through the fallback header
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/devices', $headers);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $fallback = \json_decode($response['headers']['x-fallback-cookies'] ?? '', true);
+        $this->assertIsArray($fallback);
+        $this->assertArrayHasKey($deviceKey, $fallback);
+        $deviceFallback = $fallback[$deviceKey];
+
+        /**
+         * Test for SUCCESS - signing in on the device returns both the session and the device entries
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', \array_merge($headers, [
+            'x-fallback-cookies' => \json_encode([$deviceKey => $deviceFallback]),
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $fallback = \json_decode($response['headers']['x-fallback-cookies'] ?? '', true);
+        $this->assertIsArray($fallback);
+        $this->assertArrayHasKey($sessionKey, $fallback);
+        $this->assertArrayHasKey($deviceKey, $fallback);
+        $this->assertEquals($deviceFallback, $fallback[$deviceKey]);
+        $sessionExpire = $response['body']['expire'];
+
+        /**
+         * Test for SUCCESS - refreshing the session re-issues the device entry without dropping the session entry
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', \array_merge($headers, [
+            'x-fallback-cookies' => \json_encode($fallback),
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual($sessionExpire, $response['body']['expire']);
+        $refreshed = \json_decode($response['headers']['x-fallback-cookies'] ?? '', true);
+        $this->assertIsArray($refreshed);
+        $this->assertArrayHasKey($sessionKey, $refreshed);
+        $this->assertArrayHasKey($deviceKey, $refreshed);
+        $this->assertEquals($fallback[$sessionKey], $refreshed[$sessionKey]);
+        $this->assertEquals($deviceFallback, $refreshed[$deviceKey]);
+
+        /**
+         * Test for SUCCESS - a client that replaced its whole fallback set with that header is still signed in
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge($headers, [
+            'x-fallback-cookies' => \json_encode($refreshed),
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($email, $response['body']['email']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/devices/current', \array_merge($headers, [
+            'x-fallback-cookies' => \json_encode($refreshed),
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['sessions']);
+    }
+
     public function testAccountDevicesPolicy(): void
     {
         $projectId = $this->getProject()['$id'];
