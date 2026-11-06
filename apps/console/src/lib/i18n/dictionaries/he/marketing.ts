@@ -711,7 +711,6 @@ export const heMarketingDictionary: Record<string, string> = {
     'שירות ההודעות הרחיב את הפלטפורמה עם יכולות אימייל, פוש ו-SMS, והעניק לצוותים כלים נייטיביים לתקשורת עם משתמשים ולהתראות.',
   'Method': 'מתודה',
   'MFA enabled': 'MFA מופעל',
-  'Migrations': 'מיגרציות',
   'Min 12 chars': 'לפחות 12 תווים',
   'Miss': 'החטאה',
   'Model': 'מודל',

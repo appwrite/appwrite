@@ -554,7 +554,6 @@ export const jaMarketingDictionary: Record<string, string> = {
   'Messaging docs': 'メッセージングドキュメント',
   'Method': 'メソッド',
   'MFA enabled': 'MFA有効',
-  'Migrations': '移行',
   'Min 12 chars': '最低12文字',
   'Miss': 'ミス',
   'Model': 'モデル',
