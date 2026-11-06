@@ -41,7 +41,7 @@ final class StorageCustomServerTest extends Scope
     private const string CACHE_OUTAGE_STATE = '/tmp/appwrite-response-cache-outage.json';
 
     /**
-     * Seconds a request may take with the device down: a read and a copy, each a 3s
+     * Seconds a request may take with the device down: a read and a copy, each a 1s
      * timeout retried once, and margin. A default client's 30s timeout can't fit in this.
      */
     private const int CACHE_OUTAGE_BUDGET = 6;
@@ -377,11 +377,7 @@ final class StorageCustomServerTest extends Scope
     #[Group('responseCacheOutage')]
     public function testFilePreviewCacheSurvivesDeviceOutage(): void
     {
-        $handle = \curl_init(System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''));
-        \curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 2]);
-        if (System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '') === '' || \curl_exec($handle) !== false) {
-            $this->markTestSkipped('Needs the cache device to be down');
-        }
+        $this->skipUnlessCacheDeviceDown();
 
         $state = \json_decode((string) \file_get_contents(self::CACHE_OUTAGE_STATE), true);
         ['headers' => $headers, 'path' => $path, 'entries' => $entries, 'copied' => $copied, 'uncopied' => $uncopied] = $state;
@@ -423,6 +419,41 @@ final class StorageCustomServerTest extends Scope
             $this->assertSame('hit', $preview['headers']['x-appwrite-cache']);
         }
         $this->assertLessThan(self::CACHE_OUTAGE_BUDGET, $elapsed);
+    }
+
+    /**
+     * A purge the device can't answer must not stop the rest: the rows are gone by the time
+     * it fails, so an entry skipped here is never purged. The default client waits out a
+     * paused device, retries included, before the first purge fails.
+     */
+    #[Group('responseCacheOutage')]
+    public function testFilePreviewCachePurgeSurvivesDeviceOutage(): void
+    {
+        $this->skipUnlessCacheDeviceDown();
+
+        [$headers, $filesystem] = $this->getCacheFixture();
+        $path = $this->createPreviewFile($headers);
+        foreach (\range(20, 31) as $width) {
+            $preview = $this->client->call(Client::METHOD_GET, $path, $headers, ['width' => $width, 'output' => 'png']);
+            $this->assertSame(200, $preview['headers']['status-code']);
+        }
+
+        // The first row's filesystem entry goes before its device purge fails, so it takes a second to tell.
+        $this->assertEventually(fn () => $this->assertGreaterThanOrEqual(2, \count($this->getCacheKeys($filesystem))));
+
+        $delete = $this->client->call(Client::METHOD_DELETE, \dirname($path), $headers);
+        $this->assertSame(204, $delete['headers']['status-code']);
+
+        $this->assertEventually(fn () => $this->assertSame([], $this->getCacheKeys($filesystem)), 300_000, 1000);
+    }
+
+    private function skipUnlessCacheDeviceDown(): void
+    {
+        $handle = \curl_init(System::getEnv('_APP_STORAGE_S3_ENDPOINT', ''));
+        \curl_setopt_array($handle, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 2]);
+        if (System::getEnv('_APP_CONNECTIONS_STORAGE_CACHE', '') === '' || \curl_exec($handle) !== false) {
+            $this->markTestSkipped('Needs the cache device to be down');
+        }
     }
 
     /**
@@ -479,20 +510,7 @@ final class StorageCustomServerTest extends Scope
      */
     private function warmPreviewCache(array $headers, Device $filesystem, Device $device): array
     {
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
-            'bucketId' => Id::unique(),
-            'name' => 'Cache stores',
-            'permissions' => [Permission::read(Role::any())],
-        ]);
-        $this->assertSame(201, $bucket['headers']['status-code']);
-
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', ['content-type' => 'multipart/form-data'] + $headers, [
-            'fileId' => Id::unique(),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
-        ]);
-        $this->assertSame(201, $file['headers']['status-code']);
-
-        $path = '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'] . '/preview';
+        $path = $this->createPreviewFile($headers);
         $entries = [];
         foreach (\range(20, 51) as $width) {
             $before = $this->getCacheKeys($device);
@@ -514,6 +532,28 @@ final class StorageCustomServerTest extends Scope
         }
 
         return ['path' => $path, 'entries' => $entries];
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @return string The preview path of a new file in a new bucket
+     */
+    private function createPreviewFile(array $headers): string
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Cache stores',
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket['body']['$id'] . '/files', ['content-type' => 'multipart/form-data'] + $headers, [
+            'fileId' => Id::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+        $this->assertSame(201, $file['headers']['status-code']);
+
+        return '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'] . '/preview';
     }
 
     /**

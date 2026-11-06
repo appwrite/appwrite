@@ -962,8 +962,11 @@ jobs:
 
       - name: Run tests with the cache device down
         if: matrix.config.group == 'responseCache'
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
+          # Later steps need the device running, or stopped, not paused.
+          trap 'docker compose unpause minio || true' EXIT
+
           # Fails on a skip, which is how the test reports finding the device still up.
           outage() {
             docker compose exec -T \
