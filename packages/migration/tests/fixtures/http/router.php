@@ -10,6 +10,16 @@ if ($log !== false && $log !== '') {
     \file_put_contents($log, $method.' '.$uri.' '.$host."\n", FILE_APPEND | LOCK_EX);
 }
 
+// FIXTURE_RESPONSES maps a path to the JSON body it answers with, for tests that
+// drive a whole source against the server and read back what it asked for
+$responses = \json_decode(\getenv('FIXTURE_RESPONSES') ?: '[]', true);
+if (\is_array($responses) && \array_key_exists($path, $responses)) {
+    \header('Content-Type: application/json; charset=utf-8');
+    echo \json_encode($responses[$path]);
+
+    return;
+}
+
 if ($path === '/echo') {
     \header('Content-Type: application/json; charset=utf-8');
     echo \json_encode(['method' => $method, 'host' => $host, 'uri' => $uri]);

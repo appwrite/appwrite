@@ -990,6 +990,11 @@ class Appwrite extends Source
                 $queries[] = Query::limit(1);
             }
 
+            $ids = $this->scopedIds(Resource::TYPE_USER);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
+            }
+
             if ($lastDocument) {
                 $queries[] = Query::cursorAfter($lastDocument);
             }
@@ -1044,6 +1049,11 @@ class Appwrite extends Source
                 $queries[] = Query::limit(1);
             }
 
+            $ids = $this->scopedIds(Resource::TYPE_TEAM);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
+            }
+
             if ($lastDocument) {
                 $queries[] = Query::cursorAfter($lastDocument);
             }
@@ -1088,6 +1098,10 @@ class Appwrite extends Source
 
         foreach ($cacheTeams as $team) {
             /** @var Team $team */
+            if (!$this->inScope(Resource::TYPE_MEMBERSHIP, $team->getId())) {
+                continue;
+            }
+
             $lastDocument = null;
 
             while (true) {
@@ -1108,6 +1122,11 @@ class Appwrite extends Source
                 foreach ($response->memberships as $membership) {
                     $user = $cacheUsers[$membership->userId] ?? null;
                     if ($user === null) {
+                        // Users held to a list leave the memberships of the others behind
+                        if ($this->scopedIds(Resource::TYPE_USER) !== null) {
+                            continue;
+                        }
+
                         throw new \Exception('User not found', Exception::CODE_NOT_FOUND);
                     }
 
@@ -1235,39 +1254,44 @@ class Appwrite extends Source
 
             $response = $this->reader->listDatabases($queries);
 
+            if (empty($response)) {
+                break;
+            }
+
             foreach ($response as $database) {
                 $database = $database instanceof UtopiaDocument ? $database->getArrayCopy() : $database;
-                $originalType = $database['type'] ?? Resource::TYPE_DATABASE_LEGACY;
+                $originalType = \is_string($database['type'] ?? null) ? $database['type'] : Resource::TYPE_DATABASE_LEGACY;
 
                 $databaseFamilyType = $originalType;
                 if (\in_array($databaseFamilyType, [Resource::TYPE_DATABASE_LEGACY, Resource::TYPE_DATABASE_TABLESDB], true)) {
                     $databaseFamilyType = Resource::TYPE_DATABASE;
                 }
 
-                if (Resource::isSupported($databaseFamilyType, $resources)) {
-                    $newDatabase = self::getDatabase($databaseFamilyType, [
-                        'id' => $database['$id'],
-                        'name' => $database['name'],
-                        'description' => \is_array($database) && \is_string($database['description'] ?? null) ? $database['description'] : '',
-                        'createdAt' => $database['$createdAt'],
-                        'updatedAt' => $database['$updatedAt'],
-                        'type' => $originalType,
-                        'database' => $database['database'],
-                        'enabled' => $database['enabled'] ?? true,
-                    ]);
+                $newDatabase = self::getDatabase($databaseFamilyType, [
+                    'id' => $database['$id'],
+                    'name' => $database['name'],
+                    'description' => \is_array($database) && \is_string($database['description'] ?? null) ? $database['description'] : '',
+                    'createdAt' => $database['$createdAt'],
+                    'updatedAt' => $database['$updatedAt'],
+                    'type' => $originalType,
+                    'database' => $database['database'],
+                    'enabled' => $database['enabled'] ?? true,
+                ]);
+
+                // The cursor moves over every database listed, so a page of databases the
+                // export is not asked for does not end the listing early
+                $lastDatabase = $newDatabase;
+
+                if (Resource::isSupported($databaseFamilyType, $resources) && $this->inScope($databaseFamilyType, $newDatabase->getId())) {
                     $databases[] = $newDatabase;
                 }
             }
 
-            if (empty($databases)) {
-                break;
+            if (!empty($databases)) {
+                $this->callback($databases);
             }
 
-            $lastDatabase = $databases[\count($databases) - 1];
-
-            $this->callback($databases);
-
-            if (\count($databases) < $batchSize) {
+            if (\count($response) < $batchSize) {
                 break;
             }
         }
@@ -1283,11 +1307,20 @@ class Appwrite extends Source
         $databases = $this->cache->get($databaseName);
         foreach ($databases as $database) {
             /** @var Database $database */
+            $tableIds = $this->scopedIds(Resource::DATABASE_TYPE_RESOURCE_MAP[$databaseName]['entity'], [$database->getId()]);
+            if ($tableIds === []) {
+                continue;
+            }
+
             $lastTable = null;
 
             while (true) {
                 $queries = [$this->reader->queryLimit($batchSize)];
                 $tables = [];
+
+                if ($tableIds !== null) {
+                    $queries[] = $this->reader->queryEqual('$id', $tableIds);
+                }
 
                 // Filter to a specific table or collection when its database root has a child set,
                 // or when the root itself is a table.
@@ -1471,6 +1504,10 @@ class Appwrite extends Source
 
         foreach ($entities as $table) {
             /** @var Table $table */
+            if (!$this->inScope(Resource::ENTITY_TYPE_RESOURCE_MAP[$entityName]['record'], $table->getDatabase()->getId(), $table->getId())) {
+                continue;
+            }
+
             $lastRow = null;
             $iterationCount = 0;
             $limit = $batchSize;
@@ -1638,6 +1675,11 @@ class Appwrite extends Source
             $queries[] = Query::limit(1);
         }
 
+        $ids = $this->scopedIds(Resource::TYPE_BUCKET);
+        if ($ids !== null) {
+            $queries[] = Query::equal('$id', $ids);
+        }
+
         $buckets = $this->storage->listBuckets($queries);
 
         $convertedBuckets = [];
@@ -1676,6 +1718,10 @@ class Appwrite extends Source
 
         foreach ($buckets as $bucket) {
             /** @var Bucket $bucket */
+            if (!$this->inScope(Resource::TYPE_FILE, $bucket->getId())) {
+                continue;
+            }
+
             $lastDocument = null;
 
             while (true) {
@@ -2387,6 +2433,11 @@ class Appwrite extends Source
                 $queries[] = Query::limit(1);
             }
 
+            $ids = $this->scopedIds(Resource::TYPE_FUNCTION);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
+            }
+
             if ($lastFunction) {
                 $queries[] = Query::cursorAfter($lastFunction->getId());
             }
@@ -2455,6 +2506,10 @@ class Appwrite extends Source
 
         foreach ($functions as $func) {
             /** @var Func $func */
+            if (!$this->inScope(Resource::TYPE_DEPLOYMENT, $func->getId())) {
+                continue;
+            }
+
             $lastDocument = null;
 
             if ($exportOnlyActive) {
@@ -2788,6 +2843,11 @@ class Appwrite extends Source
                 $queries[] = Query::limit(1);
             }
 
+            $ids = $this->scopedIds(Resource::TYPE_PROVIDER);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
+            }
+
             if ($lastDocument) {
                 $queries[] = Query::cursorAfter($lastDocument);
             }
@@ -2839,6 +2899,11 @@ class Appwrite extends Source
                 $queries[] = Query::limit(1);
             }
 
+            $ids = $this->scopedIds(Resource::TYPE_TOPIC);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
+            }
+
             if ($lastDocument) {
                 $queries[] = Query::cursorAfter($lastDocument);
             }
@@ -2880,6 +2945,10 @@ class Appwrite extends Source
 
         foreach ($topics as $topic) {
             /** @var Topic $topic */
+            if (!$this->inScope(Resource::TYPE_SUBSCRIBER, $topic->getId())) {
+                continue;
+            }
+
             $lastDocument = null;
 
             while (true) {
@@ -2938,6 +3007,11 @@ class Appwrite extends Source
                 $queries[] = Query::limit(1);
             }
 
+            $ids = $this->scopedIds(Resource::TYPE_MESSAGE);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
+            }
+
             if ($lastDocument) {
                 $queries[] = Query::cursorAfter($lastDocument);
             }
@@ -2991,6 +3065,11 @@ class Appwrite extends Source
             if ($this->rootResourceId !== '' && $this->rootResourceType === Resource::TYPE_SITE) {
                 $queries[] = Query::equal('$id', $this->rootResourceId);
                 $queries[] = Query::limit(1);
+            }
+
+            $ids = $this->scopedIds(Resource::TYPE_SITE);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
             }
 
             if ($lastSite) {
@@ -3062,6 +3141,10 @@ class Appwrite extends Source
 
         foreach ($sites as $site) {
             /** @var Site $site */
+            if (!$this->inScope(Resource::TYPE_SITE_DEPLOYMENT, $site->getId())) {
+                continue;
+            }
+
             $lastDocument = null;
 
             if ($exportOnlyActive) {
@@ -3293,6 +3376,51 @@ class Appwrite extends Source
     }
 
     /**
+     * IDs of a type to list under a parent, from the resource IDs the export is held
+     * to: null when the type is unrestricted there, otherwise the IDs, empty when
+     * nothing under that parent was asked for. A root type has no parent and lists
+     * its own IDs.
+     *
+     * @param array<string> $parents
+     * @return array<string>|null
+     */
+    private function scopedIds(string $type, array $parents = []): ?array
+    {
+        $scopes = $this->resourceIds[$type] ?? [];
+
+        if ($scopes === []) {
+            return null;
+        }
+
+        $parent = \implode(':', $parents);
+        $ids = [];
+
+        foreach ($scopes as $scope) {
+            if ($parents === []) {
+                $ids[] = $scope;
+            } elseif ($scope === $parent) {
+                return null;
+            } elseif (\str_starts_with($scope, $parent . ':')) {
+                $ids[] = \substr($scope, \strlen($parent) + 1);
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Whether a resource, given by its path of IDs from the root down to its own, is
+     * among the resource IDs the export is held to for its type.
+     */
+    private function inScope(string $type, string ...$path): bool
+    {
+        $id = \array_pop($path);
+        $ids = $this->scopedIds($type, $path);
+
+        return $ids === null || \in_array($id, $ids, true);
+    }
+
+    /**
      * @param int $batchSize
      * @param array<string> $resources
      */
@@ -3400,6 +3528,11 @@ class Appwrite extends Source
                 $queries[] = Query::limit(1);
             }
 
+            $ids = $this->scopedIds(Resource::TYPE_PLATFORM);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
+            }
+
             if ($lastId !== null) {
                 $queries[] = Query::cursorAfter($lastId);
             }
@@ -3449,6 +3582,11 @@ class Appwrite extends Source
             if ($this->rootResourceId !== '' && $this->rootResourceType === Resource::TYPE_API_KEY) {
                 $queries[] = Query::equal('$id', $this->rootResourceId);
                 $queries[] = Query::limit(1);
+            }
+
+            $ids = $this->scopedIds(Resource::TYPE_API_KEY);
+            if ($ids !== null) {
+                $queries[] = Query::equal('$id', $ids);
             }
 
             if ($lastId !== null) {
