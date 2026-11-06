@@ -190,6 +190,11 @@ trait ProxyBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(APP_VERSION_STABLE, $response['body']['server']);
 
+        foreach (['/robots.txt', '/humans.txt'] as $path) {
+            $response = $proxyClient->call(Client::METHOD_GET, $path);
+            $this->assertSame(404, $response['headers']['status-code'], $path);
+        }
+
         $this->cleanupRule($ruleId);
 
         $rule = $this->createAPIRule('http://' . $domain);
