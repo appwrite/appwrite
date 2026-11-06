@@ -864,10 +864,18 @@ Http::init()
     ->groups(['session'])
     ->inject('route')
     ->inject('user')
-    ->action(function (Route $route, User $user) {
+    ->inject('authDevice')
+    ->action(function (Route $route, User $user, ?Document $authDevice) {
         // Sign-ins that link to or upgrade the current account accept a caller
         // who is already logged in (e.g. converting an anonymous account)
         if ($route->getLabel('session.allowActive', false)) {
+            return;
+        }
+
+        // An account switching device may hold several accounts at once: creating another
+        // session adds it to the device instead of being refused. The create action attaches
+        // the new session and makes it the active one (see AuthDevice::attach).
+        if ($authDevice !== null) {
             return;
         }
 

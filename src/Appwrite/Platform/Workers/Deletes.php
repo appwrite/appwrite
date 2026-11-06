@@ -389,6 +389,7 @@ class Deletes extends Action
                 $this->deleteExpiredTargets($project, $getProjectDB, $mqtt);
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount, $executionStore);
                 $this->deleteExpiredSessions($project, $getProjectDB);
+                $this->deleteExpiredDevices($project, $getProjectDB);
                 $this->deleteExpiredTokens($project, $getProjectDB);
                 $this->deleteExpiredChallenges($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
@@ -1486,6 +1487,20 @@ class Deletes extends Action
      * @return void
      * @throws Exception|Throwable
      */
+    private function deleteExpiredDevices(Document $project, callable $getProjectDB): void
+    {
+        Console::info('Delete expired devices');
+
+        $dbForProject = $getProjectDB($project);
+
+        // Devices carry their own expiry; the sessions they held are cleaned up separately.
+        $this->deleteByGroup('devices', [
+            Query::lessThanEqual('expire', DateTime::now()),
+            Query::orderAsc('expire'),
+            Query::orderAsc(),
+        ], $dbForProject);
+    }
+
     private function deleteExpiredSessions(Document $project, callable $getProjectDB, ?string $invalidatedAt = null): void
     {
         Console::info('Delete expired sessions');
