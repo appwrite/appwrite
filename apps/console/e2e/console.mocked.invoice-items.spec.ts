@@ -137,6 +137,30 @@ async function mockBilling(
         ...(responses['/account'] as object),
         prefs: request.postDataJSON().prefs ?? {},
       }
+    if (
+      path === `/organizations/${orgId}/aggregations/mutable-aggregation` &&
+      usage
+    ) {
+      const query = new URL(request.url()).searchParams
+      const limit = Number(query.get('limit') ?? 10)
+      if (limit > 10) {
+        return route.fulfill({
+          status: 400,
+          headers,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            message: 'Invalid limit: maximum is 10',
+            code: 400,
+          }),
+        })
+      }
+      const offset = Number(query.get('offset') ?? 0)
+      const context = usage as typeof aggregation
+      responses[path] = {
+        ...context,
+        breakdown: context.breakdown.slice(offset, offset + limit),
+      }
+    }
     const found = path in responses && responses[path] !== null
     return route.fulfill({
       status: found ? 200 : 404,
@@ -166,6 +190,7 @@ test('keeps project expanders and usage bars while showing only saved charges', 
   const project = projectButton.locator('..')
   await expect(project.getByRole('progressbar').first()).toBeVisible()
   await expect(project.getByText('1.5 GB / 1 GB')).toBeVisible()
+  await expect(project.getByText('MAU', { exact: true })).toBeVisible()
   await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
   await expect(
     summary
@@ -301,4 +326,39 @@ test('keeps unmapped project line items in the project subtotal and details', as
       .locator('..')
       .getByText('$1.23'),
   ).toBeVisible()
+})
+
+test('keeps named projects and saved charges beyond the first aggregation page', async ({
+  page,
+}) => {
+  const projects = Array.from({ length: 11 }, (_, index) => ({
+    ...aggregation.breakdown[0],
+    $id: `project-${index + 1}`,
+    name: `Project ${index + 1}`,
+  }))
+  const summary = await mockBilling(
+    page,
+    {
+      ...invoice,
+      items: invoice.items.map((item) =>
+        item.projectId ? { ...item, projectId: 'project-11' } : item,
+      ),
+    },
+    undefined,
+    { ...aggregation, breakdown: projects },
+  )
+  await expect(
+    summary.getByRole('button', { name: 'Project 1 -', exact: true }),
+  ).toBeVisible()
+  await summary
+    .getByRole('button', { name: 'Go to next page', exact: true })
+    .click()
+  const project = summary.getByRole('button', {
+    name: 'Project 11 $10.01',
+    exact: true,
+  })
+  await expect(project).toBeVisible()
+  await project.click()
+  await expect(summary.getByText('Recorded project bandwidth')).toBeVisible()
+  await expect(summary.getByText('$10.01', { exact: true })).toHaveCount(2)
 })

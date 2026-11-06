@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearch, useNavigate } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { Progress } from '@/components/ui/progress'
@@ -108,56 +108,73 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       dedicatedDatabaseSourceFromEngine('postgresql'),
     ),
   )
-  const dedicatedDbBillingSpecLookup = buildDedicatedDbBillingSpecLookup(
-    databaseSpecificationsData?.specifications,
-  )
-  const lines = invoice?.items ?? []
-  const projectIds = [
-    ...new Set([
-      ...(aggregation?.breakdown ?? []).map((project) => project.$id),
-      ...lines.flatMap((item) => (item.projectId ? [item.projectId] : [])),
-    ]),
-  ]
-  const projectBreakdowns = projectIds.map((projectId) => {
-    const project = aggregation?.breakdown.find(
-      (project) => project.$id === projectId,
-    )
-    const items = lines.filter((item) => item.projectId === projectId)
-    return {
-      projectId,
-      projectName: project?.name || projectId,
-      items,
-      categories: usageCategories(
-        project?.resources,
-        items,
-        plan,
-        dedicatedDbBillingSpecLookup,
+  const dedicatedDbBillingSpecLookup = useMemo(
+    () =>
+      buildDedicatedDbBillingSpecLookup(
+        databaseSpecificationsData?.specifications,
       ),
-      total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
+    [databaseSpecificationsData?.specifications],
+  )
+  const lines = useMemo(() => invoice?.items ?? [], [invoice?.items])
+  const {
+    projectBreakdowns,
+    organizationLines,
+    organizationUsageCategories,
+    organizationItems,
+  } = useMemo(() => {
+    const projectIds = [
+      ...new Set([
+        ...(aggregation?.breakdown ?? []).map((project) => project.$id),
+        ...lines.flatMap((item) => (item.projectId ? [item.projectId] : [])),
+      ]),
+    ]
+    const projectBreakdowns = projectIds.map((projectId) => {
+      const project = aggregation?.breakdown.find(
+        (project) => project.$id === projectId,
+      )
+      const items = lines.filter((item) => item.projectId === projectId)
+      return {
+        projectId,
+        projectName: project?.name || projectId,
+        items,
+        categories: usageCategories(
+          project?.resources,
+          items,
+          plan,
+          dedicatedDbBillingSpecLookup,
+        ),
+        total: items.reduce((sum, item) => sum + item.amount, 0) / 100,
+      }
+    })
+    const organizationLines = lines.filter((item) => !item.projectId)
+    const organizationUsageCategories =
+      plan?.usagePerProject || (!aggregation && organizationLines.length === 0)
+        ? []
+        : usageCategories(
+            aggregation?.resources,
+            organizationLines,
+            plan,
+            dedicatedDbBillingSpecLookup,
+          )
+    const organizationItems = organizationLines.filter(
+      (item) =>
+        !organizationUsageCategories.some((category) =>
+          category.resources.some(
+            (resource) => resource.resourceId === item.resourceId,
+          ),
+        ),
+    )
+    return {
+      projectBreakdowns,
+      organizationLines,
+      organizationUsageCategories,
+      organizationItems,
     }
-  })
+  }, [aggregation, lines, plan, dedicatedDbBillingSpecLookup])
   const totalProjects = projectBreakdowns.length
   const displayedBreakdowns = projectBreakdowns.slice(
     (displayedPage - 1) * pageLimit,
     displayedPage * pageLimit,
-  )
-  const organizationLines = lines.filter((item) => !item.projectId)
-  const organizationUsageCategories =
-    plan?.usagePerProject || (!aggregation && organizationLines.length === 0)
-      ? []
-      : usageCategories(
-          aggregation?.resources,
-          organizationLines,
-          plan,
-          dedicatedDbBillingSpecLookup,
-        )
-  const organizationItems = organizationLines.filter(
-    (item) =>
-      !organizationUsageCategories.some((category) =>
-        category.resources.some(
-          (resource) => resource.resourceId === item.resourceId,
-        ),
-      ),
   )
   const toggleProject = (id: string) =>
     setExpandedProjects((previous) => {
@@ -940,11 +957,14 @@ function usageCategories(
     if (mapping.showOnlyWhenUsed && value === 0 && recorded.length === 0)
       continue
     const unavailable = isBillingPlanResourceUnavailable(plan, mapping.planKey)
+    const limit = getBillingPlanResourceLimit(plan, mapping.planKey)
+    if (!resource && recorded.length === 0 && limit === null && !unavailable)
+      continue
     rows.push({
       resourceId: id,
       name: mapping.name,
       usage: value,
-      limit: getBillingPlanResourceLimit(plan, mapping.planKey),
+      limit,
       // Aggregation amounts and plan prices never enter the displayed charges.
       cost: recorded.reduce((sum, item) => sum + item.amount, 0) / 100,
       formatType: mapping.format,

@@ -583,16 +583,16 @@ export function organizationBillingAggregationQueryOptions(
         const first = await sdk.forConsole.organizations.getAggregation({
           organizationId,
           aggregationId,
-          limit: 100,
+          limit: 10,
           offset: 0,
         })
         const breakdown = [...first.breakdown]
         let page = first
-        while (page.breakdown.length === 100) {
+        while (page.breakdown.length === 10) {
           page = await sdk.forConsole.organizations.getAggregation({
             organizationId,
             aggregationId,
-            limit: 100,
+            limit: 10,
             offset: breakdown.length,
           })
           breakdown.push(...page.breakdown)
@@ -605,6 +605,8 @@ export function organizationBillingAggregationQueryOptions(
       }
     },
     enabled: !!organizationId && !!aggregationId,
+    // Slow usage context must never keep the fullscreen initial loader up.
+    meta: { skipInitialLoader: true },
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
     refetchOnMount: false,
