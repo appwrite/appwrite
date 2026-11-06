@@ -142,6 +142,7 @@ export function AddDomainWizard() {
     try {
       await ensureApexDomainInOrganization(project?.teamId ?? '', d, {
         skipForSites: true,
+        region: project?.region,
       })
     } catch (err: unknown) {
       const e = err as { type?: string }
