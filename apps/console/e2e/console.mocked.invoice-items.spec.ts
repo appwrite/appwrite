@@ -124,6 +124,7 @@ async function mockBilling(
         usagePerProject: true,
         bandwidth: 1,
         storage: 2,
+        users: 0, // A zero-cap resource remains visible; it is not an unset limit.
       },
       [`/organizations/${orgId}/aggregations/mutable-aggregation`]: usage,
       [`/organizations/${orgId}/invoices`]: {
