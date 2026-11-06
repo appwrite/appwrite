@@ -93,18 +93,21 @@ afterAll(async () => {
   await GlobalRegistrator.unregister()
 })
 
-describe('organization domain status', () => {
-  test('reads Active when the nameservers point to Appwrite', () => {
+describe('organization domain nameservers', () => {
+  test('shows Appwrite nameservers without a Status or Verify', () => {
     const view = renderView('Appwrite')
 
-    expect(view.getByText('Active')).toBeTruthy()
-    expect(view.queryByText('Appwrite DNS')).toBeNull()
+    expect(view.getByText('Appwrite')).toBeTruthy()
+    expect(view.queryByText('Status')).toBeNull()
+    expect(view.queryByText('Verify')).toBeNull()
   })
 
-  test('reads Pending when the nameservers point elsewhere', () => {
+  test('shows external nameservers with Verify, not a pending Status', () => {
     const view = renderView('Cloudflare')
 
-    expect(view.getByText('Pending')).toBeTruthy()
-    expect(view.queryByText('External DNS')).toBeNull()
+    expect(view.getByText('Cloudflare')).toBeTruthy()
+    expect(view.getByText('Verify')).toBeTruthy()
+    expect(view.queryByText('Status')).toBeNull()
+    expect(view.queryByText('Pending')).toBeNull()
   })
 })
