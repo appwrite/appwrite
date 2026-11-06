@@ -89,15 +89,23 @@ class Create extends Base
         if (!empty($documents)) {
             // A chat is counted once, with its first usage: the service reports it only once a
             // model ran, so a comment it chose not to answer without asking one costs nothing.
-            $answered = $authorization->skip(fn () => $dbForProject->findOne('reviewUsage', [
-                Query::equal('resourceType', ['reviewChats']),
-                Query::equal('resourceInternalId', [(string) $chat->getSequence()]),
-            ]));
+            // The chat row is locked so concurrent reports for it cannot both count it.
+            $answered = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $chat, $documents) {
+                $dbForProject->getDocument('reviewChats', $chat->getId(), forUpdate: true);
 
-            $authorization->skip(fn () => $dbForProject->createDocuments('reviewUsage', $documents));
+                $answered = !$dbForProject->findOne('reviewUsage', [
+                    Query::equal('resourceType', ['reviewChats']),
+                    Query::equal('resourceInternalId', [(string) $chat->getSequence()]),
+                ])->isEmpty();
+
+                $dbForProject->createDocuments('reviewUsage', $documents);
+
+                return $answered;
+            }));
+
             $this->publishTokens($project, $chat, $documents, $publisherForUsage);
 
-            if ($answered->isEmpty()) {
+            if (!$answered) {
                 $this->publishUsage($project, $this->getRepositoryUsage($chat)->addMetric(METRIC_REVIEWS_CHATS, 1), $publisherForUsage);
             }
         }
