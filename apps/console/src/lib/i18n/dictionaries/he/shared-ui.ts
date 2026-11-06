@@ -1411,4 +1411,6 @@ export const heSharedUiDictionary: Record<string, string> = {
   'No thanks': 'לא תודה',
   'One-time ask, promise. May your builds be ever green.':
     'מבקשים רק פעם אחת, מבטיחים. שה-builds שלכם יהיו תמיד ירוקים.',
+  'Settings · Identity servers': 'הגדרות · שרתי זהויות',
+  'LDAP directory sign-in': 'התחברות דרך ספריית LDAP',
 }

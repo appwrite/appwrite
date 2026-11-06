@@ -4025,4 +4025,89 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Send email, SMS, and push notifications to your users.':
     'ユーザーにメール、SMS、プッシュ通知を送信します。',
   'Auto-deploy on every push': 'push のたびに自動デプロイ',
+  // Identity servers (LDAP)
+  'Identity servers': 'ID サーバー',
+  LDAP: 'LDAP',
+  'Connect the identity systems your organization already runs so people can sign in with the accounts they have.':
+    '組織がすでに運用している ID システムを接続し、既存のアカウントでサインインできるようにします。',
+  'Let users sign in with the credentials of your LDAP directory, such as Active Directory or OpenLDAP.':
+    'Active Directory や OpenLDAP などの LDAP ディレクトリの認証情報でユーザーがサインインできるようにします。',
+  'Turn on LDAP sign-in for this project. Enabling connects to the directory to validate the configuration, so add at least one host and a base DN first.':
+    'このプロジェクトで LDAP サインインを有効にします。有効化時にディレクトリへ接続して設定を検証するため、先に少なくとも 1 つのホストとベース DN を追加してください。',
+  Directory: 'ディレクトリ',
+  Hosts: 'ホスト',
+  'Hostnames or IP addresses of the directory, tried in order until one answers. Press Enter after each host, up to 10.':
+    'ディレクトリのホスト名または IP アドレス。応答があるまで順に試します。ホストごとに Enter を押してください。最大 10 件。',
+  'Leave empty for the default: 636 for LDAPS, 389 otherwise.':
+    '空にするとデフォルトを使用します。LDAPS は 636、それ以外は 389 です。',
+  'LDAPS encrypts from the first byte, StartTLS upgrades a plain connection, None is for a trusted network only.':
+    'LDAPS は最初から暗号化し、StartTLS は平文接続を暗号化に切り替えます。「なし」は信頼できるネットワーク専用です。',
+  'Verify certificate': '証明書を検証',
+  'Check the certificate the directory presents against the CA certificate below or the system trust store.':
+    'ディレクトリが提示する証明書を、下の CA 証明書またはシステムの信頼ストアで検証します。',
+  'Timeout (seconds)': 'タイムアウト (秒)',
+  'Seconds to wait for the directory to connect and answer each operation, from 1 to 30.':
+    'ディレクトリの接続と各操作の応答を待つ秒数。1 から 30 まで。',
+  'CA certificate (PEM)': 'CA 証明書 (PEM)',
+  'Certificate of the authority that signed the directory certificate. Leave empty to use the system trust store.':
+    'ディレクトリの証明書に署名した認証局の証明書。空にするとシステムの信頼ストアを使用します。',
+  'Base DN': 'ベース DN',
+  'Subtree the user search starts from, for example ou=people,dc=example,dc=com.':
+    'ユーザー検索の起点となるサブツリー。例: ou=people,dc=example,dc=com',
+  'Bind DN': 'バインド DN',
+  'Service account used to search for users. Leave empty if the directory allows anonymous search.':
+    'ユーザー検索に使うサービスアカウント。ディレクトリが匿名検索を許可している場合は空にします。',
+  'Bind password': 'バインドパスワード',
+  'Stored securely. Required again when hosts, port, encryption or bind DN change.':
+    '安全に保存されます。ホスト、ポート、暗号化、バインド DN を変更する際は再入力が必要です。',
+  'Username attribute': 'ユーザー名属性',
+  'Attribute the username is matched against: uid, or sAMAccountName on Active Directory.':
+    'ユーザー名と照合する属性。uid、Active Directory では sAMAccountName。',
+  'User filter': 'ユーザーフィルター',
+  'Optional LDAP filter every user must also match, for example (objectClass=inetOrgPerson).':
+    'すべてのユーザーが追加で一致する必要がある LDAP フィルター (任意)。例: (objectClass=inetOrgPerson)',
+  'ID attribute': 'ID 属性',
+  'Attribute with the identifier that stays the same when an entry is renamed or moved: entryUUID, or objectGUID on Active Directory.':
+    'エントリの名前変更や移動後も変わらない識別子を保持する属性。entryUUID、Active Directory では objectGUID。',
+  'Email attribute': 'メール属性',
+  'Attribute holding the email address, usually mail.':
+    'メールアドレスを保持する属性。通常は mail。',
+  'Name attribute': '名前属性',
+  'Attribute holding the display name: cn, or displayName on Active Directory.':
+    '表示名を保持する属性。cn、Active Directory では displayName。',
+  'Phone attribute': '電話番号属性',
+  'Attribute holding the phone number in E.164 format, for example mobile. Leave empty to skip phone numbers.':
+    'E.164 形式の電話番号を保持する属性。例: mobile。空にすると電話番号は取り込みません。',
+  'Required group DN': '必須グループ DN',
+  'Group a user must belong to in order to sign in, checked on every sign-in. Leave empty to allow every user the directory authenticates.':
+    'サインインに必要な所属グループ。サインインのたびに確認します。空にするとディレクトリで認証されたすべてのユーザーを許可します。',
+  'Port must be between 1 and 65535.':
+    'ポートは 1 から 65535 の範囲で指定してください。',
+  'LDAP settings have been updated.': 'LDAP 設定を更新しました。',
+  'LDAP sign-in has been enabled.': 'LDAP サインインを有効にしました。',
+  'LDAP sign-in has been disabled.': 'LDAP サインインを無効にしました。',
+  'Failed to update LDAP settings': 'LDAP 設定の更新に失敗しました',
+  'Test connection': '接続をテスト',
+  'Update the configuration with at least one host and a base DN before testing the connection.':
+    '接続をテストする前に、少なくとも 1 つのホストとベース DN を設定して更新してください。',
+  'Test LDAP connection': 'LDAP 接続のテスト',
+  'Checks the configuration saved on this project: it connects to the directory, binds as the service account and reads the base DN.':
+    'このプロジェクトに保存された設定を確認します。ディレクトリに接続し、サービスアカウントでバインドして、ベース DN を読み取ります。',
+  'Unsaved changes in the form are not included: update first to test them.':
+    'フォームの未保存の変更は含まれません。テストするには先に更新してください。',
+  'Username (optional)': 'ユーザー名 (任意)',
+  'Also looks this user up and checks the required group.':
+    'このユーザーを検索し、必須グループも確認します。',
+  'Password (optional)': 'パスワード (任意)',
+  'Also verifies the password of that user.':
+    'そのユーザーのパスワードも検証します。',
+  'Run test': 'テストを実行',
+  'Testing the connection…': '接続をテストしています…',
+  'Connection, service account and base DN look good.':
+    '接続、サービスアカウント、ベース DN に問題はありません。',
+  'User found, group check passed, password accepted.':
+    'ユーザーが見つかり、グループの確認に合格し、パスワードが受け入れられました。',
+  'User found, group check passed.':
+    'ユーザーが見つかり、グループの確認に合格しました。',
+  'Failed to test the LDAP connection': 'LDAP 接続のテストに失敗しました',
 }

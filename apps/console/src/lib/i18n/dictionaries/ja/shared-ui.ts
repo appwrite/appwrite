@@ -1375,4 +1375,6 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'No thanks': 'いいえ、結構です',
   'One-time ask, promise. May your builds be ever green.':
     'お願いするのは今回だけ、約束します。あなたのビルドがいつもグリーンでありますように。',
+  'Settings · Identity servers': '設定 · ID サーバー',
+  'LDAP directory sign-in': 'LDAP ディレクトリでのサインイン',
 }

@@ -14,6 +14,7 @@ import { Domains } from './Domains'
 import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
+import { IdentityServers } from './IdentityServers'
 import { Variables } from './Variables'
 import type { Models } from '@appwrite.io/console'
 
@@ -61,9 +62,14 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
       if (pathParts[settingsIndex + 1]) {
         const tabFromPath = pathParts[settingsIndex + 1]
         if (
-          ['domains', 'webhooks', 'migrations', 'smtp', 'variables'].includes(
-            tabFromPath,
-          )
+          [
+            'domains',
+            'webhooks',
+            'migrations',
+            'smtp',
+            'variables',
+            'identity-servers',
+          ].includes(tabFromPath)
         ) {
           return tabFromPath
         }
@@ -113,6 +119,12 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/smtp',
         params: { projectId: projectId as string },
       },
+      {
+        id: 'identity-servers',
+        label: t('Identity servers'),
+        to: '/projects/$projectId/settings/identity-servers',
+        params: { projectId: projectId as string },
+      },
     ],
     [projectId, t],
   )
@@ -140,7 +152,8 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
   const hasSearch =
     activeTab !== 'overview' &&
     activeTab !== 'smtp' &&
-    activeTab !== 'variables'
+    activeTab !== 'variables' &&
+    activeTab !== 'identity-servers'
   const searchPlaceholder = hasSearch
     ? activeTab === 'domains'
       ? t('Search domains...')
@@ -241,6 +254,9 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
+        {activeTab === 'identity-servers' && (
+          <IdentityServers projectId={projectId} />
+        )}
         {activeTab === 'variables' && <Variables />}
       </div>
     </div>
