@@ -80,6 +80,8 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
     return 'overview'
   }, [location.pathname])
 
+  const { features } = useConsoleProfile()
+
   // Update tabs with route paths
   const tabs: Tab[] = useMemo(
     () => [
@@ -119,18 +121,22 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
         to: '/projects/$projectId/settings/smtp',
         params: { projectId: projectId as string },
       },
-      {
-        id: 'identity-servers',
-        label: t('Identity servers'),
-        to: '/projects/$projectId/settings/identity-servers',
-        params: { projectId: projectId as string },
-      },
+      // Preview: the route redirects to the overview while the flag is off.
+      ...(features.identityServers
+        ? [
+            {
+              id: 'identity-servers',
+              label: t('Identity servers'),
+              to: '/projects/$projectId/settings/identity-servers',
+              params: { projectId: projectId as string },
+            },
+          ]
+        : []),
     ],
-    [projectId, t],
+    [projectId, t, features.identityServers],
   )
 
   const { project } = useProject(projectId)
-  const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const noDomainsPermission = !canWriteProjectDomains(access, features)
   const noWebhooksPermission = !canWriteWebhooks(access, features)
@@ -254,7 +260,7 @@ export function View({ initialMigrationsData }: SettingsViewProps = {}) {
           />
         )}
         {activeTab === 'smtp' && <SMTP projectId={projectId} />}
-        {activeTab === 'identity-servers' && (
+        {activeTab === 'identity-servers' && features.identityServers && (
           <IdentityServers projectId={projectId} />
         )}
         {activeTab === 'variables' && <Variables />}

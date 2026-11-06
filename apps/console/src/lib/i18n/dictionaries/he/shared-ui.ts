@@ -1398,6 +1398,7 @@ export const heSharedUiDictionary: Record<string, string> = {
     'מעבר או שכפול בין staging לפרודקשן.',
   'Project transfers': 'העברות פרויקטים',
   'Move a project to another organization.': 'העברת פרויקט לארגון אחר.',
+  'LDAP directory sign-in for a project.': 'כניסה לפרויקט באמצעות ספריית LDAP.',
   'Repository not available': 'ה-repo לא זמין',
   'This Git installation can no longer reach the repository. It may have been deleted, removed from the installation, or moved to another installation. Connect the repository again to keep deploying.':
     'התקנת ה-Git הזו כבר לא מגיעה ל-repo. ייתכן שהוא נמחק, הוסר מההתקנה או הועבר להתקנה אחרת. חברו את ה-repo מחדש כדי להמשיך לפרוס.',
